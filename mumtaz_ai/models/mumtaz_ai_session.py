@@ -1,16 +1,21 @@
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class MumtazAISession(models.Model):
     _name = "mumtaz.ai.session"
     _description = "Mumtaz AI Session"
     _inherit = ["mail.thread", "mail.activity.mixin"]
+    _check_company_auto = True
 
     name = fields.Char(required=True, default="New Session", tracking=True)
-    user_id = fields.Many2one("res.users", required=True, default=lambda self: self.env.user, index=True)
-    company_id = fields.Many2one(
-        "res.company", required=True, default=lambda self: self.env.company, index=True
+    user_id = fields.Many2one(
+        "res.users", required=True, default=lambda self: self.env.user, index=True, check_company=True
     )
+    company_id = fields.Many2one(
+        "res.company", required=True, default=lambda self: self.env.company, index=True, check_company=True
+    )
+    company_currency_id = fields.Many2one(related="company_id.currency_id", store=False, readonly=True)
     execution_status = fields.Selection(
         [("draft", "Draft"), ("running", "Running"), ("done", "Done"), ("failed", "Failed")],
         default="draft",
@@ -22,6 +27,7 @@ class MumtazAISession(models.Model):
     response = fields.Text(string="Last Response", readonly=True)
     token_usage = fields.Integer(readonly=True)
     model_used = fields.Char(readonly=True)
+    last_error = fields.Text(readonly=True)
 
     @api.depends("message_ids")
     def _compute_message_count(self):
@@ -38,14 +44,20 @@ class MumtazAISession(models.Model):
     def action_process_prompt(self):
         self.ensure_one()
         if not self.prompt:
-            return
+            raise UserError("Please enter a prompt before sending.")
         self.execution_status = "running"
-        result = self.env["mumtaz.ai.service"].process_user_prompt(self, self.prompt)
-        self.response = result.get("response")
-        self.token_usage = result.get("token_usage", 0)
-        self.model_used = result.get("model_used")
-        self.execution_status = "done"
-        self.prompt = False
+        try:
+            result = self.env["mumtaz.ai.service"].process_user_prompt(self, self.prompt)
+            self.response = result.get("response")
+            self.token_usage = result.get("token_usage", 0)
+            self.model_used = result.get("model_used")
+            self.execution_status = "done"
+            self.last_error = False
+            self.prompt = False
+        except Exception as exc:
+            self.execution_status = "failed"
+            self.last_error = str(exc)
+            raise
 
     def action_view_history(self):
         self.ensure_one()
@@ -55,5 +67,5 @@ class MumtazAISession(models.Model):
             "res_model": "mumtaz.ai.message",
             "view_mode": "list,form",
             "domain": [("session_id", "=", self.id)],
-            "context": {"default_session_id": self.id},
+            "context": {"default_session_id": self.id, "default_company_id": self.company_id.id},
         }

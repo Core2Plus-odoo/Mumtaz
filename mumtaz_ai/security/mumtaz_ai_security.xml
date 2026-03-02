@@ -13,4 +13,34 @@
         <field name="global" eval="True"/>
         <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
+
+    <record id="rule_mumtaz_ai_session_user_own" model="ir.rule">
+        <field name="name">Mumtaz AI Session own records</field>
+        <field name="model_id" ref="model_mumtaz_ai_session"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+    </record>
+
+    <record id="rule_mumtaz_ai_message_user_own" model="ir.rule">
+        <field name="name">Mumtaz AI Message own records</field>
+        <field name="model_id" ref="model_mumtaz_ai_message"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+    </record>
+
+
+    <record id="rule_mumtaz_ai_session_manager_all" model="ir.rule">
+        <field name="name">Mumtaz AI Session manager all</field>
+        <field name="model_id" ref="model_mumtaz_ai_session"/>
+        <field name="groups" eval="[(4, ref('mumtaz_core.group_mumtaz_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_mumtaz_ai_message_manager_all" model="ir.rule">
+        <field name="name">Mumtaz AI Message manager all</field>
+        <field name="model_id" ref="model_mumtaz_ai_message"/>
+        <field name="groups" eval="[(4, ref('mumtaz_core.group_mumtaz_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
 </odoo>

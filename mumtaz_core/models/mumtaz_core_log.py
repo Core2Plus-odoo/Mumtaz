@@ -5,9 +5,10 @@ class MumtazCoreLog(models.Model):
     _name = "mumtaz.core.log"
     _description = "Mumtaz Core Action Log"
     _order = "create_date desc"
+    _check_company_auto = True
 
-    company_id = fields.Many2one("res.company", required=True, index=True)
-    user_id = fields.Many2one("res.users", required=True, index=True)
+    company_id = fields.Many2one("res.company", required=True, index=True, check_company=True)
+    user_id = fields.Many2one("res.users", required=True, index=True, check_company=True)
     module_name = fields.Char(required=True)
     action = fields.Char(required=True)
     request_payload = fields.Text()

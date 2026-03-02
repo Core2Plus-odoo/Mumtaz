@@ -1,7 +1,7 @@
 {
     "name": "Mumtaz AI",
     "summary": "Pluggable AI interaction layer for Odoo Community",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Productivity",
     "author": "Mumtaz",
     "license": "LGPL-3",

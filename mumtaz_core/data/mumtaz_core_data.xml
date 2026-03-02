@@ -3,6 +3,7 @@
     <function model="mumtaz.core.settings" name="create">
         <value eval="{
             'company_id': ref('base.main_company'),
+            'tenant_code': 'MAIN_COMPANY',
             'ai_provider': 'none',
             'feature_ai_chat_enabled': True,
             'feature_financial_insights_enabled': True,

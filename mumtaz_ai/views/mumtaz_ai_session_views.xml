@@ -43,6 +43,7 @@
                         <field name="response" nolabel="1" readonly="1"/>
                         <field name="model_used" readonly="1"/>
                         <field name="token_usage" readonly="1"/>
+                        <field name="last_error" readonly="1"/>
                     </group>
                     <notebook>
                         <page string="Message History">

@@ -1,14 +1,17 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class MumtazAIMessage(models.Model):
     _name = "mumtaz.ai.message"
     _description = "Mumtaz AI Message"
     _order = "create_date desc"
+    _check_company_auto = True
 
-    session_id = fields.Many2one("mumtaz.ai.session", required=True, ondelete="cascade", index=True)
-    user_id = fields.Many2one("res.users", required=True, index=True)
-    company_id = fields.Many2one("res.company", required=True, index=True)
+    session_id = fields.Many2one(
+        "mumtaz.ai.session", required=True, ondelete="cascade", index=True, check_company=True
+    )
+    user_id = fields.Many2one("res.users", required=True, index=True, check_company=True)
+    company_id = fields.Many2one("res.company", required=True, index=True, check_company=True)
     intent = fields.Selection(
         [
             ("financial_query", "Financial Query"),
@@ -27,3 +30,13 @@ class MumtazAIMessage(models.Model):
         default="done",
         required=True,
     )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get("session_id") and not vals.get("company_id"):
+                session = self.env["mumtaz.ai.session"].browse(vals["session_id"])
+                vals["company_id"] = session.company_id.id
+            vals.setdefault("company_id", self.env.company.id)
+            vals.setdefault("user_id", self.env.user.id)
+        return super().create(vals_list)
