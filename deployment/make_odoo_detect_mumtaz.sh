@@ -2,18 +2,27 @@
 set -euo pipefail
 
 # Usage:
-#   sudo bash deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE]
+#   sudo bash deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE] [REPO_PATH]
 # Example:
-#   sudo bash deployment/make_odoo_detect_mumtaz.sh mydb /etc/odoo/odoo.conf odoo
+#   sudo bash deployment/make_odoo_detect_mumtaz.sh Mumtaz_ERP /etc/odoo/odoo.conf odoo /opt/custom_addons/Mumtaz
 
 DB_NAME="${1:-}"
 ODOO_CONF="${2:-/etc/odoo/odoo.conf}"
 ODOO_SERVICE="${3:-odoo}"
-REPO_PATH="/workspace/Mumtaz"
+REPO_PATH_INPUT="${4:-}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_FROM_SCRIPT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_PATH="$REPO_FROM_SCRIPT"
+
+if [[ -n "$REPO_PATH_INPUT" ]]; then
+  REPO_PATH="$REPO_PATH_INPUT"
+fi
 
 if [[ -z "$DB_NAME" ]]; then
   echo "ERROR: DB_NAME is required."
-  echo "Usage: sudo bash deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE]"
+  echo "Usage: sudo bash deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE] [REPO_PATH]"
+  echo "TIP: Do not type angle brackets. Example: ... make_odoo_detect_mumtaz.sh Mumtaz_ERP"
   exit 1
 fi
 
@@ -26,6 +35,13 @@ if [[ ! -d "$REPO_PATH" ]]; then
   echo "ERROR: Repo path not found: $REPO_PATH"
   exit 1
 fi
+
+if [[ ! -f "$REPO_PATH/deployment/check_mumtaz_modules.py" ]]; then
+  echo "ERROR: Expected helper missing: $REPO_PATH/deployment/check_mumtaz_modules.py"
+  exit 1
+fi
+
+echo "Using: DB_NAME=$DB_NAME ODOO_CONF=$ODOO_CONF ODOO_SERVICE=$ODOO_SERVICE REPO_PATH=$REPO_PATH"
 
 echo "[1/6] Checking Mumtaz module structure..."
 python3 "$REPO_PATH/deployment/check_mumtaz_modules.py"
