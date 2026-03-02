@@ -1,0 +1,20 @@
+{
+    "name": "Mumtaz Core",
+    "summary": "Core configuration and logging for Mumtaz AI Agent",
+    "version": "19.0.1.2.0",
+    "category": "Tools",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["base", "mail"],
+    "data": [
+        "security/mumtaz_core_security.xml",
+        "security/mumtaz_core_rules.xml",
+        "security/ir.model.access.csv",
+        "views/mumtaz_core_settings_views.xml",
+        "views/mumtaz_log_views.xml",
+        "data/mumtaz_core_data.xml",
+    ],
+    "installable": True,
+    "auto_install": False,
+    "application": True,
+}
