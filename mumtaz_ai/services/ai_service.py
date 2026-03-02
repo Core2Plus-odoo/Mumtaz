@@ -37,8 +37,8 @@ class AIService(models.AbstractModel):
             action="process_user_prompt",
             company=company,
             user=user,
-            request_payload=json.dumps({"prompt": prompt, "intent": intent, "tenant": settings.tenant_code}),
-            response_payload=json.dumps(response_data),
+            request_payload=json.dumps({"prompt": prompt, "intent": intent, "tenant": settings.tenant_code}, default=str),
+            response_payload=json.dumps(response_data, default=str),
             level="info",
         )
         return response_data
@@ -91,7 +91,7 @@ class AIService(models.AbstractModel):
         total_balance = 0.0
         if accounts:
             group_data = self.env["account.move.line"].read_group(
-                [("company_id", "=", company.id), ("parent_state", "=", "posted"), ("account_id", "in", accounts.ids)],
+                [("company_id", "=", company.id), ("move_id.state", "=", "posted"), ("account_id", "in", accounts.ids)],
                 ["balance:sum"],
                 [],
             )

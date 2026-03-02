@@ -1,7 +1,7 @@
 {
     "name": "Mumtaz Base",
     "summary": "Base customizations for Mumtaz in Odoo Community",
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.2.0",
     "category": "Contacts",
     "author": "Mumtaz",
     "license": "LGPL-3",
