@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_core_settings_tree" model="ir.ui.view">
+        <field name="name">mumtaz.core.settings.tree</field>
+        <field name="model">mumtaz.core.settings</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="company_id"/>
+                <field name="ai_provider"/>
+                <field name="feature_ai_chat_enabled"/>
+                <field name="feature_financial_insights_enabled"/>
+                <field name="feature_crm_insights_enabled"/>
+                <field name="feature_sales_insights_enabled"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_core_settings_form" model="ir.ui.view">
+        <field name="name">mumtaz.core.settings.form</field>
+        <field name="model">mumtaz.core.settings</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="ai_provider"/>
+                        <field name="api_key" password="True"/>
+                    </group>
+                    <group string="Feature Toggles" col="2">
+                        <field name="feature_ai_chat_enabled"/>
+                        <field name="feature_financial_insights_enabled"/>
+                        <field name="feature_crm_insights_enabled"/>
+                        <field name="feature_sales_insights_enabled"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_core_settings" model="ir.actions.act_window">
+        <field name="name">Mumtaz Settings</field>
+        <field name="res_model">mumtaz.core.settings</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_mumtaz_root" name="Mumtaz AI" sequence="10"/>
+    <menuitem id="menu_mumtaz_configuration" name="Configuration" parent="menu_mumtaz_root" sequence="20" groups="mumtaz_core.group_mumtaz_manager"/>
+    <menuitem id="menu_mumtaz_core_settings" name="Settings" parent="menu_mumtaz_configuration" action="action_mumtaz_core_settings" sequence="10" groups="mumtaz_core.group_mumtaz_manager"/>
+</odoo>

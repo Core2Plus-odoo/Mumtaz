@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="rule_mumtaz_ai_session_company" model="ir.rule">
+        <field name="name">Mumtaz AI Session multi-company</field>
+        <field name="model_id" ref="model_mumtaz_ai_session"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_mumtaz_ai_message_company" model="ir.rule">
+        <field name="name">Mumtaz AI Message multi-company</field>
+        <field name="model_id" ref="model_mumtaz_ai_message"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>
