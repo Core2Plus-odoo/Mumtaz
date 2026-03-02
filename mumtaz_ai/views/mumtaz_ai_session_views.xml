@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_ai_session_tree" model="ir.ui.view">
+        <field name="name">mumtaz.ai.session.tree</field>
+        <field name="model">mumtaz.ai.session</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="company_id"/>
+                <field name="execution_status"/>
+                <field name="message_count"/>
+                <field name="model_used"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_ai_session_form" model="ir.ui.view">
+        <field name="name">mumtaz.ai.session.form</field>
+        <field name="model">mumtaz.ai.session</field>
+        <field name="arch" type="xml">
+            <form string="Mumtaz AI Session">
+                <header>
+                    <button name="action_process_prompt" string="Send" type="object" class="oe_highlight"/>
+                    <button name="action_view_history" string="History" type="object"/>
+                    <field name="execution_status" widget="statusbar" statusbar_visible="draft,running,done,failed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-history" type="object" name="action_view_history">
+                            <field name="message_count" widget="statinfo" string="Messages"/>
+                        </button>
+                    </div>
+                    <group>
+                        <field name="name"/>
+                        <field name="user_id"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                    <group string="Chat Input">
+                        <field name="prompt" placeholder="Ask Mumtaz AI..." nolabel="1"/>
+                    </group>
+                    <group string="Last Response">
+                        <field name="response" nolabel="1" readonly="1"/>
+                        <field name="model_used" readonly="1"/>
+                        <field name="token_usage" readonly="1"/>
+                        <field name="last_error" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Message History">
+                            <field name="message_ids" readonly="1">
+                                <list create="0" delete="0">
+                                    <field name="create_date"/>
+                                    <field name="intent"/>
+                                    <field name="prompt"/>
+                                    <field name="response"/>
+                                    <field name="model_used"/>
+                                    <field name="token_usage"/>
+                                    <field name="execution_status"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_ai_message_tree" model="ir.ui.view">
+        <field name="name">mumtaz.ai.message.tree</field>
+        <field name="model">mumtaz.ai.message</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0">
+                <field name="create_date"/>
+                <field name="session_id"/>
+                <field name="user_id"/>
+                <field name="company_id"/>
+                <field name="intent"/>
+                <field name="model_used"/>
+                <field name="token_usage"/>
+                <field name="execution_status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_ai_session" model="ir.actions.act_window">
+        <field name="name">AI Sessions</field>
+        <field name="res_model">mumtaz.ai.session</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_mumtaz_ai_message" model="ir.actions.act_window">
+        <field name="name">AI History</field>
+        <field name="res_model">mumtaz.ai.message</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_mumtaz_ai_sessions" name="AI Sessions" parent="mumtaz_core.menu_mumtaz_root" action="action_mumtaz_ai_session" sequence="10" groups="base.group_user"/>
+    <menuitem id="menu_mumtaz_ai_history" name="AI History" parent="mumtaz_core.menu_mumtaz_root" action="action_mumtaz_ai_message" sequence="20" groups="base.group_user"/>
+</odoo>
