@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <function model="mumtaz.core.settings" name="create">
+        <value eval="{
+            'company_id': ref('base.main_company'),
+            'tenant_code': 'MAIN_COMPANY',
+            'ai_provider': 'none',
+            'feature_ai_chat_enabled': True,
+            'feature_financial_insights_enabled': True,
+            'feature_crm_insights_enabled': False,
+            'feature_sales_insights_enabled': False
+        }"/>
+    </function>
+</odoo>
