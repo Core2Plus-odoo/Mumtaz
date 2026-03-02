@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_core_log_tree" model="ir.ui.view">
+        <field name="name">mumtaz.core.log.tree</field>
+        <field name="model">mumtaz.core.log</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0">
+                <field name="create_date"/>
+                <field name="company_id"/>
+                <field name="user_id"/>
+                <field name="module_name"/>
+                <field name="action"/>
+                <field name="level"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_core_log_form" model="ir.ui.view">
+        <field name="name">mumtaz.core.log.form</field>
+        <field name="model">mumtaz.core.log</field>
+        <field name="arch" type="xml">
+            <form create="0" delete="0" edit="0">
+                <sheet>
+                    <group>
+                        <field name="create_date"/>
+                        <field name="company_id"/>
+                        <field name="user_id"/>
+                        <field name="module_name"/>
+                        <field name="action"/>
+                        <field name="level"/>
+                    </group>
+                    <group>
+                        <field name="request_payload"/>
+                        <field name="response_payload"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_core_log" model="ir.actions.act_window">
+        <field name="name">Mumtaz Logs</field>
+        <field name="res_model">mumtaz.core.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_mumtaz_logs" name="Logs" parent="menu_mumtaz_configuration" action="action_mumtaz_core_log" sequence="20" groups="mumtaz_core.group_mumtaz_manager"/>
+</odoo>
