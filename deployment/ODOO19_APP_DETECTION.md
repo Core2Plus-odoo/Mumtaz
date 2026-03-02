@@ -43,3 +43,18 @@ PY
 ```
 
 In UI: Apps -> clear filters -> search `Mumtaz`.
+
+## One-command automation (recommended)
+Run the helper script from this repository:
+
+```bash
+sudo bash /workspace/Mumtaz/deployment/make_odoo_detect_mumtaz.sh <DB_NAME> /etc/odoo/odoo.conf odoo
+```
+
+This will:
+- validate Mumtaz addon structure
+- append `/workspace/Mumtaz` to `addons_path` if missing
+- fix ownership/permissions
+- restart Odoo service
+- refresh app list (`-u base`)
+- print module detection state from `ir.module.module`
