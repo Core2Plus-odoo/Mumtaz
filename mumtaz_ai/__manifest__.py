@@ -12,5 +12,6 @@
         "views/mumtaz_ai_session_views.xml",
     ],
     "installable": True,
+    "auto_install": False,
     "application": True,
 }

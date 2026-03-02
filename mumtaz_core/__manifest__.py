@@ -15,5 +15,6 @@
         "data/mumtaz_core_data.xml",
     ],
     "installable": True,
-    "application": False,
+    "auto_install": False,
+    "application": True,
 }
