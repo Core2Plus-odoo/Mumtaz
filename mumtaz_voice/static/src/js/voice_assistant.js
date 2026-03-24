@@ -3,12 +3,12 @@
 import { Component, useState, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { rpc } from "@web/core/network/rpc";
 
 class VoiceAssistantAction extends Component {
     static template = "mumtaz_voice.VoiceAssistantAction";
 
     setup() {
-        this.rpc = useService("rpc");
         this.notification = useService("notification");
 
         this.state = useState({
@@ -88,7 +88,7 @@ class VoiceAssistantAction extends Component {
         this.state.error = "";
         this.state.response = "";
         try {
-            const result = await this.rpc("/mumtaz/voice/query", { transcript: question, session_id: this.state.sessionId });
+            const result = await rpc("/mumtaz/voice/query", { transcript: question, session_id: this.state.sessionId });
             if (result.error) { this.state.error = result.error; return; }
             const answer = result.response || "No response received.";
             this.state.response = answer;
