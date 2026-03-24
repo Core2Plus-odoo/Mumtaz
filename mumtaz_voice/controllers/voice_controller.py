@@ -55,8 +55,8 @@ class MumtazVoiceController(http.Controller):
             if not settings or not settings.api_key:
                 return {"error": "No API key configured"}
 
-            voice = settings.tts_voice or "nova"
-            tts_model = settings.tts_model or "tts-1"
+            voice = getattr(settings, "tts_voice", None) or "nova"
+            tts_model = getattr(settings, "tts_model", None) or "tts-1"
             resp = req.post(
                 _OPENAI_TTS_URL,
                 headers={"Authorization": f"Bearer {settings.api_key}",

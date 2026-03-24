@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ── List View ─────────────────────────────────────────────────── -->
+    <record id="view_mumtaz_onboarding_list" model="ir.ui.view">
+        <field name="name">mumtaz.onboarding.checklist.list</field>
+        <field name="model">mumtaz.onboarding.checklist</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="onboarding_stage" widget="badge"
+                       decoration-success="onboarding_stage == 'complete'"
+                       decoration-info="onboarding_stage == 'crm'"
+                       decoration-warning="onboarding_stage in ('profile', 'finance')"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="sme_profile_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form View ─────────────────────────────────────────────────── -->
+    <record id="view_mumtaz_onboarding_form" model="ir.ui.view">
+        <field name="name">mumtaz.onboarding.checklist.form</field>
+        <field name="model">mumtaz.onboarding.checklist</field>
+        <field name="arch" type="xml">
+            <form string="Onboarding Checklist">
+                <header>
+                    <field name="onboarding_stage" widget="statusbar"
+                           statusbar_visible="profile,finance,crm,complete"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <div class="o_field_widget o_field_progressbar">
+                            <field name="progress" widget="progressbar"
+                                   options="{'current_value': 'progress', 'max_value': 100}"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="sme_profile_id"
+                                   domain="[('company_id', '=', company_id)]"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+
+                        <!-- ── Company Profile ── -->
+                        <page string="Company Profile" name="profile">
+                            <div class="alert alert-info py-2 mb-3" invisible="task_company_info and task_logo and task_currency">
+                                <i class="fa fa-info-circle me-1"/>
+                                Complete your company profile so the platform can personalise your experience.
+                            </div>
+                            <group>
+                                <field name="task_company_info" widget="boolean_toggle"/>
+                                <field name="task_logo" widget="boolean_toggle"/>
+                                <field name="task_currency" widget="boolean_toggle"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Finance Setup ── -->
+                        <page string="Finance Setup" name="finance">
+                            <div class="alert alert-info py-2 mb-3" invisible="task_fiscal_year and task_chart_of_accounts and task_bank_account and task_tax_setup and task_payment_terms">
+                                <i class="fa fa-info-circle me-1"/>
+                                Set up your accounting foundations before issuing invoices or recording expenses.
+                            </div>
+                            <group>
+                                <field name="task_fiscal_year" widget="boolean_toggle"/>
+                                <field name="task_chart_of_accounts" widget="boolean_toggle"/>
+                                <field name="task_bank_account" widget="boolean_toggle"/>
+                                <field name="task_tax_setup" widget="boolean_toggle"/>
+                                <field name="task_payment_terms" widget="boolean_toggle"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Customer & Sales ── -->
+                        <page string="Customer &amp; Sales" name="crm">
+                            <div class="alert alert-info py-2 mb-3" invisible="task_first_customer and task_first_quotation and task_first_invoice">
+                                <i class="fa fa-info-circle me-1"/>
+                                Add your first customer and issue your first invoice to complete this stage.
+                            </div>
+                            <group>
+                                <field name="task_first_customer" widget="boolean_toggle"/>
+                                <field name="task_first_quotation" widget="boolean_toggle"/>
+                                <field name="task_first_invoice" widget="boolean_toggle"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Operations ── -->
+                        <page string="Operations" name="operations">
+                            <div class="alert alert-success py-2 mb-3" invisible="not task_products">
+                                <i class="fa fa-check-circle me-1"/>
+                                Operations setup is complete. Your platform is ready.
+                            </div>
+                            <group>
+                                <field name="task_products" widget="boolean_toggle"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Notes ── -->
+                        <page string="Notes" name="notes">
+                            <field name="notes" nolabel="1"
+                                   placeholder="Onboarding notes, blockers, or next actions…"/>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Server action: open or create checklist for current company ── -->
+    <record id="action_mumtaz_onboarding_open" model="ir.actions.server">
+        <field name="name">Open Onboarding Checklist</field>
+        <field name="model_id" ref="model_mumtaz_onboarding_checklist"/>
+        <field name="state">code</field>
+        <field name="code">
+checklist = env['mumtaz.onboarding.checklist'].search([('company_id', '=', env.company.id)], limit=1)
+if not checklist:
+    sme_profile = env['mumtaz.sme.profile'].search([('company_id', '=', env.company.id)], limit=1)
+    checklist = env['mumtaz.onboarding.checklist'].sudo().create({
+        'company_id': env.company.id,
+        'sme_profile_id': sme_profile.id if sme_profile else False,
+    })
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Onboarding Checklist',
+    'res_model': 'mumtaz.onboarding.checklist',
+    'res_id': checklist.id,
+    'view_mode': 'form',
+    'views': [(False, 'form')],
+    'target': 'current',
+}
+        </field>
+    </record>
+
+    <!-- ── List action (admin view) ──────────────────────────────────── -->
+    <record id="action_mumtaz_onboarding_list" model="ir.actions.act_window">
+        <field name="name">Onboarding — All Companies</field>
+        <field name="res_model">mumtaz.onboarding.checklist</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No onboarding checklists yet</p>
+            <p>Checklists are created automatically when a company opens the Onboarding section.</p>
+        </field>
+    </record>
+
+    <!-- ── Menus ──────────────────────────────────────────────────────── -->
+    <menuitem id="menu_mumtaz_onboarding"
+              name="Onboarding"
+              parent="mumtaz_core.menu_mumtaz_root"
+              action="action_mumtaz_onboarding_open"
+              sequence="20"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_mumtaz_onboarding_all"
+              name="Onboarding — All"
+              parent="mumtaz_core.menu_mumtaz_configuration"
+              action="action_mumtaz_onboarding_list"
+              sequence="40"
+              groups="base.group_system"/>
+
+</odoo>

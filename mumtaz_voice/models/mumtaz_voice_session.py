@@ -63,7 +63,10 @@ class MumtazVoiceSession(models.Model):
                 "last_error": False,
             })
         except Exception as exc:
-            self.write({"status": "error", "last_error": str(exc)})
+            try:
+                self.write({"status": "error", "last_error": str(exc)})
+            except Exception:
+                pass  # cursor may be poisoned by a DB-level error; do not mask original
             raise
         return True
 

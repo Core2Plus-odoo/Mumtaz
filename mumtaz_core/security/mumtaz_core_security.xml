@@ -1,7 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <record id="group_mumtaz_manager" model="res.groups">
-        <field name="name">Mumtaz Manager</field>
-<field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+
+    <!-- ── Readonly Analyst ─────────────────────────────────────────── -->
+    <!-- Baseline access: read reports, dashboards, KPIs. No edits.     -->
+    <record id="group_mumtaz_analyst" model="res.groups">
+        <field name="name">Mumtaz / Readonly Analyst</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
+
+    <!-- ── Finance User ─────────────────────────────────────────────── -->
+    <!-- Can enter transactions, use AI, access CFO assistant.          -->
+    <record id="group_mumtaz_finance_user" model="res.groups">
+        <field name="name">Mumtaz / Finance User</field>
+        <field name="implied_ids" eval="[(4, ref('group_mumtaz_analyst'))]"/>
+    </record>
+
+    <!-- ── SME Admin ────────────────────────────────────────────────── -->
+    <!-- Company-level administrator: profile, onboarding, users.       -->
+    <record id="group_mumtaz_sme_admin" model="res.groups">
+        <field name="name">Mumtaz / SME Admin</field>
+        <field name="implied_ids" eval="[(4, ref('group_mumtaz_finance_user'))]"/>
+    </record>
+
+    <!-- ── Partner Manager ──────────────────────────────────────────── -->
+    <!-- Manages brand configs and partner/ecosystem assignments.        -->
+    <record id="group_mumtaz_partner_manager" model="res.groups">
+        <field name="name">Mumtaz / Partner Manager</field>
+        <field name="implied_ids" eval="[(4, ref('group_mumtaz_analyst'))]"/>
+    </record>
+
+    <!-- ── Admin (XML ID group_mumtaz_manager preserved) ───────────── -->
+    <!-- Internal platform admin. Implies SME Admin + Partner Manager.  -->
+    <record id="group_mumtaz_manager" model="res.groups">
+        <field name="name">Mumtaz / Admin</field>
+        <field name="implied_ids" eval="[
+            (4, ref('group_mumtaz_sme_admin')),
+            (4, ref('group_mumtaz_partner_manager')),
+        ]"/>
+    </record>
+
+    <!-- ── Super Admin ──────────────────────────────────────────────── -->
+    <!-- Platform-level superuser. Full access across all companies.    -->
+    <record id="group_mumtaz_super_admin" model="res.groups">
+        <field name="name">Mumtaz / Super Admin</field>
+        <field name="implied_ids" eval="[(4, ref('group_mumtaz_manager'))]"/>
+    </record>
+
 </odoo>

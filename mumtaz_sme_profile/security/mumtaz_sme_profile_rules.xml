@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- SME Admins can only see/edit their own company's profile -->
+    <record id="rule_mumtaz_sme_profile_company" model="ir.rule">
+        <field name="name">Mumtaz SME Profile — company isolation</field>
+        <field name="model_id" ref="model_mumtaz_sme_profile"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

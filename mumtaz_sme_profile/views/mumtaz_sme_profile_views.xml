@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ── List View ─────────────────────────────────────────────────── -->
+    <record id="view_mumtaz_sme_profile_list" model="ir.ui.view">
+        <field name="name">mumtaz.sme.profile.list</field>
+        <field name="model">mumtaz.sme.profile</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="legal_name"/>
+                <field name="trade_name"/>
+                <field name="industry"/>
+                <field name="country_id"/>
+                <field name="onboarding_stage" widget="badge"
+                       decoration-success="onboarding_stage == 'activated'"
+                       decoration-warning="onboarding_stage in ('discovery', 'profile_setup')"
+                       decoration-info="onboarding_stage in ('finance_setup', 'operations_setup')"/>
+                <field name="activation_status" widget="badge"
+                       decoration-success="activation_status == 'active'"
+                       decoration-danger="activation_status in ('suspended', 'churned')"
+                       decoration-warning="activation_status == 'pending'"/>
+                <field name="subscription_plan"/>
+                <field name="profile_completeness" widget="progressbar"/>
+                <field name="brand_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form View ─────────────────────────────────────────────────── -->
+    <record id="view_mumtaz_sme_profile_form" model="ir.ui.view">
+        <field name="name">mumtaz.sme.profile.form</field>
+        <field name="model">mumtaz.sme.profile</field>
+        <field name="arch" type="xml">
+            <form string="SME Business Profile">
+                <header>
+                    <!-- Onboarding stage pipeline -->
+                    <field name="onboarding_stage" widget="statusbar"
+                           statusbar_visible="discovery,profile_setup,finance_setup,operations_setup,activated"/>
+                    <!-- Activation status -->
+                    <field name="activation_status" widget="statusbar"
+                           statusbar_visible="pending,active,suspended"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_title">
+                        <label class="o_form_label" for="legal_name"/>
+                        <h1>
+                            <field name="legal_name" placeholder="Legal business name…"/>
+                        </h1>
+                        <label class="o_form_label" for="trade_name"/>
+                        <h2 class="text-muted">
+                            <field name="trade_name" placeholder="Trading name (if different)…"/>
+                        </h2>
+                    </div>
+
+                    <notebook>
+
+                        <!-- ── Business Details ── -->
+                        <page string="Business Details" name="business">
+                            <group>
+                                <group string="Classification">
+                                    <field name="business_type"/>
+                                    <field name="industry"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                </group>
+                                <group string="Location">
+                                    <field name="country_id"/>
+                                    <field name="city"/>
+                                    <field name="address"/>
+                                </group>
+                            </group>
+                            <group string="Registration Numbers">
+                                <group>
+                                    <field name="tax_number"/>
+                                    <field name="vat_number"/>
+                                </group>
+                                <group>
+                                    <field name="commercial_registration"/>
+                                </group>
+                            </group>
+                            <group string="Contact">
+                                <group>
+                                    <field name="contact_email" widget="email"/>
+                                    <field name="contact_phone" widget="phone"/>
+                                </group>
+                                <group>
+                                    <field name="website" widget="url"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ── Subscription & Ecosystem ── -->
+                        <page string="Subscription &amp; Ecosystem" name="subscription">
+                            <group>
+                                <group string="Subscription">
+                                    <field name="subscription_plan"/>
+                                    <field name="subscription_start"/>
+                                    <field name="subscription_end"/>
+                                </group>
+                                <group string="Partner Ecosystem">
+                                    <field name="brand_id"/>
+                                    <field name="assigned_ecosystem"
+                                           placeholder="e.g. Acme Bank SME Programme"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- ── Internal Notes ── -->
+                        <page string="Internal Notes" name="notes">
+                            <field name="notes" nolabel="1"
+                                   placeholder="Internal notes, flags, or relationship context…"/>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Server Action: open or create profile for current company ── -->
+    <record id="action_mumtaz_sme_profile_open" model="ir.actions.server">
+        <field name="name">Open My SME Profile</field>
+        <field name="model_id" ref="model_mumtaz_sme_profile"/>
+        <field name="state">code</field>
+        <field name="code">
+profile = env['mumtaz.sme.profile'].search([('company_id', '=', env.company.id)], limit=1)
+if not profile:
+    profile = env['mumtaz.sme.profile'].sudo().create({
+        'company_id': env.company.id,
+        'legal_name': env.company.name,
+    })
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'SME Profile',
+    'res_model': 'mumtaz.sme.profile',
+    'res_id': profile.id,
+    'view_mode': 'form',
+    'views': [(False, 'form')],
+    'target': 'current',
+}
+        </field>
+    </record>
+
+    <!-- ── List action (admin view) ──────────────────────────────────── -->
+    <record id="action_mumtaz_sme_profiles_list" model="ir.actions.act_window">
+        <field name="name">SME Profiles</field>
+        <field name="res_model">mumtaz.sme.profile</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No SME profiles yet</p>
+            <p>SME profiles are created automatically when a company opens this section.</p>
+        </field>
+    </record>
+
+    <!-- ── Menus ──────────────────────────────────────────────────────── -->
+    <menuitem id="menu_mumtaz_sme_profile"
+              name="My Business Profile"
+              parent="mumtaz_core.menu_mumtaz_root"
+              action="action_mumtaz_sme_profile_open"
+              sequence="15"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_mumtaz_sme_profiles_all"
+              name="SME Profiles"
+              parent="mumtaz_core.menu_mumtaz_configuration"
+              action="action_mumtaz_sme_profiles_list"
+              sequence="30"
+              groups="base.group_system"/>
+
+</odoo>

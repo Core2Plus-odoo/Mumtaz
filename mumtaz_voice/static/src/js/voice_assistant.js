@@ -69,8 +69,9 @@ class VoiceAssistantAction extends Component {
         };
     }
 
-    setLanguage(lang) {
-        this.state.language = lang;
+    setLanguage(ev) {
+        const lang = ev.currentTarget.dataset.lang;
+        if (lang) this.state.language = lang;
     }
 
     toggleMic() {
@@ -133,7 +134,8 @@ class VoiceAssistantAction extends Component {
             this.state.transcript = "";
             this._speak(answer);
         } catch (err) {
-            this.state.error = `Request failed: ${err.message || "Unknown error."}`;
+            const msg = err.data?.message || err.message || "Unknown error.";
+            this.state.error = `Request failed: ${msg}`;
         } finally {
             this.state.isProcessing = false;
         }

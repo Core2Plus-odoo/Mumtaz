@@ -34,7 +34,7 @@
                         <div class="col-auto d-flex align-items-center gap-2">
                             <span class="badge bg-success fs-6" invisible="not active">Active</span>
                             <span class="badge bg-secondary fs-6" invisible="active">Inactive</span>
-                            <span class="badge bg-info fs-6 text-dark" t-esc="tenant_code"/>
+                            <field name="tenant_code" readonly="1" class="badge bg-info fs-6 text-dark oe_inline"/>
                         </div>
                     </div>
 
@@ -121,7 +121,7 @@
                                         <field name="feature_voice_enabled" widget="boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
-                                        <label class="o_form_label fw-bold">CFO Voice Assistant</label>
+                                        <div class="o_form_label fw-bold">CFO Voice Assistant</div>
                                         <div class="text-muted small">
                                             Enable the AI-powered voice interface for CFO queries.
                                         </div>
@@ -188,7 +188,7 @@
                                         <field name="feature_ai_chat_enabled" widget="boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
-                                        <label class="o_form_label fw-bold">AI Chat Sessions</label>
+                                        <div class="o_form_label fw-bold">AI Chat Sessions</div>
                                         <div class="text-muted small">
                                             Enable the text-based Mumtaz AI Chat interface.
                                         </div>
@@ -244,7 +244,7 @@
                                         <field name="feature_financial_insights_enabled" widget="boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
-                                        <label class="o_form_label fw-bold">Financial Insights</label>
+                                        <div class="o_form_label fw-bold">Financial Insights</div>
                                         <div class="text-muted small">
                                             P&amp;L, cash position, AR/AP aging.
                                         </div>
@@ -256,7 +256,7 @@
                                         <field name="feature_sales_insights_enabled" widget="boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
-                                        <label class="o_form_label fw-bold">Sales Insights</label>
+                                        <div class="o_form_label fw-bold">Sales Insights</div>
                                         <div class="text-muted small">
                                             Sales orders, revenue, top customers.
                                         </div>
@@ -268,7 +268,7 @@
                                         <field name="feature_crm_insights_enabled" widget="boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
-                                        <label class="o_form_label fw-bold">CRM Insights</label>
+                                        <div class="o_form_label fw-bold">CRM Insights</div>
                                         <div class="text-muted small">
                                             Leads, opportunities, pipeline.
                                         </div>
@@ -311,7 +311,7 @@
                                         <field name="active" widget="boolean_toggle"/>
                                     </div>
                                     <div class="o_setting_right_pane">
-                                        <label class="o_form_label fw-bold">Active</label>
+                                        <div class="o_form_label fw-bold">Active</div>
                                         <div class="text-muted small">
                                             Deactivate to disable all Mumtaz AI features for this company.
                                         </div>
