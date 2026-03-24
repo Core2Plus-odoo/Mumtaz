@@ -31,16 +31,6 @@
                 </header>
                 <sheet>
 
-                    <!-- Progress stat -->
-                    <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" icon="fa-check-circle" type="object"
-                                name="action_view_sme_profile"
-                                invisible="not sme_profile_id">
-                            <span class="o_stat_value">Profile</span>
-                            <span class="o_stat_text">View</span>
-                        </button>
-                    </div>
-
                     <div class="oe_title">
                         <h1>
                             <field name="name" readonly="1"/>

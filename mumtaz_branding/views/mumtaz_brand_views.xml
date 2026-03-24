@@ -32,15 +32,6 @@
                 </header>
                 <sheet>
 
-                    <!-- stat buttons -->
-                    <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" icon="fa-building" type="object"
-                                name="action_view_companies"
-                                invisible="company_count == 0">
-                            <field name="company_count" widget="statinfo" string="Companies"/>
-                        </button>
-                    </div>
-
                     <!-- Logo -->
                     <field name="logo" widget="image" class="oe_avatar"
                            options="{'preview_image': 'logo', 'size': [128, 128]}"/>

@@ -74,16 +74,6 @@ class MumtazBrand(models.Model):
         string="Companies",
         help="Companies operating under this brand configuration.",
     )
-    company_count = fields.Integer(
-        compute="_compute_company_count",
-        string="# Companies",
-    )
-
-    @api.depends("company_ids")
-    def _compute_company_count(self):
-        for rec in self:
-            rec.company_count = len(rec.company_ids)
-
     _sql_constraints = [
         ("mumtaz_brand_name_unique", "unique(brand_name)",
          "Brand name must be unique across the platform."),

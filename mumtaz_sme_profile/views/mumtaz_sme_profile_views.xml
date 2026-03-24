@@ -42,16 +42,6 @@
                 </header>
                 <sheet>
 
-                    <!-- Profile completeness stat -->
-                    <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" icon="fa-tasks" type="object"
-                                name="action_view_onboarding"
-                                invisible="not id">
-                            <field name="profile_completeness" widget="statinfo"
-                                   string="% Complete"/>
-                        </button>
-                    </div>
-
                     <div class="oe_title">
                         <label class="o_form_label" for="legal_name"/>
                         <h1>
