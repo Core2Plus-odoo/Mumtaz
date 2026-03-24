@@ -66,13 +66,13 @@ class CFOService(models.AbstractModel):
 
     def _get_cash_position(self, company):
         accounts = self.env["account.account"].search(
-            [("company_id", "=", company.id), ("account_type", "=", "asset_cash")]
+            [("company_ids", "in", [company.id]), ("account_type", "=", "asset_cash")]
         )
         if not accounts:
             return {"total": 0.0, "accounts": []}
         lines = self.env["account.move.line"].read_group(
             [("company_id", "=", company.id), ("account_id", "in", accounts.ids),
-             ("move_id.state", "=", "posted"), ("parent_state", "=", "posted")],
+             ("move_id.state", "=", "posted")],
             ["account_id", "balance:sum"], ["account_id"],
         )
         account_map = {a.id: a.name for a in accounts}

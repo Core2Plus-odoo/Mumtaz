@@ -30,20 +30,28 @@ class OpenAIProvider(models.AbstractModel):
         company_name = context.get("company_name", "")
         model = context.get("model") or _DEFAULT_MODEL
         max_tokens = int(context.get("max_tokens") or 600)
+        history = context.get("history", [])
 
-        messages = [{"role": "system", "content": system_prompt}]
-        user_content = prompt
+        # Embed financial data in the system prompt so it's available for all turns
+        full_system = system_prompt
         if financial_data:
-            user_content = (f"Company: {company_name}\n\n"
-                            f"--- Real-time Financial Data ---\n{financial_data}\n"
-                            f"--- End of Data ---\n\nQuestion: {prompt}")
-        messages.append({"role": "user", "content": user_content})
+            full_system += (f"\n\n--- Real-time Financial Data for {company_name} ---\n"
+                            f"{financial_data}\n--- End of Data ---")
+
+        messages = [{"role": "system", "content": full_system}]
+
+        # Inject conversation history
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+        # Current user message
+        messages.append({"role": "user", "content": prompt})
 
         try:
             resp = requests.post(
                 _OPENAI_CHAT_URL,
                 headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-                json={"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.2},
+                json={"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.3},
                 timeout=_REQUEST_TIMEOUT,
             )
             resp.raise_for_status()

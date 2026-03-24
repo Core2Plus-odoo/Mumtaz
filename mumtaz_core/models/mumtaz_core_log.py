@@ -7,7 +7,7 @@ class MumtazCoreLog(models.Model):
     _order = "create_date desc"
     _check_company_auto = True
 
-    company_id = fields.Many2one("res.company", required=True, index=True, check_company=True)
+    company_id = fields.Many2one("res.company", required=True, index=True)
     user_id = fields.Many2one("res.users", required=True, index=True, check_company=True)
     module_name = fields.Char(required=True)
     action = fields.Char(required=True)
@@ -29,7 +29,7 @@ class MumtazCoreLog(models.Model):
         response_payload=None,
         level="info",
     ):
-        return self.create(
+        return self.sudo().create(
             {
                 "company_id": company.id,
                 "user_id": user.id,

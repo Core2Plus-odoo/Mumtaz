@@ -14,7 +14,7 @@ class MumtazVoiceSession(models.Model):
         "res.users", required=True, default=lambda self: self.env.user, index=True, check_company=True
     )
     company_id = fields.Many2one(
-        "res.company", required=True, default=lambda self: self.env.company, index=True, check_company=True
+        "res.company", required=True, default=lambda self: self.env.company, index=True
     )
 
     transcript = fields.Text(string="Voice Input / Question")
@@ -31,13 +31,13 @@ class MumtazVoiceSession(models.Model):
     model_used = fields.Char(readonly=True)
     token_usage = fields.Integer(readonly=True, default=0)
 
-    message_ids = fields.One2many("mumtaz.voice.message", "session_id", string="Conversation History")
+    voice_message_ids = fields.One2many("mumtaz.voice.message", "session_id", string="Conversation History")
     message_count = fields.Integer(compute="_compute_message_count")
 
-    @api.depends("message_ids")
+    @api.depends("voice_message_ids")
     def _compute_message_count(self):
         for rec in self:
-            rec.message_count = len(rec.message_ids)
+            rec.message_count = len(rec.voice_message_ids)
 
     @api.model_create_multi
     def create(self, vals_list):

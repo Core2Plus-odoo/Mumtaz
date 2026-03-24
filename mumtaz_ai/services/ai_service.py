@@ -83,7 +83,7 @@ class AIService(models.AbstractModel):
     def _handle_financial_query(self, prompt, company, settings):
         self._ensure_feature_enabled(settings, "feature_financial_insights_enabled", "Financial insights")
         accounts = self.env["account.account"].search(
-            [("company_id", "=", company.id), ("account_type", "in", ["asset_cash", "liability_credit_card"])]
+            [("company_ids", "in", [company.id]), ("account_type", "in", ["asset_cash", "liability_credit_card"])]
         )
         move_count = self.env["account.move"].search_count(
             [("company_id", "=", company.id), ("state", "=", "posted")]

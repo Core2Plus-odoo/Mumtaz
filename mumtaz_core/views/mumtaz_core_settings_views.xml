@@ -1,55 +1,394 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+
+    <!-- ── Settings Form (Odoo-style settings page) ───────────────────── -->
+    <record id="view_mumtaz_core_settings_form" model="ir.ui.view">
+        <field name="name">mumtaz.core.settings.form</field>
+        <field name="model">mumtaz.core.settings</field>
+        <field name="arch" type="xml">
+            <form string="Mumtaz AI Settings" class="o_base_settings">
+                <header>
+                    <button name="action_test_connection"
+                            string="Test API Connection"
+                            type="object"
+                            class="btn btn-primary"
+                            invisible="ai_provider == 'none' or not api_key"/>
+                    <button name="action_view_logs"
+                            string="View Logs"
+                            type="object"
+                            class="btn btn-secondary"/>
+                </header>
+                <sheet>
+
+                    <!-- Page title -->
+                    <div class="row mb-4">
+                        <div class="col">
+                            <h2 class="mb-0">
+                                <i class="fa fa-cog me-2 text-primary"/>Mumtaz AI Settings
+                            </h2>
+                            <p class="text-muted mb-0">
+                                Configure AI provider, voice assistant, features and limits for
+                                <field name="company_id" readonly="1" class="oe_inline fw-bold"/>.
+                            </p>
+                        </div>
+                        <div class="col-auto d-flex align-items-center gap-2">
+                            <span class="badge bg-success fs-6" invisible="not active">Active</span>
+                            <span class="badge bg-secondary fs-6" invisible="active">Inactive</span>
+                            <span class="badge bg-info fs-6 text-dark" t-esc="tenant_code"/>
+                        </div>
+                    </div>
+
+                    <!-- Connection status banner -->
+                    <div class="alert alert-success d-flex align-items-center gap-2 mb-4"
+                         invisible="not connection_status or 'Error' in (connection_status or '')">
+                        <i class="fa fa-check-circle fa-lg"/>
+                        <field name="connection_status" readonly="1" class="oe_inline mb-0"/>
+                    </div>
+                    <div class="alert alert-danger d-flex align-items-center gap-2 mb-4"
+                         invisible="not connection_status or 'Error' not in (connection_status or '')">
+                        <i class="fa fa-exclamation-circle fa-lg"/>
+                        <field name="connection_status" readonly="1" class="oe_inline mb-0"/>
+                    </div>
+
+                    <div class="o_setting_container">
+
+                        <!-- ══ SECTION 1: AI Provider ══════════════════ -->
+                        <div class="o_settings_section mb-4">
+                            <div class="o_section_header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <i class="fa fa-robot text-primary fa-lg"/>
+                                <h4 class="mb-0">AI Provider</h4>
+                            </div>
+                            <div class="row">
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="ai_provider">Provider</label>
+                                        <div class="text-muted small mb-1">
+                                            Choose the AI engine powering CFO responses.
+                                        </div>
+                                        <field name="ai_provider" widget="radio" class="mt-1"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="ai_provider == 'none'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="api_key">API Key</label>
+                                        <div class="text-muted small mb-1">
+                                            Your secret key from OpenAI or Anthropic.
+                                        </div>
+                                        <field name="api_key" password="True"
+                                               placeholder="sk-… or ask-…" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="ai_provider != 'openai'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="openai_model">OpenAI Chat Model</label>
+                                        <div class="text-muted small mb-1">
+                                            GPT-4o Mini is fast and cheap. GPT-4o is most capable.
+                                        </div>
+                                        <field name="openai_model" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="ai_provider != 'anthropic'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="anthropic_model">Anthropic Model</label>
+                                        <div class="text-muted small mb-1">
+                                            Haiku is fastest. Opus is the most capable Claude model.
+                                        </div>
+                                        <field name="anthropic_model" class="w-100"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ══ SECTION 2: Voice Assistant ══════════════ -->
+                        <div class="o_settings_section mb-4">
+                            <div class="o_section_header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <i class="fa fa-microphone text-primary fa-lg"/>
+                                <h4 class="mb-0">Voice Assistant</h4>
+                            </div>
+                            <div class="row">
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="feature_voice_enabled" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold">CFO Voice Assistant</label>
+                                        <div class="text-muted small">
+                                            Enable the AI-powered voice interface for CFO queries.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="voice_language">Default Language</label>
+                                        <div class="text-muted small mb-1">
+                                            Speech recognition language. Users can switch EN/AR in the UI.
+                                        </div>
+                                        <field name="voice_language" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="ai_provider != 'openai'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="tts_model">Voice Quality</label>
+                                        <div class="text-muted small mb-1">
+                                            TTS-1 HD sounds more natural. Requires OpenAI.
+                                        </div>
+                                        <field name="tts_model" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="ai_provider != 'openai'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="tts_voice">Voice Character</label>
+                                        <div class="text-muted small mb-1">
+                                            Nova is warm and works well in English and Arabic.
+                                        </div>
+                                        <field name="tts_voice" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 o_setting_box" invisible="ai_provider == 'openai'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <div class="alert alert-info mb-0 py-2 small">
+                                            <i class="fa fa-info-circle me-1"/>
+                                            Human-quality TTS requires <strong>OpenAI</strong>.
+                                            With Anthropic, the browser's built-in voice is used as fallback.
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ══ SECTION 3: AI Chat ══════════════════════ -->
+                        <div class="o_settings_section mb-4">
+                            <div class="o_section_header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <i class="fa fa-comments text-primary fa-lg"/>
+                                <h4 class="mb-0">AI Chat</h4>
+                            </div>
+                            <div class="row">
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="feature_ai_chat_enabled" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold">AI Chat Sessions</label>
+                                        <div class="text-muted small">
+                                            Enable the text-based Mumtaz AI Chat interface.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="max_tokens_per_request">Max Response Length</label>
+                                        <div class="text-muted small mb-1">
+                                            Maximum tokens per AI response (600 ≈ 450 words).
+                                        </div>
+                                        <field name="max_tokens_per_request" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="conversation_history_depth">Conversation Memory</label>
+                                        <div class="text-muted small mb-1">
+                                            Past messages kept in context (10 = 5 exchanges). Higher = better memory, more cost.
+                                        </div>
+                                        <field name="conversation_history_depth" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="requests_per_minute_limit">Rate Limit (req/min)</label>
+                                        <div class="text-muted small mb-1">
+                                            Max API requests per minute. Match your provider plan.
+                                        </div>
+                                        <field name="requests_per_minute_limit" class="w-100"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ══ SECTION 4: Data Access ══════════════════ -->
+                        <div class="o_settings_section mb-4">
+                            <div class="o_section_header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <i class="fa fa-database text-primary fa-lg"/>
+                                <h4 class="mb-0">Data Access</h4>
+                            </div>
+                            <div class="row">
+
+                                <div class="col-lg-4 o_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="feature_financial_insights_enabled" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold">Financial Insights</label>
+                                        <div class="text-muted small">
+                                            P&amp;L, cash position, AR/AP aging.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 o_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="feature_sales_insights_enabled" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold">Sales Insights</label>
+                                        <div class="text-muted small">
+                                            Sales orders, revenue, top customers.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 o_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="feature_crm_insights_enabled" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold">CRM Insights</label>
+                                        <div class="text-muted small">
+                                            Leads, opportunities, pipeline.
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- ══ SECTION 5: Company ══════════════════════ -->
+                        <div class="o_settings_section mb-2">
+                            <div class="o_section_header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <i class="fa fa-building text-primary fa-lg"/>
+                                <h4 class="mb-0">Company &amp; Identity</h4>
+                            </div>
+                            <div class="row">
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="company_id">Company</label>
+                                        <field name="company_id" class="w-100"/>
+                                        <field name="company_currency_id" readonly="1" class="text-muted small mt-1"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="tenant_code">Tenant Code</label>
+                                        <div class="text-muted small mb-1">
+                                            Unique identifier used in logs and API routing.
+                                        </div>
+                                        <field name="tenant_code" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane">
+                                        <field name="active" widget="boolean_toggle"/>
+                                    </div>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold">Active</label>
+                                        <div class="text-muted small">
+                                            Deactivate to disable all Mumtaz AI features for this company.
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List View ─────────────────────────────────────────────────── -->
     <record id="view_mumtaz_core_settings_tree" model="ir.ui.view">
         <field name="name">mumtaz.core.settings.tree</field>
         <field name="model">mumtaz.core.settings</field>
         <field name="arch" type="xml">
             <list>
-                <field name="company_id"/><field name="tenant_code"/><field name="ai_provider"/>
-                <field name="feature_voice_enabled"/><field name="feature_ai_chat_enabled"/>
+                <field name="company_id"/>
+                <field name="tenant_code"/>
+                <field name="ai_provider"/>
+                <field name="openai_model" optional="hide"/>
+                <field name="anthropic_model" optional="hide"/>
+                <field name="tts_voice" optional="hide"/>
+                <field name="feature_voice_enabled"/>
+                <field name="feature_ai_chat_enabled"/>
                 <field name="feature_financial_insights_enabled"/>
-                <field name="feature_crm_insights_enabled"/><field name="feature_sales_insights_enabled"/>
+                <field name="active"/>
             </list>
         </field>
     </record>
-    <record id="view_mumtaz_core_settings_form" model="ir.ui.view">
-        <field name="name">mumtaz.core.settings.form</field>
-        <field name="model">mumtaz.core.settings</field>
-        <field name="arch" type="xml">
-            <form>
-                <sheet>
-                    <group string="Company">
-                        <field name="company_id"/>
-                        <field name="company_currency_id" readonly="1"/>
-                        <field name="tenant_code"/>
-                    </group>
-                    <group string="AI Provider">
-                        <field name="ai_provider"/>
-                        <field name="api_key" password="True"
-                               help="OpenAI or Anthropic API key depending on selected provider."/>
-                        <field name="openai_model" invisible="ai_provider != 'openai'"/>
-                        <field name="voice_language"/>
-                        <field name="max_tokens_per_request"/>
-                        <field name="requests_per_minute_limit"/>
-                    </group>
-                    <group string="Feature Toggles" col="2">
-                        <field name="feature_voice_enabled"/>
-                        <field name="feature_ai_chat_enabled"/>
-                        <field name="feature_financial_insights_enabled"/>
-                        <field name="feature_crm_insights_enabled"/>
-                        <field name="feature_sales_insights_enabled"/>
-                        <field name="active"/>
-                    </group>
-                </sheet>
-            </form>
+
+    <!-- ── Server action: find or create settings for current company ── -->
+    <record id="action_mumtaz_open_settings" model="ir.actions.server">
+        <field name="name">Open Mumtaz AI Settings</field>
+        <field name="model_id" ref="model_mumtaz_core_settings"/>
+        <field name="state">code</field>
+        <field name="code">
+settings = env['mumtaz.core.settings'].search([('company_id', '=', env.company.id)], limit=1)
+if not settings:
+    settings = env['mumtaz.core.settings'].sudo().create({
+        'company_id': env.company.id,
+        'tenant_code': env.company.name.strip().upper().replace(' ', '_'),
+        'ai_provider': 'none',
+    })
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Mumtaz AI Settings',
+    'res_model': 'mumtaz.core.settings',
+    'res_id': settings.id,
+    'view_mode': 'form',
+    'views': [(False, 'form')],
+    'target': 'current',
+}
         </field>
     </record>
+
+    <!-- ── Fallback act_window (used for breadcrumbs/back navigation) ── -->
     <record id="action_mumtaz_core_settings" model="ir.actions.act_window">
-        <field name="name">Mumtaz Settings</field>
+        <field name="name">Mumtaz AI Settings</field>
         <field name="res_model">mumtaz.core.settings</field>
         <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No settings yet</p>
+            <p>Click New to create settings for your company.</p>
+        </field>
     </record>
+
+    <!-- ── Menus ─────────────────────────────────────────────────────── -->
     <menuitem id="menu_mumtaz_root" name="Mumtaz AI" sequence="10"/>
-    <menuitem id="menu_mumtaz_configuration" name="Configuration" parent="menu_mumtaz_root" sequence="20" groups="mumtaz_core.group_mumtaz_manager"/>
-    <menuitem id="menu_mumtaz_core_settings" name="Settings" parent="menu_mumtaz_configuration" action="action_mumtaz_core_settings" sequence="10" groups="mumtaz_core.group_mumtaz_manager"/>
+    <menuitem id="menu_mumtaz_configuration" name="Configuration"
+              parent="menu_mumtaz_root" sequence="90"/>
+    <menuitem id="menu_mumtaz_core_settings" name="Settings"
+              parent="menu_mumtaz_configuration"
+              action="action_mumtaz_open_settings"
+              sequence="10"/>
 </odoo>
