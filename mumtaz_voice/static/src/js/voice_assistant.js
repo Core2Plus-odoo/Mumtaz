@@ -69,8 +69,9 @@ class VoiceAssistantAction extends Component {
         };
     }
 
-    setLanguage(lang) {
-        this.state.language = lang;
+    setLanguage(ev) {
+        const lang = ev.currentTarget.dataset.lang;
+        if (lang) this.state.language = lang;
     }
 
     toggleMic() {

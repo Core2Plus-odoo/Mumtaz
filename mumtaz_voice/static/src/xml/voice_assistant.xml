@@ -29,9 +29,9 @@
                     <!-- Language Toggle -->
                     <div class="btn-group" role="group">
                         <button t-attf-class="btn btn-sm {{ state.language === 'en' ? 'btn-light' : 'btn-outline-light' }}"
-                                t-on-click="() => setLanguage('en')">EN</button>
+                                t-on-click="setLanguage" data-lang="en">EN</button>
                         <button t-attf-class="btn btn-sm {{ state.language === 'ar' ? 'btn-light' : 'btn-outline-light' }}"
-                                t-on-click="() => setLanguage('ar')">ع</button>
+                                t-on-click="setLanguage" data-lang="ar">ع</button>
                     </div>
                     <span t-attf-class="badge {{ statusBadgeClass }} px-3 py-2" t-esc="statusLabel"/>
                     <button class="btn btn-outline-light btn-sm" t-on-click="newSession">
