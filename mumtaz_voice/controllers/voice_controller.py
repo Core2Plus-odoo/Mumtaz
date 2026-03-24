@@ -55,13 +55,13 @@ class MumtazVoiceController(http.Controller):
             if not settings or not settings.api_key:
                 return {"error": "No API key configured"}
 
-            # "nova" voice supports English and Arabic naturally
-            voice = "nova"
+            voice = settings.tts_voice or "nova"
+            tts_model = settings.tts_model or "tts-1"
             resp = req.post(
                 _OPENAI_TTS_URL,
                 headers={"Authorization": f"Bearer {settings.api_key}",
                          "Content-Type": "application/json"},
-                json={"model": "tts-1", "input": text, "voice": voice, "response_format": "mp3"},
+                json={"model": tts_model, "input": text, "voice": voice, "response_format": "mp3"},
                 timeout=_TTS_TIMEOUT,
             )
             resp.raise_for_status()

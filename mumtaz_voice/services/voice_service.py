@@ -34,11 +34,12 @@ class VoiceService(models.AbstractModel):
         intent = self.env["mumtaz.cfo.service"].detect_intent(transcript)
         financial_context = self.env["mumtaz.cfo.service"].build_financial_context(company, intent)
 
-        # Build conversation history from existing session messages (last 10 = 5 exchanges)
+        # Build conversation history from existing session messages
+        depth = getattr(settings, "conversation_history_depth", 10) or 10
         history = []
         if session.id:
             sorted_msgs = session.voice_message_ids.sorted(key="create_date")
-            for msg in sorted_msgs[-10:]:
+            for msg in sorted_msgs[-depth:]:
                 history.append({"role": msg.role, "content": msg.content})
 
         response_data = self._call_ai_provider(
@@ -98,7 +99,8 @@ class VoiceService(models.AbstractModel):
             "financial_data": financial_context,
             "system_prompt": CFO_SYSTEM_PROMPT,
             "max_tokens": settings.max_tokens_per_request,
-            "model": getattr(settings, "openai_model", "gpt-4o-mini") if provider_name == "openai" else None,
+            "model": (settings.openai_model if provider_name == "openai"
+                      else settings.anthropic_model if provider_name == "anthropic" else None),
             "history": history or [],
             "language": language,
         }

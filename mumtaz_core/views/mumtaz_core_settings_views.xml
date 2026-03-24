@@ -1,55 +1,183 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    <!-- ── List View ─────────────────────────────────────────────────── -->
     <record id="view_mumtaz_core_settings_tree" model="ir.ui.view">
         <field name="name">mumtaz.core.settings.tree</field>
         <field name="model">mumtaz.core.settings</field>
         <field name="arch" type="xml">
             <list>
-                <field name="company_id"/><field name="tenant_code"/><field name="ai_provider"/>
-                <field name="feature_voice_enabled"/><field name="feature_ai_chat_enabled"/>
+                <field name="company_id"/>
+                <field name="tenant_code"/>
+                <field name="ai_provider"/>
+                <field name="openai_model" optional="hide"/>
+                <field name="anthropic_model" optional="hide"/>
+                <field name="tts_voice" optional="hide"/>
+                <field name="feature_voice_enabled"/>
+                <field name="feature_ai_chat_enabled"/>
                 <field name="feature_financial_insights_enabled"/>
-                <field name="feature_crm_insights_enabled"/><field name="feature_sales_insights_enabled"/>
+                <field name="active"/>
             </list>
         </field>
     </record>
+
+    <!-- ── Form View ─────────────────────────────────────────────────── -->
     <record id="view_mumtaz_core_settings_form" model="ir.ui.view">
         <field name="name">mumtaz.core.settings.form</field>
         <field name="model">mumtaz.core.settings</field>
         <field name="arch" type="xml">
-            <form>
+            <form string="Mumtaz AI Settings">
+                <header>
+                    <button name="action_test_connection"
+                            string="Test API Connection"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="ai_provider == 'none' or not api_key"/>
+                </header>
                 <sheet>
-                    <group string="Company">
-                        <field name="company_id"/>
-                        <field name="company_currency_id" readonly="1"/>
-                        <field name="tenant_code"/>
-                    </group>
-                    <group string="AI Provider">
-                        <field name="ai_provider"/>
-                        <field name="api_key" password="True"
-                               help="OpenAI or Anthropic API key depending on selected provider."/>
-                        <field name="openai_model" invisible="ai_provider != 'openai'"/>
-                        <field name="voice_language"/>
-                        <field name="max_tokens_per_request"/>
-                        <field name="requests_per_minute_limit"/>
-                    </group>
-                    <group string="Feature Toggles" col="2">
-                        <field name="feature_voice_enabled"/>
-                        <field name="feature_ai_chat_enabled"/>
-                        <field name="feature_financial_insights_enabled"/>
-                        <field name="feature_crm_insights_enabled"/>
-                        <field name="feature_sales_insights_enabled"/>
-                        <field name="active"/>
-                    </group>
+                    <!-- Stat buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_logs" type="object"
+                                class="oe_stat_button" icon="fa-list-alt">
+                            <field name="log_count" widget="statinfo" string="Total Queries"/>
+                        </button>
+                        <button name="action_view_logs" type="object"
+                                class="oe_stat_button" icon="fa-exclamation-triangle"
+                                invisible="error_count == 0">
+                            <field name="error_count" widget="statinfo" string="Errors (30d)"/>
+                        </button>
+                    </div>
+
+                    <!-- Title block -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="company_id" readonly="1"/>
+                        </h1>
+                        <h4 class="text-muted">
+                            Tenant: <field name="tenant_code" class="oe_inline"/>
+                        </h4>
+                    </div>
+
+                    <!-- Connection status banner -->
+                    <div class="alert alert-info mb-3" invisible="not connection_status">
+                        <i class="fa fa-plug me-1"/>
+                        <field name="connection_status" class="oe_inline" readonly="1"/>
+                    </div>
+
+                    <notebook>
+
+                        <!-- ── Tab 1: AI Provider ──────────────────── -->
+                        <page string="AI Provider" name="provider">
+                            <group string="Provider Selection">
+                                <field name="ai_provider" widget="radio"/>
+                            </group>
+
+                            <group string="API Credentials"
+                                   invisible="ai_provider == 'none'">
+                                <field name="api_key" password="True"
+                                       help="Your OpenAI or Anthropic API key. Stored encrypted."/>
+                            </group>
+
+                            <group string="OpenAI Settings"
+                                   invisible="ai_provider != 'openai'">
+                                <field name="openai_model"/>
+                            </group>
+
+                            <group string="Anthropic Settings"
+                                   invisible="ai_provider != 'anthropic'">
+                                <field name="anthropic_model"/>
+                            </group>
+
+                            <group string="Performance &amp; Limits">
+                                <field name="max_tokens_per_request"
+                                       help="Maximum tokens per AI response (50–4000). Higher = longer answers, more cost."/>
+                                <field name="requests_per_minute_limit"
+                                       help="API rate limit cap. Match your provider plan (default: 30/min)."/>
+                                <field name="conversation_history_depth"
+                                       help="Messages kept in context per conversation (0 = no memory). Each exchange = 2 messages."/>
+                            </group>
+                        </page>
+
+                        <!-- ── Tab 2: Voice Assistant ──────────────── -->
+                        <page string="Voice Assistant" name="voice">
+                            <group string="Speech Recognition">
+                                <field name="voice_language"
+                                       help="Default language for microphone input. Users can override this in the UI."/>
+                            </group>
+
+                            <group string="Text-to-Speech (TTS)"
+                                   invisible="ai_provider != 'openai'">
+                                <field name="tts_model"
+                                       help="TTS-1 is faster; TTS-1 HD sounds more natural. Both support English and Arabic."/>
+                                <field name="tts_voice"
+                                       help="Voice character for spoken responses. 'Nova' works well for both English and Arabic."/>
+                            </group>
+
+                            <div class="alert alert-warning"
+                                 invisible="ai_provider == 'openai'">
+                                <i class="fa fa-info-circle me-1"/>
+                                Human-quality TTS requires the <strong>OpenAI</strong> provider.
+                                With Anthropic, the browser's built-in voice synthesis will be used as fallback.
+                            </div>
+                        </page>
+
+                        <!-- ── Tab 3: Features ─────────────────────── -->
+                        <page string="Features" name="features">
+                            <group string="Module Features">
+                                <field name="feature_voice_enabled" widget="boolean_toggle"
+                                       help="Enable the CFO Voice Assistant interface."/>
+                                <field name="feature_ai_chat_enabled" widget="boolean_toggle"
+                                       help="Enable the text-based AI Chat Sessions interface."/>
+                            </group>
+                            <group string="Data Access">
+                                <field name="feature_financial_insights_enabled" widget="boolean_toggle"
+                                       help="Allow AI to query P&amp;L, cash position, AR/AP aging from Odoo."/>
+                                <field name="feature_sales_insights_enabled" widget="boolean_toggle"
+                                       help="Allow AI to query sales orders and pipeline data."/>
+                                <field name="feature_crm_insights_enabled" widget="boolean_toggle"
+                                       help="Allow AI to query CRM leads and opportunities."/>
+                            </group>
+                        </page>
+
+                        <!-- ── Tab 4: Company & Identity ──────────── -->
+                        <page string="Company" name="company">
+                            <group>
+                                <field name="company_id"/>
+                                <field name="company_currency_id" readonly="1"/>
+                                <field name="tenant_code"
+                                       help="Unique identifier for this tenant. Used in logs and API routing."/>
+                                <field name="active" widget="boolean_toggle"
+                                       help="Deactivate to disable all Mumtaz AI features for this company."/>
+                            </group>
+                        </page>
+
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
+
+    <!-- ── Actions ───────────────────────────────────────────────────── -->
     <record id="action_mumtaz_core_settings" model="ir.actions.act_window">
-        <field name="name">Mumtaz Settings</field>
+        <field name="name">Mumtaz AI Settings</field>
         <field name="res_model">mumtaz.core.settings</field>
         <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Mumtaz AI for your company
+            </p>
+            <p>Set up your AI provider, API key, voice settings, and feature toggles.</p>
+        </field>
     </record>
-    <menuitem id="menu_mumtaz_root" name="Mumtaz AI" sequence="10"/>
-    <menuitem id="menu_mumtaz_configuration" name="Configuration" parent="menu_mumtaz_root" sequence="20" groups="mumtaz_core.group_mumtaz_manager"/>
-    <menuitem id="menu_mumtaz_core_settings" name="Settings" parent="menu_mumtaz_configuration" action="action_mumtaz_core_settings" sequence="10" groups="mumtaz_core.group_mumtaz_manager"/>
+
+    <!-- ── Menu ──────────────────────────────────────────────────────── -->
+    <menuitem id="menu_mumtaz_root" name="Mumtaz AI" sequence="10"
+              web_icon="mumtaz_core,static/description/icon.png"/>
+    <menuitem id="menu_mumtaz_configuration" name="Configuration"
+              parent="menu_mumtaz_root" sequence="90"
+              groups="mumtaz_core.group_mumtaz_manager"/>
+    <menuitem id="menu_mumtaz_core_settings" name="Settings"
+              parent="menu_mumtaz_configuration"
+              action="action_mumtaz_core_settings"
+              sequence="10"
+              groups="mumtaz_core.group_mumtaz_manager"/>
 </odoo>
