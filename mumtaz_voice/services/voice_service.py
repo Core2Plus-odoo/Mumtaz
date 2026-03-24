@@ -99,8 +99,8 @@ class VoiceService(models.AbstractModel):
             "financial_data": financial_context,
             "system_prompt": CFO_SYSTEM_PROMPT,
             "max_tokens": settings.max_tokens_per_request,
-            "model": (settings.openai_model if provider_name == "openai"
-                      else settings.anthropic_model if provider_name == "anthropic" else None),
+            "model": (getattr(settings, "openai_model", "gpt-4o-mini") if provider_name == "openai"
+                      else getattr(settings, "anthropic_model", "claude-haiku-4-5-20251001") if provider_name == "anthropic" else None),
             "history": history or [],
             "language": language,
         }
