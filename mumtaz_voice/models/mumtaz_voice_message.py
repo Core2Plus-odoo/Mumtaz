@@ -10,7 +10,7 @@ class MumtazVoiceMessage(models.Model):
     session_id = fields.Many2one(
         "mumtaz.voice.session", required=True, ondelete="cascade", index=True, check_company=True
     )
-    company_id = fields.Many2one("res.company", required=True, index=True, check_company=True)
+    company_id = fields.Many2one("res.company", required=True, index=True)
     user_id = fields.Many2one("res.users", required=True, index=True)
     role = fields.Selection([("user", "User"), ("assistant", "CFO Assistant")], required=True)
     content = fields.Text(required=True)

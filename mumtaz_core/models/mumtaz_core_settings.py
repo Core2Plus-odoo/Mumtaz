@@ -9,7 +9,7 @@ class MumtazCoreSettings(models.Model):
     _check_company_auto = True
 
     company_id = fields.Many2one(
-        "res.company", required=True, ondelete="cascade", index=True, check_company=True
+        "res.company", required=True, ondelete="cascade", index=True
     )
     company_currency_id = fields.Many2one(
         related="company_id.currency_id", string="Company Currency", store=False, readonly=True

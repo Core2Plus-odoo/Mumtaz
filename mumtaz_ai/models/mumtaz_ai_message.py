@@ -11,7 +11,7 @@ class MumtazAIMessage(models.Model):
         "mumtaz.ai.session", required=True, ondelete="cascade", index=True, check_company=True
     )
     user_id = fields.Many2one("res.users", required=True, index=True, check_company=True)
-    company_id = fields.Many2one("res.company", required=True, index=True, check_company=True)
+    company_id = fields.Many2one("res.company", required=True, index=True)
     intent = fields.Selection(
         [
             ("financial_query", "Financial Query"),
