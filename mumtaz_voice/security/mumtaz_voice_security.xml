@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="rule_mumtaz_voice_session_company" model="ir.rule">
+        <field name="name">Mumtaz Voice Session multi-company</field>
+        <field name="model_id" ref="model_mumtaz_voice_session"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_mumtaz_voice_message_company" model="ir.rule">
+        <field name="name">Mumtaz Voice Message multi-company</field>
+        <field name="model_id" ref="model_mumtaz_voice_message"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_mumtaz_voice_session_own" model="ir.rule">
+        <field name="name">Mumtaz Voice Session own records</field>
+        <field name="model_id" ref="model_mumtaz_voice_session"/>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <field name="domain_force">['|', ('user_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+    </record>
+    <record id="rule_mumtaz_voice_session_manager" model="ir.rule">
+        <field name="name">Mumtaz Voice Session manager all</field>
+        <field name="model_id" ref="model_mumtaz_voice_session"/>
+        <field name="groups" eval="[(4, ref('mumtaz_core.group_mumtaz_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+    <record id="rule_mumtaz_voice_message_manager" model="ir.rule">
+        <field name="name">Mumtaz Voice Message manager all</field>
+        <field name="model_id" ref="model_mumtaz_voice_message"/>
+        <field name="groups" eval="[(4, ref('mumtaz_core.group_mumtaz_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>
