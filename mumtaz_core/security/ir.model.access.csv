@@ -1,5 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_mumtaz_core_settings_user,mumtaz.core.settings user,model_mumtaz_core_settings,base.group_user,1,0,0,0
-access_mumtaz_core_settings_manager,mumtaz.core.settings manager,model_mumtaz_core_settings,mumtaz_core.group_mumtaz_manager,1,1,1,1
-access_mumtaz_core_log_user,mumtaz.core.log user,model_mumtaz_core_log,base.group_user,1,0,0,0
-access_mumtaz_core_log_manager,mumtaz.core.log manager,model_mumtaz_core_log,mumtaz_core.group_mumtaz_manager,1,1,1,0
+access_mumtaz_core_settings_analyst,mumtaz.core.settings analyst,model_mumtaz_core_settings,mumtaz_core.group_mumtaz_analyst,1,0,0,0
+access_mumtaz_core_settings_manager,mumtaz.core.settings admin,model_mumtaz_core_settings,mumtaz_core.group_mumtaz_manager,1,1,1,1
+access_mumtaz_core_log_analyst,mumtaz.core.log analyst,model_mumtaz_core_log,mumtaz_core.group_mumtaz_analyst,1,0,0,0
+access_mumtaz_core_log_manager,mumtaz.core.log admin,model_mumtaz_core_log,mumtaz_core.group_mumtaz_manager,1,1,1,0

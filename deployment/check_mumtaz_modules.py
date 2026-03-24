@@ -3,21 +3,37 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULES = ["mumtaz_base", "mumtaz_core", "mumtaz_ai"]
+
+# Ordered by dependency chain — core first, then dependent modules
+MODULES = [
+    # Foundation layer
+    "mumtaz_base",
+    "mumtaz_core",
+    # Brand / profile layer
+    "mumtaz_branding",
+    "mumtaz_sme_profile",
+    "mumtaz_onboarding",
+    # AI / Voice layer
+    "mumtaz_ai",
+    "mumtaz_voice",
+]
 
 errors = []
 for mod in MODULES:
-    mp = ROOT / mod / "__manifest__.py"
-    ip = ROOT / mod / "__init__.py"
-    if not mp.exists():
-        errors.append(f"Missing manifest: {mp}")
-    if not ip.exists():
-        errors.append(f"Missing __init__: {ip}")
+    mod_path = ROOT / mod
+    if not mod_path.is_dir():
+        errors.append(f"Missing module directory: {mod_path}")
+        continue
+    for required_file in ("__manifest__.py", "__init__.py"):
+        if not (mod_path / required_file).exists():
+            errors.append(f"Missing {required_file}: {mod_path / required_file}")
 
 if errors:
-    print("FAILED")
+    print("FAILED — structural issues found:")
     for e in errors:
-        print(f"- {e}")
+        print(f"  - {e}")
     raise SystemExit(1)
 
-print("OK: all Mumtaz modules have __manifest__.py and __init__.py")
+print(f"OK — all {len(MODULES)} Mumtaz modules have __manifest__.py and __init__.py")
+for mod in MODULES:
+    print(f"  ✓ {mod}")

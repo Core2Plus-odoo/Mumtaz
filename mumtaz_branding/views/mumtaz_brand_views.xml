@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ── List View ─────────────────────────────────────────────────── -->
+    <record id="view_mumtaz_brand_list" model="ir.ui.view">
+        <field name="name">mumtaz.brand.list</field>
+        <field name="model">mumtaz.brand</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="brand_name"/>
+                <field name="partner_name"/>
+                <field name="product_name"/>
+                <field name="company_count" string="Companies"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form View ─────────────────────────────────────────────────── -->
+    <record id="view_mumtaz_brand_form" model="ir.ui.view">
+        <field name="name">mumtaz.brand.form</field>
+        <field name="model">mumtaz.brand</field>
+        <field name="arch" type="xml">
+            <form string="Partner Brand Configuration">
+                <header>
+                    <button name="toggle_active" type="object"
+                            string="Archive" class="btn-secondary"
+                            invisible="not active"/>
+                    <button name="toggle_active" type="object"
+                            string="Unarchive" class="btn-secondary"
+                            invisible="active"/>
+                </header>
+                <sheet>
+
+                    <!-- stat buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-building" type="object"
+                                name="action_view_companies"
+                                invisible="company_count == 0">
+                            <field name="company_count" widget="statinfo" string="Companies"/>
+                        </button>
+                    </div>
+
+                    <!-- Logo -->
+                    <field name="logo" widget="image" class="oe_avatar"
+                           options="{'preview_image': 'logo', 'size': [128, 128]}"/>
+
+                    <div class="oe_title">
+                        <label class="o_form_label" for="brand_name"/>
+                        <h1>
+                            <field name="brand_name" placeholder="Brand reference name…"/>
+                        </h1>
+                        <label class="o_form_label" for="partner_name"/>
+                        <h2>
+                            <field name="partner_name" placeholder="Public partner name…"/>
+                        </h2>
+                    </div>
+
+                    <notebook>
+
+                        <!-- ── Identity ── -->
+                        <page string="Identity &amp; Theme" name="identity">
+                            <group>
+                                <group string="Platform Identity">
+                                    <field name="product_name"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </group>
+                                <group string="Brand Colors">
+                                    <field name="primary_color"
+                                           widget="color"
+                                           placeholder="#0f3460"/>
+                                    <field name="secondary_color"
+                                           widget="color"
+                                           placeholder="#16213e"/>
+                                </group>
+                            </group>
+                            <group string="Favicon">
+                                <field name="favicon" widget="image" nolabel="1"
+                                       options="{'size': [32, 32]}"/>
+                            </group>
+                            <group string="Scope">
+                                <field name="company_ids" widget="many2many_tags"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Email ── -->
+                        <page string="Email" name="email">
+                            <group>
+                                <field name="email_from_name"
+                                       placeholder="Acme Bank — Business Platform"/>
+                            </group>
+                            <group string="Email Footer">
+                                <field name="email_footer" nolabel="1"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Reports ── -->
+                        <page string="Reports" name="reports">
+                            <group string="Report Header Image">
+                                <field name="report_header" widget="image" nolabel="1"
+                                       options="{'size': [800, 120]}"/>
+                            </group>
+                            <group string="Report Footer Text">
+                                <field name="report_footer_text" nolabel="1"
+                                       placeholder="Confidential — prepared by Acme Bank Business Platform"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Portal Welcome ── -->
+                        <page string="Portal Welcome" name="portal">
+                            <group>
+                                <field name="portal_welcome_title"
+                                       placeholder="Welcome to Acme Business Suite"/>
+                            </group>
+                            <group string="Welcome Message">
+                                <field name="portal_welcome_body" nolabel="1"/>
+                            </group>
+                        </page>
+
+                        <!-- ── Notes ── -->
+                        <page string="Internal Notes" name="notes">
+                            <field name="notes" nolabel="1"
+                                   placeholder="Internal notes about this brand configuration…"/>
+                        </page>
+
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────── -->
+    <record id="action_mumtaz_brand" model="ir.actions.act_window">
+        <field name="name">Partner Brands</field>
+        <field name="res_model">mumtaz.brand</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No brands configured yet</p>
+            <p>Create a brand configuration for each white-label partner or ecosystem.</p>
+        </field>
+    </record>
+
+    <!-- ── Menu ──────────────────────────────────────────────────────── -->
+    <menuitem id="menu_mumtaz_brands"
+              name="Partner Brands"
+              parent="mumtaz_core.menu_mumtaz_configuration"
+              action="action_mumtaz_brand"
+              sequence="20"
+              groups="mumtaz_core.group_mumtaz_partner_manager"/>
+
+</odoo>
