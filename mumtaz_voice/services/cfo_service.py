@@ -72,7 +72,7 @@ class CFOService(models.AbstractModel):
             return {"total": 0.0, "accounts": []}
         lines = self.env["account.move.line"].read_group(
             [("company_id", "=", company.id), ("account_id", "in", accounts.ids),
-             ("move_id.state", "=", "posted"), ("parent_state", "=", "posted")],
+             ("move_id.state", "=", "posted")],
             ["account_id", "balance:sum"], ["account_id"],
         )
         account_map = {a.id: a.name for a in accounts}
