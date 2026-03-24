@@ -66,7 +66,7 @@ class CFOService(models.AbstractModel):
 
     def _get_cash_position(self, company):
         accounts = self.env["account.account"].search(
-            [("company_id", "=", company.id), ("account_type", "=", "asset_cash")]
+            [("company_ids", "in", [company.id]), ("account_type", "=", "asset_cash")]
         )
         if not accounts:
             return {"total": 0.0, "accounts": []}
