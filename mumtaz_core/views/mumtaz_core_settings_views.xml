@@ -34,7 +34,7 @@
                         <div class="col-auto d-flex align-items-center gap-2">
                             <span class="badge bg-success fs-6" invisible="not active">Active</span>
                             <span class="badge bg-secondary fs-6" invisible="active">Inactive</span>
-                            <span class="badge bg-info fs-6 text-dark" t-esc="tenant_code"/>
+                            <field name="tenant_code" readonly="1" class="badge bg-info fs-6 text-dark oe_inline"/>
                         </div>
                     </div>
 
