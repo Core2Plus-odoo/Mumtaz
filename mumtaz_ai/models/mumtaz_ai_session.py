@@ -21,7 +21,7 @@ class MumtazAISession(models.Model):
         default="draft",
         tracking=True,
     )
-    message_ids = fields.One2many("mumtaz.ai.message", "session_id", string="Messages")
+    ai_message_ids = fields.One2many("mumtaz.ai.message", "session_id", string="Messages")
     message_count = fields.Integer(compute="_compute_message_count")
     prompt = fields.Text(string="Prompt", help="Current prompt input for chat-like interaction.")
     response = fields.Text(string="Last Response", readonly=True)
@@ -29,10 +29,10 @@ class MumtazAISession(models.Model):
     model_used = fields.Char(readonly=True)
     last_error = fields.Text(readonly=True)
 
-    @api.depends("message_ids")
+    @api.depends("ai_message_ids")
     def _compute_message_count(self):
         for record in self:
-            record.message_count = len(record.message_ids)
+            record.message_count = len(record.ai_message_ids)
 
     @api.model_create_multi
     def create(self, vals_list):
