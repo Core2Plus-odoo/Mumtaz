@@ -13,6 +13,8 @@ Your role:
 - Use exact numbers from the provided data — never fabricate figures
 - Keep responses focused: 2-5 sentences unless a detailed breakdown is requested
 - When data is missing or unavailable, say so clearly
+- Maintain conversation context — reference previous exchanges when relevant
+- Always respond in the same language as the user's question: reply in Arabic (العربية) if asked in Arabic, in English if asked in English
 
 Tone: Direct, authoritative, and business-focused. Speak as if briefing the board.
 """
@@ -25,13 +27,25 @@ class VoiceService(models.AbstractModel):
     def process_cfo_query(self, session, transcript):
         company = session.company_id
         user = session.user_id
+        language = self.env.context.get("voice_language", "en")
         settings = self._get_settings(company)
         self._ensure_voice_enabled(settings)
 
         intent = self.env["mumtaz.cfo.service"].detect_intent(transcript)
         financial_context = self.env["mumtaz.cfo.service"].build_financial_context(company, intent)
-        response_data = self._call_ai_provider(settings=settings, transcript=transcript,
-                                               financial_context=financial_context, company=company)
+
+        # Build conversation history from existing session messages (last 10 = 5 exchanges)
+        history = []
+        if session.id:
+            sorted_msgs = session.voice_message_ids.sorted(key="create_date")
+            for msg in sorted_msgs[-10:]:
+                history.append({"role": msg.role, "content": msg.content})
+
+        response_data = self._call_ai_provider(
+            settings=settings, transcript=transcript,
+            financial_context=financial_context, company=company,
+            history=history, language=language,
+        )
         response_data["intent"] = intent
         response_data["financial_context"] = financial_context
 
@@ -48,7 +62,7 @@ class VoiceService(models.AbstractModel):
         self.env["mumtaz.core.log"].log_action(
             module_name="mumtaz_voice", action="cfo_voice_query", company=company, user=user,
             request_payload=json.dumps({"transcript": transcript, "intent": intent,
-                                        "tenant": settings.tenant_code}, default=str),
+                                        "language": language, "tenant": settings.tenant_code}, default=str),
             response_payload=json.dumps({"model_used": response_data.get("model_used"),
                                          "token_usage": response_data.get("token_usage", 0)}, default=str),
             level="info",
@@ -69,7 +83,8 @@ class VoiceService(models.AbstractModel):
             raise UserError(f"Voice Assistant is disabled for tenant {settings.tenant_code}. "
                             "Enable it in Mumtaz Settings \u2192 Feature Toggles.")
 
-    def _call_ai_provider(self, settings, transcript, financial_context, company):
+    def _call_ai_provider(self, settings, transcript, financial_context, company,
+                          history=None, language="en"):
         provider_name = settings.ai_provider
         if provider_name == "openai":
             provider = self.env["mumtaz.ai.provider.openai"]
@@ -84,6 +99,8 @@ class VoiceService(models.AbstractModel):
             "system_prompt": CFO_SYSTEM_PROMPT,
             "max_tokens": settings.max_tokens_per_request,
             "model": getattr(settings, "openai_model", "gpt-4o-mini") if provider_name == "openai" else None,
+            "history": history or [],
+            "language": language,
         }
         return provider.generate_response(prompt=transcript, context=context)
 

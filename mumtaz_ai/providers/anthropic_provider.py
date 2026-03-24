@@ -31,20 +31,38 @@ class AnthropicProvider(models.AbstractModel):
         company_name = context.get("company_name", "")
         model = context.get("model") or _DEFAULT_MODEL
         max_tokens = int(context.get("max_tokens") or 600)
+        history = context.get("history", [])
 
-        user_content = prompt
+        # Embed financial data in system prompt
+        full_system = system_prompt
         if financial_data:
-            user_content = (f"Company: {company_name}\n\n"
-                            f"--- Real-time Financial Data ---\n{financial_data}\n"
-                            f"--- End of Data ---\n\nQuestion: {prompt}")
+            full_system += (f"\n\n--- Real-time Financial Data for {company_name} ---\n"
+                            f"{financial_data}\n--- End of Data ---")
+
+        # Build messages with conversation history
+        # Anthropic requires alternating user/assistant — enforce this
+        messages = []
+        for msg in history:
+            role = msg["role"]
+            if messages and messages[-1]["role"] == role:
+                # Merge consecutive same-role messages
+                messages[-1]["content"] += "\n" + msg["content"]
+            else:
+                messages.append({"role": role, "content": msg["content"]})
+
+        # Add current user message
+        if messages and messages[-1]["role"] == "user":
+            messages[-1]["content"] += "\n" + prompt
+        else:
+            messages.append({"role": "user", "content": prompt})
 
         try:
             resp = requests.post(
                 _ANTHROPIC_URL,
                 headers={"x-api-key": api_key, "anthropic-version": _ANTHROPIC_VERSION,
                          "Content-Type": "application/json"},
-                json={"model": model, "max_tokens": max_tokens, "system": system_prompt,
-                      "messages": [{"role": "user", "content": user_content}]},
+                json={"model": model, "max_tokens": max_tokens, "system": full_system,
+                      "messages": messages},
                 timeout=_REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
