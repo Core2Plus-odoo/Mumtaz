@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="mumtaz_voice.VoiceAssistantAction">
+    <div class="mumtaz-voice-root d-flex flex-column bg-light" style="min-height:100vh;padding:1rem;">
+        <!-- Header -->
+        <div class="card mb-3 shadow-sm border-0">
+            <div class="card-header d-flex align-items-center justify-content-between py-3"
+                 style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary text-white"
+                         style="width:44px;height:44px;font-size:1.2rem;"><i class="fa fa-line-chart"/></div>
+                    <div>
+                        <h4 class="mb-0 text-white fw-bold">Mumtaz CFO Voice Assistant</h4>
+                        <small class="text-white-50">AI-powered financial intelligence from your Odoo data</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span t-attf-class="badge {{ statusBadgeClass }} px-3 py-2" t-esc="statusLabel"/>
+                    <button class="btn btn-outline-light btn-sm" t-on-click="newSession"><i class="fa fa-plus me-1"/>New Session</button>
+                </div>
+            </div>
+        </div>
+        <!-- Main Layout -->
+        <div class="row g-3 flex-grow-1">
+            <!-- History -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm h-100 border-0">
+                    <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-2">
+                        <i class="fa fa-history text-muted"/><span class="fw-semibold">Conversation History</span>
+                        <span class="badge bg-secondary ms-auto" t-esc="state.history.length"/>
+                    </div>
+                    <div class="card-body p-3 overflow-auto" style="max-height:70vh;">
+                        <t t-if="!state.history.length">
+                            <div class="text-center text-muted py-5">
+                                <i class="fa fa-comments-o fa-3x mb-3 d-block opacity-25"/>
+                                <p class="mb-1 fw-semibold">No conversation yet</p>
+                                <small>Click the microphone or type a question to get started.</small>
+                                <div class="mt-3 text-start bg-light rounded p-3 small">
+                                    <strong>Try asking:</strong>
+                                    <ul class="mb-0 mt-1 ps-3">
+                                        <li>"What is our cash position?"</li>
+                                        <li>"Show me the P&amp;L for this month"</li>
+                                        <li>"How much do customers owe us?"</li>
+                                        <li>"Give me a financial overview"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-foreach="state.history" t-as="msg" t-key="msg_index">
+                            <div class="mb-3">
+                                <div class="d-flex align-items-start gap-2 mb-2">
+                                    <span class="badge bg-secondary flex-shrink-0 mt-1">You</span>
+                                    <div class="flex-grow-1">
+                                        <div class="bg-white border rounded-3 px-3 py-2 shadow-sm small" t-esc="msg.question"/>
+                                        <small class="text-muted ms-1" t-esc="msg.time"/>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-start gap-2">
+                                    <span class="badge flex-shrink-0 mt-1" style="background-color:#0f3460;">CFO</span>
+                                    <div class="flex-grow-1">
+                                        <div class="border rounded-3 px-3 py-2 shadow-sm small"
+                                             style="background-color:#e8f4fd;border-color:#0f3460 !important;" t-esc="msg.response"/>
+                                        <t t-if="msg.intent"><span class="badge bg-info text-dark ms-1 mt-1 small" t-esc="msg.intent"/></t>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr t-if="!msg_last" class="my-2 opacity-25"/>
+                        </t>
+                    </div>
+                </div>
+            </div>
+            <!-- Voice Interface -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex flex-column p-4 gap-3">
+                        <div class="text-center">
+                            <button t-attf-class="btn btn-lg rounded-circle shadow {{ micBtnClass }}"
+                                    style="width:100px;height:100px;font-size:2rem;transition:all 0.2s;"
+                                    t-on-click="toggleMic" t-att-disabled="state.isProcessing">
+                                <i t-attf-class="fa {{ micIcon }}"/>
+                            </button>
+                            <div class="mt-2"><span class="text-muted small fw-semibold" t-esc="statusLabel"/></div>
+                            <t t-if="!state.browserSupported">
+                                <div class="alert alert-warning mt-2 py-2 small mb-0">
+                                    <i class="fa fa-exclamation-triangle me-1"/>Voice input requires Chrome or Edge. Please type your question below.
+                                </div>
+                            </t>
+                        </div>
+                        <div>
+                            <label class="form-label fw-semibold small text-uppercase text-muted">
+                                <i class="fa fa-keyboard-o me-1"/>Your Question
+                            </label>
+                            <textarea class="form-control border-2" rows="3"
+                                      placeholder="Ask your CFO question… e.g. 'What is our cash position?' or 'Show AR aging'"
+                                      t-model="state.transcript"
+                                      t-att-disabled="state.isListening or state.isProcessing"
+                                      style="resize:none;font-size:0.95rem;"/>
+                            <button class="btn btn-success mt-2 w-100" t-on-click="submitTyped"
+                                    t-att-disabled="!state.transcript or state.isProcessing">
+                                <t t-if="state.isProcessing"><i class="fa fa-spinner fa-spin me-1"/>Analyzing…</t>
+                                <t t-else=""><i class="fa fa-paper-plane me-1"/>Ask CFO</t>
+                            </button>
+                        </div>
+                        <div class="flex-grow-1 d-flex flex-column">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="form-label fw-semibold small text-uppercase text-muted mb-0">
+                                    <i class="fa fa-comment-o me-1"/>CFO Response
+                                </label>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm" t-on-click="replayResponse"
+                                            t-att-disabled="!state.response or state.isSpeaking">
+                                        <i class="fa fa-volume-up me-1"/>Replay
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" t-on-click="stopSpeaking"
+                                            t-att-disabled="!state.isSpeaking">
+                                        <i class="fa fa-stop me-1"/>Stop
+                                    </button>
+                                </div>
+                            </div>
+                            <t t-if="state.error">
+                                <div class="alert alert-danger d-flex align-items-start gap-2 py-2">
+                                    <i class="fa fa-exclamation-triangle flex-shrink-0 mt-1"/>
+                                    <span t-esc="state.error"/>
+                                </div>
+                            </t>
+                            <t t-if="state.response and !state.error">
+                                <div class="border rounded-3 p-3 flex-grow-1"
+                                     style="background-color:#f0f7ff;border-color:#0f3460 !important;white-space:pre-wrap;font-size:0.95rem;line-height:1.6;">
+                                    <t t-if="state.intent"><span class="badge bg-info text-dark mb-2 d-inline-block" t-esc="state.intent"/></t>
+                                    <div t-esc="state.response"/>
+                                </div>
+                            </t>
+                            <t t-if="!state.response and !state.error">
+                                <div class="text-center text-muted py-4 flex-grow-1 d-flex flex-column align-items-center justify-content-center border rounded-3 bg-white">
+                                    <i class="fa fa-user-circle-o fa-3x mb-2 opacity-25"/>
+                                    <span class="small">CFO response will appear here</span>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</t>
+</templates>
