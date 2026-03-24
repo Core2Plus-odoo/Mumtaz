@@ -29,7 +29,7 @@ class MumtazCoreLog(models.Model):
         response_payload=None,
         level="info",
     ):
-        return self.create(
+        return self.sudo().create(
             {
                 "company_id": company.id,
                 "user_id": user.id,
