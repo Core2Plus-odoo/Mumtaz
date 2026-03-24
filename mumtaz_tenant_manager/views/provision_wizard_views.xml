@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="provision_wizard_form_view" model="ir.ui.view">
+        <field name="name">mumtaz.provision.wizard.form</field>
+        <field name="model">mumtaz.provision.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Provision Tenant">
+
+                <!-- ── Confirmation screen ─────────────────────────── -->
+                <group invisible="state != 'confirm'">
+                    <group string="Tenant">
+                        <field name="tenant_id" readonly="1"/>
+                        <field name="database_name" readonly="1"/>
+                        <field name="subdomain" readonly="1"/>
+                        <field name="admin_email" readonly="1"/>
+                    </group>
+                    <group string="Configuration">
+                        <field name="bundle_id" readonly="1"/>
+                        <field name="brand_id" readonly="1"/>
+                    </group>
+                    <group string="Options" col="2">
+                        <field name="dry_run"/>
+                    </group>
+                </group>
+
+                <!-- ── Result screen ───────────────────────────────── -->
+                <group invisible="state != 'done'">
+                    <group string="Result">
+                        <field name="result_success" readonly="1" widget="boolean"/>
+                        <field name="result_message" readonly="1"/>
+                    </group>
+                    <group string="Log">
+                        <field name="result_log" readonly="1" widget="text" nolabel="1"/>
+                    </group>
+                </group>
+
+                <footer>
+                    <button name="action_run_provisioning" type="object"
+                            string="Run Provisioning"
+                            class="oe_highlight"
+                            invisible="state != 'confirm'"/>
+                    <button name="action_close" type="object"
+                            string="Close"
+                            invisible="state != 'done'"/>
+                    <button string="Cancel" class="btn-secondary"
+                            special="cancel"
+                            invisible="state != 'confirm'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

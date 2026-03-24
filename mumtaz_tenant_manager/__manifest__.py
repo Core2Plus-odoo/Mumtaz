@@ -1,0 +1,21 @@
+{
+    "name": "Mumtaz Tenant Manager",
+    "summary": "Central control plane for managing isolated Odoo tenants in the Mumtaz SaaS platform",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["base", "mail", "mumtaz_branding"],
+    "data": [
+        "security/mumtaz_tenant_security.xml",
+        "security/ir.model.access.csv",
+        "data/mumtaz_bundle_data.xml",
+        "views/mumtaz_module_bundle_views.xml",
+        "views/mumtaz_tenant_views.xml",
+        "views/provision_wizard_views.xml",
+        "views/mumtaz_menus.xml",
+    ],
+    "installable": True,
+    "auto_install": False,
+    "application": True,
+}

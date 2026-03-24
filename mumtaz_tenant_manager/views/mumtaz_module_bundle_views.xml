@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List view ───────────────────────────────────────────────── -->
+    <record id="mumtaz_module_bundle_list_view" model="ir.ui.view">
+        <field name="name">mumtaz.module.bundle.list</field>
+        <field name="model">mumtaz.module.bundle</field>
+        <field name="arch" type="xml">
+            <list string="Module Bundles">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="monthly_price"/>
+                <field name="max_users"/>
+                <field name="tenant_count"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form view ───────────────────────────────────────────────── -->
+    <record id="mumtaz_module_bundle_form_view" model="ir.ui.view">
+        <field name="name">mumtaz.module.bundle.form</field>
+        <field name="model">mumtaz.module.bundle</field>
+        <field name="arch" type="xml">
+            <form string="Module Bundle">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Bundle Name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Identity">
+                            <field name="code"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Pricing">
+                            <field name="monthly_price"/>
+                            <field name="max_users"/>
+                            <field name="tenant_count"/>
+                        </group>
+                    </group>
+
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Base Modules">
+                            <div class="o_form_label mb-1">
+                                Comma-separated module technical names installed for every tenant on this bundle.
+                            </div>
+                            <field name="base_modules" widget="text" nolabel="1"
+                                   placeholder="base, mail, account, mumtaz_core"/>
+                        </page>
+                        <page string="Optional Modules">
+                            <div class="o_form_label mb-1">
+                                Comma-separated modules that can be added per tenant.
+                            </div>
+                            <field name="optional_modules" widget="text" nolabel="1"
+                                   placeholder="mumtaz_voice, mumtaz_ai"/>
+                        </page>
+                        <page string="Tenants">
+                            <field name="tenant_ids" nolabel="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="state"/>
+                                    <field name="subscription_start"/>
+                                    <field name="subscription_end"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ──────────────────────────────────────────────────── -->
+    <record id="action_mumtaz_module_bundle" model="ir.actions.act_window">
+        <field name="name">Module Bundles</field>
+        <field name="res_model">mumtaz.module.bundle</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_active": 1}</field>
+    </record>
+
+</odoo>

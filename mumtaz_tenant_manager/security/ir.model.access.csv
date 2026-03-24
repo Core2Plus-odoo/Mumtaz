@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mumtaz_tenant_admin,mumtaz.tenant (admin),model_mumtaz_tenant,group_mumtaz_platform_admin,1,1,1,1
+access_mumtaz_tenant_manager,mumtaz.tenant (manager),model_mumtaz_tenant,group_mumtaz_platform_manager,1,1,0,0
+access_mumtaz_module_bundle_admin,mumtaz.module.bundle (admin),model_mumtaz_module_bundle,group_mumtaz_platform_admin,1,1,1,1
+access_mumtaz_module_bundle_manager,mumtaz.module.bundle (manager),model_mumtaz_module_bundle,group_mumtaz_platform_manager,1,0,0,0
+access_mumtaz_provision_wizard_admin,mumtaz.provision.wizard (admin),model_mumtaz_provision_wizard,group_mumtaz_platform_admin,1,1,1,1

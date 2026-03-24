@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List view ───────────────────────────────────────────────── -->
+    <record id="mumtaz_tenant_list_view" model="ir.ui.view">
+        <field name="name">mumtaz.tenant.list</field>
+        <field name="model">mumtaz.tenant</field>
+        <field name="arch" type="xml">
+            <list string="Tenants" decoration-success="state == 'active'"
+                  decoration-warning="state == 'suspended'"
+                  decoration-muted="state == 'archived'"
+                  decoration-info="state == 'provisioning'">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="database_name"/>
+                <field name="subdomain"/>
+                <field name="bundle_id"/>
+                <field name="brand_id"/>
+                <field name="state"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'suspended'"
+                       decoration-danger="state == 'archived'"
+                       decoration-info="state == 'provisioning'"
+                       widget="badge"/>
+                <field name="subscription_start" optional="show"/>
+                <field name="subscription_end" optional="show"/>
+                <field name="provisioned_on" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search view ─────────────────────────────────────────────── -->
+    <record id="mumtaz_tenant_search_view" model="ir.ui.view">
+        <field name="name">mumtaz.tenant.search</field>
+        <field name="model">mumtaz.tenant</field>
+        <field name="arch" type="xml">
+            <search string="Tenants">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="database_name"/>
+                <field name="bundle_id"/>
+                <field name="partner_id"/>
+                <separator/>
+                <filter string="Draft" name="state_draft"
+                        domain="[('state','=','draft')]"/>
+                <filter string="Active" name="state_active"
+                        domain="[('state','=','active')]"/>
+                <filter string="Suspended" name="state_suspended"
+                        domain="[('state','=','suspended')]"/>
+                <filter string="Archived" name="state_archived"
+                        domain="[('state','=','archived')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Bundle" name="group_bundle"
+                            context="{'group_by': 'bundle_id'}"/>
+                    <filter string="Brand" name="group_brand"
+                            context="{'group_by': 'brand_id'}"/>
+                    <filter string="State" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Form view ───────────────────────────────────────────────── -->
+    <record id="mumtaz_tenant_form_view" model="ir.ui.view">
+        <field name="name">mumtaz.tenant.form</field>
+        <field name="model">mumtaz.tenant</field>
+        <field name="arch" type="xml">
+            <form string="Tenant">
+                <header>
+                    <!-- State bar -->
+                    <button name="action_start_provisioning" type="object"
+                            string="Start Provisioning"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_open_provision_wizard" type="object"
+                            string="Provision Tenant"
+                            class="oe_highlight"
+                            invisible="state not in ('draft', 'provisioning')"/>
+                    <button name="action_mark_active" type="object"
+                            string="Mark Active"
+                            invisible="state != 'provisioning'"/>
+                    <button name="action_suspend" type="object"
+                            string="Suspend"
+                            invisible="state != 'active'"/>
+                    <button name="action_archive_tenant" type="object"
+                            string="Archive"
+                            invisible="state in ('draft', 'archived')"
+                            confirm="This will archive the tenant record. Continue?"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Reset to Draft"
+                            invisible="state not in ('provisioning', 'suspended')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,provisioning,active,suspended,archived"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Tenant Name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Identity">
+                            <field name="code"/>
+                            <field name="database_name"/>
+                            <field name="subdomain"/>
+                            <field name="custom_domain"/>
+                        </group>
+                        <group string="Configuration">
+                            <field name="bundle_id"/>
+                            <field name="brand_id"/>
+                            <field name="partner_id"/>
+                        </group>
+                    </group>
+
+                    <group string="Subscription">
+                        <group>
+                            <field name="subscription_start"/>
+                            <field name="subscription_end"/>
+                        </group>
+                        <group>
+                            <field name="provisioned_on"/>
+                            <field name="last_checked_on"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Admin User">
+                            <group>
+                                <field name="admin_name"/>
+                                <field name="admin_email"/>
+                                <field name="admin_password"
+                                       groups="mumtaz_tenant_manager.group_mumtaz_platform_admin"
+                                       password="True"/>
+                            </group>
+                        </page>
+
+                        <page string="Extra Modules">
+                            <div class="o_form_label mb-1">
+                                Comma-separated additional module names to install beyond the bundle.
+                            </div>
+                            <field name="extra_modules" widget="text" nolabel="1"
+                                   placeholder="mumtaz_voice, mumtaz_ai"/>
+                        </page>
+
+                        <page string="Provisioning Log"
+                              invisible="not provision_log">
+                            <field name="provision_log" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+
+                        <page string="Notes">
+                            <field name="notes" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Kanban view ─────────────────────────────────────────────── -->
+    <record id="mumtaz_tenant_kanban_view" model="ir.ui.view">
+        <field name="name">mumtaz.tenant.kanban</field>
+        <field name="model">mumtaz.tenant</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="database_name"/>
+                <field name="bundle_id"/>
+                <field name="brand_id"/>
+                <field name="state"/>
+                <field name="subdomain"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <strong><field name="name"/></strong>
+                            <div class="text-muted small">
+                                <field name="code"/> · <field name="database_name"/>
+                            </div>
+                            <div class="mt-1">
+                                <field name="bundle_id"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ── Action ──────────────────────────────────────────────────── -->
+    <record id="action_mumtaz_tenant" model="ir.actions.act_window">
+        <field name="name">Tenants</field>
+        <field name="res_model">mumtaz.tenant</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="mumtaz_tenant_search_view"/>
+        <field name="context">{"search_default_state_active": 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No tenants yet. Create your first tenant to get started.
+            </p>
+        </field>
+    </record>
+
+</odoo>
