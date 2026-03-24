@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Top-level application menu ─────────────────────────────── -->
+    <menuitem id="menu_mumtaz_platform_root"
+              name="Mumtaz Platform"
+              groups="mumtaz_tenant_manager.group_mumtaz_platform_manager"
+              sequence="90"/>
+
+    <!-- ── Tenants ────────────────────────────────────────────────── -->
+    <menuitem id="menu_mumtaz_tenants"
+              name="Tenants"
+              parent="menu_mumtaz_platform_root"
+              sequence="10"/>
+
+    <menuitem id="menu_mumtaz_tenant_list"
+              name="All Tenants"
+              parent="menu_mumtaz_tenants"
+              action="action_mumtaz_tenant"
+              sequence="10"/>
+
+    <!-- ── Configuration ──────────────────────────────────────────── -->
+    <menuitem id="menu_mumtaz_platform_config"
+              name="Configuration"
+              parent="menu_mumtaz_platform_root"
+              groups="mumtaz_tenant_manager.group_mumtaz_platform_admin"
+              sequence="90"/>
+
+    <menuitem id="menu_mumtaz_module_bundles"
+              name="Module Bundles"
+              parent="menu_mumtaz_platform_config"
+              action="action_mumtaz_module_bundle"
+              sequence="10"/>
+
+</odoo>

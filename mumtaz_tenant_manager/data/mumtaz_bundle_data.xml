@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--
+            Default Mumtaz module bundles.
+            ``noupdate="1"`` — these records will not be overwritten on module
+            upgrade; operators can customise them freely after installation.
+        -->
+
+        <record id="bundle_starter" model="mumtaz.module.bundle">
+            <field name="name">Starter</field>
+            <field name="code">starter</field>
+            <field name="sequence">10</field>
+            <field name="description">
+                Essential Mumtaz modules for small businesses getting started.
+                Includes core platform, branding, SME profile and guided onboarding.
+            </field>
+            <field name="base_modules">base,mail,mumtaz_base,mumtaz_core,mumtaz_branding,mumtaz_sme_profile,mumtaz_onboarding</field>
+            <field name="optional_modules">mumtaz_ai,mumtaz_voice</field>
+            <field name="monthly_price">49.00</field>
+            <field name="max_users">5</field>
+        </record>
+
+        <record id="bundle_growth" model="mumtaz.module.bundle">
+            <field name="name">Growth</field>
+            <field name="code">growth</field>
+            <field name="sequence">20</field>
+            <field name="description">
+                Everything in Starter plus accounting, HR and AI capabilities.
+                Suitable for growing SMEs that need financial and people management.
+            </field>
+            <field name="base_modules">base,mail,account,hr,mumtaz_base,mumtaz_core,mumtaz_branding,mumtaz_sme_profile,mumtaz_onboarding,mumtaz_ai</field>
+            <field name="optional_modules">mumtaz_voice,sale,purchase,stock</field>
+            <field name="monthly_price">149.00</field>
+            <field name="max_users">25</field>
+        </record>
+
+        <record id="bundle_finance" model="mumtaz.module.bundle">
+            <field name="name">Finance</field>
+            <field name="code">finance</field>
+            <field name="sequence">30</field>
+            <field name="description">
+                Deep finance stack: accounting, analytic, budgeting, bank reconciliation.
+                Designed for accounting-first deployments and finance-focused partners.
+            </field>
+            <field name="base_modules">base,mail,account,account_accountant,analytic,mumtaz_base,mumtaz_core,mumtaz_branding,mumtaz_ai</field>
+            <field name="optional_modules">mumtaz_voice,hr,sale,purchase,stock</field>
+            <field name="monthly_price">199.00</field>
+            <field name="max_users">50</field>
+        </record>
+
+        <record id="bundle_ai_cfo" model="mumtaz.module.bundle">
+            <field name="name">AI CFO</field>
+            <field name="code">ai_cfo</field>
+            <field name="sequence">40</field>
+            <field name="description">
+                Finance bundle enhanced with the full AI and Voice Assistant stack.
+                Delivers an AI-powered CFO experience for business owners.
+            </field>
+            <field name="base_modules">base,mail,account,account_accountant,analytic,mumtaz_base,mumtaz_core,mumtaz_branding,mumtaz_ai,mumtaz_voice</field>
+            <field name="optional_modules">hr,sale,purchase,stock,mumtaz_sme_profile,mumtaz_onboarding</field>
+            <field name="monthly_price">299.00</field>
+            <field name="max_users">0</field>
+        </record>
+
+        <record id="bundle_enterprise_partner" model="mumtaz.module.bundle">
+            <field name="name">Enterprise Partner</field>
+            <field name="code">enterprise_partner</field>
+            <field name="sequence">90</field>
+            <field name="description">
+                Full platform suite for white-label partners deploying Mumtaz at scale.
+                Includes all modules; billed per commercial agreement.
+            </field>
+            <field name="base_modules">base,mail,account,account_accountant,analytic,hr,sale,purchase,stock,mumtaz_base,mumtaz_core,mumtaz_branding,mumtaz_sme_profile,mumtaz_onboarding,mumtaz_ai,mumtaz_voice</field>
+            <field name="optional_modules"></field>
+            <field name="monthly_price">0.00</field>
+            <field name="max_users">0</field>
+        </record>
+
+    </data>
+</odoo>
