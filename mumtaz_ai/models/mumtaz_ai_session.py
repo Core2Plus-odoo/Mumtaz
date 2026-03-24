@@ -13,7 +13,7 @@ class MumtazAISession(models.Model):
         "res.users", required=True, default=lambda self: self.env.user, index=True, check_company=True
     )
     company_id = fields.Many2one(
-        "res.company", required=True, default=lambda self: self.env.company, index=True, check_company=True
+        "res.company", required=True, default=lambda self: self.env.company, index=True
     )
     company_currency_id = fields.Many2one(related="company_id.currency_id", store=False, readonly=True)
     execution_status = fields.Selection(

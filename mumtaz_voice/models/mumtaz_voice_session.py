@@ -14,7 +14,7 @@ class MumtazVoiceSession(models.Model):
         "res.users", required=True, default=lambda self: self.env.user, index=True, check_company=True
     )
     company_id = fields.Many2one(
-        "res.company", required=True, default=lambda self: self.env.company, index=True, check_company=True
+        "res.company", required=True, default=lambda self: self.env.company, index=True
     )
 
     transcript = fields.Text(string="Voice Input / Question")
