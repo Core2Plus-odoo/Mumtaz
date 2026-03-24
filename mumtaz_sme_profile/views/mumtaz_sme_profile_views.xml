@@ -169,13 +169,13 @@ action = {
               parent="mumtaz_core.menu_mumtaz_root"
               action="action_mumtaz_sme_profile_open"
               sequence="15"
-              groups="mumtaz_core.group_mumtaz_sme_admin"/>
+              groups="base.group_user"/>
 
     <menuitem id="menu_mumtaz_sme_profiles_all"
               name="SME Profiles"
               parent="mumtaz_core.menu_mumtaz_configuration"
               action="action_mumtaz_sme_profiles_list"
               sequence="30"
-              groups="mumtaz_core.group_mumtaz_manager"/>
+              groups="base.group_system"/>
 
 </odoo>

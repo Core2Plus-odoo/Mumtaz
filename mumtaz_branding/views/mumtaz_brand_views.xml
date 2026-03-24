@@ -147,6 +147,6 @@
               parent="mumtaz_core.menu_mumtaz_configuration"
               action="action_mumtaz_brand"
               sequence="20"
-              groups="mumtaz_core.group_mumtaz_partner_manager"/>
+              groups="base.group_system"/>
 
 </odoo>
