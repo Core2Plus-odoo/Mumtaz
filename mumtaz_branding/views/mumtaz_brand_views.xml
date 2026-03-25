@@ -10,7 +10,7 @@
                 <field name="brand_name"/>
                 <field name="partner_name"/>
                 <field name="product_name"/>
-                <field name="company_count" string="Companies"/>
+
                 <field name="active"/>
             </list>
         </field>
