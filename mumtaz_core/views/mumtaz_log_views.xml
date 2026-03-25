@@ -55,11 +55,31 @@
         </field>
     </record>
 
+    <!-- ── Search View ───────────────────────────────────────────────── -->
+    <record id="view_mumtaz_core_log_search" model="ir.ui.view">
+        <field name="name">mumtaz.core.log.search</field>
+        <field name="model">mumtaz.core.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user_id"/>
+                <field name="module_name"/>
+                <field name="action"/>
+                <field name="level"/>
+                <filter string="Errors" name="errors" domain="[('level', '=', 'error')]"/>
+                <filter string="Warnings" name="warnings" domain="[('level', '=', 'warning')]"/>
+                <filter string="Info" name="info" domain="[('level', '=', 'info')]"/>
+                <filter string="Voice Queries" name="voice" domain="[('module_name', '=', 'mumtaz_voice')]"/>
+                <filter string="AI Chat" name="ai" domain="[('module_name', '=', 'mumtaz_ai')]"/>
+            </search>
+        </field>
+    </record>
+
     <!-- ── Action ────────────────────────────────────────────────────── -->
     <record id="action_mumtaz_core_log" model="ir.actions.act_window">
         <field name="name">Mumtaz Query Logs</field>
         <field name="res_model">mumtaz.core.log</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mumtaz_core_log_search"/>
         <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No queries logged yet</p>
