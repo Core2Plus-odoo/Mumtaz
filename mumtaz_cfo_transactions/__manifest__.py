@@ -1,0 +1,20 @@
+{
+    "name": "Mumtaz CFO Transactions",
+    "summary": "Normalized transaction engine and review workflow for Mumtaz CFO",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["mumtaz_cfo_ingestion"],
+    "data": [
+        "security/ir.model.access.csv",
+        "security/cfo_transactions_rules.xml",
+        "views/cfo_transaction_views.xml",
+        "views/cfo_review_item_views.xml",
+        "views/cfo_upload_batch_views.xml",
+        "views/cfo_transactions_menus.xml",
+    ],
+    "installable": True,
+    "auto_install": True,
+    "application": True,
+}

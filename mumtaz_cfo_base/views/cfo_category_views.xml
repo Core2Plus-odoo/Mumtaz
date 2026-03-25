@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_cfo_category_tree" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.category.tree</field>
+        <field name="model">mumtaz.cfo.category</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="kind"/>
+                <field name="workspace_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="is_system"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_cfo_category_form" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.category.form</field>
+        <field name="model">mumtaz.cfo.category</field>
+        <field name="arch" type="xml">
+            <form string="CFO Category">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="kind"/>
+                        </group>
+                        <group>
+                            <field name="workspace_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="is_system" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_cfo_category" model="ir.actions.act_window">
+        <field name="name">Categories</field>
+        <field name="res_model">mumtaz.cfo.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

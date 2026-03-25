@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mumtaz_cfo_workspace_user,mumtaz.cfo.workspace user,model_mumtaz_cfo_workspace,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_workspace_manager,mumtaz.cfo.workspace manager,model_mumtaz_cfo_workspace,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
+access_mumtaz_cfo_category_user,mumtaz.cfo.category user,model_mumtaz_cfo_category,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_category_manager,mumtaz.cfo.category manager,model_mumtaz_cfo_category,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1

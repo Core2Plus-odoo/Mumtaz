@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <menuitem id="menu_mumtaz_cfo_transactions"
+              name="Transactions"
+              parent="mumtaz_cfo_base.menu_mumtaz_cfo_root"
+              sequence="40"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+
+    <menuitem id="menu_mumtaz_cfo_transaction_list"
+              name="All Transactions"
+              parent="menu_mumtaz_cfo_transactions"
+              action="action_mumtaz_cfo_transaction"
+              sequence="10"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+
+    <menuitem id="menu_mumtaz_cfo_review_queue"
+              name="Review Queue"
+              parent="menu_mumtaz_cfo_transactions"
+              action="action_mumtaz_cfo_review_item"
+              sequence="20"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+</odoo>

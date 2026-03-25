@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="rule_mumtaz_cfo_data_source_company_scope" model="ir.rule">
+        <field name="name">CFO data source company scope</field>
+        <field name="model_id" ref="model_mumtaz_cfo_data_source"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('mumtaz_cfo_base.group_mumtaz_cfo_user'))]"/>
+    </record>
+
+    <record id="rule_mumtaz_cfo_upload_batch_company_scope" model="ir.rule">
+        <field name="name">CFO upload batch company scope</field>
+        <field name="model_id" ref="model_mumtaz_cfo_upload_batch"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('mumtaz_cfo_base.group_mumtaz_cfo_user'))]"/>
+    </record>
+
+    <record id="rule_mumtaz_cfo_mapping_profile_company_scope" model="ir.rule">
+        <field name="name">CFO mapping profile company scope</field>
+        <field name="model_id" ref="model_mumtaz_cfo_mapping_profile"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('mumtaz_cfo_base.group_mumtaz_cfo_user'))]"/>
+    </record>
+</odoo>
