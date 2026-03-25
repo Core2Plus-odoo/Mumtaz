@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mumtaz_cfo_data_source_user,mumtaz.cfo.data.source user,model_mumtaz_cfo_data_source,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_data_source_manager,mumtaz.cfo.data.source manager,model_mumtaz_cfo_data_source,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
+access_mumtaz_cfo_upload_batch_user,mumtaz.cfo.upload.batch user,model_mumtaz_cfo_upload_batch,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_upload_batch_manager,mumtaz.cfo.upload.batch manager,model_mumtaz_cfo_upload_batch,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
+access_mumtaz_cfo_mapping_profile_user,mumtaz.cfo.mapping.profile user,model_mumtaz_cfo_mapping_profile,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_mapping_profile_manager,mumtaz.cfo.mapping.profile manager,model_mumtaz_cfo_mapping_profile,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
