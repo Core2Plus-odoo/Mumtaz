@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <menuitem id="menu_mumtaz_cfo_ingestion"
+              name="Ingestion"
+              parent="mumtaz_cfo_base.menu_mumtaz_cfo_root"
+              sequence="30"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+
+    <menuitem id="menu_mumtaz_cfo_upload_batch"
+              name="Upload Batches"
+              parent="menu_mumtaz_cfo_ingestion"
+              action="action_mumtaz_cfo_upload_batch"
+              sequence="10"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+
+    <menuitem id="menu_mumtaz_cfo_data_source"
+              name="Data Sources"
+              parent="menu_mumtaz_cfo_ingestion"
+              action="action_mumtaz_cfo_data_source"
+              sequence="20"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_manager"/>
+
+    <menuitem id="menu_mumtaz_cfo_mapping_profile"
+              name="Mapping Profiles"
+              parent="menu_mumtaz_cfo_ingestion"
+              action="action_mumtaz_cfo_mapping_profile"
+              sequence="30"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_manager"/>
+</odoo>
