@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mumtaz_cfo_transaction_user,mumtaz.cfo.transaction user,model_mumtaz_cfo_transaction,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_transaction_manager,mumtaz.cfo.transaction manager,model_mumtaz_cfo_transaction,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
+access_mumtaz_cfo_review_item_user,mumtaz.cfo.review.item user,model_mumtaz_cfo_review_item,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
+access_mumtaz_cfo_review_item_manager,mumtaz.cfo.review.item manager,model_mumtaz_cfo_review_item,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
