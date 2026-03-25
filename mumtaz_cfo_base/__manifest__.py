@@ -5,7 +5,7 @@
     "category": "Mumtaz Platform",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["base", "mail", "mumtaz_core"],
+    "depends": ["base", "mail"],
     "data": [
         "security/cfo_base_security.xml",
         "security/ir.model.access.csv",

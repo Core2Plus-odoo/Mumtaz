@@ -2,7 +2,6 @@
 <odoo>
     <menuitem id="menu_mumtaz_cfo_root"
               name="CFO Toolkit"
-              parent="mumtaz_core.menu_mumtaz_root"
               sequence="30"
               groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
 

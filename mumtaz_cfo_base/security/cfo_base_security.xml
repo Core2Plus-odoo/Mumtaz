@@ -7,11 +7,6 @@
 
     <record id="group_mumtaz_cfo_manager" model="res.groups">
         <field name="name">Mumtaz / CFO Manager</field>
-        <field name="implied_ids" eval="[(4, ref('group_mumtaz_cfo_user')), (4, ref('mumtaz_core.group_mumtaz_manager'))]"/>
-    </record>
-
-    <!-- Auto-enable CFO features for existing finance users/admins. -->
-    <record id="mumtaz_core.group_mumtaz_finance_user" model="res.groups">
-        <field name="implied_ids" eval="[(4, ref('mumtaz_cfo_base.group_mumtaz_cfo_user'))]"/>
+        <field name="implied_ids" eval="[(4, ref('group_mumtaz_cfo_user')), (4, ref('base.group_system'))]"/>
     </record>
 </odoo>

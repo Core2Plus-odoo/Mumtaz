@@ -77,6 +77,6 @@ Tip: You can now install `mumtaz_cfo_toolkit` as a single compact module to inst
 Tip: Installing `mumtaz_cfo_base` now auto-installs `mumtaz_cfo_ingestion` and `mumtaz_cfo_transactions` because they are configured with `auto_install` once dependencies are present.
 
 ## 6) If modules are installed but menus are not visible
-- Ensure the user has **Mumtaz / Finance User** (or higher) in Access Rights.
-- CFO menus are granted through implied CFO groups from `mumtaz_core.group_mumtaz_finance_user`.
+- Ensure the user has **Mumtaz / CFO User** (or **Mumtaz / CFO Manager**) in Access Rights.
+- CFO modules are now installable independently from `mumtaz_core`; they no longer rely on `mumtaz_core` group implications.
 - Re-login after changing groups to refresh menu visibility.
