@@ -71,3 +71,9 @@ PY
 ```
 
 In UI: Apps -> clear filters -> search `Mumtaz`.
+
+## 6) If modules are installed but menus are not visible
+- Ensure the user has **Mumtaz / Finance User** (or higher) in Access Rights.
+- CFO menus are granted through implied CFO groups from `mumtaz_core.group_mumtaz_finance_user`.
+- Re-login after changing groups to refresh menu visibility.
+
