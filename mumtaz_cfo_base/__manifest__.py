@@ -1,0 +1,21 @@
+{
+    "name": "Mumtaz CFO Base",
+    "summary": "Workspace and category foundation for Mumtaz v1 CFO toolkit",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["base", "mail", "mumtaz_core"],
+    "data": [
+        "security/cfo_base_security.xml",
+        "security/ir.model.access.csv",
+        "security/cfo_base_rules.xml",
+        "views/cfo_workspace_views.xml",
+        "views/cfo_category_views.xml",
+        "views/cfo_menus.xml",
+        "data/cfo_category_data.xml",
+    ],
+    "installable": True,
+    "auto_install": False,
+    "application": True,
+}
