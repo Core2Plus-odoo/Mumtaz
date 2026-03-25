@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_cfo_review_item_tree" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.review.item.tree</field>
+        <field name="model">mumtaz.cfo.review.item</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="create_date"/>
+                <field name="workspace_id"/>
+                <field name="transaction_id"/>
+                <field name="reason"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_cfo_review_item_form" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.review.item.form</field>
+        <field name="model">mumtaz.cfo.review.item</field>
+        <field name="arch" type="xml">
+            <form string="CFO Review Item">
+                <header>
+                    <button name="action_resolve" type="object" string="Resolve" class="btn-primary" invisible="status == 'resolved'"/>
+                    <button name="action_ignore" type="object" string="Ignore" invisible="status == 'ignored'"/>
+                    <field name="status" widget="statusbar" statusbar_visible="open,resolved,ignored"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="transaction_id"/>
+                        <field name="workspace_id"/>
+                        <field name="reason"/>
+                    </group>
+                    <group>
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_cfo_review_item" model="ir.actions.act_window">
+        <field name="name">Review Queue</field>
+        <field name="res_model">mumtaz.cfo.review.item</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[("status", "=", "open")]</field>
+    </record>
+</odoo>

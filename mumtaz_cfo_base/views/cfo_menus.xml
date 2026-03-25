@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <menuitem id="menu_mumtaz_cfo_root"
+              name="CFO Toolkit"
+              sequence="30"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+
+    <menuitem id="menu_mumtaz_cfo_workspace"
+              name="Workspaces"
+              parent="menu_mumtaz_cfo_root"
+              action="action_mumtaz_cfo_workspace"
+              sequence="10"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_user"/>
+
+    <menuitem id="menu_mumtaz_cfo_category"
+              name="Categories"
+              parent="menu_mumtaz_cfo_root"
+              action="action_mumtaz_cfo_category"
+              sequence="20"
+              groups="mumtaz_cfo_base.group_mumtaz_cfo_manager"/>
+</odoo>
