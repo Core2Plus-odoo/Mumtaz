@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_cfo_transaction_tree" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.transaction.tree</field>
+        <field name="model">mumtaz.cfo.transaction</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="workspace_id"/>
+                <field name="description"/>
+                <field name="reference"/>
+                <field name="direction"/>
+                <field name="entry_type"/>
+                <field name="category_id"/>
+                <field name="amount"/>
+                <field name="is_duplicate"/>
+                <field name="requires_review"/>
+                <field name="batch_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_cfo_transaction_form" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.transaction.form</field>
+        <field name="model">mumtaz.cfo.transaction</field>
+        <field name="arch" type="xml">
+            <form string="CFO Transaction">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="workspace_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="batch_id"/>
+                            <field name="data_source_id"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="description"/>
+                            <field name="reference"/>
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="direction"/>
+                            <field name="entry_type"/>
+                            <field name="category_id"/>
+                        </group>
+                        <group>
+                            <field name="is_duplicate" readonly="1"/>
+                            <field name="requires_review" readonly="1"/>
+                            <field name="review_reason" readonly="1"/>
+                            <field name="review_item_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Source Payload">
+                        <field name="raw_payload_json" nolabel="1" readonly="1" widget="text"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_cfo_transaction" model="ir.actions.act_window">
+        <field name="name">Transactions</field>
+        <field name="res_model">mumtaz.cfo.transaction</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
