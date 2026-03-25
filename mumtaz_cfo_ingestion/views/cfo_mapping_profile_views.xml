@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_cfo_mapping_profile_tree" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.mapping.profile.tree</field>
+        <field name="model">mumtaz.cfo.mapping.profile</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="workspace_id"/>
+                <field name="data_source_id"/>
+                <field name="sample_columns"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_cfo_mapping_profile_form" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.mapping.profile.form</field>
+        <field name="model">mumtaz.cfo.mapping.profile</field>
+        <field name="arch" type="xml">
+            <form string="CFO Mapping Profile">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="workspace_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="data_source_id"/>
+                        </group>
+                        <group>
+                            <field name="sample_columns" placeholder="date,description,amount,balance"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Column Mapping JSON">
+                        <field name="mapping_json" nolabel="1" widget="text"/>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_cfo_mapping_profile" model="ir.actions.act_window">
+        <field name="name">Mapping Profiles</field>
+        <field name="res_model">mumtaz.cfo.mapping.profile</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
