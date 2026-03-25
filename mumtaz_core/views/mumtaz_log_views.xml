@@ -64,32 +64,21 @@
                 <field name="user_id"/>
                 <field name="module_name" string="Module"/>
                 <field name="action"/>
-                <separator/>
                 <filter string="Errors" name="errors"
                         domain="[('level', '=', 'error')]"/>
                 <filter string="Warnings" name="warnings"
                         domain="[('level', '=', 'warning')]"/>
                 <filter string="Info" name="info"
                         domain="[('level', '=', 'info')]"/>
-                <separator/>
                 <filter string="Voice Queries" name="voice"
                         domain="[('module_name', '=', 'mumtaz_voice')]"/>
                 <filter string="AI Chat" name="ai"
                         domain="[('module_name', '=', 'mumtaz_ai')]"/>
-                <separator/>
-                <filter string="Today" name="today"
-                        domain="[('create_date', '>=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00'))]"/>
-                <filter string="Last 7 Days" name="last_week"
-                        domain="[('create_date', '>=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))]"/>
-                <filter string="Last 30 Days" name="last_month"
-                        domain="[('create_date', '>=', (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y-%m-%d 00:00:00'))]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Module" name="group_module" context="{'group_by': 'module_name'}"/>
-                    <filter string="Level" name="group_level" context="{'group_by': 'level'}"/>
-                    <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
-                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
-                    <filter string="Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
-                </group>
+                <filter string="Group by Module" name="group_module" context="{'group_by': 'module_name'}"/>
+                <filter string="Group by Level" name="group_level" context="{'group_by': 'level'}"/>
+                <filter string="Group by User" name="group_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Group by Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                <filter string="Group by Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
             </search>
         </field>
     </record>
@@ -100,7 +89,7 @@
         <field name="res_model">mumtaz.core.log</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_mumtaz_core_log_search"/>
-        <field name="context">{'search_default_last_month': 1}</field>
+        <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No queries logged yet</p>
             <p>Logs appear here after users interact with the CFO Voice Assistant or AI Chat.</p>
