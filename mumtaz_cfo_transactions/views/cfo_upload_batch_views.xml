@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mumtaz_cfo_upload_batch_form_inherit_processing" model="ir.ui.view">
+        <field name="name">mumtaz.cfo.upload.batch.form.inherit.processing</field>
+        <field name="model">mumtaz.cfo.upload.batch</field>
+        <field name="inherit_id" ref="mumtaz_cfo_ingestion.view_mumtaz_cfo_upload_batch_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_process_batch"
+                        string="Process Batch"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state not in ('uploaded', 'mapped', 'ready')"/>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="statusbar_visible">draft,uploaded,mapped,ready,processed,failed</attribute>
+            </xpath>
+            <xpath expr="//sheet/group[last()]" position="after">
+                <group string="Processing Stats">
+                    <group>
+                        <field name="processed_on" readonly="1"/>
+                        <field name="transaction_count" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="duplicate_count" readonly="1"/>
+                        <field name="review_count" readonly="1"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

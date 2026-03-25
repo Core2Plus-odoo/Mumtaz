@@ -11,7 +11,6 @@
         "security/mumtaz_core_rules.xml",
         "security/ir.model.access.csv",
         "views/mumtaz_core_settings_views.xml",
-        "views/mumtaz_log_views.xml",
         "views/mumtaz_res_config_settings_views.xml",
         "data/mumtaz_core_data.xml",
     ],
