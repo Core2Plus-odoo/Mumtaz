@@ -21,6 +21,7 @@ MODULES = [
     "mumtaz_cfo_ingestion",
     "mumtaz_cfo_transactions",
     "mumtaz_cfo_toolkit",
+    "mumtaz_super_toolkit",
 ]
 
 errors = []
