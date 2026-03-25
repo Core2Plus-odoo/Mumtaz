@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="mumtaz_cfo_category_income_sales" model="mumtaz.cfo.category">
+        <field name="name">Sales Revenue</field>
+        <field name="code">sales_revenue</field>
+        <field name="kind">income</field>
+        <field name="is_system">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="mumtaz_cfo_category_income_other" model="mumtaz.cfo.category">
+        <field name="name">Other Income</field>
+        <field name="code">other_income</field>
+        <field name="kind">income</field>
+        <field name="is_system">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="mumtaz_cfo_category_expense_payroll" model="mumtaz.cfo.category">
+        <field name="name">Payroll</field>
+        <field name="code">payroll</field>
+        <field name="kind">expense</field>
+        <field name="is_system">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="mumtaz_cfo_category_expense_rent" model="mumtaz.cfo.category">
+        <field name="name">Rent &amp; Utilities</field>
+        <field name="code">rent_utilities</field>
+        <field name="kind">expense</field>
+        <field name="is_system">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="mumtaz_cfo_category_expense_marketing" model="mumtaz.cfo.category">
+        <field name="name">Marketing</field>
+        <field name="code">marketing</field>
+        <field name="kind">expense</field>
+        <field name="is_system">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="mumtaz_cfo_category_transfer_internal" model="mumtaz.cfo.category">
+        <field name="name">Internal Transfers</field>
+        <field name="code">internal_transfers</field>
+        <field name="kind">transfer</field>
+        <field name="is_system">True</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

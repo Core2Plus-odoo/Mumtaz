@@ -1,6 +1,6 @@
 # Odoo 19 CE - Mumtaz app detection guide
 
-If Odoo cannot detect `mumtaz_base`, `mumtaz_core`, or `mumtaz_ai`, the issue is usually `addons_path`/permissions/cache, not module code.
+If Odoo cannot detect `mumtaz_base`, `mumtaz_core`, `mumtaz_ai`, `mumtaz_cfo_base`, or `mumtaz_cfo_ingestion`, the issue is usually `addons_path`/permissions/cache, not module code.
 
 ## 1) Find your database name
 ```bash
@@ -65,7 +65,7 @@ sudo -u odoo /usr/bin/odoo -c /etc/odoo/odoo.conf -d Mumtaz_ERP -u base --stop-a
 ### Verify modules exist in database
 ```bash
 sudo -u odoo /usr/bin/odoo shell -c /etc/odoo/odoo.conf -d Mumtaz_ERP <<'PY'
-mods = env['ir.module.module'].search([('name', 'in', ['mumtaz_base','mumtaz_core','mumtaz_ai'])])
+mods = env['ir.module.module'].search([('name', 'in', ['mumtaz_base','mumtaz_core','mumtaz_ai','mumtaz_cfo_base','mumtaz_cfo_ingestion'])])
 print(mods.mapped(lambda m: (m.name, m.state)))
 PY
 ```
