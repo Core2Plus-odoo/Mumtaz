@@ -88,7 +88,7 @@ sudo -u odoo /usr/bin/odoo -c "$ODOO_CONF" -d "$DB_NAME" -u base --stop-after-in
 
 echo "[6/6] Verifying module records in ir.module.module ..."
 sudo -u odoo /usr/bin/odoo shell -c "$ODOO_CONF" -d "$DB_NAME" <<'PY'
-mods = env['ir.module.module'].search([('name', 'in', ['mumtaz_base', 'mumtaz_core', 'mumtaz_ai', 'mumtaz_cfo_base', 'mumtaz_cfo_ingestion'])])
+mods = env['ir.module.module'].search([('name', 'in', ['mumtaz_base', 'mumtaz_core', 'mumtaz_ai', 'mumtaz_cfo_base', 'mumtaz_cfo_ingestion', 'mumtaz_cfo_transactions'])])
 print("Found modules:", mods.mapped(lambda m: (m.name, m.state)))
 PY
 

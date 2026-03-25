@@ -19,6 +19,7 @@ MODULES = [
     # CFO v1 layer
     "mumtaz_cfo_base",
     "mumtaz_cfo_ingestion",
+    "mumtaz_cfo_transactions",
 ]
 
 errors = []
