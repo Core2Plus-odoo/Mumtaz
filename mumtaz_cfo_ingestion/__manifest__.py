@@ -1,0 +1,20 @@
+{
+    "name": "Mumtaz CFO Ingestion",
+    "summary": "Upload and mapping foundation for Mumtaz CFO transaction ingestion",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["mumtaz_cfo_base"],
+    "data": [
+        "security/ir.model.access.csv",
+        "security/cfo_ingestion_rules.xml",
+        "views/cfo_data_source_views.xml",
+        "views/cfo_mapping_profile_views.xml",
+        "views/cfo_upload_batch_views.xml",
+        "views/cfo_ingestion_menus.xml",
+    ],
+    "installable": True,
+    "auto_install": True,
+    "application": True,
+}

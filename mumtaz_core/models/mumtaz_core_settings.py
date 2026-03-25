@@ -142,7 +142,7 @@ class MumtazCoreSettings(models.Model):
             )
             rec.log_count = len(logs)
             rec.error_count = len(logs.filtered(
-                lambda l: l.level == "error" and str(l.create_date) >= cutoff
+                lambda log_entry: log_entry.level == "error" and str(log_entry.create_date) >= cutoff
             ))
 
     # ── Constraints ───────────────────────────────────────────────────────
