@@ -60,9 +60,9 @@
         <field name="name">mumtaz.core.log.search</field>
         <field name="model">mumtaz.core.log</field>
         <field name="arch" type="xml">
-            <search string="Search Logs">
+            <search>
                 <field name="user_id"/>
-                <field name="module_name" string="Module"/>
+                <field name="module_name"/>
                 <field name="action"/>
                 <filter string="Errors" name="errors"
                         domain="[('level', '=', 'error')]"/>
@@ -74,11 +74,6 @@
                         domain="[('module_name', '=', 'mumtaz_voice')]"/>
                 <filter string="AI Chat" name="ai"
                         domain="[('module_name', '=', 'mumtaz_ai')]"/>
-                <filter string="Group by Module" name="group_module" context="{'group_by': 'module_name'}"/>
-                <filter string="Group by Level" name="group_level" context="{'group_by': 'level'}"/>
-                <filter string="Group by User" name="group_user" context="{'group_by': 'user_id'}"/>
-                <filter string="Group by Company" name="group_company" context="{'group_by': 'company_id'}"/>
-                <filter string="Group by Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
             </search>
         </field>
     </record>
