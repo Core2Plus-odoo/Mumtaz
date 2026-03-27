@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List ──────────────────────────────────────────────────────── -->
+    <record id="lead_scraper_record_list_view" model="ir.ui.view">
+        <field name="name">lead.scraper.record.list</field>
+        <field name="model">lead.scraper.record</field>
+        <field name="arch" type="xml">
+            <list string="Extracted Leads"
+                  decoration-success="processing_status == 'crm_created'"
+                  decoration-warning="processing_status == 'skipped'"
+                  decoration-danger="processing_status == 'failed'">
+                <field name="source_id"/>
+                <field name="company_name"/>
+                <field name="contact_name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="city"/>
+                <field name="country_name"/>
+                <field name="industry" optional="hide"/>
+                <field name="duplicate_status" widget="badge"
+                       decoration-success="duplicate_status == 'unique'"
+                       decoration-danger="duplicate_status == 'duplicate'"/>
+                <field name="processing_status" widget="badge"
+                       decoration-success="processing_status == 'crm_created'"
+                       decoration-warning="processing_status in ('skipped','pending')"
+                       decoration-danger="processing_status == 'failed'"/>
+                <field name="crm_lead_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search ────────────────────────────────────────────────────── -->
+    <record id="lead_scraper_record_search_view" model="ir.ui.view">
+        <field name="name">lead.scraper.record.search</field>
+        <field name="model">lead.scraper.record</field>
+        <field name="arch" type="xml">
+            <search string="Extracted Leads">
+                <field name="company_name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="source_id"/>
+                <filter string="Unique" name="unique"
+                        domain="[('duplicate_status','=','unique')]"/>
+                <filter string="Duplicates" name="duplicates"
+                        domain="[('duplicate_status','=','duplicate')]"/>
+                <filter string="CRM Created" name="crm_created"
+                        domain="[('processing_status','=','crm_created')]"/>
+                <filter string="Pending" name="pending"
+                        domain="[('processing_status','=','normalized')]"/>
+                <filter string="Failed" name="failed"
+                        domain="[('processing_status','=','failed')]"/>
+                <filter string="Source" name="group_source"
+                        context="{'group_by': 'source_id'}"/>
+                <filter string="Status" name="group_status"
+                        context="{'group_by': 'processing_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Form ──────────────────────────────────────────────────────── -->
+    <record id="lead_scraper_record_form_view" model="ir.ui.view">
+        <field name="name">lead.scraper.record.form</field>
+        <field name="model">lead.scraper.record</field>
+        <field name="arch" type="xml">
+            <form string="Extracted Lead Record">
+                <header>
+                    <button name="action_push_to_crm" type="object"
+                            string="Push to CRM"
+                            class="oe_highlight"
+                            invisible="processing_status in ('crm_created', 'skipped')"
+                            groups="mumtaz_lead_scraper.group_lead_scraper_user"/>
+                    <button name="action_check_duplicate" type="object"
+                            string="Check Duplicate"
+                            invisible="duplicate_status != 'unchecked'"
+                            groups="mumtaz_lead_scraper.group_lead_scraper_user"/>
+                    <button name="action_mark_skipped" type="object"
+                            string="Skip"
+                            invisible="processing_status in ('crm_created', 'skipped')"/>
+                    <button name="action_open_crm_lead" type="object"
+                            string="View CRM Lead"
+                            invisible="not crm_lead_id"/>
+                    <field name="processing_status" widget="statusbar"
+                           statusbar_visible="pending,normalized,crm_created"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Lead Data">
+                            <field name="company_name"/>
+                            <field name="contact_name"/>
+                            <field name="email"/>
+                            <field name="phone"/>
+                            <field name="website"/>
+                            <field name="industry"/>
+                        </group>
+                        <group string="Location">
+                            <field name="city"/>
+                            <field name="country_name"/>
+                        </group>
+                    </group>
+
+                    <group string="Source &amp; Status">
+                        <group>
+                            <field name="source_id" readonly="1"/>
+                            <field name="job_id" readonly="1"/>
+                            <field name="source_url" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="normalized_status" readonly="1"/>
+                            <field name="duplicate_status" readonly="1"/>
+                            <field name="duplicate_lead_id" readonly="1"/>
+                            <field name="crm_lead_id" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Description" name="desc">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                        <page string="Processing Notes" name="notes">
+                            <field name="processing_notes" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Raw Payload" name="raw">
+                            <field name="raw_payload" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────── -->
+    <record id="action_lead_scraper_record" model="ir.actions.act_window">
+        <field name="name">Extracted Leads</field>
+        <field name="res_model">lead.scraper.record</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="lead_scraper_record_search_view"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No extracted leads yet. Run a scraper source to populate this list.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,25 @@
+{
+    "name": "Mumtaz Lead Scraper",
+    "summary": "Configurable lead scraping engine with CRM integration",
+    "version": "19.0.1.0.0",
+    "category": "CRM",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["base", "mail", "crm"],
+    "data": [
+        "security/lead_scraper_security.xml",
+        "security/ir.model.access.csv",
+        "data/lead_scraper_cron.xml",
+        "views/lead_scraper_source_views.xml",
+        "views/lead_scraper_job_views.xml",
+        "views/lead_scraper_record_views.xml",
+        "views/lead_scraper_wizard_views.xml",
+        "views/lead_scraper_menus.xml",
+    ],
+    "external_dependencies": {
+        "python": ["requests", "bs4"],
+    },
+    "installable": True,
+    "auto_install": False,
+    "application": True,
+}
