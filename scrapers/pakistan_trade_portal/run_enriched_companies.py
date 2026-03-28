@@ -3,17 +3,8 @@ import re
 import time
 from typing import Iterable, List, Set
 from urllib.parse import urljoin, urlparse
-from urllib.request import Request, urlopen
-
-try:
-    import requests
-except Exception:
-    requests = None
-
-try:
-    from bs4 import BeautifulSoup
-except Exception:
-    BeautifulSoup = None
+import requests
+from bs4 import BeautifulSoup
 
 from config import BASE_URL, DELAY_SECONDS, HEADERS
 from models import RawTradeRecord, ScoredTradeLead
@@ -31,19 +22,12 @@ MAX_FOLLOWUP_PAGES = 3
 
 
 def fetch_html(url: str) -> str:
-    if requests is not None:
-        response = requests.get(url, headers=HEADERS, timeout=TIMEOUT_SECONDS)
-        response.raise_for_status()
-        return response.text
-
-    req = Request(url, headers=HEADERS)
-    with urlopen(req, timeout=TIMEOUT_SECONDS) as response:
-        return response.read().decode("utf-8", errors="replace")
+    response = requests.get(url, headers=HEADERS, timeout=TIMEOUT_SECONDS)
+    response.raise_for_status()
+    return response.text
 
 
 def get_soup(url: str):
-    if BeautifulSoup is None:
-        return None
     return BeautifulSoup(fetch_html(url), "html.parser")
 
 
@@ -169,14 +153,10 @@ def scrape_enriched_companies() -> List[dict]:
 
     try:
         soup = get_soup(BASE_URL)
-        if soup is None:
-            raise RuntimeError("BeautifulSoup is not installed")
 
         for page_url in _candidate_pages(soup):
             try:
                 page_soup = get_soup(page_url)
-                if page_soup is None:
-                    continue
                 all_records.extend(_extract_records_from_soup(page_soup, page_url))
             except Exception as page_error:
                 print(f"Warning: failed to scrape {page_url} ({page_error})")
