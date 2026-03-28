@@ -5,8 +5,8 @@ COMPANY_CARD_SELECTORS = [
     ".company-card",
     ".supplier-card",
     ".listing-item",
+    ".company-listing",
     "article",
-    "li",
 ]
 
 COMPANY_NAME_SELECTORS = [
