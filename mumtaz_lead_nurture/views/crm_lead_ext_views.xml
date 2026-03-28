@@ -99,22 +99,6 @@
         </field>
     </record>
 
-    <!-- ══ CRM LEAD LIST — NURTURE COLUMNS ═══════════════════════════ -->
-
-    <record id="crm_lead_list_inherit_nurture" model="ir.ui.view">
-        <field name="name">crm.lead.list.mumtaz.nurture</field>
-        <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_view_tree"/>
-        <field name="arch" type="xml">
-            <xpath expr="//list" position="inside">
-                <field name="nurture_stage" optional="show" string="Nurture"/>
-                <field name="qualification_score" optional="show" string="Score"/>
-                <field name="response_status" optional="show" string="Response"/>
-                <field name="nurture_campaign_id" optional="show" string="Campaign"/>
-            </xpath>
-        </field>
-    </record>
-
     <!-- ══ NURTURE LEADS kanban / list action ══════════════════════════ -->
 
     <record id="action_nurture_leads" model="ir.actions.act_window">
