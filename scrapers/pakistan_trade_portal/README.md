@@ -26,8 +26,9 @@ Capture publicly visible exporter and product listing data, score prospects for 
 - `config.py` - configuration values
 - `models.py` - dataclasses for raw and scored leads
 - `scoring.py` - business-development scoring rules
-- `scrape.py` - scraper entry point
-- `odoo_push.py` - Odoo import helper via XML-RPC
+- `scrape.py` - lightweight homepage scraper
+- `run_enriched_companies.py` - enriched company discovery + scoring pipeline
+- `portal_selectors.py` - CSS selector bank for resilient extraction
 - `requirements.txt` - Python dependencies
 
 ## Run
@@ -37,7 +38,7 @@ cd scrapers/pakistan_trade_portal
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python scrape.py
+python run_enriched_companies.py
 ```
 
 ## Important note

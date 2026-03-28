@@ -1,34 +1,44 @@
 # Repository Inspection Report
 
 - Date: 2026-03-28
-- Scope: Full static inspection of repository files and addon structure.
+- Method: static inspection of repository files and addon manifests.
 
-## Snapshot
-- Total tracked files (excluding `.git` internals): **156**
-- Total Odoo addons (directories with `__manifest__.py`): **13**
-- Python files: **82**, XML files: **39**, HTML files: **10**
+## Executive Summary
+- Repository is primarily an Odoo 19 addon monorepo with a separate static marketing site and one external data-scraper utility.
+- Addon graph is centered on `mumtaz_core`, with CFO, AI/Voice, SME onboarding, and tenant-provisioning capabilities layered on top.
+- Current inspection found one documentation consistency issue in the scraper package (missing referenced file).
 
-## Odoo Addons and Dependencies
-| Addon path | Name | Version | Depends | Summary |
-|---|---|---|---|---|
-| `mumtaz_ai` | Mumtaz AI | 19.0.1.2.0 | `base, mail, account, mumtaz_core` | Pluggable AI interaction layer for Odoo Community |
-| `mumtaz_base` | Mumtaz Base | 19.0.1.2.0 | `base, contacts` | Base customizations for Mumtaz in Odoo Community |
-| `mumtaz_branding` | Mumtaz Branding | 19.0.1.0.0 | `mumtaz_core` | White-label brand configuration engine for Mumtaz platform partners |
-| `mumtaz_cfo_base` | Mumtaz CFO Base | 19.0.1.0.0 | `base, mail` | Workspace and category foundation for Mumtaz v1 CFO toolkit |
-| `mumtaz_cfo_ingestion` | Mumtaz CFO Ingestion | 19.0.1.0.0 | `mumtaz_cfo_base` | Upload and mapping foundation for Mumtaz CFO transaction ingestion |
-| `mumtaz_cfo_toolkit` | Mumtaz CFO Toolkit | 19.0.1.0.0 | `mumtaz_cfo_base, mumtaz_cfo_ingestion, mumtaz_cfo_transactions` | Compact installer module for CFO base, ingestion, and transactions |
-| `mumtaz_cfo_transactions` | Mumtaz CFO Transactions | 19.0.1.0.0 | `mumtaz_cfo_ingestion` | Normalized transaction engine and review workflow for Mumtaz CFO |
-| `mumtaz_core` | Mumtaz Core | 19.0.1.2.0 | `base, mail, base_setup` | Core configuration and logging for Mumtaz AI Agent |
-| `mumtaz_onboarding` | Mumtaz Onboarding | 19.0.1.0.0 | `mumtaz_sme_profile` | Guided SME onboarding checklists and progress tracking |
-| `mumtaz_sme_profile` | Mumtaz SME Profile | 19.0.1.0.0 | `mumtaz_branding` | SME company profile, classification, and lifecycle management |
-| `mumtaz_super_toolkit` | Mumtaz Super Toolkit | 19.0.1.0.0 | `mumtaz_base, mumtaz_cfo_toolkit` | Single-click installer for Mumtaz base + CFO toolkit |
-| `mumtaz_tenant_manager` | Mumtaz Tenant Manager | 19.0.1.0.0 | `base, mail, mumtaz_branding` | Central control plane for managing isolated Odoo tenants in the Mumtaz SaaS platform |
-| `mumtaz_voice` | Mumtaz CFO Voice Assistant | 19.0.1.0.0 | `mumtaz_ai, mumtaz_core, account` | AI-powered CFO Voice Assistant - query your Odoo financials by voice or text |
+## Repository Composition
+- Total files (excluding `.git`): **157**
+- Python: **82**, XML: **39**, CSV: **11**, HTML: **10**
 
-## HTTP Controllers / Routes
-- `mumtaz_voice/controllers/voice_controller.py`
+## Addon Matrix
+| Addon | Version | Depends | Models | Services | Controllers | Purpose |
+|---|---|---|---|---|---|---|
+| `mumtaz_ai` | 19.0.1.2.0 | `base, mail, account, mumtaz_core` | 2 | 1 | 0 | Pluggable AI interaction layer for Odoo Community |
+| `mumtaz_base` | 19.0.1.2.0 | `base, contacts` | 1 | 0 | 0 | Base customizations for Mumtaz in Odoo Community |
+| `mumtaz_branding` | 19.0.1.0.0 | `mumtaz_core` | 1 | 0 | 0 | White-label brand configuration engine for Mumtaz platform partners |
+| `mumtaz_cfo_base` | 19.0.1.0.0 | `base, mail` | 2 | 0 | 0 | Workspace and category foundation for Mumtaz v1 CFO toolkit |
+| `mumtaz_cfo_ingestion` | 19.0.1.0.0 | `mumtaz_cfo_base` | 3 | 0 | 0 | Upload and mapping foundation for Mumtaz CFO transaction ingestion |
+| `mumtaz_cfo_toolkit` | 19.0.1.0.0 | `mumtaz_cfo_base, mumtaz_cfo_ingestion, mumtaz_cfo_transactions` | 0 | 0 | 0 | Compact installer module for CFO base, ingestion, and transactions |
+| `mumtaz_cfo_transactions` | 19.0.1.0.0 | `mumtaz_cfo_ingestion` | 3 | 1 | 0 | Normalized transaction engine and review workflow for Mumtaz CFO |
+| `mumtaz_core` | 19.0.1.2.0 | `base, mail, base_setup` | 3 | 0 | 0 | Core configuration and logging for Mumtaz AI Agent |
+| `mumtaz_onboarding` | 19.0.1.0.0 | `mumtaz_sme_profile` | 1 | 0 | 0 | Guided SME onboarding checklists and progress tracking |
+| `mumtaz_sme_profile` | 19.0.1.0.0 | `mumtaz_branding` | 1 | 0 | 0 | SME company profile, classification, and lifecycle management |
+| `mumtaz_super_toolkit` | 19.0.1.0.0 | `mumtaz_base, mumtaz_cfo_toolkit` | 0 | 0 | 0 | Single-click installer for Mumtaz base + CFO toolkit |
+| `mumtaz_tenant_manager` | 19.0.1.0.0 | `base, mail, mumtaz_branding` | 2 | 1 | 0 | Central control plane for managing isolated Odoo tenants in the Mumtaz SaaS platform |
+| `mumtaz_voice` | 19.0.1.0.0 | `mumtaz_ai, mumtaz_core, account` | 2 | 2 | 1 | AI-powered CFO Voice Assistant - query your Odoo financials by voice or text |
 
-## Top-level Areas
+## Key Python Entry Points
+- `mumtaz_ai` → services: AIService
+- `mumtaz_cfo_transactions` → services: MumtazCFOIngestionService
+- `mumtaz_tenant_manager` → services: DryRunProvisioner
+- `mumtaz_voice` → controllers: MumtazVoiceController | services: VoiceService, CFOService
+
+## Notable Findings
+- ⚠️ `scrapers/pakistan_trade_portal/README.md` references `odoo_push.py`, but that file is not present in the repository.
+
+## Top-Level Areas
 - `deployment/`: 6 files
 - `mumtaz_ai/`: 14 files
 - `mumtaz_base/`: 6 files
@@ -49,6 +59,7 @@
 ## Complete File Inventory
 - `.gitignore`
 - `.mcp.json`
+- `REPO_INSPECTION.md`
 - `deployment/ODOO19_APP_DETECTION.md`
 - `deployment/check_mumtaz_modules.py`
 - `deployment/make_odoo_detect_mumtaz.sh`
