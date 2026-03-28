@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <record id="module_lead_nurture_category" model="ir.module.category">
-        <field name="name">Mumtaz Lead Nurture</field>
-        <field name="sequence">100</field>
-    </record>
-
     <record id="group_lead_nurture_user" model="res.groups">
-        <field name="name">User</field>
-        <field name="category_id" ref="module_lead_nurture_category"/>
+        <field name="name">Mumtaz Lead Nurture / User</field>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
     <record id="group_lead_nurture_manager" model="res.groups">
-        <field name="name">Manager</field>
-        <field name="category_id" ref="module_lead_nurture_category"/>
+        <field name="name">Mumtaz Lead Nurture / Manager</field>
         <field name="implied_ids" eval="[(4, ref('group_lead_nurture_user'))]"/>
     </record>
 
