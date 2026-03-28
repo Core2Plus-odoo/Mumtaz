@@ -62,6 +62,82 @@ class ScraperEngine:
         return job
 
     def _execute(self, job, source, auto_push_crm):
+        # Dispatch to dedicated PTP engine if source type is ptp
+        if source.source_type == "ptp":
+            all_leads = self._execute_ptp(job, source)
+        else:
+            all_leads = self._execute_generic(job, source)
+        self._save_leads(job, source, all_leads, auto_push_crm)
+
+    def _execute_ptp(self, job, source):
+        """Two-level scrape: collection page(s) → company detail pages."""
+        from .ptp_parser import PTPListingParser, PTPDetailParser
+
+        fetcher = PageFetcher(delay=source.request_delay or 2.0)
+        listing_parser = PTPListingParser()
+        detail_parser = PTPDetailParser()
+        max_pages = source.max_pages or 20
+
+        # --- Phase 1: collect all company URLs ---
+        collection_queue = [source.url]
+        collection_visited = set()
+        company_urls = []
+        collection_pages = 0
+
+        while collection_queue and collection_pages < max_pages:
+            col_url = collection_queue.pop(0)
+            if col_url in collection_visited:
+                continue
+            collection_visited.add(col_url)
+
+            if source.respect_robots and not fetcher.is_allowed_by_robots(col_url):
+                job.append_log(f"Skipped (robots.txt): {col_url}")
+                continue
+
+            job.append_log(f"Fetching collection page: {col_url}")
+            result = fetcher.fetch(col_url)
+            if not result.success:
+                job.append_log(f"Collection fetch failed [{result.status_code}]: {result.error}")
+                continue
+
+            collection_pages += 1
+            new_urls = listing_parser.get_company_urls(result.content, result.final_url or col_url)
+            added = [u for u in new_urls if u not in set(company_urls)]
+            company_urls.extend(added)
+            job.append_log(f"Found {len(new_urls)} company URLs (+{len(added)} new) on this page")
+
+            next_col = listing_parser.get_next_page_url(result.content, result.final_url or col_url)
+            if next_col and next_col not in collection_visited:
+                collection_queue.append(next_col)
+                job.append_log(f"Collection next page: {next_col}")
+
+        job.append_log(f"Phase 1 complete — {len(company_urls)} unique company URLs")
+
+        # --- Phase 2: fetch each company detail page ---
+        all_leads = []
+        detail_limit = max_pages * 10  # reasonable cap on detail pages
+        for i, comp_url in enumerate(company_urls[:detail_limit]):
+            if source.respect_robots and not fetcher.is_allowed_by_robots(comp_url):
+                job.append_log(f"Skipped (robots.txt): {comp_url}")
+                continue
+
+            job.append_log(f"[{i+1}/{min(len(company_urls), detail_limit)}] {comp_url}")
+            result = fetcher.fetch(comp_url)
+            if not result.success:
+                job.append_log(f"  Failed [{result.status_code}]: {result.error}")
+                continue
+
+            lead = detail_parser.parse(result.content, result.final_url or comp_url)
+            if lead:
+                all_leads.append(lead)
+                job.append_log(f"  Extracted: {lead.company_name} | {lead.email} | {lead.phone}")
+            else:
+                job.append_log(f"  No usable data found")
+
+        job.append_log(f"Phase 2 complete — {len(all_leads)} leads extracted")
+        return all_leads
+
+    def _execute_generic(self, job, source):
         fetcher = PageFetcher(delay=source.request_delay or 2.0)
         parser = get_parser(source.parsing_mode or "auto")
         config = source.get_selector_config()
@@ -102,10 +178,14 @@ class ScraperEngine:
                     queue.append(next_url)
                     job.append_log(f"Next page found: {next_url}")
 
-        job.total_found = len(all_leads)
         job.append_log(f"Total raw records: {len(all_leads)} from {pages_fetched} pages")
+        return all_leads
 
-        # Process each lead
+    def _save_leads(self, job, source, all_leads, auto_push_crm):
+        """Normalize, deduplicate, persist, and optionally push to CRM."""
+        job.total_found = len(all_leads)
+        job.append_log(f"Processing {len(all_leads)} raw leads…")
+
         processed = failed = 0
         for parsed in all_leads:
             normalized = self.normalizer.normalize(parsed)

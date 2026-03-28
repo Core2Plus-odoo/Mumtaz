@@ -22,6 +22,7 @@ class LeadScraperSource(models.Model):
             ("listing", "Listing + Detail Pages"),
             ("api", "API / JSON Endpoint"),
             ("sitemap", "Sitemap"),
+            ("ptp", "Pakistan Trade Portal"),
         ],
         default="html",
         required=True,
