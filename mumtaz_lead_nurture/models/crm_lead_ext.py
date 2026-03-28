@@ -142,7 +142,7 @@ class CrmLeadExt(models.Model):
     nurture_log_ids = fields.One2many(
         "lead.nurture.log", "lead_id", string="Communication History"
     )
-    nurture_log_count = fields.Integer(compute="_compute_nurture_log_count", string="Messages")
+    nurture_log_count = fields.Integer(compute="_compute_nurture_log_count", string="Outreach")
 
     # ── Conversion ────────────────────────────────────────────────────────
     auto_convert_ready = fields.Boolean(

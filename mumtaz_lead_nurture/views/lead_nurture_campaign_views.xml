@@ -78,7 +78,7 @@
                     </group>
                     <notebook>
                         <page string="Sequence Steps" name="steps">
-                            <field name="step_ids" context="{'default_campaign_id': active_id}">
+                            <field name="step_ids">
                                 <list editable="bottom">
                                     <field name="step_number" string="#"/>
                                     <field name="name"/>
