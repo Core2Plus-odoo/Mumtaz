@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ QUALIFICATION RULES ════════════════════════════════════════ -->
+
+    <record id="lead_nurture_rule_list" model="ir.ui.view">
+        <field name="name">lead.nurture.rule.list</field>
+        <field name="model">lead.nurture.rule</field>
+        <field name="arch" type="xml">
+            <list string="Qualification Rules" editable="top"
+                  decoration-success="score_change &gt; 0"
+                  decoration-danger="score_change &lt; 0">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="trigger_event"/>
+                <field name="score_change"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="lead_nurture_rule_search" model="ir.ui.view">
+        <field name="name">lead.nurture.rule.search</field>
+        <field name="model">lead.nurture.rule</field>
+        <field name="arch" type="xml">
+            <search string="Qualification Rules">
+                <field name="name"/>
+                <field name="trigger_event"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Positive" name="positive" domain="[('score_change','>',0)]"/>
+                <filter string="Negative" name="negative" domain="[('score_change','&lt;',0)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_lead_nurture_rule" model="ir.actions.act_window">
+        <field name="name">Scoring Rules</field>
+        <field name="res_model">lead.nurture.rule</field>
+        <field name="view_mode">list</field>
+        <field name="context">{"search_default_active": 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No scoring rules. Rules determine how events change lead scores.
+            </p>
+        </field>
+    </record>
+
+    <!-- ══ ERP NEEDS ══════════════════════════════════════════════════ -->
+
+    <record id="lead_nurture_erp_need_list" model="ir.ui.view">
+        <field name="name">lead.nurture.erp.need.list</field>
+        <field name="model">lead.nurture.erp.need</field>
+        <field name="arch" type="xml">
+            <list string="ERP Needs" editable="top">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="description"/>
+                <field name="color" widget="color_picker"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_lead_nurture_erp_need" model="ir.actions.act_window">
+        <field name="name">ERP Needs</field>
+        <field name="res_model">lead.nurture.erp.need</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add ERP module needs to tag leads with.
+            </p>
+        </field>
+    </record>
+
+</odoo>

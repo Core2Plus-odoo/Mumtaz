@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ CAMPAIGN ═══════════════════════════════════════════════════ -->
+
+    <record id="lead_nurture_campaign_list" model="ir.ui.view">
+        <field name="name">lead.nurture.campaign.list</field>
+        <field name="model">lead.nurture.campaign</field>
+        <field name="arch" type="xml">
+            <list string="Campaigns" decoration-muted="not active">
+                <field name="name"/>
+                <field name="target_segment"/>
+                <field name="target_industry"/>
+                <field name="step_count" string="Steps"/>
+                <field name="lead_count" string="Leads"/>
+                <field name="qualified_count" string="Qualified"/>
+                <field name="converted_count" string="Converted"/>
+                <field name="qualification_threshold" string="Qual."/>
+                <field name="auto_convert_threshold" string="Auto-Conv."/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="lead_nurture_campaign_search" model="ir.ui.view">
+        <field name="name">lead.nurture.campaign.search</field>
+        <field name="model">lead.nurture.campaign</field>
+        <field name="arch" type="xml">
+            <search string="Campaigns">
+                <field name="name"/>
+                <field name="target_industry"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Archived" name="archived" domain="[('active','=',False)]"/>
+                <filter string="By Segment" name="group_segment" context="{'group_by': 'target_segment'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="lead_nurture_campaign_form" model="ir.ui.view">
+        <field name="name">lead.nurture.campaign.form</field>
+        <field name="model">lead.nurture.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Nurture Campaign">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="lead_count" widget="statinfo" string="Leads"/>
+                        </button>
+                        <button name="action_view_leads" type="object"
+                                class="oe_stat_button" icon="fa-check-circle">
+                            <field name="converted_count" widget="statinfo" string="Converted"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Campaign Name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Targeting">
+                            <field name="target_segment"/>
+                            <field name="target_industry" placeholder="textiles, manufacturing…"/>
+                            <field name="target_geography" placeholder="Pakistan, UAE…"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Defaults">
+                            <field name="team_id"/>
+                            <field name="user_id"/>
+                        </group>
+                    </group>
+                    <group string="Qualification Thresholds">
+                        <group>
+                            <field name="qualification_threshold"/>
+                        </group>
+                        <group>
+                            <field name="auto_convert_threshold"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Sequence Steps" name="steps">
+                            <field name="step_ids" context="{'default_campaign_id': active_id}">
+                                <list editable="bottom">
+                                    <field name="step_number" string="#"/>
+                                    <field name="name"/>
+                                    <field name="channel"/>
+                                    <field name="delay_days" string="Delay (days)"/>
+                                    <field name="mail_template_id"
+                                           invisible="channel != 'email'"/>
+                                    <field name="wa_template_id"
+                                           invisible="channel != 'whatsapp'"/>
+                                    <field name="activity_type_id"
+                                           invisible="channel != 'activity'"/>
+                                    <field name="score_on_send" string="Score +/-"/>
+                                    <field name="active" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Description" name="desc">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lead_nurture_campaign" model="ir.actions.act_window">
+        <field name="name">Campaigns</field>
+        <field name="res_model">lead.nurture.campaign</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_active": 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first nurture campaign.
+            </p>
+        </field>
+    </record>
+
+    <!-- ══ SEQUENCE STEP standalone view ══════════════════════════════ -->
+
+    <record id="lead_nurture_step_list" model="ir.ui.view">
+        <field name="name">lead.nurture.step.list</field>
+        <field name="model">lead.nurture.step</field>
+        <field name="arch" type="xml">
+            <list string="Sequence Steps">
+                <field name="campaign_id"/>
+                <field name="step_number" string="#"/>
+                <field name="name"/>
+                <field name="channel"/>
+                <field name="delay_days" string="Delay"/>
+                <field name="mail_template_id"/>
+                <field name="wa_template_id"/>
+                <field name="score_on_send" string="Score"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="lead_nurture_step_form" model="ir.ui.view">
+        <field name="name">lead.nurture.step.form</field>
+        <field name="model">lead.nurture.step</field>
+        <field name="arch" type="xml">
+            <form string="Sequence Step">
+                <sheet>
+                    <group>
+                        <group string="Step">
+                            <field name="campaign_id"/>
+                            <field name="step_number"/>
+                            <field name="name"/>
+                            <field name="channel"/>
+                            <field name="delay_days"/>
+                            <field name="score_on_send"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Template">
+                            <field name="mail_template_id"
+                                   invisible="channel != 'email'"/>
+                            <field name="wa_template_id"
+                                   invisible="channel != 'whatsapp'"/>
+                            <field name="activity_type_id"
+                                   invisible="channel != 'activity'"/>
+                            <field name="activity_summary"
+                                   invisible="channel != 'activity'"/>
+                            <field name="activity_deadline_days"
+                                   invisible="channel != 'activity'"/>
+                        </group>
+                    </group>
+                    <group string="Activity Note" invisible="channel != 'activity'">
+                        <field name="activity_note" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

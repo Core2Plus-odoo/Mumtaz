@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ WHATSAPP PROVIDER ══════════════════════════════════════════ -->
+
+    <record id="lead_whatsapp_provider_list" model="ir.ui.view">
+        <field name="name">lead.whatsapp.provider.list</field>
+        <field name="model">lead.whatsapp.provider</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Providers" decoration-muted="not active">
+                <field name="name"/>
+                <field name="provider_type"/>
+                <field name="is_default"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="lead_whatsapp_provider_form" model="ir.ui.view">
+        <field name="name">lead.whatsapp.provider.form</field>
+        <field name="model">lead.whatsapp.provider</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Provider">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Provider Name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="provider_type"/>
+                            <field name="is_default" widget="boolean_toggle"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <!-- WhatsApp Cloud -->
+                    <group string="WhatsApp Cloud API (Meta)"
+                           invisible="provider_type != 'whatsapp_cloud'">
+                        <field name="wa_phone_number_id"/>
+                        <field name="wa_access_token" widget="password"/>
+                        <field name="wa_api_version"/>
+                    </group>
+
+                    <!-- Twilio -->
+                    <group string="Twilio" invisible="provider_type != 'twilio'">
+                        <field name="twilio_account_sid"/>
+                        <field name="twilio_auth_token" widget="password"/>
+                        <field name="twilio_from_number"/>
+                    </group>
+
+                    <!-- Manual -->
+                    <group string="Webhook" invisible="provider_type != 'manual'">
+                        <field name="webhook_url"/>
+                        <field name="webhook_token" widget="password"/>
+                    </group>
+
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lead_whatsapp_provider" model="ir.actions.act_window">
+        <field name="name">WhatsApp Providers</field>
+        <field name="res_model">lead.whatsapp.provider</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure a WhatsApp provider to enable automated messaging.
+            </p>
+        </field>
+    </record>
+
+    <!-- ══ WHATSAPP TEMPLATES ═════════════════════════════════════════ -->
+
+    <record id="lead_whatsapp_template_list" model="ir.ui.view">
+        <field name="name">lead.whatsapp.template.list</field>
+        <field name="model">lead.whatsapp.template</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Templates" decoration-muted="not active">
+                <field name="name"/>
+                <field name="provider_id"/>
+                <field name="language"/>
+                <field name="wa_template_name"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="lead_whatsapp_template_form" model="ir.ui.view">
+        <field name="name">lead.whatsapp.template.form</field>
+        <field name="model">lead.whatsapp.template</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Template">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Template Name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="provider_id"/>
+                            <field name="language"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Meta Cloud Template">
+                            <field name="wa_template_name"/>
+                            <field name="wa_template_language"/>
+                        </group>
+                    </group>
+                    <group string="Message Body">
+                        <div class="o_form_label mb-1">
+                            Available placeholders: {company_name} {contact_name} {email}
+                            {phone} {city} {industry} {use_case}
+                        </div>
+                        <field name="body" nolabel="1" placeholder="Hello {company_name}, …"/>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lead_whatsapp_template" model="ir.actions.act_window">
+        <field name="name">WhatsApp Templates</field>
+        <field name="res_model">lead.whatsapp.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create WhatsApp message templates for nurture campaigns.
+            </p>
+        </field>
+    </record>
+
+</odoo>
