@@ -6,7 +6,7 @@
     <record id="crm_lead_form_inherit_nurture" model="ir.ui.view">
         <field name="name">crm.lead.form.mumtaz.nurture</field>
         <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_all_leads_form_view"/>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
 
             <!-- Smart button: communication history -->
@@ -104,7 +104,7 @@
     <record id="crm_lead_list_inherit_nurture" model="ir.ui.view">
         <field name="name">crm.lead.list.mumtaz.nurture</field>
         <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_all_leads_tree_view"/>
+        <field name="inherit_id" ref="crm.crm_lead_view_tree"/>
         <field name="arch" type="xml">
             <xpath expr="//list" position="inside">
                 <field name="nurture_stage" optional="show" string="Nurture"/>
