@@ -13,6 +13,15 @@ class RawTradeRecord:
     min_qty: str = ""
     source_url: str = ""
     company_url: str = ""
+    website: str = ""
+    contact_email: str = ""
+    contact_phone: str = ""
+    address: str = ""
+    description: str = ""
+    social_links: str = ""
+    has_contact_form: bool = False
+    scrape_status: str = "draft"
+    scrape_error: str = ""
     source_portal: str = "Pakistan Trade Portal"
 
     def to_dict(self):
