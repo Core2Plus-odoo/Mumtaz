@@ -1,6 +1,6 @@
 # Pakistan Trade Portal Scraper
 
-This module provides a business-development oriented scraper scaffold for the Pakistan Trade Portal.
+This module provides a business-development oriented scraper scaffold for the Pakistan Trade Portal and can run against generic business websites.
 
 ## Objective
 
@@ -10,6 +10,7 @@ Capture publicly visible exporter and product listing data, score prospects for 
 
 - Sector/category crawling
 - Product/company listing extraction
+- Generic website extraction (home/about/contact pages)
 - Lead scoring for business development
 - CSV export for review
 - Optional Odoo XML-RPC push into `crm.lead`
@@ -41,6 +42,8 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python run_enriched_companies.py --url https://example.com --output leads.csv
 ```
+
+The scraper auto-normalizes URLs (adds `https://` if missing), crawls up to configured internal pages, and extracts fallback contact details even when listing-style selectors are absent.
 
 ## Push extracted leads to Odoo CRM
 

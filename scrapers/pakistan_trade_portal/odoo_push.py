@@ -56,6 +56,9 @@ def push_leads_to_odoo(rows: Iterable[Dict[str, object]], config: Dict[str, str]
     created_ids: List[int] = []
 
     for row in rows:
+        if row.get("scrape_status") == "failed":
+            _LOGGER.warning("Skipping failed scrape row: source=%s", row.get("source_url"))
+            continue
         vals = _lead_vals(row)
         if not vals["name"]:
             _LOGGER.warning("Skipping row with empty lead name: %s", row)

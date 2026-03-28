@@ -3,7 +3,7 @@ import csv
 import logging
 import re
 import time
-from typing import Dict, Iterable, List, Set
+from typing import Dict, Iterable, List, Optional, Set
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -40,6 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 EMAIL_REGEX = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 PHONE_REGEX = re.compile(r"(?:(?:\+|00)\d{1,3}[\s-]?)?(?:\(?\d{2,5}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,5}")
 
+    return candidate.rstrip("/") + "/"
 
 def _setup_logging(verbose: bool = False) -> None:
     level = logging.DEBUG if verbose else logging.INFO
@@ -143,6 +144,21 @@ def _extract_social_links(soup, page_url: str) -> str:
     return ", ".join(sorted(set(links)))
 
 
+def _extract_company_name(soup, fallback_url: str) -> str:
+    site_name = soup.select_one("meta[property='og:site_name']")
+    if site_name and site_name.get("content"):
+        return _compact(site_name["content"])
+
+    for selector in ("h1", ".logo", ".site-title", "title"):
+        node = soup.select_one(selector)
+        if node:
+            text = _compact(node.get_text(" ", strip=True))
+            if text and len(text) >= 3:
+                return text[:140]
+
+    return urlparse(fallback_url).netloc
+
+
 def _extract_description(soup) -> str:
     meta_description = soup.select_one("meta[name='description']")
     if meta_description and meta_description.get("content"):
@@ -175,6 +191,31 @@ def _detect_js_heavy_page(soup) -> bool:
     text_len = len(_compact(soup.get_text(" ", strip=True)))
     scripts = len(soup.select("script"))
     return scripts >= 20 and text_len < 300
+
+
+def _extract_page_lead(soup, page_url: str, base_url: str) -> Optional[RawTradeRecord]:
+    full_text = soup.get_text(" ", strip=True)
+    company_name = _extract_company_name(soup, base_url)
+    emails = _extract_emails(full_text)
+    phones = _extract_phones(full_text)
+    description = _extract_description(soup)
+
+    if not any([company_name, emails, phones, description]):
+        return None
+
+    return RawTradeRecord(
+        company_name=company_name,
+        source_url=page_url,
+        company_url=base_url,
+        website=base_url,
+        contact_email=emails,
+        contact_phone=phones,
+        address=_extract_address(soup),
+        description=description,
+        social_links=_extract_social_links(soup, page_url),
+        has_contact_form=bool(soup.select_one("form input[type='email'], form textarea")),
+        scrape_status="parsed",
+    )
 
 
 def _is_company_like(text: str) -> bool:
@@ -261,7 +302,18 @@ def _extract_records_from_soup(soup, page_url: str) -> List[RawTradeRecord]:
 def _candidate_pages(soup, base_url: str) -> List[str]:
     candidates: List[str] = [base_url]
     seen: Set[str] = {base_url}
-    keywords = ("supplier", "export", "company", "directory", "listing", "about", "contact")
+    keywords = (
+        "supplier",
+        "export",
+        "company",
+        "directory",
+        "listing",
+        "about",
+        "contact",
+        "team",
+        "services",
+        "products",
+    )
 
     for anchor in soup.select("a[href]"):
         href = _normalize_link(base_url, anchor.get("href", ""))
@@ -294,7 +346,12 @@ def dedupe_records(records: List[RawTradeRecord]) -> List[RawTradeRecord]:
 
 
 def _valid_for_lead(record: RawTradeRecord) -> bool:
-    return bool(record.company_name or record.contact_email or record.contact_phone)
+    return bool(
+        record.company_name
+        or record.contact_email
+        or record.contact_phone
+        or record.description
+    )
 
 
 def _status_template(source_url: str) -> Dict[str, str]:
@@ -323,6 +380,9 @@ def scrape_enriched_companies(target_url: str) -> List[dict]:
         for page_url in _candidate_pages(soup, normalized_url):
             try:
                 page_soup, _ = get_soup(session, page_url)
+                page_lead = _extract_page_lead(page_soup, page_url, normalized_url)
+                if page_lead:
+                    all_records.append(page_lead)
                 extracted = _extract_records_from_soup(page_soup, page_url)
                 _LOGGER.info("parsed_page url=%s records=%s", page_url, len(extracted))
                 all_records.extend(extracted)
@@ -344,6 +404,8 @@ def scrape_enriched_companies(target_url: str) -> List[dict]:
             _LOGGER.debug("discarding_record_missing_minimum_payload source=%s", raw.source_url)
             continue
         scored = ScoredTradeLead(**raw.to_dict())
+        if scored.scrape_status == "draft":
+            scored.scrape_status = "parsed"
         score_lead(scored)
         enriched.append(scored.__dict__)
         if DELAY_SECONDS:
@@ -371,10 +433,19 @@ def push_rows_to_odoo(rows: List[dict]) -> None:
     }
     try:
         created_ids = push_leads_to_odoo(rows, config)
+        for row in rows:
+            if row.get("scrape_status") != "failed":
+                row["scrape_status"] = "lead_created"
         _LOGGER.info("odoo_push_complete created=%s", len(created_ids))
     except OdooPushError as exc:
+        for row in rows:
+            row["scrape_status"] = "failed"
+            row["scrape_error"] = str(exc)
         _LOGGER.error("odoo_push_configuration_error error=%s", exc)
     except Exception as exc:
+        for row in rows:
+            row["scrape_status"] = "failed"
+            row["scrape_error"] = str(exc)
         _LOGGER.exception("odoo_push_failed error=%s", exc)
 
 
