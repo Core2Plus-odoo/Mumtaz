@@ -181,8 +181,28 @@ class DIFCRegisterParser:
             _logger.info("DIFC page fetch: GET %s → %s", self._register_url, resp.status_code)
             if resp.status_code == 200:
                 self._page_html = resp.text
-                self._extract_next_data(resp.text)
-                self._extract_csrf(resp.text)
+                # Log HTML diagnostics: first 500 chars + script tags summary
+                html = resp.text
+                script_tags = re.findall(r'<script[^>]*>', html)
+                _logger.info(
+                    "DIFC HTML: %d chars | %d <script> tags | first 500: %s",
+                    len(html), len(script_tags),
+                    html[:500].replace("\n", " ")
+                )
+                _logger.info(
+                    "DIFC script tags: %s",
+                    " || ".join(script_tags[:15])
+                )
+                # Log any self.__next_f occurrences (App Router RSC payloads)
+                next_f_count = html.count("self.__next_f")
+                _logger.info("DIFC: self.__next_f occurrences: %d", next_f_count)
+                if next_f_count:
+                    # Find first RSC push
+                    m_rsc = re.search(r'self\.__next_f\.push\(\[(.*?)\]\)', html, re.DOTALL)
+                    if m_rsc:
+                        _logger.info("DIFC: first RSC push: %s", m_rsc.group(0)[:300])
+                self._extract_next_data(html)
+                self._extract_csrf(html)
             else:
                 _logger.warning("DIFC page fetch failed: HTTP %s", resp.status_code)
                 self._page_html = ""
@@ -193,12 +213,29 @@ class DIFCRegisterParser:
 
     def _extract_next_data(self, html):
         """Parse <script id="__NEXT_DATA__"> JSON from the page."""
-        m = re.search(
+        # Try both attribute orderings
+        patterns = [
             r'<script[^>]+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
-            html, re.DOTALL
-        )
+            r'<script\s+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
+            r'__NEXT_DATA__["\'][^>]*>(.*?)</script>',
+        ]
+        m = None
+        for pat in patterns:
+            m = re.search(pat, html, re.DOTALL)
+            if m:
+                break
         if not m:
-            _logger.warning("DIFC: __NEXT_DATA__ not found in page HTML")
+            # Log surrounding HTML for diagnosis
+            idx = html.find("NEXT_DATA")
+            if idx >= 0:
+                _logger.warning(
+                    "DIFC: NEXT_DATA string found at pos %d but regex failed. Context: %s",
+                    idx, html[max(0, idx-30):idx+200]
+                )
+            else:
+                _logger.warning(
+                    "DIFC: __NEXT_DATA__ not found in page HTML (len=%d)", len(html)
+                )
             return
         try:
             self._next_data = json.loads(m.group(1))
@@ -246,6 +283,40 @@ class DIFCRegisterParser:
                 self._csrf_token = cookie.value
                 _logger.info("DIFC: found CSRF token in cookie: %s", cookie.name)
                 return
+
+    # ── Strategy: extract from Next.js App Router RSC payloads ──────────────
+
+    def _leads_from_rsc(self):
+        """
+        Next.js App Router embeds server data as RSC (React Server Component)
+        payloads: self.__next_f.push([N,"...json..."]) or similar.
+        Try to extract JSON objects that look like company lists from these.
+        """
+        if not self._page_html:
+            return None
+        # Collect all RSC push strings
+        pushes = re.findall(
+            r'self\.__next_f\.push\(\[.*?\]\)', self._page_html, re.DOTALL
+        )
+        _logger.info("DIFC RSC: found %d push() calls", len(pushes))
+        for push in pushes:
+            # Extract the string payload
+            m = re.search(r'\[(?:\d+,)?"(.*?)"\]', push, re.DOTALL)
+            if not m:
+                continue
+            payload = m.group(1).replace('\\"', '"').replace("\\\\", "\\")
+            # Look for JSON arrays that could be company lists
+            for arr_match in re.finditer(r'\[(\{[^\[\]]{20,}\}(?:,\{[^\[\]]{20,}\})*)\]', payload):
+                try:
+                    arr = json.loads("[" + arr_match.group(1) + "]")
+                    if arr and isinstance(arr[0], dict):
+                        result = self._find_company_list(arr, 0, 2)
+                        if result:
+                            _logger.info("DIFC RSC: found %d companies in RSC payload", len(result))
+                            return result
+                except (json.JSONDecodeError, ValueError):
+                    continue
+        return None
 
     # ── Strategy: extract from __NEXT_DATA__ directly ────────────────────────
 
@@ -417,6 +488,15 @@ class DIFCRegisterParser:
                     (self._next_data.get("props") or {}).get("pageProps") or {}, default=str
                 )[:500]
             )
+
+        # ── Strategy 1b: App Router RSC payload ──────────────────────────
+        if page_number == 1 and self._page_html:
+            items = self._leads_from_rsc()
+            if items is not None:
+                self._strategy = ("rsc", None)
+                _logger.info("DIFC: using RSC payload strategy")
+                return items, len(items), ""
+            errors.append("RSC payload: no company list found in self.__next_f pushes")
 
         # ── Strategy 2: Next.js /_next/data/ JSON route ───────────────────
         items, err = self._fetch_next_json_page(page_number, page_size)
