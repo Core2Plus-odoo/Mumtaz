@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List ──────────────────────────────────────────────────────── -->
+    <record id="lead_scraper_source_list_view" model="ir.ui.view">
+        <field name="name">lead.scraper.source.list</field>
+        <field name="model">lead.scraper.source</field>
+        <field name="arch" type="xml">
+            <list string="Scraper Sources"
+                  decoration-muted="not active">
+                <field name="name"/>
+                <field name="url"/>
+                <field name="source_type"/>
+                <field name="parsing_mode"/>
+                <field name="job_count" string="Runs"/>
+                <field name="total_leads_created" string="CRM Leads"/>
+                <field name="last_run_date"/>
+                <field name="auto_schedule"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search ────────────────────────────────────────────────────── -->
+    <record id="lead_scraper_source_search_view" model="ir.ui.view">
+        <field name="name">lead.scraper.source.search</field>
+        <field name="model">lead.scraper.source</field>
+        <field name="arch" type="xml">
+            <search string="Scraper Sources">
+                <field name="name"/>
+                <field name="url"/>
+                <filter string="Active" name="active" domain="[('active','=',True)]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('auto_schedule','=',True)]"/>
+                <filter string="Archived" name="archived" domain="[('active','=',False)]"/>
+                <filter string="Source Type" name="group_type" context="{'group_by': 'source_type'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Form ──────────────────────────────────────────────────────── -->
+    <record id="lead_scraper_source_form_view" model="ir.ui.view">
+        <field name="name">lead.scraper.source.form</field>
+        <field name="model">lead.scraper.source</field>
+        <field name="arch" type="xml">
+            <form string="Scraper Source">
+                <header>
+                    <button name="action_run_scraper" type="object"
+                            string="Run Scraper Now"
+                            class="oe_highlight"
+                            groups="mumtaz_lead_scraper.group_lead_scraper_user"/>
+                </header>
+                <sheet>
+                    <!-- Smart buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_jobs" type="object"
+                                class="oe_stat_button" icon="fa-play-circle">
+                            <field name="job_count" widget="statinfo" string="Runs"/>
+                        </button>
+                        <button name="action_view_records" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="total_leads_created" widget="statinfo" string="CRM Leads"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Source Name"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Source">
+                            <field name="url" placeholder="https://..."/>
+                            <field name="source_type"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Parsing">
+                            <field name="parsing_mode"/>
+                            <field name="request_delay"/>
+                            <field name="max_pages"/>
+                            <field name="respect_robots"/>
+                        </group>
+                    </group>
+
+                    <group string="CRM Defaults">
+                        <group>
+                            <field name="crm_team_id"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group>
+                            <field name="auto_push_crm"/>
+                        </group>
+                    </group>
+
+                    <group string="Scheduling">
+                        <group>
+                            <field name="auto_schedule"/>
+                            <field name="schedule_interval"
+                                   invisible="not auto_schedule"/>
+                        </group>
+                        <group>
+                            <field name="last_run_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Selector / Path Config" name="config">
+                            <div class="o_form_label mb-1">
+                                JSON configuration for CSS selectors (css mode) or JSON paths (json mode).
+                                Leave empty to use auto-detect.
+                            </div>
+                            <field name="selector_config" widget="text" nolabel="1"
+                                   placeholder='{"container": ".listing-item", "company_name": ".name", "email": ".email", "phone": ".phone"}'/>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────── -->
+    <record id="action_lead_scraper_source" model="ir.actions.act_window">
+        <field name="name">Scraper Sources</field>
+        <field name="res_model">lead.scraper.source</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="lead_scraper_source_search_view"/>
+        <field name="context">{"search_default_active": 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No sources yet. Add a website to start scraping leads.
+            </p>
+        </field>
+    </record>
+
+</odoo>

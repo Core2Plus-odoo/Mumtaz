@@ -1,6 +1,6 @@
 # Pakistan Trade Portal Scraper
 
-This module provides a business-development oriented scraper scaffold for the Pakistan Trade Portal.
+This module provides a business-development oriented scraper scaffold for the Pakistan Trade Portal and can run against generic business websites.
 
 ## Objective
 
@@ -10,9 +10,10 @@ Capture publicly visible exporter and product listing data, score prospects for 
 
 - Sector/category crawling
 - Product/company listing extraction
+- Generic website extraction (home/about/contact pages)
 - Lead scoring for business development
 - CSV export for review
-- Optional Odoo XML-RPC push
+- Optional Odoo XML-RPC push into `crm.lead`
 
 ## Recommended workflow
 
@@ -26,8 +27,10 @@ Capture publicly visible exporter and product listing data, score prospects for 
 - `config.py` - configuration values
 - `models.py` - dataclasses for raw and scored leads
 - `scoring.py` - business-development scoring rules
-- `scrape.py` - scraper entry point
-- `odoo_push.py` - Odoo import helper via XML-RPC
+- `scrape.py` - lightweight homepage scraper
+- `run_enriched_companies.py` - enriched company discovery + scoring pipeline
+- `portal_selectors.py` - CSS selector bank for resilient extraction
+- `odoo_push.py` - XML-RPC integration helper for creating CRM leads
 - `requirements.txt` - Python dependencies
 
 ## Run
@@ -37,7 +40,26 @@ cd scrapers/pakistan_trade_portal
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python scrape.py
+python run_enriched_companies.py --url https://example.com --output leads.csv
+```
+
+The scraper auto-normalizes URLs (adds `https://` if missing), crawls up to configured internal pages, and extracts fallback contact details even when listing-style selectors are absent.
+
+## Push extracted leads to Odoo CRM
+
+Set environment variables:
+
+```bash
+export ODOO_URL=https://your-odoo-domain.com
+export ODOO_DB=your_db
+export ODOO_USERNAME=your_user
+export ODOO_PASSWORD=your_password
+```
+
+Then run:
+
+```bash
+python run_enriched_companies.py --url https://example.com --push-odoo
 ```
 
 ## Important note
