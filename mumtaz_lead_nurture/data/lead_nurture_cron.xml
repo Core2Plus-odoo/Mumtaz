@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="cron_run_nurture_sequences" model="ir.cron">
+        <field name="name">Lead Nurture: Run Sequence Steps</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model.action_run_nurture_sequences()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">False</field>
+    </record>
+
+    <record id="cron_run_auto_conversion" model="ir.cron">
+        <field name="name">Lead Nurture: Auto-Convert Qualified Leads</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model.action_run_auto_conversion()</field>
+        <field name="interval_number">6</field>
+        <field name="interval_type">hours</field>
+        <field name="active">False</field>
+    </record>
+
+</odoo>

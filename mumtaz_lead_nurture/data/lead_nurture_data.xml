@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- ── ERP Needs ────────────────────────────────────────────────── -->
+    <record id="erp_need_inventory" model="lead.nurture.erp.need">
+        <field name="name">Inventory Management</field>
+        <field name="code">INV</field>
+        <field name="sequence">1</field>
+        <field name="color">3</field>
+    </record>
+    <record id="erp_need_accounting" model="lead.nurture.erp.need">
+        <field name="name">Accounting / Finance</field>
+        <field name="code">ACC</field>
+        <field name="sequence">2</field>
+        <field name="color">1</field>
+    </record>
+    <record id="erp_need_hrm" model="lead.nurture.erp.need">
+        <field name="name">HR &amp; Payroll</field>
+        <field name="code">HRM</field>
+        <field name="sequence">3</field>
+        <field name="color">6</field>
+    </record>
+    <record id="erp_need_sales" model="lead.nurture.erp.need">
+        <field name="name">Sales / CRM Automation</field>
+        <field name="code">CRM</field>
+        <field name="sequence">4</field>
+        <field name="color">4</field>
+    </record>
+    <record id="erp_need_purchase" model="lead.nurture.erp.need">
+        <field name="name">Purchase Management</field>
+        <field name="code">PUR</field>
+        <field name="sequence">5</field>
+        <field name="color">2</field>
+    </record>
+    <record id="erp_need_manufacturing" model="lead.nurture.erp.need">
+        <field name="name">Manufacturing (MRP)</field>
+        <field name="code">MFG</field>
+        <field name="sequence">6</field>
+        <field name="color">5</field>
+    </record>
+    <record id="erp_need_ecommerce" model="lead.nurture.erp.need">
+        <field name="name">eCommerce Integration</field>
+        <field name="code">ECO</field>
+        <field name="sequence">7</field>
+        <field name="color">7</field>
+    </record>
+    <record id="erp_need_full_erp" model="lead.nurture.erp.need">
+        <field name="name">Full ERP Replacement</field>
+        <field name="code">ERP</field>
+        <field name="sequence">8</field>
+        <field name="color">11</field>
+    </record>
+
+    <!-- ── Default Scoring Rules ────────────────────────────────────── -->
+    <record id="rule_lead_enrolled" model="lead.nurture.rule">
+        <field name="name">Lead Enrolled</field>
+        <field name="trigger_event">lead_enrolled</field>
+        <field name="score_change">5</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="rule_email_sent" model="lead.nurture.rule">
+        <field name="name">Email Sent</field>
+        <field name="trigger_event">email_sent</field>
+        <field name="score_change">3</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="rule_email_opened" model="lead.nurture.rule">
+        <field name="name">Email Opened</field>
+        <field name="trigger_event">email_opened</field>
+        <field name="score_change">5</field>
+        <field name="sequence">30</field>
+    </record>
+    <record id="rule_email_clicked" model="lead.nurture.rule">
+        <field name="name">Email Link Clicked</field>
+        <field name="trigger_event">email_clicked</field>
+        <field name="score_change">8</field>
+        <field name="sequence">35</field>
+    </record>
+    <record id="rule_whatsapp_sent" model="lead.nurture.rule">
+        <field name="name">WhatsApp Sent</field>
+        <field name="trigger_event">whatsapp_sent</field>
+        <field name="score_change">3</field>
+        <field name="sequence">40</field>
+    </record>
+    <record id="rule_reply_received" model="lead.nurture.rule">
+        <field name="name">Reply Received</field>
+        <field name="trigger_event">reply_received</field>
+        <field name="score_change">15</field>
+        <field name="sequence">50</field>
+    </record>
+    <record id="rule_positive_reply" model="lead.nurture.rule">
+        <field name="name">Positive Reply</field>
+        <field name="trigger_event">positive_reply</field>
+        <field name="score_change">20</field>
+        <field name="sequence">55</field>
+    </record>
+    <record id="rule_demo_requested" model="lead.nurture.rule">
+        <field name="name">Demo Requested</field>
+        <field name="trigger_event">demo_requested</field>
+        <field name="score_change">30</field>
+        <field name="sequence">60</field>
+    </record>
+    <record id="rule_requirement_shared" model="lead.nurture.rule">
+        <field name="name">Requirement Shared</field>
+        <field name="trigger_event">requirement_shared</field>
+        <field name="score_change">25</field>
+        <field name="sequence">65</field>
+    </record>
+    <record id="rule_manual_qualified" model="lead.nurture.rule">
+        <field name="name">Manually Qualified</field>
+        <field name="trigger_event">manual_qualified</field>
+        <field name="score_change">40</field>
+        <field name="sequence">70</field>
+    </record>
+    <record id="rule_not_interested" model="lead.nurture.rule">
+        <field name="name">Not Interested</field>
+        <field name="trigger_event">not_interested</field>
+        <field name="score_change">-20</field>
+        <field name="sequence">80</field>
+    </record>
+    <record id="rule_bounced" model="lead.nurture.rule">
+        <field name="name">Message Bounced</field>
+        <field name="trigger_event">bounced</field>
+        <field name="score_change">-5</field>
+        <field name="sequence">85</field>
+    </record>
+
+</odoo>

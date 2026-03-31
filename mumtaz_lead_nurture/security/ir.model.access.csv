@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_lead_nurture_campaign_user,lead.nurture.campaign user,model_lead_nurture_campaign,group_lead_nurture_user,1,0,0,0
+access_lead_nurture_campaign_manager,lead.nurture.campaign manager,model_lead_nurture_campaign,group_lead_nurture_manager,1,1,1,1
+access_lead_nurture_step_user,lead.nurture.step user,model_lead_nurture_step,group_lead_nurture_user,1,0,0,0
+access_lead_nurture_step_manager,lead.nurture.step manager,model_lead_nurture_step,group_lead_nurture_manager,1,1,1,1
+access_lead_nurture_log_user,lead.nurture.log user,model_lead_nurture_log,group_lead_nurture_user,1,0,0,0
+access_lead_nurture_log_manager,lead.nurture.log manager,model_lead_nurture_log,group_lead_nurture_manager,1,1,1,1
+access_lead_nurture_rule_user,lead.nurture.rule user,model_lead_nurture_rule,group_lead_nurture_user,1,0,0,0
+access_lead_nurture_rule_manager,lead.nurture.rule manager,model_lead_nurture_rule,group_lead_nurture_manager,1,1,1,1
+access_lead_nurture_erp_need_user,lead.nurture.erp.need user,model_lead_nurture_erp_need,group_lead_nurture_user,1,0,0,0
+access_lead_nurture_erp_need_manager,lead.nurture.erp.need manager,model_lead_nurture_erp_need,group_lead_nurture_manager,1,1,1,1
+access_lead_whatsapp_provider_manager,lead.whatsapp.provider manager,model_lead_whatsapp_provider,group_lead_nurture_manager,1,1,1,1
+access_lead_whatsapp_template_user,lead.whatsapp.template user,model_lead_whatsapp_template,group_lead_nurture_user,1,0,0,0
+access_lead_whatsapp_template_manager,lead.whatsapp.template manager,model_lead_whatsapp_template,group_lead_nurture_manager,1,1,1,1
+access_lead_nurture_enroll_wizard_user,lead.nurture.enroll.wizard user,model_lead_nurture_enroll_wizard,group_lead_nurture_user,1,1,1,1
+access_lead_nurture_qualify_wizard_user,lead.nurture.qualify.wizard user,model_lead_nurture_qualify_wizard,group_lead_nurture_user,1,1,1,1

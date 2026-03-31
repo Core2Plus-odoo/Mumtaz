@@ -6,105 +6,107 @@
         <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
         <field name="arch" type="xml">
 
-            <app string="Mumtaz AI" name="mumtaz_core">
+            <xpath expr="//form" position="inside">
+                <app string="Mumtaz AI" name="mumtaz_core">
 
-                <!-- ── AI Provider ──────────────────────────────────── -->
-                <block title="AI Provider" id="mumtaz_provider_block">
+                    <!-- ── AI Provider ──────────────────────────────────── -->
+                    <block title="AI Provider" id="mumtaz_provider_block">
 
-                    <setting string="AI Provider"
-                             help="Select the AI engine that powers CFO responses and chat.">
-                        <field name="mumtaz_ai_provider"/>
-                    </setting>
+                        <setting string="AI Provider"
+                                 help="Select the AI engine that powers CFO responses and chat.">
+                            <field name="mumtaz_ai_provider"/>
+                        </setting>
 
-                    <setting string="API Key"
-                             invisible="mumtaz_ai_provider == 'none'"
-                             help="Your OpenAI or Anthropic secret API key. Leave blank to keep the existing key.">
-                        <field name="mumtaz_api_key" password="True"
-                               placeholder="sk-… or ask-…"/>
-                    </setting>
+                        <setting string="API Key"
+                                 invisible="mumtaz_ai_provider == 'none'"
+                                 help="Your OpenAI or Anthropic secret API key. Leave blank to keep the existing key.">
+                            <field name="mumtaz_api_key" password="True"
+                                   placeholder="sk-… or ask-…"/>
+                        </setting>
 
-                    <setting string="OpenAI Model"
-                             invisible="mumtaz_ai_provider != 'openai'"
-                             help="GPT-4o Mini is fastest and cheapest. GPT-4o gives the best results.">
-                        <field name="mumtaz_openai_model"/>
-                    </setting>
+                        <setting string="OpenAI Model"
+                                 invisible="mumtaz_ai_provider != 'openai'"
+                                 help="GPT-4o Mini is fastest and cheapest. GPT-4o gives the best results.">
+                            <field name="mumtaz_openai_model"/>
+                        </setting>
 
-                    <setting string="Anthropic Model"
-                             invisible="mumtaz_ai_provider != 'anthropic'"
-                             help="Haiku is fastest. Opus is the most capable Claude model.">
-                        <field name="mumtaz_anthropic_model"/>
-                    </setting>
+                        <setting string="Anthropic Model"
+                                 invisible="mumtaz_ai_provider != 'anthropic'"
+                                 help="Haiku is fastest. Opus is the most capable Claude model.">
+                            <field name="mumtaz_anthropic_model"/>
+                        </setting>
 
-                </block>
+                    </block>
 
-                <!-- ── Voice Assistant ─────────────────────────────── -->
-                <block title="Voice Assistant" id="mumtaz_voice_block">
+                    <!-- ── Voice Assistant ─────────────────────────────── -->
+                    <block title="Voice Assistant" id="mumtaz_voice_block">
 
-                    <setting string="CFO Voice Assistant"
-                             help="Enable the AI-powered CFO Voice Assistant for this company.">
-                        <field name="mumtaz_feature_voice" widget="boolean_toggle"/>
-                    </setting>
+                        <setting string="CFO Voice Assistant"
+                                 help="Enable the AI-powered CFO Voice Assistant for this company.">
+                            <field name="mumtaz_feature_voice" widget="boolean_toggle"/>
+                        </setting>
 
-                    <setting string="Default Language"
-                             help="Default speech recognition language. Users can also switch between EN/AR in the UI.">
-                        <field name="mumtaz_voice_language"/>
-                    </setting>
+                        <setting string="Default Language"
+                                 help="Default speech recognition language. Users can also switch between EN/AR in the UI.">
+                            <field name="mumtaz_voice_language"/>
+                        </setting>
 
-                    <setting string="Voice Quality"
-                             invisible="mumtaz_ai_provider != 'openai'"
-                             help="TTS-1 HD sounds more natural but is slightly slower. Requires OpenAI.">
-                        <field name="mumtaz_tts_model"/>
-                    </setting>
+                        <setting string="Voice Quality"
+                                 invisible="mumtaz_ai_provider != 'openai'"
+                                 help="TTS-1 HD sounds more natural but is slightly slower. Requires OpenAI.">
+                            <field name="mumtaz_tts_model"/>
+                        </setting>
 
-                    <setting string="Voice Character"
-                             invisible="mumtaz_ai_provider != 'openai'"
-                             help="The voice used for spoken CFO responses. Nova works well for both English and Arabic.">
-                        <field name="mumtaz_tts_voice"/>
-                    </setting>
+                        <setting string="Voice Character"
+                                 invisible="mumtaz_ai_provider != 'openai'"
+                                 help="The voice used for spoken CFO responses. Nova works well for both English and Arabic.">
+                            <field name="mumtaz_tts_voice"/>
+                        </setting>
 
-                </block>
+                    </block>
 
-                <!-- ── AI Chat ─────────────────────────────────────── -->
-                <block title="AI Chat" id="mumtaz_chat_block">
+                    <!-- ── AI Chat ─────────────────────────────────────── -->
+                    <block title="AI Chat" id="mumtaz_chat_block">
 
-                    <setting string="AI Chat Sessions"
-                             help="Enable the text-based Mumtaz AI Chat interface.">
-                        <field name="mumtaz_feature_ai_chat" widget="boolean_toggle"/>
-                    </setting>
+                        <setting string="AI Chat Sessions"
+                                 help="Enable the text-based Mumtaz AI Chat interface.">
+                            <field name="mumtaz_feature_ai_chat" widget="boolean_toggle"/>
+                        </setting>
 
-                    <setting string="Max Response Length (tokens)"
-                             help="Maximum AI response length. 600 ≈ 450 words. Increase for detailed answers.">
-                        <field name="mumtaz_max_tokens"/>
-                    </setting>
+                        <setting string="Max Response Length (tokens)"
+                                 help="Maximum AI response length. 600 ≈ 450 words. Increase for detailed answers.">
+                            <field name="mumtaz_max_tokens"/>
+                        </setting>
 
-                    <setting string="Conversation Memory (messages)"
-                             help="Past messages sent as context each turn. 10 = 5 exchanges. Higher = better memory, more cost.">
-                        <field name="mumtaz_history_depth"/>
-                    </setting>
+                        <setting string="Conversation Memory (messages)"
+                                 help="Past messages sent as context each turn. 10 = 5 exchanges. Higher = better memory, more cost.">
+                            <field name="mumtaz_history_depth"/>
+                        </setting>
 
-                </block>
+                    </block>
 
-                <!-- ── Data Access ─────────────────────────────────── -->
-                <block title="Data Access" id="mumtaz_data_block">
+                    <!-- ── Data Access ─────────────────────────────────── -->
+                    <block title="Data Access" id="mumtaz_data_block">
 
-                    <setting string="Financial Insights"
-                             help="Allow the AI to read P&amp;L, cash position, and AR/AP data from Odoo.">
-                        <field name="mumtaz_feature_financial" widget="boolean_toggle"/>
-                    </setting>
+                        <setting string="Financial Insights"
+                                 help="Allow the AI to read P&amp;L, cash position, and AR/AP data from Odoo.">
+                            <field name="mumtaz_feature_financial" widget="boolean_toggle"/>
+                        </setting>
 
-                    <setting string="Sales Insights"
-                             help="Allow the AI to read sales orders and revenue data.">
-                        <field name="mumtaz_feature_sales" widget="boolean_toggle"/>
-                    </setting>
+                        <setting string="Sales Insights"
+                                 help="Allow the AI to read sales orders and revenue data.">
+                            <field name="mumtaz_feature_sales" widget="boolean_toggle"/>
+                        </setting>
 
-                    <setting string="CRM Insights"
-                             help="Allow the AI to read leads and pipeline data.">
-                        <field name="mumtaz_feature_crm" widget="boolean_toggle"/>
-                    </setting>
+                        <setting string="CRM Insights"
+                                 help="Allow the AI to read leads and pipeline data.">
+                            <field name="mumtaz_feature_crm" widget="boolean_toggle"/>
+                        </setting>
 
-                </block>
+                    </block>
 
-            </app>
+                </app>
+            </xpath>
 
         </field>
     </record>

@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_lead_scraper_source_admin,lead.scraper.source (admin),model_lead_scraper_source,group_lead_scraper_admin,1,1,1,1
+access_lead_scraper_source_user,lead.scraper.source (user),model_lead_scraper_source,group_lead_scraper_user,1,1,1,0
+access_lead_scraper_source_viewer,lead.scraper.source (viewer),model_lead_scraper_source,group_lead_scraper_viewer,1,0,0,0
+access_lead_scraper_job_admin,lead.scraper.job (admin),model_lead_scraper_job,group_lead_scraper_admin,1,1,1,1
+access_lead_scraper_job_user,lead.scraper.job (user),model_lead_scraper_job,group_lead_scraper_user,1,1,1,0
+access_lead_scraper_job_viewer,lead.scraper.job (viewer),model_lead_scraper_job,group_lead_scraper_viewer,1,0,0,0
+access_lead_scraper_record_admin,lead.scraper.record (admin),model_lead_scraper_record,group_lead_scraper_admin,1,1,1,1
+access_lead_scraper_record_user,lead.scraper.record (user),model_lead_scraper_record,group_lead_scraper_user,1,1,1,0
+access_lead_scraper_record_viewer,lead.scraper.record (viewer),model_lead_scraper_record,group_lead_scraper_viewer,1,0,0,0
+access_lead_scraper_run_wizard_user,lead.scraper.run.wizard (user),model_lead_scraper_run_wizard,group_lead_scraper_user,1,1,1,1

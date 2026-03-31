@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root menu inside CRM app -->
+    <menuitem id="menu_lead_nurture_root"
+              name="Lead Nurture"
+              parent="crm.crm_menu_root"
+              sequence="30"
+              groups="mumtaz_lead_nurture.group_lead_nurture_user"/>
+
+    <menuitem id="menu_nurture_leads"
+              name="Nurture Leads"
+              parent="menu_lead_nurture_root"
+              action="action_nurture_leads"
+              sequence="10"/>
+
+    <menuitem id="menu_nurture_campaigns"
+              name="Campaigns"
+              parent="menu_lead_nurture_root"
+              action="action_lead_nurture_campaign"
+              sequence="20"/>
+
+    <menuitem id="menu_nurture_logs"
+              name="Communication Log"
+              parent="menu_lead_nurture_root"
+              action="action_lead_nurture_log"
+              sequence="30"/>
+
+    <!-- Configuration submenu (manager only) -->
+    <menuitem id="menu_nurture_config"
+              name="Configuration"
+              parent="menu_lead_nurture_root"
+              sequence="100"
+              groups="mumtaz_lead_nurture.group_lead_nurture_manager"/>
+
+    <menuitem id="menu_nurture_rules"
+              name="Scoring Rules"
+              parent="menu_nurture_config"
+              action="action_lead_nurture_rule"
+              sequence="10"/>
+
+    <menuitem id="menu_nurture_erp_needs"
+              name="ERP Needs"
+              parent="menu_nurture_config"
+              action="action_lead_nurture_erp_need"
+              sequence="20"/>
+
+    <menuitem id="menu_wa_providers"
+              name="WhatsApp Providers"
+              parent="menu_nurture_config"
+              action="action_lead_whatsapp_provider"
+              sequence="30"/>
+
+    <menuitem id="menu_wa_templates"
+              name="WhatsApp Templates"
+              parent="menu_nurture_config"
+              action="action_lead_whatsapp_template"
+              sequence="40"/>
+
+</odoo>
