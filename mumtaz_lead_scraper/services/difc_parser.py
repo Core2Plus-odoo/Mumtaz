@@ -3,20 +3,22 @@ DIFC Public Register — Dedicated Scraper
 =========================================
 The DIFC Public Register (https://www.difc.com/business/public-register) is a
 Next.js SPA backed by Sitecore XM Cloud.  Static HTML contains no company data.
-The page hydrates via a server-side Next.js API route:
 
-  POST https://www.difc.com/api/handleRequest
-  Content-Type: application/json
-  Body: {"action": "difc/request-company-details",
-         "companyName": "", "pageNumber": 1, "pageSize": 20}
+Two API strategies are tried in order:
 
-The endpoint returns a JSON document.  Multiple response envelope shapes are
-handled gracefully so that schema changes do not break the scraper silently.
+  Strategy A — GET /api/actions/difc/request-company-details
+    POST to this path returned 405 (Method Not Allowed) in probe tests,
+    meaning the route exists but only accepts GET.
+    Query params: companyName, pageNumber, pageSize
+
+  Strategy B — POST /api/handleRequest
+    Tries multiple action name candidates since HTTP 500 means the route
+    exists but the action name is unrecognised.
+    Body: {"action": "<candidate>", "companyName": "", "pageNumber": 1, ...}
 
 Usage in Odoo:
   - Source Type  : DIFC Public Register
   - URL          : https://www.difc.com/business/public-register
-    (the scheme + host is extracted; only https://www.difc.com is contacted)
   - Max Pages    : controls how many API pages to fetch (default 20)
   - request_delay: seconds between API calls (default 2.0)
 """
@@ -38,8 +40,6 @@ from .parser import ParsedLead
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-_ACTION = "difc/request-company-details"
-_API_PATH = "/api/handleRequest"
 _DEFAULT_PAGE_SIZE = 20
 
 _BROWSER_HEADERS = {
@@ -48,15 +48,49 @@ _BROWSER_HEADERS = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/124.0.0.0 Safari/537.36"
     ),
-    "Accept": "application/json, */*;q=0.8",
+    "Accept": "application/json, text/plain, */*",
     "Accept-Language": "en-US,en;q=0.9",
-    "Content-Type": "application/json",
     "Origin": "https://www.difc.com",
     "Referer": "https://www.difc.com/business/public-register",
-    "X-Requested-With": "XMLHttpRequest",
 }
 
-# Candidate field names in the response — handled in priority order
+# Strategy A: GET endpoint (POST to this path returned 405 in earlier probe)
+_GET_ENDPOINTS = [
+    "/api/actions/difc/request-company-details",
+    "/api/actions/request-company-details",
+    "/api/actions/difc/public-register",
+]
+
+# Strategy B: POST /api/handleRequest with different action name candidates
+_HANDLE_REQUEST_PATH = "/api/handleRequest"
+_ACTION_CANDIDATES = [
+    "request-company-details",
+    "difc/request-company-details",
+    "difc/publicRegister",
+    "publicRegister",
+    "getPublicRegister",
+    "difc/getCompanies",
+    "getCompanies",
+    "difc/companies",
+]
+
+# Response envelope unwrappers — tried in order to locate the item array
+_ARRAY_PATHS = [
+    lambda d: d.get("data", {}).get("results") if isinstance(d.get("data"), dict) else None,
+    lambda d: d.get("data") if isinstance(d.get("data"), list) else None,
+    lambda d: d.get("results") if isinstance(d.get("results"), list) else None,
+    lambda d: d.get("Items") if isinstance(d.get("Items"), list) else None,
+    lambda d: d.get("items") if isinstance(d.get("items"), list) else None,
+    lambda d: d.get("companies") if isinstance(d.get("companies"), list) else None,
+    lambda d: d.get("entities") if isinstance(d.get("entities"), list) else None,
+    lambda d: d.get("records") if isinstance(d.get("records"), list) else None,
+    lambda d: (d.get("data", {}).get("search", {}) or {}).get("results"),
+]
+
+_TOTAL_KEYS = ("totalCount", "total_count", "TotalCount", "Total",
+               "total", "count", "Count", "totalResults")
+
+# Field-name candidates for ParsedLead mapping
 _NAME_KEYS   = ("companyName", "company_name", "name", "Name", "entityName",
                 "legalName", "LegalName", "title")
 _TYPE_KEYS   = ("licenseType", "license_type", "type", "Type", "entityType",
@@ -67,62 +101,25 @@ _EMAIL_KEYS  = ("email", "Email", "emailAddress", "contactEmail")
 _PHONE_KEYS  = ("phone", "Phone", "phoneNumber", "contactPhone", "telephone")
 _ADDR_KEYS   = ("address", "Address", "registeredAddress", "officeAddress",
                 "location", "Location")
-_COUNTRY_KEYS = ("country", "Country", "countryName", "nationality")
-
-# Envelope shapes tried to locate the item array
-_ARRAY_PATHS = [
-    lambda d: d.get("data", {}).get("results") if isinstance(d.get("data"), dict) else None,
-    lambda d: d.get("data") if isinstance(d.get("data"), list) else None,
-    lambda d: d.get("results") if isinstance(d.get("results"), list) else None,
-    lambda d: d.get("Items") if isinstance(d.get("Items"), list) else None,
-    lambda d: d.get("items") if isinstance(d.get("items"), list) else None,
-    lambda d: d.get("companies") if isinstance(d.get("companies"), list) else None,
-    lambda d: d.get("entities") if isinstance(d.get("entities"), list) else None,
-    lambda d: d.get("records") if isinstance(d.get("records"), list) else None,
-    # Sitecore Edge GraphQL envelope
-    lambda d: (d.get("data", {}).get("search", {}) or {}).get("results"),
-]
-
-# Total-count field names (for logging)
-_TOTAL_KEYS = ("totalCount", "total_count", "TotalCount", "Total",
-               "total", "count", "Count", "totalResults")
-
-# ── Request builder helpers ───────────────────────────────────────────────────
-
-def _build_request_bodies(page_number, page_size, company_name=""):
-    """
-    Return a list of candidate JSON bodies to try.
-    Different Sitecore action handler versions use different field names.
-    """
-    base = {"action": _ACTION, "companyName": company_name}
-    variants = [
-        {**base, "pageNumber": page_number, "pageSize": page_size},
-        {**base, "page": page_number, "pageSize": page_size},
-        {**base, "pageNumber": page_number, "PageSize": page_size},
-        {**base, "page_number": page_number, "page_size": page_size},
-        {**base, "offset": (page_number - 1) * page_size, "limit": page_size},
-    ]
-    return variants
 
 
 # ── Main parser class ─────────────────────────────────────────────────────────
 
 class DIFCRegisterParser:
     """
-    Fetches and parses DIFC Public Register data via the /api/handleRequest
-    Next.js API route.  Each call retrieves one page of results.
+    Fetches and parses DIFC Public Register data.
+    Auto-detects the working API strategy on the first call.
     """
 
     def __init__(self, base_url, delay=2.0, timeout=20):
         parsed = urlparse(base_url)
         self._origin = f"{parsed.scheme}://{parsed.netloc}"
-        self._api_url = self._origin + _API_PATH
         self._delay = max(delay, 1.0)
         self._timeout = timeout
         self._session = None
         self._last_req = 0.0
-        # remember which request body variant actually worked
-        self._working_body_variant = None
+        # Locked-in strategy once discovered: ("GET", url) or ("POST", action)
+        self._strategy = None
 
     def _get_session(self):
         if self._session is None:
@@ -140,120 +137,152 @@ class DIFCRegisterParser:
             time.sleep(self._delay - elapsed)
 
     def _warm_session(self):
-        """
-        Visit the public register page first to pick up any session cookies or
-        CSRF tokens the Next.js app sets before allowing API calls.
-        """
+        """Visit the public register page to collect session cookies."""
         if getattr(self, "_session_warmed", False):
             return
         try:
             sess = self._get_session()
-            warmup_url = f"{self._origin}/business/public-register"
-            resp = sess.get(warmup_url, timeout=self._timeout)
+            resp = sess.get(
+                f"{self._origin}/business/public-register", timeout=self._timeout
+            )
             self._last_req = time.time()
-            _logger.info("DIFC session warm-up: GET %s → %s", warmup_url, resp.status_code)
+            _logger.info("DIFC warm-up: GET /business/public-register → %s", resp.status_code)
         except Exception as exc:
-            _logger.warning("DIFC session warm-up failed: %s", exc)
+            _logger.warning("DIFC warm-up failed: %s", exc)
         self._session_warmed = True
 
-    def _request(self, method, body):
-        """
-        Execute one HTTP request (POST or GET).
-        Returns (ok, data_or_None, status_code, err_str, body_snippet).
-        """
+    def _do_get(self, path, page_number, page_size, company_name=""):
         self._rate_limit()
         sess = self._get_session()
+        url = self._origin + path
+        params = {
+            "companyName": company_name,
+            "pageNumber": page_number,
+            "pageSize": page_size,
+            "page": page_number,
+            "size": page_size,
+        }
         try:
-            if method == "GET":
-                params = {k: str(v) for k, v in body.items()}
-                resp = sess.get(self._api_url, params=params, timeout=self._timeout)
-            else:
-                resp = sess.post(self._api_url, json=body, timeout=self._timeout)
+            resp = sess.get(url, params=params, timeout=self._timeout)
             self._last_req = time.time()
-
-            if resp.status_code == 429:
-                wait = int(resp.headers.get("Retry-After", "5"))
-                _logger.warning("DIFC API rate-limited — sleeping %ds", wait)
-                time.sleep(wait)
-                if method == "GET":
-                    resp = sess.get(self._api_url, params=params, timeout=self._timeout)
-                else:
-                    resp = sess.post(self._api_url, json=body, timeout=self._timeout)
-                self._last_req = time.time()
-
             snippet = resp.text[:300].replace("\n", " ")
             if resp.status_code not in (200, 201):
                 return False, None, resp.status_code, f"HTTP {resp.status_code}", snippet
-
             try:
                 return True, resp.json(), resp.status_code, "", snippet
             except ValueError:
-                return False, None, resp.status_code, "Response is not valid JSON", snippet
-
+                return False, None, resp.status_code, "Not JSON", snippet
         except requests.exceptions.Timeout:
-            return False, None, 0, "Request timed out", ""
-        except requests.exceptions.ConnectionError as exc:
-            return False, None, 0, f"Connection error: {exc}", ""
+            return False, None, 0, "Timeout", ""
         except Exception as exc:
             return False, None, 0, str(exc), ""
 
+    def _do_post(self, action, page_number, page_size, company_name=""):
+        self._rate_limit()
+        sess = self._get_session()
+        url = self._origin + _HANDLE_REQUEST_PATH
+        body = {
+            "action": action,
+            "companyName": company_name,
+            "pageNumber": page_number,
+            "pageSize": page_size,
+        }
+        try:
+            resp = sess.post(url, json=body, timeout=self._timeout)
+            self._last_req = time.time()
+            if resp.status_code == 429:
+                wait = int(resp.headers.get("Retry-After", "5"))
+                time.sleep(wait)
+                resp = sess.post(url, json=body, timeout=self._timeout)
+                self._last_req = time.time()
+            snippet = resp.text[:300].replace("\n", " ")
+            if resp.status_code not in (200, 201):
+                return False, None, resp.status_code, f"HTTP {resp.status_code}", snippet
+            try:
+                return True, resp.json(), resp.status_code, "", snippet
+            except ValueError:
+                return False, None, resp.status_code, "Not JSON", snippet
+        except requests.exceptions.Timeout:
+            return False, None, 0, "Timeout", ""
+        except Exception as exc:
+            return False, None, 0, str(exc), ""
+
+    # ── Public API ────────────────────────────────────────────────────────────
+
     def fetch_page(self, page_number, page_size=_DEFAULT_PAGE_SIZE):
         """
-        Fetch one page of DIFC register data.
-        Returns (items: list[dict], total: int, error: str).
-        The error string includes per-variant diagnostics when all fail.
+        Fetch one page.  Returns (items, total, error_str).
+        On first call probes all strategies; subsequent calls reuse winner.
         """
         if page_number == 1:
             self._warm_session()
 
-        post_bodies = _build_request_bodies(page_number, page_size)
-        # Also try GET versions of the first two POST variants
-        candidates = (
-            [("POST", post_bodies[self._working_body_variant])]
-            if self._working_body_variant is not None
-            else (
-                [("POST", b) for b in post_bodies]
-                + [("GET", post_bodies[0]), ("GET", post_bodies[1])]
-            )
-        )
+        # Reuse confirmed strategy
+        if self._strategy is not None:
+            kind, key = self._strategy
+            if kind == "GET":
+                ok, data, status, err, snippet = self._do_get(key, page_number, page_size)
+            else:
+                ok, data, status, err, snippet = self._do_post(key, page_number, page_size)
+            if ok:
+                items = self._extract_items(data)
+                if items is not None:
+                    return items, self._extract_total(data, len(items)), ""
+            return [], 0, f"Strategy {kind}:{key} failed — {err} | {snippet[:150]}"
 
+        # Discovery phase — try all strategies
         variant_errors = []
-        for idx, (method, body) in enumerate(candidates):
-            ok, data, status, err, snippet = self._request(method, body)
-            if not ok:
-                detail = f"variant {idx} ({method}) → {err} | response: {snippet[:150]}"
-                variant_errors.append(detail)
-                _logger.warning("DIFC %s", detail)
-                continue
 
+        # Strategy A: GET endpoints
+        for path in _GET_ENDPOINTS:
+            ok, data, status, err, snippet = self._do_get(path, page_number, page_size)
+            label = f"GET {path}"
+            if not ok:
+                variant_errors.append(f"{label} → {err} | {snippet[:120]}")
+                _logger.warning("DIFC probe: %s → %s | %s", label, err, snippet[:120])
+                continue
             items = self._extract_items(data)
             if items is None:
                 detail = (
-                    f"variant {idx} ({method}) → HTTP {status} OK but no item array; "
+                    f"{label} → HTTP {status} OK but no item array; "
                     f"keys={list(data.keys()) if isinstance(data, dict) else type(data).__name__} "
-                    f"| snippet: {snippet[:150]}"
+                    f"| {snippet[:120]}"
                 )
                 variant_errors.append(detail)
-                _logger.warning("DIFC %s", detail)
+                _logger.warning("DIFC probe: %s", detail)
                 continue
+            self._strategy = ("GET", path)
+            _logger.info("DIFC: using strategy GET %s", path)
+            return items, self._extract_total(data, len(items)), ""
 
-            if self._working_body_variant is None:
-                self._working_body_variant = idx
-                _logger.info(
-                    "DIFC: working variant is #%d (%s): %s", idx, method, json.dumps(body)
+        # Strategy B: POST /api/handleRequest with action name candidates
+        for action in _ACTION_CANDIDATES:
+            ok, data, status, err, snippet = self._do_post(action, page_number, page_size)
+            label = f"POST handleRequest action={action}"
+            if not ok:
+                variant_errors.append(f"{label} → {err} | {snippet[:120]}")
+                _logger.warning("DIFC probe: %s → %s | %s", label, err, snippet[:120])
+                continue
+            items = self._extract_items(data)
+            if items is None:
+                detail = (
+                    f"{label} → HTTP {status} OK but no item array; "
+                    f"keys={list(data.keys()) if isinstance(data, dict) else type(data).__name__} "
+                    f"| {snippet[:120]}"
                 )
+                variant_errors.append(detail)
+                _logger.warning("DIFC probe: %s", detail)
+                continue
+            self._strategy = ("POST", action)
+            _logger.info("DIFC: using strategy POST action=%s", action)
+            return items, self._extract_total(data, len(items)), ""
 
-            total = self._extract_total(data, len(items))
-            return items, total, ""
+        return [], 0, "All strategies failed:\n" + "\n".join(variant_errors)
 
-        summary = " || ".join(variant_errors)
-        return [], 0, f"All variants failed: {summary}"
-
-    # ── Envelope unwrapping ───────────────────────────────────────────────
+    # ── Envelope unwrapping ───────────────────────────────────────────────────
 
     @staticmethod
     def _extract_items(data):
-        """Walk candidate paths to find a list of company records."""
         if isinstance(data, list):
             return data
         if not isinstance(data, dict):
@@ -279,10 +308,9 @@ class DIFCRegisterParser:
                 return val
         return fallback
 
-    # ── ParsedLead construction ───────────────────────────────────────────
+    # ── ParsedLead construction ───────────────────────────────────────────────
 
     def item_to_lead(self, item, source_url):
-        """Convert a single API record dict into a ParsedLead."""
         if not isinstance(item, dict):
             return None
 
@@ -291,24 +319,18 @@ class DIFCRegisterParser:
         lead.country_name = "United Arab Emirates"
 
         lead.company_name = self._first(item, _NAME_KEYS)
-        lead.website     = self._first(item, _WEB_KEYS)
-        lead.email       = self._first(item, _EMAIL_KEYS)
-        lead.phone       = self._first(item, _PHONE_KEYS)
+        lead.website      = self._first(item, _WEB_KEYS)
+        lead.email        = self._first(item, _EMAIL_KEYS)
+        lead.phone        = self._first(item, _PHONE_KEYS)
 
-        # Build city / address
         addr = self._first(item, _ADDR_KEYS)
-        if addr:
-            lead.city = addr[:200]
-        else:
-            lead.city = "Dubai"  # DIFC is in Dubai
+        lead.city = addr[:200] if addr else "Dubai"
 
-        # Industry / entity type from license type field
         license_type = self._first(item, _TYPE_KEYS)
         status       = self._first(item, _STATUS_KEYS)
         parts = [p for p in [license_type, status] if p]
         lead.industry = " — ".join(parts)[:200] if parts else ""
 
-        # Description with all available structured data
         desc_lines = ["DIFC Public Register"]
         for key in ("licenseNumber", "license_number", "LicenseNumber",
                     "registrationNumber", "regNumber"):
@@ -321,7 +343,6 @@ class DIFCRegisterParser:
         if status:
             desc_lines.append(f"Status: {status}")
         lead.description = "\n".join(desc_lines)
-
         lead.raw_payload = {"source": "DIFC Public Register", **item}
 
         if not (lead.company_name or lead.email or lead.phone):
@@ -330,7 +351,6 @@ class DIFCRegisterParser:
 
     @staticmethod
     def _first(d, keys):
-        """Return the first non-empty string value from d matching any key in keys."""
         for k in keys:
             v = d.get(k)
             if v and isinstance(v, str):
