@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ ENROLL WIZARD ══════════════════════════════════════════════ -->
+
+    <record id="lead_nurture_enroll_wizard_form" model="ir.ui.view">
+        <field name="name">lead.nurture.enroll.wizard.form</field>
+        <field name="model">lead.nurture.enroll.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Enroll Leads in Campaign">
+                <sheet>
+                    <group>
+                        <group string="Campaign">
+                            <field name="campaign_id"/>
+                            <field name="outreach_channel"/>
+                            <field name="start_immediately"/>
+                        </group>
+                        <group string="Summary">
+                            <field name="lead_count" readonly="1"/>
+                            <field name="already_enrolled_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Leads to Enroll">
+                        <field name="lead_ids" nolabel="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="partner_name" string="Company"/>
+                                <field name="email_from" string="Email"/>
+                                <field name="nurture_stage" string="Current Stage"/>
+                                <field name="nurture_campaign_id" string="Current Campaign"/>
+                            </list>
+                        </field>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_enroll" type="object"
+                            string="Enroll" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ══ QUALIFY WIZARD ═════════════════════════════════════════════ -->
+
+    <record id="lead_nurture_qualify_wizard_form" model="ir.ui.view">
+        <field name="name">lead.nurture.qualify.wizard.form</field>
+        <field name="model">lead.nurture.qualify.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Qualify Lead">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <strong><field name="lead_name" readonly="1"/></strong>
+                        — Current Score: <field name="current_score" readonly="1" nolabel="1"/>
+                        | Stage: <field name="current_stage" readonly="1" nolabel="1"/>
+                    </div>
+                    <group>
+                        <group string="Qualification">
+                            <field name="qualification_event"/>
+                            <field name="response_status"/>
+                            <field name="convert_to_opportunity"/>
+                        </group>
+                        <group string="Score Preview">
+                            <field name="score_delta" readonly="1"/>
+                            <field name="projected_score" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Notes / Summary">
+                        <field name="notes" nolabel="1" placeholder="Add context about this qualification…"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_qualify" type="object"
+                            string="Qualify" class="oe_highlight"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

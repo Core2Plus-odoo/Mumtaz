@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ CRM LEAD FORM — NURTURE TAB + SMART BUTTON ════════════════ -->
+
+    <record id="crm_lead_form_inherit_nurture" model="ir.ui.view">
+        <field name="name">crm.lead.form.mumtaz.nurture</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart button: communication history -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_nurture_logs" type="object"
+                        class="oe_stat_button" icon="fa-comments"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_user">
+                    <field name="nurture_log_count" widget="statinfo" string="Messages"/>
+                </button>
+            </xpath>
+
+            <!-- Nurture action buttons in header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_enroll_in_campaign" type="object"
+                        string="Enroll in Campaign"
+                        invisible="nurture_campaign_id != False"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_user"/>
+                <button name="action_mark_interested" type="object"
+                        string="Mark Interested"
+                        invisible="response_status in ('interested','demo_requested','not_interested')"
+                        class="btn-success"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_user"/>
+                <button name="action_mark_demo_requested" type="object"
+                        string="Demo Requested"
+                        invisible="response_status == 'demo_requested'"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_user"/>
+                <button name="action_mark_not_interested" type="object"
+                        string="Not Interested"
+                        invisible="response_status == 'not_interested'"
+                        class="btn-danger"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_user"/>
+                <button name="action_qualify_lead" type="object"
+                        string="Qualify Lead"
+                        class="oe_highlight"
+                        invisible="nurture_stage in ('qualified','converted','dead')"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_user"/>
+                <button name="action_convert_qualified" type="object"
+                        string="Convert to Opportunity"
+                        class="oe_highlight"
+                        invisible="type == 'opportunity' or nurture_stage not in ('qualified','responded')"
+                        groups="mumtaz_lead_nurture.group_lead_nurture_manager"/>
+            </xpath>
+
+            <!-- Nurture page in notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Nurture &amp; Qualification" name="nurture"
+                      groups="mumtaz_lead_nurture.group_lead_nurture_user">
+                    <group>
+                        <group string="Segmentation">
+                            <field name="scraped_source_id"/>
+                            <field name="industry_cluster"/>
+                            <field name="company_segment"/>
+                            <field name="use_case_type"/>
+                            <field name="probable_erp_need_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="Campaign">
+                            <field name="nurture_campaign_id"/>
+                            <field name="nurture_stage"/>
+                            <field name="nurture_sequence_step" readonly="1"/>
+                            <field name="outreach_channel_pref"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Scoring">
+                            <field name="lead_score"/>
+                            <field name="qualification_score"/>
+                            <field name="auto_convert_ready" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Outreach Timeline">
+                            <field name="response_status"/>
+                            <field name="last_outreach_date" readonly="1"/>
+                            <field name="next_followup_date"/>
+                        </group>
+                    </group>
+                    <group string="Communication History">
+                        <field name="nurture_log_ids" nolabel="1" readonly="1">
+                            <list create="false" delete="false"
+                                  decoration-danger="status in ('failed','bounced')"
+                                  decoration-success="status == 'replied'">
+                                <field name="timestamp"/>
+                                <field name="channel"/>
+                                <field name="status"/>
+                                <field name="subject"/>
+                                <field name="score_change" string="Score"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ══ NURTURE LEADS kanban / list action ══════════════════════════ -->
+
+    <record id="action_nurture_leads" model="ir.actions.act_window">
+        <field name="name">Nurture Leads</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('nurture_campaign_id','!=',False),('type','=','lead')]</field>
+        <field name="context">{"search_default_active": 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No leads are enrolled in a nurture campaign yet.
+            </p>
+        </field>
+    </record>
+
+</odoo>

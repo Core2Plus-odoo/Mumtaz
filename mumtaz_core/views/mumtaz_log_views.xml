@@ -64,12 +64,27 @@
                 <field name="user_id"/>
                 <field name="module_name"/>
                 <field name="action"/>
-                <field name="level"/>
-                <filter string="Errors" name="errors" domain="[('level', '=', 'error')]"/>
-                <filter string="Warnings" name="warnings" domain="[('level', '=', 'warning')]"/>
-                <filter string="Info" name="info" domain="[('level', '=', 'info')]"/>
-                <filter string="Voice Queries" name="voice" domain="[('module_name', '=', 'mumtaz_voice')]"/>
-                <filter string="AI Chat" name="ai" domain="[('module_name', '=', 'mumtaz_ai')]"/>
+                <filter string="Errors" name="errors"
+                        domain="[('level', '=', 'error')]"/>
+                <filter string="Warnings" name="warnings"
+                        domain="[('level', '=', 'warning')]"/>
+                <filter string="Info" name="info"
+                        domain="[('level', '=', 'info')]"/>
+                <filter string="Voice Queries" name="voice"
+                        domain="[('module_name', '=', 'mumtaz_voice')]"/>
+                <filter string="AI Chat" name="ai"
+                        domain="[('module_name', '=', 'mumtaz_ai')]"/>
+                <filter string="Today" name="today"
+                        domain="[('create_date', '>=', datetime.datetime.now().strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Last 7 Days" name="last_week"
+                        domain="[('create_date', '>=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Last 30 Days" name="last_month"
+                        domain="[('create_date', '>=', (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter string="Module" name="group_module" context="{'group_by': 'module_name'}"/>
+                <filter string="Level" name="group_level" context="{'group_by': 'level'}"/>
+                <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                <filter string="Date" name="group_date" context="{'group_by': 'create_date:day'}"/>
             </search>
         </field>
     </record>

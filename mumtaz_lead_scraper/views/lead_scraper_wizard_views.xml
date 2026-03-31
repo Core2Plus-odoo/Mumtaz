@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="lead_scraper_run_wizard_form_view" model="ir.ui.view">
+        <field name="name">lead.scraper.run.wizard.form</field>
+        <field name="model">lead.scraper.run.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Run Scraper">
+
+                <!-- Confirmation screen -->
+                <group invisible="state != 'confirm'">
+                    <group string="Source">
+                        <field name="source_name" readonly="1"/>
+                        <field name="source_url" readonly="1"/>
+                        <field name="parsing_mode" readonly="1"/>
+                    </group>
+                    <group string="Options">
+                        <field name="auto_push_crm"/>
+                    </group>
+                </group>
+
+                <!-- Result screen -->
+                <group invisible="state != 'done'">
+                    <group string="Result">
+                        <field name="result_status" readonly="1"/>
+                        <field name="result_job_id" readonly="1"/>
+                    </group>
+                    <group string="Summary">
+                        <field name="result_summary" widget="text" nolabel="1" readonly="1"/>
+                    </group>
+                </group>
+
+                <footer>
+                    <button name="action_run" type="object"
+                            string="Run Scraper"
+                            class="oe_highlight"
+                            invisible="state != 'confirm'"/>
+                    <button name="action_view_job" type="object"
+                            string="View Job Details"
+                            invisible="state != 'done'"/>
+                    <button name="action_close" type="object"
+                            string="Close"
+                            invisible="state != 'done'"/>
+                    <button string="Cancel" special="cancel"
+                            class="btn-secondary"
+                            invisible="state != 'confirm'"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

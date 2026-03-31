@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_lead_scraper_root"
+              name="Lead Scraper"
+              groups="mumtaz_lead_scraper.group_lead_scraper_viewer"
+              sequence="85"/>
+
+    <menuitem id="menu_lead_scraper_sources"
+              name="Sources"
+              parent="menu_lead_scraper_root"
+              action="action_lead_scraper_source"
+              sequence="10"
+              groups="mumtaz_lead_scraper.group_lead_scraper_user"/>
+
+    <menuitem id="menu_lead_scraper_jobs"
+              name="Jobs / Runs"
+              parent="menu_lead_scraper_root"
+              action="action_lead_scraper_job"
+              sequence="20"/>
+
+    <menuitem id="menu_lead_scraper_records"
+              name="Extracted Leads"
+              parent="menu_lead_scraper_root"
+              action="action_lead_scraper_record"
+              sequence="30"/>
+
+</odoo>
