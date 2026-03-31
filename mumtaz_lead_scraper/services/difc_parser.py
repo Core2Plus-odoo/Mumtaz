@@ -139,72 +139,115 @@ class DIFCRegisterParser:
         if elapsed < self._delay:
             time.sleep(self._delay - elapsed)
 
-    def _post(self, body):
-        """POST body, return (ok: bool, data: dict|None, status: int, err: str)."""
+    def _warm_session(self):
+        """
+        Visit the public register page first to pick up any session cookies or
+        CSRF tokens the Next.js app sets before allowing API calls.
+        """
+        if getattr(self, "_session_warmed", False):
+            return
+        try:
+            sess = self._get_session()
+            warmup_url = f"{self._origin}/business/public-register"
+            resp = sess.get(warmup_url, timeout=self._timeout)
+            self._last_req = time.time()
+            _logger.info("DIFC session warm-up: GET %s → %s", warmup_url, resp.status_code)
+        except Exception as exc:
+            _logger.warning("DIFC session warm-up failed: %s", exc)
+        self._session_warmed = True
+
+    def _request(self, method, body):
+        """
+        Execute one HTTP request (POST or GET).
+        Returns (ok, data_or_None, status_code, err_str, body_snippet).
+        """
         self._rate_limit()
         sess = self._get_session()
         try:
-            resp = sess.post(self._api_url, json=body, timeout=self._timeout)
+            if method == "GET":
+                params = {k: str(v) for k, v in body.items()}
+                resp = sess.get(self._api_url, params=params, timeout=self._timeout)
+            else:
+                resp = sess.post(self._api_url, json=body, timeout=self._timeout)
             self._last_req = time.time()
 
             if resp.status_code == 429:
                 wait = int(resp.headers.get("Retry-After", "5"))
                 _logger.warning("DIFC API rate-limited — sleeping %ds", wait)
                 time.sleep(wait)
-                resp = sess.post(self._api_url, json=body, timeout=self._timeout)
+                if method == "GET":
+                    resp = sess.get(self._api_url, params=params, timeout=self._timeout)
+                else:
+                    resp = sess.post(self._api_url, json=body, timeout=self._timeout)
                 self._last_req = time.time()
 
+            snippet = resp.text[:300].replace("\n", " ")
             if resp.status_code not in (200, 201):
-                return False, None, resp.status_code, f"HTTP {resp.status_code}"
+                return False, None, resp.status_code, f"HTTP {resp.status_code}", snippet
 
             try:
-                return True, resp.json(), resp.status_code, ""
+                return True, resp.json(), resp.status_code, "", snippet
             except ValueError:
-                return False, None, resp.status_code, "Response is not valid JSON"
+                return False, None, resp.status_code, "Response is not valid JSON", snippet
 
         except requests.exceptions.Timeout:
-            return False, None, 0, "Request timed out"
+            return False, None, 0, "Request timed out", ""
         except requests.exceptions.ConnectionError as exc:
-            return False, None, 0, f"Connection error: {exc}"
+            return False, None, 0, f"Connection error: {exc}", ""
         except Exception as exc:
-            return False, None, 0, str(exc)
+            return False, None, 0, str(exc), ""
 
     def fetch_page(self, page_number, page_size=_DEFAULT_PAGE_SIZE):
         """
         Fetch one page of DIFC register data.
         Returns (items: list[dict], total: int, error: str).
+        The error string includes per-variant diagnostics when all fail.
         """
-        # Use the confirmed-working variant first, then fall back to probing
+        if page_number == 1:
+            self._warm_session()
+
+        post_bodies = _build_request_bodies(page_number, page_size)
+        # Also try GET versions of the first two POST variants
         candidates = (
-            [_build_request_bodies(page_number, page_size)[self._working_body_variant]]
+            [("POST", post_bodies[self._working_body_variant])]
             if self._working_body_variant is not None
-            else _build_request_bodies(page_number, page_size)
+            else (
+                [("POST", b) for b in post_bodies]
+                + [("GET", post_bodies[0]), ("GET", post_bodies[1])]
+            )
         )
 
-        for idx, body in enumerate(candidates):
-            ok, data, status, err = self._post(body)
+        variant_errors = []
+        for idx, (method, body) in enumerate(candidates):
+            ok, data, status, err, snippet = self._request(method, body)
             if not ok:
-                _logger.debug(
-                    "DIFC variant %d failed [%s]: %s — body: %s",
-                    idx, status, err, json.dumps(body)
-                )
+                detail = f"variant {idx} ({method}) → {err} | response: {snippet[:150]}"
+                variant_errors.append(detail)
+                _logger.warning("DIFC %s", detail)
                 continue
 
             items = self._extract_items(data)
             if items is None:
-                _logger.debug("DIFC variant %d: valid JSON but no item array found", idx)
+                detail = (
+                    f"variant {idx} ({method}) → HTTP {status} OK but no item array; "
+                    f"keys={list(data.keys()) if isinstance(data, dict) else type(data).__name__} "
+                    f"| snippet: {snippet[:150]}"
+                )
+                variant_errors.append(detail)
+                _logger.warning("DIFC %s", detail)
                 continue
 
             if self._working_body_variant is None:
                 self._working_body_variant = idx
                 _logger.info(
-                    "DIFC: working request variant is #%d: %s", idx, json.dumps(body)
+                    "DIFC: working variant is #%d (%s): %s", idx, method, json.dumps(body)
                 )
 
             total = self._extract_total(data, len(items))
             return items, total, ""
 
-        return [], 0, "All request variants failed — check endpoint or parameter format"
+        summary = " || ".join(variant_errors)
+        return [], 0, f"All variants failed: {summary}"
 
     # ── Envelope unwrapping ───────────────────────────────────────────────
 
