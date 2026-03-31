@@ -7,41 +7,17 @@ from html.parser import HTMLParser
 from typing import Iterable, List, Set
 from urllib.parse import urljoin, urlparse
 
-import requests
-from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
-from config import (
-    BACKOFF_FACTOR,
-    BASE_URL,
-    DELAY_SECONDS,
-    HEADERS,
-    MAX_PAGES,
-    MAX_RETRIES,
-    ODOO_DB,
-    ODOO_PASSWORD,
-    ODOO_URL,
-    ODOO_USERNAME,
-    TIMEOUT_SECONDS,
-)
-from models import RawTradeRecord, ScoredTradeLead
-from odoo_push import OdooPushError, push_leads_to_odoo
-from portal_selectors import (
-    CITY_SELECTORS,
-    COMPANY_CARD_SELECTORS,
-    COMPANY_NAME_SELECTORS,
-    SECTOR_SELECTORS,
-)
-from scoring import score_lead
+def main():
+    scraper = EnterpriseScraperV2()
+    product_records = scraper.crawl()
 
-OUTPUT_FILE = "enriched_company_leads.csv"
-_LOGGER = logging.getLogger(__name__)
+    companies = consolidate_company_records(product_records)
 
-EMAIL_REGEX = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-PHONE_REGEX = re.compile(r"(?:(?:\+|00)\d{1,3}[\s-]?)?(?:\(?\d{2,5}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,5}")
+    enriched = [enrich_company(c) for c in companies]
 
-    return candidate.rstrip("/") + "/"
+    df = pd.DataFrame(enriched)
+    df.to_csv('enriched_company_leads.csv', index=False)
 
 class AnchorCollector(HTMLParser):
     """Minimal HTML fallback parser when BeautifulSoup is unavailable."""
