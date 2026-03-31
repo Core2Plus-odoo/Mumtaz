@@ -23,6 +23,7 @@ class LeadScraperSource(models.Model):
             ("api", "API / JSON Endpoint"),
             ("sitemap", "Sitemap"),
             ("ptp", "Pakistan Trade Portal"),
+            ("difc_public_register", "DIFC Public Register"),
         ],
         default="html",
         required=True,

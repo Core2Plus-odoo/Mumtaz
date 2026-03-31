@@ -62,9 +62,10 @@ class ScraperEngine:
         return job
 
     def _execute(self, job, source, auto_push_crm):
-        # Dispatch to dedicated PTP engine if source type is ptp
         if source.source_type == "ptp":
             all_leads = self._execute_ptp(job, source)
+        elif source.source_type == "difc_public_register":
+            all_leads = self._execute_difc(job, source)
         else:
             all_leads = self._execute_generic(job, source)
         self._save_leads(job, source, all_leads, auto_push_crm)
@@ -135,6 +136,62 @@ class ScraperEngine:
                 job.append_log(f"  No usable data found")
 
         job.append_log(f"Phase 2 complete — {len(all_leads)} leads extracted")
+        return all_leads
+
+    def _execute_difc(self, job, source):
+        """
+        DIFC Public Register: paginate through the /api/handleRequest JSON API.
+        """
+        from .difc_parser import DIFCRegisterParser, _DEFAULT_PAGE_SIZE
+
+        parser = DIFCRegisterParser(
+            base_url=source.url,
+            delay=source.request_delay or 2.0,
+        )
+        max_pages = source.max_pages or 20
+        page_size = _DEFAULT_PAGE_SIZE
+
+        all_leads = []
+        total_reported = None
+
+        for page_num in range(1, max_pages + 1):
+            job.append_log(f"DIFC API — fetching page {page_num}")
+            items, total, err = parser.fetch_page(page_num, page_size)
+
+            if err:
+                job.append_log(f"  Error: {err}")
+                if page_num == 1:
+                    # First page failed — nothing to do
+                    job.append_log("DIFC: aborting — first page returned an error")
+                    break
+                # Subsequent pages failing may mean we've exceeded the data
+                job.append_log("DIFC: stopping pagination after error")
+                break
+
+            if total_reported is None and total:
+                total_reported = total
+                job.append_log(f"DIFC: register reports {total} total entities")
+
+            job.append_log(f"  Page {page_num}: {len(items)} items received")
+
+            for item in items:
+                lead = parser.item_to_lead(item, source.url)
+                if lead:
+                    all_leads.append(lead)
+
+            # Stop if we have fetched all available pages
+            if total_reported is not None:
+                fetched_so_far = page_num * page_size
+                if fetched_so_far >= total_reported:
+                    job.append_log("DIFC: all available pages fetched")
+                    break
+
+            # Also stop if the server returned fewer items than a full page
+            if len(items) < page_size:
+                job.append_log("DIFC: last page (fewer items than page size)")
+                break
+
+        job.append_log(f"DIFC complete — {len(all_leads)} leads extracted")
         return all_leads
 
     def _execute_generic(self, job, source):
