@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class MumtazCFOTransaction(models.Model):
@@ -56,7 +56,7 @@ class MumtazCFOTransaction(models.Model):
         )
     ]
 
-    @fields.depends("date", "description", "amount")
+    @api.depends("date", "description", "amount")
     def _compute_name(self):
         for rec in self:
             rec.name = f"{rec.date or ''} | {rec.description or ''} | {rec.amount or 0:.2f}"
