@@ -3,51 +3,54 @@ import csv
 import logging
 import re
 import time
-from typing import Dict, Iterable, List, Optional, Set
+from html.parser import HTMLParser
+from typing import Iterable, List, Set
 from urllib.parse import urljoin, urlparse
 
-import requests
-from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
-from config import (
-    BACKOFF_FACTOR,
-    BASE_URL,
-    DELAY_SECONDS,
-    HEADERS,
-    MAX_PAGES,
-    MAX_RETRIES,
-    ODOO_DB,
-    ODOO_PASSWORD,
-    ODOO_URL,
-    ODOO_USERNAME,
-    TIMEOUT_SECONDS,
-)
-from models import RawTradeRecord, ScoredTradeLead
-from odoo_push import OdooPushError, push_leads_to_odoo
-from portal_selectors import (
-    CITY_SELECTORS,
-    COMPANY_CARD_SELECTORS,
-    COMPANY_NAME_SELECTORS,
-    SECTOR_SELECTORS,
-)
-from scoring import score_lead
+def main():
+    scraper = EnterpriseScraperV2()
+    product_records = scraper.crawl()
 
-OUTPUT_FILE = "enriched_company_leads.csv"
-_LOGGER = logging.getLogger(__name__)
+    companies = consolidate_company_records(product_records)
 
-EMAIL_REGEX = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-PHONE_REGEX = re.compile(r"(?:(?:\+|00)\d{1,3}[\s-]?)?(?:\(?\d{2,5}\)?[\s-]?)?\d{3,4}[\s-]?\d{3,5}")
+    enriched = [enrich_company(c) for c in companies]
 
-    return candidate.rstrip("/") + "/"
+    df = pd.DataFrame(enriched)
+    df.to_csv('enriched_company_leads.csv', index=False)
 
-def _setup_logging(verbose: bool = False) -> None:
-    level = logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-    )
+class AnchorCollector(HTMLParser):
+    """Minimal HTML fallback parser when BeautifulSoup is unavailable."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.anchors: List[tuple[str, str]] = []
+        self._href = ""
+        self._text_parts: List[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != "a":
+            return
+        attrs_dict = dict(attrs)
+        self._href = attrs_dict.get("href", "")
+        self._text_parts = []
+
+    def handle_data(self, data):
+        if self._href:
+            self._text_parts.append(data)
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "a" and self._href:
+            self.anchors.append(("".join(self._text_parts), self._href))
+            self._href = ""
+            self._text_parts = []
+
+
+def fetch_html(url: str) -> str:
+    if requests is not None:
+        response = requests.get(url, headers=HEADERS, timeout=TIMEOUT_SECONDS)
+        response.raise_for_status()
+        return response.text
 
 
 def _normalize_url(raw_url: str) -> str:
@@ -237,7 +240,7 @@ def _is_company_like(text: str) -> bool:
         "corp",
         "pvt",
     )
-    return any(hint in text.lower() for hint in business_hints) or len(text.split()) >= 3
+    return any(hint in text.lower() for hint in business_hints) or len(text.split()) >= 2
 
 
 def _extract_records_from_soup(soup, page_url: str) -> List[RawTradeRecord]:
@@ -333,6 +336,49 @@ def _candidate_pages(soup, base_url: str) -> List[str]:
     return candidates
 
 
+def _candidate_pages_from_html(raw_html: str) -> List[str]:
+    parser = AnchorCollector()
+    parser.feed(raw_html)
+    candidates: List[str] = [BASE_URL]
+    seen: Set[str] = {BASE_URL}
+    keywords = ("supplier", "export", "company", "directory", "listing")
+
+    for text, href_raw in parser.anchors:
+        href = _normalize_url(BASE_URL, href_raw)
+        if not href or href in seen:
+            continue
+        if urlparse(href).netloc != urlparse(BASE_URL).netloc:
+            continue
+
+        lowered_text = _compact(text).lower()
+        if any(k in href.lower() or k in lowered_text for k in keywords):
+            seen.add(href)
+            candidates.append(href)
+
+        if len(candidates) >= MAX_FOLLOWUP_PAGES + 1:
+            break
+
+    return candidates
+
+
+def _extract_records_from_html(raw_html: str, page_url: str) -> List[RawTradeRecord]:
+    parser = AnchorCollector()
+    parser.feed(raw_html)
+    records: List[RawTradeRecord] = []
+    for text, href_raw in parser.anchors:
+        company_name = _compact(text)
+        if not _is_company_like(company_name):
+            continue
+        records.append(
+            RawTradeRecord(
+                company_name=company_name,
+                source_url=page_url,
+                company_url=_normalize_url(page_url, href_raw),
+            )
+        )
+    return records
+
+
 def dedupe_records(records: List[RawTradeRecord]) -> List[RawTradeRecord]:
     seen = set()
     unique = []
@@ -370,22 +416,21 @@ def scrape_enriched_companies(target_url: str) -> List[dict]:
     all_records: List[RawTradeRecord] = []
 
     try:
-        soup, response = get_soup(session, normalized_url)
-        if response.status_code in (401, 403):
-            _LOGGER.warning("site_blocking_detected status=%s url=%s", response.status_code, response.url)
+        base_html = fetch_html(BASE_URL)
+        if BeautifulSoup is not None:
+            base_soup = BeautifulSoup(base_html, "html.parser")
+            pages = _candidate_pages(base_soup)
+        else:
+            pages = _candidate_pages_from_html(base_html)
 
-        if _detect_js_heavy_page(soup):
-            _LOGGER.warning("js_heavy_page_detected url=%s", normalized_url)
-
-        for page_url in _candidate_pages(soup, normalized_url):
+        for page_url in pages:
             try:
-                page_soup, _ = get_soup(session, page_url)
-                page_lead = _extract_page_lead(page_soup, page_url, normalized_url)
-                if page_lead:
-                    all_records.append(page_lead)
-                extracted = _extract_records_from_soup(page_soup, page_url)
-                _LOGGER.info("parsed_page url=%s records=%s", page_url, len(extracted))
-                all_records.extend(extracted)
+                page_html = fetch_html(page_url)
+                if BeautifulSoup is not None:
+                    page_soup = BeautifulSoup(page_html, "html.parser")
+                    all_records.extend(_extract_records_from_soup(page_soup, page_url))
+                else:
+                    all_records.extend(_extract_records_from_html(page_html, page_url))
             except Exception as page_error:
                 _LOGGER.exception("page_parse_failed url=%s error=%s", page_url, page_error)
 

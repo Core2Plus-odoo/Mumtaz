@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_mumtaz_marketplace_root"
+              name="Marketplace"
+              parent="mumtaz_core.menu_mumtaz_root"
+              sequence="25"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_mumtaz_marketplace_browse"
+              name="Browse Listings"
+              parent="menu_mumtaz_marketplace_root"
+              action="action_mumtaz_marketplace_listings"
+              sequence="10"/>
+
+    <menuitem id="menu_mumtaz_marketplace_my"
+              name="My Listings"
+              parent="menu_mumtaz_marketplace_root"
+              action="action_mumtaz_my_listings"
+              sequence="20"/>
+
+    <menuitem id="menu_mumtaz_marketplace_inquiries"
+              name="Inquiries"
+              parent="menu_mumtaz_marketplace_root"
+              action="action_mumtaz_marketplace_inquiries"
+              sequence="30"/>
+
+    <menuitem id="menu_mumtaz_marketplace_config"
+              name="Categories"
+              parent="menu_mumtaz_marketplace_root"
+              action="action_mumtaz_marketplace_categories"
+              sequence="90"
+              groups="mumtaz_marketplace.group_mumtaz_marketplace_manager"/>
+
+</odoo>
