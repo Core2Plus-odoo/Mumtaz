@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mumtaz_marketplace_inquiry_list" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.inquiry.list</field>
+        <field name="model">mumtaz.marketplace.inquiry</field>
+        <field name="arch" type="xml">
+            <list string="Inquiries">
+                <field name="create_date" string="Date"/>
+                <field name="listing_id"/>
+                <field name="inquirer_name"/>
+                <field name="inquirer_company" optional="show"/>
+                <field name="inquirer_email"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'new'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'responded'"
+                       decoration-muted="state == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_marketplace_inquiry_form" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.inquiry.form</field>
+        <field name="model">mumtaz.marketplace.inquiry</field>
+        <field name="arch" type="xml">
+            <form string="Inquiry">
+                <header>
+                    <button name="action_mark_in_progress" string="In Progress"
+                            type="object" invisible="state != 'new'"/>
+                    <button name="action_respond" string="Mark Responded"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('new', 'in_progress')"/>
+                    <button name="action_close" string="Close"
+                            type="object"
+                            invisible="state == 'closed'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="new,in_progress,responded,closed"/>
+                </header>
+                <sheet>
+                    <group string="Listing">
+                        <field name="listing_id"/>
+                    </group>
+                    <group string="Inquirer Details">
+                        <group>
+                            <field name="inquirer_name"/>
+                            <field name="inquirer_company"/>
+                        </group>
+                        <group>
+                            <field name="inquirer_email"/>
+                            <field name="inquirer_phone"/>
+                        </group>
+                    </group>
+                    <group string="Message">
+                        <field name="message" nolabel="1"/>
+                    </group>
+                    <group string="Response" invisible="state == 'new'">
+                        <field name="response" nolabel="1" placeholder="Your response..."/>
+                        <field name="responded_date" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_marketplace_inquiries" model="ir.actions.act_window">
+        <field name="name">Inquiries</field>
+        <field name="res_model">mumtaz.marketplace.inquiry</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_state_new": 1}</field>
+    </record>
+
+</odoo>

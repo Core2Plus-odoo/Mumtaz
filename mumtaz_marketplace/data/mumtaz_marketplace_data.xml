@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="category_technology" model="mumtaz.marketplace.category">
+        <field name="name">Technology &amp; Software</field>
+        <field name="icon">fa-laptop</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="category_consulting" model="mumtaz.marketplace.category">
+        <field name="name">Consulting &amp; Advisory</field>
+        <field name="icon">fa-briefcase</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="category_finance" model="mumtaz.marketplace.category">
+        <field name="name">Finance &amp; Accounting</field>
+        <field name="icon">fa-line-chart</field>
+        <field name="sequence">30</field>
+    </record>
+
+    <record id="category_manufacturing" model="mumtaz.marketplace.category">
+        <field name="name">Manufacturing &amp; Supply</field>
+        <field name="icon">fa-industry</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="category_marketing" model="mumtaz.marketplace.category">
+        <field name="name">Marketing &amp; Sales</field>
+        <field name="icon">fa-bullhorn</field>
+        <field name="sequence">50</field>
+    </record>
+
+    <record id="category_logistics" model="mumtaz.marketplace.category">
+        <field name="name">Logistics &amp; Distribution</field>
+        <field name="icon">fa-truck</field>
+        <field name="sequence">60</field>
+    </record>
+
+    <record id="category_legal" model="mumtaz.marketplace.category">
+        <field name="name">Legal &amp; Compliance</field>
+        <field name="icon">fa-gavel</field>
+        <field name="sequence">70</field>
+    </record>
+
+    <record id="category_hr" model="mumtaz.marketplace.category">
+        <field name="name">HR &amp; Recruitment</field>
+        <field name="icon">fa-users</field>
+        <field name="sequence">80</field>
+    </record>
+</odoo>

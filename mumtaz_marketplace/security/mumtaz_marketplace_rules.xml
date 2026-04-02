@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Listings: company can only manage their own, but see all published -->
+    <record id="rule_marketplace_listing_own" model="ir.rule">
+        <field name="name">Marketplace Listing - Own company</field>
+        <field name="model_id" ref="model_mumtaz_marketplace_listing"/>
+        <field name="domain_force">
+            ['|', ('company_id', '=', user.company_id.id), ('state', '=', 'published')]
+        </field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Inquiries: company can only see their own -->
+    <record id="rule_marketplace_inquiry_own" model="ir.rule">
+        <field name="name">Marketplace Inquiry - Own company</field>
+        <field name="model_id" ref="model_mumtaz_marketplace_inquiry"/>
+        <field name="domain_force">[('company_id', '=', user.company_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+</odoo>

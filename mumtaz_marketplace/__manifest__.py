@@ -1,0 +1,22 @@
+{
+    "name": "Mumtaz Marketplace",
+    "summary": "B2B marketplace for SMEs to list and discover products and services",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": ["mumtaz_sme_profile", "mail"],
+    "data": [
+        "security/mumtaz_marketplace_security.xml",
+        "security/ir.model.access.csv",
+        "security/mumtaz_marketplace_rules.xml",
+        "data/mumtaz_marketplace_data.xml",
+        "views/mumtaz_marketplace_listing_views.xml",
+        "views/mumtaz_marketplace_inquiry_views.xml",
+        "views/mumtaz_marketplace_category_views.xml",
+        "views/mumtaz_menus.xml",
+    ],
+    "installable": True,
+    "auto_install": False,
+    "application": False,
+}

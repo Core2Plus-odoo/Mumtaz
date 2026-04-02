@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_marketplace_category_user,marketplace.category user,model_mumtaz_marketplace_category,base.group_user,1,0,0,0
+access_marketplace_category_manager,marketplace.category manager,model_mumtaz_marketplace_category,mumtaz_marketplace.group_mumtaz_marketplace_manager,1,1,1,1
+access_marketplace_listing_user,marketplace.listing user,model_mumtaz_marketplace_listing,base.group_user,1,1,1,0
+access_marketplace_listing_manager,marketplace.listing manager,model_mumtaz_marketplace_listing,mumtaz_marketplace.group_mumtaz_marketplace_manager,1,1,1,1
+access_marketplace_inquiry_user,marketplace.inquiry user,model_mumtaz_marketplace_inquiry,base.group_user,1,1,1,0
+access_marketplace_inquiry_manager,marketplace.inquiry manager,model_mumtaz_marketplace_inquiry,mumtaz_marketplace.group_mumtaz_marketplace_manager,1,1,1,1
+access_marketplace_tag_user,marketplace.tag user,model_mumtaz_marketplace_tag,base.group_user,1,0,0,0
+access_marketplace_tag_manager,marketplace.tag manager,model_mumtaz_marketplace_tag,mumtaz_marketplace.group_mumtaz_marketplace_manager,1,1,1,1
