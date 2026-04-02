@@ -1,7 +1,5 @@
 (function () {
-  'use strict';
-
-  /* --- Mobile nav toggle --- */
+  // ── Mobile nav toggle ──────────────────────────────────────
   const nav = document.querySelector('[data-nav]');
   const toggle = document.querySelector('[data-nav-toggle]');
   if (nav && toggle) {
@@ -18,60 +16,45 @@
     });
   }
 
-  /* --- Copyright year --- */
-  document.querySelectorAll('[data-year]').forEach(function (el) {
-    el.textContent = String(new Date().getFullYear());
-  });
+  // ── Copyright year ─────────────────────────────────────────
+  const year = document.querySelector('[data-year]');
+  if (year) year.textContent = String(new Date().getFullYear());
 
-  /* --- Scroll reveal --- */
+  // ── Scroll reveal ──────────────────────────────────────────
   if ('IntersectionObserver' in window) {
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    const observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
     document.querySelectorAll('.reveal').forEach(function (el) {
       observer.observe(el);
     });
   } else {
+    // Fallback: show all immediately
     document.querySelectorAll('.reveal').forEach(function (el) {
       el.classList.add('visible');
     });
   }
 
-  /* --- Billing toggle (pricing page) --- */
-  var billingToggle = document.getElementById('billing-toggle');
-  if (billingToggle) {
-    var isAnnual = true;
-    billingToggle.addEventListener('click', function () {
-      isAnnual = !isAnnual;
-      billingToggle.classList.toggle('active', isAnnual);
-      billingToggle.setAttribute('aria-checked', String(isAnnual));
-
-      document.querySelectorAll('.annual-price').forEach(function (el) {
-        el.style.display = isAnnual ? '' : 'none';
-      });
-      document.querySelectorAll('.monthly-price').forEach(function (el) {
-        el.style.display = isAnnual ? 'none' : '';
-      });
-      document.querySelectorAll('.billing-period').forEach(function (el) {
-        el.textContent = isAnnual ? 'billed annually' : 'billed monthly';
-      });
-    });
-  }
-
-  /* --- Smooth anchor scroll --- */
-  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      var target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // ── Header scroll shadow ───────────────────────────────────
+  var header = document.querySelector('.site-header');
+  if (header) {
+    var lastScroll = 0;
+    window.addEventListener('scroll', function () {
+      var current = window.scrollY;
+      if (current > 10) {
+        header.style.boxShadow = '0 2px 20px rgba(0,0,0,0.4)';
+      } else {
+        header.style.boxShadow = 'none';
       }
-    });
-  });
-
+      lastScroll = current;
+    }, { passive: true });
+  }
 })();
