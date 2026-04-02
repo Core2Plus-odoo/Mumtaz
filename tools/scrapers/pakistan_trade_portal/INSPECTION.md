@@ -1,7 +1,7 @@
 # Pakistan Trade Portal Scraper Inspection
 
 Date: 2026-03-28  
-Scope: `scrapers/pakistan_trade_portal`
+Scope: `tools/scrapers/pakistan_trade_portal`
 
 ## What this module currently does
 
@@ -44,6 +44,6 @@ Scope: `scrapers/pakistan_trade_portal`
 ## Commands used for this inspection
 
 ```bash
-python -m compileall scrapers/pakistan_trade_portal
-python scrapers/pakistan_trade_portal/run_enriched_companies.py
+python -m compileall tools/scrapers/pakistan_trade_portal
+python tools/scrapers/pakistan_trade_portal/run_enriched_companies.py
 ```
