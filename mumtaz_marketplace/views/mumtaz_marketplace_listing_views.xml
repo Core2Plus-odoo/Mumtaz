@@ -101,7 +101,7 @@
                 <filter string="Published" name="published"
                         domain="[('state','=','published')]"/>
                 <filter string="My Listings" name="my_listings"
-                        domain="[('company_id','=',company.id)]"/>
+                        domain="[('company_id','in',allowed_company_ids)]"/>
                 <filter string="Products" name="products"
                         domain="[('listing_type','=','product')]"/>
                 <filter string="Services" name="services"
