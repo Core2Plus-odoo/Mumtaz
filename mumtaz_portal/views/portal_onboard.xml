@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <template id="portal_onboard" name="Mumtaz Portal – Onboarding">
+    <t t-call="mumtaz_portal.portal_layout">
+      <t t-set="title">Setup — Mumtaz</t>
+      <t t-set="page_title">Setup &amp; Onboarding</t>
+
+      <div class="mz-onboard-layout">
+        <!-- Step progress -->
+        <div class="mz-steps">
+          <div t-attf-class="mz-step #{step in ('profile',) and 'active' or (onboarding and onboarding.task_company_info) and 'done' or ''}">
+            <span class="mz-step-num">1</span>
+            <span class="mz-step-label">Company Profile</span>
+          </div>
+          <div class="mz-step-line"></div>
+          <div t-attf-class="mz-step #{step in ('finance',) and 'active' or (onboarding and onboarding.task_bank_connected) and 'done' or ''}">
+            <span class="mz-step-num">2</span>
+            <span class="mz-step-label">Finance Setup</span>
+          </div>
+          <div class="mz-step-line"></div>
+          <div t-attf-class="mz-step #{step in ('ai',) and 'active' or (onboarding and onboarding.task_crm_leads) and 'done' or ''}">
+            <span class="mz-step-num">3</span>
+            <span class="mz-step-label">Meet your AI</span>
+          </div>
+          <div class="mz-step-line"></div>
+          <div t-attf-class="mz-step #{step == 'complete' and 'done' or ''}">
+            <span class="mz-step-num">✓</span>
+            <span class="mz-step-label">Complete</span>
+          </div>
+        </div>
+
+        <!-- Step content -->
+        <div class="mz-step-card" id="mzStepCard" t-att-data-step="step">
+
+          <!-- STEP 1: Profile -->
+          <t t-if="step == 'profile'">
+            <div class="mz-step-hd">
+              <span class="mz-step-icon">🏢</span>
+              <h2>Tell us about your business</h2>
+              <p>This helps Mumtaz AI understand your context and gives you a better readiness score.</p>
+            </div>
+            <form class="mz-onboard-form" id="mzOnboardForm" data-step="profile">
+              <div class="mz-field-group">
+                <label>Legal Business Name *</label>
+                <input type="text" name="legal_name"
+                       t-att-value="sme_profile.legal_name if sme_profile else company.name"
+                       required="1" placeholder="Registered legal name"/>
+              </div>
+              <div class="mz-field-group">
+                <label>Trading / Brand Name</label>
+                <input type="text" name="trade_name"
+                       t-att-value="sme_profile.trade_name if sme_profile else ''"
+                       placeholder="Name you trade under (if different)"/>
+              </div>
+              <div class="mz-field-row">
+                <div class="mz-field-group">
+                  <label>Industry</label>
+                  <select name="industry">
+                    <t t-foreach="industry_options" t-as="opt">
+                      <option t-att-value="opt[0]"
+                              t-att-selected="sme_profile and sme_profile.industry == opt[0] and 'selected' or None"
+                              t-esc="opt[1]"/>
+                    </t>
+                  </select>
+                </div>
+                <div class="mz-field-group">
+                  <label>Business Type</label>
+                  <select name="business_type">
+                    <option value="llc">LLC</option>
+                    <option value="sole_proprietorship">Sole Proprietorship</option>
+                    <option value="partnership">Partnership</option>
+                    <option value="corporation">Corporation</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mz-field-row">
+                <div class="mz-field-group">
+                  <label>Country</label>
+                  <select name="country_id">
+                    <option value="">Select country</option>
+                    <t t-foreach="country_ids" t-as="c">
+                      <option t-att-value="c.id"
+                              t-att-selected="sme_profile and sme_profile.country_id.id == c.id and 'selected' or None"
+                              t-esc="c.name"/>
+                    </t>
+                  </select>
+                </div>
+                <div class="mz-field-group">
+                  <label>City</label>
+                  <input type="text" name="city"
+                         t-att-value="sme_profile.city if sme_profile else ''"
+                         placeholder="e.g. Dubai"/>
+                </div>
+              </div>
+              <button type="submit" class="mz-btn mz-btn-primary mz-btn-lg mz-btn-full">
+                Save &amp; Continue →
+              </button>
+            </form>
+          </t>
+
+          <!-- STEP 2: Finance -->
+          <t t-if="step == 'finance'">
+            <div class="mz-step-hd">
+              <span class="mz-step-icon">📊</span>
+              <h2>Set up your CFO Workspace</h2>
+              <p>Your CFO Workspace is where all financial data lives. We'll create one for you automatically.</p>
+            </div>
+            <form class="mz-onboard-form" id="mzOnboardForm" data-step="finance">
+              <div class="mz-field-group">
+                <label>Workspace Name</label>
+                <input type="text" name="workspace_name"
+                       t-attf-value="#{company.name} – CFO"
+                       placeholder="e.g. Acme Corp CFO"/>
+              </div>
+              <div class="mz-info-box">
+                <p>💡 After setup, you can upload transaction files (CSV) from your bank or accounting system. Mumtaz AI will analyse them and generate your first briefing.</p>
+              </div>
+              <button type="submit" class="mz-btn mz-btn-primary mz-btn-lg mz-btn-full">
+                Create Workspace &amp; Continue →
+              </button>
+            </form>
+          </t>
+
+          <!-- STEP 3: AI -->
+          <t t-if="step == 'ai'">
+            <div class="mz-step-hd">
+              <span class="mz-step-icon">🧠</span>
+              <h2>Meet your AI CFO</h2>
+              <p>Mumtaz AI is always available to answer questions about your business, finances, and strategy.</p>
+            </div>
+            <div class="mz-ai-intro">
+              <div class="mz-ai-demo-bubble">
+                <strong>AI CFO:</strong> Hello! I'm your Mumtaz AI CFO. I can help you understand your cash flow, identify risks, plan scenarios, and prioritise your business focus. What would you like to know today?
+              </div>
+              <div class="mz-ai-demo-starters">
+                <span>Try asking:</span>
+                <span class="mz-demo-q">What's my cash runway?</span>
+                <span class="mz-demo-q">Where should I focus this week?</span>
+                <span class="mz-demo-q">Am I ready for a loan?</span>
+              </div>
+            </div>
+            <form class="mz-onboard-form" id="mzOnboardForm" data-step="ai">
+              <button type="submit" class="mz-btn mz-btn-primary mz-btn-lg mz-btn-full">
+                I'm Ready — Go to Dashboard →
+              </button>
+              <a class="mz-btn mz-btn-ghost mz-btn-full" href="/mumtaz/ai" style="margin-top:10px">
+                Talk to AI CFO now →
+              </a>
+            </form>
+          </t>
+
+          <!-- Complete -->
+          <t t-if="step == 'complete'">
+            <div class="mz-step-hd mz-complete">
+              <span class="mz-step-icon">🎉</span>
+              <h2>You're all set!</h2>
+              <p>Your Mumtaz platform is ready. Head to your dashboard to see your business snapshot and first AI briefing.</p>
+              <a class="mz-btn mz-btn-primary mz-btn-lg" href="/mumtaz/dashboard">
+                Go to Dashboard →
+              </a>
+            </div>
+          </t>
+
+        </div>
+      </div>
+    </t>
+  </template>
+
+</odoo>
