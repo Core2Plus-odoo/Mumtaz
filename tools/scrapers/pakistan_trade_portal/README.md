@@ -36,7 +36,7 @@ Capture publicly visible exporter and product listing data, score prospects for 
 ## Run
 
 ```bash
-cd scrapers/pakistan_trade_portal
+cd tools/scrapers/pakistan_trade_portal
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
