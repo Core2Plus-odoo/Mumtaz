@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <template id="portal_cfo" name="Mumtaz Portal – CFO Workspace">
+    <t t-call="mumtaz_portal.portal_layout">
+      <t t-set="title">CFO Workspace — Mumtaz</t>
+      <t t-set="page_title">CFO Workspace</t>
+
+      <div class="mz-page-hero">
+        <div>
+          <h1 class="mz-page-title">CFO Workspace</h1>
+          <p class="mz-page-sub">Upload transactions, review data quality, and track your financial picture.</p>
+        </div>
+        <t t-if="workspace">
+          <div class="mz-hero-actions">
+            <button class="mz-btn mz-btn-primary" id="mzUploadBtn">Upload CSV</button>
+          </div>
+        </t>
+      </div>
+
+      <!-- No workspace state -->
+      <t t-if="not workspace">
+        <div class="mz-empty-page">
+          <div class="mz-empty-icon">📊</div>
+          <h2>No CFO Workspace yet</h2>
+          <p>Create your workspace to start uploading and analysing business transactions.</p>
+          <button class="mz-btn mz-btn-primary" id="mzCreateWorkspace">Create Workspace</button>
+        </div>
+      </t>
+
+      <t t-if="workspace">
+
+        <!-- Workspace selector -->
+        <t t-if="workspaces and len(workspaces) > 1">
+          <div class="mz-workspace-selector">
+            <span class="mz-ws-label">Workspace:</span>
+            <t t-foreach="workspaces" t-as="ws">
+              <a t-attf-href="/mumtaz/cfo?workspace_id=#{ws.id}"
+                 t-attf-class="mz-ws-tab #{workspace.id == ws.id and 'active' or ''}"
+                 t-esc="ws.name"/>
+            </t>
+          </div>
+        </t>
+
+        <!-- KPI row -->
+        <div class="mz-cfo-stats">
+          <div class="mz-stat-pill mz-stat-income">
+            <span class="mz-stat-label">Total Income</span>
+            <span class="mz-stat-val">
+              <t t-esc="'{:,.0f}'.format(income_total)"/>
+              <t t-esc="workspace.currency_id.symbol or ''"/>
+            </span>
+          </div>
+          <div class="mz-stat-pill mz-stat-expense">
+            <span class="mz-stat-label">Total Expenses</span>
+            <span class="mz-stat-val">
+              <t t-esc="'{:,.0f}'.format(expense_total)"/>
+              <t t-esc="workspace.currency_id.symbol or ''"/>
+            </span>
+          </div>
+          <div class="mz-stat-pill mz-stat-net">
+            <span class="mz-stat-label">Net Position</span>
+            <span t-attf-class="mz-stat-val #{net_total >= 0 and 'mz-positive' or 'mz-negative'}">
+              <t t-esc="'{:,.0f}'.format(net_total)"/>
+              <t t-esc="workspace.currency_id.symbol or ''"/>
+            </span>
+          </div>
+          <t t-if="review_open_count > 0">
+            <div class="mz-stat-pill mz-stat-warn">
+              <span class="mz-stat-label">Review Items</span>
+              <span class="mz-stat-val mz-warn"><t t-esc="review_open_count"/> open</span>
+            </div>
+          </t>
+        </div>
+
+        <!-- Review Items banner -->
+        <t t-if="review_items">
+          <div class="mz-review-banner">
+            <div class="mz-review-banner-hd">
+              <span class="mz-badge mz-badge-gold">⚠ <t t-esc="len(review_items)"/> items need review</span>
+              <p>These transactions need your attention before they can be counted in your financial analysis.</p>
+            </div>
+            <div class="mz-review-list">
+              <t t-foreach="review_items[:5]" t-as="ri">
+                <div class="mz-review-row">
+                  <span class="mz-review-desc" t-esc="ri.transaction_id.description or '—'"/>
+                  <span class="mz-review-amt">
+                    <t t-esc="'{:,.2f}'.format(ri.transaction_id.amount or 0)"/>
+                  </span>
+                  <span class="mz-review-reason" t-esc="ri.reason or ''"/>
+                </div>
+              </t>
+            </div>
+          </div>
+        </t>
+
+        <!-- Hidden upload form -->
+        <div class="mz-upload-panel" id="mzUploadPanel" style="display:none">
+          <div class="mz-upload-card">
+            <h3>Upload Transactions</h3>
+            <p>Upload a CSV file from your bank or accounting system. We'll parse, normalise, and flag any issues automatically.</p>
+            <form class="mz-upload-form" method="post" enctype="multipart/form-data"
+                  t-attf-action="/mumtaz/cfo/upload?workspace_id=#{workspace.id}">
+              <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+              <div class="mz-dropzone" id="mzDropzone">
+                <div class="mz-drop-icon">📁</div>
+                <p>Drag &amp; drop a CSV file here, or click to browse</p>
+                <input type="file" name="upload_file" accept=".csv,.xlsx" id="mzFileInput"/>
+              </div>
+              <div class="mz-upload-actions">
+                <button type="submit" class="mz-btn mz-btn-primary">Upload &amp; Process</button>
+                <button type="button" class="mz-btn mz-btn-ghost" id="mzUploadCancel">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Transactions table -->
+        <div class="mz-card">
+          <div class="mz-card-header">
+            <h3>Transactions
+              <span class="mz-count-badge" t-esc="len(transactions)"/>
+            </h3>
+            <div class="mz-pagination">
+              <t t-if="current_page > 1">
+                <a t-attf-href="/mumtaz/cfo?workspace_id=#{workspace.id}&amp;page=#{current_page - 1}"
+                   class="mz-page-btn">‹</a>
+              </t>
+              <span>Page <t t-esc="current_page"/> of <t t-esc="total_pages"/></span>
+              <t t-if="current_page &lt; total_pages">
+                <a t-attf-href="/mumtaz/cfo?workspace_id=#{workspace.id}&amp;page=#{current_page + 1}"
+                   class="mz-page-btn">›</a>
+              </t>
+            </div>
+          </div>
+
+          <t t-if="transactions">
+            <div class="mz-table-wrap">
+              <table class="mz-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Direction</th>
+                    <th class="mz-th-right">Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <t t-foreach="transactions" t-as="txn">
+                    <tr t-attf-class="#{txn.requires_review and 'mz-row-warn' or ''}">
+                      <td class="mz-td-date">
+                        <t t-esc="txn.date.strftime('%d %b %Y') if txn.date else '—'"/>
+                      </td>
+                      <td class="mz-td-desc" t-esc="(txn.description or '—')[:60]"/>
+                      <td>
+                        <t t-if="txn.category_id">
+                          <span class="mz-cat-tag" t-esc="txn.category_id.name"/>
+                        </t>
+                        <t t-else=""><span class="mz-cat-none">—</span></t>
+                      </td>
+                      <td>
+                        <span t-attf-class="mz-dir-badge mz-dir-#{txn.direction}"
+                              t-esc="txn.direction.upper() if txn.direction else '—'"/>
+                      </td>
+                      <td t-attf-class="mz-td-amount mz-amount-#{txn.direction}">
+                        <t t-esc="workspace.currency_id.symbol or ''"/>
+                        <t t-esc="'{:,.2f}'.format(txn.amount or 0)"/>
+                      </td>
+                      <td>
+                        <t t-if="txn.requires_review">
+                          <span class="mz-badge mz-badge-gold">Review</span>
+                        </t>
+                        <t t-else="">
+                          <span class="mz-badge mz-badge-emerald">OK</span>
+                        </t>
+                      </td>
+                    </tr>
+                  </t>
+                </tbody>
+              </table>
+            </div>
+          </t>
+
+          <t t-else="">
+            <div class="mz-empty-state">
+              <div class="mz-empty-icon">📊</div>
+              <p>No transactions yet.</p>
+              <button class="mz-btn mz-btn-primary" id="mzUploadBtn2">Upload your first file</button>
+            </div>
+          </t>
+        </div>
+
+      </t>
+    </t>
+  </template>
+
+</odoo>
