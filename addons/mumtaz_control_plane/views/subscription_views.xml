@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_subscription_tree" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.tree</field>
+            <field name="model">mumtaz.subscription</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="tenant_id"/>
+                    <field name="plan_id"/>
+                    <field name="status"/>
+                    <field name="billing_cycle"/>
+                    <field name="renewal_date"/>
+                    <field name="payment_status"/>
+                    <field name="outstanding_amount"/>
+                    <field name="is_current"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_subscription_search" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.search</field>
+            <field name="model">mumtaz.subscription</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="tenant_id"/>
+                    <field name="plan_id"/>
+                    <field name="status"/>
+                    <field name="payment_status"/>
+                    <filter string="Current" domain="[('is_current','=',True)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Status" context="{'group_by': 'status'}"/>
+                        <filter string="Plan" context="{'group_by': 'plan_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_subscription_form" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.form</field>
+            <field name="model">mumtaz.subscription</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="tenant_id"/>
+                                <field name="plan_id"/>
+                                <field name="status"/>
+                                <field name="is_current"/>
+                            </group>
+                            <group>
+                                <field name="billing_cycle"/>
+                                <field name="payment_status"/>
+                                <field name="outstanding_amount"/>
+                                <field name="currency_id"/>
+                            </group>
+                        </group>
+                        <group string="Dates">
+                            <group>
+                                <field name="start_date"/>
+                                <field name="renewal_date"/>
+                                <field name="end_date"/>
+                            </group>
+                            <group>
+                                <field name="trial_start"/>
+                                <field name="trial_end"/>
+                                <field name="grace_until"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="external_billing_ref"/>
+                            <field name="custom_pricing_notes"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_subscription" model="ir.actions.act_window">
+            <field name="name">Subscriptions</field>
+            <field name="res_model">mumtaz.subscription</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_mumtaz_subscription_search"/>
+        </record>
+    </data>
+</odoo>

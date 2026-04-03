@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <menuitem id="menu_mumtaz_control_plane_root"
+                  name="Mumtaz Control Plane"
+                  sequence="3"
+                  groups="mumtaz_control_plane.group_mumtaz_super_admin,mumtaz_control_plane.group_mumtaz_billing_admin,mumtaz_control_plane.group_mumtaz_tenant_admin,mumtaz_control_plane.group_mumtaz_support_admin,mumtaz_control_plane.group_mumtaz_ops_readonly"/>
+
+        <menuitem id="menu_mumtaz_control_plane_dashboard"
+                  name="Dashboard"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_control_plane_dashboard"
+                  sequence="5"/>
+
+        <menuitem id="menu_mumtaz_control_plane_tenants"
+                  name="Tenants"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="mumtaz_tenant_manager.action_mumtaz_tenant"
+                  sequence="10"/>
+
+        <menuitem id="menu_mumtaz_control_plane_plans"
+                  name="Plans"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_plan"
+                  sequence="20"/>
+
+        <menuitem id="menu_mumtaz_control_plane_features"
+                  name="Features"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_feature"
+                  sequence="30"/>
+
+        <menuitem id="menu_mumtaz_control_plane_subscriptions"
+                  name="Subscriptions"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_subscription"
+                  sequence="40"/>
+
+        <menuitem id="menu_mumtaz_control_plane_feature_overrides"
+                  name="Feature Overrides"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_tenant_feature"
+                  sequence="50"/>
+
+        <menuitem id="menu_mumtaz_control_plane_usage"
+                  name="Usage Metrics"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_usage_metric"
+                  sequence="60"/>
+    </data>
+</odoo>

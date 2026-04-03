@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_control_plane_dashboard_form" model="ir.ui.view">
+            <field name="name">mumtaz.control.plane.dashboard.form</field>
+            <field name="model">mumtaz.control.plane.dashboard</field>
+            <field name="arch" type="xml">
+                <form string="Control Plane Dashboard" create="false" edit="false" delete="false">
+                    <header>
+                        <button name="action_refresh_dashboard" type="object" string="Refresh" class="btn-primary"/>
+                        <field name="generated_at"/>
+                    </header>
+                    <sheet>
+                        <group string="Tenant Health">
+                            <group>
+                                <field name="total_tenant_count" readonly="1"/>
+                                <field name="active_tenant_count" readonly="1"/>
+                                <field name="trial_tenant_count" readonly="1"/>
+                                <field name="suspended_tenant_count" readonly="1"/>
+                                <field name="tenants_without_active_subscription_count" readonly="1"/>
+                                <field name="fail_open_tenant_count" readonly="1"/>
+                            </group>
+                        </group>
+
+                        <group string="Subscription Operations">
+                            <group>
+                                <button name="action_open_renewals_due" type="object" class="oe_stat_button" icon="fa-calendar">
+                                    <field name="renewals_next_30_count" widget="statinfo" string="Renewals in Next 30 Days"/>
+                                </button>
+                                <button name="action_open_overdue_subscriptions" type="object" class="oe_stat_button" icon="fa-exclamation-circle">
+                                    <field name="overdue_subscription_count" widget="statinfo" string="Overdue Subscriptions"/>
+                                </button>
+                                <button name="action_open_grace_subscriptions" type="object" class="oe_stat_button" icon="fa-clock-o">
+                                    <field name="grace_subscription_count" widget="statinfo" string="Grace Period Subscriptions"/>
+                                </button>
+                            </group>
+                        </group>
+
+                        <group string="Feature &amp; Quota Governance">
+                            <group>
+                                <button name="action_open_tenant_overrides" type="object" class="oe_stat_button" icon="fa-sliders">
+                                    <field name="tenant_override_count" widget="statinfo" string="Tenants with Feature Overrides"/>
+                                </button>
+                                <button name="action_open_quota_issues" type="object" class="oe_stat_button" icon="fa-line-chart">
+                                    <field name="quota_nearing_or_exceeded_tenant_count" widget="statinfo" string="Tenants Nearing/Exceeding Quota"/>
+                                </button>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_control_plane_dashboard" model="ir.actions.server">
+            <field name="name">Control Plane Dashboard</field>
+            <field name="model_id" ref="model_mumtaz_control_plane_dashboard"/>
+            <field name="state">code</field>
+            <field name="code">action = env['mumtaz.control.plane.dashboard'].action_open_dashboard()</field>
+        </record>
+    </data>
+</odoo>

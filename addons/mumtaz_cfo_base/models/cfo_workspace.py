@@ -1,0 +1,169 @@
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
+
+
+class MumtazCFOWorkspace(models.Model):
+    _name = "mumtaz.cfo.workspace"
+    _description = "Mumtaz CFO Workspace"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _order = "name"
+    _check_company_auto = True
+
+    name = fields.Char(required=True, tracking=True)
+    code = fields.Char(
+        required=True,
+        tracking=True,
+        help="Unique workspace code used in API and integrations.",
+    )
+    company_id = fields.Many2one(
+        "res.company",
+        required=True,
+        default=lambda self: self.env.company,
+        index=True,
+    )
+    sme_profile_id = fields.Many2one(
+        "mumtaz.sme.profile",
+        string="SME Profile",
+        ondelete="cascade",
+        index=True,
+        tracking=True,
+        help="The SME profile this workspace belongs to.",
+    )
+    tenant_id = fields.Many2one(
+        "mumtaz.tenant",
+        string="Tenant",
+        compute="_compute_tenant_id",
+        store=True,
+        index=True,
+        help="Inherited from SME profile for quick filtering.",
+    )
+    owner_user_id = fields.Many2one(
+        "res.users",
+        string="Workspace Owner",
+        default=lambda self: self.env.user,
+        required=True,
+        check_company=True,
+        tracking=True,
+    )
+    currency_id = fields.Many2one(related="company_id.currency_id", readonly=True, store=False)
+    active = fields.Boolean(default=True, tracking=True)
+    notes = fields.Text()
+    category_ids = fields.One2many("mumtaz.cfo.category", "workspace_id", string="Categories")
+    category_count = fields.Integer(compute="_compute_category_count", string="Category Count")
+    erp_feature_enabled = fields.Boolean(compute="_compute_erp_feature_access")
+    erp_feature_note = fields.Char(compute="_compute_erp_feature_access")
+
+    _sql_constraints = [
+        (
+            "mumtaz_cfo_workspace_company_code_unique",
+            "unique(company_id, code)",
+            "Workspace code must be unique per company.",
+        ),
+    ]
+
+    @api.depends("category_ids")
+    def _compute_category_count(self):
+        for rec in self:
+            rec.category_count = len(rec.category_ids)
+
+    @api.depends("sme_profile_id.tenant_id")
+    def _compute_tenant_id(self):
+        for rec in self:
+            rec.tenant_id = rec.sme_profile_id.tenant_id.id if rec.sme_profile_id else False
+
+    def _compute_erp_feature_access(self):
+        service_available = "mumtaz.feature.access.service" in self.env
+        for rec in self:
+            if not service_available:
+                rec.erp_feature_enabled = True
+                rec.erp_feature_note = False
+                continue
+            access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                rec.company_id,
+                "erp_core_access",
+                include_quota=False,
+            )
+            rec.erp_feature_enabled = bool(access.get("effective_enabled", True))
+            rec.erp_feature_note = False if rec.erp_feature_enabled else (
+                access.get("reason") or "ERP core access is disabled for this tenant."
+            )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            vals.setdefault("company_id", self.env.company.id)
+            vals.setdefault("owner_user_id", self.env.user.id)
+            if vals.get("code"):
+                vals["code"] = self._sanitize_code(vals["code"])
+            elif vals.get("name"):
+                vals["code"] = self._sanitize_code(vals["name"])
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get("code"):
+            vals["code"] = self._sanitize_code(vals["code"])
+        return super().write(vals)
+
+    @api.constrains("code")
+    def _check_code(self):
+        for rec in self:
+            if not rec.code or len(rec.code) < 3:
+                raise ValidationError("Workspace code must be at least 3 characters.")
+
+    @api.constrains("sme_profile_id", "company_id")
+    def _check_sme_company_consistency(self):
+        """Ensure workspace and SME profile are in the same company."""
+        for rec in self:
+            if rec.sme_profile_id and rec.sme_profile_id.company_id != rec.company_id:
+                raise ValidationError("Workspace company must match SME profile company.")
+
+    @staticmethod
+    def _sanitize_code(value):
+        return "_".join((value or "").strip().lower().replace("-", " ").split())
+
+    def action_load_default_categories(self):
+        """Clone system categories into this workspace if missing by code."""
+        if "mumtaz.feature.access.service" in self.env:
+            for workspace in self:
+                access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                    workspace.company_id,
+                    "erp_core_access",
+                    include_quota=False,
+                )
+                if not access.get("effective_enabled", True):
+                    raise ValidationError(access.get("reason") or "ERP core access is disabled for this tenant.")
+        template_categories = self.env["mumtaz.cfo.category"].search([
+            ("is_system", "=", True),
+            ("workspace_id", "=", False),
+        ])
+        for workspace in self:
+            existing_codes = set(workspace.category_ids.mapped("code"))
+            to_create = []
+            for cat in template_categories:
+                if cat.code in existing_codes:
+                    continue
+                to_create.append({
+                    "name": cat.name,
+                    "code": cat.code,
+                    "kind": cat.kind,
+                    "workspace_id": workspace.id,
+                    "company_id": workspace.company_id.id,
+                    "is_system": False,
+                })
+            if to_create:
+                self.env["mumtaz.cfo.category"].create(to_create)
+        return True
+
+    def action_view_categories(self):
+        self.ensure_one()
+        return {
+            "name": "Workspace Categories",
+            "type": "ir.actions.act_window",
+            "res_model": "mumtaz.cfo.category",
+            "view_mode": "list,form",
+            "domain": [("workspace_id", "=", self.id)],
+            "context": {
+                "default_workspace_id": self.id,
+                "default_company_id": self.company_id.id,
+            },
+        }

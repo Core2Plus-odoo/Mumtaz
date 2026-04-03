@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_feature_tree" model="ir.ui.view">
+            <field name="name">mumtaz.feature.tree</field>
+            <field name="model">mumtaz.feature</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="product_area"/>
+                    <field name="feature_type"/>
+                    <field name="odoo_module_name" optional="hide"/>
+                    <field name="metric_code_default" optional="hide"/>
+                    <field name="is_customer_visible"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_feature_search" model="ir.ui.view">
+            <field name="name">mumtaz.feature.search</field>
+            <field name="model">mumtaz.feature</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="product_area"/>
+                    <field name="feature_type"/>
+                    <filter string="Active" domain="[('active','=',True)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Area" context="{'group_by': 'product_area'}"/>
+                        <filter string="Type" context="{'group_by': 'feature_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_feature_form" model="ir.ui.view">
+            <field name="name">mumtaz.feature.form</field>
+            <field name="model">mumtaz.feature</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="code"/>
+                                <field name="product_area"/>
+                                <field name="feature_type"/>
+                            </group>
+                            <group>
+                                <field name="odoo_module_name"/>
+                                <field name="metric_code_default"/>
+                                <field name="is_customer_visible"/>
+                                <field name="active"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_feature" model="ir.actions.act_window">
+            <field name="name">Features</field>
+            <field name="res_model">mumtaz.feature</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_mumtaz_feature_search"/>
+        </record>
+    </data>
+</odoo>
