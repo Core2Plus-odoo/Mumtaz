@@ -5,11 +5,12 @@
     "category": "Mumtaz Platform",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["base", "mail"],
+    "depends": ["base", "mail", "mumtaz_sme_profile", "mumtaz_tenant_manager"],
     "data": [
         "security/cfo_base_security.xml",
         "security/ir.model.access.csv",
         "security/cfo_base_rules.xml",
+        "security/cfo_workspace_tenant_rules.xml",
         "views/cfo_workspace_views.xml",
         "views/cfo_category_views.xml",
         "views/cfo_menus.xml",

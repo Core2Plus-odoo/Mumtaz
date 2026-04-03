@@ -14,6 +14,15 @@ class MumtazSmeProfile(models.Model):
         "res.company", required=True, ondelete="cascade",
         index=True, default=lambda self: self.env.company,
     )
+    tenant_id = fields.Many2one(
+        "mumtaz.tenant",
+        string="SaaS Tenant",
+        required=True,
+        ondelete="cascade",
+        index=True,
+        tracking=True,
+        help="The SaaS tenant this SME profile belongs to.",
+    )
 
     # ── Legal Identity ─────────────────────────────────────────────────
     legal_name = fields.Char(
@@ -155,9 +164,18 @@ class MumtazSmeProfile(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             vals.setdefault("company_id", self.env.company.id)
+            if not vals.get("tenant_id"):
+                tenant = self.env["mumtaz.tenant"].search([("state", "=", "active")], limit=1)
+                if tenant:
+                    vals["tenant_id"] = tenant.id
         return super().create(vals_list)
 
     _sql_constraints = [
         ("mumtaz_sme_profile_company_unique", "unique(company_id)",
          "Each company can only have one SME profile record."),
+        (
+            "mumtaz_sme_profile_tenant_company_unique",
+            "unique(tenant_id, company_id)",
+            "Each tenant can only have one SME profile per company.",
+        ),
     ]

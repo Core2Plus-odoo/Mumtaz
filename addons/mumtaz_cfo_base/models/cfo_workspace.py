@@ -21,6 +21,22 @@ class MumtazCFOWorkspace(models.Model):
         default=lambda self: self.env.company,
         index=True,
     )
+    sme_profile_id = fields.Many2one(
+        "mumtaz.sme.profile",
+        string="SME Profile",
+        ondelete="cascade",
+        index=True,
+        tracking=True,
+        help="The SME profile this workspace belongs to.",
+    )
+    tenant_id = fields.Many2one(
+        "mumtaz.tenant",
+        string="Tenant",
+        compute="_compute_tenant_id",
+        store=True,
+        index=True,
+        help="Inherited from SME profile for quick filtering.",
+    )
     owner_user_id = fields.Many2one(
         "res.users",
         string="Workspace Owner",
@@ -48,6 +64,11 @@ class MumtazCFOWorkspace(models.Model):
         for rec in self:
             rec.category_count = len(rec.category_ids)
 
+    @api.depends("sme_profile_id.tenant_id")
+    def _compute_tenant_id(self):
+        for rec in self:
+            rec.tenant_id = rec.sme_profile_id.tenant_id.id if rec.sme_profile_id else False
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -69,6 +90,13 @@ class MumtazCFOWorkspace(models.Model):
         for rec in self:
             if not rec.code or len(rec.code) < 3:
                 raise ValidationError("Workspace code must be at least 3 characters.")
+
+    @api.constrains("sme_profile_id", "company_id")
+    def _check_sme_company_consistency(self):
+        """Ensure workspace and SME profile are in the same company."""
+        for rec in self:
+            if rec.sme_profile_id and rec.sme_profile_id.company_id != rec.company_id:
+                raise ValidationError("Workspace company must match SME profile company.")
 
     @staticmethod
     def _sanitize_code(value):
