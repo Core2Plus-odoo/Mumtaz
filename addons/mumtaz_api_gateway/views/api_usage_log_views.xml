@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mumtaz_api_usage_log_tree" model="ir.ui.view">
+        <field name="name">mumtaz.api.usage.log.tree</field>
+        <field name="model">mumtaz.api.usage.log</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="request_time"/>
+                <field name="tenant_id"/>
+                <field name="endpoint"/>
+                <field name="method"/>
+                <field name="status_code"/>
+                <field name="duration_ms"/>
+            </list>
+        </field>
+    </record>
+</odoo>
