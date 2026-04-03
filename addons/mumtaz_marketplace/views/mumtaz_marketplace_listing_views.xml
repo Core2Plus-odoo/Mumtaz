@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mumtaz_marketplace_listing_list" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.listing.list</field>
+        <field name="model">mumtaz.marketplace.listing</field>
+        <field name="arch" type="xml">
+            <list string="Marketplace Listings">
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="listing_type"/>
+                <field name="price_type"/>
+                <field name="price" optional="show"/>
+                <field name="currency_id" optional="hide"/>
+                <field name="inquiry_count" string="Inquiries"/>
+                <field name="published_date" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'published'"
+                       decoration-warning="state == 'draft'"
+                       decoration-muted="state == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_marketplace_listing_form" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.listing.form</field>
+        <field name="model">mumtaz.marketplace.listing</field>
+        <field name="arch" type="xml">
+            <form string="Marketplace Listing">
+                <header>
+                    <button name="action_publish" string="Publish"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_close" string="Close Listing"
+                            type="object"
+                            invisible="state != 'published'"/>
+                    <button name="action_reset_draft" string="Reset to Draft"
+                            type="object"
+                            invisible="state != 'closed'"/>
+                    <button name="action_view_inquiries" string="Inquiries"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,published,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_inquiries" type="object"
+                                class="oe_stat_button" icon="fa-envelope">
+                            <field name="inquiry_count" widget="statinfo"
+                                   string="Inquiries"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Listing title..."/></h1>
+                        <field name="short_description" placeholder="One-line summary..."/>
+                    </div>
+                    <group>
+                        <group string="Classification">
+                            <field name="category_id"/>
+                            <field name="listing_type"/>
+                            <field name="tag_ids" widget="many2many_tags"
+                                   options="{'color_field': 'color'}"/>
+                        </group>
+                        <group string="Pricing">
+                            <field name="price_type"/>
+                            <field name="price"
+                                   invisible="price_type in ('negotiable', 'free')"/>
+                            <field name="currency_id"
+                                   invisible="price_type in ('negotiable', 'free')"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Full description of your offering..."/>
+                        </page>
+                        <page string="Contact" name="contact">
+                            <group>
+                                <field name="contact_name"/>
+                                <field name="contact_email"/>
+                                <field name="contact_phone"/>
+                                <field name="website_url"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_marketplace_listing_search" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.listing.search</field>
+        <field name="model">mumtaz.marketplace.listing</field>
+        <field name="arch" type="xml">
+            <search string="Marketplace Listings">
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="tag_ids"/>
+                <filter string="Published" name="published"
+                        domain="[('state','=','published')]"/>
+                <filter string="My Listings" name="my_listings"
+                        domain="[('company_id','=',user.company_id.id)]"/>
+                <filter string="Products" name="products"
+                        domain="[('listing_type','=','product')]"/>
+                <filter string="Services" name="services"
+                        domain="[('listing_type','=','service')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Category" name="group_category"
+                            context="{'group_by': 'category_id'}"/>
+                    <filter string="Type" name="group_type"
+                            context="{'group_by': 'listing_type'}"/>
+                    <filter string="State" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_marketplace_listings" model="ir.actions.act_window">
+        <field name="name">Marketplace</field>
+        <field name="res_model">mumtaz.marketplace.listing</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_published": 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No listings yet. Create your first marketplace listing!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_my_listings" model="ir.actions.act_window">
+        <field name="name">My Listings</field>
+        <field name="res_model">mumtaz.marketplace.listing</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"search_default_my_listings": 1}</field>
+    </record>
+
+</odoo>

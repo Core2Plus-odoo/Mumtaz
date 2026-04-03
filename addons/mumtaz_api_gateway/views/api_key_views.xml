@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mumtaz_api_key_tree" model="ir.ui.view">
+        <field name="name">mumtaz.api.key.tree</field>
+        <field name="model">mumtaz.api.key</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="tenant_id"/>
+                <field name="key_prefix"/>
+                <field name="rate_limit_per_minute"/>
+                <field name="expires_at"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mumtaz_api_key_form" model="ir.ui.view">
+        <field name="name">mumtaz.api.key.form</field>
+        <field name="model">mumtaz.api.key</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="tenant_id"/>
+                        <field name="key_prefix" readonly="1"/>
+                        <field name="rate_limit_per_minute"/>
+                        <field name="expires_at"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
