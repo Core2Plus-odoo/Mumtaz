@@ -5,10 +5,22 @@ from odoo.exceptions import AccessDenied
 
 _logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Login redirect override
+# ---------------------------------------------------------------------------
+# Odoo's web login controller (odoo/addons/web/controllers/home.py) calls
+# self._login_redirect(uid, redirect=redirect) to determine where to send
+# the user after successful authentication. We override that method by
+# subclassing the Home controller — Odoo's controller registry resolves
+# conflicts by giving priority to the last-registered subclass, so this
+# cleanly overrides the base behaviour without patching core files.
+# ---------------------------------------------------------------------------
+
 try:
     from odoo.addons.web.controllers.home import Home as _WebHome
     _BASE_HOME = _WebHome
 except ImportError:
+    # Fallback for Odoo versions that reorganised the web module
     try:
         from odoo.addons.web.controllers.main import Home as _WebHome
         _BASE_HOME = _WebHome
@@ -20,6 +32,7 @@ class MumtazHome(_BASE_HOME):
     """Extends the Odoo login controller to route Mumtaz users to their portal."""
 
     def _login_redirect(self, uid, redirect=None):
+        # Always honour an explicit redirect parameter (e.g. from a deep link).
         if redirect:
             return redirect
 
@@ -28,7 +41,7 @@ class MumtazHome(_BASE_HOME):
             portal_url = user.get_mumtaz_portal_redirect_url()
             if portal_url and portal_url != '/web':
                 _logger.info(
-                    'Portal routing: uid=%s -> %s (%s)',
+                    'Portal routing: uid=%s → %s (%s)',
                     uid, portal_url, user.mumtaz_portal_type,
                 )
                 return portal_url
@@ -38,10 +51,23 @@ class MumtazHome(_BASE_HOME):
         return super()._login_redirect(uid, redirect=redirect)
 
 
+# ---------------------------------------------------------------------------
+# Portal page controllers
+# ---------------------------------------------------------------------------
+
 class MumtazPortalRouting(http.Controller):
     """Serves landing pages for each Mumtaz portal."""
 
+    # ------------------------------------------------------------------ #
+    # Shared helpers
+    # ------------------------------------------------------------------ #
+
     def _require_portal(self, portal_type):
+        """Redirect to login if unauthenticated; to /web if wrong portal type.
+
+        Returns None when the user is authorised, or an HTTP response
+        (redirect) when they are not.
+        """
         user = request.env.user
         if not user or user._is_public():
             return request.redirect('/web/login?redirect=/mumtaz/portal/' + portal_type)
@@ -50,12 +76,14 @@ class MumtazPortalRouting(http.Controller):
         is_super = user.has_group('mumtaz_core.group_mumtaz_super_admin')
 
         if detected != portal_type and not is_super:
+            # Route them to their actual portal instead of showing a 403
             correct_url = user.get_mumtaz_portal_redirect_url()
             return request.redirect(correct_url)
 
-        return None
+        return None  # authorised
 
     def _base_ctx(self, portal_type):
+        """Build template context shared by all portal pages."""
         user = request.env.user
         return {
             'user': user,
@@ -65,13 +93,34 @@ class MumtazPortalRouting(http.Controller):
             'company': request.env.company,
         }
 
-    @http.route('/mumtaz/portal/home', type='http', auth='user', website=True, sitemap=False)
+    # ------------------------------------------------------------------ #
+    # Generic portal router — /mumtaz/portal/home
+    # ------------------------------------------------------------------ #
+
+    @http.route(
+        '/mumtaz/portal/home',
+        type='http',
+        auth='user',
+        website=True,
+        sitemap=False,
+    )
     def portal_home(self, **kwargs):
+        """Detect and redirect to the user's assigned portal."""
         user = request.env.user
         url = user.get_mumtaz_portal_redirect_url()
         return request.redirect(url)
 
-    @http.route('/mumtaz/portal/admin', type='http', auth='user', website=True, sitemap=False)
+    # ------------------------------------------------------------------ #
+    # Admin Control Plane portal
+    # ------------------------------------------------------------------ #
+
+    @http.route(
+        '/mumtaz/portal/admin',
+        type='http',
+        auth='user',
+        website=True,
+        sitemap=False,
+    )
     def portal_admin(self, **kwargs):
         guard = self._require_portal('admin')
         if guard:
@@ -100,7 +149,17 @@ class MumtazPortalRouting(http.Controller):
         })
         return request.render('mumtaz_portal_routing.portal_admin_home', ctx)
 
-    @http.route('/mumtaz/portal/erp', type='http', auth='user', website=True, sitemap=False)
+    # ------------------------------------------------------------------ #
+    # ERP portal
+    # ------------------------------------------------------------------ #
+
+    @http.route(
+        '/mumtaz/portal/erp',
+        type='http',
+        auth='user',
+        website=True,
+        sitemap=False,
+    )
     def portal_erp(self, **kwargs):
         guard = self._require_portal('erp')
         if guard:
@@ -112,18 +171,26 @@ class MumtazPortalRouting(http.Controller):
         leads_total = Lead.search_count([('type', '=', 'lead')])
         opps_open   = Lead.search_count([('type', '=', 'opportunity'), ('probability', '<', 100)])
         opps_won    = Lead.search_count([('type', '=', 'opportunity'), ('stage_id.is_won', '=', True)])
-        recent_leads = Lead.search([('type', '=', 'lead')], order='create_date desc', limit=8)
+        recent_leads = Lead.search(
+            [('type', '=', 'lead')],
+            order='create_date desc',
+            limit=8,
+        )
 
+        # Lead scraper — last job (optional module)
         last_scraper_job = None
         try:
-            ScraperJob = env['mumtaz.lead.scraper.job'].sudo()
+            ScraperJob = env['lead.scraper.job'].sudo()
             last_scraper_job = ScraperJob.search([], order='create_date desc', limit=1)
         except Exception:
             pass
 
+        # Marketplace listings
         listing_count = 0
         try:
-            listing_count = env['mumtaz.marketplace.listing'].sudo().search_count([('state', '=', 'published')])
+            listing_count = env['mumtaz.marketplace.listing'].sudo().search_count(
+                [('state', '=', 'published')]
+            )
         except Exception:
             pass
 
@@ -138,7 +205,17 @@ class MumtazPortalRouting(http.Controller):
         })
         return request.render('mumtaz_portal_routing.portal_erp_home', ctx)
 
-    @http.route('/mumtaz/portal/zaki', type='http', auth='user', website=True, sitemap=False)
+    # ------------------------------------------------------------------ #
+    # ZAKI AI portal
+    # ------------------------------------------------------------------ #
+
+    @http.route(
+        '/mumtaz/portal/zaki',
+        type='http',
+        auth='user',
+        website=True,
+        sitemap=False,
+    )
     def portal_zaki(self, **kwargs):
         guard = self._require_portal('zaki')
         if guard:
@@ -147,34 +224,45 @@ class MumtazPortalRouting(http.Controller):
         env = request.env
         company_id = env.company.id
 
+        # CFO workspace
         Workspace = env['mumtaz.cfo.workspace'].sudo()
-        workspace = Workspace.search([('company_id', '=', company_id)], limit=1)
+        workspace = Workspace.search(
+            [('company_id', '=', company_id)], limit=1
+        )
 
-        tx_count = 0
+        # Transactions
+        tx_count   = 0
         review_count = 0
         income_total = 0.0
         expense_total = 0.0
         recent_txs = []
         if workspace:
             Tx = env['mumtaz.cfo.transaction'].sudo()
-            tx_count = Tx.search_count([('batch_id.workspace_id', '=', workspace.id)])
+            tx_count = Tx.search_count([('workspace_id', '=', workspace.id)])
             review_count = Tx.search_count([
-                ('batch_id.workspace_id', '=', workspace.id),
+                ('workspace_id', '=', workspace.id),
                 ('requires_review', '=', True),
                 ('is_duplicate', '=', False),
             ])
-            income_txs  = Tx.search([('batch_id.workspace_id', '=', workspace.id), ('direction', '=', 'inflow')])
-            expense_txs = Tx.search([('batch_id.workspace_id', '=', workspace.id), ('direction', '=', 'outflow')])
+            income_txs  = Tx.search([('workspace_id', '=', workspace.id), ('direction', '=', 'inflow')])
+            expense_txs = Tx.search([('workspace_id', '=', workspace.id), ('direction', '=', 'outflow')])
             income_total  = sum(t.amount for t in income_txs)
             expense_total = sum(t.amount for t in expense_txs)
-            recent_txs = Tx.search([('batch_id.workspace_id', '=', workspace.id)], order='date desc', limit=8)
+            recent_txs = Tx.search(
+                [('workspace_id', '=', workspace.id)],
+                order='date desc', limit=8
+            )
 
+        # AI sessions
         ai_session_count = 0
         recent_sessions  = []
         try:
             Session = env['mumtaz.ai.session'].sudo()
             ai_session_count = Session.search_count([('company_id', '=', company_id)])
-            recent_sessions  = Session.search([('company_id', '=', company_id)], order='create_date desc', limit=5)
+            recent_sessions  = Session.search(
+                [('company_id', '=', company_id)],
+                order='create_date desc', limit=5,
+            )
         except Exception:
             pass
 
@@ -191,7 +279,17 @@ class MumtazPortalRouting(http.Controller):
         })
         return request.render('mumtaz_portal_routing.portal_zaki_home', ctx)
 
-    @http.route('/mumtaz/portal/marketplace', type='http', auth='user', website=True, sitemap=False)
+    # ------------------------------------------------------------------ #
+    # Marketplace portal
+    # ------------------------------------------------------------------ #
+
+    @http.route(
+        '/mumtaz/portal/marketplace',
+        type='http',
+        auth='user',
+        website=True,
+        sitemap=False,
+    )
     def portal_marketplace(self, **kwargs):
         guard = self._require_portal('marketplace')
         if guard:
@@ -203,7 +301,11 @@ class MumtazPortalRouting(http.Controller):
 
         total_listings   = Listing.search_count([('state', '=', 'published')])
         my_listings      = Listing.search_count([('company_id', '=', company_id)])
-        featured_listings = Listing.search([('state', '=', 'published')], order='create_date desc', limit=6)
+        featured_listings = Listing.search(
+            [('state', '=', 'published')],
+            order='create_date desc',
+            limit=6,
+        )
 
         inquiry_count = 0
         try:
@@ -221,7 +323,17 @@ class MumtazPortalRouting(http.Controller):
         })
         return request.render('mumtaz_portal_routing.portal_marketplace_home', ctx)
 
-    @http.route('/mumtaz/portal/switch', type='http', auth='user', website=True, sitemap=False)
+    # ------------------------------------------------------------------ #
+    # Portal switcher (super admins only)
+    # ------------------------------------------------------------------ #
+
+    @http.route(
+        '/mumtaz/portal/switch',
+        type='http',
+        auth='user',
+        website=True,
+        sitemap=False,
+    )
     def portal_switch(self, **kwargs):
         user = request.env.user
         portals = user.get_accessible_portals()
