@@ -13,13 +13,13 @@ Use the first column from your Odoo database row (example: `Mumtaz_ERP`).
 find / -type f -name make_odoo_detect_mumtaz.sh 2>/dev/null
 ```
 Example result:
-`/opt/custom_addons/Mumtaz/deployment/make_odoo_detect_mumtaz.sh`
+`/opt/custom_addons/Mumtaz/ops/deployment/make_odoo_detect_mumtaz.sh`
 
 > If nothing is found, clone/pull this repository first.
 
 ## 3) Run the one-command fixer from the real path
 ```bash
-sudo bash /opt/custom_addons/Mumtaz/deployment/make_odoo_detect_mumtaz.sh Mumtaz_ERP /etc/odoo/odoo.conf odoo
+sudo bash /opt/custom_addons/Mumtaz/ops/deployment/make_odoo_detect_mumtaz.sh Mumtaz_ERP /etc/odoo/odoo.conf odoo
 ```
 
 ### Important shell note
