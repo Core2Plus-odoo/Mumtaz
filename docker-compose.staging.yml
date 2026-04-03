@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:15-alpine
+    env_file: .env.staging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_staging:/var/lib/postgresql/data
+
+  odoo:
+    build: .
+    depends_on: [db]
+    env_file: .env.staging
+    ports:
+      - "8070:8069"
+    volumes:
+      - ./addons:/mnt/extra-addons
+      - ./config/odoo.conf:/etc/odoo/odoo.conf
+
+volumes:
+  db_staging:
