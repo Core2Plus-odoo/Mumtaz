@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--
-        Portal Switcher
-        ===============
-        Shown to super-admins who have access to multiple portals.
-        Provides a clean selection screen to navigate between portals.
-    -->
     <template id="portal_switcher" name="Mumtaz Portal Switcher">
         <t t-call="mumtaz_portal_routing.portal_base_layout">
 
