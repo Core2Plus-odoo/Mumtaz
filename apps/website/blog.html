@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog | Mumtaz</title>
+  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
+  <link rel="icon" href="assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
+    <button class="nav-toggle" data-nav-toggle>Menu</button>
+    <nav class="nav-menu" data-nav-menu>
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="platform.html">Platform</a>
+      <a class="nav-link" href="solutions.html">Solutions</a>
+      <a class="nav-link" href="pricing.html">Pricing</a>
+      <a class="nav-link" href="docs.html">Docs</a>
+      <a class="nav-link" href="about.html">About</a>
+      <a class="nav-link active" href="blog.html">Blog</a>
+      <a class="nav-link" href="contact.html">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
+      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+    </div>
+  </div>
+</header>
+<main>
+
+<section class="hero"><div class="container"><div class="section-header reveal"><span class="badge">Insights</span><h1>Enterprise AI, ERP, and embedded finance insights</h1><p>Trends, implementation patterns, and practical playbooks for GCC operators.</p></div><div class="glass card reveal"><input id="blog-search" type="search" placeholder="Search posts, tags, or categories"></div></div></section>
+<section class="section"><div class="container grid-3" id="posts"><article class="glass card reveal" data-tags="ai finance"><h3>How AI CFO workflows improve liquidity planning</h3><p class="small">Category: AI • Finance</p></article><article class="glass card reveal" data-tags="erp operations"><h3>ERP modernization checklist for multi-entity GCC groups</h3><p class="small">Category: ERP • Operations</p></article><article class="glass card reveal" data-tags="bank fintech"><h3>Designing embedded finance journeys for SME ecosystems</h3><p class="small">Category: Banking • Product</p></article></div></section>
+<script>document.addEventListener("DOMContentLoaded",()=>{const i=document.getElementById("blog-search");if(!i)return;i.addEventListener("input",()=>{document.querySelectorAll("#posts article").forEach(p=>{const t=(p.textContent+p.dataset.tags).toLowerCase();p.style.display=t.includes(i.value.toLowerCase())?"block":"none";});});});</script>
+</main>
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
+    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
+    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
+    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+  </div>
+</footer>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
