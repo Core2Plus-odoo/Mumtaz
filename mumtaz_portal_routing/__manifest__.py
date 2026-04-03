@@ -34,8 +34,6 @@ Capabilities
         'mumtaz_core',
         'mumtaz_tenant_manager',
         'mumtaz_cfo_base',
-        'mumtaz_marketplace',
-        'mumtaz_portal',
     ],
     'data': [
         'security/portal_routing_security.xml',
