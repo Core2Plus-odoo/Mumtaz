@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class MumtazPlan(models.Model):
@@ -38,9 +38,48 @@ class MumtazPlan(models.Model):
     plan_feature_ids = fields.One2many("mumtaz.plan.feature", "plan_id", string="Plan Features")
     subscription_ids = fields.One2many("mumtaz.subscription", "plan_id", string="Subscriptions")
 
+    comparison_feature_gain = fields.Integer(compute="_compute_comparison_metrics")
+    comparison_quota_gain = fields.Integer(compute="_compute_comparison_metrics")
+    comparison_summary = fields.Char(compute="_compute_comparison_metrics")
+
     _sql_constraints = [
         ("mumtaz_plan_code_unique", "unique(code)", "Plan code must be unique."),
     ]
+
+    @api.depends_context("current_plan_id")
+    def _compute_comparison_metrics(self):
+        current_plan_id = self.env.context.get("current_plan_id")
+        baseline = self.env["mumtaz.plan"].browse(current_plan_id) if current_plan_id else False
+
+        baseline_enabled = {}
+        if baseline:
+            for line in baseline.plan_feature_ids:
+                baseline_enabled[line.feature_id.id] = {
+                    "enabled": bool(line.enabled),
+                    "quota_limit": line.quota_limit,
+                }
+
+        for rec in self:
+            feature_gain = 0
+            quota_gain = 0
+
+            for line in rec.plan_feature_ids:
+                current = baseline_enabled.get(line.feature_id.id)
+                if not current:
+                    if line.enabled:
+                        feature_gain += 1
+                    if line.quota_limit:
+                        quota_gain += 1
+                    continue
+
+                if line.enabled and not current.get("enabled"):
+                    feature_gain += 1
+                if line.quota_limit and (line.quota_limit > (current.get("quota_limit") or 0.0)):
+                    quota_gain += 1
+
+            rec.comparison_feature_gain = feature_gain
+            rec.comparison_quota_gain = quota_gain
+            rec.comparison_summary = f"+{feature_gain} features, +{quota_gain} quota upgrades"
 
 
 class MumtazPlanFeature(models.Model):

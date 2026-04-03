@@ -23,6 +23,7 @@
                 <header>
                     <button name="action_load_default_categories" string="Load Default Categories" type="object" class="btn-primary" invisible="not erp_feature_enabled"/>
                     <button name="action_view_categories" string="Categories" type="object"/>
+                    <button name="action_open_subscription_status" string="Subscription" type="object"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -40,6 +41,17 @@
                         <group>
                             <field name="owner_user_id"/>
                             <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Subscription Visibility">
+                        <group>
+                            <field name="subscription_plan_name" readonly="1"/>
+                            <field name="subscription_status" readonly="1" widget="badge"/>
+                            <field name="subscription_renewal_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="subscription_grace_days_remaining" readonly="1"/>
+                            <field name="subscription_quota_summary" readonly="1"/>
                         </group>
                     </group>
                     <group string="Notes">

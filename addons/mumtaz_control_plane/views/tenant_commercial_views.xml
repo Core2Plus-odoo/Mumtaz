@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_tenant_list_commercial_inherit" model="ir.ui.view">
+            <field name="name">mumtaz.tenant.list.commercial.inherit</field>
+            <field name="model">mumtaz.tenant</field>
+            <field name="inherit_id" ref="mumtaz_tenant_manager.mumtaz_tenant_list_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='state']" position="after">
+                    <field name="cp_subscription_health" widget="badge" optional="show"/>
+                    <field name="cp_subscription_status" widget="badge" optional="show"/>
+                    <field name="cp_plan_name" optional="show"/>
+                    <field name="cp_renewal_date" optional="show"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_tenant_form_commercial_inherit" model="ir.ui.view">
+            <field name="name">mumtaz.tenant.form.commercial.inherit</field>
+            <field name="model">mumtaz.tenant</field>
+            <field name="inherit_id" ref="mumtaz_tenant_manager.mumtaz_tenant_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header/field[@name='state']" position="before">
+                    <button name="action_open_tenant_subscription" type="object" string="Open Subscription"/>
+                    <button name="action_quick_reactivate_subscription" type="object" string="Reactivate Sub"/>
+                    <button name="action_quick_extend_grace" type="object" string="Extend Grace"/>
+                </xpath>
+                <xpath expr="//group[@string='Subscription']" position="after">
+                    <group string="Commercial Visibility">
+                        <group>
+                            <field name="cp_plan_name" readonly="1"/>
+                            <field name="cp_subscription_status" readonly="1" widget="badge"/>
+                            <field name="cp_subscription_health" readonly="1" widget="badge"/>
+                        </group>
+                        <group>
+                            <field name="cp_renewal_date" readonly="1"/>
+                            <field name="cp_grace_days_remaining" readonly="1"/>
+                            <field name="cp_quota_usage_summary" readonly="1"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

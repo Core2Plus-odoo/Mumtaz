@@ -12,6 +12,7 @@
                     <field name="billing_cycle"/>
                     <field name="renewal_date"/>
                     <field name="payment_status"/>
+                    <field name="subscription_risk_level" widget="badge"/>
                     <field name="outstanding_amount"/>
                     <field name="grace_until"/>
                     <field name="is_current"/>
@@ -50,6 +51,10 @@
                                 invisible="status not in ('past_due','grace','suspended')"/>
                         <button name="action_cancel_subscription" type="object" string="Cancel" class="btn-secondary"
                                 invisible="status in ('cancelled','expired')"/>
+                        <button name="action_request_renewal" type="object" string="Renew Subscription" class="btn-secondary"/>
+                        <button name="action_open_upgrade_plans" type="object" string="Upgrade Plan" class="btn-primary"/>
+                        <button name="action_extend_grace" type="object" string="Extend Grace" class="btn-secondary"
+                                invisible="status != 'grace'"/>
                         <field name="status" widget="statusbar" statusbar_visible="trial,active,past_due,grace,suspended,cancelled,expired"/>
                     </header>
                     <sheet>
@@ -82,6 +87,17 @@
                                 <field name="trial_start"/>
                                 <field name="trial_end"/>
                                 <field name="grace_until"/>
+                            </group>
+                        </group>
+                        <group string="Commercial Health">
+                            <group>
+                                <field name="subscription_risk_level" readonly="1" widget="badge"/>
+                                <field name="grace_days_remaining" readonly="1"/>
+                                <field name="quota_usage_summary" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="recommended_plan_id" readonly="1"/>
+                                <field name="recommended_plan_note" readonly="1"/>
                             </group>
                         </group>
                         <group string="Lifecycle">

@@ -54,5 +54,12 @@
                   parent="menu_mumtaz_control_plane_root"
                   action="action_mumtaz_subscription_lifecycle_log"
                   sequence="70"/>
+
+
+        <menuitem id="menu_mumtaz_control_plane_notification_logs"
+                  name="Notification Logs"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_subscription_notification_log"
+                  sequence="75"/>
     </data>
 </odoo>

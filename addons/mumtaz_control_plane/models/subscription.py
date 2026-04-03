@@ -1,3 +1,5 @@
+from dateutil.relativedelta import relativedelta
+
 from odoo import _, api, fields, models
 
 
@@ -67,6 +69,15 @@ class MumtazSubscription(models.Model):
     )
     lifecycle_log_count = fields.Integer(compute="_compute_lifecycle_log_count")
 
+    grace_days_remaining = fields.Integer(compute="_compute_commercial_health")
+    quota_usage_summary = fields.Char(compute="_compute_commercial_health")
+    subscription_risk_level = fields.Selection(
+        [("low", "Low"), ("medium", "Medium"), ("high", "High")],
+        compute="_compute_commercial_health",
+    )
+    recommended_plan_id = fields.Many2one("mumtaz.plan", compute="_compute_recommended_plan")
+    recommended_plan_note = fields.Char(compute="_compute_recommended_plan")
+
     def name_get(self):
         result = []
         for rec in self:
@@ -82,6 +93,60 @@ class MumtazSubscription(models.Model):
         mapped = {item["subscription_id"][0]: item["subscription_id_count"] for item in counts}
         for rec in self:
             rec.lifecycle_log_count = mapped.get(rec.id, 0)
+
+    def _compute_commercial_health(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            if rec.status == "suspended":
+                rec.subscription_risk_level = "high"
+            elif rec.status in ("grace", "past_due"):
+                rec.subscription_risk_level = "high"
+            elif rec.status == "trial":
+                rec.subscription_risk_level = "medium"
+            else:
+                rec.subscription_risk_level = "low"
+
+            if rec.grace_until:
+                rec.grace_days_remaining = (rec.grace_until - today).days
+            else:
+                rec.grace_days_remaining = 0
+
+            usage_rows = self.env["mumtaz.usage.metric"].sudo().search(
+                [
+                    ("tenant_id", "=", rec.tenant_id.id),
+                    ("period_start", "<=", today),
+                    ("period_end", ">=", today),
+                    ("value_limit", ">", 0),
+                ]
+            )
+            if not usage_rows:
+                rec.quota_usage_summary = "No quota telemetry"
+                continue
+
+            peak = max(usage_rows.mapped("utilization_pct") or [0.0])
+            rec.quota_usage_summary = f"Peak utilization {peak:.1f}%"
+
+    def _compute_recommended_plan(self):
+        for rec in self:
+            rec.recommended_plan_id = False
+            rec.recommended_plan_note = False
+            candidate_plans = self.env["mumtaz.plan"].search(
+                [
+                    ("active", "=", True),
+                    ("sequence", ">", rec.plan_id.sequence),
+                ],
+                order="sequence asc",
+            )
+            if not candidate_plans:
+                continue
+
+            preferred = candidate_plans[0]
+            if rec.subscription_risk_level == "high":
+                preferred = candidate_plans[:1]
+            rec.recommended_plan_id = preferred.id
+            rec.recommended_plan_note = _(
+                "Recommended upgrade path based on current risk/quota profile."
+            )
 
     def _apply_tenant_impact(self, to_status, tenant_impact_mode):
         self.ensure_one()
@@ -164,6 +229,9 @@ class MumtazSubscription(models.Model):
             applied=applied,
             tenant_action=tenant_action,
         )
+        self.env["mumtaz.subscription.notification.service"].notify_transition(
+            self, from_status, decision["to_status"], source=source
+        )
 
     def action_open_lifecycle_logs(self):
         self.ensure_one()
@@ -171,6 +239,40 @@ class MumtazSubscription(models.Model):
         action["domain"] = [("subscription_id", "=", self.id)]
         action["context"] = {"default_subscription_id": self.id}
         return action
+
+    def action_open_upgrade_plans(self):
+        self.ensure_one()
+        action = self.env.ref("mumtaz_control_plane.action_mumtaz_plan_comparison").read()[0]
+        action["domain"] = [("active", "=", True), ("sequence", ">=", self.plan_id.sequence)]
+        action["context"] = {
+            "current_plan_id": self.plan_id.id,
+            "default_subscription_id": self.id,
+        }
+        return action
+
+    def action_request_renewal(self):
+        for rec in self:
+            increment = {"monthly": 1, "quarterly": 3, "yearly": 12}.get(rec.billing_cycle, 1)
+            base_date = rec.renewal_date or fields.Date.context_today(self)
+            rec.renewal_date = base_date + relativedelta(months=increment)
+            rec.payment_status = "pending"
+            rec.tenant_id.message_post(
+                body=_(
+                    "Renewal requested for subscription %(sub)s. Next renewal date moved to %(date)s.",
+                    sub=rec.display_name,
+                    date=rec.renewal_date,
+                )
+            )
+            self.env["mumtaz.subscription.notification.service"].notify_event(
+                rec, "renewal_requested", source="manual"
+            )
+        return True
+
+    def action_extend_grace(self):
+        for rec in self:
+            if rec.status == "grace":
+                rec.grace_until = (rec.grace_until or fields.Date.context_today(self)) + relativedelta(days=3)
+        return True
 
     def action_evaluate_lifecycle(self):
         return self.process_lifecycle(source="manual")
