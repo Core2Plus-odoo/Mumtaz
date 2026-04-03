@@ -160,16 +160,6 @@ class MumtazSmeProfile(models.Model):
             filled = sum(1 for f in scored_fields if rec[f])
             rec.profile_completeness = int(filled / total * 100) if total else 0
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            vals.setdefault("company_id", self.env.company.id)
-            if not vals.get("tenant_id"):
-                tenant = self.env["mumtaz.tenant"].search([("state", "=", "active")], limit=1)
-                if tenant:
-                    vals["tenant_id"] = tenant.id
-        return super().create(vals_list)
-
     _sql_constraints = [
         ("mumtaz_sme_profile_company_unique", "unique(company_id)",
          "Each company can only have one SME profile record."),
@@ -179,3 +169,13 @@ class MumtazSmeProfile(models.Model):
             "Each tenant can only have one SME profile per company.",
         ),
     ]
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            vals.setdefault("company_id", self.env.company.id)
+            if not vals.get("tenant_id"):
+                tenant = self.env["mumtaz.tenant"].search([("state", "=", "active")], limit=1)
+                if tenant:
+                    vals["tenant_id"] = tenant.id
+        return super().create(vals_list)

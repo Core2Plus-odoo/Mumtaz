@@ -241,9 +241,9 @@ class MumtazTenant(models.Model):
         if self.state != "active":
             raise ValidationError("Cannot create SME profile for inactive tenant.")
         if not company_id:
-            company_id = self.env.company.id
+            company_id = self.env.ref("base.main_company").id
 
-        values = {
+        sme_vals = {
             "tenant_id": self.id,
             "company_id": company_id,
             "legal_name": (sme_values or {}).get("legal_name") or self.name,
@@ -252,38 +252,52 @@ class MumtazTenant(models.Model):
             "brand_id": self.brand_id.id if self.brand_id else False,
         }
         if sme_values:
-            values.update(sme_values)
-        sme_profile = self.env["mumtaz.sme.profile"].create(values)
+            sme_vals.update(sme_values)
+
+        sme_profile = self.env["mumtaz.sme.profile"].create(sme_vals)
         self._append_log(f"Created SME profile: {sme_profile.legal_name}")
         return sme_profile
 
     def action_create_cfo_workspace(self, sme_profile_id, workspace_values=None):
         self.ensure_one()
         sme_profile = self.env["mumtaz.sme.profile"].browse(sme_profile_id)
-        if not sme_profile or sme_profile.tenant_id != self:
+        if sme_profile.tenant_id != self:
             raise ValidationError("SME profile does not belong to this tenant.")
 
-        values = {
-            "sme_profile_id": sme_profile.id,
+        workspace_vals = {
+            "sme_profile_id": sme_profile_id,
             "company_id": sme_profile.company_id.id,
             "name": f"{sme_profile.legal_name} - Main Workspace",
             "code": "main",
             "owner_user_id": self.env.user.id,
         }
         if workspace_values:
-            values.update(workspace_values)
-        workspace = self.env["mumtaz.cfo.workspace"].create(values)
+            workspace_vals.update(workspace_values)
+
+        workspace = self.env["mumtaz.cfo.workspace"].create(workspace_vals)
         self._append_log(f"Created CFO workspace: {workspace.name}")
         return workspace
 
     def action_run_smoke_tests(self):
+        import logging
+
+        _logger = logging.getLogger(__name__)
         self.ensure_one()
         tests_passed = 0
-        smes = self.env["mumtaz.sme.profile"].search([("tenant_id", "=", self.id)])
-        if smes:
-            tests_passed += 1
-        workspaces = self.env["mumtaz.cfo.workspace"].search([("sme_profile_id", "in", smes.ids)])
-        if workspaces:
-            tests_passed += 1
-        self.message_post(body=_("✓ %(count)s smoke tests passed", count=tests_passed))
-        return True
+        try:
+            smes = self.env["mumtaz.sme.profile"].search([("tenant_id", "=", self.id)])
+            if smes:
+                _logger.info("✓ Found %s SME profiles", len(smes))
+                tests_passed += 1
+
+            if smes:
+                workspaces = self.env["mumtaz.cfo.workspace"].search([("sme_profile_id", "in", smes.ids)])
+                if workspaces:
+                    _logger.info("✓ Found %s workspaces", len(workspaces))
+                    tests_passed += 1
+
+            self.message_post(body=f"✓ {tests_passed} smoke tests passed")
+            return True
+        except Exception as exc:  # pylint: disable=broad-except
+            _logger.exception("Smoke test error: %s", exc)
+            raise ValidationError(f"Smoke test failed: {exc}") from exc
