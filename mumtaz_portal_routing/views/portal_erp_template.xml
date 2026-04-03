@@ -9,7 +9,7 @@
                     <div>
                         <h1 class="mzp-page-title">ERP Portal</h1>
                         <p class="mzp-page-subtitle">
-                            CRM pipeline, lead intelligence, and marketplace operations
+                            CRM pipeline, lead intelligence, nurture campaigns, and marketplace operations
                         </p>
                     </div>
                     <div class="mzp-header-actions">
@@ -24,7 +24,7 @@
                 </div>
             </div>
 
-            <!-- Stat cards -->
+            <!-- CRM stat cards -->
             <div class="mzp-section">
                 <div class="mzp-stat-grid mzp-stat-grid-4">
                     <div class="mzp-stat-card">
@@ -32,34 +32,100 @@
                             <t t-esc="leads_total"/>
                         </div>
                         <div class="mzp-stat-label">Total Leads</div>
+                        <div class="mzp-stat-detail">From all sources</div>
                     </div>
                     <div class="mzp-stat-card mzp-stat-warning">
                         <div class="mzp-stat-value">
                             <t t-esc="opps_open"/>
                         </div>
                         <div class="mzp-stat-label">Open Opportunities</div>
+                        <div class="mzp-stat-detail">In pipeline</div>
                     </div>
                     <div class="mzp-stat-card mzp-stat-success">
                         <div class="mzp-stat-value">
                             <t t-esc="opps_won"/>
                         </div>
                         <div class="mzp-stat-label">Won</div>
+                        <div class="mzp-stat-detail">Closed deals</div>
                     </div>
-                    <div class="mzp-stat-card">
+                    <div class="mzp-stat-card mzp-stat-primary">
                         <div class="mzp-stat-value">
                             <t t-esc="listing_count"/>
                         </div>
                         <div class="mzp-stat-label">Active Listings</div>
+                        <div class="mzp-stat-detail">Marketplace</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Lead intelligence banner -->
+            <t t-if="scraper_source_count &gt; 0 or campaign_count &gt; 0">
+                <div class="mzp-section">
+                    <div class="mzp-intel-banner">
+                        <div class="mzp-intel-item">
+                            <span class="mzp-intel-icon">🔍</span>
+                            <div class="mzp-intel-body">
+                                <div class="mzp-intel-value"><t t-esc="scraper_source_count"/></div>
+                                <div class="mzp-intel-label">Active Sources</div>
+                            </div>
+                        </div>
+                        <div class="mzp-intel-divider"></div>
+                        <div class="mzp-intel-item">
+                            <span class="mzp-intel-icon">📡</span>
+                            <div class="mzp-intel-body">
+                                <div class="mzp-intel-value"><t t-esc="scraper_job_count"/></div>
+                                <div class="mzp-intel-label">Scraper Runs</div>
+                            </div>
+                        </div>
+                        <div class="mzp-intel-divider"></div>
+                        <div class="mzp-intel-item">
+                            <span class="mzp-intel-icon">📣</span>
+                            <div class="mzp-intel-body">
+                                <div class="mzp-intel-value"><t t-esc="campaign_count"/></div>
+                                <div class="mzp-intel-label">Campaigns</div>
+                            </div>
+                        </div>
+                        <div class="mzp-intel-divider"></div>
+                        <div class="mzp-intel-item">
+                            <span class="mzp-intel-icon">🎯</span>
+                            <div class="mzp-intel-body">
+                                <div class="mzp-intel-value"><t t-esc="total_scraped_records"/></div>
+                                <div class="mzp-intel-label">Records Extracted</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Nurture pipeline stats -->
+            <t t-if="campaign_count &gt; 0">
+                <div class="mzp-section">
+                    <h2 class="mzp-section-title">Nurture Pipeline</h2>
+                    <div class="mzp-pipeline-bar">
+                        <div class="mzp-pipeline-stage">
+                            <span class="mzp-pipeline-count mzp-pipeline-nurturing"><t t-esc="nurturing_leads"/></span>
+                            <span class="mzp-pipeline-label">Nurturing</span>
+                        </div>
+                        <div class="mzp-pipeline-arrow">→</div>
+                        <div class="mzp-pipeline-stage">
+                            <span class="mzp-pipeline-count mzp-pipeline-qualified"><t t-esc="qualified_leads"/></span>
+                            <span class="mzp-pipeline-label">Qualified</span>
+                        </div>
+                        <div class="mzp-pipeline-arrow">→</div>
+                        <div class="mzp-pipeline-stage">
+                            <span class="mzp-pipeline-count mzp-pipeline-converted"><t t-esc="converted_leads"/></span>
+                            <span class="mzp-pipeline-label">Converted</span>
+                        </div>
+                    </div>
+                </div>
+            </t>
 
             <!-- Quick actions -->
             <div class="mzp-section">
                 <h2 class="mzp-section-title">Quick Actions</h2>
                 <div class="mzp-quick-actions">
                     <a href="/web#action=crm.crm_lead_all_leads_act"
-                       class="mzp-action-card">
+                       class="mzp-action-card mzp-action-featured">
                         <div class="mzp-action-icon">🎯</div>
                         <div class="mzp-action-label">CRM Leads</div>
                     </a>
@@ -71,22 +137,44 @@
                     <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
                        class="mzp-action-card">
                         <div class="mzp-action-icon">🔍</div>
-                        <div class="mzp-action-label">Lead Scraper</div>
+                        <div class="mzp-action-label">Lead Sources
+                            <t t-if="scraper_source_count &gt; 0">
+                                <span class="mzp-action-badge">
+                                    <t t-esc="scraper_source_count"/>
+                                </span>
+                            </t>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_job"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📡</div>
+                        <div class="mzp-action-label">Scraper Jobs</div>
                     </a>
                     <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign"
                        class="mzp-action-card">
                         <div class="mzp-action-icon">📣</div>
-                        <div class="mzp-action-label">Nurture Campaigns</div>
+                        <div class="mzp-action-label">Nurture Campaigns
+                            <t t-if="campaign_count &gt; 0">
+                                <span class="mzp-action-badge">
+                                    <t t-esc="campaign_count"/>
+                                </span>
+                            </t>
+                        </div>
                     </a>
-                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing"
+                    <a href="/web#action=mumtaz_lead_nurture.action_nurture_leads"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🔄</div>
+                        <div class="mzp-action-label">Nurture Leads</div>
+                    </a>
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listings"
                        class="mzp-action-card">
                         <div class="mzp-action-icon">🛒</div>
                         <div class="mzp-action-label">Marketplace</div>
                     </a>
-                    <a href="/web#model=lead.scraper.job&amp;view_type=list"
+                    <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_log"
                        class="mzp-action-card">
                         <div class="mzp-action-icon">📊</div>
-                        <div class="mzp-action-label">Scraper Jobs</div>
+                        <div class="mzp-action-label">Activity Logs</div>
                     </a>
                 </div>
             </div>
@@ -109,9 +197,21 @@
                             </span>
                         </div>
                         <div class="mzp-info-row">
-                            <span class="mzp-info-key">Records Extracted</span>
+                            <span class="mzp-info-key">Records Found</span>
                             <span class="mzp-info-val">
-                                <t t-esc="last_scraper_job.record_count or 0"/>
+                                <t t-esc="last_scraper_job.total_found or 0"/>
+                            </span>
+                        </div>
+                        <div class="mzp-info-row">
+                            <span class="mzp-info-key">Created</span>
+                            <span class="mzp-info-val mzp-info-success">
+                                <t t-esc="last_scraper_job.total_created or 0"/>
+                            </span>
+                        </div>
+                        <div class="mzp-info-row">
+                            <span class="mzp-info-key">Duplicates</span>
+                            <span class="mzp-info-val">
+                                <t t-esc="last_scraper_job.total_duplicates or 0"/>
                             </span>
                         </div>
                         <div class="mzp-info-row">
@@ -124,9 +224,80 @@
                 </div>
             </t>
 
+            <!-- Active nurture campaigns -->
+            <t t-if="active_campaigns">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Active Campaigns</h2>
+                        <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign"
+                           class="mzp-section-link">View all →</a>
+                    </div>
+                    <div class="mzp-session-list">
+                        <t t-foreach="active_campaigns" t-as="campaign">
+                            <a t-att-href="'/web#id=' + str(campaign.id) + '&amp;model=lead.nurture.campaign&amp;view_type=form'"
+                               class="mzp-session-item">
+                                <div class="mzp-session-icon">📣</div>
+                                <div class="mzp-session-body">
+                                    <div class="mzp-session-name">
+                                        <t t-esc="campaign.name"/>
+                                    </div>
+                                    <div class="mzp-session-meta">
+                                        <t t-esc="campaign.lead_count or 0"/> leads
+                                        · <t t-esc="campaign.qualified_count or 0"/> qualified
+                                        · <t t-esc="campaign.converted_count or 0"/> converted
+                                    </div>
+                                </div>
+                                <div class="mzp-session-arrow">→</div>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Recent nurture activity -->
+            <t t-if="recent_nurture_logs">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Recent Outreach Activity</h2>
+                        <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_log"
+                           class="mzp-section-link">View all →</a>
+                    </div>
+                    <div class="mzp-session-list">
+                        <t t-foreach="recent_nurture_logs" t-as="log">
+                            <div class="mzp-session-item">
+                                <div class="mzp-session-icon">
+                                    <t t-if="log.channel == 'email'">📧</t>
+                                    <t t-elif="log.channel == 'whatsapp'">💬</t>
+                                    <t t-elif="log.channel == 'activity'">📌</t>
+                                    <t t-else="">📋</t>
+                                </div>
+                                <div class="mzp-session-body">
+                                    <div class="mzp-session-name">
+                                        <t t-esc="log.lead_name or log.subject or 'Outreach'"/>
+                                    </div>
+                                    <div class="mzp-session-meta">
+                                        <t t-esc="log.channel or 'unknown'"/>
+                                        · <span t-att-class="'mzp-badge mzp-badge-' + (log.status or 'draft')">
+                                            <t t-esc="log.status"/>
+                                        </span>
+                                        <t t-if="log.campaign_name">
+                                            · <t t-esc="log.campaign_name"/>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
             <!-- Recent leads table -->
             <div class="mzp-section">
-                <h2 class="mzp-section-title">Recent Leads</h2>
+                <div class="mzp-section-header">
+                    <h2 class="mzp-section-title">Recent Leads</h2>
+                    <a href="/web#action=crm.crm_lead_all_leads_act"
+                       class="mzp-section-link">View all →</a>
+                </div>
                 <t t-if="recent_leads">
                     <div class="mzp-table-wrapper">
                         <table class="mzp-table">
@@ -171,8 +342,14 @@
                     </div>
                 </t>
                 <t t-else="">
-                    <div class="mzp-empty-state">
-                        <p>No leads yet. <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source">Run a lead scraper</a> or add leads manually.</p>
+                    <div class="mzp-empty-state mzp-empty-state-large">
+                        <div class="mzp-empty-icon">🎯</div>
+                        <h3>No Leads Yet</h3>
+                        <p>Run a lead scraper to start filling your pipeline, or add leads manually.</p>
+                        <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
+                           class="mzp-btn mzp-btn-primary">
+                            Set Up Lead Scraper
+                        </a>
                     </div>
                 </t>
             </div>
