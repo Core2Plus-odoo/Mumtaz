@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Usage:
-#   sudo bash deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE] [REPO_PATH]
+#   sudo bash ops/deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE] [REPO_PATH]
 # Example:
-#   sudo bash deployment/make_odoo_detect_mumtaz.sh Mumtaz_ERP /etc/odoo/odoo.conf odoo /opt/custom_addons/Mumtaz
+#   sudo bash ops/deployment/make_odoo_detect_mumtaz.sh Mumtaz_ERP /etc/odoo/odoo.conf odoo /opt/custom_addons/Mumtaz
 
 DB_NAME="${1:-}"
 ODOO_CONF="${2:-/etc/odoo/odoo.conf}"
@@ -12,8 +12,9 @@ ODOO_SERVICE="${3:-odoo}"
 REPO_PATH_INPUT="${4:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_FROM_SCRIPT="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_FROM_SCRIPT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 REPO_PATH="$REPO_FROM_SCRIPT"
+ADDONS_PATH="$REPO_PATH/addons"
 
 if [[ -n "$REPO_PATH_INPUT" ]]; then
   REPO_PATH="$REPO_PATH_INPUT"
@@ -21,7 +22,7 @@ fi
 
 if [[ -z "$DB_NAME" ]]; then
   echo "ERROR: DB_NAME is required."
-  echo "Usage: sudo bash deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE] [REPO_PATH]"
+  echo "Usage: sudo bash ops/deployment/make_odoo_detect_mumtaz.sh <DB_NAME> [ODOO_CONF] [ODOO_SERVICE] [REPO_PATH]"
   echo "TIP: Do not type angle brackets. Example: ... make_odoo_detect_mumtaz.sh Mumtaz_ERP"
   exit 1
 fi
@@ -36,18 +37,23 @@ if [[ ! -d "$REPO_PATH" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$REPO_PATH/deployment/check_mumtaz_modules.py" ]]; then
-  echo "ERROR: Expected helper missing: $REPO_PATH/deployment/check_mumtaz_modules.py"
+if [[ ! -f "$REPO_PATH/ops/deployment/check_mumtaz_modules.py" ]]; then
+  echo "ERROR: Expected helper missing: $REPO_PATH/ops/deployment/check_mumtaz_modules.py"
   exit 1
 fi
 
-echo "Using: DB_NAME=$DB_NAME ODOO_CONF=$ODOO_CONF ODOO_SERVICE=$ODOO_SERVICE REPO_PATH=$REPO_PATH"
+if [[ ! -d "$ADDONS_PATH" ]]; then
+  echo "ERROR: Expected addons directory missing: $ADDONS_PATH"
+  exit 1
+fi
+
+echo "Using: DB_NAME=$DB_NAME ODOO_CONF=$ODOO_CONF ODOO_SERVICE=$ODOO_SERVICE REPO_PATH=$REPO_PATH ADDONS_PATH=$ADDONS_PATH"
 
 echo "[1/6] Checking Mumtaz module structure..."
-python3 "$REPO_PATH/deployment/check_mumtaz_modules.py"
+python3 "$REPO_PATH/ops/deployment/check_mumtaz_modules.py"
 
 echo "[2/6] Updating addons_path in $ODOO_CONF ..."
-python3 - "$ODOO_CONF" "$REPO_PATH" <<'PY'
+python3 - "$ODOO_CONF" "$ADDONS_PATH" <<'PY'
 from pathlib import Path
 import sys
 
@@ -77,7 +83,7 @@ echo "[3/6] Fixing ownership/permissions for $REPO_PATH ..."
 chown -R odoo:odoo "$REPO_PATH"
 find "$REPO_PATH" -type d -exec chmod 755 {} \;
 find "$REPO_PATH" -type f -exec chmod 644 {} \;
-chmod +x "$REPO_PATH/deployment/check_mumtaz_modules.py" "$REPO_PATH/deployment/make_odoo_detect_mumtaz.sh"
+chmod +x "$REPO_PATH/ops/deployment/check_mumtaz_modules.py" "$REPO_PATH/ops/deployment/make_odoo_detect_mumtaz.sh"
 
 echo "[4/6] Restarting service: $ODOO_SERVICE ..."
 systemctl restart "$ODOO_SERVICE"
