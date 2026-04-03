@@ -297,17 +297,24 @@ class MumtazPortalRouting(http.Controller):
 
         env = request.env
         company_id = env.company.id
-        Listing = env['mumtaz.marketplace.listing'].sudo()
 
-        total_listings   = Listing.search_count([('state', '=', 'published')])
-        my_listings      = Listing.search_count([('company_id', '=', company_id)])
-        featured_listings = Listing.search(
-            [('state', '=', 'published')],
-            order='create_date desc',
-            limit=6,
-        )
-
+        total_listings = 0
+        my_listings = 0
+        featured_listings = []
         inquiry_count = 0
+
+        try:
+            Listing = env['mumtaz.marketplace.listing'].sudo()
+            total_listings = Listing.search_count([('state', '=', 'published')])
+            my_listings = Listing.search_count([('company_id', '=', company_id)])
+            featured_listings = Listing.search(
+                [('state', '=', 'published')],
+                order='create_date desc',
+                limit=6,
+            )
+        except Exception:
+            pass
+
         try:
             Inquiry = env['mumtaz.marketplace.inquiry'].sudo()
             inquiry_count = Inquiry.search_count([('listing_id.company_id', '=', company_id)])

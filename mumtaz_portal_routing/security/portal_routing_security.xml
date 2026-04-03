@@ -40,12 +40,9 @@
     <record id="group_portal_gateway_marketplace" model="res.groups">
         <field name="name">Portal Gateway: Marketplace Portal</field>
         <field name="category_id" ref="base.module_category_hidden"/>
-        <field name="implied_ids" eval="[
-            (4, ref('mumtaz_marketplace.group_mumtaz_marketplace_user')),
-        ]"/>
         <field name="comment">
             Users in this group are routed to the Marketplace Portal after login.
-            Grants marketplace user access for browsing and listing products/services.
+            Marketplace permissions granted when mumtaz_marketplace is installed.
         </field>
     </record>
 
