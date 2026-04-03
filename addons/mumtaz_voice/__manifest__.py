@@ -5,7 +5,7 @@
     "category": "Productivity",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["mumtaz_ai", "mumtaz_core", "account"],
+    "depends": ["mumtaz_ai", "mumtaz_core", "account", "mumtaz_control_plane"],
     "data": [
         "security/mumtaz_voice_security.xml",
         "security/ir.model.access.csv",

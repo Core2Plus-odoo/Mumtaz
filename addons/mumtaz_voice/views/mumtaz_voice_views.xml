@@ -18,7 +18,7 @@
         <field name="arch" type="xml">
             <form string="CFO Voice Session">
                 <header>
-                    <button name="action_ask" string="Ask CFO" type="object" class="oe_highlight" invisible="not transcript"/>
+                    <button name="action_ask" string="Ask CFO" type="object" class="oe_highlight" invisible="not transcript or not ai_feature_enabled"/>
                     <button name="action_clear_session" string="Clear" type="object"/>
                     <button name="action_view_history" string="View History" type="object"/>
                     <field name="status" widget="statusbar" statusbar_visible="idle,processing,done,error"/>
@@ -35,6 +35,7 @@
                     </group>
                     <group string="Your Question">
                         <field name="transcript" placeholder="Type your CFO question here…" nolabel="1"/>
+                        <field name="ai_feature_note" readonly="1" invisible="not ai_feature_note"/>
                     </group>
                     <group string="CFO Response">
                         <field name="response" nolabel="1" readonly="1"/>

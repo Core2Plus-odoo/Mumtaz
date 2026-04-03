@@ -30,7 +30,7 @@
                 <header>
                     <button name="action_publish" string="Publish"
                             type="object" class="btn-primary"
-                            invisible="state != 'draft'"/>
+                            invisible="state != 'draft' or not marketplace_feature_enabled"/>
                     <button name="action_close" string="Close Listing"
                             type="object"
                             invisible="state != 'published'"/>
@@ -55,6 +55,7 @@
                         <label for="name"/>
                         <h1><field name="name" placeholder="Listing title..."/></h1>
                         <field name="short_description" placeholder="One-line summary..."/>
+                        <field name="marketplace_feature_note" readonly="1" invisible="not marketplace_feature_note"/>
                     </div>
                     <group>
                         <group string="Classification">

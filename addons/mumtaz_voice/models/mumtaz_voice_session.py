@@ -33,11 +33,34 @@ class MumtazVoiceSession(models.Model):
 
     voice_message_ids = fields.One2many("mumtaz.voice.message", "session_id", string="Conversation History")
     message_count = fields.Integer(compute="_compute_message_count")
+    ai_feature_enabled = fields.Boolean(compute="_compute_ai_feature_access")
+    ai_feature_note = fields.Char(compute="_compute_ai_feature_access")
 
     @api.depends("voice_message_ids")
     def _compute_message_count(self):
         for rec in self:
             rec.message_count = len(rec.voice_message_ids)
+
+    def _compute_ai_feature_access(self):
+        service_available = "mumtaz.feature.access.service" in self.env
+        for rec in self:
+            if not service_available:
+                rec.ai_feature_enabled = True
+                rec.ai_feature_note = False
+                continue
+            access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                rec.company_id,
+                "ai_access",
+                include_quota=True,
+            )
+            quota = access.get("quota") or {}
+            rec.ai_feature_enabled = bool(access.get("effective_enabled", True))
+            if quota.get("status") == "nearing_limit":
+                rec.ai_feature_note = "AI usage is nearing tenant quota."
+            elif quota.get("status") == "exceeded":
+                rec.ai_feature_note = "AI quota exceeded for this tenant."
+            else:
+                rec.ai_feature_note = access.get("reason")
 
     @api.model_create_multi
     def create(self, vals_list):

@@ -16,11 +16,11 @@ class MumtazAuthController(http.Controller):
         return response_builder.success({"token": f"token-for-{username or 'anonymous'}"}, message="Authenticated")
 
     @http.route("/api/v1/auth/logout", type="http", auth="public", methods=["POST"], csrf=False)
-    @api_endpoint(require_api_key=True)
+    @api_endpoint(require_api_key=True, required_feature_code="api_access")
     def logout(self, api_key=None, **kwargs):
         return response_builder.success({"api_key_prefix": api_key.key_prefix}, message="Logged out")
 
     @http.route("/api/v1/auth/refresh", type="http", auth="public", methods=["POST"], csrf=False)
-    @api_endpoint(require_api_key=True)
+    @api_endpoint(require_api_key=True, required_feature_code="api_access")
     def refresh(self, api_key=None, **kwargs):
         return response_builder.success({"token": f"refresh-{api_key.key_prefix}"}, message="Token refreshed")

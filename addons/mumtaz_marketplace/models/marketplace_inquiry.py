@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class MumtazMarketplaceInquiry(models.Model):
@@ -41,6 +42,23 @@ class MumtazMarketplaceInquiry(models.Model):
     )
     response = fields.Text(tracking=True)
     responded_date = fields.Datetime(readonly=True)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if "mumtaz.feature.access.service" in self.env:
+            for vals in vals_list:
+                company_id = vals.get("company_id") or self.env.company.id
+                company = self.env["res.company"].browse(company_id)
+                access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                    company,
+                    "marketplace_access",
+                    include_quota=False,
+                )
+                if not access.get("effective_enabled", True):
+                    raise ValidationError(
+                        access.get("reason") or "Marketplace access is disabled for this tenant."
+                    )
+        return super().create(vals_list)
 
     @api.depends("listing_id", "inquirer_name")
     def _compute_name(self):

@@ -50,6 +50,8 @@ class MumtazCFOWorkspace(models.Model):
     notes = fields.Text()
     category_ids = fields.One2many("mumtaz.cfo.category", "workspace_id", string="Categories")
     category_count = fields.Integer(compute="_compute_category_count", string="Category Count")
+    erp_feature_enabled = fields.Boolean(compute="_compute_erp_feature_access")
+    erp_feature_note = fields.Char(compute="_compute_erp_feature_access")
 
     _sql_constraints = [
         (
@@ -68,6 +70,23 @@ class MumtazCFOWorkspace(models.Model):
     def _compute_tenant_id(self):
         for rec in self:
             rec.tenant_id = rec.sme_profile_id.tenant_id.id if rec.sme_profile_id else False
+
+    def _compute_erp_feature_access(self):
+        service_available = "mumtaz.feature.access.service" in self.env
+        for rec in self:
+            if not service_available:
+                rec.erp_feature_enabled = True
+                rec.erp_feature_note = False
+                continue
+            access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                rec.company_id,
+                "erp_core_access",
+                include_quota=False,
+            )
+            rec.erp_feature_enabled = bool(access.get("effective_enabled", True))
+            rec.erp_feature_note = False if rec.erp_feature_enabled else (
+                access.get("reason") or "ERP core access is disabled for this tenant."
+            )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -104,6 +123,15 @@ class MumtazCFOWorkspace(models.Model):
 
     def action_load_default_categories(self):
         """Clone system categories into this workspace if missing by code."""
+        if "mumtaz.feature.access.service" in self.env:
+            for workspace in self:
+                access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                    workspace.company_id,
+                    "erp_core_access",
+                    include_quota=False,
+                )
+                if not access.get("effective_enabled", True):
+                    raise ValidationError(access.get("reason") or "ERP core access is disabled for this tenant.")
         template_categories = self.env["mumtaz.cfo.category"].search([
             ("is_system", "=", True),
             ("workspace_id", "=", False),

@@ -21,7 +21,7 @@
         <field name="arch" type="xml">
             <form string="CFO Workspace">
                 <header>
-                    <button name="action_load_default_categories" string="Load Default Categories" type="object" class="btn-primary"/>
+                    <button name="action_load_default_categories" string="Load Default Categories" type="object" class="btn-primary" invisible="not erp_feature_enabled"/>
                     <button name="action_view_categories" string="Categories" type="object"/>
                 </header>
                 <sheet>
@@ -44,6 +44,7 @@
                     </group>
                     <group string="Notes">
                         <field name="notes" nolabel="1" placeholder="Workspace context, policies, and governance notes."/>
+                        <field name="erp_feature_note" readonly="1" invisible="not erp_feature_note"/>
                     </group>
                     <notebook>
                         <page string="Categories">

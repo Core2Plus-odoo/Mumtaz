@@ -8,7 +8,7 @@ from odoo.http import request
 from ..services import auth_service, rate_limiter, response_builder
 
 
-def api_endpoint(require_api_key=True):
+def api_endpoint(require_api_key=True, required_feature_code=None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -19,6 +19,27 @@ def api_endpoint(require_api_key=True):
                     raw_key = request.httprequest.headers.get("X-API-Key")
                     api_key = auth_service.resolve_api_key(request.env, raw_key)
                     rate_limiter.check_rate_limit(api_key)
+                    if required_feature_code and api_key.tenant_id:
+                        access = request.env["mumtaz.feature.access.service"].sudo().resolve_feature_access_by_code(
+                            tenant=api_key.tenant_id,
+                            feature_code=required_feature_code,
+                        )
+                        if not access.get("effective_enabled"):
+                            code = "feature_not_enabled"
+                            message = access.get("reason", "Feature is disabled for this tenant.")
+                            quota = access.get("quota") or {}
+                            if quota.get("status") == "exceeded":
+                                code = "quota_exceeded"
+                                message = "Quota exceeded for this feature."
+                            payload = response_builder.error(message=message, code=code, status=403, details=access)
+                            _log_usage(
+                                api_key,
+                                403,
+                                int((time.time() - start) * 1000),
+                                endpoint=request.httprequest.path,
+                                error=message,
+                            )
+                            return request.make_json_response(payload, status=403)
 
                 result = func(*args, api_key=api_key, **kwargs)
                 payload = result if isinstance(result, dict) else response_builder.success(result)

@@ -67,6 +67,8 @@ class MumtazMarketplaceListing(models.Model):
     published_date = fields.Datetime(readonly=True)
     inquiry_count = fields.Integer(compute="_compute_inquiry_count")
     tag_ids = fields.Many2many("mumtaz.marketplace.tag", string="Tags")
+    marketplace_feature_enabled = fields.Boolean(compute="_compute_marketplace_feature_access")
+    marketplace_feature_note = fields.Char(compute="_compute_marketplace_feature_access")
 
     def _compute_inquiry_count(self):
         for rec in self:
@@ -74,7 +76,37 @@ class MumtazMarketplaceListing(models.Model):
                 [("listing_id", "=", rec.id)]
             )
 
+    def _compute_marketplace_feature_access(self):
+        service_available = "mumtaz.feature.access.service" in self.env
+        for rec in self:
+            if not service_available:
+                rec.marketplace_feature_enabled = True
+                rec.marketplace_feature_note = False
+                continue
+            access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                rec.company_id,
+                "marketplace_access",
+                include_quota=False,
+            )
+            rec.marketplace_feature_enabled = bool(access.get("effective_enabled", True))
+            rec.marketplace_feature_note = False if rec.marketplace_feature_enabled else (
+                access.get("reason") or "Marketplace feature is disabled for this tenant."
+            )
+
+    def _ensure_marketplace_access(self):
+        if "mumtaz.feature.access.service" not in self.env:
+            return
+        for rec in self:
+            access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+                rec.company_id,
+                "marketplace_access",
+                include_quota=False,
+            )
+            if not access.get("effective_enabled", True):
+                raise ValidationError(access.get("reason") or "Marketplace access is disabled for this tenant.")
+
     def action_publish(self):
+        self._ensure_marketplace_access()
         for rec in self:
             if not rec.description or not rec.short_description:
                 raise ValidationError("Please complete description before publishing.")

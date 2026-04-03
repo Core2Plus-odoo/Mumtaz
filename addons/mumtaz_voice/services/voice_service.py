@@ -29,6 +29,7 @@ class VoiceService(models.AbstractModel):
         user = session.user_id
         language = self.env.context.get("voice_language", "en")
         settings = self._get_settings(company)
+        access = self._check_ai_entitlement(company)
         self._ensure_voice_enabled(settings)
 
         intent = self.env["mumtaz.cfo.service"].detect_intent(transcript)
@@ -47,6 +48,12 @@ class VoiceService(models.AbstractModel):
             financial_context=financial_context, company=company,
             history=history, language=language,
         )
+        quota = access.get("quota") or {}
+        if quota.get("status") == "nearing_limit":
+            response_data["response"] = (
+                f"{response_data.get('response', '')}\n\n"
+                "Note: Your tenant AI usage is nearing the configured quota."
+            ).strip()
         response_data["intent"] = intent
         response_data["financial_context"] = financial_context
 
@@ -69,6 +76,23 @@ class VoiceService(models.AbstractModel):
             level="info",
         )
         return response_data
+
+    def _check_ai_entitlement(self, company):
+        if "mumtaz.feature.access.service" not in self.env:
+            return {"effective_enabled": True, "quota": None}
+
+        access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+            company,
+            "ai_access",
+            include_quota=True,
+        )
+        if not access.get("effective_enabled"):
+            raise UserError(access.get("reason") or "AI access is disabled for this tenant.")
+
+        quota = access.get("quota") or {}
+        if quota.get("status") == "exceeded":
+            raise UserError("AI quota exceeded for this tenant.")
+        return access
 
     def _get_settings(self, company):
         settings = self.env["mumtaz.core.settings"].search(

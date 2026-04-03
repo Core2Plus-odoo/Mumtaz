@@ -67,6 +67,46 @@ class MumtazFeatureAccessService(models.AbstractModel):
             for f in features
         ]
 
+    @api.model
+    def resolve_feature_access_by_code(self, tenant, feature_code, timestamp=None, include_quota=True):
+        feature = self.env["mumtaz.feature"].search([("code", "=", feature_code), ("active", "=", True)], limit=1)
+        if not feature:
+            return {
+                "tenant_id": self._coerce_tenant(tenant).id,
+                "feature_id": False,
+                "effective_enabled": True,
+                "effective_limit": None,
+                "source": "fallback",
+                "reason": f"Feature code '{feature_code}' is not registered; fail-open fallback applied.",
+                "quota": None,
+            }
+        return self.resolve_feature_access(
+            tenant=tenant,
+            feature=feature,
+            timestamp=timestamp,
+            include_quota=include_quota,
+        )
+
+    @api.model
+    def resolve_company_feature_access(self, company, feature_code, timestamp=None, include_quota=True):
+        tenant = self._resolve_tenant_for_company(company)
+        if not tenant:
+            return {
+                "tenant_id": False,
+                "feature_id": False,
+                "effective_enabled": True,
+                "effective_limit": None,
+                "source": "fallback",
+                "reason": "No tenant mapping found for company; fail-open fallback applied.",
+                "quota": None,
+            }
+        return self.resolve_feature_access_by_code(
+            tenant=tenant,
+            feature_code=feature_code,
+            timestamp=timestamp,
+            include_quota=include_quota,
+        )
+
     def _coerce_tenant(self, tenant):
         if hasattr(tenant, "_name") and tenant._name == "mumtaz.tenant":
             return tenant
@@ -83,6 +123,21 @@ class MumtazFeatureAccessService(models.AbstractModel):
         if isinstance(timestamp, datetime):
             return timestamp
         return datetime.fromisoformat(str(timestamp))
+
+    def _resolve_tenant_for_company(self, company):
+        company_id = company.id if hasattr(company, "id") else int(company)
+
+        if "mumtaz.core.settings" in self.env:
+            settings = self.env["mumtaz.core.settings"].sudo().search(
+                [("company_id", "=", company_id), ("active", "=", True)],
+                limit=1,
+            )
+            if settings and settings.tenant_code:
+                tenant = self.env["mumtaz.tenant"].sudo().search([("code", "=", settings.tenant_code)], limit=1)
+                if tenant:
+                    return tenant
+
+        return False
 
     def _resolve_current_subscription(self, tenant, at_time):
         at_date = at_time.date()

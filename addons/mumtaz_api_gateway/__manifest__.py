@@ -5,7 +5,14 @@
     "category": "Mumtaz Platform",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["base", "mail", "web", "mumtaz_tenant_manager", "mumtaz_core"],
+    "depends": [
+        "base",
+        "mail",
+        "web",
+        "mumtaz_tenant_manager",
+        "mumtaz_core",
+        "mumtaz_control_plane",
+    ],
     "data": [
         "security/api_key_security.xml",
         "security/api_usage_log_security.xml",
