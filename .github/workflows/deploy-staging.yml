@@ -28,3 +28,12 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} \
             'cd /opt/mumtaz && bash scripts/health-check.sh'
+
+      - name: Slack Notification - Staging
+        if: ${{ always() && secrets.SLACK_WEBHOOK != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {"text": "Staging deployment ${{ job.status }} for ${{ github.repository }}"}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

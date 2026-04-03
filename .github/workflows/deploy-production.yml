@@ -43,3 +43,12 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} \
             'cd /opt/mumtaz && bash scripts/rollback.sh'
+
+      - name: Slack Notification - Production
+        if: ${{ always() && secrets.SLACK_WEBHOOK != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {"text": "Production deployment ${{ job.status }} for ${{ github.repository }} (version=${{ github.event.inputs.version }})"}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
