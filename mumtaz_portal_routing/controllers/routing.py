@@ -180,7 +180,7 @@ class MumtazPortalRouting(http.Controller):
         # Lead scraper — last job (optional module)
         last_scraper_job = None
         try:
-            ScraperJob = env['mumtaz.lead.scraper.job'].sudo()
+            ScraperJob = env['lead.scraper.job'].sudo()
             last_scraper_job = ScraperJob.search([], order='create_date desc', limit=1)
         except Exception:
             pass
@@ -238,18 +238,18 @@ class MumtazPortalRouting(http.Controller):
         recent_txs = []
         if workspace:
             Tx = env['mumtaz.cfo.transaction'].sudo()
-            tx_count = Tx.search_count([('batch_id.workspace_id', '=', workspace.id)])
+            tx_count = Tx.search_count([('workspace_id', '=', workspace.id)])
             review_count = Tx.search_count([
-                ('batch_id.workspace_id', '=', workspace.id),
+                ('workspace_id', '=', workspace.id),
                 ('requires_review', '=', True),
                 ('is_duplicate', '=', False),
             ])
-            income_txs  = Tx.search([('batch_id.workspace_id', '=', workspace.id), ('direction', '=', 'inflow')])
-            expense_txs = Tx.search([('batch_id.workspace_id', '=', workspace.id), ('direction', '=', 'outflow')])
+            income_txs  = Tx.search([('workspace_id', '=', workspace.id), ('direction', '=', 'inflow')])
+            expense_txs = Tx.search([('workspace_id', '=', workspace.id), ('direction', '=', 'outflow')])
             income_total  = sum(t.amount for t in income_txs)
             expense_total = sum(t.amount for t in expense_txs)
             recent_txs = Tx.search(
-                [('batch_id.workspace_id', '=', workspace.id)],
+                [('workspace_id', '=', workspace.id)],
                 order='date desc', limit=8
             )
 

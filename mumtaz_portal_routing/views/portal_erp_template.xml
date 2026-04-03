@@ -83,7 +83,7 @@
                         <div class="mzp-action-icon">🛒</div>
                         <div class="mzp-action-label">Marketplace</div>
                     </a>
-                    <a href="/web#model=mumtaz.lead.scraper.job&amp;view_type=list"
+                    <a href="/web#model=lead.scraper.job&amp;view_type=list"
                        class="mzp-action-card">
                         <div class="mzp-action-icon">📊</div>
                         <div class="mzp-action-label">Scraper Jobs</div>
@@ -104,8 +104,8 @@
                         </div>
                         <div class="mzp-info-row">
                             <span class="mzp-info-key">Status</span>
-                            <span t-att-class="'mzp-badge mzp-badge-' + last_scraper_job.state">
-                                <t t-esc="last_scraper_job.state"/>
+                            <span t-att-class="'mzp-badge mzp-badge-' + last_scraper_job.status">
+                                <t t-esc="last_scraper_job.status"/>
                             </span>
                         </div>
                         <div class="mzp-info-row">

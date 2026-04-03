@@ -108,16 +108,16 @@
                                 <h3 class="mzp-listing-title">
                                     <t t-esc="listing.name"/>
                                 </h3>
-                                <t t-if="listing.short_summary">
+                                <t t-if="listing.short_description">
                                     <p class="mzp-listing-summary">
-                                        <t t-esc="listing.short_summary"/>
+                                        <t t-esc="listing.short_description"/>
                                     </p>
                                 </t>
                                 <div class="mzp-listing-footer">
                                     <span class="mzp-listing-price">
-                                        <t t-if="listing.pricing_type == 'free'">Free</t>
-                                        <t t-elif="listing.pricing_type == 'negotiable'">Negotiable</t>
-                                        <t t-elif="listing.pricing_type == 'from'">From <t t-esc="'%.0f' % (listing.price or 0)"/></t>
+                                        <t t-if="listing.price_type == 'free'">Free</t>
+                                        <t t-elif="listing.price_type == 'negotiable'">Negotiable</t>
+                                        <t t-elif="listing.price_type == 'from'">From <t t-esc="'%.0f' % (listing.price or 0)"/></t>
                                         <t t-else=""><t t-esc="'%.0f' % (listing.price or 0)"/></t>
                                     </span>
                                     <span class="mzp-listing-company">
