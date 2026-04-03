@@ -19,11 +19,11 @@
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) entry.target.classList.add('show');
+      if (entry.isIntersecting) { entry.target.classList.add('in-view'); entry.target.classList.add('show'); }
     });
   }, { threshold: 0.16 });
 
-  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+  document.querySelectorAll('.reveal, .reveal-slow, .reveal-fast, .slide-in-left, .slide-in-right, .scale-in, .observe').forEach((el) => observer.observe(el));
 
   const form = document.querySelector('[data-contact-form]');
   if (form) {
