@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_portal_routing_res_users_analyst,res.users (portal read),base.model_res_users,mumtaz_core.group_mumtaz_analyst,1,0,0,0

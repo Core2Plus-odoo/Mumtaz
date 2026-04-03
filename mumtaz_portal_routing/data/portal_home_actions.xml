@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Portal Home Actions
+        ===================
+        ir.actions.act_url records that serve as home actions for each portal.
+
+        These are referenced from the portal templates so that backend links
+        (e.g. "Open in Odoo Backend") always point to the right starting
+        view for each portal.
+
+        Backend users (admin, ERP, ZAKI) are redirected to their Odoo
+        backend home action; SME/marketplace users stay in the website portal.
+    -->
+
+    <!-- Admin Control Plane backend home -->
+    <record id="action_portal_admin_backend_home" model="ir.actions.act_url">
+        <field name="name">Admin Control Plane Home</field>
+        <field name="url">/web#action=mumtaz_tenant_manager.action_tenant_list</field>
+        <field name="target">self</field>
+    </record>
+
+    <!-- ERP Portal backend home — CRM pipeline -->
+    <record id="action_portal_erp_backend_home" model="ir.actions.act_url">
+        <field name="name">ERP Portal Home</field>
+        <field name="url">/web#action=crm.crm_lead_all_leads_act</field>
+        <field name="target">self</field>
+    </record>
+
+    <!-- ZAKI AI Portal backend home — CFO workspace list -->
+    <record id="action_portal_zaki_backend_home" model="ir.actions.act_url">
+        <field name="name">ZAKI AI Portal Home</field>
+        <field name="url">/web#action=mumtaz_cfo_base.action_cfo_workspace</field>
+        <field name="target">self</field>
+    </record>
+
+    <!-- Marketplace portal website home -->
+    <record id="action_portal_marketplace_home" model="ir.actions.act_url">
+        <field name="name">Marketplace Portal Home</field>
+        <field name="url">/mumtaz/portal/marketplace</field>
+        <field name="target">self</field>
+    </record>
+
+    <!-- Generic portal router (used as fallback) -->
+    <record id="action_portal_home_redirect" model="ir.actions.act_url">
+        <field name="name">Mumtaz Portal Home</field>
+        <field name="url">/mumtaz/portal/home</field>
+        <field name="target">self</field>
+    </record>
+
+</odoo>

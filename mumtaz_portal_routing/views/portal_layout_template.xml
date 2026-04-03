@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Shared Portal Layout
+        ====================
+        Base template used by all four portal home pages.
+        Provides:
+          - Sticky top navigation bar with portal identity + switcher
+          - Consistent header / stat cards / quick-action patterns
+          - Responsive CSS grid via assets_frontend CSS
+    -->
+    <template id="portal_base_layout" name="Mumtaz Portal Base Layout">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+
+            <!-- Portal navbar -->
+            <nav class="mzp-navbar">
+                <div class="mzp-navbar-brand">
+                    <span class="mzp-logo">ممتاز</span>
+                    <span class="mzp-portal-label">
+                        <t t-esc="portal_label or 'Mumtaz'"/>
+                    </span>
+                </div>
+
+                <div class="mzp-navbar-right">
+                    <!-- Portal switcher (shown when user has multiple portals) -->
+                    <t t-if="accessible_portals and len(accessible_portals) &gt; 1">
+                        <div class="mzp-switcher">
+                            <button class="mzp-switcher-btn" onclick="this.nextElementSibling.classList.toggle('open')">
+                                ⊞ Switch Portal
+                            </button>
+                            <div class="mzp-switcher-dropdown">
+                                <t t-foreach="accessible_portals" t-as="p">
+                                    <a t-att-href="p['url']" class="mzp-switcher-item">
+                                        <t t-esc="p['label']"/>
+                                    </a>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Odoo backend link (backend-facing portals) -->
+                    <t t-if="portal_type in ['admin', 'erp', 'zaki']">
+                        <a href="/web" class="mzp-btn mzp-btn-ghost">
+                            ⬛ Odoo Backend
+                        </a>
+                    </t>
+
+                    <!-- User info -->
+                    <div class="mzp-user-chip">
+                        <span class="mzp-user-avatar">
+                            <t t-esc="(user.name or 'U')[0].upper()"/>
+                        </span>
+                        <span class="mzp-user-name">
+                            <t t-esc="user.name"/>
+                        </span>
+                        <a href="/web/session/logout" class="mzp-logout">↩</a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Page content slot -->
+            <main class="mzp-main">
+                <t t-raw="0"/>
+            </main>
+        </t>
+    </template>
+
+</odoo>

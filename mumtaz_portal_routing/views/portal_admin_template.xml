@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_admin_home" name="Mumtaz Admin Control Plane">
+        <t t-call="mumtaz_portal_routing.portal_base_layout">
+
+            <!-- Page header -->
+            <div class="mzp-page-header mzp-header-admin">
+                <div class="mzp-page-header-inner">
+                    <div>
+                        <h1 class="mzp-page-title">Admin Control Plane</h1>
+                        <p class="mzp-page-subtitle">
+                            Tenant management, provisioning, and platform configuration
+                        </p>
+                    </div>
+                    <div class="mzp-header-actions">
+                        <a href="/web#action=mumtaz_tenant_manager.action_tenant_provision_wizard"
+                           class="mzp-btn mzp-btn-primary">
+                            + New Tenant
+                        </a>
+                        <a href="/web" class="mzp-btn mzp-btn-ghost">
+                            Open Backend
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="mzp-section">
+                <div class="mzp-stat-grid mzp-stat-grid-4">
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_total"/>
+                        </div>
+                        <div class="mzp-stat-label">Total Tenants</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-success">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_active"/>
+                        </div>
+                        <div class="mzp-stat-label">Active</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-warning">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_prov"/>
+                        </div>
+                        <div class="mzp-stat-label">Provisioning</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-danger">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_susp"/>
+                        </div>
+                        <div class="mzp-stat-label">Suspended</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Quick Actions</h2>
+                <div class="mzp-quick-actions">
+                    <a href="/web#action=mumtaz_tenant_manager.action_tenant_list"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🏢</div>
+                        <div class="mzp-action-label">All Tenants</div>
+                    </a>
+                    <a href="/web#action=mumtaz_tenant_manager.action_module_bundle_list"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📦</div>
+                        <div class="mzp-action-label">Module Bundles
+                            <span class="mzp-action-badge">
+                                <t t-esc="bundle_count"/>
+                            </span>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_core.action_mumtaz_core_settings"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">⚙️</div>
+                        <div class="mzp-action-label">Platform Settings</div>
+                    </a>
+                    <a href="/web#action=mumtaz_core.action_mumtaz_core_log"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📋</div>
+                        <div class="mzp-action-label">Audit Logs</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent tenants table -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Recent Tenants</h2>
+                <t t-if="recent_tenants">
+                    <div class="mzp-table-wrapper">
+                        <table class="mzp-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Subdomain</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="recent_tenants" t-as="tenant">
+                                    <tr>
+                                        <td class="mzp-td-primary">
+                                            <t t-esc="tenant.name"/>
+                                        </td>
+                                        <td>
+                                            <code><t t-esc="tenant.code"/></code>
+                                        </td>
+                                        <td>
+                                            <t t-esc="tenant.subdomain or '—'"/>
+                                        </td>
+                                        <td>
+                                            <span t-att-class="'mzp-badge mzp-badge-' + tenant.state">
+                                                <t t-esc="tenant.state"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <t t-esc="tenant.create_date" t-options='{"widget": "date"}'/>
+                                        </td>
+                                        <td>
+                                            <a t-att-href="'/web#id=' + str(tenant.id) + '&amp;model=mumtaz.tenant&amp;view_type=form'"
+                                               class="mzp-table-action">
+                                                View →
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="mzp-empty-state">
+                        <p>No tenants yet. <a href="/web#action=mumtaz_tenant_manager.action_tenant_provision_wizard">Provision your first tenant</a>.</p>
+                    </div>
+                </t>
+            </div>
+
+        </t>
+    </template>
+</odoo>

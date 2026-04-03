@@ -1,0 +1,222 @@
+name: Mumtaz CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────
+  # 1. Manifest validation
+  # Parses every __manifest__.py and checks structural integrity.
+  # ────────────────────────────────────────────────────────────────────
+  manifest-lint:
+    name: Validate Module Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate __manifest__.py files
+        run: |
+          import ast, sys, pathlib
+
+          required_keys = {"name", "version", "depends", "license"}
+          errors = []
+
+          for path in pathlib.Path(".").glob("mumtaz_*/__manifest__.py"):
+              try:
+                  tree = ast.parse(path.read_text())
+                  # The manifest must be a single dict literal at module level
+                  if not (tree.body and isinstance(tree.body[0], ast.Expr)
+                          and isinstance(tree.body[0].value, ast.Dict)):
+                      errors.append(f"{path}: not a plain dict literal")
+                      continue
+                  node = tree.body[0].value
+                  keys = {
+                      k.s if isinstance(k, ast.Constant) else None
+                      for k in node.keys
+                  }
+                  missing = required_keys - keys
+                  if missing:
+                      errors.append(f"{path}: missing keys {missing}")
+              except SyntaxError as e:
+                  errors.append(f"{path}: syntax error — {e}")
+
+          if errors:
+              print("Manifest errors found:")
+              for e in errors:
+                  print(" ✗", e)
+              sys.exit(1)
+
+          print(f"All {len(list(pathlib.Path('.').glob('mumtaz_*/__manifest__.py')))} manifests valid.")
+        shell: python
+
+  # ────────────────────────────────────────────────────────────────────
+  # 2. Python lint
+  # ────────────────────────────────────────────────────────────────────
+  python-lint:
+    name: Python Lint (flake8 + pyupgrade)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: pip install flake8 flake8-bugbear
+
+      - name: flake8
+        run: |
+          flake8 mumtaz_*/ scrapers/ \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503,E501 \
+            --exclude=**/migrations/**,**/__pycache__/**,**/static/**
+
+  # ────────────────────────────────────────────────────────────────────
+  # 3. Security scan
+  # Checks for hardcoded secrets and known-vulnerable patterns.
+  # ────────────────────────────────────────────────────────────────────
+  security-scan:
+    name: Security Scan (bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Run bandit
+        run: |
+          bandit -r mumtaz_*/ scrapers/ \
+            --severity-level medium \
+            --confidence-level medium \
+            --skip B101,B311,B603,B607 \
+            -f txt
+
+  # ────────────────────────────────────────────────────────────────────
+  # 4. XML validation
+  # Ensures all Odoo XML data files are well-formed.
+  # ────────────────────────────────────────────────────────────────────
+  xml-lint:
+    name: Validate XML Data Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate XML
+        run: |
+          set -e
+          errors=0
+          while IFS= read -r -d '' f; do
+            if ! xmllint --noout "$f" 2>/dev/null; then
+              echo "✗ Invalid XML: $f"
+              errors=$((errors + 1))
+            fi
+          done < <(find mumtaz_*/ -name "*.xml" -print0)
+
+          if [ "$errors" -gt 0 ]; then
+            echo "Found $errors XML errors."
+            exit 1
+          fi
+          echo "All XML files valid."
+
+  # ────────────────────────────────────────────────────────────────────
+  # 5. Module dependency audit
+  # Verifies every module listed in 'depends' actually exists locally
+  # or is a known Odoo/OCA standard module.
+  # ────────────────────────────────────────────────────────────────────
+  dependency-audit:
+    name: Module Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Audit inter-module dependencies
+        run: |
+          import ast, pathlib, sys
+
+          # Modules that exist in this repo
+          local_modules = {
+              p.parent.name
+              for p in pathlib.Path(".").glob("mumtaz_*/__manifest__.py")
+          }
+
+          # Known Odoo core / OCA modules (non-exhaustive whitelist)
+          KNOWN_EXTERNAL = {
+              "base", "mail", "web", "website", "account", "crm", "sale",
+              "purchase", "stock", "hr", "project", "contacts",
+              "base_setup", "portal", "utm", "auth_signup",
+          }
+
+          errors = []
+          for path in pathlib.Path(".").glob("mumtaz_*/__manifest__.py"):
+              module = path.parent.name
+              tree = ast.parse(path.read_text())
+              node = tree.body[0].value
+              deps = []
+              for k, v in zip(node.keys, node.values):
+                  if isinstance(k, ast.Constant) and k.s == "depends":
+                      if isinstance(v, ast.List):
+                          deps = [
+                              el.s for el in v.elts
+                              if isinstance(el, ast.Constant)
+                          ]
+              for dep in deps:
+                  if dep not in local_modules and dep not in KNOWN_EXTERNAL:
+                      errors.append(
+                          f"{module}: unknown dependency '{dep}'"
+                          " (not in repo, not in whitelist)"
+                      )
+
+          if errors:
+              print("Dependency issues:")
+              for e in errors:
+                  print(" ✗", e)
+              sys.exit(1)
+
+          print("All dependencies look clean.")
+        shell: python
+
+  # ────────────────────────────────────────────────────────────────────
+  # 6. Deployment dry-run (Hostinger website)
+  # Validates that the website folder has the required entry points.
+  # ────────────────────────────────────────────────────────────────────
+  website-check:
+    name: Website Deployment Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required website files
+        run: |
+          set -e
+          required=(
+            "website/index.html"
+            "website/assets/css/style.css"
+            "website/assets/js/main.js"
+          )
+          errors=0
+          for f in "${required[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "✗ Missing: $f"
+              errors=$((errors+1))
+            else
+              echo "✓ Found: $f"
+            fi
+          done
+          if [ "$errors" -gt 0 ]; then exit 1; fi
