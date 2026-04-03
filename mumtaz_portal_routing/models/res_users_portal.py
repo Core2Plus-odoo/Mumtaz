@@ -63,7 +63,6 @@ class ResUsersPortal(models.Model):
         ),
     )
 
-    @api.depends('groups_id')
     def _compute_mumtaz_portal_type(self):
         for user in self:
             user.mumtaz_portal_type = self._detect_portal_type(user)
