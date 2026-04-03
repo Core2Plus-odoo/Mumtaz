@@ -96,21 +96,15 @@
         <field name="arch" type="xml">
             <search string="Marketplace Listings">
                 <field name="name"/>
-                <field name="category_id"/>
-                <field name="tag_ids"/>
                 <filter string="Published" name="published"
                         domain="[('state','=','published')]"/>
-                <filter string="Products" name="products"
-                        domain="[('listing_type','=','product')]"/>
-                <filter string="Services" name="services"
-                        domain="[('listing_type','=','service')]"/>
+                <filter string="Draft" name="draft"
+                        domain="[('state','=','draft')]"/>
                 <group expand="0" string="Group By">
                     <filter string="Category" name="group_category"
                             context="{'group_by': 'category_id'}"/>
                     <filter string="Type" name="group_type"
                             context="{'group_by': 'listing_type'}"/>
-                    <filter string="State" name="group_state"
-                            context="{'group_by': 'state'}"/>
                 </group>
             </search>
         </field>
