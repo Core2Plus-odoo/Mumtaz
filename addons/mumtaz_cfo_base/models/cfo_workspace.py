@@ -52,6 +52,22 @@ class MumtazCFOWorkspace(models.Model):
     category_count = fields.Integer(compute="_compute_category_count", string="Category Count")
     erp_feature_enabled = fields.Boolean(compute="_compute_erp_feature_access")
     erp_feature_note = fields.Char(compute="_compute_erp_feature_access")
+    subscription_plan_name = fields.Char(compute="_compute_subscription_visibility")
+    subscription_status = fields.Selection(
+        [
+            ("trial", "Trial"),
+            ("active", "Active"),
+            ("past_due", "Past Due"),
+            ("grace", "Grace"),
+            ("suspended", "Suspended"),
+            ("cancelled", "Cancelled"),
+            ("expired", "Expired"),
+        ],
+        compute="_compute_subscription_visibility",
+    )
+    subscription_renewal_date = fields.Date(compute="_compute_subscription_visibility")
+    subscription_grace_days_remaining = fields.Integer(compute="_compute_subscription_visibility")
+    subscription_quota_summary = fields.Char(compute="_compute_subscription_visibility")
 
     _sql_constraints = [
         (
@@ -87,6 +103,56 @@ class MumtazCFOWorkspace(models.Model):
             rec.erp_feature_note = False if rec.erp_feature_enabled else (
                 access.get("reason") or "ERP core access is disabled for this tenant."
             )
+
+    @api.depends("tenant_id")
+    def _compute_subscription_visibility(self):
+        today = fields.Date.context_today(self)
+        for rec in self:
+            rec.subscription_plan_name = False
+            rec.subscription_status = False
+            rec.subscription_renewal_date = False
+            rec.subscription_grace_days_remaining = 0
+            rec.subscription_quota_summary = "No quota telemetry"
+
+            if not rec.tenant_id or "mumtaz.subscription" not in self.env:
+                continue
+
+            subscription = self.env["mumtaz.subscription"].sudo().search(
+                [("tenant_id", "=", rec.tenant_id.id), ("is_current", "=", True)],
+                order="id desc",
+                limit=1,
+            )
+            if not subscription:
+                continue
+
+            rec.subscription_plan_name = subscription.plan_id.name
+            rec.subscription_status = subscription.status
+            rec.subscription_renewal_date = subscription.renewal_date
+            if subscription.grace_until:
+                rec.subscription_grace_days_remaining = (subscription.grace_until - today).days
+
+            metrics = self.env["mumtaz.usage.metric"].sudo().search(
+                [
+                    ("tenant_id", "=", rec.tenant_id.id),
+                    ("period_start", "<=", today),
+                    ("period_end", ">=", today),
+                    ("value_limit", ">", 0),
+                ]
+            )
+            if metrics:
+                rec.subscription_quota_summary = f"Peak utilization {max(metrics.mapped('utilization_pct') or [0.0]):.1f}%"
+
+    def action_open_subscription_status(self):
+        self.ensure_one()
+        if "mumtaz.subscription" not in self.env:
+            return False
+        return {
+            "name": "Subscription",
+            "type": "ir.actions.act_window",
+            "res_model": "mumtaz.subscription",
+            "view_mode": "tree,form",
+            "domain": [("tenant_id", "=", self.tenant_id.id)],
+        }
 
     @api.model_create_multi
     def create(self, vals_list):
