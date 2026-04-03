@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_mumtaz_api_keys" model="ir.actions.act_window">
+        <field name="name">API Keys</field>
+        <field name="res_model">mumtaz.api.key</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_mumtaz_api_usage_logs" model="ir.actions.act_window">
+        <field name="name">API Usage Logs</field>
+        <field name="res_model">mumtaz.api.usage.log</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_mumtaz_api_root" name="API Gateway" parent="mumtaz_tenant_manager.menu_mumtaz_platform_root" sequence="90"/>
+    <menuitem id="menu_mumtaz_api_keys" name="API Keys" parent="menu_mumtaz_api_root" action="action_mumtaz_api_keys"/>
+    <menuitem id="menu_mumtaz_api_logs" name="Usage Logs" parent="menu_mumtaz_api_root" action="action_mumtaz_api_usage_logs"/>
+</odoo>
