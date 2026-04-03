@@ -1,0 +1,26 @@
+{
+    "name": "Mumtaz Control Plane",
+    "summary": "Control-plane models and feature resolution engine for tenants",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": [
+        "base",
+        "mail",
+        "mumtaz_tenant_manager",
+    ],
+    "data": [
+        "security/security.xml",
+        "security/ir.model.access.csv",
+        "views/plan_views.xml",
+        "views/feature_views.xml",
+        "views/subscription_views.xml",
+        "views/tenant_feature_views.xml",
+        "views/usage_metric_views.xml",
+        "views/menus.xml",
+    ],
+    "installable": True,
+    "application": True,
+    "auto_install": False,
+}

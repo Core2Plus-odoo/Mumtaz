@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_usage_metric_tree" model="ir.ui.view">
+            <field name="name">mumtaz.usage.metric.tree</field>
+            <field name="model">mumtaz.usage.metric</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="tenant_id"/>
+                    <field name="feature_id"/>
+                    <field name="metric_code"/>
+                    <field name="period_start"/>
+                    <field name="period_end"/>
+                    <field name="value_used"/>
+                    <field name="value_limit"/>
+                    <field name="utilization_pct"/>
+                    <field name="source_system"/>
+                    <field name="last_sync_at"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_usage_metric_search" model="ir.ui.view">
+            <field name="name">mumtaz.usage.metric.search</field>
+            <field name="model">mumtaz.usage.metric</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="tenant_id"/>
+                    <field name="feature_id"/>
+                    <field name="metric_code"/>
+                    <field name="source_system"/>
+                    <filter string="Over 80%" domain="[('utilization_pct','&gt;=',80)]"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_usage_metric_form" model="ir.ui.view">
+            <field name="name">mumtaz.usage.metric.form</field>
+            <field name="model">mumtaz.usage.metric</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="tenant_id"/>
+                                <field name="feature_id"/>
+                                <field name="metric_code"/>
+                                <field name="source_system"/>
+                            </group>
+                            <group>
+                                <field name="period_start"/>
+                                <field name="period_end"/>
+                                <field name="last_sync_at"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="value_used"/>
+                            <field name="value_limit"/>
+                            <field name="utilization_pct" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_usage_metric" model="ir.actions.act_window">
+            <field name="name">Usage Metrics</field>
+            <field name="res_model">mumtaz.usage.metric</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_mumtaz_usage_metric_search"/>
+        </record>
+    </data>
+</odoo>
