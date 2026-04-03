@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_erp_home" name="Mumtaz ERP Portal">
+        <t t-call="mumtaz_portal_routing.portal_base_layout">
+
+            <!-- Page header -->
+            <div class="mzp-page-header mzp-header-erp">
+                <div class="mzp-page-header-inner">
+                    <div>
+                        <h1 class="mzp-page-title">ERP Portal</h1>
+                        <p class="mzp-page-subtitle">
+                            CRM pipeline, lead intelligence, and marketplace operations
+                        </p>
+                    </div>
+                    <div class="mzp-header-actions">
+                        <a href="/web#action=crm.crm_lead_all_leads_act"
+                           class="mzp-btn mzp-btn-primary">
+                            CRM Pipeline
+                        </a>
+                        <a href="/web" class="mzp-btn mzp-btn-ghost">
+                            Open Backend
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="mzp-section">
+                <div class="mzp-stat-grid mzp-stat-grid-4">
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="leads_total"/>
+                        </div>
+                        <div class="mzp-stat-label">Total Leads</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-warning">
+                        <div class="mzp-stat-value">
+                            <t t-esc="opps_open"/>
+                        </div>
+                        <div class="mzp-stat-label">Open Opportunities</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-success">
+                        <div class="mzp-stat-value">
+                            <t t-esc="opps_won"/>
+                        </div>
+                        <div class="mzp-stat-label">Won</div>
+                    </div>
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="listing_count"/>
+                        </div>
+                        <div class="mzp-stat-label">Active Listings</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Quick Actions</h2>
+                <div class="mzp-quick-actions">
+                    <a href="/web#action=crm.crm_lead_all_leads_act"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🎯</div>
+                        <div class="mzp-action-label">CRM Leads</div>
+                    </a>
+                    <a href="/web#action=crm.crm_lead_opportunities_tree_view"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">💼</div>
+                        <div class="mzp-action-label">Opportunities</div>
+                    </a>
+                    <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🔍</div>
+                        <div class="mzp-action-label">Lead Scraper</div>
+                    </a>
+                    <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📣</div>
+                        <div class="mzp-action-label">Nurture Campaigns</div>
+                    </a>
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🛒</div>
+                        <div class="mzp-action-label">Marketplace</div>
+                    </a>
+                    <a href="/web#model=mumtaz.lead.scraper.job&amp;view_type=list"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📊</div>
+                        <div class="mzp-action-label">Scraper Jobs</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Lead scraper status -->
+            <t t-if="last_scraper_job">
+                <div class="mzp-section">
+                    <h2 class="mzp-section-title">Last Scraper Run</h2>
+                    <div class="mzp-info-card">
+                        <div class="mzp-info-row">
+                            <span class="mzp-info-key">Job</span>
+                            <span class="mzp-info-val">
+                                <t t-esc="last_scraper_job.name or last_scraper_job.source_id.name or '—'"/>
+                            </span>
+                        </div>
+                        <div class="mzp-info-row">
+                            <span class="mzp-info-key">Status</span>
+                            <span t-att-class="'mzp-badge mzp-badge-' + last_scraper_job.state">
+                                <t t-esc="last_scraper_job.state"/>
+                            </span>
+                        </div>
+                        <div class="mzp-info-row">
+                            <span class="mzp-info-key">Records Extracted</span>
+                            <span class="mzp-info-val">
+                                <t t-esc="last_scraper_job.record_count or 0"/>
+                            </span>
+                        </div>
+                        <div class="mzp-info-row">
+                            <span class="mzp-info-key">Run At</span>
+                            <span class="mzp-info-val">
+                                <t t-esc="last_scraper_job.create_date" t-options='{"widget": "datetime"}'/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Recent leads table -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Recent Leads</h2>
+                <t t-if="recent_leads">
+                    <div class="mzp-table-wrapper">
+                        <table class="mzp-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Company</th>
+                                    <th>Email</th>
+                                    <th>Stage</th>
+                                    <th>Created</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="recent_leads" t-as="lead">
+                                    <tr>
+                                        <td class="mzp-td-primary">
+                                            <t t-esc="lead.name"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="lead.partner_name or '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="lead.email_from or '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="lead.stage_id.name or '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="lead.create_date" t-options='{"widget": "date"}'/>
+                                        </td>
+                                        <td>
+                                            <a t-att-href="'/web#id=' + str(lead.id) + '&amp;model=crm.lead&amp;view_type=form'"
+                                               class="mzp-table-action">
+                                                View →
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="mzp-empty-state">
+                        <p>No leads yet. <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source">Run a lead scraper</a> or add leads manually.</p>
+                    </div>
+                </t>
+            </div>
+
+        </t>
+    </template>
+</odoo>

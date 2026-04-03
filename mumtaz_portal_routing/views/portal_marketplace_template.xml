@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_marketplace_home" name="Mumtaz Marketplace Portal">
+        <t t-call="mumtaz_portal_routing.portal_base_layout">
+
+            <!-- Page header -->
+            <div class="mzp-page-header mzp-header-marketplace">
+                <div class="mzp-page-header-inner">
+                    <div>
+                        <h1 class="mzp-page-title">Marketplace</h1>
+                        <p class="mzp-page-subtitle">
+                            Discover products, services, and partnership opportunities across the SME network
+                        </p>
+                    </div>
+                    <div class="mzp-header-actions">
+                        <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing&amp;view_type=form"
+                           class="mzp-btn mzp-btn-primary">
+                            + Post Listing
+                        </a>
+                        <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing"
+                           class="mzp-btn mzp-btn-ghost">
+                            Browse All
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="mzp-section">
+                <div class="mzp-stat-grid mzp-stat-grid-3">
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="total_listings"/>
+                        </div>
+                        <div class="mzp-stat-label">Active Listings</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-primary">
+                        <div class="mzp-stat-value">
+                            <t t-esc="my_listings"/>
+                        </div>
+                        <div class="mzp-stat-label">My Listings</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-warning">
+                        <div class="mzp-stat-value">
+                            <t t-esc="inquiry_count"/>
+                        </div>
+                        <div class="mzp-stat-label">Inquiries Received</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Quick Actions</h2>
+                <div class="mzp-quick-actions">
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🛒</div>
+                        <div class="mzp-action-label">Browse Listings</div>
+                    </a>
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_my_listing"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📋</div>
+                        <div class="mzp-action-label">My Listings</div>
+                    </a>
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_inquiry"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">💬</div>
+                        <div class="mzp-action-label">
+                            Inquiries
+                            <t t-if="inquiry_count &gt; 0">
+                                <span class="mzp-action-badge mzp-badge-warning">
+                                    <t t-esc="inquiry_count"/>
+                                </span>
+                            </t>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing&amp;view_type=form"
+                       class="mzp-action-card mzp-action-featured">
+                        <div class="mzp-action-icon">✏️</div>
+                        <div class="mzp-action-label">Post New Listing</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Featured listings -->
+            <div class="mzp-section">
+                <div class="mzp-section-header">
+                    <h2 class="mzp-section-title">Featured Listings</h2>
+                    <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing"
+                       class="mzp-section-link">View all →</a>
+                </div>
+                <t t-if="featured_listings">
+                    <div class="mzp-listing-grid">
+                        <t t-foreach="featured_listings" t-as="listing">
+                            <a t-att-href="'/web#id=' + str(listing.id) + '&amp;model=mumtaz.marketplace.listing&amp;view_type=form'"
+                               class="mzp-listing-card">
+                                <div class="mzp-listing-header">
+                                    <span t-att-class="'mzp-badge mzp-badge-' + listing.state">
+                                        <t t-esc="listing.state"/>
+                                    </span>
+                                    <t t-if="listing.category_id">
+                                        <span class="mzp-listing-category">
+                                            <t t-esc="listing.category_id.name"/>
+                                        </span>
+                                    </t>
+                                </div>
+                                <h3 class="mzp-listing-title">
+                                    <t t-esc="listing.name"/>
+                                </h3>
+                                <t t-if="listing.short_summary">
+                                    <p class="mzp-listing-summary">
+                                        <t t-esc="listing.short_summary"/>
+                                    </p>
+                                </t>
+                                <div class="mzp-listing-footer">
+                                    <span class="mzp-listing-price">
+                                        <t t-if="listing.pricing_type == 'free'">Free</t>
+                                        <t t-elif="listing.pricing_type == 'negotiable'">Negotiable</t>
+                                        <t t-elif="listing.pricing_type == 'from'">From <t t-esc="'%.0f' % (listing.price or 0)"/></t>
+                                        <t t-else=""><t t-esc="'%.0f' % (listing.price or 0)"/></t>
+                                    </span>
+                                    <span class="mzp-listing-company">
+                                        <t t-esc="listing.company_id.name"/>
+                                    </span>
+                                </div>
+                            </a>
+                        </t>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="mzp-empty-state">
+                        <div class="mzp-empty-icon">🛒</div>
+                        <p>No listings yet. Be the first to post a product or service.</p>
+                        <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_listing&amp;view_type=form"
+                           class="mzp-btn mzp-btn-primary">
+                            Post a Listing
+                        </a>
+                    </div>
+                </t>
+            </div>
+
+        </t>
+    </template>
+</odoo>
