@@ -1,0 +1,54 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy'
+        required: true
+        default: 'latest'
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.PROD_SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+
+      - name: Backup before deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} \
+            'cd /opt/mumtaz && bash scripts/backup.sh'
+
+      - name: Deploy to Production
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} \
+            'cd /opt/mumtaz && bash scripts/deploy-production.sh ${{ github.event.inputs.version }}'
+
+      - name: Health Check
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} \
+            'cd /opt/mumtaz && bash scripts/health-check.sh'
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} \
+            'cd /opt/mumtaz && bash scripts/rollback.sh'
+
+      - name: Slack Notification - Production
+        if: ${{ always() && secrets.SLACK_WEBHOOK != '' }}
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {"text": "Production deployment ${{ job.status }} for ${{ github.repository }} (version=${{ github.event.inputs.version }})"}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

@@ -2,7 +2,8 @@
 """Quick local check that Mumtaz addons are structurally discoverable by Odoo."""
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
+ADDONS_ROOT = ROOT / "addons"
 
 # Ordered by dependency chain — core first, then dependent modules
 MODULES = [
@@ -22,11 +23,16 @@ MODULES = [
     "mumtaz_cfo_transactions",
     "mumtaz_cfo_toolkit",
     "mumtaz_super_toolkit",
+    # Growth / marketplace / tenant layer
+    "mumtaz_lead_scraper",
+    "mumtaz_lead_nurture",
+    "mumtaz_marketplace",
+    "mumtaz_tenant_manager",
 ]
 
 errors = []
 for mod in MODULES:
-    mod_path = ROOT / mod
+    mod_path = ADDONS_ROOT / mod
     if not mod_path.is_dir():
         errors.append(f"Missing module directory: {mod_path}")
         continue

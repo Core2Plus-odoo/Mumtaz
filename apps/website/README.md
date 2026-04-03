@@ -14,7 +14,7 @@ It is designed for direct deployment to **Hostinger** with **no build step** and
 ## Folder Structure
 
 ```text
-website/
+apps/website/
   index.html
   platform.html
   erp.html
