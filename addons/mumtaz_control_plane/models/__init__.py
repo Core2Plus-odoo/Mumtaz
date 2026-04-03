@@ -10,3 +10,6 @@ from . import subscription_lifecycle_log
 from . import subscription_notification_log
 from . import subscription_notification_service
 from . import tenant_commercial
+from . import commercial_operation
+from . import billing_record
+from . import commercial_event_log

@@ -61,5 +61,48 @@
                   parent="menu_mumtaz_control_plane_root"
                   action="action_mumtaz_subscription_notification_log"
                   sequence="75"/>
+
+
+        <menuitem id="menu_mumtaz_control_plane_commercial_ops"
+                  name="Commercial Operations"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_commercial_operation"
+                  sequence="80"/>
+
+        <menuitem id="menu_mumtaz_control_plane_pending_renewals"
+                  name="Pending Renewals"
+                  parent="menu_mumtaz_control_plane_commercial_ops"
+                  action="action_mumtaz_pending_renewals"
+                  sequence="81"/>
+
+        <menuitem id="menu_mumtaz_control_plane_pending_upgrades"
+                  name="Pending Upgrades"
+                  parent="menu_mumtaz_control_plane_commercial_ops"
+                  action="action_mumtaz_pending_upgrades"
+                  sequence="82"/>
+
+        <menuitem id="menu_mumtaz_control_plane_pending_grace"
+                  name="Pending Grace Actions"
+                  parent="menu_mumtaz_control_plane_commercial_ops"
+                  action="action_mumtaz_pending_grace_actions"
+                  sequence="83"/>
+
+        <menuitem id="menu_mumtaz_control_plane_pending_reactivations"
+                  name="Pending Reactivations"
+                  parent="menu_mumtaz_control_plane_commercial_ops"
+                  action="action_mumtaz_pending_reactivations"
+                  sequence="84"/>
+
+        <menuitem id="menu_mumtaz_control_plane_billing_records"
+                  name="Billing Records"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_billing_records"
+                  sequence="85"/>
+
+        <menuitem id="menu_mumtaz_control_plane_commercial_history"
+                  name="Commercial History"
+                  parent="menu_mumtaz_control_plane_root"
+                  action="action_mumtaz_commercial_event_logs"
+                  sequence="86"/>
     </data>
 </odoo>

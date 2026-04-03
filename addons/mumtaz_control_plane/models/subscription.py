@@ -251,22 +251,58 @@ class MumtazSubscription(models.Model):
         return action
 
     def action_request_renewal(self):
+        Operation = self.env["mumtaz.commercial.operation"]
         for rec in self:
-            increment = {"monthly": 1, "quarterly": 3, "yearly": 12}.get(rec.billing_cycle, 1)
-            base_date = rec.renewal_date or fields.Date.context_today(self)
-            rec.renewal_date = base_date + relativedelta(months=increment)
-            rec.payment_status = "pending"
-            rec.tenant_id.message_post(
-                body=_(
-                    "Renewal requested for subscription %(sub)s. Next renewal date moved to %(date)s.",
-                    sub=rec.display_name,
-                    date=rec.renewal_date,
-                )
+            op = Operation.create(
+                {
+                    "operation_type": "renewal",
+                    "tenant_id": rec.tenant_id.id,
+                    "subscription_id": rec.id,
+                    "status": "requested",
+                    "commercial_notes": _("Renewal requested from subscription CTA."),
+                }
             )
-            self.env["mumtaz.subscription.notification.service"].notify_event(
-                rec, "renewal_requested", source="manual"
-            )
+            rec.tenant_id.message_post(body=_("Renewal request %(op)s created for %(sub)s.", op=op.name, sub=rec.display_name))
+            self.env["mumtaz.subscription.notification.service"].notify_event(rec, "renewal_requested", source="manual")
         return True
+
+    def action_request_reactivation(self):
+        Operation = self.env["mumtaz.commercial.operation"]
+        for rec in self:
+            op = Operation.create(
+                {
+                    "operation_type": "reactivation",
+                    "tenant_id": rec.tenant_id.id,
+                    "subscription_id": rec.id,
+                    "status": "requested",
+                    "commercial_notes": _("Reactivation requested from subscription CTA."),
+                }
+            )
+            rec.tenant_id.message_post(body=_("Reactivation request %(op)s created for %(sub)s.", op=op.name, sub=rec.display_name))
+        return True
+
+    def action_request_grace_extension(self):
+        Operation = self.env["mumtaz.commercial.operation"]
+        for rec in self:
+            op = Operation.create(
+                {
+                    "operation_type": "grace_extension",
+                    "tenant_id": rec.tenant_id.id,
+                    "subscription_id": rec.id,
+                    "status": "requested",
+                    "grace_days_requested": 3,
+                    "commercial_notes": _("Grace extension requested from subscription CTA."),
+                }
+            )
+            rec.tenant_id.message_post(body=_("Grace extension request %(op)s created for %(sub)s.", op=op.name, sub=rec.display_name))
+        return True
+
+    def action_open_commercial_operations(self):
+        self.ensure_one()
+        action = self.env.ref("mumtaz_control_plane.action_mumtaz_commercial_operation").read()[0]
+        action["domain"] = [("subscription_id", "=", self.id)]
+        action["context"] = {"default_subscription_id": self.id, "default_tenant_id": self.tenant_id.id}
+        return action
 
     def action_extend_grace(self):
         for rec in self:
