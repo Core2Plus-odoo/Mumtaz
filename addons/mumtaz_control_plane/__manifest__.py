@@ -18,6 +18,7 @@
         "views/subscription_views.xml",
         "views/tenant_feature_views.xml",
         "views/usage_metric_views.xml",
+        "views/dashboard_views.xml",
         "views/menus.xml",
     ],
     "installable": True,

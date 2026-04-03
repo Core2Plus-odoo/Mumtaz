@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record id="action_mumtaz_control_plane_dashboard" model="ir.actions.act_window">
-            <field name="name">Control Plane Dashboard</field>
-            <field name="res_model">mumtaz.subscription</field>
-            <field name="view_mode">tree,form</field>
-            <field name="help" type="html">
-                <p>Dashboard KPIs will be added in a future phase.</p>
-            </field>
-        </record>
-
         <menuitem id="menu_mumtaz_control_plane_root"
                   name="Mumtaz Control Plane"
                   sequence="3"
