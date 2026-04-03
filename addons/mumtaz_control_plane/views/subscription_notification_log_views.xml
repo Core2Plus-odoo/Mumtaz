@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_subscription_notification_log_tree" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.notification.log.tree</field>
+            <field name="model">mumtaz.subscription.notification.log</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sent_at"/>
+                    <field name="source"/>
+                    <field name="subscription_id"/>
+                    <field name="tenant_id"/>
+                    <field name="event_code"/>
+                    <field name="channel_chatter"/>
+                    <field name="channel_internal"/>
+                    <field name="channel_email"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_subscription_notification_log" model="ir.actions.act_window">
+            <field name="name">Subscription Notifications</field>
+            <field name="res_model">mumtaz.subscription.notification.log</field>
+            <field name="view_mode">tree</field>
+        </record>
+    </data>
+</odoo>

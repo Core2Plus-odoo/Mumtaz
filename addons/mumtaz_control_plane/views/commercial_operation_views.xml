@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_commercial_operation_tree" model="ir.ui.view">
+            <field name="name">mumtaz.commercial.operation.tree</field>
+            <field name="model">mumtaz.commercial.operation</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="requested_on"/>
+                    <field name="operation_type"/>
+                    <field name="tenant_id"/>
+                    <field name="subscription_id"/>
+                    <field name="current_plan_id"/>
+                    <field name="target_plan_id"/>
+                    <field name="status" widget="badge"/>
+                    <field name="requested_by"/>
+                    <field name="approval_user_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_commercial_operation_search" model="ir.ui.view">
+            <field name="name">mumtaz.commercial.operation.search</field>
+            <field name="model">mumtaz.commercial.operation</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="tenant_id"/>
+                    <field name="subscription_id"/>
+                    <field name="operation_type"/>
+                    <field name="status"/>
+                    <filter string="Pending" domain="[('status','in',['requested','under_review','approved','invoiced','paid','pending_activation'])]"/>
+                    <filter string="Renewals" domain="[('operation_type','=','renewal')]"/>
+                    <filter string="Upgrades" domain="[('operation_type','=','upgrade')]"/>
+                    <filter string="Grace" domain="[('operation_type','=','grace_extension')]"/>
+                    <filter string="Reactivations" domain="[('operation_type','=','reactivation')]"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_commercial_operation_form" model="ir.ui.view">
+            <field name="name">mumtaz.commercial.operation.form</field>
+            <field name="model">mumtaz.commercial.operation</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_start_review" type="object" string="Start Review" class="btn-secondary" invisible="status != 'requested'"/>
+                        <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="status not in ('requested','under_review')"/>
+                        <button name="action_deny" type="object" string="Deny" class="btn-secondary" invisible="status in ('denied','activated','cancelled')"/>
+                        <button name="action_create_billing_record" type="object" string="Create Billing" class="btn-secondary" invisible="operation_type not in ('renewal','upgrade') or billing_record_id"/>
+                        <button name="action_mark_paid" type="object" string="Mark Paid" class="btn-secondary" invisible="status not in ('approved','invoiced')"/>
+                        <button name="action_activate" type="object" string="Activate" class="btn-primary" invisible="status not in ('pending_activation','paid','approved')"/>
+                        <button name="action_cancel" type="object" string="Cancel" class="btn-secondary" invisible="status in ('activated','cancelled')"/>
+                        <field name="status" widget="statusbar" statusbar_visible="requested,under_review,approved,invoiced,paid,pending_activation,activated,denied,cancelled"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" readonly="1"/>
+                                <field name="operation_type"/>
+                                <field name="tenant_id"/>
+                                <field name="subscription_id"/>
+                                <field name="current_plan_id"/>
+                                <field name="target_plan_id" invisible="operation_type != 'upgrade'"/>
+                            </group>
+                            <group>
+                                <field name="requested_by" readonly="1"/>
+                                <field name="requested_on" readonly="1"/>
+                                <field name="approval_user_id" readonly="1"/>
+                                <field name="activated_on" readonly="1"/>
+                                <field name="billing_record_id"/>
+                                <field name="grace_days_requested" invisible="operation_type != 'grace_extension'"/>
+                                <field name="grace_days_approved" invisible="operation_type != 'grace_extension'"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="approval_notes"/>
+                            <field name="commercial_notes"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_commercial_operation" model="ir.actions.act_window">
+            <field name="name">Commercial Operations</field>
+            <field name="res_model">mumtaz.commercial.operation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_mumtaz_commercial_operation_search"/>
+        </record>
+
+        <record id="action_mumtaz_pending_renewals" model="ir.actions.act_window">
+            <field name="name">Pending Renewals</field>
+            <field name="res_model">mumtaz.commercial.operation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('operation_type','=','renewal'),('status','in',['requested','under_review','approved','invoiced','paid','pending_activation'])]</field>
+        </record>
+
+        <record id="action_mumtaz_pending_upgrades" model="ir.actions.act_window">
+            <field name="name">Pending Upgrades</field>
+            <field name="res_model">mumtaz.commercial.operation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('operation_type','=','upgrade'),('status','in',['requested','under_review','approved','invoiced','paid','pending_activation'])]</field>
+        </record>
+
+        <record id="action_mumtaz_pending_grace_actions" model="ir.actions.act_window">
+            <field name="name">Pending Grace Actions</field>
+            <field name="res_model">mumtaz.commercial.operation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('operation_type','=','grace_extension'),('status','in',['requested','under_review','approved','pending_activation'])]</field>
+        </record>
+
+        <record id="action_mumtaz_pending_reactivations" model="ir.actions.act_window">
+            <field name="name">Pending Reactivations</field>
+            <field name="res_model">mumtaz.commercial.operation</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('operation_type','=','reactivation'),('status','in',['requested','under_review','approved','pending_activation'])]</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_commercial_event_log_tree" model="ir.ui.view">
+            <field name="name">mumtaz.commercial.event.log.tree</field>
+            <field name="model">mumtaz.commercial.event.log</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="event_at"/>
+                    <field name="event_type"/>
+                    <field name="tenant_id"/>
+                    <field name="subscription_id"/>
+                    <field name="operation_id"/>
+                    <field name="billing_record_id"/>
+                    <field name="from_value"/>
+                    <field name="to_value"/>
+                    <field name="summary"/>
+                    <field name="user_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_commercial_event_logs" model="ir.actions.act_window">
+            <field name="name">Commercial History</field>
+            <field name="res_model">mumtaz.commercial.event.log</field>
+            <field name="view_mode">tree</field>
+        </record>
+    </data>
+</odoo>
