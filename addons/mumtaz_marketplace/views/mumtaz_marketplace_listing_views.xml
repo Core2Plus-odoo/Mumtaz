@@ -100,8 +100,6 @@
                 <field name="tag_ids"/>
                 <filter string="Published" name="published"
                         domain="[('state','=','published')]"/>
-                <filter string="My Listings" name="my_listings"
-                        domain="[('company_id','=',user.company_id.id)]"/>
                 <filter string="Products" name="products"
                         domain="[('listing_type','=','product')]"/>
                 <filter string="Services" name="services"
@@ -134,7 +132,7 @@
         <field name="name">My Listings</field>
         <field name="res_model">mumtaz.marketplace.listing</field>
         <field name="view_mode">list,form</field>
-        <field name="context">{"search_default_my_listings": 1}</field>
+        <field name="domain">[("create_uid","=",uid)]</field>
     </record>
 
 </odoo>
