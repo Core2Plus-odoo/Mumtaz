@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="features" name="Mumtaz — Features">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+            <t t-call="mumtaz_website.website_navbar"/>
+
+            <section class="mzw-page-hero">
+                <div class="mzw-section-inner">
+                    <div class="mzw-section-label">Platform capabilities</div>
+                    <h1 class="mzw-section-title">Everything in one platform</h1>
+                    <p class="mzw-page-hero-sub">
+                        Mumtaz brings together ERP, AI, and marketplace — purpose-built for SMEs
+                        in emerging markets.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ERP features -->
+            <section class="mzw-feature-section">
+                <div class="mzw-section-inner">
+                    <div class="mzw-feature-block">
+                        <div class="mzw-feature-info">
+                            <div class="mzw-feature-tag mzw-tag-erp">ERP &amp; CRM</div>
+                            <h2 class="mzw-feature-title">Intelligent lead generation &amp; nurture</h2>
+                            <p class="mzw-feature-body">
+                                Automatically scrape leads from the web, enrich them with AI,
+                                and run multi-channel nurture campaigns — all from one interface.
+                            </p>
+                            <div class="mzw-feature-points">
+                                <div class="mzw-fp">✓ Web lead scraper with CSS/JSON/API parsing</div>
+                                <div class="mzw-fp">✓ AI-powered lead scoring and qualification</div>
+                                <div class="mzw-fp">✓ Email &amp; WhatsApp nurture sequences</div>
+                                <div class="mzw-fp">✓ Full Odoo CRM integration</div>
+                                <div class="mzw-fp">✓ Campaign analytics and conversion tracking</div>
+                            </div>
+                        </div>
+                        <div class="mzw-feature-visual mzw-fv-erp">
+                            <div class="mzw-stat-demo">
+                                <div class="mzw-demo-row">
+                                    <span class="mzw-demo-icon">🔍</span>
+                                    <span class="mzw-demo-label">Lead sources active</span>
+                                    <span class="mzw-demo-val">12</span>
+                                </div>
+                                <div class="mzw-demo-row">
+                                    <span class="mzw-demo-icon">📡</span>
+                                    <span class="mzw-demo-label">Records extracted</span>
+                                    <span class="mzw-demo-val">3,841</span>
+                                </div>
+                                <div class="mzw-demo-row">
+                                    <span class="mzw-demo-icon">📣</span>
+                                    <span class="mzw-demo-label">Campaigns running</span>
+                                    <span class="mzw-demo-val">5</span>
+                                </div>
+                                <div class="mzw-demo-row mzw-demo-highlight">
+                                    <span class="mzw-demo-icon">🎯</span>
+                                    <span class="mzw-demo-label">Converted this month</span>
+                                    <span class="mzw-demo-val mzw-demo-green">48</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ZAKI features -->
+            <section class="mzw-feature-section mzw-feature-alt">
+                <div class="mzw-section-inner">
+                    <div class="mzw-feature-block mzw-feature-reverse">
+                        <div class="mzw-feature-info">
+                            <div class="mzw-feature-tag mzw-tag-zaki">ZAKI AI CFO</div>
+                            <h2 class="mzw-feature-title">Your AI-powered financial brain</h2>
+                            <p class="mzw-feature-body">
+                                ZAKI is not just a dashboard. It's a conversational AI CFO that
+                                understands your financials and answers questions in plain language.
+                            </p>
+                            <div class="mzw-feature-points">
+                                <div class="mzw-fp">✓ Conversational AI financial queries</div>
+                                <div class="mzw-fp">✓ Real-time transaction tracking &amp; categorization</div>
+                                <div class="mzw-fp">✓ Net position &amp; cash flow analysis</div>
+                                <div class="mzw-fp">✓ Automated review queue for anomalies</div>
+                                <div class="mzw-fp">✓ Supports Claude &amp; OpenAI providers</div>
+                            </div>
+                        </div>
+                        <div class="mzw-feature-visual mzw-fv-zaki">
+                            <div class="mzw-chat-demo">
+                                <div class="mzw-chat-msg mzw-chat-user">
+                                    What's our net position this month?
+                                </div>
+                                <div class="mzw-chat-msg mzw-chat-zaki">
+                                    <strong>ZAKI:</strong> Your net position is
+                                    <span class="mzw-demo-green">+48,200 AED</span> this month.
+                                    Inflows total 92,400 with 44,200 in outflows.
+                                    You have 3 transactions pending review.
+                                </div>
+                                <div class="mzw-chat-msg mzw-chat-user">
+                                    Which category is driving the most expense?
+                                </div>
+                                <div class="mzw-chat-msg mzw-chat-zaki">
+                                    <strong>ZAKI:</strong> Operations accounts for 38% of outflows
+                                    (16,796 AED), followed by Payroll at 28%.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketplace features -->
+            <section class="mzw-feature-section">
+                <div class="mzw-section-inner">
+                    <div class="mzw-feature-block">
+                        <div class="mzw-feature-info">
+                            <div class="mzw-feature-tag mzw-tag-mp">Marketplace</div>
+                            <h2 class="mzw-feature-title">Connect with the SME network</h2>
+                            <p class="mzw-feature-body">
+                                Post products and services, discover partnership opportunities,
+                                and manage inquiries — all within your Mumtaz workspace.
+                            </p>
+                            <div class="mzw-feature-points">
+                                <div class="mzw-fp">✓ Products, services &amp; partnerships</div>
+                                <div class="mzw-fp">✓ Category-based discovery</div>
+                                <div class="mzw-fp">✓ Inquiry management &amp; response tracking</div>
+                                <div class="mzw-fp">✓ Flexible pricing (fixed, from, negotiable, free)</div>
+                            </div>
+                        </div>
+                        <div class="mzw-feature-visual mzw-fv-mp">
+                            <div class="mzw-listing-demo">
+                                <div class="mzw-ld-card">
+                                    <div class="mzw-ld-type">📦 Product</div>
+                                    <div class="mzw-ld-title">ERP Implementation Service</div>
+                                    <div class="mzw-ld-price">From 5,000 AED</div>
+                                </div>
+                                <div class="mzw-ld-card">
+                                    <div class="mzw-ld-type">🤝 Partnership</div>
+                                    <div class="mzw-ld-title">Distribution Network Access</div>
+                                    <div class="mzw-ld-price">Negotiable</div>
+                                </div>
+                                <div class="mzw-ld-card">
+                                    <div class="mzw-ld-type">🔧 Service</div>
+                                    <div class="mzw-ld-title">AI Training Workshop</div>
+                                    <div class="mzw-ld-price">Free</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Platform features -->
+            <section class="mzw-platform-section">
+                <div class="mzw-section-inner">
+                    <div class="mzw-section-label">Under the hood</div>
+                    <h2 class="mzw-section-title">Enterprise-grade platform</h2>
+                    <div class="mzw-platform-grid">
+                        <div class="mzw-platform-card">
+                            <div class="mzw-platform-icon">🏗️</div>
+                            <h4>Multi-tenant Architecture</h4>
+                            <p>Every client gets an isolated Odoo database. Full data separation by design.</p>
+                        </div>
+                        <div class="mzw-platform-card">
+                            <div class="mzw-platform-icon">🔐</div>
+                            <h4>Role-based Access</h4>
+                            <p>Granular permissions for platform admin, ERP users, ZAKI CFO, and marketplace roles.</p>
+                        </div>
+                        <div class="mzw-platform-card">
+                            <div class="mzw-platform-icon">📦</div>
+                            <h4>Module Bundles</h4>
+                            <p>Choose the right feature bundle for your SME. Upgrade anytime.</p>
+                        </div>
+                        <div class="mzw-platform-card">
+                            <div class="mzw-platform-icon">🤖</div>
+                            <h4>Pluggable AI Providers</h4>
+                            <p>Bring your own API key — supports Claude, GPT-4, and more.</p>
+                        </div>
+                        <div class="mzw-platform-card">
+                            <div class="mzw-platform-icon">📊</div>
+                            <h4>Usage & Quota Tracking</h4>
+                            <p>Real-time usage metrics with automatic quota enforcement and alerts.</p>
+                        </div>
+                        <div class="mzw-platform-card">
+                            <div class="mzw-platform-icon">🔔</div>
+                            <h4>Lifecycle Notifications</h4>
+                            <p>Automated renewal reminders, trial expiry alerts, and commercial CTAs.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA -->
+            <section class="mzw-cta">
+                <div class="mzw-cta-inner">
+                    <h2 class="mzw-cta-title">See it in action</h2>
+                    <p class="mzw-cta-sub">Request a demo and we'll walk you through the full platform.</p>
+                    <a href="/contact" class="mzw-btn mzw-btn-primary mzw-btn-lg">Request Demo</a>
+                </div>
+            </section>
+
+            <t t-call="mumtaz_website.website_footer"/>
+        </t>
+    </template>
+</odoo>

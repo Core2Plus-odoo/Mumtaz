@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_portal_gateway_admin" model="res.groups">
+        <field name="name">Portal Gateway: Admin Control Plane</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="implied_ids" eval="[
+            (4, ref('mumtaz_tenant_manager.group_mumtaz_platform_admin')),
+        ]"/>
+        <field name="comment">
+            Users in this group are routed to the Admin Control Plane after login.
+            Grants platform admin permissions for tenant and bundle management.
+        </field>
+    </record>
+
+    <record id="group_portal_gateway_erp" model="res.groups">
+        <field name="name">Portal Gateway: ERP Portal</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="implied_ids" eval="[
+            (4, ref('mumtaz_core.group_mumtaz_manager')),
+        ]"/>
+        <field name="comment">
+            Users in this group are routed to the ERP Portal after login.
+            Grants mumtaz manager access (which implies sme_admin, finance_user, analyst).
+            Lead scraper / nurture access must be assigned separately by the admin.
+        </field>
+    </record>
+
+    <record id="group_portal_gateway_zaki" model="res.groups">
+        <field name="name">Portal Gateway: ZAKI AI Portal</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="implied_ids" eval="[
+            (4, ref('mumtaz_cfo_base.group_mumtaz_cfo_user')),
+        ]"/>
+        <field name="comment">
+            Users in this group are routed to the ZAKI AI Portal after login.
+            Grants CFO user access for workspaces, transactions, and AI assistant.
+        </field>
+    </record>
+
+    <record id="group_portal_gateway_marketplace" model="res.groups">
+        <field name="name">Portal Gateway: Marketplace Portal</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+        <field name="comment">
+            Users in this group are routed to the Marketplace Portal after login.
+            Marketplace permissions granted when mumtaz_marketplace is installed.
+        </field>
+    </record>
+
+</odoo>

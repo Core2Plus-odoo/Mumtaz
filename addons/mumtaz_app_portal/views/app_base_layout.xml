@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Mumtaz Unified App Portal — Base Layout
+        =========================================
+        Persistent sidebar + topbar layout for the unified customer app.
+        All section templates t-call this layout.
+
+        Context variables expected:
+          user                — res.users record
+          company             — res.company record
+          tenant_profile      — mumtaz.sme.profile or None
+          subscription        — mumtaz.subscription or None
+          active_section      — string: 'home' | 'erp' | 'zaki' | 'marketplace' | 'account'
+          section_title       — string, rendered in topbar
+          has_erp             — bool
+          has_zaki            — bool
+          has_marketplace     — bool
+    -->
+    <template id="app_base_layout" name="Mumtaz App Base Layout">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+
+            <!-- Mobile sidebar overlay -->
+            <div class="mza-sidebar-overlay" id="mzaSidebarOverlay"></div>
+
+            <div class="mza-shell">
+
+                <!-- ═══════════════════════════════════════════ SIDEBAR -->
+                <aside class="mza-sidebar" id="mzaSidebar">
+
+                    <!-- Brand -->
+                    <div class="mza-sidebar-brand">
+                        <div class="mza-brand-logo">ممتاز</div>
+                        <div class="mza-brand-name">Mumtaz</div>
+                    </div>
+
+                    <!-- Tenant/company pill -->
+                    <div class="mza-sidebar-company">
+                        <div class="mza-company-icon">🏢</div>
+                        <div class="mza-company-body">
+                            <div class="mza-company-name">
+                                <t t-esc="company.name"/>
+                            </div>
+                            <t t-if="subscription">
+                                <div t-att-class="'mza-company-plan mza-plan-' + (subscription.status or 'trial')">
+                                    <t t-esc="subscription.plan_id.name if subscription.plan_id else 'Trial'"/>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="mza-company-plan mza-plan-trial">Trial</div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <nav class="mza-nav">
+                        <div class="mza-nav-group">
+                            <a href="/app"
+                               t-att-class="'mza-nav-item' + (' mza-nav-active' if active_section == 'home' else '')">
+                                <span class="mza-nav-icon">⊞</span>
+                                <span class="mza-nav-label">Home</span>
+                            </a>
+                        </div>
+
+                        <div class="mza-nav-section-label">Workspace</div>
+
+                        <t t-if="has_erp">
+                            <div class="mza-nav-group">
+                                <a href="/app/erp"
+                                   t-att-class="'mza-nav-item' + (' mza-nav-active' if active_section == 'erp' else '')">
+                                    <span class="mza-nav-icon">🎯</span>
+                                    <span class="mza-nav-label">ERP</span>
+                                    <t t-if="erp_alert_count and erp_alert_count &gt; 0">
+                                        <span class="mza-nav-badge"><t t-esc="erp_alert_count"/></span>
+                                    </t>
+                                </a>
+                            </div>
+                        </t>
+
+                        <t t-if="has_zaki">
+                            <div class="mza-nav-group">
+                                <a href="/app/zaki"
+                                   t-att-class="'mza-nav-item' + (' mza-nav-active' if active_section == 'zaki' else '')">
+                                    <span class="mza-nav-icon">🤖</span>
+                                    <span class="mza-nav-label">ZAKI AI</span>
+                                    <t t-if="zaki_alert_count and zaki_alert_count &gt; 0">
+                                        <span class="mza-nav-badge mza-nav-badge-warning">
+                                            <t t-esc="zaki_alert_count"/>
+                                        </span>
+                                    </t>
+                                </a>
+                            </div>
+                        </t>
+
+                        <t t-if="has_marketplace">
+                            <div class="mza-nav-group">
+                                <a href="/app/marketplace"
+                                   t-att-class="'mza-nav-item' + (' mza-nav-active' if active_section == 'marketplace' else '')">
+                                    <span class="mza-nav-icon">🛒</span>
+                                    <span class="mza-nav-label">Marketplace</span>
+                                    <t t-if="marketplace_alert_count and marketplace_alert_count &gt; 0">
+                                        <span class="mza-nav-badge mza-nav-badge-warning">
+                                            <t t-esc="marketplace_alert_count"/>
+                                        </span>
+                                    </t>
+                                </a>
+                            </div>
+                        </t>
+
+                        <!-- Locked sections (not subscribed) -->
+                        <t t-if="not has_erp">
+                            <div class="mza-nav-item mza-nav-locked">
+                                <span class="mza-nav-icon">🎯</span>
+                                <span class="mza-nav-label">ERP</span>
+                                <span class="mza-nav-lock">🔒</span>
+                            </div>
+                        </t>
+                        <t t-if="not has_zaki">
+                            <div class="mza-nav-item mza-nav-locked">
+                                <span class="mza-nav-icon">🤖</span>
+                                <span class="mza-nav-label">ZAKI AI</span>
+                                <span class="mza-nav-lock">🔒</span>
+                            </div>
+                        </t>
+                        <t t-if="not has_marketplace">
+                            <div class="mza-nav-item mza-nav-locked">
+                                <span class="mza-nav-icon">🛒</span>
+                                <span class="mza-nav-label">Marketplace</span>
+                                <span class="mza-nav-lock">🔒</span>
+                            </div>
+                        </t>
+
+                        <div class="mza-nav-section-label">Account</div>
+
+                        <div class="mza-nav-group">
+                            <a href="/app/account"
+                               t-att-class="'mza-nav-item' + (' mza-nav-active' if active_section == 'account' else '')">
+                                <span class="mza-nav-icon">⚙️</span>
+                                <span class="mza-nav-label">Account &amp; Plan</span>
+                            </a>
+                        </div>
+
+                        <!-- Odoo backend link for power users -->
+                        <t t-if="user.has_group('mumtaz_core.group_mumtaz_super_admin') or user.has_group('base.group_system')">
+                            <div class="mza-nav-group">
+                                <a href="/web" class="mza-nav-item mza-nav-external">
+                                    <span class="mza-nav-icon">⬛</span>
+                                    <span class="mza-nav-label">Odoo Backend</span>
+                                    <span class="mza-nav-ext-icon">↗</span>
+                                </a>
+                            </div>
+                        </t>
+                    </nav>
+
+                    <!-- User chip at bottom -->
+                    <div class="mza-sidebar-footer">
+                        <div class="mza-user-chip">
+                            <div class="mza-user-avatar">
+                                <t t-esc="(user.name or 'U')[0].upper()"/>
+                            </div>
+                            <div class="mza-user-body">
+                                <div class="mza-user-name">
+                                    <t t-esc="user.name"/>
+                                </div>
+                                <div class="mza-user-email">
+                                    <t t-esc="user.email or ''"/>
+                                </div>
+                            </div>
+                            <a href="/web/session/logout" class="mza-logout" title="Sign out">↩</a>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- ═════════════════════════════════════════ MAIN AREA -->
+                <div class="mza-main-wrapper">
+
+                    <!-- Topbar -->
+                    <header class="mza-topbar">
+                        <div class="mza-topbar-left">
+                            <!-- Mobile sidebar toggle -->
+                            <button class="mza-sidebar-toggle" id="mzaSidebarToggle" aria-label="Toggle sidebar">
+                                ☰
+                            </button>
+                            <div class="mza-topbar-title">
+                                <t t-esc="section_title or 'Mumtaz'"/>
+                            </div>
+                        </div>
+                        <div class="mza-topbar-right">
+                            <!-- Notifications placeholder -->
+                            <div class="mza-topbar-actions">
+                                <a href="/app/account" class="mza-topbar-btn" title="Account">
+                                    <span>⚙️</span>
+                                </a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- Page content -->
+                    <main class="mza-content">
+                        <t t-raw="0"/>
+                    </main>
+
+                </div><!-- /mza-main-wrapper -->
+
+            </div><!-- /mza-shell -->
+
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_admin_home" name="Mumtaz Admin Control Plane">
+        <t t-call="mumtaz_portal_routing.portal_base_layout">
+
+            <!-- Page header -->
+            <div class="mzp-page-header mzp-header-admin">
+                <div class="mzp-page-header-inner">
+                    <div>
+                        <h1 class="mzp-page-title">Admin Control Plane</h1>
+                        <p class="mzp-page-subtitle">
+                            Tenant lifecycle, platform provisioning, subscriptions, and system health
+                        </p>
+                    </div>
+                    <div class="mzp-header-actions">
+                        <a href="/web#action=mumtaz_tenant_manager.action_mumtaz_tenant&amp;view_type=form"
+                           class="mzp-btn mzp-btn-primary">
+                            + New Tenant
+                        </a>
+                        <a href="/web" class="mzp-btn mzp-btn-ghost">
+                            Open Backend
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform health banner -->
+            <t t-if="error_count &gt; 0 or overdue_subs &gt; 0">
+                <div class="mzp-section">
+                    <div class="mzp-alert-banner mzp-alert-warning">
+                        <span class="mzp-alert-icon">⚠️</span>
+                        <div class="mzp-alert-body">
+                            <strong>Platform Alerts</strong>
+                            <span class="mzp-alert-details">
+                                <t t-if="error_count &gt; 0">
+                                    <t t-esc="error_count"/> error(s) in last 24h
+                                </t>
+                                <t t-if="error_count &gt; 0 and overdue_subs &gt; 0"> · </t>
+                                <t t-if="overdue_subs &gt; 0">
+                                    <t t-esc="overdue_subs"/> overdue subscription(s)
+                                </t>
+                            </span>
+                        </div>
+                        <a href="/web#action=mumtaz_core.action_mumtaz_core_log"
+                           class="mzp-btn mzp-btn-ghost mzp-btn-sm">View Logs</a>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Stat cards -->
+            <div class="mzp-section">
+                <div class="mzp-stat-grid mzp-stat-grid-4">
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_total"/>
+                        </div>
+                        <div class="mzp-stat-label">Total Tenants</div>
+                        <div class="mzp-stat-detail">
+                            <t t-esc="tenants_draft"/> draft · <t t-esc="tenants_archived"/> archived
+                        </div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-success">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_active"/>
+                        </div>
+                        <div class="mzp-stat-label">Active</div>
+                        <div class="mzp-stat-detail">
+                            <t t-if="tenants_total &gt; 0">
+                                <t t-esc="'%.0f' % (tenants_active * 100.0 / tenants_total)"/>% of total
+                            </t>
+                        </div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-warning">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_prov"/>
+                        </div>
+                        <div class="mzp-stat-label">Provisioning</div>
+                        <div class="mzp-stat-detail">Awaiting setup</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-danger">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tenants_susp"/>
+                        </div>
+                        <div class="mzp-stat-label">Suspended</div>
+                        <div class="mzp-stat-detail">Requires action</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary stats row -->
+            <div class="mzp-section">
+                <div class="mzp-stat-grid mzp-stat-grid-4">
+                    <div class="mzp-stat-card mzp-stat-primary">
+                        <div class="mzp-stat-value">
+                            <t t-esc="subscription_count"/>
+                        </div>
+                        <div class="mzp-stat-label">Subscriptions</div>
+                        <div class="mzp-stat-detail">
+                            <t t-esc="active_subs"/> active
+                        </div>
+                    </div>
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="bundle_count"/>
+                        </div>
+                        <div class="mzp-stat-label">Module Bundles</div>
+                    </div>
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="sme_count"/>
+                        </div>
+                        <div class="mzp-stat-label">SME Profiles</div>
+                    </div>
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="feature_count"/>
+                        </div>
+                        <div class="mzp-stat-label">Platform Features</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Quick Actions</h2>
+                <div class="mzp-quick-actions">
+                    <a href="/web#action=mumtaz_tenant_manager.action_mumtaz_tenant"
+                       class="mzp-action-card mzp-action-featured">
+                        <div class="mzp-action-icon">🏢</div>
+                        <div class="mzp-action-label">All Tenants</div>
+                    </a>
+                    <a href="/web#action=mumtaz_tenant_manager.action_mumtaz_module_bundle"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📦</div>
+                        <div class="mzp-action-label">Module Bundles
+                            <span class="mzp-action-badge">
+                                <t t-esc="bundle_count"/>
+                            </span>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_control_plane.action_mumtaz_subscription"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">💳</div>
+                        <div class="mzp-action-label">Subscriptions
+                            <t t-if="overdue_subs &gt; 0">
+                                <span class="mzp-action-badge mzp-badge-warning">
+                                    <t t-esc="overdue_subs"/>
+                                </span>
+                            </t>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_control_plane.action_mumtaz_plan"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📋</div>
+                        <div class="mzp-action-label">Plans
+                            <span class="mzp-action-badge">
+                                <t t-esc="plan_count"/>
+                            </span>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_control_plane.action_mumtaz_feature"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🔧</div>
+                        <div class="mzp-action-label">Features</div>
+                    </a>
+                    <a href="/web#action=mumtaz_core.action_mumtaz_core_settings"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">⚙️</div>
+                        <div class="mzp-action-label">Platform Settings</div>
+                    </a>
+                    <a href="/web#action=mumtaz_core.action_mumtaz_core_log"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📊</div>
+                        <div class="mzp-action-label">Audit Logs
+                            <t t-if="error_count &gt; 0">
+                                <span class="mzp-action-badge mzp-badge-warning">
+                                    <t t-esc="error_count"/>
+                                </span>
+                            </t>
+                        </div>
+                    </a>
+                    <a href="/web#action=mumtaz_control_plane.action_mumtaz_usage_metric"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">📈</div>
+                        <div class="mzp-action-label">Usage Metrics</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Module bundles cards -->
+            <t t-if="bundles">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Module Bundles</h2>
+                        <a href="/web#action=mumtaz_tenant_manager.action_mumtaz_module_bundle"
+                           class="mzp-section-link">View all →</a>
+                    </div>
+                    <div class="mzp-bundle-grid">
+                        <t t-foreach="bundles" t-as="bundle">
+                            <a t-att-href="'/web#id=' + str(bundle.id) + '&amp;model=mumtaz.module.bundle&amp;view_type=form'"
+                               class="mzp-bundle-card">
+                                <div class="mzp-bundle-icon">📦</div>
+                                <div class="mzp-bundle-body">
+                                    <div class="mzp-bundle-name">
+                                        <t t-esc="bundle.name"/>
+                                    </div>
+                                    <div class="mzp-bundle-meta">
+                                        <code><t t-esc="bundle.code"/></code>
+                                        <t t-if="bundle.max_users &gt; 0">
+                                            · max <t t-esc="bundle.max_users"/> users
+                                        </t>
+                                        <t t-else="">
+                                            · unlimited users
+                                        </t>
+                                    </div>
+                                </div>
+                                <div class="mzp-bundle-arrow">→</div>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Recent tenants table -->
+            <div class="mzp-section">
+                <div class="mzp-section-header">
+                    <h2 class="mzp-section-title">Recent Tenants</h2>
+                    <a href="/web#action=mumtaz_tenant_manager.action_mumtaz_tenant"
+                       class="mzp-section-link">View all →</a>
+                </div>
+                <t t-if="recent_tenants">
+                    <div class="mzp-table-wrapper">
+                        <table class="mzp-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Bundle</th>
+                                    <th>Subdomain</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="recent_tenants" t-as="tenant">
+                                    <tr>
+                                        <td class="mzp-td-primary">
+                                            <t t-esc="tenant.name"/>
+                                        </td>
+                                        <td>
+                                            <code><t t-esc="tenant.code"/></code>
+                                        </td>
+                                        <td>
+                                            <t t-esc="tenant.bundle_id.name or '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="tenant.subdomain or '—'"/>
+                                        </td>
+                                        <td>
+                                            <span t-att-class="'mzp-badge mzp-badge-' + tenant.state">
+                                                <t t-esc="tenant.state"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <t t-esc="tenant.create_date" t-options='{"widget": "date"}'/>
+                                        </td>
+                                        <td>
+                                            <a t-att-href="'/web#id=' + str(tenant.id) + '&amp;model=mumtaz.tenant&amp;view_type=form'"
+                                               class="mzp-table-action">
+                                                Manage →
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="mzp-empty-state mzp-empty-state-large">
+                        <div class="mzp-empty-icon">🏢</div>
+                        <h3>No Tenants Yet</h3>
+                        <p>Provision your first tenant to start building the platform.</p>
+                        <a href="/web#action=mumtaz_tenant_manager.action_mumtaz_tenant&amp;view_type=form"
+                           class="mzp-btn mzp-btn-primary">
+                            Provision Tenant
+                        </a>
+                    </div>
+                </t>
+            </div>
+
+            <!-- Recent SME profiles -->
+            <t t-if="recent_smes">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Recent SME Profiles</h2>
+                        <span class="mzp-section-meta">
+                            <t t-esc="sme_count"/> total
+                        </span>
+                    </div>
+                    <div class="mzp-session-list">
+                        <t t-foreach="recent_smes" t-as="sme">
+                            <a t-att-href="'/web#id=' + str(sme.id) + '&amp;model=mumtaz.sme.profile&amp;view_type=form'"
+                               class="mzp-session-item">
+                                <div class="mzp-session-icon">🏭</div>
+                                <div class="mzp-session-body">
+                                    <div class="mzp-session-name">
+                                        <t t-esc="sme.trade_name or sme.legal_name or 'SME Profile'"/>
+                                    </div>
+                                    <div class="mzp-session-meta">
+                                        <t t-if="sme.industry">
+                                            <t t-esc="sme.industry"/> ·
+                                        </t>
+                                        <t t-esc="sme.city or ''"/>
+                                        <t t-if="sme.country_id"> · <t t-esc="sme.country_id.name"/></t>
+                                    </div>
+                                </div>
+                                <div class="mzp-session-arrow">→</div>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+        </t>
+    </template>
+</odoo>

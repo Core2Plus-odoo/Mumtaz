@@ -5,7 +5,7 @@
             <field name="name">mumtaz.feature.tree</field>
             <field name="model">mumtaz.feature</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="name"/>
                     <field name="code"/>
                     <field name="product_area"/>
@@ -14,7 +14,7 @@
                     <field name="metric_code_default" optional="hide"/>
                     <field name="is_customer_visible"/>
                     <field name="active"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -22,16 +22,14 @@
             <field name="name">mumtaz.feature.search</field>
             <field name="model">mumtaz.feature</field>
             <field name="arch" type="xml">
-                <search>
+                <search string="Features">
                     <field name="name"/>
                     <field name="code"/>
                     <field name="product_area"/>
                     <field name="feature_type"/>
                     <filter string="Active" domain="[('active','=',True)]"/>
-                    <group expand="0" string="Group By">
-                        <filter string="Area" context="{'group_by': 'product_area'}"/>
-                        <filter string="Type" context="{'group_by': 'feature_type'}"/>
-                    </group>
+                    <filter string="Area" name="group_by_area" context="{'group_by': 'product_area'}"/>
+                    <filter string="Type" name="group_by_type" context="{'group_by': 'feature_type'}"/>
                 </search>
             </field>
         </record>
@@ -67,7 +65,7 @@
         <record id="action_mumtaz_feature" model="ir.actions.act_window">
             <field name="name">Features</field>
             <field name="res_model">mumtaz.feature</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="search_view_id" ref="view_mumtaz_feature_search"/>
         </record>
     </data>

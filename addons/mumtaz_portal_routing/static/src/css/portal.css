@@ -1,0 +1,1212 @@
+/*
+ * Mumtaz Portal Routing — Portal CSS
+ * ====================================
+ * Design language: dark, premium, enterprise-grade.
+ * Used by all four portal home pages (Admin, ERP, ZAKI, Marketplace).
+ *
+ * Prefix: mzp- (Mumtaz Portal)
+ * Base unit: 8px
+ */
+
+/* ------------------------------------------------------------------ */
+/* Design tokens                                                        */
+/* ------------------------------------------------------------------ */
+:root {
+    --mzp-bg:            #060b14;
+    --mzp-surface:       #0d1526;
+    --mzp-surface-2:     #131e33;
+    --mzp-border:        rgba(255,255,255,0.07);
+    --mzp-border-hover:  rgba(255,255,255,0.15);
+
+    --mzp-gold:          #f0a500;
+    --mzp-gold-light:    #fbbf24;
+    --mzp-blue:          #3b82f6;
+    --mzp-blue-light:    #60a5fa;
+    --mzp-green:         #10b981;
+    --mzp-red:           #ef4444;
+    --mzp-orange:        #f59e0b;
+    --mzp-purple:        #8b5cf6;
+
+    --mzp-text:          #f1f5f9;
+    --mzp-text-2:        #94a3b8;
+    --mzp-text-3:        #475569;
+
+    --mzp-radius:        10px;
+    --mzp-radius-sm:     6px;
+    --mzp-radius-lg:     16px;
+
+    --mzp-shadow:        0 4px 24px rgba(0,0,0,0.4);
+    --mzp-shadow-card:   0 2px 12px rgba(0,0,0,0.3);
+
+    /* Portal accent colours */
+    --mzp-accent-admin:       var(--mzp-purple);
+    --mzp-accent-erp:         var(--mzp-blue);
+    --mzp-accent-zaki:        var(--mzp-gold);
+    --mzp-accent-marketplace: var(--mzp-green);
+}
+
+/* ------------------------------------------------------------------ */
+/* Reset & base                                                         */
+/* ------------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.website {
+    background: var(--mzp-bg);
+    color: var(--mzp-text);
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Navbar                                                               */
+/* ------------------------------------------------------------------ */
+.mzp-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 60px;
+    background: rgba(6, 11, 20, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--mzp-border);
+}
+
+.mzp-navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.mzp-logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--mzp-gold);
+    letter-spacing: -0.5px;
+}
+
+.mzp-portal-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--mzp-text-2);
+    padding-left: 12px;
+    border-left: 1px solid var(--mzp-border);
+}
+
+.mzp-navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Switcher dropdown                                                    */
+/* ------------------------------------------------------------------ */
+.mzp-switcher {
+    position: relative;
+}
+
+.mzp-switcher-btn {
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    color: var(--mzp-text-2);
+    padding: 6px 14px;
+    border-radius: var(--mzp-radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.mzp-switcher-btn:hover {
+    border-color: var(--mzp-border-hover);
+    color: var(--mzp-text);
+}
+
+.mzp-switcher-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 200px;
+    background: var(--mzp-surface-2);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    box-shadow: var(--mzp-shadow);
+    z-index: 200;
+    overflow: hidden;
+}
+.mzp-switcher-dropdown.open { display: block; }
+
+.mzp-switcher-item {
+    display: block;
+    padding: 10px 16px;
+    color: var(--mzp-text-2);
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 0.1s;
+}
+.mzp-switcher-item:hover {
+    background: var(--mzp-border);
+    color: var(--mzp-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                              */
+/* ------------------------------------------------------------------ */
+.mzp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: var(--mzp-radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+.mzp-btn-primary {
+    background: var(--mzp-gold);
+    color: #000;
+    border: 1px solid var(--mzp-gold);
+}
+.mzp-btn-primary:hover {
+    background: var(--mzp-gold-light);
+    color: #000;
+    text-decoration: none;
+}
+.mzp-btn-ghost {
+    background: transparent;
+    color: var(--mzp-text-2);
+    border: 1px solid var(--mzp-border);
+}
+.mzp-btn-ghost:hover {
+    border-color: var(--mzp-border-hover);
+    color: var(--mzp-text);
+    text-decoration: none;
+}
+.mzp-btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ */
+/* User chip                                                            */
+/* ------------------------------------------------------------------ */
+.mzp-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mzp-user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--mzp-gold);
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.mzp-user-name {
+    font-size: 13px;
+    color: var(--mzp-text-2);
+}
+
+.mzp-logout {
+    font-size: 16px;
+    color: var(--mzp-text-3);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.mzp-logout:hover { color: var(--mzp-red); }
+
+/* ------------------------------------------------------------------ */
+/* Main content area                                                    */
+/* ------------------------------------------------------------------ */
+.mzp-main {
+    min-height: calc(100vh - 60px);
+    padding-bottom: 80px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Page header                                                          */
+/* ------------------------------------------------------------------ */
+.mzp-page-header {
+    padding: 40px 40px 32px;
+    border-bottom: 1px solid var(--mzp-border);
+    position: relative;
+    overflow: hidden;
+}
+.mzp-page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    background: radial-gradient(ellipse at 80% 50%, currentColor 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.mzp-header-admin { color: var(--mzp-accent-admin); }
+.mzp-header-erp   { color: var(--mzp-accent-erp); }
+.mzp-header-zaki  { color: var(--mzp-accent-zaki); }
+.mzp-header-marketplace { color: var(--mzp-accent-marketplace); }
+
+.mzp-page-header-inner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.mzp-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--mzp-text);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+}
+
+.mzp-page-subtitle {
+    font-size: 14px;
+    color: var(--mzp-text-2);
+    margin: 0;
+    max-width: 480px;
+}
+
+.mzp-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sections                                                             */
+/* ------------------------------------------------------------------ */
+.mzp-section {
+    padding: 32px 40px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.mzp-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.mzp-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--mzp-text);
+    margin: 0 0 20px;
+}
+.mzp-section-header .mzp-section-title { margin-bottom: 0; }
+
+.mzp-section-meta {
+    font-size: 13px;
+    color: var(--mzp-text-3);
+}
+
+.mzp-section-link {
+    font-size: 13px;
+    color: var(--mzp-gold);
+    text-decoration: none;
+}
+.mzp-section-link:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Stat cards                                                           */
+/* ------------------------------------------------------------------ */
+.mzp-stat-grid {
+    display: grid;
+    gap: 16px;
+}
+.mzp-stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.mzp-stat-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+@media (max-width: 900px) {
+    .mzp-stat-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .mzp-stat-grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+    .mzp-stat-grid-4, .mzp-stat-grid-3 { grid-template-columns: 1fr; }
+}
+
+.mzp-stat-card {
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    padding: 24px;
+    transition: border-color 0.15s;
+}
+.mzp-stat-card:hover { border-color: var(--mzp-border-hover); }
+
+.mzp-stat-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--mzp-text);
+    line-height: 1;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.mzp-stat-label {
+    font-size: 13px;
+    color: var(--mzp-text-2);
+    font-weight: 500;
+}
+
+.mzp-stat-detail {
+    font-size: 11px;
+    color: var(--mzp-text-3);
+    margin-top: 6px;
+    font-weight: 400;
+}
+
+/* Stat card variants */
+.mzp-stat-success { border-left: 3px solid var(--mzp-green); }
+.mzp-stat-success .mzp-stat-value { color: var(--mzp-green); }
+
+.mzp-stat-warning { border-left: 3px solid var(--mzp-orange); }
+.mzp-stat-warning .mzp-stat-value { color: var(--mzp-orange); }
+
+.mzp-stat-danger { border-left: 3px solid var(--mzp-red); }
+.mzp-stat-danger .mzp-stat-value { color: var(--mzp-red); }
+
+.mzp-stat-primary { border-left: 3px solid var(--mzp-blue); }
+.mzp-stat-primary .mzp-stat-value { color: var(--mzp-blue); }
+
+/* ------------------------------------------------------------------ */
+/* Alert banner                                                         */
+/* ------------------------------------------------------------------ */
+.mzp-alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: var(--mzp-radius);
+    border: 1px solid var(--mzp-border);
+    background: var(--mzp-surface);
+}
+
+.mzp-alert-warning {
+    border-left: 4px solid var(--mzp-orange);
+    background: rgba(245, 158, 11, 0.04);
+}
+
+.mzp-alert-danger {
+    border-left: 4px solid var(--mzp-red);
+    background: rgba(239, 68, 68, 0.04);
+}
+
+.mzp-alert-success {
+    border-left: 4px solid var(--mzp-green);
+    background: rgba(16, 185, 129, 0.04);
+}
+
+.mzp-alert-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.mzp-alert-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mzp-alert-body strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--mzp-text);
+}
+
+.mzp-alert-details {
+    font-size: 13px;
+    color: var(--mzp-text-2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Intelligence banner (ERP / Marketplace)                              */
+/* ------------------------------------------------------------------ */
+.mzp-intel-banner {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 20px 24px;
+    border-radius: var(--mzp-radius);
+    border: 1px solid var(--mzp-border);
+    background: var(--mzp-surface);
+}
+
+.mzp-intel-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    padding: 0 20px;
+}
+
+.mzp-intel-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.mzp-intel-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.mzp-intel-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--mzp-text);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.mzp-intel-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--mzp-text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.mzp-intel-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--mzp-border);
+    flex-shrink: 0;
+}
+
+/* ERP intel accent */
+.mzp-header-erp ~ .mzp-section .mzp-intel-banner {
+    border-left: 3px solid var(--mzp-blue);
+}
+
+/* Marketplace intel accent */
+.mzp-intel-marketplace {
+    border-left: 3px solid var(--mzp-green);
+}
+
+@media (max-width: 768px) {
+    .mzp-intel-banner {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .mzp-intel-item {
+        padding: 0;
+    }
+    .mzp-intel-divider {
+        width: 100%;
+        height: 1px;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Pipeline bar (ERP nurture funnel)                                    */
+/* ------------------------------------------------------------------ */
+.mzp-pipeline-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 24px 32px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    border-left: 3px solid var(--mzp-blue);
+}
+
+.mzp-pipeline-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.mzp-pipeline-count {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.mzp-pipeline-nurturing { color: var(--mzp-orange); }
+.mzp-pipeline-qualified { color: var(--mzp-blue); }
+.mzp-pipeline-converted { color: var(--mzp-green); }
+
+.mzp-pipeline-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--mzp-text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mzp-pipeline-arrow {
+    font-size: 24px;
+    color: var(--mzp-text-3);
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .mzp-pipeline-bar {
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+    }
+    .mzp-pipeline-arrow {
+        transform: rotate(90deg);
+        padding: 0;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Bundle cards (Admin)                                                 */
+/* ------------------------------------------------------------------ */
+.mzp-bundle-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mzp-bundle-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    text-decoration: none;
+    color: var(--mzp-text-2);
+    transition: all 0.15s;
+}
+.mzp-bundle-card:hover {
+    border-color: var(--mzp-purple);
+    color: var(--mzp-text);
+    text-decoration: none;
+}
+
+.mzp-bundle-icon { font-size: 20px; }
+
+.mzp-bundle-body { flex: 1; }
+
+.mzp-bundle-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mzp-text);
+}
+
+.mzp-bundle-meta {
+    font-size: 12px;
+    color: var(--mzp-text-3);
+    margin-top: 2px;
+}
+
+.mzp-bundle-meta code {
+    font-size: 11px;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--mzp-text-2);
+}
+
+.mzp-bundle-arrow {
+    font-size: 16px;
+    color: var(--mzp-text-3);
+    transition: color 0.15s;
+}
+.mzp-bundle-card:hover .mzp-bundle-arrow { color: var(--mzp-purple); }
+
+/* ------------------------------------------------------------------ */
+/* Category grid (Marketplace)                                          */
+/* ------------------------------------------------------------------ */
+.mzp-category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.mzp-category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 12px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    text-decoration: none;
+    color: var(--mzp-text-2);
+    text-align: center;
+    transition: all 0.15s;
+}
+.mzp-category-card:hover {
+    border-color: var(--mzp-green);
+    color: var(--mzp-text);
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: var(--mzp-shadow-card);
+}
+
+.mzp-category-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+.mzp-category-icon .fa {
+    font-size: 22px;
+    color: var(--mzp-green);
+}
+
+.mzp-category-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mzp-text);
+}
+
+.mzp-category-count {
+    font-size: 11px;
+    color: var(--mzp-text-3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Quick action cards                                                   */
+/* ------------------------------------------------------------------ */
+.mzp-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.mzp-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 24px 16px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    text-decoration: none;
+    color: var(--mzp-text-2);
+    text-align: center;
+    transition: all 0.15s;
+}
+.mzp-action-card:hover {
+    border-color: var(--mzp-gold);
+    color: var(--mzp-text);
+    background: var(--mzp-surface-2);
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: var(--mzp-shadow-card);
+}
+
+.mzp-action-featured {
+    border-color: var(--mzp-gold);
+    background: rgba(240, 165, 0, 0.06);
+}
+.mzp-action-featured .mzp-action-label { color: var(--mzp-gold); }
+
+.mzp-action-icon { font-size: 28px; line-height: 1; }
+
+.mzp-action-label {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.mzp-action-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--mzp-orange);
+    color: #000;
+}
+
+/* ------------------------------------------------------------------ */
+/* Badges                                                               */
+/* ------------------------------------------------------------------ */
+.mzp-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.mzp-badge-active, .mzp-badge-success, .mzp-badge-done, .mzp-badge-published,
+.mzp-badge-responded, .mzp-badge-delivered, .mzp-badge-replied, .mzp-badge-interested,
+.mzp-badge-qualified, .mzp-badge-converted {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--mzp-green);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.mzp-badge-warning, .mzp-badge-provisioning, .mzp-badge-running,
+.mzp-badge-new, .mzp-badge-nurturing, .mzp-badge-pending, .mzp-badge-in_progress,
+.mzp-badge-opened, .mzp-badge-clicked {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--mzp-orange);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.mzp-badge-danger, .mzp-badge-suspended, .mzp-badge-failed, .mzp-badge-error,
+.mzp-badge-bounced, .mzp-badge-dead, .mzp-badge-not_interested {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--mzp-red);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.mzp-badge-draft, .mzp-badge-closed, .mzp-badge-cancelled,
+.mzp-badge-no_response, .mzp-badge-archived {
+    background: rgba(255,255,255,0.06);
+    color: var(--mzp-text-3);
+    border: 1px solid var(--mzp-border);
+}
+.mzp-badge-sent, .mzp-badge-contacted, .mzp-badge-enrolled {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--mzp-blue);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.mzp-badge-inflow  { background: rgba(16,185,129,0.15); color: var(--mzp-green); border: 1px solid rgba(16,185,129,0.3); }
+.mzp-badge-outflow { background: rgba(239,68,68,0.15);  color: var(--mzp-red);   border: 1px solid rgba(239,68,68,0.3); }
+
+/* ------------------------------------------------------------------ */
+/* Tables                                                               */
+/* ------------------------------------------------------------------ */
+.mzp-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--mzp-radius);
+    border: 1px solid var(--mzp-border);
+}
+
+.mzp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.mzp-table thead {
+    background: var(--mzp-surface-2);
+    border-bottom: 1px solid var(--mzp-border);
+}
+
+.mzp-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--mzp-text-3);
+}
+.mzp-th-right { text-align: right; }
+
+.mzp-table tbody tr {
+    border-bottom: 1px solid var(--mzp-border);
+    transition: background 0.1s;
+}
+.mzp-table tbody tr:last-child { border-bottom: none; }
+.mzp-table tbody tr:hover { background: var(--mzp-surface); }
+
+.mzp-table td {
+    padding: 12px 16px;
+    color: var(--mzp-text-2);
+    vertical-align: middle;
+}
+
+.mzp-td-primary {
+    color: var(--mzp-text) !important;
+    font-weight: 500;
+}
+
+.mzp-td-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+.mzp-amount-positive { color: var(--mzp-green) !important; }
+.mzp-amount-negative { color: var(--mzp-red) !important; }
+
+.mzp-table-action {
+    color: var(--mzp-gold);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.mzp-table-action:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Info card (key-value list)                                           */
+/* ------------------------------------------------------------------ */
+.mzp-info-card {
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    overflow: hidden;
+}
+
+.mzp-info-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--mzp-border);
+    gap: 16px;
+}
+.mzp-info-row:last-child { border-bottom: none; }
+
+.mzp-info-key {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--mzp-text-3);
+    width: 160px;
+    flex-shrink: 0;
+}
+
+.mzp-info-val {
+    font-size: 13px;
+    color: var(--mzp-text);
+}
+
+.mzp-info-success { color: var(--mzp-green) !important; font-weight: 600; }
+
+/* ------------------------------------------------------------------ */
+/* Net position banner (ZAKI)                                           */
+/* ------------------------------------------------------------------ */
+.mzp-net-banner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 24px;
+    border-radius: var(--mzp-radius);
+    border: 1px solid var(--mzp-border);
+    background: var(--mzp-surface);
+}
+
+.mzp-net-positive { border-left: 4px solid var(--mzp-green); }
+.mzp-net-negative { border-left: 4px solid var(--mzp-red); }
+
+.mzp-net-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--mzp-text-3);
+}
+
+.mzp-net-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mzp-text);
+}
+.mzp-net-positive .mzp-net-value { color: var(--mzp-green); }
+.mzp-net-negative .mzp-net-value { color: var(--mzp-red); }
+
+.mzp-net-workspace {
+    font-size: 12px;
+    color: var(--mzp-text-3);
+    margin-left: auto;
+}
+
+/* ------------------------------------------------------------------ */
+/* Session list (ZAKI / shared)                                         */
+/* ------------------------------------------------------------------ */
+.mzp-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mzp-session-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    text-decoration: none;
+    color: var(--mzp-text-2);
+    transition: all 0.15s;
+}
+.mzp-session-item:hover {
+    border-color: var(--mzp-gold);
+    color: var(--mzp-text);
+    text-decoration: none;
+}
+
+.mzp-session-icon { font-size: 20px; }
+
+.mzp-session-body { flex: 1; }
+
+.mzp-session-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mzp-text);
+}
+
+.mzp-session-meta {
+    font-size: 12px;
+    color: var(--mzp-text-3);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.mzp-session-arrow {
+    font-size: 16px;
+    color: var(--mzp-text-3);
+    transition: color 0.15s;
+}
+.mzp-session-item:hover .mzp-session-arrow { color: var(--mzp-gold); }
+
+/* ------------------------------------------------------------------ */
+/* Listing grid (Marketplace)                                           */
+/* ------------------------------------------------------------------ */
+.mzp-listing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.mzp-listing-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    text-decoration: none;
+    color: var(--mzp-text);
+    transition: all 0.15s;
+}
+.mzp-listing-card:hover {
+    border-color: var(--mzp-green);
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: var(--mzp-shadow-card);
+}
+
+.mzp-listing-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mzp-listing-category {
+    font-size: 11px;
+    color: var(--mzp-text-3);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mzp-listing-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--mzp-text);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.mzp-listing-summary {
+    font-size: 13px;
+    color: var(--mzp-text-2);
+    margin: 0;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.mzp-listing-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--mzp-border);
+}
+
+.mzp-listing-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mzp-green);
+}
+
+.mzp-listing-company {
+    font-size: 12px;
+    color: var(--mzp-text-3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty states                                                         */
+/* ------------------------------------------------------------------ */
+.mzp-empty-state {
+    padding: 32px;
+    text-align: center;
+    color: var(--mzp-text-2);
+    font-size: 14px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius);
+    border-style: dashed;
+}
+.mzp-empty-state a { color: var(--mzp-gold); }
+
+.mzp-empty-state-large {
+    padding: 60px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.mzp-empty-icon {
+    font-size: 40px;
+    margin-bottom: 4px;
+}
+
+.mzp-empty-state-large h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--mzp-text);
+    margin: 0;
+}
+
+.mzp-empty-state-large p {
+    color: var(--mzp-text-2);
+    margin: 0;
+    max-width: 360px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Portal switcher page                                                 */
+/* ------------------------------------------------------------------ */
+.mzp-switcher-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 32px;
+    gap: 48px;
+}
+
+.mzp-switcher-header {
+    text-align: center;
+}
+.mzp-switcher-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--mzp-text);
+    margin: 0 0 10px;
+}
+.mzp-switcher-header p {
+    font-size: 16px;
+    color: var(--mzp-text-2);
+    margin: 0;
+}
+
+.mzp-switcher-portal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.mzp-switcher-portal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 24px;
+    background: var(--mzp-surface);
+    border: 1px solid var(--mzp-border);
+    border-radius: var(--mzp-radius-lg);
+    text-decoration: none;
+    color: var(--mzp-text);
+    transition: all 0.2s;
+}
+.mzp-switcher-portal-card:hover {
+    border-color: var(--mzp-gold);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(240, 165, 0, 0.12);
+    text-decoration: none;
+}
+
+.mzp-switcher-portal-icon {
+    font-size: 40px;
+}
+
+.mzp-switcher-portal-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--mzp-text);
+    text-align: center;
+}
+
+.mzp-switcher-portal-arrow {
+    font-size: 18px;
+    color: var(--mzp-text-3);
+    transition: color 0.15s;
+}
+.mzp-switcher-portal-card:hover .mzp-switcher-portal-arrow {
+    color: var(--mzp-gold);
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                           */
+/* ------------------------------------------------------------------ */
+@media (max-width: 768px) {
+    .mzp-navbar { padding: 0 16px; }
+    .mzp-section { padding: 24px 16px; }
+    .mzp-page-header { padding: 24px 16px; }
+    .mzp-page-header-inner { flex-direction: column; }
+    .mzp-header-actions { flex-wrap: wrap; }
+    .mzp-page-title { font-size: 22px; }
+    .mzp-portal-label { display: none; }
+    .mzp-user-name { display: none; }
+    .mzp-stat-value { font-size: 28px; }
+    .mzp-quick-actions { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    .mzp-listing-grid { grid-template-columns: 1fr; }
+    .mzp-category-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .mzp-alert-banner { flex-direction: column; align-items: flex-start; }
+}

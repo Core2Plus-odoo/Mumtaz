@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="portal_zaki_home" name="ZAKI AI CFO Portal">
+        <t t-call="mumtaz_portal_routing.portal_base_layout">
+
+            <!-- Page header -->
+            <div class="mzp-page-header mzp-header-zaki">
+                <div class="mzp-page-header-inner">
+                    <div>
+                        <h1 class="mzp-page-title">ZAKI — Your AI CFO</h1>
+                        <p class="mzp-page-subtitle">
+                            Financial analytics, transaction intelligence, and AI-powered insights
+                        </p>
+                    </div>
+                    <div class="mzp-header-actions">
+                        <a href="/mumtaz/ai" class="mzp-btn mzp-btn-primary">
+                            🤖 Ask ZAKI
+                        </a>
+                        <a href="/mumtaz/cfo" class="mzp-btn mzp-btn-ghost">
+                            CFO Workspace
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial stat cards -->
+            <div class="mzp-section">
+                <div class="mzp-stat-grid mzp-stat-grid-4">
+                    <div class="mzp-stat-card">
+                        <div class="mzp-stat-value">
+                            <t t-esc="tx_count"/>
+                        </div>
+                        <div class="mzp-stat-label">Transactions</div>
+                    </div>
+                    <t t-if="review_count &gt; 0">
+                        <div class="mzp-stat-card mzp-stat-warning">
+                            <div class="mzp-stat-value">
+                                <t t-esc="review_count"/>
+                            </div>
+                            <div class="mzp-stat-label">Pending Review</div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="mzp-stat-card mzp-stat-success">
+                            <div class="mzp-stat-value">✓</div>
+                            <div class="mzp-stat-label">Review Queue Clear</div>
+                        </div>
+                    </t>
+                    <div class="mzp-stat-card mzp-stat-success">
+                        <div class="mzp-stat-value">
+                            <t t-esc="'%.0f' % income_total"/>
+                        </div>
+                        <div class="mzp-stat-label">Total Inflow</div>
+                    </div>
+                    <div class="mzp-stat-card mzp-stat-danger">
+                        <div class="mzp-stat-value">
+                            <t t-esc="'%.0f' % expense_total"/>
+                        </div>
+                        <div class="mzp-stat-label">Total Outflow</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net position banner -->
+            <t t-if="tx_count &gt; 0">
+                <div class="mzp-section">
+                    <t t-set="net" t-value="income_total - expense_total"/>
+                    <div t-att-class="'mzp-net-banner ' + ('mzp-net-positive' if net &gt;= 0 else 'mzp-net-negative')">
+                        <span class="mzp-net-label">Net Position</span>
+                        <span class="mzp-net-value">
+                            <t t-esc="('+ ' if net &gt;= 0 else '− ') + '%.2f' % abs(net)"/>
+                        </span>
+                        <t t-if="workspace">
+                            <span class="mzp-net-workspace">
+                                <t t-esc="workspace.name"/>
+                            </span>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Quick actions -->
+            <div class="mzp-section">
+                <h2 class="mzp-section-title">Quick Actions</h2>
+                <div class="mzp-quick-actions">
+                    <a href="/mumtaz/ai" class="mzp-action-card mzp-action-featured">
+                        <div class="mzp-action-icon">🤖</div>
+                        <div class="mzp-action-label">Ask ZAKI AI</div>
+                    </a>
+                    <a href="/mumtaz/cfo" class="mzp-action-card">
+                        <div class="mzp-action-icon">📊</div>
+                        <div class="mzp-action-label">CFO Workspace</div>
+                    </a>
+                    <a href="/web#action=mumtaz_cfo_transactions.action_cfo_transaction_list"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">💳</div>
+                        <div class="mzp-action-label">All Transactions</div>
+                    </a>
+                    <a href="/web#action=mumtaz_cfo_transactions.action_cfo_review_queue"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">🔎</div>
+                        <div class="mzp-action-label">
+                            Review Queue
+                            <t t-if="review_count &gt; 0">
+                                <span class="mzp-action-badge mzp-badge-warning">
+                                    <t t-esc="review_count"/>
+                                </span>
+                            </t>
+                        </div>
+                    </a>
+                    <a href="/mumtaz/finance" class="mzp-action-card">
+                        <div class="mzp-action-icon">🏦</div>
+                        <div class="mzp-action-label">Finance Hub</div>
+                    </a>
+                    <a href="/web#action=mumtaz_cfo_ingestion.action_cfo_upload_batch"
+                       class="mzp-action-card">
+                        <div class="mzp-action-icon">⬆️</div>
+                        <div class="mzp-action-label">Upload Data</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent AI sessions -->
+            <t t-if="recent_sessions">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Recent AI Sessions</h2>
+                        <span class="mzp-section-meta">
+                            <t t-esc="ai_session_count"/> total
+                        </span>
+                    </div>
+                    <div class="mzp-session-list">
+                        <t t-foreach="recent_sessions" t-as="session">
+                            <a t-att-href="'/mumtaz/ai?session=' + str(session.id)"
+                               class="mzp-session-item">
+                                <div class="mzp-session-icon">💬</div>
+                                <div class="mzp-session-body">
+                                    <div class="mzp-session-name">
+                                        <t t-esc="session.name or 'AI Session'"/>
+                                    </div>
+                                    <div class="mzp-session-meta">
+                                        <t t-esc="session.create_date" t-options='{"widget": "datetime"}'/>
+                                    </div>
+                                </div>
+                                <div class="mzp-session-arrow">→</div>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Recent transactions table -->
+            <t t-if="recent_txs">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Recent Transactions</h2>
+                        <a href="/mumtaz/cfo" class="mzp-section-link">View all →</a>
+                    </div>
+                    <div class="mzp-table-wrapper">
+                        <table class="mzp-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Direction</th>
+                                    <th class="mzp-th-right">Amount</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="recent_txs" t-as="tx">
+                                    <tr>
+                                        <td>
+                                            <t t-esc="tx.date" t-options='{"widget": "date"}'/>
+                                        </td>
+                                        <td class="mzp-td-primary">
+                                            <t t-esc="tx.description or '—'"/>
+                                        </td>
+                                        <td>
+                                            <t t-esc="tx.entry_type or '—'"/>
+                                        </td>
+                                        <td>
+                                            <span t-att-class="'mzp-badge ' + ('mzp-badge-success' if tx.direction == 'inflow' else 'mzp-badge-danger')">
+                                                <t t-esc="tx.direction"/>
+                                            </span>
+                                        </td>
+                                        <td t-att-class="'mzp-td-amount ' + ('mzp-amount-positive' if tx.direction == 'inflow' else 'mzp-amount-negative')">
+                                            <t t-esc="'%.2f' % tx.amount"/>
+                                        </td>
+                                        <td>
+                                            <t t-if="tx.requires_review">
+                                                <span class="mzp-badge mzp-badge-warning">Review</span>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Empty state -->
+            <t t-if="not workspace">
+                <div class="mzp-section">
+                    <div class="mzp-empty-state mzp-empty-state-large">
+                        <div class="mzp-empty-icon">📊</div>
+                        <h3>Set Up Your CFO Workspace</h3>
+                        <p>Create a workspace to start tracking transactions and unlocking AI financial insights.</p>
+                        <a href="/mumtaz/cfo" class="mzp-btn mzp-btn-primary">
+                            Create Workspace
+                        </a>
+                    </div>
+                </div>
+            </t>
+
+        </t>
+    </template>
+</odoo>

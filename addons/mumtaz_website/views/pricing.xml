@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="pricing" name="Mumtaz — Pricing">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+            <t t-call="mumtaz_website.website_navbar"/>
+
+            <section class="mzw-page-hero">
+                <div class="mzw-section-inner">
+                    <div class="mzw-section-label">Simple, transparent pricing</div>
+                    <h1 class="mzw-section-title">Plans for every stage</h1>
+                    <p class="mzw-page-hero-sub">
+                        Start with a free trial. Upgrade when you're ready. No hidden fees.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Dynamic plans from mumtaz.plan -->
+            <section class="mzw-pricing-section">
+                <div class="mzw-section-inner">
+                    <t t-if="plans">
+                        <div class="mzw-pricing-grid">
+                            <t t-foreach="plans" t-as="plan">
+                                <div t-att-class="'mzw-plan-card' + (' mzw-plan-featured' if plan_index == 1 else '')">
+                                    <t t-if="plan_index == 1">
+                                        <div class="mzw-plan-badge">Most Popular</div>
+                                    </t>
+                                    <div class="mzw-plan-name">
+                                        <t t-esc="plan.name"/>
+                                    </div>
+                                    <div class="mzw-plan-price">
+                                        <t t-if="plan.monthly_price">
+                                            <span class="mzw-plan-amount">
+                                                <t t-esc="'%.0f' % plan.monthly_price"/>
+                                            </span>
+                                            <span class="mzw-plan-period">AED / mo</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="mzw-plan-amount">Custom</span>
+                                        </t>
+                                    </div>
+                                    <t t-if="plan.description">
+                                        <p class="mzw-plan-desc">
+                                            <t t-esc="plan.description"/>
+                                        </p>
+                                    </t>
+                                    <div class="mzw-plan-limit">
+                                        <t t-if="plan.max_users and plan.max_users &gt; 0">
+                                            Up to <t t-esc="plan.max_users"/> users
+                                        </t>
+                                        <t t-else="">Unlimited users</t>
+                                    </div>
+                                    <a href="/contact" class="mzw-btn mzw-btn-primary mzw-plan-cta">
+                                        Get Started
+                                    </a>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                    <!-- Fallback static plans if none configured -->
+                    <t t-if="not plans">
+                        <div class="mzw-pricing-grid">
+                            <div class="mzw-plan-card">
+                                <div class="mzw-plan-name">Starter</div>
+                                <div class="mzw-plan-price">
+                                    <span class="mzw-plan-amount">999</span>
+                                    <span class="mzw-plan-period">AED / mo</span>
+                                </div>
+                                <p class="mzw-plan-desc">For small teams getting started with ERP and lead management.</p>
+                                <div class="mzw-plan-limit">Up to 5 users</div>
+                                <div class="mzw-plan-features">
+                                    <div class="mzw-pf">✓ ERP &amp; CRM</div>
+                                    <div class="mzw-pf">✓ Lead Scraper (2 sources)</div>
+                                    <div class="mzw-pf">✓ Basic Marketplace</div>
+                                    <div class="mzw-pf mzw-pf-off">✗ ZAKI AI CFO</div>
+                                </div>
+                                <a href="/contact" class="mzw-btn mzw-btn-ghost mzw-plan-cta">Get Started</a>
+                            </div>
+                            <div class="mzw-plan-card mzw-plan-featured">
+                                <div class="mzw-plan-badge">Most Popular</div>
+                                <div class="mzw-plan-name">Growth</div>
+                                <div class="mzw-plan-price">
+                                    <span class="mzw-plan-amount">2,499</span>
+                                    <span class="mzw-plan-period">AED / mo</span>
+                                </div>
+                                <p class="mzw-plan-desc">Full platform access for growing SMEs with AI capabilities.</p>
+                                <div class="mzw-plan-limit">Up to 20 users</div>
+                                <div class="mzw-plan-features">
+                                    <div class="mzw-pf">✓ ERP &amp; CRM</div>
+                                    <div class="mzw-pf">✓ Lead Scraper (unlimited)</div>
+                                    <div class="mzw-pf">✓ Full Marketplace</div>
+                                    <div class="mzw-pf">✓ ZAKI AI CFO</div>
+                                    <div class="mzw-pf">✓ Nurture Campaigns</div>
+                                </div>
+                                <a href="/contact" class="mzw-btn mzw-btn-primary mzw-plan-cta">Get Started</a>
+                            </div>
+                            <div class="mzw-plan-card">
+                                <div class="mzw-plan-name">Enterprise</div>
+                                <div class="mzw-plan-price">
+                                    <span class="mzw-plan-amount">Custom</span>
+                                </div>
+                                <p class="mzw-plan-desc">Tailored deployment for larger organisations with custom needs.</p>
+                                <div class="mzw-plan-limit">Unlimited users</div>
+                                <div class="mzw-plan-features">
+                                    <div class="mzw-pf">✓ Everything in Growth</div>
+                                    <div class="mzw-pf">✓ Dedicated infrastructure</div>
+                                    <div class="mzw-pf">✓ White-label branding</div>
+                                    <div class="mzw-pf">✓ SLA &amp; priority support</div>
+                                    <div class="mzw-pf">✓ Custom integrations</div>
+                                </div>
+                                <a href="/contact" class="mzw-btn mzw-btn-ghost mzw-plan-cta">Contact Sales</a>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </section>
+
+            <!-- FAQ -->
+            <section class="mzw-faq-section">
+                <div class="mzw-section-inner">
+                    <h2 class="mzw-section-title">Common questions</h2>
+                    <div class="mzw-faq-grid">
+                        <div class="mzw-faq-item">
+                            <h4>Is there a free trial?</h4>
+                            <p>Yes. All plans include a 14-day free trial with full access to your selected feature bundle.</p>
+                        </div>
+                        <div class="mzw-faq-item">
+                            <h4>Do I need to bring my own AI key?</h4>
+                            <p>Yes. Mumtaz is BYOK (Bring Your Own Key). We support OpenAI and Anthropic — connect your existing API key.</p>
+                        </div>
+                        <div class="mzw-faq-item">
+                            <h4>Is my data isolated from other clients?</h4>
+                            <p>Absolutely. Every tenant gets a dedicated Odoo database. There is zero data co-mingling.</p>
+                        </div>
+                        <div class="mzw-faq-item">
+                            <h4>Can I upgrade or downgrade my plan?</h4>
+                            <p>Yes, at any time. Contact your account manager or email sales@mumtaz.digital.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mzw-cta">
+                <div class="mzw-cta-inner">
+                    <h2 class="mzw-cta-title">Not sure which plan fits?</h2>
+                    <p class="mzw-cta-sub">Talk to our team and we'll recommend the right setup.</p>
+                    <a href="/contact" class="mzw-btn mzw-btn-primary mzw-btn-lg">Talk to Sales</a>
+                </div>
+            </section>
+
+            <t t-call="mumtaz_website.website_footer"/>
+        </t>
+    </template>
+</odoo>
