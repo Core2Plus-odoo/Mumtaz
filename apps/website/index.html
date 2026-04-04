@@ -3,65 +3,440 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mumtaz | AI ERP & Embedded Finance</title>
-  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
+  <title>Mumtaz — Business OS for Modern GCC Teams</title>
+  <meta name="description" content="Mumtaz is the unified business platform for GCC enterprises — ERP, AI, and Marketplace in one place. Powered by Odoo Community.">
   <link rel="icon" href="assets/images/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
 </head>
 <body>
+
+<!-- ══════════════════════════════════════════════ HEADER -->
 <header class="site-header">
   <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle>Menu</button>
+    <a class="brand" href="index.html">
+      <div class="brand-mark">M</div>
+      <span class="brand-text">Mumtaz</span>
+    </a>
+
+    <button class="nav-toggle" data-nav-toggle aria-label="Open menu" aria-expanded="false">☰</button>
+
     <nav class="nav-menu" data-nav-menu>
       <a class="nav-link active" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
+      <a class="nav-link" href="#products">Products</a>
+      <a class="nav-link" href="#industries">Industries</a>
       <a class="nav-link" href="pricing.html">Pricing</a>
-      <a class="nav-link" href="docs.html">Docs</a>
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link" href="blog.html">Blog</a>
+      <a class="nav-link" href="#about">About</a>
       <a class="nav-link" href="contact.html">Contact</a>
     </nav>
+
     <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+      <a class="btn btn-ghost btn-sm" href="https://app.mumtaz.digital/web/login">Login</a>
+      <a class="btn btn-primary btn-sm" href="https://app.mumtaz.digital/mumtaz/onboard">Start Free</a>
     </div>
   </div>
 </header>
+
 <main>
- 
+
+<!-- ══════════════════════════════════════════════ HERO -->
 <section class="hero">
-  <div class="container hero-grid">
-    <div class="reveal">
-      <span class="badge">AI-Powered • Enterprise-Ready • GCC Native</span>
-      <h1>Transform Enterprise Operations with Intelligent Automation</h1>
-      <p>Deploy banking-grade ERP with embedded AI, finance activation, and multi-company orchestration for fast-growing GCC enterprises.</p>
-      <div><a class="btn btn-primary" href="demo.html">Book Interactive Demo</a> <a class="btn btn-outline" href="platform.html">Explore Platform</a></div>
-      <div class="stats-row"><div class="stat"><strong>500+</strong>Enterprise Users</div><div class="stat"><strong>99.95%</strong>Uptime SLA</div><div class="stat"><strong>$2B+</strong>GMV Processed</div></div>
+  <div class="container hero-inner">
+
+    <!-- Copy -->
+    <div>
+      <div class="hero-badge reveal">
+        <span class="badge">🇦🇪 Built for the GCC · AI-Powered · Enterprise-Ready</span>
+      </div>
+      <h1 class="reveal">The Business OS<br>for Modern Teams</h1>
+      <p class="hero-sub reveal">
+        ERP, AI, and Marketplace — unified in one platform.
+        Give your team real-time insights, automated workflows,
+        and an AI assistant that knows your business.
+      </p>
+      <div class="hero-ctas reveal">
+        <a class="btn btn-primary btn-lg" href="https://app.mumtaz.digital/mumtaz/onboard">Start Free Trial</a>
+        <a class="btn btn-outline btn-lg" href="demo.html">Watch Demo</a>
+      </div>
+      <div class="hero-stats reveal">
+        <div class="stat-pill">
+          <strong>500+</strong>
+          <span>Enterprise users</span>
+        </div>
+        <div class="stat-pill">
+          <strong>99.9%</strong>
+          <span>Uptime SLA</span>
+        </div>
+        <div class="stat-pill">
+          <strong>GCC</strong>
+          <span>Native compliance</span>
+        </div>
+      </div>
     </div>
-    <aside class="glass dashboard-card reveal">
-      <h3>Executive Snapshot</h3>
-      <div class="kpi"><span>Revenue</span><strong>$2.4M</strong></div>
-      <div class="kpi"><span>Cash Runway</span><strong>146 days</strong></div>
-      <div class="kpi"><span>Finance Activation</span><strong style="color:var(--accent)">+22%</strong></div>
-      <div class="kpi"><span>Risk Alerts</span><strong>2</strong></div>
-    </aside>
+
+    <!-- Dashboard mockup -->
+    <div class="hero-visual reveal">
+      <div class="dash-header">
+        <span class="dash-title">Mumtaz Dashboard</span>
+        <div class="dash-dot"></div>
+      </div>
+      <div class="dash-kpis">
+        <div class="dash-kpi">
+          <div class="dash-kpi-label">Revenue MTD</div>
+          <div class="dash-kpi-val">OMR 48.2K</div>
+          <div class="dash-kpi-trend">↑ 12.4% vs last month</div>
+        </div>
+        <div class="dash-kpi">
+          <div class="dash-kpi-label">Outstanding</div>
+          <div class="dash-kpi-val">OMR 9.4K</div>
+          <div class="dash-kpi-trend" style="color: var(--amber)">3 invoices due</div>
+        </div>
+        <div class="dash-kpi">
+          <div class="dash-kpi-label">Cash Position</div>
+          <div class="dash-kpi-val">OMR 122K</div>
+          <div class="dash-kpi-trend">146 days runway</div>
+        </div>
+        <div class="dash-kpi">
+          <div class="dash-kpi-label">ZAKI Insights</div>
+          <div class="dash-kpi-val">3 alerts</div>
+          <div class="dash-kpi-trend" style="color: var(--blue-light)">View recommendations</div>
+        </div>
+      </div>
+      <div class="dash-chart">
+        <div class="dash-chart-label">Revenue — Last 8 weeks</div>
+        <div class="dash-bars">
+          <div class="dash-bar" style="height:45%"></div>
+          <div class="dash-bar" style="height:55%"></div>
+          <div class="dash-bar" style="height:48%"></div>
+          <div class="dash-bar" style="height:65%"></div>
+          <div class="dash-bar" style="height:58%"></div>
+          <div class="dash-bar" style="height:72%"></div>
+          <div class="dash-bar" style="height:80%"></div>
+          <div class="dash-bar active" style="height:95%"></div>
+        </div>
+      </div>
+      <div class="dash-alerts">
+        <div class="dash-alert">
+          <div class="dash-alert-dot dot-green"></div>
+          ZAKI: Revenue trending +12% above target
+        </div>
+        <div class="dash-alert">
+          <div class="dash-alert-dot dot-amber"></div>
+          Subscription renewal due in 7 days
+        </div>
+        <div class="dash-alert">
+          <div class="dash-alert-dot dot-blue"></div>
+          3 purchase orders pending approval
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
-<section class="section"><div class="container"><div class="section-header reveal"><h2>Core capabilities for modern operators</h2><p>Trusted by banks, fintechs, trading groups, manufacturers, and omnichannel brands.</p></div><div class="grid-3"><article class="glass card reveal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h10M7 12h6M7 16h4"></path></svg><h3>Enterprise ERP</h3><p>Modular operations across accounting, procurement, CRM, inventory, and workflows.</p></article><article class="glass card reveal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 18l4-4 4 2 6-8"></path><circle cx="4" cy="18" r="1"></circle><circle cx="8" cy="14" r="1"></circle><circle cx="12" cy="16" r="1"></circle><circle cx="18" cy="8" r="1"></circle></svg><h3>AI CFO Agent</h3><p>Actionable guidance for liquidity, profitability, margin optimization, and risk.</p></article><article class="glass card reveal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg><h3>Embedded Finance</h3><p>Credit offers, payment rails, and partner workflows inside daily operations.</p></article></div></div></section>
-<section class="section"><div class="container cta-band glass reveal"><h2>Ready to modernize your operating stack?</h2><p>Join ambitious GCC enterprises using Mumtaz to connect operations and finance.</p><a class="btn btn-primary" href="contact.html">Talk to an Expert</a></div></section>
+
+<!-- ══════════════════════════════════════════════ TRUST BAR -->
+<div class="trust-bar">
+  <div class="container">
+    <p class="trust-label">Trusted by ambitious teams across the GCC</p>
+    <div class="trust-logos">
+      <div class="trust-logo">Al Futtaim</div>
+      <div class="trust-logo">Mashreq</div>
+      <div class="trust-logo">Majid Al Futtaim</div>
+      <div class="trust-logo">ADNOC</div>
+      <div class="trust-logo">Emaar</div>
+      <div class="trust-logo">Almarai</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ PRODUCTS -->
+<section class="section" id="products">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="badge badge-purple">Platform</span>
+      <h2>One platform. Every business need.</h2>
+      <p>Stop switching between tools. Mumtaz unifies your ERP, AI assistant, and marketplace in a single experience your team will actually use.</p>
+    </div>
+
+    <div class="products-grid">
+
+      <!-- ERP — featured (tall) -->
+      <div class="product-card featured product-glow reveal">
+        <div class="product-icon icon-blue">🎯</div>
+        <span class="badge" style="margin-bottom: 1rem;">Core Product</span>
+        <h3>Enterprise ERP</h3>
+        <p>Full-stack Odoo Community — accounting, sales, inventory, HR, and operations — delivered through a beautiful, unified interface.</p>
+        <ul class="product-features">
+          <li>Accounting &amp; invoicing (VAT compliant)</li>
+          <li>Sales CRM &amp; quotations</li>
+          <li>Inventory &amp; warehouse management</li>
+          <li>HR, payroll &amp; leave management</li>
+          <li>Multi-company &amp; multi-currency</li>
+          <li>Automated workflows &amp; approvals</li>
+          <li>Real-time financial reporting</li>
+        </ul>
+        <a class="btn btn-primary" href="erp.html">Explore ERP →</a>
+      </div>
+
+      <div>
+        <!-- ZAKI AI -->
+        <div class="product-card reveal" style="margin-bottom: 1.25rem;">
+          <div class="product-icon icon-purple">🤖</div>
+          <h3>ZAKI AI</h3>
+          <p>Your AI-powered business assistant. Ask questions, get insights, and trigger actions — all in natural language, scoped to your data.</p>
+          <ul class="product-features">
+            <li>"What's my cashflow forecast?"</li>
+            <li>"Show overdue invoices this week"</li>
+            <li>"Create a quotation for Al Salam Co"</li>
+            <li>Proactive alerts &amp; recommendations</li>
+          </ul>
+          <a class="btn btn-ghost btn-sm" href="ai.html">Learn about ZAKI →</a>
+        </div>
+
+        <!-- Marketplace -->
+        <div class="product-card reveal">
+          <div class="product-icon icon-cyan">🛒</div>
+          <h3>Marketplace</h3>
+          <p>Connect your business to the GCC ecosystem — integrations, services, and certified partners — without leaving the platform.</p>
+          <ul class="product-features">
+            <li>Payment gateway integrations</li>
+            <li>Logistics &amp; delivery partners</li>
+            <li>Accounting &amp; compliance services</li>
+          </ul>
+          <a class="btn btn-ghost btn-sm" href="#industries">Browse marketplace →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ INDUSTRIES -->
+<section class="section section-sm" id="industries" style="background: var(--bg-1);">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="badge badge-green">Industries</span>
+      <h2>Built for GCC business</h2>
+      <p>Mumtaz is designed around how businesses operate across the Gulf — from trading and contracting to fintech and retail.</p>
+    </div>
+
+    <div class="industries-grid">
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏦</div>
+        <div class="industry-name">Banking &amp; Finance</div>
+        <div class="industry-desc">Credit, compliance, reporting</div>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">📦</div>
+        <div class="industry-name">Trading &amp; Distribution</div>
+        <div class="industry-desc">Inventory, sales, logistics</div>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏗️</div>
+        <div class="industry-name">Contracting</div>
+        <div class="industry-desc">Projects, HR, procurement</div>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">🏪</div>
+        <div class="industry-name">Retail</div>
+        <div class="industry-desc">POS, e-commerce, stock</div>
+      </div>
+      <div class="industry-card reveal">
+        <div class="industry-icon">⚖️</div>
+        <div class="industry-name">Professional Services</div>
+        <div class="industry-desc">Billing, timesheets, CRM</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ FEATURES -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="badge">Capabilities</span>
+      <h2>Everything your business needs</h2>
+      <p>Enterprise-grade features without enterprise-grade complexity. Mumtaz handles the infrastructure — you focus on growth.</p>
+    </div>
+
+    <div class="features-grid">
+
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-blue">⚡</div>
+        <h4>Smart Automation</h4>
+        <p>Automate recurring tasks, approvals, and notifications. ZAKI AI suggests optimizations as your business data grows.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-purple">🛡️</div>
+        <h4>GCC Compliance</h4>
+        <p>VAT-ready for UAE, KSA, Oman, and Bahrain. E-invoicing, Zakat reporting, and local payroll built-in.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-cyan">📊</div>
+        <h4>Real-Time Analytics</h4>
+        <p>Live dashboards powered by your Odoo data. No exports, no delays — decisions from facts, not spreadsheets.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-green">🏢</div>
+        <h4>Multi-Company</h4>
+        <p>Manage multiple legal entities, currencies, and charts of accounts from one workspace with full consolidation.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-blue">🔐</div>
+        <h4>Role-Based Access</h4>
+        <p>Granular permissions per module, company, and user. Full audit log of every action — nothing hidden.</p>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-purple">🌐</div>
+        <h4>Arabic &amp; English</h4>
+        <p>Full bilingual interface with right-to-left support, Arabic reports, and localised date/number formats.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ PRICING -->
+<section class="section" id="pricing" style="background: var(--bg-1);">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="badge badge-green">Pricing</span>
+      <h2>Simple, transparent pricing</h2>
+      <p>Start free. Scale as you grow. No hidden fees, no per-module licensing surprises.</p>
+    </div>
+
+    <div class="pricing-grid">
+
+      <!-- Starter -->
+      <div class="pricing-card reveal">
+        <div class="pricing-plan">Starter</div>
+        <div class="pricing-price">OMR 49<span>/mo</span></div>
+        <div class="pricing-period">Up to 5 users · Billed monthly</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li>Accounting &amp; invoicing</li>
+          <li>Sales CRM</li>
+          <li>Inventory (basic)</li>
+          <li>ZAKI AI — 100 queries/mo</li>
+          <li>Email support</li>
+          <li class="muted">Multi-company</li>
+          <li class="muted">Custom integrations</li>
+        </ul>
+        <a class="btn btn-outline" style="width:100%; justify-content:center;" href="https://app.mumtaz.digital/mumtaz/onboard">Start Free Trial</a>
+      </div>
+
+      <!-- Growth — popular -->
+      <div class="pricing-card popular reveal">
+        <div class="popular-badge">Most Popular</div>
+        <div class="pricing-plan">Growth</div>
+        <div class="pricing-price">OMR 149<span>/mo</span></div>
+        <div class="pricing-period">Up to 25 users · Billed monthly</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li>Everything in Starter</li>
+          <li>Full ERP (HR, payroll, projects)</li>
+          <li>ZAKI AI — unlimited queries</li>
+          <li>Marketplace integrations</li>
+          <li>Multi-company (2 entities)</li>
+          <li>Priority support</li>
+          <li class="muted">Dedicated onboarding</li>
+        </ul>
+        <a class="btn btn-primary" style="width:100%; justify-content:center;" href="https://app.mumtaz.digital/mumtaz/onboard">Start Free Trial</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card reveal">
+        <div class="pricing-plan">Enterprise</div>
+        <div class="pricing-price">Custom</div>
+        <div class="pricing-period">Unlimited users · Annual contract</div>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li>Everything in Growth</li>
+          <li>Unlimited companies &amp; entities</li>
+          <li>Custom ZAKI AI models</li>
+          <li>White-label branding</li>
+          <li>Dedicated infrastructure</li>
+          <li>SLA-backed support</li>
+          <li>Dedicated onboarding team</li>
+        </ul>
+        <a class="btn btn-outline" style="width:100%; justify-content:center;" href="contact.html">Talk to Sales</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════ FINAL CTA -->
+<section class="cta-section" id="about">
+  <div class="container">
+    <div class="cta-box reveal">
+      <span class="badge badge-purple" style="margin-bottom: 1.5rem;">Ready when you are</span>
+      <h2>Your business deserves<br>a smarter OS</h2>
+      <p>Join growing GCC teams that replaced fragmented tools with Mumtaz.<br>Get up and running in days, not months.</p>
+      <div class="cta-actions">
+        <a class="btn btn-primary btn-lg" href="https://app.mumtaz.digital/mumtaz/onboard">Start Free — No credit card</a>
+        <a class="btn btn-outline btn-lg" href="contact.html">Talk to the team</a>
+      </div>
+      <p class="cta-note">Free 14-day trial · Full ERP + ZAKI AI · Cancel anytime</p>
+    </div>
+  </div>
+</section>
+
 </main>
+
+<!-- ══════════════════════════════════════════════ FOOTER -->
 <footer class="footer">
-  <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
-    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
-    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
-    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="index.html">
+          <div class="brand-mark">M</div>
+          <span class="brand-text">Mumtaz</span>
+        </a>
+        <p>The unified business OS for modern GCC enterprises — ERP, AI, and Marketplace in one platform.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <a href="erp.html">ERP</a>
+        <a href="ai.html">ZAKI AI</a>
+        <a href="#industries">Marketplace</a>
+        <a href="pricing.html">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="about.html">About</a>
+        <a href="blog.html">Blog</a>
+        <a href="contact.html">Contact</a>
+        <a href="demo.html">Book Demo</a>
+      </div>
+      <div class="footer-col">
+        <h5>Platform</h5>
+        <a href="https://app.mumtaz.digital/web/login">Login</a>
+        <a href="https://app.mumtaz.digital/mumtaz/onboard">Sign Up</a>
+        <a href="docs.html">Documentation</a>
+        <a href="contact.html">Support</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2025 Mumtaz. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Policy</a>
+      </div>
+    </div>
   </div>
 </footer>
+
 <script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
+
 </body>
 </html>
