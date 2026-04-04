@@ -106,35 +106,26 @@
     }
 }
 
-/* Apply animations to elements */
-.reveal {
-    animation: fadeInUp 0.8s ease-out forwards;
+/* Scroll-reveal: driven by IntersectionObserver adding .in-view */
+.reveal, .reveal-slow, .reveal-fast {
     opacity: 0;
+    transform: translateY(22px);
+    transition: opacity .65s ease, transform .65s ease;
 }
-
-.reveal-slow {
-    animation: fadeInUp 1.2s ease-out forwards;
-    opacity: 0;
-}
-
-.reveal-fast {
-    animation: fadeInUp 0.4s ease-out forwards;
-    opacity: 0;
-}
+.reveal-slow  { transition-duration: 1s; }
+.reveal-fast  { transition-duration: .35s; }
 
 .slide-in-left {
-    animation: slideInLeft 0.8s ease-out forwards;
-    opacity: 0;
+    opacity: 0; transform: translateX(-30px);
+    transition: opacity .65s ease, transform .65s ease;
 }
-
 .slide-in-right {
-    animation: slideInRight 0.8s ease-out forwards;
-    opacity: 0;
+    opacity: 0; transform: translateX(30px);
+    transition: opacity .65s ease, transform .65s ease;
 }
-
 .scale-in {
-    animation: scaleIn 0.6s ease-out forwards;
-    opacity: 0;
+    opacity: 0; transform: scale(0.92);
+    transition: opacity .55s ease, transform .55s ease;
 }
 
 .pulse {

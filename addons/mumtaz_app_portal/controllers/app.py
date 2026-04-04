@@ -121,87 +121,181 @@ class MumtazApp(http.Controller):
 
         env = request.env
         company_id = env.company.id
+        today = date.today()
+        first_of_month = today.replace(day=1)
         ctx = self._base_ctx('home', 'Home')
 
-        # ERP quick stats
-        erp_leads_total = erp_opps_open = erp_opps_won = erp_campaign_count = 0
-        if ctx['has_erp']:
-            try:
-                Lead = env['crm.lead'].sudo()
-                erp_leads_total = Lead.search_count([('type', '=', 'lead')])
-                erp_opps_open = Lead.search_count([('type', '=', 'opportunity'), ('probability', '<', 100)])
-                erp_opps_won = Lead.search_count([('type', '=', 'opportunity'), ('stage_id.is_won', '=', True)])
-                erp_campaign_count = env['lead.nurture.campaign'].sudo().search_count([('active', '=', True)])
-            except Exception:
-                pass
+        # ── Odoo ERP stats (account.move, sale.order, purchase.order) ──
+        revenue_mtd = 0.0
+        invoices_outstanding = 0.0
+        invoices_overdue = 0
+        open_sales_count = 0
+        open_po_count = 0
+        cash_balance = 0.0
+        recent_invoices = []
+        alerts = []
 
-        # ZAKI quick stats
-        zaki_tx_count = zaki_review_count = zaki_ai_sessions = 0
-        zaki_net = zaki_workspace_obj = None
-        if ctx['has_zaki']:
-            try:
-                ws = env['mumtaz.cfo.workspace'].sudo().search(
-                    [('company_id', '=', company_id)], limit=1
-                )
-                zaki_workspace_obj = ws
-                ctx['zaki_workspace'] = ws
-                if ws:
-                    Tx = env['mumtaz.cfo.transaction'].sudo()
-                    zaki_tx_count = Tx.search_count([('workspace_id', '=', ws.id)])
-                    zaki_review_count = Tx.search_count([
-                        ('workspace_id', '=', ws.id),
-                        ('requires_review', '=', True),
-                    ])
-                    income = sum(t.amount for t in Tx.search([
-                        ('workspace_id', '=', ws.id), ('direction', '=', 'inflow')
-                    ]))
-                    expense = sum(t.amount for t in Tx.search([
-                        ('workspace_id', '=', ws.id), ('direction', '=', 'outflow')
-                    ]))
-                    zaki_net = income - expense
-                    zaki_ai_sessions = env['mumtaz.ai.session'].sudo().search_count(
-                        [('company_id', '=', company_id)]
-                    )
-            except Exception:
-                pass
-            ctx['zaki_alert_count'] = zaki_review_count
-
-        # Marketplace quick stats
-        mp_total_listings = mp_my_listings = mp_new_inquiries = 0
-        if ctx['has_marketplace']:
-            try:
-                Listing = env['mumtaz.marketplace.listing'].sudo()
-                mp_total_listings = Listing.search_count([('state', '=', 'published')])
-                mp_my_listings = Listing.search_count([
-                    ('company_id', '=', company_id), ('state', '=', 'published')
-                ])
-                mp_new_inquiries = env['mumtaz.marketplace.inquiry'].sudo().search_count([
-                    ('listing_id.company_id', '=', company_id), ('state', '=', 'new')
-                ])
-            except Exception:
-                pass
-            ctx['marketplace_alert_count'] = mp_new_inquiries
-
-        profile_completeness = 0
+        # Revenue this month + outstanding invoices
         try:
-            if ctx['tenant_profile']:
-                profile_completeness = ctx['tenant_profile'].profile_completeness or 0
+            Move = env['account.move'].sudo()
+            # Posted customer invoices issued this month
+            mtd_invoices = Move.search([
+                ('move_type', '=', 'out_invoice'),
+                ('state', '=', 'posted'),
+                ('invoice_date', '>=', first_of_month.strftime('%Y-%m-%d')),
+                ('company_id', '=', company_id),
+            ])
+            revenue_mtd = sum(m.amount_total for m in mtd_invoices)
+
+            # All unpaid customer invoices
+            unpaid = Move.search([
+                ('move_type', '=', 'out_invoice'),
+                ('state', '=', 'posted'),
+                ('payment_state', 'not in', ['paid', 'reversed']),
+                ('company_id', '=', company_id),
+            ])
+            invoices_outstanding = sum(m.amount_residual for m in unpaid)
+
+            # Overdue
+            invoices_overdue = Move.search_count([
+                ('move_type', '=', 'out_invoice'),
+                ('state', '=', 'posted'),
+                ('payment_state', 'not in', ['paid', 'reversed']),
+                ('invoice_date_due', '<', today.strftime('%Y-%m-%d')),
+                ('company_id', '=', company_id),
+            ])
+
+            # Recent invoices for the table
+            recent_invoices = Move.search([
+                ('move_type', 'in', ['out_invoice', 'out_refund']),
+                ('state', '=', 'posted'),
+                ('company_id', '=', company_id),
+            ], order='invoice_date desc', limit=8)
+
+            if invoices_overdue:
+                alerts.append({
+                    'level': 'danger',
+                    'icon': '⚠',
+                    'text': f'{invoices_overdue} overdue invoice(s) need attention',
+                    'link': '/web#action=account.action_move_out_invoice_type',
+                })
         except Exception:
             pass
 
+        # Cash / bank balance
+        try:
+            journals = env['account.journal'].sudo().search([
+                ('type', 'in', ['bank', 'cash']),
+                ('company_id', '=', company_id),
+            ])
+            for j in journals:
+                cash_balance += j.current_statement_balance or 0.0
+        except Exception:
+            pass
+
+        # Open sales orders
+        try:
+            Sale = env['sale.order'].sudo()
+            open_sales_count = Sale.search_count([
+                ('state', 'in', ['draft', 'sent', 'sale']),
+                ('company_id', '=', company_id),
+            ])
+        except Exception:
+            pass
+
+        # Open purchase orders
+        try:
+            PO = env['purchase.order'].sudo()
+            open_po_count = PO.search_count([
+                ('state', 'in', ['draft', 'sent', 'purchase']),
+                ('company_id', '=', company_id),
+            ])
+            if open_po_count:
+                alerts.append({
+                    'level': 'info',
+                    'icon': '📦',
+                    'text': f'{open_po_count} purchase order(s) in progress',
+                    'link': '/web#action=purchase.purchase_rfq',
+                })
+        except Exception:
+            pass
+
+        # Low-stock alert
+        try:
+            low_stock_count = env['stock.quant'].sudo().search_count([
+                ('location_id.usage', '=', 'internal'),
+                ('quantity', '<=', 0),
+                ('company_id', '=', company_id),
+            ])
+            if low_stock_count:
+                alerts.append({
+                    'level': 'warning',
+                    'icon': '📉',
+                    'text': f'{low_stock_count} product(s) with zero or negative stock',
+                    'link': '/web#action=stock.product_template_action_product',
+                })
+        except Exception:
+            pass
+
+        # Pending timesheets / leave approvals (HR)
+        try:
+            pending_leaves = env['hr.leave'].sudo().search_count([
+                ('state', '=', 'confirm'),
+                ('company_id', '=', company_id),
+            ])
+            if pending_leaves:
+                alerts.append({
+                    'level': 'info',
+                    'icon': '🗓',
+                    'text': f'{pending_leaves} leave request(s) awaiting approval',
+                    'link': '/web#action=hr_holidays.action_hr_leave_manager',
+                })
+        except Exception:
+            pass
+
+        # Subscription renewal alert
+        try:
+            sub = ctx.get('subscription')
+            if sub and sub.renewal_date:
+                days_left = (sub.renewal_date - today).days
+                if 0 < days_left <= 14:
+                    alerts.append({
+                        'level': 'warning',
+                        'icon': '🔄',
+                        'text': f'Subscription renews in {days_left} day(s)',
+                        'link': '/app/account',
+                    })
+        except Exception:
+            pass
+
+        # Currency symbol for display
+        try:
+            currency_symbol = env.company.currency_id.symbol or ''
+        except Exception:
+            currency_symbol = ''
+
+        # Format helper
+        def fmt_amount(val):
+            """Return a compact human-readable amount string."""
+            if val >= 1_000_000:
+                return f'{val/1_000_000:.1f}M'
+            if val >= 1_000:
+                return f'{val/1_000:.1f}K'
+            return f'{val:.0f}'
+
         ctx.update({
-            'erp_leads_total': erp_leads_total,
-            'erp_opps_open': erp_opps_open,
-            'erp_opps_won': erp_opps_won,
-            'erp_campaign_count': erp_campaign_count,
-            'zaki_tx_count': zaki_tx_count,
-            'zaki_review_count': zaki_review_count,
-            'zaki_net': zaki_net,
-            'zaki_ai_sessions': zaki_ai_sessions,
-            'mp_total_listings': mp_total_listings,
-            'mp_my_listings': mp_my_listings,
-            'mp_new_inquiries': mp_new_inquiries,
-            'profile_completeness': profile_completeness,
+            'revenue_mtd': revenue_mtd,
+            'revenue_mtd_fmt': fmt_amount(revenue_mtd),
+            'invoices_outstanding': invoices_outstanding,
+            'invoices_outstanding_fmt': fmt_amount(invoices_outstanding),
+            'invoices_overdue': invoices_overdue,
+            'open_sales_count': open_sales_count,
+            'open_po_count': open_po_count,
+            'cash_balance': cash_balance,
+            'cash_balance_fmt': fmt_amount(cash_balance),
+            'recent_invoices': recent_invoices,
+            'alerts': alerts,
+            'currency_symbol': currency_symbol,
         })
         return request.render('mumtaz_app_portal.app_home', ctx)
 

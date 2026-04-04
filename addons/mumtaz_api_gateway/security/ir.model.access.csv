@@ -2,3 +2,6 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mumtaz_api_key_manager,mumtaz.api.key manager,model_mumtaz_api_key,mumtaz_tenant_manager.group_mumtaz_platform_admin,1,1,1,1
 access_mumtaz_api_usage_log_manager,mumtaz.api.usage.log manager,model_mumtaz_api_usage_log,mumtaz_tenant_manager.group_mumtaz_platform_admin,1,0,0,0
 access_mumtaz_async_job_manager,mumtaz.async.job manager,model_mumtaz_async_job,mumtaz_tenant_manager.group_mumtaz_platform_admin,1,1,1,1
+access_mumtaz_api_key_system,mumtaz_api_key system,model_mumtaz_api_key,base.group_system,1,1,1,1
+access_mumtaz_api_usage_log_system,mumtaz_api_usage_log system,model_mumtaz_api_usage_log,base.group_system,1,1,1,1
+access_mumtaz_async_job_system,mumtaz_async_job system,model_mumtaz_async_job,base.group_system,1,1,1,1

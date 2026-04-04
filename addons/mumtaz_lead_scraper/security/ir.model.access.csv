@@ -9,3 +9,7 @@ access_lead_scraper_record_admin,lead.scraper.record (admin),model_lead_scraper_
 access_lead_scraper_record_user,lead.scraper.record (user),model_lead_scraper_record,group_lead_scraper_user,1,1,1,0
 access_lead_scraper_record_viewer,lead.scraper.record (viewer),model_lead_scraper_record,group_lead_scraper_viewer,1,0,0,0
 access_lead_scraper_run_wizard_user,lead.scraper.run.wizard (user),model_lead_scraper_run_wizard,group_lead_scraper_user,1,1,1,1
+access_lead_scraper_job_system,lead_scraper_job system,model_lead_scraper_job,base.group_system,1,1,1,1
+access_lead_scraper_record_system,lead_scraper_record system,model_lead_scraper_record,base.group_system,1,1,1,1
+access_lead_scraper_run_wizard_system,lead_scraper_run_wizard system,model_lead_scraper_run_wizard,base.group_system,1,1,1,1
+access_lead_scraper_source_system,lead_scraper_source system,model_lead_scraper_source,base.group_system,1,1,1,1
