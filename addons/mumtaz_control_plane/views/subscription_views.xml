@@ -25,17 +25,15 @@
             <field name="name">mumtaz.subscription.search</field>
             <field name="model">mumtaz.subscription</field>
             <field name="arch" type="xml">
-                <search>
+                <search string="Subscriptions">
                     <field name="tenant_id"/>
                     <field name="plan_id"/>
                     <field name="status"/>
                     <field name="payment_status"/>
                     <filter string="Current" domain="[('is_current','=',True)]"/>
                     <filter string="Lifecycle Risk" domain="[('status','in',['past_due','grace','suspended'])]"/>
-                    <group expand="0" string="Group By">
-                        <filter string="Status" context="{'group_by': 'status'}"/>
-                        <filter string="Plan" context="{'group_by': 'plan_id'}"/>
-                    </group>
+                    <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
+                    <filter string="Plan" name="group_by_plan" context="{'group_by': 'plan_id'}"/>
                 </search>
             </field>
         </record>

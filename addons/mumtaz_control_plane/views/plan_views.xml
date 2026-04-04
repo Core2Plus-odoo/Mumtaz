@@ -23,15 +23,13 @@
             <field name="name">mumtaz.plan.search</field>
             <field name="model">mumtaz.plan</field>
             <field name="arch" type="xml">
-                <search>
+                <search string="Plans">
                     <field name="name"/>
                     <field name="code"/>
                     <field name="billing_cycle_default"/>
                     <field name="legacy_bundle_id"/>
                     <filter name="active_only" string="Active" domain="[('active','=',True)]"/>
-                    <group expand="0" string="Group By">
-                        <filter string="Cycle" context="{'group_by': 'billing_cycle_default'}"/>
-                    </group>
+                    <filter string="Cycle" name="group_by_cycle" context="{'group_by': 'billing_cycle_default'}"/>
                 </search>
             </field>
         </record>

@@ -23,7 +23,7 @@
         <record id="action_mumtaz_commercial_event_logs" model="ir.actions.act_window">
             <field name="name">Commercial History</field>
             <field name="res_model">mumtaz.commercial.event.log</field>
-            <field name="view_mode">list/field>
+            <field name="view_mode">list</field>
         </record>
     </data>
 </odoo>

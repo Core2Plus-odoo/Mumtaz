@@ -21,14 +21,12 @@
             <field name="name">mumtaz.tenant.feature.search</field>
             <field name="model">mumtaz.tenant.feature</field>
             <field name="arch" type="xml">
-                <search>
+                <search string="Feature Overrides">
                     <field name="tenant_id"/>
                     <field name="feature_id"/>
                     <field name="override_mode"/>
-                    <group expand="0" string="Group By">
-                        <filter string="Tenant" context="{'group_by': 'tenant_id'}"/>
-                        <filter string="Mode" context="{'group_by': 'override_mode'}"/>
-                    </group>
+                    <filter string="Tenant" name="group_by_tenant" context="{'group_by': 'tenant_id'}"/>
+                    <filter string="Mode" name="group_by_mode" context="{'group_by': 'override_mode'}"/>
                 </search>
             </field>
         </record>

@@ -22,16 +22,14 @@
             <field name="name">mumtaz.feature.search</field>
             <field name="model">mumtaz.feature</field>
             <field name="arch" type="xml">
-                <search>
+                <search string="Features">
                     <field name="name"/>
                     <field name="code"/>
                     <field name="product_area"/>
                     <field name="feature_type"/>
                     <filter string="Active" domain="[('active','=',True)]"/>
-                    <group expand="0" string="Group By">
-                        <filter string="Area" context="{'group_by': 'product_area'}"/>
-                        <filter string="Type" context="{'group_by': 'feature_type'}"/>
-                    </group>
+                    <filter string="Area" name="group_by_area" context="{'group_by': 'product_area'}"/>
+                    <filter string="Type" name="group_by_type" context="{'group_by': 'feature_type'}"/>
                 </search>
             </field>
         </record>

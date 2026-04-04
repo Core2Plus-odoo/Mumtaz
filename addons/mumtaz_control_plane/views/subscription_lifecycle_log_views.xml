@@ -54,7 +54,7 @@
             <field name="name">mumtaz.subscription.lifecycle.log.search</field>
             <field name="model">mumtaz.subscription.lifecycle.log</field>
             <field name="arch" type="xml">
-                <search>
+                <search string="Lifecycle Logs">
                     <field name="subscription_id"/>
                     <field name="tenant_id"/>
                     <field name="from_status"/>
@@ -62,11 +62,9 @@
                     <field name="source"/>
                     <filter string="Applied" domain="[('applied','=',True)]"/>
                     <filter string="Warnings" domain="[('applied','=',False)]"/>
-                    <group expand="0" string="Group By">
-                        <filter string="To Status" context="{'group_by':'to_status'}"/>
-                        <filter string="Policy Mode" context="{'group_by':'policy_mode'}"/>
-                        <filter string="Source" context="{'group_by':'source'}"/>
-                    </group>
+                    <filter string="To Status" name="group_by_to_status" context="{'group_by':'to_status'}"/>
+                    <filter string="Policy Mode" name="group_by_policy_mode" context="{'group_by':'policy_mode'}"/>
+                    <filter string="Source" name="group_by_source" context="{'group_by':'source'}"/>
                 </search>
             </field>
         </record>
