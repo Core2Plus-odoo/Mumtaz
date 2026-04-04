@@ -22,6 +22,9 @@
             <t t-set="no_header" t-value="True"/>
             <t t-set="no_footer" t-value="True"/>
 
+            <!-- Mobile sidebar overlay -->
+            <div class="mza-sidebar-overlay" id="mzaSidebarOverlay"></div>
+
             <div class="mza-shell">
 
                 <!-- ═══════════════════════════════════════════ SIDEBAR -->
