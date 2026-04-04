@@ -60,17 +60,6 @@ class MumtazTenant(models.Model):
     )
     subscription_start = fields.Date(tracking=True)
     subscription_end = fields.Date(tracking=True)
-    sme_profile_ids = fields.One2many(
-        "mumtaz.sme.profile",
-        "tenant_id",
-        string="SME Profiles",
-        help="Business customers in this tenant.",
-    )
-    sme_profile_count = fields.Integer(
-        compute="_compute_sme_profile_count",
-        string="SME Count",
-    )
-
     # ── Branding ──────────────────────────────────────────────────────────
     brand_id = fields.Many2one(
         "mumtaz.brand",
@@ -163,11 +152,6 @@ class MumtazTenant(models.Model):
                         db=rec.database_name,
                     )
                 )
-
-    @api.depends("sme_profile_ids")
-    def _compute_sme_profile_count(self):
-        for rec in self:
-            rec.sme_profile_count = len(rec.sme_profile_ids)
 
     # ── State transition helpers ──────────────────────────────────────────
     def action_start_provisioning(self):
