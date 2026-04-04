@@ -1,263 +1,302 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="app_home" name="Mumtaz App — Home Dashboard">
-        <t t-call="mumtaz_app_portal.app_base_layout">
+<template id="app_home" name="Mumtaz App — Home Dashboard">
+<t t-call="mumtaz_app_portal.app_base_layout">
+<div class="mza-page">
 
-            <div class="mza-page">
-
-                <!-- Welcome banner -->
-                <div class="mza-welcome-banner">
-                    <div class="mza-welcome-inner">
-                        <div class="mza-welcome-text">
-                            <h1 class="mza-welcome-title">
-                                Welcome back<t t-if="user.name">, <t t-esc="user.name.split()[0]"/></t>
-                            </h1>
-                            <p class="mza-welcome-sub">
-                                <t t-esc="company.name"/> · <t t-esc="today_date"/>
-                            </p>
-                        </div>
-                        <t t-if="subscription">
-                            <div t-att-class="'mza-sub-pill mza-sub-' + (subscription.status or 'trial')">
-                                <span class="mza-sub-dot"/>
-                                <t t-esc="subscription.plan_id.name if subscription.plan_id else 'Trial'"/>
-                                <t t-if="subscription.status == 'trial' and subscription.trial_end_date">
-                                    — ends <t t-esc="subscription.trial_end_date" t-options='{"widget": "date"}'/>
-                                </t>
-                            </div>
-                        </t>
-                    </div>
-                </div>
-
-                <!-- Health overview cards -->
-                <div class="mza-section">
-                    <div class="mza-health-grid">
-
-                        <!-- ERP health -->
-                        <t t-if="has_erp">
-                            <a href="/app/erp" class="mza-health-card mza-health-erp">
-                                <div class="mza-health-header">
-                                    <span class="mza-health-icon">🎯</span>
-                                    <span class="mza-health-label">ERP</span>
-                                    <span class="mza-health-arrow">→</span>
-                                </div>
-                                <div class="mza-health-stats">
-                                    <div class="mza-health-stat">
-                                        <span class="mza-health-num"><t t-esc="erp_leads_total or 0"/></span>
-                                        <span class="mza-health-stat-label">Leads</span>
-                                    </div>
-                                    <div class="mza-health-stat">
-                                        <span class="mza-health-num mza-num-warning"><t t-esc="erp_opps_open or 0"/></span>
-                                        <span class="mza-health-stat-label">Open Opps</span>
-                                    </div>
-                                    <div class="mza-health-stat">
-                                        <span class="mza-health-num mza-num-success"><t t-esc="erp_opps_won or 0"/></span>
-                                        <span class="mza-health-stat-label">Won</span>
-                                    </div>
-                                </div>
-                                <t t-if="erp_campaign_count and erp_campaign_count &gt; 0">
-                                    <div class="mza-health-footer">
-                                        📣 <t t-esc="erp_campaign_count"/> active campaign(s)
-                                    </div>
-                                </t>
-                            </a>
-                        </t>
-                        <t t-if="not has_erp">
-                            <div class="mza-health-card mza-health-locked">
-                                <div class="mza-health-header">
-                                    <span class="mza-health-icon">🎯</span>
-                                    <span class="mza-health-label">ERP</span>
-                                    <span class="mza-health-lock">🔒</span>
-                                </div>
-                                <div class="mza-health-upgrade">
-                                    <p>ERP &amp; lead tools not included in your current plan.</p>
-                                    <a href="/app/account" class="mza-upgrade-link">Upgrade plan →</a>
-                                </div>
-                            </div>
-                        </t>
-
-                        <!-- ZAKI health -->
-                        <t t-if="has_zaki">
-                            <a href="/app/zaki" class="mza-health-card mza-health-zaki">
-                                <div class="mza-health-header">
-                                    <span class="mza-health-icon">🤖</span>
-                                    <span class="mza-health-label">ZAKI AI</span>
-                                    <span class="mza-health-arrow">→</span>
-                                </div>
-                                <div class="mza-health-stats">
-                                    <div class="mza-health-stat">
-                                        <span class="mza-health-num"><t t-esc="zaki_tx_count or 0"/></span>
-                                        <span class="mza-health-stat-label">Transactions</span>
-                                    </div>
-                                    <t t-if="zaki_net is not None">
-                                        <div class="mza-health-stat">
-                                            <span t-att-class="'mza-health-num ' + ('mza-num-success' if zaki_net &gt;= 0 else 'mza-num-danger')">
-                                                <t t-esc="('+ ' if zaki_net &gt;= 0 else '− ') + '%.0f' % abs(zaki_net)"/>
-                                            </span>
-                                            <span class="mza-health-stat-label">Net Position</span>
-                                        </div>
-                                    </t>
-                                    <t t-if="zaki_review_count and zaki_review_count &gt; 0">
-                                        <div class="mza-health-stat">
-                                            <span class="mza-health-num mza-num-warning"><t t-esc="zaki_review_count"/></span>
-                                            <span class="mza-health-stat-label">Review Queue</span>
-                                        </div>
-                                    </t>
-                                </div>
-                                <t t-if="zaki_ai_sessions and zaki_ai_sessions &gt; 0">
-                                    <div class="mza-health-footer">
-                                        💬 <t t-esc="zaki_ai_sessions"/> AI session(s)
-                                    </div>
-                                </t>
-                            </a>
-                        </t>
-                        <t t-if="not has_zaki">
-                            <div class="mza-health-card mza-health-locked">
-                                <div class="mza-health-header">
-                                    <span class="mza-health-icon">🤖</span>
-                                    <span class="mza-health-label">ZAKI AI</span>
-                                    <span class="mza-health-lock">🔒</span>
-                                </div>
-                                <div class="mza-health-upgrade">
-                                    <p>ZAKI AI CFO is not included in your plan.</p>
-                                    <a href="/app/account" class="mza-upgrade-link">Upgrade plan →</a>
-                                </div>
-                            </div>
-                        </t>
-
-                        <!-- Marketplace health -->
-                        <t t-if="has_marketplace">
-                            <a href="/app/marketplace" class="mza-health-card mza-health-marketplace">
-                                <div class="mza-health-header">
-                                    <span class="mza-health-icon">🛒</span>
-                                    <span class="mza-health-label">Marketplace</span>
-                                    <span class="mza-health-arrow">→</span>
-                                </div>
-                                <div class="mza-health-stats">
-                                    <div class="mza-health-stat">
-                                        <span class="mza-health-num"><t t-esc="mp_total_listings or 0"/></span>
-                                        <span class="mza-health-stat-label">Live Listings</span>
-                                    </div>
-                                    <div class="mza-health-stat">
-                                        <span class="mza-health-num mza-num-primary"><t t-esc="mp_my_listings or 0"/></span>
-                                        <span class="mza-health-stat-label">Mine</span>
-                                    </div>
-                                    <t t-if="mp_new_inquiries and mp_new_inquiries &gt; 0">
-                                        <div class="mza-health-stat">
-                                            <span class="mza-health-num mza-num-warning"><t t-esc="mp_new_inquiries"/></span>
-                                            <span class="mza-health-stat-label">New Inquiries</span>
-                                        </div>
-                                    </t>
-                                </div>
-                            </a>
-                        </t>
-                        <t t-if="not has_marketplace">
-                            <div class="mza-health-card mza-health-locked">
-                                <div class="mza-health-header">
-                                    <span class="mza-health-icon">🛒</span>
-                                    <span class="mza-health-label">Marketplace</span>
-                                    <span class="mza-health-lock">🔒</span>
-                                </div>
-                                <div class="mza-health-upgrade">
-                                    <p>Marketplace not included in your plan.</p>
-                                    <a href="/app/account" class="mza-upgrade-link">Upgrade plan →</a>
-                                </div>
-                            </div>
-                        </t>
-
-                    </div>
-                </div>
-
-                <!-- Quick actions -->
-                <div class="mza-section">
-                    <h2 class="mza-section-title">Quick Actions</h2>
-                    <div class="mza-quick-grid">
-                        <t t-if="has_zaki">
-                            <a href="/mumtaz/ai" class="mza-quick-card mza-quick-featured">
-                                <div class="mza-quick-icon">🤖</div>
-                                <div class="mza-quick-label">Ask ZAKI</div>
-                                <div class="mza-quick-desc">AI-powered CFO insights</div>
-                            </a>
-                        </t>
-                        <t t-if="has_erp">
-                            <a href="/app/erp" class="mza-quick-card">
-                                <div class="mza-quick-icon">🎯</div>
-                                <div class="mza-quick-label">CRM Pipeline</div>
-                                <div class="mza-quick-desc">Leads &amp; opportunities</div>
-                            </a>
-                        </t>
-                        <t t-if="has_marketplace">
-                            <a href="/app/marketplace" class="mza-quick-card">
-                                <div class="mza-quick-icon">🛒</div>
-                                <div class="mza-quick-label">Marketplace</div>
-                                <div class="mza-quick-desc">Listings &amp; inquiries</div>
-                            </a>
-                        </t>
-                        <a href="/app/account" class="mza-quick-card">
-                            <div class="mza-quick-icon">📋</div>
-                            <div class="mza-quick-label">Account</div>
-                            <div class="mza-quick-desc">Plan &amp; subscription</div>
-                        </a>
-                        <t t-if="has_erp">
-                            <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
-                               class="mza-quick-card">
-                                <div class="mza-quick-icon">🔍</div>
-                                <div class="mza-quick-label">Lead Scraper</div>
-                                <div class="mza-quick-desc">Automated lead sourcing</div>
-                            </a>
-                        </t>
-                        <t t-if="has_zaki">
-                            <a href="/app/zaki" class="mza-quick-card">
-                                <div class="mza-quick-icon">💳</div>
-                                <div class="mza-quick-label">Transactions</div>
-                                <div class="mza-quick-desc">Financial records</div>
-                            </a>
-                        </t>
-                    </div>
-                </div>
-
-                <!-- Onboarding checklist if incomplete -->
-                <t t-if="tenant_profile and tenant_profile.onboarding_stage != 'done'">
-                    <div class="mza-section">
-                        <div class="mza-onboarding-card">
-                            <div class="mza-onboarding-header">
-                                <span class="mza-onboarding-icon">🚀</span>
-                                <div>
-                                    <div class="mza-onboarding-title">Get Started with Mumtaz</div>
-                                    <div class="mza-onboarding-sub">Complete setup to unlock the full platform</div>
-                                </div>
-                                <div class="mza-onboarding-progress">
-                                    <div class="mza-progress-bar">
-                                        <div t-att-class="'mza-progress-fill'"
-                                             t-att-style="'width: ' + str(profile_completeness or 0) + '%'"/>
-                                    </div>
-                                    <span class="mza-progress-label">
-                                        <t t-esc="profile_completeness or 0"/>% complete
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="mza-onboarding-steps">
-                                <a href="/app/account" class="mza-onboarding-step mza-step-active">
-                                    <span class="mza-step-check">○</span>
-                                    Complete company profile
-                                </a>
-                                <t t-if="has_zaki and not zaki_workspace">
-                                    <a href="/mumtaz/cfo" class="mza-onboarding-step mza-step-active">
-                                        <span class="mza-step-check">○</span>
-                                        Set up ZAKI CFO workspace
-                                    </a>
-                                </t>
-                                <t t-if="has_marketplace and mp_my_listings == 0">
-                                    <a href="/app/marketplace" class="mza-onboarding-step mza-step-active">
-                                        <span class="mza-step-check">○</span>
-                                        Post your first marketplace listing
-                                    </a>
-                                </t>
-                            </div>
-                        </div>
-                    </div>
-                </t>
-
+    <!-- ══════════════════════════════════════ WELCOME HEADER -->
+    <div class="mza-welcome-banner">
+        <div class="mza-welcome-text">
+            <div class="mza-welcome-greeting">
+                Welcome back<t t-if="user.name">, <t t-esc="user.name.split()[0]"/></t>
             </div>
-        </t>
-    </template>
+            <div class="mza-welcome-date">
+                <t t-esc="company.name"/> · <t t-esc="today_date"/>
+            </div>
+        </div>
+        <div class="mza-welcome-right">
+            <t t-if="subscription">
+                <span t-att-class="'mza-company-plan mza-plan-' + (subscription.status or 'trial')">
+                    <t t-esc="subscription.plan_id.name if subscription.plan_id else 'Trial'"/>
+                </span>
+            </t>
+            <t t-else="">
+                <span class="mza-company-plan mza-plan-trial">Trial</span>
+            </t>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ ALERTS STRIP -->
+    <t t-if="alerts">
+        <div class="mza-alerts-strip">
+            <t t-foreach="alerts" t-as="alert">
+                <a t-att-href="alert.get('link', '#')"
+                   t-att-class="'mza-alert-item mza-alert-' + alert.get('level', 'info')">
+                    <span class="mza-alert-icon"><t t-esc="alert.get('icon', '•')"/></span>
+                    <span class="mza-alert-text"><t t-esc="alert.get('text', '')"/></span>
+                    <span class="mza-alert-arrow">→</span>
+                </a>
+            </t>
+        </div>
+    </t>
+
+    <!-- ══════════════════════════════════════ KPI CARDS -->
+    <div class="mza-kpi-grid">
+
+        <!-- Revenue MTD -->
+        <a href="/web#action=account.action_move_out_invoice_type" class="mza-kpi-card">
+            <div class="mza-kpi-icon mza-kpi-icon-blue">💰</div>
+            <div class="mza-kpi-body">
+                <div class="mza-kpi-label">Revenue MTD</div>
+                <div class="mza-kpi-value">
+                    <t t-esc="currency_symbol"/><t t-esc="revenue_mtd_fmt"/>
+                </div>
+                <div class="mza-kpi-sub">This month's invoiced revenue</div>
+            </div>
+        </a>
+
+        <!-- Outstanding invoices -->
+        <a href="/web#action=account.action_move_out_invoice_type" class="mza-kpi-card">
+            <div t-att-class="'mza-kpi-icon ' + ('mza-kpi-icon-red' if invoices_overdue else 'mza-kpi-icon-amber')">📄</div>
+            <div class="mza-kpi-body">
+                <div class="mza-kpi-label">Outstanding</div>
+                <div t-att-class="'mza-kpi-value ' + ('mza-kpi-danger' if invoices_overdue else '')">
+                    <t t-esc="currency_symbol"/><t t-esc="invoices_outstanding_fmt"/>
+                </div>
+                <div class="mza-kpi-sub">
+                    <t t-if="invoices_overdue">
+                        <span class="mza-badge mza-badge-red"><t t-esc="invoices_overdue"/> overdue</span>
+                    </t>
+                    <t t-else="">All invoices current</t>
+                </div>
+            </div>
+        </a>
+
+        <!-- Open sales orders -->
+        <a href="/web#action=sale.action_quotations_with_onboarding" class="mza-kpi-card">
+            <div class="mza-kpi-icon mza-kpi-icon-green">🛍</div>
+            <div class="mza-kpi-body">
+                <div class="mza-kpi-label">Open Orders</div>
+                <div class="mza-kpi-value"><t t-esc="open_sales_count or 0"/></div>
+                <div class="mza-kpi-sub">Active sales orders</div>
+            </div>
+        </a>
+
+        <!-- Cash / bank balance -->
+        <a href="/web#action=account.action_account_config" class="mza-kpi-card">
+            <div class="mza-kpi-icon mza-kpi-icon-purple">🏦</div>
+            <div class="mza-kpi-body">
+                <div class="mza-kpi-label">Cash Position</div>
+                <div class="mza-kpi-value">
+                    <t t-esc="currency_symbol"/><t t-esc="cash_balance_fmt"/>
+                </div>
+                <div class="mza-kpi-sub">Bank &amp; cash accounts</div>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- ══════════════════════════════════════ ERP MODULE GRID -->
+    <div class="mza-section-row">
+        <div class="mza-section-head">
+            <h2 class="mza-section-title">ERP Modules</h2>
+            <a href="/web" class="mza-section-link">Open Odoo backend →</a>
+        </div>
+        <div class="mza-module-grid">
+
+            <a href="/web#action=account.action_move_out_invoice_type" class="mza-module-card">
+                <div class="mza-module-icon mza-mod-blue">📊</div>
+                <div class="mza-module-name">Accounting</div>
+                <div class="mza-module-desc">Invoices, bills, payments</div>
+            </a>
+
+            <a href="/web#action=sale.action_quotations_with_onboarding" class="mza-module-card">
+                <div class="mza-module-icon mza-mod-green">🤝</div>
+                <div class="mza-module-name">Sales</div>
+                <div class="mza-module-desc">Quotations &amp; orders</div>
+            </a>
+
+            <a href="/web#action=stock.action_stock_view_location_form" class="mza-module-card">
+                <div class="mza-module-icon mza-mod-amber">📦</div>
+                <div class="mza-module-name">Inventory</div>
+                <div class="mza-module-desc">Stock &amp; warehousing</div>
+            </a>
+
+            <a href="/web#action=purchase.purchase_rfq" class="mza-module-card">
+                <div class="mza-module-icon mza-mod-cyan">🛒</div>
+                <div class="mza-module-name">Purchase</div>
+                <div class="mza-module-desc">Vendors &amp; POs</div>
+            </a>
+
+            <a href="/web#action=hr.open_view_employee_list_my" class="mza-module-card">
+                <div class="mza-module-icon mza-mod-purple">👥</div>
+                <div class="mza-module-name">HR</div>
+                <div class="mza-module-desc">Employees &amp; leaves</div>
+            </a>
+
+            <a href="/web#action=account.action_account_general_ledger" class="mza-module-card">
+                <div class="mza-module-icon mza-mod-blue">📈</div>
+                <div class="mza-module-name">Reports</div>
+                <div class="mza-module-desc">GL, P&amp;L, balance sheet</div>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ BOTTOM SPLIT: INVOICES + ZAKI -->
+    <div class="mza-split-grid">
+
+        <!-- Recent Invoices -->
+        <div class="mza-card">
+            <div class="mza-card-header">
+                <span class="mza-card-title">Recent Invoices</span>
+                <a href="/web#action=account.action_move_out_invoice_type" class="mza-card-link">View all →</a>
+            </div>
+
+            <t t-if="recent_invoices">
+                <div class="mza-table-wrap">
+                    <table class="mza-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="recent_invoices" t-as="inv">
+                                <tr>
+                                    <td>
+                                        <a t-att-href="'/web#model=account.move&amp;id=' + str(inv.id)"
+                                           class="mza-table-link">
+                                            <t t-esc="inv.name or 'Draft'"/>
+                                        </a>
+                                    </td>
+                                    <td class="mza-text-muted">
+                                        <t t-esc="inv.partner_id.name if inv.partner_id else '—'"/>
+                                    </td>
+                                    <td class="mza-text-muted">
+                                        <t t-esc="inv.invoice_date" t-options='{"widget": "date"}' t-if="inv.invoice_date"/>
+                                        <t t-else="">—</t>
+                                    </td>
+                                    <td class="mza-text-bold">
+                                        <t t-esc="'{:,.0f}'.format(inv.amount_total)"/>
+                                    </td>
+                                    <td>
+                                        <t t-if="inv.payment_state == 'paid'">
+                                            <span class="mza-badge mza-badge-green">Paid</span>
+                                        </t>
+                                        <t t-elif="inv.payment_state == 'partial'">
+                                            <span class="mza-badge mza-badge-yellow">Partial</span>
+                                        </t>
+                                        <t t-elif="inv.payment_state == 'reversed'">
+                                            <span class="mza-badge mza-badge-gray">Reversed</span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="mza-badge mza-badge-red">Unpaid</span>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="mza-empty">
+                    <div class="mza-empty-icon">📄</div>
+                    <div class="mza-empty-title">No invoices yet</div>
+                    <div class="mza-empty-sub">Create your first invoice in Accounting</div>
+                    <a href="/web#action=account.action_move_out_invoice_type" class="mza-btn mza-btn-ghost mza-btn-sm">
+                        Open Accounting →
+                    </a>
+                </div>
+            </t>
+        </div>
+
+        <!-- ZAKI AI Panel -->
+        <div class="mza-card mza-zaki-panel">
+            <div class="mza-card-header">
+                <span class="mza-card-title">🤖 ZAKI AI</span>
+                <a href="/app/zaki" class="mza-card-link">Open ZAKI →</a>
+            </div>
+
+            <t t-if="has_zaki">
+                <div class="mza-zaki-intro">
+                    Ask ZAKI anything about your business — revenue, expenses,
+                    outstanding payments, or what to focus on today.
+                </div>
+                <a href="/app/zaki" class="mza-zaki-ask-box">
+                    <span class="mza-zaki-placeholder">Ask ZAKI something…</span>
+                    <span class="mza-zaki-send">→</span>
+                </a>
+                <div class="mza-zaki-prompts">
+                    <a href="/app/zaki?q=revenue+this+month" class="mza-zaki-prompt">
+                        💰 Revenue this month?
+                    </a>
+                    <a href="/app/zaki?q=overdue+invoices" class="mza-zaki-prompt">
+                        ⚠ Overdue invoices
+                    </a>
+                    <a href="/app/zaki?q=top+customers" class="mza-zaki-prompt">
+                        👥 Top customers
+                    </a>
+                    <a href="/app/zaki?q=cashflow+forecast" class="mza-zaki-prompt">
+                        📈 Cashflow forecast
+                    </a>
+                </div>
+            </t>
+            <t t-else="">
+                <div class="mza-upgrade-card" style="margin: 0; padding: 28px;">
+                    <div class="mza-upgrade-icon">🤖</div>
+                    <div class="mza-upgrade-title">ZAKI AI is not on your plan</div>
+                    <div class="mza-upgrade-sub">Upgrade to Growth or Enterprise to unlock AI-powered insights.</div>
+                    <div class="mza-upgrade-actions">
+                        <a href="/app/account" class="mza-btn mza-btn-primary mza-btn-sm">Upgrade Plan</a>
+                    </div>
+                </div>
+            </t>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════ QUICK ACTIONS -->
+    <div class="mza-section-row">
+        <div class="mza-section-head">
+            <h2 class="mza-section-title">Quick Actions</h2>
+        </div>
+        <div class="mza-action-grid">
+            <a href="/web#action=account.action_move_out_invoice_type&amp;view_type=form" class="mza-action-tile">
+                <div class="mza-action-tile-icon">➕</div>
+                New Invoice
+            </a>
+            <a href="/web#action=sale.action_quotations_with_onboarding&amp;view_type=form" class="mza-action-tile">
+                <div class="mza-action-tile-icon">📝</div>
+                New Quotation
+            </a>
+            <a href="/web#action=purchase.purchase_rfq&amp;view_type=form" class="mza-action-tile">
+                <div class="mza-action-tile-icon">🛒</div>
+                New Purchase
+            </a>
+            <a href="/web#action=base.action_partner_form&amp;view_type=form" class="mza-action-tile">
+                <div class="mza-action-tile-icon">👤</div>
+                Add Customer
+            </a>
+            <t t-if="has_zaki">
+                <a href="/app/zaki" class="mza-action-tile mza-action-featured">
+                    <div class="mza-action-tile-icon">🤖</div>
+                    Ask ZAKI
+                </a>
+            </t>
+            <a href="/app/account" class="mza-action-tile">
+                <div class="mza-action-tile-icon">⚙</div>
+                Account &amp; Plan
+            </a>
+        </div>
+    </div>
+
+</div>
+</t>
+</template>
 </odoo>
