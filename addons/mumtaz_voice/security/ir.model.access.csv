@@ -3,3 +3,5 @@ access_mumtaz_voice_session_user,mumtaz.voice.session user,model_mumtaz_voice_se
 access_mumtaz_voice_message_user,mumtaz.voice.message user,model_mumtaz_voice_message,base.group_user,1,0,1,0
 access_mumtaz_voice_session_manager,mumtaz.voice.session manager,model_mumtaz_voice_session,mumtaz_core.group_mumtaz_manager,1,1,1,1
 access_mumtaz_voice_message_manager,mumtaz.voice.message manager,model_mumtaz_voice_message,mumtaz_core.group_mumtaz_manager,1,1,1,1
+access_mumtaz_voice_message_system,mumtaz_voice_message system,model_mumtaz_voice_message,base.group_system,1,1,1,1
+access_mumtaz_voice_session_system,mumtaz_voice_session system,model_mumtaz_voice_session,base.group_system,1,1,1,1

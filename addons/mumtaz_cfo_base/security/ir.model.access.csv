@@ -3,3 +3,5 @@ access_mumtaz_cfo_workspace_user,mumtaz.cfo.workspace user,model_mumtaz_cfo_work
 access_mumtaz_cfo_workspace_manager,mumtaz.cfo.workspace manager,model_mumtaz_cfo_workspace,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
 access_mumtaz_cfo_category_user,mumtaz.cfo.category user,model_mumtaz_cfo_category,mumtaz_cfo_base.group_mumtaz_cfo_user,1,1,1,0
 access_mumtaz_cfo_category_manager,mumtaz.cfo.category manager,model_mumtaz_cfo_category,mumtaz_cfo_base.group_mumtaz_cfo_manager,1,1,1,1
+access_mumtaz_cfo_category_system,mumtaz_cfo_category system,model_mumtaz_cfo_category,base.group_system,1,1,1,1
+access_mumtaz_cfo_workspace_system,mumtaz_cfo_workspace system,model_mumtaz_cfo_workspace,base.group_system,1,1,1,1

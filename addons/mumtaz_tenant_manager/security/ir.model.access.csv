@@ -4,3 +4,6 @@ access_mumtaz_tenant_manager,mumtaz.tenant (manager),model_mumtaz_tenant,group_m
 access_mumtaz_module_bundle_admin,mumtaz.module.bundle (admin),model_mumtaz_module_bundle,group_mumtaz_platform_admin,1,1,1,1
 access_mumtaz_module_bundle_manager,mumtaz.module.bundle (manager),model_mumtaz_module_bundle,group_mumtaz_platform_manager,1,0,0,0
 access_mumtaz_provision_wizard_admin,mumtaz.provision.wizard (admin),model_mumtaz_provision_wizard,group_mumtaz_platform_admin,1,1,1,1
+access_mumtaz_module_bundle_system,mumtaz_module_bundle system,model_mumtaz_module_bundle,base.group_system,1,1,1,1
+access_mumtaz_provision_wizard_system,mumtaz_provision_wizard system,model_mumtaz_provision_wizard,base.group_system,1,1,1,1
+access_mumtaz_tenant_system,mumtaz_tenant system,model_mumtaz_tenant,base.group_system,1,1,1,1

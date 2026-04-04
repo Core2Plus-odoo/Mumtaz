@@ -3,3 +3,5 @@ access_mumtaz_ai_session_user,mumtaz.ai.session user,model_mumtaz_ai_session,bas
 access_mumtaz_ai_message_user,mumtaz.ai.message user,model_mumtaz_ai_message,base.group_user,1,0,1,0
 access_mumtaz_ai_session_manager,mumtaz.ai.session manager,model_mumtaz_ai_session,mumtaz_core.group_mumtaz_manager,1,1,1,1
 access_mumtaz_ai_message_manager,mumtaz.ai.message manager,model_mumtaz_ai_message,mumtaz_core.group_mumtaz_manager,1,1,1,1
+access_mumtaz_ai_message_system,mumtaz_ai_message system,model_mumtaz_ai_message,base.group_system,1,1,1,1
+access_mumtaz_ai_session_system,mumtaz_ai_session system,model_mumtaz_ai_session,base.group_system,1,1,1,1
