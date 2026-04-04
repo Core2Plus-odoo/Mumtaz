@@ -5,7 +5,7 @@
             <field name="name">mumtaz.plan.tree</field>
             <field name="model">mumtaz.plan</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="sequence"/>
                     <field name="name"/>
                     <field name="code"/>
@@ -15,7 +15,7 @@
                     <field name="grace_days_default"/>
                     <field name="legacy_bundle_id"/>
                     <field name="active"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -63,13 +63,13 @@
                         <notebook>
                             <page string="Plan Features">
                                 <field name="plan_feature_ids">
-                                    <tree editable="bottom">
+                                    <list editable="bottom">
                                         <field name="feature_id"/>
                                         <field name="enabled"/>
                                         <field name="quota_limit"/>
                                         <field name="limit_period"/>
                                         <field name="source" readonly="1"/>
-                                    </tree>
+                                    </list>
                                 </field>
                             </page>
                         </notebook>
@@ -81,7 +81,7 @@
         <record id="action_mumtaz_plan" model="ir.actions.act_window">
             <field name="name">Plans</field>
             <field name="res_model">mumtaz.plan</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="search_view_id" ref="view_mumtaz_plan_search"/>
         </record>
     </data>

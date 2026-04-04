@@ -5,7 +5,7 @@
             <field name="name">mumtaz.subscription.lifecycle.log.tree</field>
             <field name="model">mumtaz.subscription.lifecycle.log</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="processed_at"/>
                     <field name="source"/>
                     <field name="subscription_id"/>
@@ -16,7 +16,7 @@
                     <field name="tenant_impact_mode"/>
                     <field name="tenant_action"/>
                     <field name="applied"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -74,7 +74,7 @@
         <record id="action_mumtaz_subscription_lifecycle_log" model="ir.actions.act_window">
             <field name="name">Subscription Lifecycle Logs</field>
             <field name="res_model">mumtaz.subscription.lifecycle.log</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="search_view_id" ref="view_mumtaz_subscription_lifecycle_log_search"/>
         </record>
     </data>

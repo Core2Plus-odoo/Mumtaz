@@ -5,7 +5,7 @@
             <field name="name">mumtaz.tenant.feature.tree</field>
             <field name="model">mumtaz.tenant.feature</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="tenant_id"/>
                     <field name="feature_id"/>
                     <field name="override_mode"/>
@@ -13,7 +13,7 @@
                     <field name="effective_from"/>
                     <field name="effective_to"/>
                     <field name="granted_by"/>
-                </tree>
+                </list>
             </field>
         </record>
 
@@ -63,7 +63,7 @@
         <record id="action_mumtaz_tenant_feature" model="ir.actions.act_window">
             <field name="name">Feature Overrides</field>
             <field name="res_model">mumtaz.tenant.feature</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="search_view_id" ref="view_mumtaz_tenant_feature_search"/>
         </record>
     </data>

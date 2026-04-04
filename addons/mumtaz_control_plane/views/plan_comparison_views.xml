@@ -5,7 +5,7 @@
             <field name="name">mumtaz.plan.comparison.tree</field>
             <field name="model">mumtaz.plan</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="sequence"/>
                     <field name="name"/>
                     <field name="billing_cycle_default"/>
@@ -13,14 +13,14 @@
                     <field name="comparison_feature_gain"/>
                     <field name="comparison_quota_gain"/>
                     <field name="comparison_summary"/>
-                </tree>
+                </list>
             </field>
         </record>
 
         <record id="action_mumtaz_plan_comparison" model="ir.actions.act_window">
             <field name="name">Plan Comparison</field>
             <field name="res_model">mumtaz.plan</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="view_id" ref="view_mumtaz_plan_comparison_tree"/>
             <field name="search_view_id" ref="view_mumtaz_plan_search"/>
         </record>
