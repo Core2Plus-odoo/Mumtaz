@@ -29,10 +29,10 @@ PORTAL_PRIORITY = [
 ]
 
 PORTAL_URLS = {
-    'admin':       '/mumtaz/portal/admin',
-    'erp':         '/mumtaz/portal/erp',
-    'zaki':        '/mumtaz/portal/zaki',
-    'marketplace': '/mumtaz/portal/marketplace',
+    'admin':       '/mumtaz/portal/admin',  # internal control plane
+    'erp':         '/app',                  # unified customer app
+    'zaki':        '/app',                  # unified customer app
+    'marketplace': '/app',                  # unified customer app
 }
 
 PORTAL_LABELS = {
@@ -112,9 +112,17 @@ class ResUsersPortal(models.Model):
         is_super = self.has_group('mumtaz_core.group_mumtaz_super_admin')
         primary = self._detect_portal_type(self)
 
+        # Section URLs inside the unified app portal
+        APP_SECTION_URLS = {
+            'admin':       '/mumtaz/portal/admin',
+            'erp':         '/app/erp',
+            'zaki':        '/app/zaki',
+            'marketplace': '/app/marketplace',
+        }
+
         if is_super:
             return [
-                {'type': ptype, 'label': label, 'url': PORTAL_URLS[ptype]}
+                {'type': ptype, 'label': label, 'url': APP_SECTION_URLS[ptype]}
                 for ptype, label in PORTAL_LABELS.items()
             ]
 
@@ -122,7 +130,7 @@ class ResUsersPortal(models.Model):
             return [{
                 'type': primary,
                 'label': PORTAL_LABELS[primary],
-                'url': PORTAL_URLS[primary],
+                'url': APP_SECTION_URLS.get(primary, '/app'),
             }]
 
         return []
