@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Shared navbar for all marketing pages -->
+    <template id="website_navbar" name="Mumtaz Website Navbar">
+        <nav class="mzw-nav">
+            <div class="mzw-nav-inner">
+                <a href="/" class="mzw-brand">
+                    <span class="mzw-brand-logo">ممتاز</span>
+                    <span class="mzw-brand-name">Mumtaz</span>
+                </a>
+                <div class="mzw-nav-links">
+                    <a href="/features" class="mzw-nav-link">Features</a>
+                    <a href="/pricing" class="mzw-nav-link">Pricing</a>
+                    <a href="/contact" class="mzw-nav-link">Contact</a>
+                </div>
+                <div class="mzw-nav-cta">
+                    <a href="/web/login" class="mzw-btn mzw-btn-ghost">Sign In</a>
+                    <a href="/contact" class="mzw-btn mzw-btn-primary">Get Started</a>
+                </div>
+                <button class="mzw-mobile-toggle" id="mzwMobileToggle">☰</button>
+            </div>
+            <!-- Mobile menu -->
+            <div class="mzw-mobile-menu" id="mzwMobileMenu">
+                <a href="/features" class="mzw-mobile-link">Features</a>
+                <a href="/pricing" class="mzw-mobile-link">Pricing</a>
+                <a href="/contact" class="mzw-mobile-link">Contact</a>
+                <a href="/web/login" class="mzw-mobile-link">Sign In</a>
+                <a href="/contact" class="mzw-mobile-link mzw-mobile-cta">Get Started</a>
+            </div>
+        </nav>
+    </template>
+
+    <!-- Shared footer -->
+    <template id="website_footer" name="Mumtaz Website Footer">
+        <footer class="mzw-footer">
+            <div class="mzw-footer-inner">
+                <div class="mzw-footer-brand">
+                    <span class="mzw-brand-logo">ممتاز</span>
+                    <span class="mzw-brand-name">Mumtaz</span>
+                    <p class="mzw-footer-tagline">
+                        The AI-powered ERP platform for modern SMEs.
+                    </p>
+                </div>
+                <div class="mzw-footer-links">
+                    <div class="mzw-footer-col">
+                        <div class="mzw-footer-col-title">Product</div>
+                        <a href="/features">Features</a>
+                        <a href="/pricing">Pricing</a>
+                        <a href="/app">App Portal</a>
+                    </div>
+                    <div class="mzw-footer-col">
+                        <div class="mzw-footer-col-title">Company</div>
+                        <a href="/contact">Contact</a>
+                        <a href="mailto:support@mumtaz.digital">Support</a>
+                        <a href="mailto:sales@mumtaz.digital">Sales</a>
+                    </div>
+                </div>
+            </div>
+            <div class="mzw-footer-bottom">
+                <span>© 2025 Mumtaz. All rights reserved.</span>
+                <span>Built on Odoo Community · Powered by AI</span>
+            </div>
+        </footer>
+    </template>
+</odoo>
