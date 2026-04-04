@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="home" name="Mumtaz — Home">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+
+            <t t-call="mumtaz_website.website_navbar"/>
+
+            <!-- Hero -->
+            <section class="mzw-hero">
+                <div class="mzw-hero-inner">
+                    <div class="mzw-hero-badge">🚀 Now with ZAKI AI CFO</div>
+                    <h1 class="mzw-hero-title">
+                        The Intelligent ERP Platform<br/>
+                        <span class="mzw-hero-accent">Built for Modern SMEs</span>
+                    </h1>
+                    <p class="mzw-hero-sub">
+                        Mumtaz unifies your ERP, AI financial intelligence, and marketplace
+                        into one seamless platform — powered by Odoo and driven by AI.
+                    </p>
+                    <div class="mzw-hero-actions">
+                        <a href="/contact" class="mzw-btn mzw-btn-primary mzw-btn-lg">
+                            Request Demo
+                        </a>
+                        <a href="/features" class="mzw-btn mzw-btn-ghost mzw-btn-lg">
+                            Explore Features
+                        </a>
+                    </div>
+                    <div class="mzw-hero-trust">
+                        <span>🔒 Enterprise-grade security</span>
+                        <span>☁️ Multi-tenant SaaS</span>
+                        <span>🤖 AI-first design</span>
+                    </div>
+                </div>
+                <div class="mzw-hero-visual">
+                    <div class="mzw-app-preview">
+                        <div class="mzw-preview-bar">
+                            <span class="mzw-preview-dot mzw-dot-red"/>
+                            <span class="mzw-preview-dot mzw-dot-yellow"/>
+                            <span class="mzw-preview-dot mzw-dot-green"/>
+                            <span class="mzw-preview-url">app.mumtaz.digital</span>
+                        </div>
+                        <div class="mzw-preview-body">
+                            <div class="mzw-preview-sidebar">
+                                <div class="mzw-ps-logo">ممتاز</div>
+                                <div class="mzw-ps-item mzw-ps-active">⊞ Home</div>
+                                <div class="mzw-ps-item">🎯 ERP</div>
+                                <div class="mzw-ps-item">🤖 ZAKI AI</div>
+                                <div class="mzw-ps-item">🛒 Marketplace</div>
+                                <div class="mzw-ps-item">⚙️ Account</div>
+                            </div>
+                            <div class="mzw-preview-content">
+                                <div class="mzw-pc-title">Welcome back, Ahmad</div>
+                                <div class="mzw-pc-cards">
+                                    <div class="mzw-pc-card mzw-pc-erp">
+                                        <div class="mzw-pc-card-label">ERP</div>
+                                        <div class="mzw-pc-card-val">142 Leads</div>
+                                    </div>
+                                    <div class="mzw-pc-card mzw-pc-zaki">
+                                        <div class="mzw-pc-card-label">ZAKI AI</div>
+                                        <div class="mzw-pc-card-val">+ 48,200</div>
+                                    </div>
+                                    <div class="mzw-pc-card mzw-pc-mp">
+                                        <div class="mzw-pc-card-label">Marketplace</div>
+                                        <div class="mzw-pc-card-val">12 Listings</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logos / social proof -->
+            <section class="mzw-proof">
+                <div class="mzw-proof-inner">
+                    <p class="mzw-proof-label">Built on world-class foundations</p>
+                    <div class="mzw-proof-logos">
+                        <span class="mzw-proof-logo">Odoo Community</span>
+                        <span class="mzw-proof-sep">·</span>
+                        <span class="mzw-proof-logo">Claude AI</span>
+                        <span class="mzw-proof-sep">·</span>
+                        <span class="mzw-proof-logo">OpenAI</span>
+                        <span class="mzw-proof-sep">·</span>
+                        <span class="mzw-proof-logo">PostgreSQL</span>
+                        <span class="mzw-proof-sep">·</span>
+                        <span class="mzw-proof-logo">Docker</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Product pillars -->
+            <section class="mzw-pillars">
+                <div class="mzw-section-inner">
+                    <div class="mzw-section-label">Three pillars. One platform.</div>
+                    <h2 class="mzw-section-title">Everything your SME needs</h2>
+
+                    <div class="mzw-pillar-grid">
+                        <div class="mzw-pillar-card mzw-pillar-erp">
+                            <div class="mzw-pillar-icon">🎯</div>
+                            <h3 class="mzw-pillar-title">ERP & CRM</h3>
+                            <p class="mzw-pillar-body">
+                                Full CRM pipeline, automated lead scraping from the web,
+                                AI-powered nurture campaigns, and seamless Odoo ERP integration.
+                            </p>
+                            <ul class="mzw-pillar-list">
+                                <li>Lead scraping &amp; enrichment</li>
+                                <li>Nurture campaign automation</li>
+                                <li>Sales pipeline management</li>
+                                <li>WhatsApp &amp; email outreach</li>
+                            </ul>
+                        </div>
+
+                        <div class="mzw-pillar-card mzw-pillar-zaki">
+                            <div class="mzw-pillar-icon">🤖</div>
+                            <h3 class="mzw-pillar-title">ZAKI AI CFO</h3>
+                            <p class="mzw-pillar-body">
+                                Your AI-powered Chief Financial Officer — real-time transaction
+                                intelligence, net position tracking, and conversational financial insights.
+                            </p>
+                            <ul class="mzw-pillar-list">
+                                <li>AI-powered financial analysis</li>
+                                <li>Transaction categorization</li>
+                                <li>Net position &amp; cash flow</li>
+                                <li>Conversational CFO interface</li>
+                            </ul>
+                        </div>
+
+                        <div class="mzw-pillar-card mzw-pillar-mp">
+                            <div class="mzw-pillar-icon">🛒</div>
+                            <h3 class="mzw-pillar-title">SME Marketplace</h3>
+                            <p class="mzw-pillar-body">
+                                Connect with the broader SME network — list products, services,
+                                and partnership opportunities, and manage inquiries in one place.
+                            </p>
+                            <ul class="mzw-pillar-list">
+                                <li>Product &amp; service listings</li>
+                                <li>Partnership discovery</li>
+                                <li>Inquiry management</li>
+                                <li>Category-based browsing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How it works -->
+            <section class="mzw-how">
+                <div class="mzw-section-inner">
+                    <div class="mzw-section-label">Simple by design</div>
+                    <h2 class="mzw-section-title">Up and running in minutes</h2>
+                    <div class="mzw-steps">
+                        <div class="mzw-step">
+                            <div class="mzw-step-num">1</div>
+                            <div class="mzw-step-body">
+                                <h4>Request access</h4>
+                                <p>Contact our team. We provision a dedicated tenant for your company.</p>
+                            </div>
+                        </div>
+                        <div class="mzw-step-arrow">→</div>
+                        <div class="mzw-step">
+                            <div class="mzw-step-num">2</div>
+                            <div class="mzw-step-body">
+                                <h4>Configure your workspace</h4>
+                                <p>Set up your SME profile, connect your AI provider, and choose your plan.</p>
+                            </div>
+                        </div>
+                        <div class="mzw-step-arrow">→</div>
+                        <div class="mzw-step">
+                            <div class="mzw-step-num">3</div>
+                            <div class="mzw-step-body">
+                                <h4>Start growing</h4>
+                                <p>Scrape leads, ask ZAKI, post listings — one unified app portal.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA -->
+            <section class="mzw-cta">
+                <div class="mzw-cta-inner">
+                    <h2 class="mzw-cta-title">Ready to transform your SME?</h2>
+                    <p class="mzw-cta-sub">
+                        Join the growing network of businesses powered by Mumtaz.
+                    </p>
+                    <div class="mzw-cta-actions">
+                        <a href="/contact" class="mzw-btn mzw-btn-primary mzw-btn-lg">
+                            Request Demo
+                        </a>
+                        <a href="/pricing" class="mzw-btn mzw-btn-ghost mzw-btn-lg">
+                            View Pricing
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <t t-call="mumtaz_website.website_footer"/>
+        </t>
+    </template>
+</odoo>

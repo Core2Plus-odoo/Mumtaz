@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="app_account" name="Mumtaz App — Account &amp; Plan">
+        <t t-call="mumtaz_app_portal.app_base_layout">
+
+            <div class="mza-page">
+
+                <!-- Section header -->
+                <div class="mza-section-hero mza-hero-account">
+                    <div class="mza-hero-inner">
+                        <div>
+                            <h1 class="mza-hero-title">Account &amp; Plan</h1>
+                            <p class="mza-hero-sub">Subscription, usage, company profile, and platform settings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription status card -->
+                <div class="mza-section">
+                    <h2 class="mza-section-title">Subscription</h2>
+                    <t t-if="subscription">
+                        <div class="mza-sub-card">
+                            <div class="mza-sub-plan">
+                                <div class="mza-sub-plan-name">
+                                    <t t-esc="subscription.plan_id.name if subscription.plan_id else 'Custom Plan'"/>
+                                </div>
+                                <span t-att-class="'mza-badge mza-badge-' + ('success' if subscription.status == 'active' else 'warning' if subscription.status in ['trial','grace'] else 'danger')">
+                                    <t t-esc="subscription.status"/>
+                                </span>
+                            </div>
+                            <div class="mza-kv-card">
+                                <t t-if="subscription.status == 'trial' and subscription.trial_end_date">
+                                    <div class="mza-kv-row">
+                                        <span class="mza-kv-key">Trial Ends</span>
+                                        <span class="mza-kv-val">
+                                            <t t-esc="subscription.trial_end_date" t-options='{"widget": "date"}'/>
+                                        </span>
+                                    </div>
+                                </t>
+                                <t t-if="subscription.renewal_date">
+                                    <div class="mza-kv-row">
+                                        <span class="mza-kv-key">Renewal Date</span>
+                                        <span class="mza-kv-val">
+                                            <t t-esc="subscription.renewal_date" t-options='{"widget": "date"}'/>
+                                        </span>
+                                    </div>
+                                </t>
+                                <t t-if="subscription.plan_id and subscription.plan_id.monthly_price">
+                                    <div class="mza-kv-row">
+                                        <span class="mza-kv-key">Billing</span>
+                                        <span class="mza-kv-val">
+                                            <t t-esc="'%.2f' % subscription.plan_id.monthly_price"/> / month
+                                        </span>
+                                    </div>
+                                </t>
+                                <t t-if="subscription.plan_id and subscription.plan_id.max_users">
+                                    <div class="mza-kv-row">
+                                        <span class="mza-kv-key">User Limit</span>
+                                        <span class="mza-kv-val">
+                                            <t t-esc="subscription.plan_id.max_users"/> users
+                                        </span>
+                                    </div>
+                                </t>
+                            </div>
+                            <t t-if="subscription.status == 'trial'">
+                                <div class="mza-sub-cta">
+                                    <p>Upgrade to a paid plan to continue after trial.</p>
+                                    <a href="mailto:sales@mumtaz.digital?subject=Upgrade%20Request"
+                                       class="mza-btn mza-btn-gold">Contact Sales to Upgrade</a>
+                                </div>
+                            </t>
+                            <t t-elif="subscription.status in ['past_due', 'grace']">
+                                <div class="mza-sub-cta mza-cta-warning">
+                                    <p>⚠️ Your subscription has a payment issue. Please contact support.</p>
+                                    <a href="mailto:support@mumtaz.digital?subject=Subscription%20Issue"
+                                       class="mza-btn mza-btn-primary">Contact Support</a>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="mza-empty">
+                            <div class="mza-empty-icon">📋</div>
+                            <div class="mza-empty-title">No active subscription</div>
+                            <div class="mza-empty-body">Contact us to set up your plan and unlock all features.</div>
+                            <a href="mailto:sales@mumtaz.digital?subject=Plan%20Setup"
+                               class="mza-btn mza-btn-gold">Contact Sales</a>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Active features -->
+                <t t-if="active_features">
+                    <div class="mza-section">
+                        <h2 class="mza-section-title">Enabled Features</h2>
+                        <div class="mza-feature-grid">
+                            <t t-foreach="active_features" t-as="feat">
+                                <div class="mza-feature-pill mza-feat-on">
+                                    <span class="mza-feat-dot"/>
+                                    <t t-esc="feat.name"/>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+                <t t-if="locked_features">
+                    <div class="mza-section">
+                        <h2 class="mza-section-title">Upgrade to Unlock</h2>
+                        <div class="mza-feature-grid">
+                            <t t-foreach="locked_features" t-as="feat">
+                                <div class="mza-feature-pill mza-feat-off">
+                                    <span>🔒</span>
+                                    <t t-esc="feat.name"/>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Company profile -->
+                <div class="mza-section">
+                    <h2 class="mza-section-title">Company Profile</h2>
+                    <t t-if="tenant_profile">
+                        <div class="mza-kv-card">
+                            <div class="mza-kv-row">
+                                <span class="mza-kv-key">Legal Name</span>
+                                <span class="mza-kv-val"><t t-esc="tenant_profile.legal_name or '—'"/></span>
+                            </div>
+                            <div class="mza-kv-row">
+                                <span class="mza-kv-key">Trade Name</span>
+                                <span class="mza-kv-val"><t t-esc="tenant_profile.trade_name or '—'"/></span>
+                            </div>
+                            <div class="mza-kv-row">
+                                <span class="mza-kv-key">Industry</span>
+                                <span class="mza-kv-val"><t t-esc="tenant_profile.industry or '—'"/></span>
+                            </div>
+                            <div class="mza-kv-row">
+                                <span class="mza-kv-key">Location</span>
+                                <span class="mza-kv-val">
+                                    <t t-esc="tenant_profile.city or ''"/>
+                                    <t t-if="tenant_profile.country_id"> · <t t-esc="tenant_profile.country_id.name"/></t>
+                                </span>
+                            </div>
+                            <div class="mza-kv-row">
+                                <span class="mza-kv-key">Contact</span>
+                                <span class="mza-kv-val">
+                                    <t t-esc="tenant_profile.contact_email or '—'"/>
+                                </span>
+                            </div>
+                            <div class="mza-kv-row">
+                                <span class="mza-kv-key">Profile Completeness</span>
+                                <span class="mza-kv-val">
+                                    <div class="mza-progress-inline">
+                                        <div class="mza-progress-bar-sm">
+                                            <div class="mza-progress-fill-sm"
+                                                 t-att-style="'width:' + str(tenant_profile.profile_completeness or 0) + '%'"/>
+                                        </div>
+                                        <span><t t-esc="tenant_profile.profile_completeness or 0"/>%</span>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px">
+                            <a t-att-href="'/web#id=' + str(tenant_profile.id) + '&amp;model=mumtaz.sme.profile&amp;view_type=form'"
+                               class="mza-btn mza-btn-ghost">Edit Profile →</a>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="mza-empty">
+                            <div class="mza-empty-icon">🏢</div>
+                            <div class="mza-empty-title">Profile not set up</div>
+                            <div class="mza-empty-body">Complete your SME profile to improve platform visibility.</div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- User info -->
+                <div class="mza-section">
+                    <h2 class="mza-section-title">Your Account</h2>
+                    <div class="mza-kv-card">
+                        <div class="mza-kv-row">
+                            <span class="mza-kv-key">Name</span>
+                            <span class="mza-kv-val"><t t-esc="user.name"/></span>
+                        </div>
+                        <div class="mza-kv-row">
+                            <span class="mza-kv-key">Email</span>
+                            <span class="mza-kv-val"><t t-esc="user.email or '—'"/></span>
+                        </div>
+                        <div class="mza-kv-row">
+                            <span class="mza-kv-key">Company</span>
+                            <span class="mza-kv-val"><t t-esc="company.name"/></span>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+                        <a href="/web#action=base_setup.action_general_configuration"
+                           class="mza-btn mza-btn-ghost">Company Settings →</a>
+                        <a href="/web/session/logout" class="mza-btn mza-btn-ghost">Sign Out ↩</a>
+                    </div>
+                </div>
+
+            </div>
+        </t>
+    </template>
+</odoo>
