@@ -25,7 +25,7 @@
                     <button name="action_quick_reactivate_subscription" type="object" string="Reactivate Sub"/>
                     <button name="action_quick_extend_grace" type="object" string="Extend Grace"/>
                 </xpath>
-                <xpath expr="//group[@string='Subscription']" position="after">
+                <xpath expr="//group[@name='subscription_group']" position="after">
                     <group string="Commercial Visibility">
                         <group>
                             <field name="cp_plan_name" readonly="1"/>
