@@ -2,7 +2,6 @@
 <odoo>
     <record id="group_portal_gateway_admin" model="res.groups">
         <field name="name">Portal Gateway: Admin Control Plane</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
         <field name="implied_ids" eval="[
             (4, ref('mumtaz_tenant_manager.group_mumtaz_platform_admin')),
         ]"/>
@@ -14,7 +13,6 @@
 
     <record id="group_portal_gateway_erp" model="res.groups">
         <field name="name">Portal Gateway: ERP Portal</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
         <field name="implied_ids" eval="[
             (4, ref('mumtaz_core.group_mumtaz_manager')),
         ]"/>
@@ -27,7 +25,6 @@
 
     <record id="group_portal_gateway_zaki" model="res.groups">
         <field name="name">Portal Gateway: ZAKI AI Portal</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
         <field name="implied_ids" eval="[
             (4, ref('mumtaz_cfo_base.group_mumtaz_cfo_user')),
         ]"/>
@@ -39,7 +36,6 @@
 
     <record id="group_portal_gateway_marketplace" model="res.groups">
         <field name="name">Portal Gateway: Marketplace Portal</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
         <field name="comment">
             Users in this group are routed to the Marketplace Portal after login.
             Marketplace permissions granted when mumtaz_marketplace is installed.
