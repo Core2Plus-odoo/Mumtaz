@@ -24,6 +24,8 @@ services:
     build: ./frontend
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://zaki.mumtaz.digital}
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
     depends_on:
       - backend
     restart: unless-stopped
