@@ -1,0 +1,28 @@
+{
+    "name": "Mumtaz API Gateway",
+    "summary": "Tenant-aware API gateway for Mumtaz platform services",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": [
+        "base",
+        "mail",
+        "web",
+        "mumtaz_tenant_manager",
+        "mumtaz_core",
+        "mumtaz_control_plane",
+    ],
+    "data": [
+        "security/api_key_security.xml",
+        "security/api_usage_log_security.xml",
+        "security/ir.model.access.csv",
+        "data/async_job_cleanup_cron.xml",
+        "views/api_key_views.xml",
+        "views/api_usage_log_views.xml",
+        "views/menus.xml",
+    ],
+    "installable": True,
+    "auto_install": False,
+    "application": True,
+}

@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:15-alpine
+    env_file: .env.staging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_staging:/var/lib/postgresql/data
+
+  odoo:
+    build: .
+    depends_on: [db]
+    env_file: .env.staging
+    ports:
+      - "8070:8069"
+    volumes:
+      - ./addons:/mnt/extra-addons
+      - ./config/odoo.conf:/etc/odoo/odoo.conf.tmpl:ro
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on: [odoo]
+    ports:
+      - "8080:80"
+    volumes:
+      - ./config/nginx.docker.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./apps/website:/var/www/mumtaz_website:ro
+
+volumes:
+  db_staging:

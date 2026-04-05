@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_subscription_lifecycle_log_tree" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.lifecycle.log.tree</field>
+            <field name="model">mumtaz.subscription.lifecycle.log</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="processed_at"/>
+                    <field name="source"/>
+                    <field name="subscription_id"/>
+                    <field name="tenant_id"/>
+                    <field name="from_status"/>
+                    <field name="to_status"/>
+                    <field name="policy_mode"/>
+                    <field name="tenant_impact_mode"/>
+                    <field name="tenant_action"/>
+                    <field name="applied"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_subscription_lifecycle_log_form" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.lifecycle.log.form</field>
+            <field name="model">mumtaz.subscription.lifecycle.log</field>
+            <field name="arch" type="xml">
+                <form create="false" edit="false" delete="false">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="processed_at"/>
+                                <field name="source"/>
+                                <field name="subscription_id"/>
+                                <field name="tenant_id"/>
+                            </group>
+                            <group>
+                                <field name="from_status"/>
+                                <field name="to_status"/>
+                                <field name="policy_mode"/>
+                                <field name="tenant_impact_mode"/>
+                                <field name="tenant_action"/>
+                                <field name="applied"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="reason"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_subscription_lifecycle_log_search" model="ir.ui.view">
+            <field name="name">mumtaz.subscription.lifecycle.log.search</field>
+            <field name="model">mumtaz.subscription.lifecycle.log</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="subscription_id"/>
+                    <field name="tenant_id"/>
+                    <field name="from_status"/>
+                    <field name="to_status"/>
+                    <field name="source"/>
+                    <filter string="Applied" domain="[('applied','=',True)]"/>
+                    <filter string="Warnings" domain="[('applied','=',False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="To Status" context="{'group_by':'to_status'}"/>
+                        <filter string="Policy Mode" context="{'group_by':'policy_mode'}"/>
+                        <filter string="Source" context="{'group_by':'source'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_subscription_lifecycle_log" model="ir.actions.act_window">
+            <field name="name">Subscription Lifecycle Logs</field>
+            <field name="res_model">mumtaz.subscription.lifecycle.log</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_mumtaz_subscription_lifecycle_log_search"/>
+        </record>
+    </data>
+</odoo>

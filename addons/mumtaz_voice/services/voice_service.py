@@ -1,0 +1,141 @@
+import json
+
+from odoo import models
+from odoo.exceptions import UserError
+
+
+CFO_SYSTEM_PROMPT = """You are Mumtaz, an AI CFO Assistant integrated directly into the company's ERP system.
+
+Your role:
+- Analyze real-time financial data pulled directly from the company's Odoo database
+- Answer questions concisely and professionally, as a seasoned CFO would
+- Highlight key metrics, trends, risks, and actionable insights
+- Use exact numbers from the provided data — never fabricate figures
+- Keep responses focused: 2-5 sentences unless a detailed breakdown is requested
+- When data is missing or unavailable, say so clearly
+- Maintain conversation context — reference previous exchanges when relevant
+- Always respond in the same language as the user's question: reply in Arabic (العربية) if asked in Arabic, in English if asked in English
+
+Tone: Direct, authoritative, and business-focused. Speak as if briefing the board.
+"""
+
+
+class VoiceService(models.AbstractModel):
+    _name = "mumtaz.voice.service"
+    _description = "Mumtaz Voice Assistant Orchestration Service"
+
+    def process_cfo_query(self, session, transcript):
+        company = session.company_id
+        user = session.user_id
+        language = self.env.context.get("voice_language", "en")
+        settings = self._get_settings(company)
+        access = self._check_ai_entitlement(company)
+        self._ensure_voice_enabled(settings)
+
+        intent = self.env["mumtaz.cfo.service"].detect_intent(transcript)
+        financial_context = self.env["mumtaz.cfo.service"].build_financial_context(company, intent)
+
+        # Build conversation history from existing session messages
+        depth = getattr(settings, "conversation_history_depth", 10) or 10
+        history = []
+        if session.id:
+            sorted_msgs = session.voice_message_ids.sorted(key="create_date")
+            for msg in sorted_msgs[-depth:]:
+                history.append({"role": msg.role, "content": msg.content})
+
+        response_data = self._call_ai_provider(
+            settings=settings, transcript=transcript,
+            financial_context=financial_context, company=company,
+            history=history, language=language,
+        )
+        quota = access.get("quota") or {}
+        if quota.get("status") == "nearing_limit":
+            response_data["response"] = (
+                f"{response_data.get('response', '')}\n\n"
+                "Note: Your tenant AI usage is nearing the configured quota."
+            ).strip()
+        response_data["intent"] = intent
+        response_data["financial_context"] = financial_context
+
+        self.env["mumtaz.voice.message"].create({
+            "session_id": session.id, "company_id": company.id, "user_id": user.id,
+            "role": "user", "content": transcript, "intent": intent,
+        })
+        self.env["mumtaz.voice.message"].create({
+            "session_id": session.id, "company_id": company.id, "user_id": user.id,
+            "role": "assistant", "content": response_data.get("response", ""),
+            "intent": intent, "model_used": response_data.get("model_used"),
+            "token_usage": response_data.get("token_usage", 0),
+        })
+        self.env["mumtaz.core.log"].log_action(
+            module_name="mumtaz_voice", action="cfo_voice_query", company=company, user=user,
+            request_payload=json.dumps({"transcript": transcript, "intent": intent,
+                                        "language": language, "tenant": settings.tenant_code}, default=str),
+            response_payload=json.dumps({"model_used": response_data.get("model_used"),
+                                         "token_usage": response_data.get("token_usage", 0)}, default=str),
+            level="info",
+        )
+        return response_data
+
+    def _check_ai_entitlement(self, company):
+        if "mumtaz.feature.access.service" not in self.env:
+            return {"effective_enabled": True, "quota": None}
+
+        access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
+            company,
+            "ai_access",
+            include_quota=True,
+        )
+        if not access.get("effective_enabled"):
+            raise UserError(access.get("reason") or "AI access is disabled for this tenant.")
+
+        quota = access.get("quota") or {}
+        if quota.get("status") == "exceeded":
+            raise UserError("AI quota exceeded for this tenant.")
+        return access
+
+    def _get_settings(self, company):
+        settings = self.env["mumtaz.core.settings"].search(
+            [("company_id", "=", company.id), ("active", "=", True)], limit=1
+        )
+        if not settings:
+            raise UserError(f"No active Mumtaz settings found for {company.display_name}. "
+                            "Please configure Mumtaz Core Settings first.")
+        return settings
+
+    def _ensure_voice_enabled(self, settings):
+        if not settings.feature_voice_enabled:
+            raise UserError(f"Voice Assistant is disabled for tenant {settings.tenant_code}. "
+                            "Enable it in Mumtaz Settings \u2192 Feature Toggles.")
+
+    def _call_ai_provider(self, settings, transcript, financial_context, company,
+                          history=None, language="en"):
+        provider_name = settings.ai_provider
+        if provider_name == "openai":
+            provider = self.env["mumtaz.ai.provider.openai"]
+        elif provider_name == "anthropic":
+            provider = self.env["mumtaz.ai.provider.anthropic"]
+        else:
+            return self._fallback_response(financial_context, company)
+        context = {
+            "api_key": settings.api_key,
+            "company_name": company.name,
+            "financial_data": financial_context,
+            "system_prompt": CFO_SYSTEM_PROMPT,
+            "max_tokens": settings.max_tokens_per_request,
+            "model": (getattr(settings, "openai_model", "gpt-4o-mini") if provider_name == "openai"
+                      else getattr(settings, "anthropic_model", "claude-haiku-4-5-20251001") if provider_name == "anthropic" else None),
+            "history": history or [],
+            "language": language,
+        }
+        return provider.generate_response(prompt=transcript, context=context)
+
+    def _fallback_response(self, financial_context, company):
+        return {
+            "response": (f"Here is the current financial data for {company.name}:\n\n"
+                         f"{financial_context}\n"
+                         "Note: Configure an AI provider (OpenAI or Anthropic) in Mumtaz Settings "
+                         "to receive natural-language CFO analysis."),
+            "model_used": "fallback_router",
+            "token_usage": 0,
+        }
