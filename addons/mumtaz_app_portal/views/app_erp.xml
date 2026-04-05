@@ -5,202 +5,273 @@
 
             <div class="mza-page">
 
-                <!-- Section header -->
-                <div class="mza-section-hero mza-hero-erp">
-                    <div class="mza-hero-inner">
-                        <div>
-                            <h1 class="mza-hero-title">ERP</h1>
-                            <p class="mza-hero-sub">CRM pipeline, lead intelligence, nurture campaigns</p>
+                <!-- ═══════════════════════════ ERP HERO ═══════════════════════════ -->
+                <div class="mza-portal-hero mza-portal-hero-erp">
+                    <div class="mza-portal-hero-content">
+                        <div class="mza-portal-hero-left">
+                            <div class="mza-portal-hero-badge mza-badge-erp">ERP Suite</div>
+                            <h1 class="mza-portal-hero-title">Business Operations</h1>
+                            <p class="mza-portal-hero-sub">
+                                Full Odoo ERP — accounting, sales, CRM, inventory, HR, and more. Everything in one place.
+                            </p>
+                            <div class="mza-portal-hero-actions">
+                                <a href="/web" class="mza-btn mza-btn-primary">Open Odoo Backend ↗</a>
+                                <a href="/web#action=crm.crm_lead_all_leads_act" class="mza-btn mza-btn-ghost">CRM Pipeline</a>
+                            </div>
                         </div>
-                        <div class="mza-hero-actions">
-                            <a href="/web#action=crm.crm_lead_all_leads_act"
-                               class="mza-btn mza-btn-primary">CRM Pipeline</a>
-                            <a href="/web" class="mza-btn mza-btn-ghost">Backend</a>
+                        <div class="mza-portal-hero-stats">
+                            <div class="mza-portal-hero-stat">
+                                <div class="mza-portal-hero-stat-val">
+                                    <t t-esc="leads_total"/>
+                                </div>
+                                <div class="mza-portal-hero-stat-lbl">Leads</div>
+                            </div>
+                            <div class="mza-portal-hero-stat">
+                                <div class="mza-portal-hero-stat-val mza-val-amber">
+                                    <t t-esc="opps_open"/>
+                                </div>
+                                <div class="mza-portal-hero-stat-lbl">Open Opps</div>
+                            </div>
+                            <div class="mza-portal-hero-stat">
+                                <div class="mza-portal-hero-stat-val mza-val-green">
+                                    <t t-esc="opps_won"/>
+                                </div>
+                                <div class="mza-portal-hero-stat-lbl">Won</div>
+                            </div>
+                            <div class="mza-portal-hero-stat">
+                                <div class="mza-portal-hero-stat-val mza-val-blue">
+                                    <t t-esc="campaign_count"/>
+                                </div>
+                                <div class="mza-portal-hero-stat-lbl">Campaigns</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Stats -->
-                <div class="mza-section">
-                    <div class="mza-stat-row">
-                        <div class="mza-stat-card">
-                            <div class="mza-stat-val"><t t-esc="leads_total"/></div>
-                            <div class="mza-stat-lbl">Total Leads</div>
-                        </div>
-                        <div class="mza-stat-card mza-stat-warning">
-                            <div class="mza-stat-val"><t t-esc="opps_open"/></div>
-                            <div class="mza-stat-lbl">Open Opps</div>
-                        </div>
-                        <div class="mza-stat-card mza-stat-success">
-                            <div class="mza-stat-val"><t t-esc="opps_won"/></div>
-                            <div class="mza-stat-lbl">Won</div>
-                        </div>
-                        <div class="mza-stat-card mza-stat-blue">
-                            <div class="mza-stat-val"><t t-esc="campaign_count"/></div>
-                            <div class="mza-stat-lbl">Campaigns</div>
-                        </div>
+                <!-- ═══════════════════════════ ERP MODULES ════════════════════════ -->
+                <div class="mza-section mza-section-pad">
+                    <div class="mza-section-head">
+                        <h2 class="mza-section-title">Odoo Modules</h2>
+                        <a href="/web" class="mza-section-link">Open Backend ↗</a>
+                    </div>
+                    <div class="mza-erp-module-grid">
+                        <a href="/web#action=account.action_move_out_invoice_type" class="mza-erp-module mza-erp-mod-blue">
+                            <div class="mza-erp-mod-icon">📒</div>
+                            <div class="mza-erp-mod-name">Accounting</div>
+                            <div class="mza-erp-mod-desc">Invoices · Journals · GL</div>
+                        </a>
+                        <a href="/web#action=sale.action_quotations_with_onboarding" class="mza-erp-module mza-erp-mod-green">
+                            <div class="mza-erp-mod-icon">🏷️</div>
+                            <div class="mza-erp-mod-name">Sales</div>
+                            <div class="mza-erp-mod-desc">Orders · Quotes · Revenue</div>
+                        </a>
+                        <a href="/web#action=crm.crm_lead_all_leads_act" class="mza-erp-module mza-erp-mod-amber">
+                            <div class="mza-erp-mod-icon">🎯</div>
+                            <div class="mza-erp-mod-name">CRM</div>
+                            <div class="mza-erp-mod-desc">Leads · Pipeline · Won</div>
+                        </a>
+                        <a href="/web#action=purchase.action_orders" class="mza-erp-module mza-erp-mod-cyan">
+                            <div class="mza-erp-mod-icon">📦</div>
+                            <div class="mza-erp-mod-name">Purchase</div>
+                            <div class="mza-erp-mod-desc">POs · Vendors · Receipts</div>
+                        </a>
+                        <a href="/web#action=stock.action_stock_view" class="mza-erp-module mza-erp-mod-purple">
+                            <div class="mza-erp-mod-icon">🏭</div>
+                            <div class="mza-erp-mod-name">Inventory</div>
+                            <div class="mza-erp-mod-desc">Stock · Transfers · Lots</div>
+                        </a>
+                        <a href="/web#action=hr.open_view_employee_list_my" class="mza-erp-module mza-erp-mod-teal">
+                            <div class="mza-erp-mod-icon">👥</div>
+                            <div class="mza-erp-mod-name">HR</div>
+                            <div class="mza-erp-mod-desc">Employees · Leaves · Payroll</div>
+                        </a>
+                        <a href="/web#action=account.action_account_payable_tree" class="mza-erp-module mza-erp-mod-red">
+                            <div class="mza-erp-mod-icon">💸</div>
+                            <div class="mza-erp-mod-name">Payables</div>
+                            <div class="mza-erp-mod-desc">Bills · Vendors · AP</div>
+                        </a>
+                        <a href="/web#action=account.action_account_receivable_tree" class="mza-erp-module mza-erp-mod-blue">
+                            <div class="mza-erp-mod-icon">💰</div>
+                            <div class="mza-erp-mod-name">Receivables</div>
+                            <div class="mza-erp-mod-desc">Invoices · Customers · AR</div>
+                        </a>
+                        <a href="/web#action=base_setup.action_general_configuration" class="mza-erp-module mza-erp-mod-gray">
+                            <div class="mza-erp-mod-icon">⚙️</div>
+                            <div class="mza-erp-mod-name">Settings</div>
+                            <div class="mza-erp-mod-desc">Company · Users · Config</div>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Intel bar -->
+                <!-- ═══════════════════════════ INTEL STRIP (if scraper active) ════ -->
                 <t t-if="scraper_source_count &gt; 0">
-                    <div class="mza-section">
-                        <div class="mza-intel-strip">
-                            <div class="mza-intel-cell">
-                                <span class="mza-intel-val"><t t-esc="scraper_source_count"/></span>
-                                <span class="mza-intel-key">Active Sources</span>
+                    <div class="mza-section mza-section-pad">
+                        <div class="mza-intel-banner">
+                            <div class="mza-intel-banner-label">
+                                <span>📡</span> Lead Intelligence
                             </div>
-                            <div class="mza-intel-cell">
-                                <span class="mza-intel-val"><t t-esc="total_scraped_records"/></span>
-                                <span class="mza-intel-key">Records Extracted</span>
+                            <div class="mza-intel-banner-stats">
+                                <div class="mza-intel-stat">
+                                    <div class="mza-intel-stat-val">
+                                        <t t-esc="scraper_source_count"/>
+                                    </div>
+                                    <div class="mza-intel-stat-lbl">Active Sources</div>
+                                </div>
+                                <div class="mza-intel-stat">
+                                    <div class="mza-intel-stat-val">
+                                        <t t-esc="total_scraped_records"/>
+                                    </div>
+                                    <div class="mza-intel-stat-lbl">Records Extracted</div>
+                                </div>
+                                <div class="mza-intel-stat">
+                                    <div class="mza-intel-stat-val mza-val-blue">
+                                        <t t-esc="nurturing_leads"/>
+                                    </div>
+                                    <div class="mza-intel-stat-lbl">Nurturing</div>
+                                </div>
+                                <div class="mza-intel-stat">
+                                    <div class="mza-intel-stat-val mza-val-green">
+                                        <t t-esc="qualified_leads"/>
+                                    </div>
+                                    <div class="mza-intel-stat-lbl">Qualified</div>
+                                </div>
+                                <div class="mza-intel-stat">
+                                    <div class="mza-intel-stat-val mza-val-amber">
+                                        <t t-esc="converted_leads"/>
+                                    </div>
+                                    <div class="mza-intel-stat-lbl">Converted</div>
+                                </div>
                             </div>
-                            <div class="mza-intel-cell">
-                                <span class="mza-intel-val"><t t-esc="nurturing_leads"/></span>
-                                <span class="mza-intel-key">Nurturing</span>
-                            </div>
-                            <div class="mza-intel-cell">
-                                <span class="mza-intel-val mza-val-success"><t t-esc="qualified_leads"/></span>
-                                <span class="mza-intel-key">Qualified</span>
-                            </div>
-                            <div class="mza-intel-cell">
-                                <span class="mza-intel-val mza-val-gold"><t t-esc="converted_leads"/></span>
-                                <span class="mza-intel-key">Converted</span>
-                            </div>
+                            <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
+                               class="mza-btn mza-btn-ghost mza-btn-sm">Manage →</a>
                         </div>
                     </div>
                 </t>
 
-                <!-- Quick actions -->
-                <div class="mza-section">
-                    <h2 class="mza-section-title">Actions</h2>
-                    <div class="mza-action-grid">
-                        <a href="/web#action=crm.crm_lead_all_leads_act" class="mza-action-tile mza-tile-featured">
-                            <span class="mza-tile-icon">🎯</span>
-                            <span class="mza-tile-lbl">CRM Leads</span>
-                        </a>
-                        <a href="/web#action=crm.crm_lead_opportunities_tree_view" class="mza-action-tile">
-                            <span class="mza-tile-icon">💼</span>
-                            <span class="mza-tile-lbl">Opportunities</span>
-                        </a>
-                        <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source" class="mza-action-tile">
-                            <span class="mza-tile-icon">🔍</span>
-                            <span class="mza-tile-lbl">Lead Sources</span>
-                        </a>
-                        <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_job" class="mza-action-tile">
-                            <span class="mza-tile-icon">📡</span>
-                            <span class="mza-tile-lbl">Scraper Jobs</span>
-                        </a>
-                        <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign" class="mza-action-tile">
-                            <span class="mza-tile-icon">📣</span>
-                            <span class="mza-tile-lbl">Campaigns</span>
-                        </a>
-                        <a href="/web#action=mumtaz_lead_nurture.action_nurture_leads" class="mza-action-tile">
-                            <span class="mza-tile-icon">🔄</span>
-                            <span class="mza-tile-lbl">Nurture Leads</span>
-                        </a>
-                    </div>
-                </div>
+                <!-- ═══════════════════════════ BOTTOM SPLIT ══════════════════════ -->
+                <div class="mza-section mza-section-pad">
+                    <div class="mza-cols-2">
 
-                <!-- Active campaigns -->
-                <t t-if="active_campaigns">
-                    <div class="mza-section">
-                        <div class="mza-section-hdr">
-                            <h2 class="mza-section-title">Active Campaigns</h2>
-                            <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign"
-                               class="mza-section-link">View all →</a>
-                        </div>
-                        <div class="mza-list">
-                            <t t-foreach="active_campaigns" t-as="c">
-                                <a t-att-href="'/web#id=' + str(c.id) + '&amp;model=lead.nurture.campaign&amp;view_type=form'"
-                                   class="mza-list-item">
-                                    <span class="mza-list-icon">📣</span>
-                                    <div class="mza-list-body">
-                                        <div class="mza-list-title"><t t-esc="c.name"/></div>
-                                        <div class="mza-list-meta">
-                                            <t t-esc="c.lead_count or 0"/> leads ·
-                                            <t t-esc="c.qualified_count or 0"/> qualified ·
-                                            <t t-esc="c.converted_count or 0"/> converted
-                                        </div>
+                        <!-- Active campaigns -->
+                        <div class="mza-card">
+                            <div class="mza-card-header">
+                                <span class="mza-card-title" style="border:none;margin:0;padding:0;font-size:13.5px">Active Campaigns</span>
+                                <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign"
+                                   class="mza-card-link">View all →</a>
+                            </div>
+                            <t t-if="active_campaigns">
+                                <div class="mza-campaign-list">
+                                    <t t-foreach="active_campaigns" t-as="c">
+                                        <a t-att-href="'/web#id=' + str(c.id) + '&amp;model=lead.nurture.campaign&amp;view_type=form'"
+                                           class="mza-campaign-item">
+                                            <div class="mza-campaign-icon">📣</div>
+                                            <div class="mza-campaign-body">
+                                                <div class="mza-campaign-name">
+                                                    <t t-esc="c.name"/>
+                                                </div>
+                                                <div class="mza-campaign-stats">
+                                                    <span><t t-esc="c.lead_count or 0"/> leads</span>
+                                                    <span class="mza-campaign-dot">·</span>
+                                                    <span class="mza-val-green"><t t-esc="c.qualified_count or 0"/> qualified</span>
+                                                    <span class="mza-campaign-dot">·</span>
+                                                    <span class="mza-val-amber"><t t-esc="c.converted_count or 0"/> converted</span>
+                                                </div>
+                                            </div>
+                                            <span class="mza-campaign-arrow">→</span>
+                                        </a>
+                                    </t>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="mza-empty" style="padding:32px 16px">
+                                    <div class="mza-empty-icon">📣</div>
+                                    <div class="mza-empty-title">No active campaigns</div>
+                                    <div class="mza-empty-sub">
+                                        <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign"
+                                           class="mza-table-link">Create a campaign →</a>
                                     </div>
-                                    <span class="mza-list-arrow">→</span>
-                                </a>
+                                </div>
                             </t>
                         </div>
-                    </div>
-                </t>
 
-                <!-- Last scraper run -->
-                <t t-if="last_scraper_job">
-                    <div class="mza-section">
-                        <h2 class="mza-section-title">Last Scraper Run</h2>
-                        <div class="mza-kv-card">
-                            <div class="mza-kv-row">
-                                <span class="mza-kv-key">Source</span>
-                                <span class="mza-kv-val"><t t-esc="last_scraper_job.source_id.name or last_scraper_job.name or '—'"/></span>
-                            </div>
-                            <div class="mza-kv-row">
-                                <span class="mza-kv-key">Status</span>
-                                <span t-att-class="'mza-badge mza-badge-' + last_scraper_job.status">
-                                    <t t-esc="last_scraper_job.status"/>
+                        <!-- Recent leads -->
+                        <div class="mza-card">
+                            <div class="mza-card-header">
+                                <span class="mza-card-title" style="border:none;margin:0;padding:0;font-size:13.5px">
+                                    Recent Leads
                                 </span>
+                                <a href="/web#action=crm.crm_lead_all_leads_act" class="mza-card-link">View all →</a>
                             </div>
-                            <div class="mza-kv-row">
-                                <span class="mza-kv-key">Found / Created</span>
-                                <span class="mza-kv-val">
-                                    <t t-esc="last_scraper_job.total_found or 0"/> found ·
-                                    <span class="mza-val-success"><t t-esc="last_scraper_job.total_created or 0"/> created</span>
-                                </span>
-                            </div>
-                            <div class="mza-kv-row">
-                                <span class="mza-kv-key">Run at</span>
-                                <span class="mza-kv-val">
-                                    <t t-esc="last_scraper_job.create_date" t-options='{"widget": "datetime"}'/>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </t>
-
-                <!-- Recent leads -->
-                <div class="mza-section">
-                    <div class="mza-section-hdr">
-                        <h2 class="mza-section-title">Recent Leads</h2>
-                        <a href="/web#action=crm.crm_lead_all_leads_act" class="mza-section-link">View all →</a>
-                    </div>
-                    <t t-if="recent_leads">
-                        <div class="mza-table-wrap">
-                            <table class="mza-table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th><th>Company</th><th>Stage</th><th>Created</th><th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                            <t t-if="recent_leads">
+                                <div class="mza-lead-list">
                                     <t t-foreach="recent_leads" t-as="lead">
-                                        <tr>
-                                            <td class="mza-td-primary"><t t-esc="lead.name"/></td>
-                                            <td><t t-esc="lead.partner_name or '—'"/></td>
-                                            <td><t t-esc="lead.stage_id.name or '—'"/></td>
-                                            <td><t t-esc="lead.create_date" t-options='{"widget": "date"}'/></td>
-                                            <td>
-                                                <a t-att-href="'/web#id=' + str(lead.id) + '&amp;model=crm.lead&amp;view_type=form'"
-                                                   class="mza-table-link">View →</a>
-                                            </td>
-                                        </tr>
+                                        <a t-att-href="'/web#id=' + str(lead.id) + '&amp;model=crm.lead&amp;view_type=form'"
+                                           class="mza-lead-item">
+                                            <div class="mza-lead-avatar">
+                                                <t t-esc="(lead.contact_name or lead.name or 'L')[0].upper()"/>
+                                            </div>
+                                            <div class="mza-lead-body">
+                                                <div class="mza-lead-name">
+                                                    <t t-esc="lead.name"/>
+                                                </div>
+                                                <div class="mza-lead-meta">
+                                                    <t t-esc="lead.partner_name or '—'"/>
+                                                    <t t-if="lead.stage_id">
+                                                        · <span class="mza-badge mza-badge-blue" style="font-size:9px"><t t-esc="lead.stage_id.name"/></span>
+                                                    </t>
+                                                </div>
+                                            </div>
+                                            <span class="mza-lead-date">
+                                                <t t-esc="lead.create_date" t-options='{"widget": "date"}'/>
+                                            </span>
+                                        </a>
                                     </t>
-                                </tbody>
-                            </table>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="mza-empty" style="padding:32px 16px">
+                                    <div class="mza-empty-icon">🎯</div>
+                                    <div class="mza-empty-title">No leads yet</div>
+                                    <div class="mza-empty-sub">
+                                        <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
+                                           class="mza-table-link">Set up lead scraper →</a>
+                                    </div>
+                                </div>
+                            </t>
                         </div>
-                    </t>
-                    <t t-else="">
-                        <div class="mza-empty">
-                            <div class="mza-empty-icon">🎯</div>
-                            <div class="mza-empty-title">No leads yet</div>
-                            <div class="mza-empty-body">Use the lead scraper to fill your pipeline automatically.</div>
-                            <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_source"
-                               class="mza-btn mza-btn-primary">Set Up Scraper</a>
-                        </div>
-                    </t>
+
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════ QUICK ACTIONS ═════════════════════ -->
+                <div class="mza-section mza-section-pad">
+                    <h2 class="mza-section-title" style="margin-bottom:14px">Quick Actions</h2>
+                    <div class="mza-action-grid">
+                        <a href="/web#action=crm.crm_lead_all_leads_act" class="mza-action-tile mza-action-featured">
+                            <span class="mza-action-tile-icon">🎯</span>
+                            <span>CRM Leads</span>
+                        </a>
+                        <a href="/web#action=account.action_move_out_invoice_type" class="mza-action-tile">
+                            <span class="mza-action-tile-icon">📒</span>
+                            <span>Invoices</span>
+                        </a>
+                        <a href="/web#action=sale.action_quotations_with_onboarding" class="mza-action-tile">
+                            <span class="mza-action-tile-icon">🏷️</span>
+                            <span>Sales Orders</span>
+                        </a>
+                        <a href="/web#action=purchase.action_orders" class="mza-action-tile">
+                            <span class="mza-action-tile-icon">📦</span>
+                            <span>Purchase Orders</span>
+                        </a>
+                        <a href="/web#action=mumtaz_lead_scraper.action_lead_scraper_job" class="mza-action-tile">
+                            <span class="mza-action-tile-icon">📡</span>
+                            <span>Scraper Jobs</span>
+                        </a>
+                        <a href="/web#action=mumtaz_lead_nurture.action_lead_nurture_campaign" class="mza-action-tile">
+                            <span class="mza-action-tile-icon">📣</span>
+                            <span>Campaigns</span>
+                        </a>
+                    </div>
                 </div>
 
             </div>
