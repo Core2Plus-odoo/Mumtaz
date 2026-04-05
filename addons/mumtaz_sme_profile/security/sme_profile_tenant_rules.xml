@@ -9,7 +9,7 @@
             <field name="perm_write">True</field>
             <field name="perm_create">True</field>
             <field name="perm_unlink">True</field>
-            <field name="groups" eval="[(4, ref('mumtaz_portal_base.group_sme_user'))]"/>
+            <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
         </record>
 
         <record id="sme_profile_admin_rule" model="ir.rule">
