@@ -5,182 +5,250 @@
 
             <div class="mza-page">
 
-                <!-- Section header -->
-                <div class="mza-section-hero mza-hero-zaki">
-                    <div class="mza-hero-inner">
-                        <div>
-                            <h1 class="mza-hero-title">ZAKI AI</h1>
-                            <p class="mza-hero-sub">Your AI CFO — financial intelligence, transaction analytics, AI-powered insights</p>
+                <!-- ═══════════════════════════ ZAKI HERO ══════════════════════════ -->
+                <div class="mza-zaki-hero">
+                    <div class="mza-zaki-hero-glow"/>
+                    <div class="mza-zaki-hero-content">
+                        <div class="mza-zaki-hero-badge">
+                            <span class="mza-zaki-pulse"/>
+                            AI-Powered CFO Intelligence
                         </div>
-                        <div class="mza-hero-actions">
-                            <a href="/mumtaz/ai" class="mza-btn mza-btn-gold">🤖 Ask ZAKI</a>
-                            <a href="/mumtaz/cfo" class="mza-btn mza-btn-ghost">CFO Workspace</a>
+                        <h1 class="mza-zaki-hero-title">
+                            <span class="mza-zaki-z">Z</span><span class="mza-zaki-a">A</span><span class="mza-zaki-k">K</span><span class="mza-zaki-i">I</span>
+                            <span class="mza-zaki-sub-word"> AI</span>
+                        </h1>
+                        <p class="mza-zaki-hero-tagline">Your intelligent financial co-pilot — analyse transactions, forecast cash flow, surface insights.</p>
+
+                        <!-- Main ask interface -->
+                        <a href="/mumtaz/ai" class="mza-zaki-ask-field">
+                            <span class="mza-zaki-ask-icon">✦</span>
+                            <span class="mza-zaki-ask-placeholder">Ask ZAKI anything about your finances…</span>
+                            <span class="mza-zaki-ask-send">↵</span>
+                        </a>
+
+                        <!-- Suggested prompts -->
+                        <div class="mza-zaki-chips">
+                            <a href="/mumtaz/ai?q=What+is+my+cash+position+this+month" class="mza-zaki-chip">
+                                <span>💰</span> Cash position this month
+                            </a>
+                            <a href="/mumtaz/ai?q=Summarise+my+top+expenses" class="mza-zaki-chip">
+                                <span>📉</span> Summarise top expenses
+                            </a>
+                            <a href="/mumtaz/ai?q=Show+overdue+invoices" class="mza-zaki-chip">
+                                <span>🔔</span> Overdue invoices
+                            </a>
+                            <a href="/mumtaz/ai?q=Net+profit+vs+last+month" class="mza-zaki-chip">
+                                <span>📈</span> Net profit trend
+                            </a>
+                            <a href="/mumtaz/ai?q=Forecast+next+month+cash+flow" class="mza-zaki-chip">
+                                <span>🔮</span> Cash flow forecast
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Financial stats -->
-                <div class="mza-section">
-                    <div class="mza-stat-row">
-                        <div class="mza-stat-card">
-                            <div class="mza-stat-val"><t t-esc="tx_count"/></div>
-                            <div class="mza-stat-lbl">Transactions</div>
-                        </div>
-                        <t t-if="review_count &gt; 0">
-                            <div class="mza-stat-card mza-stat-warning">
-                                <div class="mza-stat-val"><t t-esc="review_count"/></div>
-                                <div class="mza-stat-lbl">Pending Review</div>
-                            </div>
-                        </t>
-                        <t t-else="">
-                            <div class="mza-stat-card mza-stat-success">
-                                <div class="mza-stat-val">✓</div>
-                                <div class="mza-stat-lbl">Review Clear</div>
-                            </div>
-                        </t>
-                        <div class="mza-stat-card mza-stat-success">
-                            <div class="mza-stat-val"><t t-esc="'%.0f' % income_total"/></div>
-                            <div class="mza-stat-lbl">Total Inflow</div>
-                        </div>
-                        <div class="mza-stat-card mza-stat-danger">
-                            <div class="mza-stat-val"><t t-esc="'%.0f' % expense_total"/></div>
-                            <div class="mza-stat-lbl">Total Outflow</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Net position banner -->
+                <!-- ═══════════════════════════ FINANCIAL METRICS ══════════════════ -->
                 <t t-if="tx_count &gt; 0">
-                    <div class="mza-section">
+                    <div class="mza-section mza-section-pad">
                         <t t-set="net" t-value="income_total - expense_total"/>
-                        <div t-att-class="'mza-net-banner ' + ('mza-net-pos' if net &gt;= 0 else 'mza-net-neg')">
-                            <div class="mza-net-label">Net Position</div>
-                            <div class="mza-net-value">
-                                <t t-esc="('+ ' if net &gt;= 0 else '− ') + '%.2f' % abs(net)"/>
+                        <div class="mza-zaki-metrics">
+                            <div class="mza-zaki-metric mza-zm-green">
+                                <div class="mza-zm-icon">↑</div>
+                                <div class="mza-zm-body">
+                                    <div class="mza-zm-label">Total Inflow</div>
+                                    <div class="mza-zm-value">
+                                        <t t-esc="'%.0f' % income_total"/>
+                                    </div>
+                                </div>
                             </div>
-                            <t t-if="workspace">
-                                <div class="mza-net-workspace"><t t-esc="workspace.name"/></div>
-                            </t>
+                            <div class="mza-zaki-metric mza-zm-red">
+                                <div class="mza-zm-icon">↓</div>
+                                <div class="mza-zm-body">
+                                    <div class="mza-zm-label">Total Outflow</div>
+                                    <div class="mza-zm-value">
+                                        <t t-esc="'%.0f' % expense_total"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <t t-set="net_class" t-value="'mza-zm-green' if net &gt;= 0 else 'mza-zm-red'"/>
+                            <div t-att-class="'mza-zaki-metric mza-zm-featured ' + net_class">
+                                <div class="mza-zm-icon">=</div>
+                                <div class="mza-zm-body">
+                                    <div class="mza-zm-label">Net Position</div>
+                                    <div class="mza-zm-value">
+                                        <t t-esc="('+' if net &gt;= 0 else '−') + ' %.0f' % abs(net)"/>
+                                    </div>
+                                    <t t-if="workspace">
+                                        <div class="mza-zm-sub">
+                                            <t t-esc="workspace.name"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="mza-zaki-metric mza-zm-purple">
+                                <div class="mza-zm-icon">✦</div>
+                                <div class="mza-zm-body">
+                                    <div class="mza-zm-label">Transactions</div>
+                                    <div class="mza-zm-value">
+                                        <t t-esc="tx_count"/>
+                                    </div>
+                                    <t t-if="review_count &gt; 0">
+                                        <div class="mza-zm-sub mza-sub-warn">
+                                            <t t-esc="review_count"/> pending review
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </t>
 
-                <!-- Quick actions -->
-                <div class="mza-section">
-                    <h2 class="mza-section-title">Actions</h2>
-                    <div class="mza-action-grid">
-                        <a href="/mumtaz/ai" class="mza-action-tile mza-tile-gold">
-                            <span class="mza-tile-icon">🤖</span>
-                            <span class="mza-tile-lbl">Ask ZAKI AI</span>
-                        </a>
-                        <a href="/mumtaz/cfo" class="mza-action-tile">
-                            <span class="mza-tile-icon">📊</span>
-                            <span class="mza-tile-lbl">CFO Workspace</span>
-                        </a>
-                        <a href="/web#action=mumtaz_cfo_transactions.action_cfo_transaction_list"
-                           class="mza-action-tile">
-                            <span class="mza-tile-icon">💳</span>
-                            <span class="mza-tile-lbl">Transactions</span>
-                        </a>
-                        <a href="/web#action=mumtaz_cfo_transactions.action_cfo_review_queue"
-                           class="mza-action-tile">
-                            <span class="mza-tile-icon">🔎</span>
-                            <span class="mza-tile-lbl">Review Queue
-                                <t t-if="review_count &gt; 0">
-                                    <span class="mza-badge mza-badge-warning"><t t-esc="review_count"/></span>
-                                </t>
-                            </span>
-                        </a>
-                        <a href="/mumtaz/finance" class="mza-action-tile">
-                            <span class="mza-tile-icon">🏦</span>
-                            <span class="mza-tile-lbl">Finance Hub</span>
-                        </a>
-                        <a href="/web#action=mumtaz_cfo_ingestion.action_cfo_upload_batch"
-                           class="mza-action-tile">
-                            <span class="mza-tile-icon">⬆️</span>
-                            <span class="mza-tile-lbl">Upload Data</span>
-                        </a>
+                <!-- ═══════════════════════════ SPLIT: SESSIONS + TRANSACTIONS ══════ -->
+                <div class="mza-section mza-section-pad">
+                    <div class="mza-zaki-split">
+
+                        <!-- Left: AI Sessions -->
+                        <div class="mza-card mza-zaki-sessions-card">
+                            <div class="mza-card-header">
+                                <h2 class="mza-card-title" style="border:none;margin:0;padding:0">
+                                    AI Sessions
+                                    <span class="mza-zaki-sessions-count">
+                                        <t t-esc="ai_session_count"/> total
+                                    </span>
+                                </h2>
+                                <a href="/mumtaz/ai" class="mza-btn mza-btn-primary mza-btn-sm">+ New Chat</a>
+                            </div>
+
+                            <t t-if="recent_sessions">
+                                <div class="mza-session-list">
+                                    <t t-foreach="recent_sessions" t-as="session">
+                                        <a t-att-href="'/mumtaz/ai?session=' + str(session.id)"
+                                           class="mza-session-item">
+                                            <div class="mza-session-avatar">
+                                                <span class="mza-zaki-pulse-sm"/>
+                                                ✦
+                                            </div>
+                                            <div class="mza-session-body">
+                                                <div class="mza-session-name">
+                                                    <t t-esc="session.name or 'AI Session #' + str(session.id)"/>
+                                                </div>
+                                                <div class="mza-session-meta">
+                                                    <t t-esc="session.create_date" t-options='{"widget": "datetime"}'/>
+                                                </div>
+                                            </div>
+                                            <span class="mza-session-arrow">→</span>
+                                        </a>
+                                    </t>
+                                </div>
+                                <div style="margin-top:12px">
+                                    <a href="/mumtaz/ai" class="mza-btn mza-btn-ghost mza-btn-sm" style="width:100%;justify-content:center">
+                                        View all sessions →
+                                    </a>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="mza-zaki-no-sessions">
+                                    <div class="mza-zaki-empty-icon">✦</div>
+                                    <p>No AI sessions yet.</p>
+                                    <a href="/mumtaz/ai" class="mza-btn mza-btn-primary mza-btn-sm">Start a conversation</a>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Right: Transaction Queue + Quick Actions -->
+                        <div class="mza-zaki-right-col">
+
+                            <!-- Transaction review queue -->
+                            <t t-if="review_count &gt; 0">
+                                <div class="mza-card mza-zaki-review-card">
+                                    <div class="mza-zaki-review-header">
+                                        <span class="mza-zaki-review-dot"/>
+                                        <span class="mza-zaki-review-title">Review Queue</span>
+                                        <span class="mza-badge mza-badge-yellow">
+                                            <t t-esc="review_count"/> pending
+                                        </span>
+                                    </div>
+                                    <p class="mza-zaki-review-sub">Transactions flagged for manual review.</p>
+                                    <a href="/web#action=mumtaz_cfo_transactions.action_cfo_review_queue"
+                                       class="mza-btn mza-btn-primary mza-btn-sm" style="width:100%;justify-content:center">
+                                        Review Now →
+                                    </a>
+                                </div>
+                            </t>
+
+                            <!-- Recent transactions mini-table -->
+                            <t t-if="recent_txs">
+                                <div class="mza-card">
+                                    <div class="mza-card-header">
+                                        <span class="mza-card-title" style="border:none;margin:0;padding:0;font-size:13.5px">Recent Transactions</span>
+                                        <a href="/mumtaz/cfo" class="mza-card-link">View all →</a>
+                                    </div>
+                                    <div class="mza-tx-mini-list">
+                                        <t t-foreach="recent_txs" t-as="tx">
+                                            <div t-att-class="'mza-tx-row ' + ('mza-tx-in' if tx.direction == 'inflow' else 'mza-tx-out')">
+                                                <div class="mza-tx-dir">
+                                                    <t t-if="tx.direction == 'inflow'">↑</t>
+                                                    <t t-else="">↓</t>
+                                                </div>
+                                                <div class="mza-tx-info">
+                                                    <div class="mza-tx-desc">
+                                                        <t t-esc="(tx.description or 'Transaction')[:32]"/>
+                                                    </div>
+                                                    <div class="mza-tx-date">
+                                                        <t t-esc="tx.date" t-options='{"widget": "date"}'/>
+                                                        <t t-if="tx.requires_review">
+                                                            <span class="mza-badge mza-badge-yellow" style="font-size:9px;padding:1px 5px">Review</span>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                                <div t-att-class="'mza-tx-amount ' + ('mza-tx-pos' if tx.direction == 'inflow' else 'mza-tx-neg')">
+                                                    <t t-esc="('+' if tx.direction == 'inflow' else '−') + ' %.0f' % tx.amount"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- Quick actions -->
+                            <div class="mza-card">
+                                <div class="mza-zaki-quick-title">Quick Actions</div>
+                                <div class="mza-zaki-quick-grid">
+                                    <a href="/mumtaz/cfo" class="mza-zaki-quick-btn">
+                                        <span>📊</span> CFO Workspace
+                                    </a>
+                                    <a href="/web#action=mumtaz_cfo_transactions.action_cfo_transaction_list"
+                                       class="mza-zaki-quick-btn">
+                                        <span>💳</span> All Transactions
+                                    </a>
+                                    <a href="/web#action=mumtaz_cfo_ingestion.action_cfo_upload_batch"
+                                       class="mza-zaki-quick-btn">
+                                        <span>⬆</span> Upload Data
+                                    </a>
+                                    <a href="/mumtaz/finance" class="mza-zaki-quick-btn">
+                                        <span>🏦</span> Finance Hub
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
-                <!-- Recent AI sessions -->
-                <t t-if="recent_sessions">
-                    <div class="mza-section">
-                        <div class="mza-section-hdr">
-                            <h2 class="mza-section-title">AI Sessions</h2>
-                            <span class="mza-section-meta"><t t-esc="ai_session_count"/> total</span>
-                        </div>
-                        <div class="mza-list">
-                            <t t-foreach="recent_sessions" t-as="session">
-                                <a t-att-href="'/mumtaz/ai?session=' + str(session.id)"
-                                   class="mza-list-item">
-                                    <span class="mza-list-icon">💬</span>
-                                    <div class="mza-list-body">
-                                        <div class="mza-list-title">
-                                            <t t-esc="session.name or 'AI Session'"/>
-                                        </div>
-                                        <div class="mza-list-meta">
-                                            <t t-esc="session.create_date" t-options='{"widget": "datetime"}'/>
-                                        </div>
-                                    </div>
-                                    <span class="mza-list-arrow">→</span>
-                                </a>
-                            </t>
-                        </div>
-                    </div>
-                </t>
-
-                <!-- Recent transactions -->
-                <t t-if="recent_txs">
-                    <div class="mza-section">
-                        <div class="mza-section-hdr">
-                            <h2 class="mza-section-title">Recent Transactions</h2>
-                            <a href="/mumtaz/cfo" class="mza-section-link">View all →</a>
-                        </div>
-                        <div class="mza-table-wrap">
-                            <table class="mza-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th><th>Description</th>
-                                        <th>Direction</th><th class="mza-th-right">Amount</th><th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="recent_txs" t-as="tx">
-                                        <tr>
-                                            <td><t t-esc="tx.date" t-options='{"widget": "date"}'/></td>
-                                            <td class="mza-td-primary"><t t-esc="tx.description or '—'"/></td>
-                                            <td>
-                                                <span t-att-class="'mza-badge mza-badge-' + ('success' if tx.direction == 'inflow' else 'danger')">
-                                                    <t t-esc="tx.direction"/>
-                                                </span>
-                                            </td>
-                                            <td t-att-class="'mza-td-amt ' + ('mza-pos' if tx.direction == 'inflow' else 'mza-neg')">
-                                                <t t-esc="'%.2f' % tx.amount"/>
-                                            </td>
-                                            <td>
-                                                <t t-if="tx.requires_review">
-                                                    <span class="mza-badge mza-badge-warning">Review</span>
-                                                </t>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </t>
-
-                <!-- Empty state (no workspace) -->
+                <!-- ═══════════════════════════ EMPTY STATE ═══════════════════════ -->
                 <t t-if="not workspace">
-                    <div class="mza-section">
-                        <div class="mza-empty mza-empty-lg">
-                            <div class="mza-empty-icon">📊</div>
-                            <div class="mza-empty-title">Set Up Your CFO Workspace</div>
-                            <div class="mza-empty-body">
-                                Create a workspace to start tracking transactions and unlocking AI financial insights.
+                    <div class="mza-section mza-section-pad">
+                        <div class="mza-zaki-setup-card">
+                            <div class="mza-zaki-setup-glow"/>
+                            <div class="mza-zaki-setup-icon">✦</div>
+                            <h3 class="mza-zaki-setup-title">Set Up Your CFO Workspace</h3>
+                            <p class="mza-zaki-setup-sub">
+                                Create a workspace to start tracking transactions and unlock AI-powered financial insights with ZAKI.
+                            </p>
+                            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+                                <a href="/mumtaz/cfo" class="mza-btn mza-btn-primary">Create Workspace</a>
+                                <a href="/mumtaz/ai" class="mza-btn mza-btn-ghost">Talk to ZAKI →</a>
                             </div>
-                            <a href="/mumtaz/cfo" class="mza-btn mza-btn-gold">Create Workspace</a>
                         </div>
                     </div>
                 </t>
