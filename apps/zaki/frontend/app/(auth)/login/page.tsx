@@ -22,7 +22,7 @@ export default function LoginPage() {
 
       localStorage.setItem('zaki_token', res.access_token)
       localStorage.setItem('zaki_user', JSON.stringify(res.user))
-      window.location.href = '/'
+      window.location.href = '/dashboard'
     } catch (err: any) {
       setError(err.message)
     } finally {
