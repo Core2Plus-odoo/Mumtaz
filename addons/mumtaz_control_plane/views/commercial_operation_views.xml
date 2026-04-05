@@ -30,11 +30,11 @@
                     <field name="subscription_id"/>
                     <field name="operation_type"/>
                     <field name="status"/>
-                    <filter string="Pending" domain="[('status','in',['requested','under_review','approved','invoiced','paid','pending_activation'])]"/>
-                    <filter string="Renewals" domain="[('operation_type','=','renewal')]"/>
-                    <filter string="Upgrades" domain="[('operation_type','=','upgrade')]"/>
-                    <filter string="Grace" domain="[('operation_type','=','grace_extension')]"/>
-                    <filter string="Reactivations" domain="[('operation_type','=','reactivation')]"/>
+                    <filter string="Pending" name="pending" domain="[('status','in',['requested','under_review','approved','invoiced','paid','pending_activation'])]"/>
+                    <filter string="Renewals" name="renewals" domain="[('operation_type','=','renewal')]"/>
+                    <filter string="Upgrades" name="upgrades" domain="[('operation_type','=','upgrade')]"/>
+                    <filter string="Grace" name="grace" domain="[('operation_type','=','grace_extension')]"/>
+                    <filter string="Reactivations" name="reactivations" domain="[('operation_type','=','reactivation')]"/>
                 </search>
             </field>
         </record>

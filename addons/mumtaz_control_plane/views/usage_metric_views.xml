@@ -29,7 +29,7 @@
                     <field name="feature_id"/>
                     <field name="metric_code"/>
                     <field name="source_system"/>
-                    <filter string="Over 80%" domain="[('utilization_pct','&gt;=',80)]"/>
+                    <filter string="Over 80%" name="over_80" domain="[('utilization_pct','&gt;=',80)]"/>
                 </search>
             </field>
         </record>

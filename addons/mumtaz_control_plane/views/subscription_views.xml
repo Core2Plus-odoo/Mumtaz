@@ -30,8 +30,8 @@
                     <field name="plan_id"/>
                     <field name="status"/>
                     <field name="payment_status"/>
-                    <filter string="Current" domain="[('is_current','=',True)]"/>
-                    <filter string="Lifecycle Risk" domain="[('status','in',['past_due','grace','suspended'])]"/>
+                    <filter string="Current" name="current" domain="[('is_current','=',True)]"/>
+                    <filter string="Lifecycle Risk" name="lifecycle_risk" domain="[('status','in',['past_due','grace','suspended'])]"/>
                     <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
                     <filter string="Plan" name="group_by_plan" context="{'group_by': 'plan_id'}"/>
                 </search>

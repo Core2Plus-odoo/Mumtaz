@@ -60,8 +60,8 @@
                     <field name="from_status"/>
                     <field name="to_status"/>
                     <field name="source"/>
-                    <filter string="Applied" domain="[('applied','=',True)]"/>
-                    <filter string="Warnings" domain="[('applied','=',False)]"/>
+                    <filter string="Applied" name="applied" domain="[('applied','=',True)]"/>
+                    <filter string="Warnings" name="warnings" domain="[('applied','=',False)]"/>
                     <filter string="To Status" name="group_by_to_status" context="{'group_by':'to_status'}"/>
                     <filter string="Policy Mode" name="group_by_policy_mode" context="{'group_by':'policy_mode'}"/>
                     <filter string="Source" name="group_by_source" context="{'group_by':'source'}"/>
