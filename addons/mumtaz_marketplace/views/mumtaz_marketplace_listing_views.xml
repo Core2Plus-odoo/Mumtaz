@@ -101,12 +101,10 @@
                         domain="[('state','=','published')]"/>
                 <filter string="Draft" name="draft"
                         domain="[('state','=','draft')]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Category" name="group_category"
-                            context="{'group_by': 'category_id'}"/>
-                    <filter string="Type" name="group_type"
-                            context="{'group_by': 'listing_type'}"/>
-                </group>
+                <filter string="Category" name="group_category"
+                        context="{'group_by': 'category_id'}"/>
+                <filter string="Type" name="group_type"
+                        context="{'group_by': 'listing_type'}"/>
             </search>
         </field>
     </record>

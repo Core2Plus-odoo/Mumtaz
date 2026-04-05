@@ -113,7 +113,7 @@
                         </group>
                     </group>
 
-                    <group string="Subscription">
+                    <group string="Subscription" name="subscription_group">
                         <group>
                             <field name="subscription_start"/>
                             <field name="subscription_end"/>

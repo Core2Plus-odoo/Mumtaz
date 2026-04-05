@@ -27,7 +27,7 @@
                     <field name="code"/>
                     <field name="product_area"/>
                     <field name="feature_type"/>
-                    <filter string="Active" domain="[('active','=',True)]"/>
+                    <filter string="Active" name="active_only" domain="[('active','=',True)]"/>
                     <filter string="Area" name="group_by_area" context="{'group_by': 'product_area'}"/>
                     <filter string="Type" name="group_by_type" context="{'group_by': 'feature_type'}"/>
                 </search>
