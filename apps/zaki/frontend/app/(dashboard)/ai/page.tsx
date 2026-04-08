@@ -86,7 +86,7 @@ export default function AIPage() {
               setMessages(msgs.map((m: any) => ({ role: m.role, content: m.content })))
             )
           }}
-          className={`text-left px-3 py-2 rounded-lg text-xs text-zaki-muted hover:text-white hover:bg-zaki-card transition-all truncate ${s.id === sessionId ? 'bg-zaki-card text-white' : ''}`}>
+          className={`text-left px-3 py-2 rounded-lg text-xs text-zaki-muted hover:text-zaki-text hover:bg-zaki-card transition-all truncate ${s.id === sessionId ? 'bg-zaki-card text-zaki-text' : ''}`}>
             {s.title || 'Untitled chat'}
           </button>
         ))}
@@ -100,7 +100,7 @@ export default function AIPage() {
             <Zap size={16} className="text-white" />
           </div>
           <div>
-            <div className="font-semibold text-white text-sm">ZAKI AI CFO</div>
+            <div className="font-semibold text-zaki-text text-sm">ZAKI AI CFO</div>
             <div className="text-xs text-green-400">● Online</div>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function AIPage() {
                 <Zap size={32} className="text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Ask ZAKI anything</h2>
+                <h2 className="text-xl font-bold text-zaki-text">Ask ZAKI anything</h2>
                 <p className="text-zaki-muted text-sm mt-1">Your AI CFO is ready to analyze your finances</p>
               </div>
               <div className="flex flex-wrap gap-2 justify-center max-w-lg">
@@ -160,7 +160,7 @@ export default function AIPage() {
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
               placeholder="Ask about cash flow, expenses, forecasts…"
               rows={1}
-              className="flex-1 bg-transparent text-white placeholder-zaki-muted text-sm resize-none outline-none px-2 py-1 max-h-32"
+              className="flex-1 bg-transparent text-zaki-text placeholder-zaki-muted text-sm resize-none outline-none px-2 py-1 max-h-32"
             />
             <div className="flex gap-1.5 shrink-0">
               <VoiceButton onTranscript={text => { setInput(text); }} />

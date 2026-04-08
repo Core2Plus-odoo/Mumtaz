@@ -49,7 +49,7 @@ export default function TransactionsPage() {
   return (
     <div className="p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Transactions</h1>
+        <h1 className="text-xl font-bold text-zaki-text">Transactions</h1>
         <button onClick={() => setShowForm(v => !v)}
           className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg transition-colors">
           <Plus size={16} /> Add Transaction
@@ -62,18 +62,18 @@ export default function TransactionsPage() {
           <div>
             <label className="block text-xs text-zaki-muted mb-1">Date</label>
             <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500" required />
+              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" required />
           </div>
           <div>
             <label className="block text-xs text-zaki-muted mb-1">Amount</label>
             <input type="number" step="0.01" value={form.amount} placeholder="0.00"
               onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500" required />
+              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" required />
           </div>
           <div>
             <label className="block text-xs text-zaki-muted mb-1">Type</label>
             <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500">
               <option value="income">Income</option>
               <option value="expense">Expense</option>
               <option value="transfer">Transfer</option>
@@ -82,7 +82,7 @@ export default function TransactionsPage() {
           <div>
             <label className="block text-xs text-zaki-muted mb-1">Category</label>
             <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500">
               <option value="">— Select —</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -91,11 +91,11 @@ export default function TransactionsPage() {
             <label className="block text-xs text-zaki-muted mb-1">Description</label>
             <input type="text" value={form.description} placeholder="Optional description"
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
+              className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
           </div>
           <div className="col-span-2 flex gap-2 justify-end">
             <button type="button" onClick={() => setShowForm(false)}
-              className="px-4 py-2 text-sm text-zaki-muted hover:text-white border border-zaki-border rounded-lg transition-colors">Cancel</button>
+              className="px-4 py-2 text-sm text-zaki-muted hover:text-zaki-text border border-zaki-border rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={saving}
               className="px-4 py-2 text-sm bg-purple-600 hover:bg-purple-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50">
               {saving ? 'Saving…' : 'Save'}
@@ -128,7 +128,7 @@ export default function TransactionsPage() {
               {txs.map(tx => (
                 <tr key={tx.id} className="hover:bg-zaki-surface/50 transition-colors">
                   <td className="px-4 py-3 text-zaki-muted font-mono text-xs">{tx.date}</td>
-                  <td className="px-4 py-3 text-white max-w-[200px] truncate">{tx.description || '—'}</td>
+                  <td className="px-4 py-3 text-zaki-text max-w-[200px] truncate">{tx.description || '—'}</td>
                   <td className="px-4 py-3">
                     {tx.category && <span className="px-2 py-0.5 bg-zaki-surface border border-zaki-border rounded-full text-xs text-zaki-muted">{tx.category}</span>}
                   </td>
