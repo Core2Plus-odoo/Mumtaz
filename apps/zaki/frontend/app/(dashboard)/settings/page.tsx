@@ -57,7 +57,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-6 space-y-6 max-w-2xl">
-      <h1 className="text-xl font-bold text-white">Settings</h1>
+      <h1 className="text-xl font-bold text-zaki-text">Settings</h1>
 
       {/* Profile */}
       <Section title="Profile">
@@ -98,13 +98,13 @@ export default function SettingsPage() {
               <label className="block text-xs text-zaki-muted mb-1">Mumtaz ERP URL</label>
               <input type="url" value={erp.url} onChange={e => setErp(v => ({ ...v, url: e.target.value }))}
                 placeholder="https://app.mumtaz.digital" required
-                className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
+                className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
             </div>
             <div>
               <label className="block text-xs text-zaki-muted mb-1">API Key</label>
               <input type="password" value={erp.key} onChange={e => setErp(v => ({ ...v, key: e.target.value }))}
                 placeholder="Your Mumtaz API key" required
-                className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500" />
+                className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
               <p className="text-xs text-zaki-muted mt-1">Find your API key in Mumtaz ERP → Settings → Technical → API Keys</p>
             </div>
             {erpMsg && (
@@ -129,7 +129,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle?: stri
   return (
     <div className="bg-zaki-card border border-zaki-border rounded-xl p-5 space-y-4">
       <div>
-        <h2 className="font-semibold text-white">{title}</h2>
+        <h2 className="font-semibold text-zaki-text">{title}</h2>
         {subtitle && <p className="text-xs text-zaki-muted mt-0.5">{subtitle}</p>}
       </div>
       {children}
@@ -141,7 +141,7 @@ function KV({ label, value }: { label: string; value?: string }) {
   return (
     <div>
       <div className="text-xs text-zaki-muted mb-0.5">{label}</div>
-      <div className="text-white text-sm">{value || '—'}</div>
+      <div className="text-zaki-text text-sm">{value || '—'}</div>
     </div>
   )
 }

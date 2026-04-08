@@ -48,7 +48,7 @@ export default function UploadPage() {
   return (
     <div className="p-6 space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-xl font-bold text-white">Upload Financial Data</h1>
+        <h1 className="text-xl font-bold text-zaki-text">Upload Financial Data</h1>
         <p className="text-zaki-muted text-sm mt-1">Import transactions from CSV or Excel files</p>
       </div>
 
@@ -66,12 +66,12 @@ export default function UploadPage() {
         {uploading ? (
           <div className="space-y-2">
             <div className="w-12 h-12 mx-auto rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
-            <p className="text-white font-medium">Processing file…</p>
+            <p className="text-zaki-text font-medium">Processing file…</p>
           </div>
         ) : (
           <>
             <Upload size={40} className="mx-auto text-zaki-muted mb-3" />
-            <p className="text-white font-medium">Drop your file here, or click to browse</p>
+            <p className="text-zaki-text font-medium">Drop your file here, or click to browse</p>
             <p className="text-zaki-muted text-sm mt-1">CSV, XLSX, XLS supported</p>
           </>
         )}
@@ -84,7 +84,7 @@ export default function UploadPage() {
             {result.status === 'done'
               ? <CheckCircle size={20} className="text-green-400" />
               : <XCircle size={20} className="text-red-400" />}
-            <span className="font-semibold text-white">{result.filename}</span>
+            <span className="font-semibold text-zaki-text">{result.filename}</span>
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="bg-zaki-card/50 rounded-lg p-3">
@@ -112,7 +112,7 @@ export default function UploadPage() {
       <div className="bg-zaki-card border border-zaki-border rounded-xl p-5">
         <div className="flex items-center gap-3 mb-3">
           <FileSpreadsheet size={20} className="text-purple-400" />
-          <h2 className="font-semibold text-white text-sm">CSV Format Guide</h2>
+          <h2 className="font-semibold text-zaki-text text-sm">CSV Format Guide</h2>
         </div>
         <div className="space-y-1 text-xs text-zaki-muted font-mono mb-4">
           <div className="text-purple-300">date, amount, type, category, description, reference, currency</div>
