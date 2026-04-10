@@ -370,6 +370,21 @@ a{color:inherit;text-decoration:none}
   border-radius:50%;animation:spin .7s linear infinite;display:inline-block;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── No API key state ── */
+.no-key-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;text-align:center;gap:12px;
+}
+.no-key-icon{font-size:2rem}
+.no-key-title{font-size:.95rem;font-weight:600;color:var(--ink)}
+.no-key-desc{font-size:.82rem;color:var(--muted);max-width:300px;line-height:1.5}
+.no-key-btn{
+  margin-top:4px;padding:9px 20px;background:var(--gold);color:var(--ink);
+  border-radius:7px;font-size:.82rem;font-weight:600;transition:background var(--transition);
+}
+.no-key-btn:hover{background:var(--gold2)}
 
 /* ── Responsive ── */
 @media(max-width:700px){
@@ -391,40 +406,18 @@ a{color:inherit;text-decoration:none}
 <div id="setup">
   <div class="setup-card">
     <div class="setup-logo">Zaki</div>
-    <div class="setup-sub">Your private AI CFO — one-time setup, then it's yours.</div>
+    <div class="setup-sub">Your AI CFO — personalise in 30 seconds, or skip straight to the dashboard.</div>
 
     <div class="setup-section">
-      <h3>API Keys</h3>
-      <div class="field">
-        <label>Anthropic API Key <span style="color:#4a4438">(required)</span></label>
-        <input id="s-anthropic" type="password" placeholder="sk-ant-…">
-      </div>
-      <div class="field">
-        <label>ElevenLabs API Key <span style="color:#4a4438">(optional — for voice briefings)</span></label>
-        <input id="s-eleven" type="password" placeholder="Leave blank to use browser TTS">
-      </div>
-    </div>
-
-    <div class="setup-section">
-      <h3>About You</h3>
+      <h3>Who are you?</h3>
       <div class="setup-row">
         <div class="field">
-          <label>Your First Name</label>
+          <label>First Name</label>
           <input id="s-fname" type="text" placeholder="Umer">
         </div>
         <div class="field">
-          <label>Your Full Name</label>
-          <input id="s-name" type="text" placeholder="Muhammad Umer">
-        </div>
-      </div>
-      <div class="setup-row">
-        <div class="field">
           <label>Company Name</label>
           <input id="s-company" type="text" placeholder="Mumtaz Digital">
-        </div>
-        <div class="field">
-          <label>Industry</label>
-          <input id="s-industry" type="text" placeholder="Technology / SaaS">
         </div>
       </div>
       <div class="setup-row">
@@ -447,67 +440,11 @@ a{color:inherit;text-decoration:none}
       </div>
     </div>
 
-    <div class="setup-section">
-      <h3>Financial Snapshot</h3>
-      <div class="setup-row">
-        <div class="field">
-          <label>Monthly Revenue</label>
-          <input id="s-rev" type="number" placeholder="250000">
-        </div>
-        <div class="field">
-          <label>Monthly Expenses</label>
-          <input id="s-exp" type="number" placeholder="180000">
-        </div>
-      </div>
-      <div class="setup-row">
-        <div class="field">
-          <label>Cash / Bank Balance</label>
-          <input id="s-cash" type="number" placeholder="500000">
-        </div>
-        <div class="field">
-          <label>Monthly Payroll</label>
-          <input id="s-payroll" type="number" placeholder="80000">
-        </div>
-      </div>
-      <div class="setup-row">
-        <div class="field">
-          <label>Accounts Receivable (Total)</label>
-          <input id="s-ar" type="number" placeholder="120000">
-        </div>
-        <div class="field">
-          <label>AR Overdue (&gt;30 days)</label>
-          <input id="s-ar-overdue" type="number" placeholder="40000">
-        </div>
-      </div>
-      <div class="setup-row">
-        <div class="field">
-          <label>Accounts Payable</label>
-          <input id="s-ap" type="number" placeholder="60000">
-        </div>
-        <div class="field">
-          <label>VAT / Tax Liability</label>
-          <input id="s-vat" type="number" placeholder="15000">
-        </div>
-      </div>
-    </div>
-
-    <div class="setup-section">
-      <h3>Business Context</h3>
-      <div class="field">
-        <label>Sales pipeline / deals in progress</label>
-        <textarea id="s-pipeline" placeholder="e.g. 3 proposals worth AED 300K pending, closing end of month"></textarea>
-      </div>
-      <div class="field">
-        <label>Top clients or revenue sources</label>
-        <textarea id="s-clients" placeholder="e.g. Acme Corp (35% revenue), Gov contract (20%)"></textarea>
-      </div>
-      <div class="field">
-        <label>What's your biggest financial worry right now?</label>
-        <textarea id="s-worry" placeholder="e.g. Cash flow tight next 60 days, need to make payroll"></textarea>
-      </div>
-    </div>
-
-    <button class="btn-primary" onclick="completeSetup()">Launch Zaki →</button>
+    <button class="btn-primary" onclick="completeSetup()">Open Dashboard →</button>
+    <button onclick="skipSetup()" style="width:100%;margin-top:10px;padding:10px;color:#5a5040;font-size:.82rem;background:none;border:none;cursor:pointer">
+      Skip — explore without personalising
+    </button>
+    <p style="margin-top:16px;color:#4a4438;font-size:.76rem;text-align:center">AI features require an Anthropic API key — add it anytime in Settings</p>
   </div>
 </div>
 
@@ -573,6 +510,10 @@ a{color:inherit;text-decoration:none}
     </div>
 
     <div class="sidebar-footer">
+      <div id="nav-api-banner" class="hide" style="background:rgba(196,154,40,.12);border:1px solid rgba(196,154,40,.25);border-radius:7px;padding:9px 11px;margin-bottom:12px;cursor:pointer" onclick="showPanel('settings')">
+        <div style="font-size:.72rem;color:var(--gold);font-weight:600">🔑 Enable AI features</div>
+        <div style="font-size:.68rem;color:#7a6840;margin-top:2px">Add API key in Settings</div>
+      </div>
       <div class="sidebar-user">
         <div class="avatar" id="nav-avatar">Z</div>
         <div class="user-info">
@@ -792,8 +733,40 @@ a{color:inherit;text-decoration:none}
     <div class="panel" id="panel-settings">
       <div class="panel-header">
         <div class="panel-title"><em>Settings</em></div>
-        <div class="panel-desc">Update your financial data and preferences</div>
+        <div class="panel-desc">Update your profile, financials, and AI keys</div>
       </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">AI Configuration</div>
+        <div style="background:var(--gold-bg);border:1px solid #e5d080;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:var(--amber)">
+          🔑 AI features (briefing, chat, analysis) require an Anthropic API key. Get one free at <strong>console.anthropic.com</strong>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Anthropic API Key</label>
+            <input id="cfg-anthropic" type="password" placeholder="sk-ant-…" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+          </div>
+          <div class="field">
+            <label>ElevenLabs Key <span style="color:var(--muted)">(optional — voice)</span></label>
+            <input id="cfg-eleven" type="password" placeholder="Leave blank for browser TTS" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+          </div>
+        </div>
+        <div class="field" style="margin-top:4px">
+          <label>Your First Name</label>
+          <input id="cfg-fname" type="text" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Company</label>
+            <input id="cfg-company" type="text" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+          </div>
+          <div class="field">
+            <label>Country</label>
+            <input id="cfg-country" type="text" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+          </div>
+        </div>
+      </div>
+
       <div class="card" style="margin-bottom:14px">
         <div class="card-title">Financials</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -890,7 +863,27 @@ YOUR STYLE AS ZAKI
 // ═══════════════════════════════════════════
 // CLAUDE API — STREAMING
 // ═══════════════════════════════════════════
+// ── Toast notification ──
+function showToast(msg, type) {
+  const t = document.createElement('div')
+  t.textContent = msg
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:${type==='error'?'var(--coral)':'var(--ink)'};color:#f0ead8;
+    padding:10px 20px;border-radius:8px;font-size:.82rem;font-weight:500;
+    z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);pointer-events:none;
+    animation:fadeInUp .2s ease`
+  document.body.appendChild(t)
+  setTimeout(() => t.remove(), 3000)
+}
+
+// ── No API key prompt ──
+function noKeyPrompt() {
+  showToast('Add your Anthropic API key in Settings to enable AI features', 'error')
+  setTimeout(() => showPanel('settings'), 400)
+}
+
 async function streamClaude(messages, onChunk, systemOverride) {
+  if (!S.keys.anthropic) { noKeyPrompt(); throw new Error('No API key') }
   const sys = systemOverride || buildPrompt()
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -1126,24 +1119,20 @@ function updateSendBtn() {
 // ═══════════════════════════════════════════
 function completeSetup() {
   const get = id => document.getElementById(id)?.value?.trim() || ''
-  const num = id => parseFloat(document.getElementById(id)?.value || 0) || 0
-  if (!get('s-anthropic')) { alert('Anthropic API key is required'); return }
-  if (!get('s-fname')) { alert('Please enter your first name'); return }
-  S.keys.anthropic = get('s-anthropic')
-  S.keys.eleven = get('s-eleven')
-  S.me.name = get('s-name') || get('s-fname')
-  S.me.firstName = get('s-fname')
-  S.co.name = get('s-company')
-  S.co.industry = get('s-industry')
-  S.co.country = get('s-country')
-  S.co.currency = get('s-currency')
-  S.fin.rev = num('s-rev'); S.fin.exp = num('s-exp')
-  S.fin.cash = num('s-cash'); S.fin.payroll = num('s-payroll')
-  S.fin.ar = num('s-ar'); S.fin.arOverdue = num('s-ar-overdue')
-  S.fin.ap = num('s-ap'); S.fin.vat = num('s-vat')
-  S.ctx.pipeline = get('s-pipeline')
-  S.ctx.clients = get('s-clients')
-  S.ctx.worry = get('s-worry')
+  S.me.firstName = get('s-fname') || 'CEO'
+  S.me.name = get('s-fname') || 'CEO'
+  S.co.name = get('s-company') || 'My Company'
+  S.co.country = get('s-country') || ''
+  S.co.currency = get('s-currency') || 'AED'
+  save()
+  launchApp()
+}
+
+function skipSetup() {
+  S.me.firstName = 'CEO'
+  S.me.name = 'CEO'
+  S.co.name = 'My Company'
+  S.co.currency = 'AED'
   save()
   launchApp()
 }
@@ -1158,6 +1147,10 @@ function launchApp() {
   // Nav user
   document.getElementById('nav-name').textContent = S.me.name
   document.getElementById('nav-avatar').textContent = (S.me.firstName || 'Z')[0].toUpperCase()
+  // Show API key banner if no key set
+  if (!S.keys.anthropic) {
+    document.getElementById('nav-api-banner')?.classList.remove('hide')
+  }
   // Init briefing KPIs
   renderBriefingKPIs()
   showPanel('briefing')
@@ -1168,6 +1161,11 @@ function launchApp() {
 // ═══════════════════════════════════════════
 function populateSettings() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || '' }
+  set('cfg-anthropic', S.keys.anthropic)
+  set('cfg-eleven', S.keys.eleven)
+  set('cfg-fname', S.me.firstName)
+  set('cfg-company', S.co.name)
+  set('cfg-country', S.co.country)
   set('cfg-rev', S.fin.rev); set('cfg-exp', S.fin.exp)
   set('cfg-cash', S.fin.cash); set('cfg-payroll', S.fin.payroll)
   set('cfg-ar', S.fin.ar); set('cfg-ar-overdue', S.fin.arOverdue)
@@ -1180,6 +1178,12 @@ function populateSettings() {
 function saveSettings() {
   const num = id => parseFloat(document.getElementById(id)?.value || 0) || 0
   const get = id => document.getElementById(id)?.value?.trim() || ''
+  S.keys.anthropic = get('cfg-anthropic')
+  S.keys.eleven = get('cfg-eleven')
+  S.me.firstName = get('cfg-fname') || S.me.firstName
+  S.me.name = S.me.firstName
+  S.co.name = get('cfg-company') || S.co.name
+  S.co.country = get('cfg-country') || S.co.country
   S.fin.rev = num('cfg-rev'); S.fin.exp = num('cfg-exp')
   S.fin.cash = num('cfg-cash'); S.fin.payroll = num('cfg-payroll')
   S.fin.ar = num('cfg-ar'); S.fin.arOverdue = num('cfg-ar-overdue')
@@ -1187,9 +1191,18 @@ function saveSettings() {
   S.ctx.pipeline = get('cfg-pipeline')
   S.ctx.clients = get('cfg-clients')
   S.ctx.worry = get('cfg-worry')
-  S._cache = {} // clear all caches
+  S._cache = {}
   save()
-  alert('Saved! All analyses will refresh with new data.')
+  // Update nav
+  document.getElementById('nav-name').textContent = S.me.name
+  document.getElementById('nav-avatar').textContent = (S.me.firstName||'Z')[0].toUpperCase()
+  document.getElementById('greeting-name').textContent = S.me.firstName
+  if (S.keys.anthropic) {
+    document.getElementById('nav-api-banner')?.classList.add('hide')
+  } else {
+    document.getElementById('nav-api-banner')?.classList.remove('hide')
+  }
+  showToast('Saved! Dashboard updated.')
 }
 
 function resetAll() {
@@ -1219,10 +1232,27 @@ function renderBriefingKPIs() {
 
 let briefingAudio = null, briefingPlaying = false
 
+function noKeyState(msg) {
+  return `<div class="no-key-state">
+    <div class="no-key-icon">🔑</div>
+    <div class="no-key-title">AI feature — API key needed</div>
+    <div class="no-key-desc">${msg || 'Add your free Anthropic API key in Settings to enable this.'}</div>
+    <button class="no-key-btn" onclick="showPanel('settings')">Add API key in Settings →</button>
+  </div>`
+}
+
 async function loadBriefing() {
   renderBriefingKPIs()
   const el = document.getElementById('briefing-text')
   const title = document.getElementById('briefing-player-title')
+
+  if (!S.keys.anthropic) {
+    el.innerHTML = noKeyState('Your morning briefing is an AI-generated spoken summary of your finances. Add an API key to unlock it.')
+    el.classList.remove('loading')
+    title.textContent = 'API key required'
+    return
+  }
+
   el.textContent = ''; el.classList.add('loading')
   title.textContent = 'Generating your briefing…'
 
@@ -1334,10 +1364,8 @@ function updateMsg(id, content) {
 async function sendChat() {
   const inp = document.getElementById('chat-input')
   const text = inp?.value?.trim()
-  if (!text || !S.keys.anthropic) {
-    if (!S.keys.anthropic) alert('No API key — go to Settings')
-    return
-  }
+  if (!text) return
+  if (!S.keys.anthropic) { noKeyPrompt(); return }
   inp.value = ''; autoResize(inp); updateSendBtn()
 
   S.chat.push({ role: 'user', content: text })
@@ -1368,6 +1396,10 @@ async function sendChat() {
 // FINANCIAL HEALTH
 // ═══════════════════════════════════════════
 async function loadHealth() {
+  if (!S.keys.anthropic) {
+    document.getElementById('health-text').innerHTML = noKeyState('Financial health assessment uses AI to score your liquidity, profitability and risk.')
+    return
+  }
   const f = S.fin
   const net = f.rev - f.exp
   const margin = f.rev > 0 ? (net/f.rev*100) : 0
@@ -1435,6 +1467,10 @@ Be direct and specific with numbers from my data.`
 async function loadOpportunities(force) {
   if (!force && S._cache.opp) return
   const grid = document.getElementById('opp-grid')
+  if (!S.keys.anthropic) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Opportunity finder uses AI to surface revenue and growth opportunities from your data.')}</div>`
+    return
+  }
   grid.innerHTML = '<div style="color:var(--muted);grid-column:1/-1"><span class="spinner"></span> Identifying opportunities…</div>'
   try {
     const raw = await callClaude([{
@@ -1471,6 +1507,10 @@ async function loadOpportunities(force) {
 async function loadRisks(force) {
   if (!force && S._cache.risks) return
   const grid = document.getElementById('risk-grid')
+  if (!S.keys.anthropic) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Risk Radar uses AI to identify financial threats and suggest mitigations.')}</div>`
+    return
+  }
   grid.innerHTML = '<div style="color:var(--muted);grid-column:1/-1"><span class="spinner"></span> Scanning for risks…</div>'
   try {
     const raw = await callClaude([{
@@ -1557,6 +1597,10 @@ async function runCustomScenario() {
 // ═══════════════════════════════════════════
 async function loadCashflow(force) {
   if (!force && S._cache.cashflow) return
+  if (!S.keys.anthropic) {
+    document.getElementById('cashflow-text').innerHTML = noKeyState('90-day cash flow projection is generated by AI from your financial data.')
+    return
+  }
   const f = S.fin
   const net = f.rev - f.exp
   const runway = f.exp > 0 ? Math.round(f.cash/(f.exp/30)) : 999
@@ -1596,6 +1640,10 @@ Use actual figures. Be specific.` }], (_, acc) => {
 async function loadBoard(force) {
   if (!force && S._cache.board) return
   const el = document.getElementById('board-content')
+  if (!S.keys.anthropic) {
+    el.innerHTML = noKeyState('Board Pack generates an executive-ready financial report using AI.')
+    return
+  }
   el.innerHTML = '<span class="spinner"></span> Generating board pack…'
   try {
     let full = ''
@@ -1638,7 +1686,7 @@ function printBoard() { window.print() }
 // INIT
 // ═══════════════════════════════════════════
 load()
-if (S.me.firstName && S.keys.anthropic) {
+if (S.me.firstName) {
   launchApp()
 } else {
   document.getElementById('setup').style.display = 'flex'
