@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zaki — AI CFO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-size:15px}
+button{cursor:pointer;border:none;background:none;font:inherit}
+input,select,textarea{font:inherit;border:none;outline:none;background:none}
+a{color:inherit;text-decoration:none}
+
+/* ── Design tokens ── */
+:root{
+  --ink:     #0e0c08;
+  --ink2:    #1c1a14;
+  --ink3:    #2c2920;
+  --paper:   #f9f6f0;
+  --paper2:  #f3efe7;
+  --card:    #ffffff;
+  --border:  #e5dfd3;
+  --gold:    #c49a28;
+  --gold2:   #e8b840;
+  --gold-bg: #fdf8ec;
+  --teal:    #0d7a64;
+  --teal-bg: #edf7f5;
+  --coral:   #c04830;
+  --coral-bg:#fdf0ee;
+  --amber:   #b86820;
+  --amber-bg:#fdf4e8;
+  --muted:   #7a7060;
+  --serif:   'Instrument Serif', Georgia, serif;
+  --sans:    'DM Sans', system-ui, sans-serif;
+  --mono:    'DM Mono', 'Courier New', monospace;
+  --radius:  10px;
+  --shadow:  0 2px 12px rgba(14,12,8,.08);
+  --shadow2: 0 4px 24px rgba(14,12,8,.14);
+  --sidebar: 220px;
+  --transition: 0.18s ease;
+}
+
+/* ── Utility ── */
+.hide{display:none!important}
+.serif{font-family:var(--serif)}
+.mono{font-family:var(--mono)}
+.gold{color:var(--gold)}
+.muted{color:var(--muted);font-size:.82rem}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:500;letter-spacing:.02em}
+.tag-green{background:var(--teal-bg);color:var(--teal)}
+.tag-red{background:var(--coral-bg);color:var(--coral)}
+.tag-amber{background:var(--amber-bg);color:var(--amber)}
+.tag-gold{background:var(--gold-bg);color:var(--gold)}
+
+/* ── Setup screen ── */
+#setup{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:var(--ink);font-family:var(--sans);
+  padding:24px;
+}
+.setup-card{
+  background:var(--ink2);border:1px solid var(--ink3);
+  border-radius:16px;width:100%;max-width:540px;padding:40px 44px;
+}
+.setup-logo{
+  font-family:var(--serif);font-size:2rem;color:var(--gold);
+  letter-spacing:-.01em;margin-bottom:4px;
+}
+.setup-sub{color:var(--muted);font-size:.85rem;margin-bottom:32px}
+.setup-section{margin-bottom:24px}
+.setup-section h3{
+  color:var(--gold);font-size:.7rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;
+}
+.setup-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{color:#9a9080;font-size:.78rem;font-weight:500}
+.field input,.field select,.field textarea{
+  background:var(--ink3);border:1px solid #3a3628;color:#e8e0d0;
+  border-radius:8px;padding:9px 12px;font-size:.88rem;
+  transition:border-color var(--transition);
+}
+.field input:focus,.field select,.field textarea:focus{border-color:var(--gold)}
+.field select{appearance:none}
+.field textarea{resize:vertical;min-height:72px}
+.field input::placeholder,.field textarea::placeholder{color:#4a4438}
+.btn-primary{
+  width:100%;padding:12px;background:var(--gold);color:var(--ink);
+  border-radius:8px;font-weight:600;font-size:.92rem;
+  transition:background var(--transition);margin-top:8px;
+}
+.btn-primary:hover{background:var(--gold2)}
+.btn-secondary{
+  padding:8px 16px;background:var(--ink3);color:#c8bfa8;
+  border-radius:6px;font-size:.8rem;border:1px solid #3a3628;
+  transition:all var(--transition);
+}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── App shell ── */
+#app{
+  display:flex;height:100vh;font-family:var(--sans);
+  background:var(--paper);overflow:hidden;
+}
+
+/* ── Sidebar ── */
+#sidebar{
+  width:var(--sidebar);background:var(--ink);
+  display:flex;flex-direction:column;flex-shrink:0;
+  border-right:1px solid var(--ink2);overflow-y:auto;
+}
+.sidebar-logo{
+  padding:22px 20px 16px;
+  font-family:var(--serif);font-size:1.45rem;color:var(--gold);letter-spacing:-.01em;
+  border-bottom:1px solid var(--ink2);
+}
+.sidebar-logo span{display:block;font-family:var(--sans);font-size:.72rem;color:#5a5040;font-weight:400;margin-top:1px;letter-spacing:.05em;text-transform:uppercase}
+.nav-section{padding:18px 0 8px}
+.nav-label{
+  padding:0 16px 6px;font-size:.65rem;color:#4a4438;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 16px;color:#7a6e5a;font-size:.85rem;font-weight:400;
+  border-left:2px solid transparent;transition:all var(--transition);cursor:pointer;
+}
+.nav-item:hover{color:#c8bfa8;background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--gold);background:rgba(196,154,40,.08);border-left-color:var(--gold)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.nav-item.active svg{opacity:1}
+.sidebar-footer{
+  margin-top:auto;padding:16px;border-top:1px solid var(--ink2);
+}
+.sidebar-user{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:30px;height:30px;border-radius:50%;background:var(--gold);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:700;flex-shrink:0;
+}
+.user-info{flex:1;min-width:0}
+.user-name{color:#c8bfa8;font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{color:#4a4438;font-size:.7rem}
+.btn-settings{color:#4a4438;padding:4px;border-radius:4px;transition:color var(--transition)}
+.btn-settings:hover{color:var(--gold)}
+
+/* ── Main ── */
+#main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* ── Panel ── */
+.panel{display:none;flex-direction:column;flex:1;padding:32px 36px;max-width:900px;width:100%;margin:0 auto}
+.panel.active{display:flex}
+.panel-header{margin-bottom:28px}
+.panel-title{font-family:var(--serif);font-size:1.75rem;color:var(--ink);line-height:1.2}
+.panel-title em{color:var(--gold);font-style:normal}
+.panel-desc{color:var(--muted);font-size:.85rem;margin-top:5px}
+
+/* ── Cards / grids ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.kpi-grid.cols3{grid-template-columns:repeat(3,1fr)}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 18px;
+}
+.kpi-label{font-size:.72rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.kpi-value{font-family:var(--mono);font-size:1.35rem;font-weight:500;color:var(--ink);margin:5px 0 2px}
+.kpi-sub{font-size:.75rem;color:var(--muted)}
+.kpi-card.green .kpi-value{color:var(--teal)}
+.kpi-card.red .kpi-value{color:var(--coral)}
+.kpi-card.amber .kpi-value{color:var(--amber)}
+.kpi-card.gold .kpi-value{color:var(--gold)}
+
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px 24px;margin-bottom:16px;
+}
+.card-title{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+
+/* ── Briefing panel ── */
+.briefing-player{
+  background:var(--ink);border-radius:12px;padding:24px 28px;
+  margin-bottom:24px;display:flex;align-items:center;gap:20px;
+}
+.briefing-zaki{
+  width:44px;height:44px;border-radius:50%;background:var(--gold);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:1.2rem;flex-shrink:0;
+}
+.briefing-center{flex:1;min-width:0}
+.briefing-title{color:#e8e0d0;font-size:.85rem;font-weight:500;margin-bottom:6px}
+.waveform{display:flex;align-items:center;gap:3px;height:28px}
+.wave-bar{
+  width:3px;border-radius:2px;background:var(--gold);
+  animation:wave 1.2s ease-in-out infinite;opacity:.3;
+}
+.wave-bar.active{opacity:1}
+@keyframes wave{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.wave-bar:nth-child(1){animation-delay:.0s;height:16px}
+.wave-bar:nth-child(2){animation-delay:.1s;height:22px}
+.wave-bar:nth-child(3){animation-delay:.2s;height:28px}
+.wave-bar:nth-child(4){animation-delay:.15s;height:20px}
+.wave-bar:nth-child(5){animation-delay:.05s;height:14px}
+.wave-bar:nth-child(6){animation-delay:.2s;height:24px}
+.wave-bar:nth-child(7){animation-delay:.1s;height:18px}
+.wave-bar:nth-child(8){animation-delay:.3s;height:26px}
+.wave-bar:nth-child(9){animation-delay:.05s;height:12px}
+.btn-play{
+  width:40px;height:40px;border-radius:50%;background:var(--gold);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;
+  transition:background var(--transition);flex-shrink:0;
+}
+.btn-play:hover{background:var(--gold2)}
+.briefing-text{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 26px;line-height:1.75;color:var(--ink);font-size:.92rem;
+  margin-bottom:20px;white-space:pre-wrap;min-height:80px;
+}
+.briefing-text.loading{color:var(--muted);font-style:italic}
+.quick-asks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.quick-ask{
+  padding:7px 14px;background:var(--card);border:1px solid var(--border);
+  border-radius:20px;font-size:.8rem;color:var(--muted);
+  transition:all var(--transition);
+}
+.quick-ask:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+/* ── Chat panel ── */
+#chat-messages{
+  flex:1;overflow-y:auto;padding:4px 0 16px;display:flex;flex-direction:column;gap:16px;
+  min-height:0;
+}
+.msg{display:flex;gap:12px;align-items:flex-start;max-width:820px}
+.msg-avatar{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;
+  margin-top:2px;
+}
+.msg-avatar.zaki{background:var(--gold);color:var(--ink)}
+.msg-avatar.user{background:var(--ink);color:var(--gold)}
+.msg-bubble{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;flex:1;min-width:0;
+}
+.msg.user .msg-bubble{background:var(--gold-bg);border-color:#e5d8a0}
+.msg-meta{font-size:.72rem;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.msg-content{font-size:.88rem;line-height:1.7;color:var(--ink)}
+.msg-content p{margin-bottom:.6em}
+.msg-content p:last-child{margin-bottom:0}
+.msg-content h2{font-family:var(--serif);font-size:1.05rem;margin:14px 0 6px;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:4px}
+.msg-content h3{font-size:.85rem;font-weight:600;margin:10px 0 4px;color:var(--ink)}
+.msg-content ul{padding-left:0;list-style:none;margin:.4em 0}
+.msg-content ul li{padding:3px 0;padding-left:16px;position:relative;font-size:.88rem}
+.msg-content ul li::before{content:"•";color:var(--gold);position:absolute;left:0}
+.msg-content ol{padding-left:0;list-style:none;counter-reset:ol;margin:.4em 0}
+.msg-content ol li{counter-increment:ol;padding:3px 0 3px 22px;position:relative;font-size:.88rem}
+.msg-content ol li::before{content:counter(ol)".";color:var(--gold);font-weight:600;position:absolute;left:0;font-family:var(--mono)}
+.msg-content strong{font-weight:600;color:var(--ink)}
+.msg-content em{font-style:italic}
+.msg-content code{font-family:var(--mono);font-size:.8rem;background:var(--paper2);padding:1px 5px;border-radius:4px}
+.msg-content table{width:100%;border-collapse:collapse;font-size:.82rem;margin:.6em 0}
+.msg-content th{background:var(--paper2);padding:7px 10px;text-align:left;font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);border-bottom:1px solid var(--border)}
+.msg-content td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--ink)}
+.msg-content tr:last-child td{border-bottom:none}
+.msg-content blockquote{border-left:2px solid var(--gold);padding-left:12px;color:var(--muted);font-style:italic;margin:.5em 0}
+.msg-content hr{border:none;border-top:1px solid var(--border);margin:.8em 0}
+.typing-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin:0 2px;animation:blink 1.4s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+.chat-input-area{
+  border-top:1px solid var(--border);padding:16px 0 4px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.chat-input-row{
+  display:flex;align-items:flex-end;gap:10px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:10px 12px;
+  transition:border-color var(--transition);
+}
+.chat-input-row:focus-within{border-color:var(--gold)}
+#chat-input{
+  flex:1;resize:none;font-size:.88rem;color:var(--ink);
+  line-height:1.5;max-height:130px;overflow-y:auto;min-height:22px;
+}
+#chat-input::placeholder{color:var(--muted)}
+.btn-voice{
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--paper2);border:1px solid var(--border);color:var(--muted);
+  transition:all var(--transition);flex-shrink:0;
+}
+.btn-voice:hover{border-color:var(--gold);color:var(--gold)}
+.btn-voice.recording{background:var(--coral-bg);border-color:var(--coral);color:var(--coral);animation:pulse 1s infinite}
+.btn-voice.processing{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.btn-send{
+  width:34px;height:34px;border-radius:50%;background:var(--gold);
+  color:var(--ink);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background var(--transition);
+}
+.btn-send:hover{background:var(--gold2)}
+.btn-send:disabled{background:var(--border);color:var(--muted)}
+
+/* ── Opportunity / Risk cards ── */
+.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.opp-card,.risk-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;
+  transition:box-shadow var(--transition);
+}
+.opp-card:hover,.risk-card:hover{box-shadow:var(--shadow)}
+.opp-card{border-top:3px solid var(--teal)}
+.risk-card{border-top:3px solid var(--coral)}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.card-name{font-weight:600;font-size:.92rem;color:var(--ink)}
+.card-body{font-size:.83rem;color:var(--muted);line-height:1.6;margin-bottom:10px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-meta{font-family:var(--mono);font-size:.78rem;color:var(--ink);font-weight:500}
+.btn-card-action{
+  font-size:.75rem;padding:5px 11px;border-radius:5px;font-weight:500;
+  background:var(--paper2);color:var(--muted);border:1px solid var(--border);
+  transition:all var(--transition);
+}
+.btn-card-action:hover{background:var(--gold-bg);color:var(--gold);border-color:var(--gold)}
+
+/* ── Scenarios ── */
+.scenario-templates{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.scenario-btn{
+  padding:12px 14px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);text-align:left;transition:all var(--transition);
+}
+.scenario-btn:hover{border-color:var(--gold);background:var(--gold-bg)}
+.scenario-btn .s-icon{font-size:1.3rem;margin-bottom:6px}
+.scenario-btn .s-name{font-size:.82rem;font-weight:600;color:var(--ink)}
+.scenario-btn .s-desc{font-size:.72rem;color:var(--muted);margin-top:2px}
+.scenario-result{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 24px;min-height:160px;
+}
+
+/* ── Health ── */
+.health-score-ring{
+  width:120px;height:120px;position:relative;margin:0 auto 16px;
+}
+.health-score-ring svg{transform:rotate(-90deg)}
+.health-score-text{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.health-score-num{font-family:var(--mono);font-size:1.6rem;font-weight:500;color:var(--ink)}
+.health-score-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Board pack ── */
+.board-section{margin-bottom:28px;page-break-inside:avoid}
+.board-section h2{font-family:var(--serif);font-size:1.2rem;color:var(--ink);border-bottom:2px solid var(--gold);padding-bottom:6px;margin-bottom:14px}
+.board-text{font-size:.88rem;line-height:1.75;color:var(--ink);white-space:pre-wrap}
+.board-actions{display:flex;gap:10px;margin-bottom:24px}
+.btn-outline{
+  padding:8px 16px;border:1px solid var(--border);border-radius:6px;
+  font-size:.8rem;color:var(--muted);transition:all var(--transition);
+}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── Loading spinner ── */
+.spinner{
+  width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .7s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  :root{--sidebar:0px}
+  #sidebar{position:fixed;left:-220px;z-index:100;width:220px;transition:left var(--transition)}
+  #sidebar.open{left:0}
+  .panel{padding:20px 16px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .cards-grid{grid-template-columns:1fr}
+  .scenario-templates{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SETUP SCREEN
+══════════════════════════════════════ -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-logo">Zaki</div>
+    <div class="setup-sub">Your private AI CFO — one-time setup, then it's yours.</div>
+
+    <div class="setup-section">
+      <h3>API Keys</h3>
+      <div class="field">
+        <label>Anthropic API Key <span style="color:#4a4438">(required)</span></label>
+        <input id="s-anthropic" type="password" placeholder="sk-ant-…">
+      </div>
+      <div class="field">
+        <label>ElevenLabs API Key <span style="color:#4a4438">(optional — for voice briefings)</span></label>
+        <input id="s-eleven" type="password" placeholder="Leave blank to use browser TTS">
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <h3>About You</h3>
+      <div class="setup-row">
+        <div class="field">
+          <label>Your First Name</label>
+          <input id="s-fname" type="text" placeholder="Umer">
+        </div>
+        <div class="field">
+          <label>Your Full Name</label>
+          <input id="s-name" type="text" placeholder="Muhammad Umer">
+        </div>
+      </div>
+      <div class="setup-row">
+        <div class="field">
+          <label>Company Name</label>
+          <input id="s-company" type="text" placeholder="Mumtaz Digital">
+        </div>
+        <div class="field">
+          <label>Industry</label>
+          <input id="s-industry" type="text" placeholder="Technology / SaaS">
+        </div>
+      </div>
+      <div class="setup-row">
+        <div class="field">
+          <label>Country / Market</label>
+          <input id="s-country" type="text" placeholder="UAE">
+        </div>
+        <div class="field">
+          <label>Reporting Currency</label>
+          <select id="s-currency">
+            <option value="AED">AED — UAE Dirham</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="SAR">SAR — Saudi Riyal</option>
+            <option value="PKR">PKR — Pakistani Rupee</option>
+            <option value="INR">INR — Indian Rupee</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <h3>Financial Snapshot</h3>
+      <div class="setup-row">
+        <div class="field">
+          <label>Monthly Revenue</label>
+          <input id="s-rev" type="number" placeholder="250000">
+        </div>
+        <div class="field">
+          <label>Monthly Expenses</label>
+          <input id="s-exp" type="number" placeholder="180000">
+        </div>
+      </div>
+      <div class="setup-row">
+        <div class="field">
+          <label>Cash / Bank Balance</label>
+          <input id="s-cash" type="number" placeholder="500000">
+        </div>
+        <div class="field">
+          <label>Monthly Payroll</label>
+          <input id="s-payroll" type="number" placeholder="80000">
+        </div>
+      </div>
+      <div class="setup-row">
+        <div class="field">
+          <label>Accounts Receivable (Total)</label>
+          <input id="s-ar" type="number" placeholder="120000">
+        </div>
+        <div class="field">
+          <label>AR Overdue (&gt;30 days)</label>
+          <input id="s-ar-overdue" type="number" placeholder="40000">
+        </div>
+      </div>
+      <div class="setup-row">
+        <div class="field">
+          <label>Accounts Payable</label>
+          <input id="s-ap" type="number" placeholder="60000">
+        </div>
+        <div class="field">
+          <label>VAT / Tax Liability</label>
+          <input id="s-vat" type="number" placeholder="15000">
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <h3>Business Context</h3>
+      <div class="field">
+        <label>Sales pipeline / deals in progress</label>
+        <textarea id="s-pipeline" placeholder="e.g. 3 proposals worth AED 300K pending, closing end of month"></textarea>
+      </div>
+      <div class="field">
+        <label>Top clients or revenue sources</label>
+        <textarea id="s-clients" placeholder="e.g. Acme Corp (35% revenue), Gov contract (20%)"></textarea>
+      </div>
+      <div class="field">
+        <label>What's your biggest financial worry right now?</label>
+        <textarea id="s-worry" placeholder="e.g. Cash flow tight next 60 days, need to make payroll"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeSetup()">Launch Zaki →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════ -->
+<div id="app" class="hide">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">Zaki<span>AI CFO</span></div>
+
+    <div class="nav-section">
+      <div class="nav-label">Daily</div>
+      <div class="nav-item active" onclick="showPanel('briefing')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Morning Briefing
+      </div>
+      <div class="nav-item" onclick="showPanel('chat')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Talk to Zaki
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Analysis</div>
+      <div class="nav-item" onclick="showPanel('health')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Financial Health
+      </div>
+      <div class="nav-item" onclick="showPanel('opportunities')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Opportunities
+      </div>
+      <div class="nav-item" onclick="showPanel('risks')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Risk Radar
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Strategy</div>
+      <div class="nav-item" onclick="showPanel('scenarios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        Scenarios
+      </div>
+      <div class="nav-item" onclick="showPanel('cashflow')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Cash Flow
+      </div>
+      <div class="nav-item" onclick="showPanel('board')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Board Pack
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Settings</div>
+      <div class="nav-item" onclick="showPanel('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" id="nav-avatar">Z</div>
+        <div class="user-info">
+          <div class="user-name" id="nav-name">—</div>
+          <div class="user-role">CEO</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main panels -->
+  <main id="main">
+
+    <!-- ── BRIEFING ── -->
+    <div class="panel active" id="panel-briefing">
+      <div class="panel-header">
+        <div class="panel-title">Good <em id="greeting-time">morning</em>, <em id="greeting-name">—</em></div>
+        <div class="panel-desc">Here's your daily financial briefing from Zaki</div>
+      </div>
+
+      <div class="briefing-player">
+        <div class="briefing-zaki">Z</div>
+        <div class="briefing-center">
+          <div class="briefing-title" id="briefing-player-title">Generating your briefing…</div>
+          <div class="waveform" id="waveform">
+            <div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div><div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+        </div>
+        <button class="btn-play" id="btn-play-briefing" onclick="toggleBriefingAudio()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+      </div>
+
+      <div id="briefing-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
+
+      <div class="briefing-text" id="briefing-text">Generating your briefing…</div>
+
+      <div style="margin-bottom:12px;font-size:.75rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em">Quick questions</div>
+      <div class="quick-asks" id="quick-asks">
+        <button class="quick-ask" onclick="askFromBriefing('What should I focus on today?')">What should I focus on today?</button>
+        <button class="quick-ask" onclick="askFromBriefing('How is my cash position?')">How is my cash position?</button>
+        <button class="quick-ask" onclick="askFromBriefing('Any overdue invoices I should chase?')">Any overdue invoices to chase?</button>
+        <button class="quick-ask" onclick="askFromBriefing('What is my burn rate and runway?')">Burn rate & runway</button>
+        <button class="quick-ask" onclick="askFromBriefing('Should I hire now or wait?')">Hire now or wait?</button>
+      </div>
+    </div>
+
+    <!-- ── CHAT ── -->
+    <div class="panel" id="panel-chat" style="max-width:none;padding-right:36px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div>
+          <div class="panel-title" style="font-size:1.3rem">Talk to Zaki</div>
+          <div class="panel-desc">Ask anything about your finances, strategy, or decisions</div>
+        </div>
+        <button class="btn-secondary" onclick="clearChat()">New conversation</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <textarea id="chat-input" rows="1" placeholder="Ask Zaki anything… e.g. 'Should I take this contract?' or 'Run a P&L analysis'"
+            onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="btn-voice" id="btn-voice" onclick="toggleVoice()" title="Voice input">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+          <button class="btn-send" id="btn-send" onclick="sendChat()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);text-align:center">
+          Zaki has full context of your financial data · Press Enter to send, Shift+Enter for new line
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HEALTH ── -->
+    <div class="panel" id="panel-health">
+      <div class="panel-header">
+        <div class="panel-title">Financial <em>Health</em></div>
+        <div class="panel-desc">Overall score and key performance dimensions</div>
+      </div>
+      <div id="health-kpis" class="kpi-grid cols3" style="margin-bottom:20px"></div>
+      <div class="card" id="health-content" style="min-height:200px">
+        <div class="card-title">Assessment</div>
+        <div id="health-text" style="color:var(--muted);font-size:.85rem">
+          <span class="spinner"></span> Analyzing your financial health…
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPPORTUNITIES ── -->
+    <div class="panel" id="panel-opportunities">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title"><em>Opportunities</em></div>
+            <div class="panel-desc">Revenue and growth opportunities identified by Zaki</div>
+          </div>
+          <button class="btn-secondary" onclick="loadOpportunities(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="opp-grid">
+        <div style="color:var(--muted);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Analyzing opportunities…</div>
+      </div>
+    </div>
+
+    <!-- ── RISKS ── -->
+    <div class="panel" id="panel-risks">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Risk <em>Radar</em></div>
+            <div class="panel-desc">Active risks and threats to monitor</div>
+          </div>
+          <button class="btn-secondary" onclick="loadRisks(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="risk-grid">
+        <div style="color:var(--muted);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Scanning for risks…</div>
+      </div>
+    </div>
+
+    <!-- ── SCENARIOS ── -->
+    <div class="panel" id="panel-scenarios">
+      <div class="panel-header">
+        <div class="panel-title"><em>Scenarios</em></div>
+        <div class="panel-desc">Model what-ifs and strategic decisions</div>
+      </div>
+      <div class="scenario-templates">
+        <button class="scenario-btn" onclick="runScenario('hire')">
+          <div class="s-icon">👥</div>
+          <div class="s-name">Hire 3 people</div>
+          <div class="s-desc">Impact on runway & margins</div>
+        </button>
+        <button class="scenario-btn" onclick="runScenario('revenue20')">
+          <div class="s-icon">📈</div>
+          <div class="s-name">Revenue +20%</div>
+          <div class="s-desc">Cash & profit projection</div>
+        </button>
+        <button class="scenario-btn" onclick="runScenario('revenueDrop30')">
+          <div class="s-icon">📉</div>
+          <div class="s-name">Revenue −30%</div>
+          <div class="s-desc">Survival & cuts needed</div>
+        </button>
+        <button class="scenario-btn" onclick="runScenario('office')">
+          <div class="s-icon">🏢</div>
+          <div class="s-name">Open office</div>
+          <div class="s-desc">Cost impact analysis</div>
+        </button>
+        <button class="scenario-btn" onclick="runScenario('raise')">
+          <div class="s-icon">💰</div>
+          <div class="s-name">Raise funding</div>
+          <div class="s-desc">Runway extension</div>
+        </button>
+        <button class="scenario-btn" onclick="runScenario('custom')">
+          <div class="s-icon">✏️</div>
+          <div class="s-name">Custom scenario</div>
+          <div class="s-desc">Describe your own</div>
+        </button>
+      </div>
+      <div id="scenario-custom-area" class="hide" style="margin-bottom:16px">
+        <div class="card">
+          <textarea id="scenario-custom-input" rows="3" style="width:100%;resize:none;font-size:.88rem;color:var(--ink);border:none;outline:none;background:none" placeholder="Describe your scenario… e.g. 'What if I lose my top client and have to cut costs by 20%?'"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px">
+            <button class="btn-primary" style="width:auto;padding:8px 20px" onclick="runCustomScenario()">Analyze →</button>
+          </div>
+        </div>
+      </div>
+      <div class="scenario-result" id="scenario-result">
+        <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:24px 0">Select a scenario above to model the financial impact</div>
+      </div>
+    </div>
+
+    <!-- ── CASH FLOW ── -->
+    <div class="panel" id="panel-cashflow">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Cash <em>Flow</em></div>
+            <div class="panel-desc">90-day projection and liquidity analysis</div>
+          </div>
+          <button class="btn-secondary" onclick="loadCashflow(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="cashflow-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
+      <div class="card" id="cashflow-content" style="min-height:200px">
+        <div class="card-title">90-Day Projection</div>
+        <div id="cashflow-text" style="color:var(--muted);font-size:.85rem">
+          <span class="spinner"></span> Building cash flow projection…
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOARD PACK ── -->
+    <div class="panel" id="panel-board">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Board <em>Pack</em></div>
+            <div class="panel-desc">Executive-ready financial report</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-outline" onclick="printBoard()">🖨 Print</button>
+            <button class="btn-secondary" onclick="loadBoard(true)">↻ Regenerate</button>
+          </div>
+        </div>
+      </div>
+      <div id="board-content">
+        <div style="color:var(--muted);font-size:.85rem"><span class="spinner"></span> Generating board pack…</div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="panel" id="panel-settings">
+      <div class="panel-header">
+        <div class="panel-title"><em>Settings</em></div>
+        <div class="panel-desc">Update your financial data and preferences</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Financials</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Monthly Revenue</label><input id="cfg-rev" type="number"></div>
+          <div class="field"><label>Monthly Expenses</label><input id="cfg-exp" type="number"></div>
+          <div class="field"><label>Cash Balance</label><input id="cfg-cash" type="number"></div>
+          <div class="field"><label>Monthly Payroll</label><input id="cfg-payroll" type="number"></div>
+          <div class="field"><label>Accounts Receivable</label><input id="cfg-ar" type="number"></div>
+          <div class="field"><label>AR Overdue</label><input id="cfg-ar-overdue" type="number"></div>
+          <div class="field"><label>Accounts Payable</label><input id="cfg-ap" type="number"></div>
+          <div class="field"><label>VAT / Tax Liability</label><input id="cfg-vat" type="number"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Business Context</div>
+        <div class="field"><label>Sales Pipeline</label><textarea id="cfg-pipeline" rows="2" style="width:100%;resize:none;background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)"></textarea></div>
+        <div class="field"><label>Top Clients</label><textarea id="cfg-clients" rows="2" style="width:100%;resize:none;background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)"></textarea></div>
+        <div class="field"><label>Current Financial Worry</label><textarea id="cfg-worry" rows="2" style="width:100%;resize:none;background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)"></textarea></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-primary" style="max-width:180px" onclick="saveSettings()">Save Changes</button>
+        <button class="btn-outline" onclick="resetAll()">Reset everything</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const S = {
+  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB' },
+  co: { name: '', industry: '', country: '', currency: 'AED' },
+  me: { name: '', firstName: '' },
+  fin: { rev:0, exp:0, cash:0, payroll:0, ar:0, arOverdue:0, ap:0, vat:0 },
+  ctx: { pipeline:'', clients:'', worry:'' },
+  chat: [],
+  prefs: { readAloud: false },
+  _cache: {}
+}
+
+function save() { try { localStorage.setItem('zaki_v3', JSON.stringify(S)) } catch(e){} }
+function load() {
+  try {
+    const d = localStorage.getItem('zaki_v3')
+    if (d) Object.assign(S, JSON.parse(d))
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════
+// ZAKI SYSTEM PROMPT
+// ═══════════════════════════════════════════
+function buildPrompt() {
+  const f = S.fin
+  const net = f.rev - f.exp
+  const margin = f.rev > 0 ? (net/f.rev*100).toFixed(1) : 'N/A'
+  const runway = f.exp > 0 ? (f.cash / (f.exp/30)).toFixed(0) : '∞'
+  const arPct = f.ar > 0 ? (f.arOverdue/f.ar*100).toFixed(0) : 0
+
+  return `You are Zaki, the private AI CFO of ${S.co.name || 'this company'} and trusted financial partner to ${S.me.name || 'the CEO'}.
+
+COMPANY PROFILE
+- Company: ${S.co.name} | Industry: ${S.co.industry} | Market: ${S.co.country}
+- Reporting currency: ${S.co.currency}
+
+CURRENT FINANCIAL SNAPSHOT
+- Monthly Revenue:  ${S.co.currency} ${fmt(f.rev)}
+- Monthly Expenses: ${S.co.currency} ${fmt(f.exp)}
+- Net Profit:       ${S.co.currency} ${fmt(net)} (margin: ${margin}%)
+- Cash / Bank:      ${S.co.currency} ${fmt(f.cash)}
+- Monthly Payroll:  ${S.co.currency} ${fmt(f.payroll)} (${f.rev>0?(f.payroll/f.rev*100).toFixed(0):0}% of revenue)
+- Accounts Receivable: ${S.co.currency} ${fmt(f.ar)} (${arPct}% overdue >30d)
+- Accounts Payable: ${S.co.currency} ${fmt(f.ap)}
+- VAT/Tax Liability: ${S.co.currency} ${fmt(f.vat)}
+- Cash Runway: ${runway} days | Burn Rate: ${S.co.currency} ${fmt(f.exp - f.rev)} / month
+
+BUSINESS CONTEXT
+- Pipeline: ${S.ctx.pipeline || 'Not provided'}
+- Top clients: ${S.ctx.clients || 'Not provided'}
+- Current worry: ${S.ctx.worry || 'Not provided'}
+
+YOUR STYLE AS ZAKI
+- You are direct, warm, decisive — like a trusted CFO who speaks plainly
+- Lead with the key number or insight immediately — no preamble
+- Use ${S.co.currency} amounts. Be specific. Give recommendations, not just observations.
+- For structured analysis: use ## headers, bullet lists, and markdown tables
+- Flag risks with ⚠️, opportunities with ✅, critical with 🔴, positive with 🟢
+- End analysis with numbered action items
+- CEO's first name: ${S.me.firstName}`
+}
+
+// ═══════════════════════════════════════════
+// CLAUDE API — STREAMING
+// ═══════════════════════════════════════════
+async function streamClaude(messages, onChunk, systemOverride) {
+  const sys = systemOverride || buildPrompt()
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': S.keys.anthropic,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 2048,
+      system: sys,
+      messages,
+      stream: true
+    })
+  })
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}))
+    throw new Error(err.error?.message || `API error ${resp.status}`)
+  }
+  const reader = resp.body.getReader()
+  const dec = new TextDecoder()
+  let full = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    for (const line of dec.decode(value).split('\n')) {
+      if (!line.startsWith('data: ')) continue
+      const data = line.slice(6)
+      if (data === '[DONE]') continue
+      try {
+        const j = JSON.parse(data)
+        if (j.type === 'content_block_delta' && j.delta?.text) {
+          full += j.delta.text
+          onChunk(j.delta.text, full)
+        }
+      } catch {}
+    }
+  }
+  return full
+}
+
+async function callClaude(messages, systemOverride) {
+  let full = ''
+  await streamClaude(messages, (chunk, acc) => { full = acc }, systemOverride)
+  return full
+}
+
+// ═══════════════════════════════════════════
+// VOICE — ElevenLabs + browser fallback
+// ═══════════════════════════════════════════
+let currentAudio = null
+function stopAudio() { if (currentAudio) { currentAudio.pause(); currentAudio = null } }
+
+async function speak(text) {
+  stopAudio()
+  const clean = text.replace(/[#*`_~>]/g, '').replace(/\n{2,}/g, '. ').replace(/\n/g, ' ')
+  if (S.keys.eleven) {
+    try {
+      const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${S.keys.elevenVoice}/stream`, {
+        method: 'POST',
+        headers: { 'xi-api-key': S.keys.eleven, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: clean.slice(0, 2500),
+          model_id: 'eleven_turbo_v2',
+          voice_settings: { stability: 0.48, similarity_boost: 0.76, style: 0.28, use_speaker_boost: true }
+        })
+      })
+      if (r.ok) {
+        const blob = await r.blob()
+        currentAudio = new Audio(URL.createObjectURL(blob))
+        currentAudio.play()
+        return
+      }
+    } catch(e) {}
+  }
+  // Browser fallback
+  const utt = new SpeechSynthesisUtterance(clean.slice(0, 2000))
+  utt.rate = 1.05; utt.pitch = 1
+  speechSynthesis.speak(utt)
+}
+
+// ═══════════════════════════════════════════
+// VOICE INPUT
+// ═══════════════════════════════════════════
+let mediaRec = null, voiceChunks = [], voiceState = 'idle'
+
+async function toggleVoice() {
+  if (voiceState === 'recording') { mediaRec?.stop(); return }
+  if (voiceState === 'processing') return
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    voiceChunks = []
+    mediaRec = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+    mediaRec.ondataavailable = e => voiceChunks.push(e.data)
+    mediaRec.onstop = async () => {
+      setVoiceState('processing')
+      stream.getTracks().forEach(t => t.stop())
+      // ElevenLabs speech-to-text or browser Web Speech fallback
+      try {
+        const blob = new Blob(voiceChunks, { type: 'audio/webm' })
+        // Use browser SpeechRecognition transcription (we captured audio as backup)
+        // For now use Web Speech API directly (runs in parallel)
+      } catch(e) {}
+      setVoiceState('idle')
+    }
+    mediaRec.start()
+    setVoiceState('recording')
+
+    // Also use Web Speech API for real-time transcription
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+      const rec = new SR()
+      rec.continuous = false; rec.interimResults = false; rec.lang = 'en-US'
+      rec.onresult = e => {
+        const text = e.results[0][0].transcript
+        const inp = document.getElementById('chat-input')
+        if (inp) { inp.value = text; autoResize(inp); updateSendBtn() }
+      }
+      rec.onend = () => { if (mediaRec?.state === 'recording') mediaRec.stop() }
+      rec.onerror = () => { if (mediaRec?.state === 'recording') mediaRec.stop() }
+      rec.start()
+    } else {
+      setTimeout(() => { if (mediaRec?.state === 'recording') mediaRec.stop() }, 8000)
+    }
+  } catch(e) {
+    alert('Microphone access denied or not available')
+    setVoiceState('idle')
+  }
+}
+
+function setVoiceState(s) {
+  voiceState = s
+  const btn = document.getElementById('btn-voice')
+  if (!btn) return
+  btn.className = `btn-voice${s==='recording'?' recording':s==='processing'?' processing':''}`
+  btn.title = s === 'recording' ? 'Stop recording' : s === 'processing' ? 'Processing…' : 'Voice input'
+}
+
+// ═══════════════════════════════════════════
+// MARKDOWN RENDERER
+// ═══════════════════════════════════════════
+function md(text) {
+  if (!text) return ''
+  let html = text
+    // Tables
+    .replace(/\n(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/g, (_,h,_s,rows) => {
+      const ths = h.split('|').filter(Boolean).map(c=>`<th>${c.trim()}</th>`).join('')
+      const trs = rows.trim().split('\n').map(r=>{
+        const tds = r.split('|').filter(Boolean).map(c=>`<td>${c.trim()}</td>`).join('')
+        return `<tr>${tds}</tr>`
+      }).join('')
+      return `<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`
+    })
+    // Headings
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+    // Bold / italic / code
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    // HR
+    .replace(/^---+$/gm, '<hr>')
+    // Numbered lists
+    .replace(/((?:^\d+\. .+\n?)+)/gm, m => {
+      const items = m.trim().split('\n').map(l => `<li>${l.replace(/^\d+\. /,'')}</li>`).join('')
+      return `<ol>${items}</ol>`
+    })
+    // Bullet lists
+    .replace(/((?:^[-*] .+\n?)+)/gm, m => {
+      const items = m.trim().split('\n').map(l => `<li>${l.replace(/^[-*] /,'')}</li>`).join('')
+      return `<ul>${items}</ul>`
+    })
+    // Blockquote
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    // Paragraphs
+    .replace(/\n{2,}/g, '</p><p>')
+
+  return `<p>${html}</p>`.replace(/<p><\/p>/g,'').replace(/<p>(<[huo])/g,'$1').replace(/(<\/[huo][l1-6]>)<\/p>/g,'$1')
+}
+
+// ═══════════════════════════════════════════
+// UI UTILITIES
+// ═══════════════════════════════════════════
+function fmt(n) {
+  n = Number(n) || 0
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(1) + 'M'
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(0) + 'K'
+  return n.toLocaleString()
+}
+function curr(n) { return `${S.co.currency} ${fmt(n)}` }
+
+function kpiCard(label, value, sub, color) {
+  return `<div class="kpi-card ${color||''}">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value">${value}</div>
+    ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+  </div>`
+}
+
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  const panel = document.getElementById('panel-' + id)
+  if (panel) panel.classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active')
+  })
+  if (id === 'briefing' && !S._cache.briefing) loadBriefing()
+  if (id === 'health' && !S._cache.health) loadHealth()
+  if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
+  if (id === 'risks' && !S._cache.risks) loadRisks()
+  if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
+  if (id === 'board' && !S._cache.board) loadBoard()
+  if (id === 'settings') populateSettings()
+}
+
+function autoResize(el) {
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px'
+  updateSendBtn()
+}
+function updateSendBtn() {
+  const btn = document.getElementById('btn-send')
+  const val = document.getElementById('chat-input')?.value?.trim()
+  if (btn) btn.disabled = !val
+}
+
+// ═══════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════
+function completeSetup() {
+  const get = id => document.getElementById(id)?.value?.trim() || ''
+  const num = id => parseFloat(document.getElementById(id)?.value || 0) || 0
+  if (!get('s-anthropic')) { alert('Anthropic API key is required'); return }
+  if (!get('s-fname')) { alert('Please enter your first name'); return }
+  S.keys.anthropic = get('s-anthropic')
+  S.keys.eleven = get('s-eleven')
+  S.me.name = get('s-name') || get('s-fname')
+  S.me.firstName = get('s-fname')
+  S.co.name = get('s-company')
+  S.co.industry = get('s-industry')
+  S.co.country = get('s-country')
+  S.co.currency = get('s-currency')
+  S.fin.rev = num('s-rev'); S.fin.exp = num('s-exp')
+  S.fin.cash = num('s-cash'); S.fin.payroll = num('s-payroll')
+  S.fin.ar = num('s-ar'); S.fin.arOverdue = num('s-ar-overdue')
+  S.fin.ap = num('s-ap'); S.fin.vat = num('s-vat')
+  S.ctx.pipeline = get('s-pipeline')
+  S.ctx.clients = get('s-clients')
+  S.ctx.worry = get('s-worry')
+  save()
+  launchApp()
+}
+
+function launchApp() {
+  document.getElementById('setup').style.display = 'none'
+  document.getElementById('app').classList.remove('hide')
+  // Set greeting
+  const h = new Date().getHours()
+  document.getElementById('greeting-time').textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'
+  document.getElementById('greeting-name').textContent = S.me.firstName || S.me.name
+  // Nav user
+  document.getElementById('nav-name').textContent = S.me.name
+  document.getElementById('nav-avatar').textContent = (S.me.firstName || 'Z')[0].toUpperCase()
+  // Init briefing KPIs
+  renderBriefingKPIs()
+  showPanel('briefing')
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS PANEL
+// ═══════════════════════════════════════════
+function populateSettings() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || '' }
+  set('cfg-rev', S.fin.rev); set('cfg-exp', S.fin.exp)
+  set('cfg-cash', S.fin.cash); set('cfg-payroll', S.fin.payroll)
+  set('cfg-ar', S.fin.ar); set('cfg-ar-overdue', S.fin.arOverdue)
+  set('cfg-ap', S.fin.ap); set('cfg-vat', S.fin.vat)
+  set('cfg-pipeline', S.ctx.pipeline)
+  set('cfg-clients', S.ctx.clients)
+  set('cfg-worry', S.ctx.worry)
+}
+
+function saveSettings() {
+  const num = id => parseFloat(document.getElementById(id)?.value || 0) || 0
+  const get = id => document.getElementById(id)?.value?.trim() || ''
+  S.fin.rev = num('cfg-rev'); S.fin.exp = num('cfg-exp')
+  S.fin.cash = num('cfg-cash'); S.fin.payroll = num('cfg-payroll')
+  S.fin.ar = num('cfg-ar'); S.fin.arOverdue = num('cfg-ar-overdue')
+  S.fin.ap = num('cfg-ap'); S.fin.vat = num('cfg-vat')
+  S.ctx.pipeline = get('cfg-pipeline')
+  S.ctx.clients = get('cfg-clients')
+  S.ctx.worry = get('cfg-worry')
+  S._cache = {} // clear all caches
+  save()
+  alert('Saved! All analyses will refresh with new data.')
+}
+
+function resetAll() {
+  if (confirm('Reset Zaki completely? This deletes all data.')) {
+    localStorage.removeItem('zaki_v3')
+    location.reload()
+  }
+}
+</script>
+<script>
+// ═══════════════════════════════════════════
+// BRIEFING PANEL
+// ═══════════════════════════════════════════
+function renderBriefingKPIs() {
+  const f = S.fin
+  const net = f.rev - f.exp
+  const runway = f.exp > 0 ? Math.round(f.cash / (f.exp / 30)) : 999
+  const margin = f.rev > 0 ? (net/f.rev*100).toFixed(1) : '—'
+  const runwayColor = runway < 60 ? 'red' : runway < 120 ? 'amber' : 'green'
+  const netColor = net >= 0 ? 'green' : 'red'
+  document.getElementById('briefing-kpis').innerHTML =
+    kpiCard('Monthly Revenue', curr(f.rev), 'This month', '') +
+    kpiCard('Monthly Expenses', curr(f.exp), `Payroll: ${curr(f.payroll)}`, '') +
+    kpiCard('Net Profit', curr(net), `Margin: ${margin}%`, netColor) +
+    kpiCard('Cash Runway', runway === 999 ? '∞' : runway + ' days', curr(f.cash) + ' in bank', runwayColor)
+}
+
+let briefingAudio = null, briefingPlaying = false
+
+async function loadBriefing() {
+  renderBriefingKPIs()
+  const el = document.getElementById('briefing-text')
+  const title = document.getElementById('briefing-player-title')
+  el.textContent = ''; el.classList.add('loading')
+  title.textContent = 'Generating your briefing…'
+
+  const f = S.fin
+  const net = f.rev - f.exp
+  const runway = f.exp > 0 ? Math.round(f.cash / (f.exp / 30)) : 999
+
+  const prompt = `Write Zaki's daily financial briefing for ${S.me.firstName}. 
+
+Rules:
+- Write in plain spoken paragraphs — NO markdown, NO bullet points, NO headers, NO bold
+- Sound like a trusted CFO friend calling at 7am — warm, personal, candid
+- Use ${S.me.firstName}'s name naturally 2-3 times
+- 220-260 words total, 4-5 paragraphs
+- Start immediately with the most important financial point — no greeting phrase needed
+- Be specific with numbers and recommendations
+- End with one clear action for today
+
+Context: revenue ${S.co.currency} ${fmt(f.rev)}/mo, expenses ${S.co.currency} ${fmt(f.exp)}/mo, net ${S.co.currency} ${fmt(net)}/mo, cash ${S.co.currency} ${fmt(f.cash)}, runway ${runway} days, AR overdue ${S.co.currency} ${fmt(f.arOverdue)}, worry: "${S.ctx.worry}"`
+
+  try {
+    let full = ''
+    await streamClaude([{ role: 'user', content: prompt }], (_, acc) => {
+      full = acc
+      el.textContent = acc
+      el.classList.remove('loading')
+    }, buildPrompt())
+    S._cache.briefing = full
+    title.textContent = 'Daily briefing ready'
+    save()
+  } catch(e) {
+    el.textContent = `Could not generate briefing: ${e.message}`
+    el.classList.remove('loading')
+    title.textContent = 'Error'
+  }
+}
+
+function toggleBriefingAudio() {
+  const text = S._cache.briefing || document.getElementById('briefing-text').textContent
+  if (!text || text.includes('Generating') || text.includes('Error')) return
+  const bars = document.querySelectorAll('.wave-bar')
+  if (briefingPlaying) {
+    stopAudio(); speechSynthesis.cancel()
+    briefingPlaying = false
+    bars.forEach(b => b.classList.remove('active'))
+    document.querySelector('#btn-play-briefing polygon').setAttribute('points', '5 3 19 12 5 21 5 3')
+  } else {
+    briefingPlaying = true
+    bars.forEach(b => b.classList.add('active'))
+    document.querySelector('#btn-play-briefing polygon').setAttribute('points', '6 4 10 4 10 20 6 20')
+    speak(text)
+    // Reset when done
+    setTimeout(() => {
+      briefingPlaying = false
+      bars.forEach(b => b.classList.remove('active'))
+      document.querySelector('#btn-play-briefing polygon')?.setAttribute('points', '5 3 19 12 5 21 5 3')
+    }, text.length * 60)
+  }
+}
+
+function askFromBriefing(q) {
+  showPanel('chat')
+  setTimeout(() => {
+    document.getElementById('chat-input').value = q
+    autoResize(document.getElementById('chat-input'))
+    sendChat()
+  }, 100)
+}
+
+// ═══════════════════════════════════════════
+// CHAT PANEL
+// ═══════════════════════════════════════════
+function clearChat() {
+  S.chat = []; save()
+  document.getElementById('chat-messages').innerHTML = ''
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() }
+}
+
+function appendMsg(role, content, streaming) {
+  const msgs = document.getElementById('chat-messages')
+  const id = 'msg-' + Date.now()
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const isZaki = role === 'assistant'
+  const div = document.createElement('div')
+  div.className = `msg${isZaki ? '' : ' user'}`
+  div.id = id
+  div.innerHTML = `
+    <div class="msg-avatar ${isZaki ? 'zaki' : 'user'}">${isZaki ? 'Z' : (S.me.firstName||'U')[0].toUpperCase()}</div>
+    <div class="msg-bubble">
+      <div class="msg-meta">${isZaki ? 'Zaki · CFO' : S.me.firstName || 'You'} <span style="opacity:.5">${time}</span></div>
+      <div class="msg-content" id="${id}-content">
+        ${streaming ? '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>' : (isZaki ? md(content) : `<p>${content}</p>`)}
+      </div>
+    </div>`
+  msgs.appendChild(div)
+  msgs.scrollTop = msgs.scrollHeight
+  return id
+}
+
+function updateMsg(id, content) {
+  const el = document.getElementById(id + '-content')
+  if (el) { el.innerHTML = md(content); el.closest('.msg-messages')?.scrollIntoView?.() }
+  document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chat-input')
+  const text = inp?.value?.trim()
+  if (!text || !S.keys.anthropic) {
+    if (!S.keys.anthropic) alert('No API key — go to Settings')
+    return
+  }
+  inp.value = ''; autoResize(inp); updateSendBtn()
+
+  S.chat.push({ role: 'user', content: text })
+  appendMsg('user', text)
+
+  const msgId = appendMsg('assistant', '', true)
+  const btn = document.getElementById('btn-send')
+  if (btn) btn.disabled = true
+
+  try {
+    let full = ''
+    await streamClaude(S.chat.slice(-20), (_, acc) => {
+      full = acc
+      updateMsg(msgId, acc)
+    })
+    S.chat.push({ role: 'assistant', content: full })
+    save()
+    if (S.prefs.readAloud) speak(full)
+  } catch(e) {
+    updateMsg(msgId, `⚠️ ${e.message}`)
+  } finally {
+    if (btn) btn.disabled = false
+    document.getElementById('chat-messages').scrollTop = 999999
+  }
+}
+
+// ═══════════════════════════════════════════
+// FINANCIAL HEALTH
+// ═══════════════════════════════════════════
+async function loadHealth() {
+  const f = S.fin
+  const net = f.rev - f.exp
+  const margin = f.rev > 0 ? (net/f.rev*100) : 0
+  const runway = f.exp > 0 ? (f.cash/(f.exp/30)) : 999
+  const arPct = f.ar > 0 ? (f.arOverdue/f.ar*100) : 0
+  const payrollPct = f.rev > 0 ? (f.payroll/f.rev*100) : 0
+
+  // Score
+  let score = 30
+  if (net > 0) score += 20
+  if (margin > 15) score += 10
+  if (margin > 25) score += 5
+  if (runway > 90) score += 15
+  if (runway > 180) score += 5
+  if (arPct < 20) score += 10
+  if (payrollPct < 50) score += 5
+  score = Math.min(score, 100)
+
+  const scoreColor = score >= 70 ? '#0d7a64' : score >= 50 ? '#b86820' : '#c04830'
+  const runwayColor = runway > 120 ? 'green' : runway > 60 ? 'amber' : 'red'
+  const netColor = net >= 0 ? 'green' : 'red'
+
+  document.getElementById('health-kpis').innerHTML =
+    kpiCard('Health Score', score + '/100', score>=70?'Strong':score>=50?'Watch':'Critical', score>=70?'green':score>=50?'amber':'red') +
+    kpiCard('Net Margin', margin.toFixed(1) + '%', net>=0?'Profitable':'Loss-making', netColor) +
+    kpiCard('Cash Runway', runway>999?'∞':Math.round(runway)+' days', curr(f.cash)+' available', runwayColor)
+
+  const el = document.getElementById('health-text')
+  el.innerHTML = '<span class="spinner"></span> Analyzing…'
+
+  try {
+    let full = ''
+    await streamClaude([{
+      role: 'user',
+      content: `Conduct a comprehensive financial health assessment. Score and analyze:
+## Overall Health: ${score}/100
+
+Cover these dimensions (score each X/100 and explain):
+1. **Profitability** — margins, net income trend
+2. **Liquidity** — cash position, runway, AR collection
+3. **Efficiency** — payroll ratio, expense control
+4. **Risk exposure** — overdue AR, AP obligations, concentration
+
+Then provide:
+## 🔴 Critical Issues (if any)
+## 🟡 Watch Items
+## 🟢 Strengths
+## Action Plan (top 3 specific actions with timelines)
+
+Be direct and specific with numbers from my data.`
+    }], (_, acc) => {
+      el.innerHTML = md(acc)
+      full = acc
+    })
+    S._cache.health = full
+    save()
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--coral)">Error: ${e.message}</span>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// OPPORTUNITIES
+// ═══════════════════════════════════════════
+async function loadOpportunities(force) {
+  if (!force && S._cache.opp) return
+  const grid = document.getElementById('opp-grid')
+  grid.innerHTML = '<div style="color:var(--muted);grid-column:1/-1"><span class="spinner"></span> Identifying opportunities…</div>'
+  try {
+    const raw = await callClaude([{
+      role: 'user',
+      content: `Identify 4 specific revenue or growth opportunities for this business. Respond with ONLY valid JSON array, no other text:
+[{"title":"...","description":"...","potential":"${S.co.currency} X","effort":"Low|Medium|High","timeline":"30|60|90 days","action":"specific first step"}]`
+    }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.opp = items; save()
+    grid.innerHTML = items.map(o => `
+      <div class="opp-card">
+        <div class="card-header">
+          <div class="card-name">${o.title}</div>
+          <span class="tag tag-green">✅ Opportunity</span>
+        </div>
+        <div class="card-body">${o.description}</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px"><strong style="color:var(--ink)">First step:</strong> ${o.action}</div>
+        <div class="card-footer">
+          <div>
+            <div class="card-meta" style="color:var(--teal)">${o.potential} potential</div>
+            <div style="font-size:.72rem;color:var(--muted)">${o.effort} effort · ${o.timeline}</div>
+          </div>
+          <button class="btn-card-action" onclick="askFromBriefing('Tell me more about this opportunity: ${o.title}')">Explore →</button>
+        </div>
+      </div>`).join('')
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--coral);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// RISKS
+// ═══════════════════════════════════════════
+async function loadRisks(force) {
+  if (!force && S._cache.risks) return
+  const grid = document.getElementById('risk-grid')
+  grid.innerHTML = '<div style="color:var(--muted);grid-column:1/-1"><span class="spinner"></span> Scanning for risks…</div>'
+  try {
+    const raw = await callClaude([{
+      role: 'user',
+      content: `Identify 4 specific financial risks for this business. Respond ONLY with valid JSON array:
+[{"title":"...","description":"...","severity":"Critical|High|Medium","impact":"${S.co.currency} X","probability":"High|Medium|Low","mitigation":"specific action to reduce this risk"}]`
+    }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.risks = items; save()
+    const sevColor = s => s==='Critical'?'tag-red':s==='High'?'tag-amber':'tag-gold'
+    grid.innerHTML = items.map(r => `
+      <div class="risk-card">
+        <div class="card-header">
+          <div class="card-name">${r.title}</div>
+          <span class="tag ${sevColor(r.severity)}">⚠️ ${r.severity}</span>
+        </div>
+        <div class="card-body">${r.description}</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px"><strong style="color:var(--ink)">Mitigation:</strong> ${r.mitigation}</div>
+        <div class="card-footer">
+          <div>
+            <div class="card-meta" style="color:var(--coral)">${r.impact} exposure</div>
+            <div style="font-size:.72rem;color:var(--muted)">${r.probability} probability</div>
+          </div>
+          <button class="btn-card-action" onclick="askFromBriefing('How do I mitigate this risk: ${r.title}')">Mitigate →</button>
+        </div>
+      </div>`).join('')
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--coral);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// SCENARIOS
+// ═══════════════════════════════════════════
+const SCENARIO_PROMPTS = {
+  hire: `Model the financial impact of hiring 3 additional staff at average market salary for ${S.co.country || 'our market'}. Use our current payroll as a base. Show: monthly cost increase, new break-even revenue needed, runway impact, and whether current growth can absorb it. Give a clear YES/NO hire recommendation.`,
+  revenue20: `Model a 20% revenue increase scenario. Show: new monthly P&L, margin improvement, cash accumulation rate, how quickly we could hit ${S.co.currency} 1M in the bank, and what investments this would unlock.`,
+  revenueDrop30: `Model a 30% revenue drop scenario. Show: new net burn rate, how many months of runway we have, which costs to cut first and by how much, minimum revenue needed to survive, and a 90-day action plan.`,
+  office: `Model opening a physical office costing roughly ${S.co.currency} 15,000/month (rent, utilities, fit-out amortized). Show: full cost impact, payroll-to-revenue ratio change, break-even requirement, and whether it's financially justified now.`,
+  raise: `Model raising ${S.co.currency} 500,000 in funding (equity or debt). Show: extended runway in months, what it enables, dilution impact if equity, repayment schedule if debt, and ROI scenarios. Should we raise now?`,
+}
+
+async function runScenario(type) {
+  if (type === 'custom') {
+    document.getElementById('scenario-custom-area').classList.remove('hide')
+    document.getElementById('scenario-result').innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:16px 0">Describe your scenario above and click Analyze</div>'
+    return
+  }
+  document.getElementById('scenario-custom-area').classList.add('hide')
+  const el = document.getElementById('scenario-result')
+  el.innerHTML = '<div><span class="spinner"></span> Modeling scenario…</div>'
+
+  const prompt = SCENARIO_PROMPTS[type]
+  if (!prompt) return
+
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content: prompt }], (_, acc) => {
+      el.innerHTML = `<div class="msg-content">${md(acc)}</div>`
+      full = acc
+    })
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--coral)">Error: ${e.message}</span>`
+  }
+}
+
+async function runCustomScenario() {
+  const q = document.getElementById('scenario-custom-input')?.value?.trim()
+  if (!q) return
+  const el = document.getElementById('scenario-result')
+  el.innerHTML = '<span class="spinner"></span> Modeling…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content: q + '\n\nProvide a detailed financial model with specific numbers, scenarios, and a clear recommendation.' }], (_, acc) => {
+      el.innerHTML = `<div class="msg-content">${md(acc)}</div>`
+    })
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--coral)">Error: ${e.message}</span>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// CASH FLOW
+// ═══════════════════════════════════════════
+async function loadCashflow(force) {
+  if (!force && S._cache.cashflow) return
+  const f = S.fin
+  const net = f.rev - f.exp
+  const runway = f.exp > 0 ? Math.round(f.cash/(f.exp/30)) : 999
+
+  document.getElementById('cashflow-kpis').innerHTML =
+    kpiCard('Operating Cash Flow', curr(net), net>=0?'Positive':'Negative — burning cash', net>=0?'green':'red') +
+    kpiCard('Cash Burn', net<0?curr(Math.abs(net))+'/mo':'N/A', net>=0?'Revenue > Expenses':'Cash decreasing', net<0?'red':'green') +
+    kpiCard('Cash Runway', runway>999?'∞':runway+' days', curr(f.cash)+' available', runway>90?'green':runway>45?'amber':'red') +
+    kpiCard('AR to Collect', curr(f.ar), `${curr(f.arOverdue)} overdue`, f.arOverdue>0?'amber':'')
+
+  const el = document.getElementById('cashflow-text')
+  el.innerHTML = '<span class="spinner"></span> Building projection…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:`Build a detailed 90-day cash flow projection. Include:
+## Current Cash Position
+## Month 1 Projection (Income / Expenses / Net / Closing Cash)
+## Month 2 Projection
+## Month 3 Projection
+Use a table format for the three months.
+## Key Assumptions
+## ⚠️ Cash Flow Risks
+## ✅ Actions to Improve Cash Position (ranked by impact)
+
+Use actual figures. Be specific.` }], (_, acc) => {
+      el.innerHTML = md(acc); full = acc
+    })
+    S._cache.cashflow = full; save()
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--coral)">Error: ${e.message}</span>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// BOARD PACK
+// ═══════════════════════════════════════════
+async function loadBoard(force) {
+  if (!force && S._cache.board) return
+  const el = document.getElementById('board-content')
+  el.innerHTML = '<span class="spinner"></span> Generating board pack…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:`Generate a complete board-level financial report for ${S.co.name}. Include:
+
+# Executive Summary
+Two paragraphs: business performance and forward outlook.
+
+# Financial Highlights
+Key metrics table: | Metric | Current | Status |
+
+# Profit & Loss Summary
+Revenue, expenses, net profit, margins with analysis.
+
+# Cash Position & Liquidity
+Cash on hand, runway, AR/AP status.
+
+# Key Risks & Mitigations
+Top 3 risks with mitigation plans.
+
+# Strategic Recommendations
+3-5 numbered recommendations for the board.
+
+# Outlook
+30/60/90 day financial outlook.
+
+Write in professional board-ready language. Use specific numbers throughout.` }], (_, acc) => {
+      el.innerHTML = `<div class="msg-content" style="max-width:760px">${md(acc)}</div>`
+      full = acc
+    })
+    S._cache.board = full; save()
+  } catch(e) {
+    el.innerHTML = `<span style="color:var(--coral)">Error: ${e.message}</span>`
+  }
+}
+
+function printBoard() { window.print() }
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+load()
+if (S.me.firstName && S.keys.anthropic) {
+  launchApp()
+} else {
+  document.getElementById('setup').style.display = 'flex'
+}
+
+document.getElementById('chat-input')?.addEventListener('input', updateSendBtn)
+</script>
+</body>
+</html>
