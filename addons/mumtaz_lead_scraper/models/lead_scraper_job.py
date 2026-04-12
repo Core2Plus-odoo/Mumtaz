@@ -96,16 +96,25 @@ class LeadScraperJob(models.Model):
         """Push all normalized unique records from this job to CRM."""
         self.ensure_one()
         from ..services.crm_mapper import CRMMapper
+        from ..services.deduplicator import Deduplicator
+
         mapper = CRMMapper(self.env)
+        deduplicator = Deduplicator(self.env)
         created_before = len(
             self.record_ids.filtered(lambda r: r.processing_status == "crm_created")
         )
-        records = self.record_ids.filtered(
+        candidates = self.record_ids.filtered(
             lambda r: r.processing_status == "normalized"
-            and r.duplicate_status != "duplicate"
         )
-        for record in records:
-            mapper.create_lead(record)
+        created_attempts = 0
+
+        for record in candidates:
+            if record.duplicate_status == "unchecked":
+                deduplicator.check(record)
+            if record.duplicate_status == "unique":
+                mapper.create_lead(record)
+                created_attempts += 1
+
         created = self.record_ids.filtered(
             lambda r: r.processing_status == "crm_created"
         )
@@ -116,7 +125,11 @@ class LeadScraperJob(models.Model):
             "tag": "display_notification",
             "params": {
                 "title": _("CRM Push Complete"),
-                "message": _("%d leads pushed to CRM.", created_now),
+                "message": _(
+                    "%(created)s leads pushed to CRM (%(attempted)s attempted).",
+                    created=created_now,
+                    attempted=created_attempts,
+                ),
                 "type": "success",
             },
         }

@@ -337,8 +337,13 @@ class ScraperEngine:
     def _resolve_max_pages(value, default):
         """
         Resolve page caps from source configuration.
-        `0` or negative means unlimited, consistent with the model help text.
+        `0` means unlimited, consistent with the model help text.
+        Negative values are treated as invalid and fall back to default.
         """
         if value is None:
             return default
-        return None if value <= 0 else value
+        if value == 0:
+            return None
+        if value < 0:
+            return default
+        return value
