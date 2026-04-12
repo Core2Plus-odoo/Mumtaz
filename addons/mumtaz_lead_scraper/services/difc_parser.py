@@ -77,7 +77,8 @@ _JSON_HEADERS = {
     ),
     "Accept": "application/json, text/plain, */*",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    # Keep encodings aligned with requests' native decoders.
+    "Accept-Encoding": "gzip, deflate",
     "Content-Type": "application/json",
     "Sec-Fetch-Dest": "empty",
     "Sec-Fetch-Mode": "cors",
@@ -146,6 +147,7 @@ class DIFCRegisterParser:
         self._delay = max(delay, 1.0)
         self._timeout = timeout
         self._session = None
+        self._use_env_proxy = True
         self._last_req = 0.0
         self._page_html = None        # cached HTML of the register page
         self._next_data = None        # parsed __NEXT_DATA__ JSON
@@ -160,8 +162,31 @@ class DIFCRegisterParser:
             if not REQUESTS_AVAILABLE:
                 raise RuntimeError("requests library not installed")
             self._session = requests.Session()
+            self._session.trust_env = self._use_env_proxy
             self._session.headers.update(_BROWSER_HEADERS)
         return self._session
+
+    def _request(self, method, url, **kwargs):
+        """
+        Execute a request with a proxy fallback.
+        If an environment proxy is configured but blocked (common in
+        containerized/private networks), retry once without env proxies.
+        """
+        req = getattr(self._sess(), method)
+        try:
+            return req(url, **kwargs)
+        except requests.exceptions.ProxyError as exc:
+            if not self._use_env_proxy:
+                raise
+            _logger.warning(
+                "DIFC %s via env proxy failed (%s) — retrying without env proxy",
+                method.upper(),
+                exc,
+            )
+            self._use_env_proxy = False
+            self._session = None
+            req = getattr(self._sess(), method)
+            return req(url, **kwargs)
 
     def _rate_limit(self):
         elapsed = time.time() - self._last_req
@@ -176,7 +201,7 @@ class DIFCRegisterParser:
             return self._page_html
         self._rate_limit()
         try:
-            resp = self._sess().get(self._register_url, timeout=self._timeout)
+            resp = self._request("get", self._register_url, timeout=self._timeout)
             self._last_req = time.time()
             _logger.info("DIFC page fetch: GET %s → %s", self._register_url, resp.status_code)
             if resp.status_code == 200:
@@ -385,9 +410,12 @@ class DIFCRegisterParser:
     def _api_get(self, url, params):
         self._rate_limit()
         try:
-            resp = self._sess().get(
-                url, params=params, headers=self._build_json_headers(),
-                timeout=self._timeout
+            resp = self._request(
+                "get",
+                url,
+                params=params,
+                headers=self._build_json_headers(),
+                timeout=self._timeout,
             )
             self._last_req = time.time()
             snippet = resp.text[:300].replace("\n", " ")
@@ -399,20 +427,24 @@ class DIFCRegisterParser:
                 return False, None, resp.status_code, "Not JSON", snippet
         except requests.exceptions.Timeout:
             return False, None, 0, "Timeout", ""
+        except requests.exceptions.ProxyError as exc:
+            return False, None, 0, f"Proxy error: {exc}", ""
         except Exception as exc:
             return False, None, 0, str(exc), ""
 
     def _api_post(self, url, body):
         self._rate_limit()
         try:
-            resp = self._sess().post(
+            resp = self._request(
+                "post",
                 url, json=body, headers=self._build_json_headers(),
                 timeout=self._timeout
             )
             self._last_req = time.time()
             if resp.status_code == 429:
                 time.sleep(int(resp.headers.get("Retry-After", "5")))
-                resp = self._sess().post(
+                resp = self._request(
+                    "post",
                     url, json=body, headers=self._build_json_headers(),
                     timeout=self._timeout
                 )
@@ -426,6 +458,8 @@ class DIFCRegisterParser:
                 return False, None, resp.status_code, "Not JSON", snippet
         except requests.exceptions.Timeout:
             return False, None, 0, "Timeout", ""
+        except requests.exceptions.ProxyError as exc:
+            return False, None, 0, f"Proxy error: {exc}", ""
         except Exception as exc:
             return False, None, 0, str(exc), ""
 

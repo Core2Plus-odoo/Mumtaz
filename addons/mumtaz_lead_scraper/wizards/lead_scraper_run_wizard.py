@@ -1,4 +1,5 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class LeadScraperRunWizard(models.TransientModel):
@@ -28,6 +29,24 @@ class LeadScraperRunWizard(models.TransientModel):
     result_status = fields.Char(readonly=True)
     result_summary = fields.Text(string="Run Summary", readonly=True)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        sanitized = [self._sanitize_nul_strings(vals) for vals in vals_list]
+        return super().create(sanitized)
+
+    def write(self, vals):
+        return super().write(self._sanitize_nul_strings(vals))
+
+    @staticmethod
+    def _sanitize_nul_strings(vals):
+        clean = {}
+        for key, value in (vals or {}).items():
+            if isinstance(value, str):
+                clean[key] = value.replace("\x00", "")
+            else:
+                clean[key] = value
+        return clean
+
     def action_run(self):
         self.ensure_one()
         from ..services.engine import ScraperEngine
@@ -38,6 +57,7 @@ class LeadScraperRunWizard(models.TransientModel):
             auto_push_crm=self.auto_push_crm,
             triggered_by="manual",
         )
+        self._sanitize_records_for_nul(job)
 
         summary = (
             f"Status       : {job.status.upper()}\n"
@@ -57,6 +77,13 @@ class LeadScraperRunWizard(models.TransientModel):
                 "result_summary": summary,
             }
         )
+        try:
+            self.env.flush_all()
+        except ValueError as exc:
+            msg = str(exc or "").replace("\x00", "")
+            raise UserError(
+                _("Scraper run created invalid text payloads. Please retry. Details: %s") % msg
+            ) from exc
 
         return {
             "type": "ir.actions.act_window",
@@ -79,3 +106,20 @@ class LeadScraperRunWizard(models.TransientModel):
 
     def action_close(self):
         return {"type": "ir.actions.act_window_close"}
+
+    def _sanitize_records_for_nul(self, job):
+        recordsets = [self]
+        if job:
+            recordsets.extend([job, job.source_id, job.record_ids])
+
+        for rs in recordsets:
+            for rec in rs:
+                vals = {}
+                for field_name, field in rec._fields.items():
+                    if field.type not in ("char", "text", "html"):
+                        continue
+                    value = rec[field_name]
+                    if isinstance(value, str) and "\x00" in value:
+                        vals[field_name] = value.replace("\x00", "")
+                if vals:
+                    rec.write(vals)
