@@ -108,19 +108,18 @@ class LeadScraperRunWizard(models.TransientModel):
         return {"type": "ir.actions.act_window_close"}
 
     def _sanitize_records_for_nul(self, job):
-        targets = self.env["lead.scraper.run.wizard"].browse(self.id)
+        recordsets = [self]
         if job:
-            targets |= job
-            targets |= job.source_id
-            targets |= job.record_ids
+            recordsets.extend([job, job.source_id, job.record_ids])
 
-        for rec in targets:
-            vals = {}
-            for field_name, field in rec._fields.items():
-                if field.type not in ("char", "text", "html"):
-                    continue
-                value = rec[field_name]
-                if isinstance(value, str) and "\x00" in value:
-                    vals[field_name] = value.replace("\x00", "")
-            if vals:
-                rec.write(vals)
+        for rs in recordsets:
+            for rec in rs:
+                vals = {}
+                for field_name, field in rec._fields.items():
+                    if field.type not in ("char", "text", "html"):
+                        continue
+                    value = rec[field_name]
+                    if isinstance(value, str) and "\x00" in value:
+                        vals[field_name] = value.replace("\x00", "")
+                if vals:
+                    rec.write(vals)
