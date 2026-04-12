@@ -1,4 +1,4 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 
 
 class LeadScraperRunWizard(models.TransientModel):
@@ -27,6 +27,24 @@ class LeadScraperRunWizard(models.TransientModel):
     result_job_id = fields.Many2one("lead.scraper.job", readonly=True)
     result_status = fields.Char(readonly=True)
     result_summary = fields.Text(string="Run Summary", readonly=True)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        sanitized = [self._sanitize_nul_strings(vals) for vals in vals_list]
+        return super().create(sanitized)
+
+    def write(self, vals):
+        return super().write(self._sanitize_nul_strings(vals))
+
+    @staticmethod
+    def _sanitize_nul_strings(vals):
+        clean = {}
+        for key, value in (vals or {}).items():
+            if isinstance(value, str):
+                clean[key] = value.replace("\x00", "")
+            else:
+                clean[key] = value
+        return clean
 
     def action_run(self):
         self.ensure_one()
