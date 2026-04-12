@@ -161,6 +161,24 @@ class LeadScraperSource(models.Model):
         except (json.JSONDecodeError, TypeError):
             return {}
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        sanitized = [self._sanitize_nul_strings(vals) for vals in vals_list]
+        return super().create(sanitized)
+
+    def write(self, vals):
+        return super().write(self._sanitize_nul_strings(vals))
+
+    @staticmethod
+    def _sanitize_nul_strings(vals):
+        clean = {}
+        for key, value in (vals or {}).items():
+            if isinstance(value, str):
+                clean[key] = value.replace("\x00", "")
+            else:
+                clean[key] = value
+        return clean
+
     _sql_constraints = [
         ("lead_scraper_source_name_unique", "unique(name)", "Source name must be unique."),
     ]

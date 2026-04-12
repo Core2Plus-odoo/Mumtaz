@@ -77,15 +77,18 @@ class ScraperEngine:
         fetcher = PageFetcher(delay=source.request_delay or 2.0)
         listing_parser = PTPListingParser()
         detail_parser = PTPDetailParser()
-        max_pages = source.max_pages or 20
+        max_pages = self._resolve_max_pages(source.max_pages, default=20)
 
         # --- Phase 1: collect all company URLs ---
         collection_queue = [source.url]
         collection_visited = set()
         company_urls = []
+        company_url_set = set()
         collection_pages = 0
 
-        while collection_queue and collection_pages < max_pages:
+        while collection_queue and (
+            max_pages is None or collection_pages < max_pages
+        ):
             col_url = collection_queue.pop(0)
             if col_url in collection_visited:
                 continue
@@ -103,8 +106,9 @@ class ScraperEngine:
 
             collection_pages += 1
             new_urls = listing_parser.get_company_urls(result.content, result.final_url or col_url)
-            added = [u for u in new_urls if u not in set(company_urls)]
+            added = [u for u in new_urls if u not in company_url_set]
             company_urls.extend(added)
+            company_url_set.update(added)
             job.append_log(f"Found {len(new_urls)} company URLs (+{len(added)} new) on this page")
 
             next_col = listing_parser.get_next_page_url(result.content, result.final_url or col_url)
@@ -116,7 +120,7 @@ class ScraperEngine:
 
         # --- Phase 2: fetch each company detail page ---
         all_leads = []
-        detail_limit = max_pages * 10  # reasonable cap on detail pages
+        detail_limit = len(company_urls) if max_pages is None else max_pages * 10
         for i, comp_url in enumerate(company_urls[:detail_limit]):
             if source.respect_robots and not fetcher.is_allowed_by_robots(comp_url):
                 job.append_log(f"Skipped (robots.txt): {comp_url}")
@@ -148,13 +152,14 @@ class ScraperEngine:
             base_url=source.url,
             delay=source.request_delay or 2.0,
         )
-        max_pages = source.max_pages or 20
+        max_pages = self._resolve_max_pages(source.max_pages, default=20)
         page_size = _DEFAULT_PAGE_SIZE
 
         all_leads = []
         total_reported = None
 
-        for page_num in range(1, max_pages + 1):
+        page_num = 1
+        while max_pages is None or page_num <= max_pages:
             job.append_log(f"DIFC API — fetching page {page_num}")
             items, total, err = parser.fetch_page(page_num, page_size)
 
@@ -190,6 +195,7 @@ class ScraperEngine:
             if len(items) < page_size:
                 job.append_log("DIFC: last page (fewer items than page size)")
                 break
+            page_num += 1
 
         job.append_log(f"DIFC complete — {len(all_leads)} leads extracted")
         return all_leads
@@ -198,14 +204,14 @@ class ScraperEngine:
         fetcher = PageFetcher(delay=source.request_delay or 2.0)
         parser = get_parser(source.parsing_mode or "auto")
         config = source.get_selector_config()
-        max_pages = source.max_pages or 5
+        max_pages = self._resolve_max_pages(source.max_pages, default=5)
 
         queue = [source.url]
         visited = set()
         all_leads = []
         pages_fetched = 0
 
-        while queue and pages_fetched < max_pages:
+        while queue and (max_pages is None or pages_fetched < max_pages):
             url = queue.pop(0)
             if url in visited:
                 continue
@@ -216,7 +222,8 @@ class ScraperEngine:
                 job.append_log(f"Skipped (robots.txt disallowed): {url}")
                 continue
 
-            job.append_log(f"Fetching page {pages_fetched + 1}/{max_pages}: {url}")
+            page_limit = "∞" if max_pages is None else str(max_pages)
+            job.append_log(f"Fetching page {pages_fetched + 1}/{page_limit}: {url}")
             result = fetcher.fetch(url)
 
             if not result.success:
@@ -229,7 +236,9 @@ class ScraperEngine:
             all_leads.extend(leads)
 
             # Pagination (listing mode)
-            if source.source_type == "listing" and pages_fetched < max_pages:
+            if source.source_type == "listing" and (
+                max_pages is None or pages_fetched < max_pages
+            ):
                 next_url = self._find_next_page(result.content, url)
                 if next_url and next_url not in visited:
                     queue.append(next_url)
@@ -323,3 +332,18 @@ class ScraperEngine:
         except Exception:
             pass
         return None
+
+    @staticmethod
+    def _resolve_max_pages(value, default):
+        """
+        Resolve page caps from source configuration.
+        `0` means unlimited, consistent with the model help text.
+        Negative values are treated as invalid and fall back to default.
+        """
+        if value is None:
+            return default
+        if value == 0:
+            return None
+        if value < 0:
+            return default
+        return value
