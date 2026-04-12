@@ -79,7 +79,8 @@ class LeadScraperJob(models.Model):
     # ── Helpers ───────────────────────────────────────────────────────────
     def append_log(self, message):
         ts = datetime.datetime.utcnow().strftime("%H:%M:%S")
-        self.log_text = (self.log_text or "") + f"[{ts}] {message}\n"
+        safe_message = str(message or "").replace("\x00", "")
+        self.log_text = (self.log_text or "").replace("\x00", "") + f"[{ts}] {safe_message}\n"
 
     # ── Actions ───────────────────────────────────────────────────────────
     def action_view_records(self):
