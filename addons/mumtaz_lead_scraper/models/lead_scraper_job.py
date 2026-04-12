@@ -97,6 +97,9 @@ class LeadScraperJob(models.Model):
         self.ensure_one()
         from ..services.crm_mapper import CRMMapper
         mapper = CRMMapper(self.env)
+        created_before = len(
+            self.record_ids.filtered(lambda r: r.processing_status == "crm_created")
+        )
         records = self.record_ids.filtered(
             lambda r: r.processing_status == "normalized"
             and r.duplicate_status != "duplicate"
@@ -106,13 +109,14 @@ class LeadScraperJob(models.Model):
         created = self.record_ids.filtered(
             lambda r: r.processing_status == "crm_created"
         )
+        created_now = max(len(created) - created_before, 0)
         self.total_created = len(created)
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
                 "title": _("CRM Push Complete"),
-                "message": _("%d leads pushed to CRM.", len(records)),
+                "message": _("%d leads pushed to CRM.", created_now),
                 "type": "success",
             },
         }
