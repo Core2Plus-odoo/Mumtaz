@@ -1,4 +1,5 @@
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class LeadScraperRunWizard(models.TransientModel):
@@ -56,6 +57,7 @@ class LeadScraperRunWizard(models.TransientModel):
             auto_push_crm=self.auto_push_crm,
             triggered_by="manual",
         )
+        self._sanitize_records_for_nul(job)
 
         summary = (
             f"Status       : {job.status.upper()}\n"
@@ -75,6 +77,13 @@ class LeadScraperRunWizard(models.TransientModel):
                 "result_summary": summary,
             }
         )
+        try:
+            self.env.flush_all()
+        except ValueError as exc:
+            msg = str(exc or "").replace("\x00", "")
+            raise UserError(
+                _("Scraper run created invalid text payloads. Please retry. Details: %s") % msg
+            ) from exc
 
         return {
             "type": "ir.actions.act_window",
@@ -97,3 +106,21 @@ class LeadScraperRunWizard(models.TransientModel):
 
     def action_close(self):
         return {"type": "ir.actions.act_window_close"}
+
+    def _sanitize_records_for_nul(self, job):
+        targets = self.env["lead.scraper.run.wizard"].browse(self.id)
+        if job:
+            targets |= job
+            targets |= job.source_id
+            targets |= job.record_ids
+
+        for rec in targets:
+            vals = {}
+            for field_name, field in rec._fields.items():
+                if field.type not in ("char", "text", "html"):
+                    continue
+                value = rec[field_name]
+                if isinstance(value, str) and "\x00" in value:
+                    vals[field_name] = value.replace("\x00", "")
+            if vals:
+                rec.write(vals)
