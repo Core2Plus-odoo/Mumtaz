@@ -32,12 +32,12 @@ class Normalizer:
             "city": self._text(parsed_lead.city),
             "country_name": self._text(parsed_lead.country_name),
             "industry": self._text(parsed_lead.industry),
-            "source_url": (parsed_lead.source_url or "")[:500],
+            "source_url": self._strip_nul(parsed_lead.source_url)[:500],
             "description": self._text(parsed_lead.description, max_len=1000),
             "raw_payload": (
                 json.dumps(parsed_lead.raw_payload)
                 if isinstance(parsed_lead.raw_payload, dict)
-                else str(parsed_lead.raw_payload or "")
+                else self._strip_nul(parsed_lead.raw_payload or "")
             )[:2000],
         }
 
@@ -51,14 +51,14 @@ class Normalizer:
     def _text(self, value, max_len=200):
         if not value:
             return ""
-        cleaned = re.sub(r"\s+", " ", str(value)).strip()
+        cleaned = re.sub(r"\s+", " ", self._strip_nul(value)).strip()
         cleaned = re.sub(r"[^\w\s\-\.,&@()'\"\/\+]+", "", cleaned)
         return cleaned[:max_len]
 
     def _email(self, value):
         if not value:
             return ""
-        value = str(value).strip().lower()
+        value = self._strip_nul(value).strip().lower()
         domain = value.split("@")[-1] if "@" in value else ""
         if domain in _JUNK_EMAILS:
             return ""
@@ -69,7 +69,7 @@ class Normalizer:
     def _phone(self, value):
         if not value:
             return ""
-        cleaned = re.sub(r"[^\d\+\-\s\(\)\.x]", "", str(value)).strip()
+        cleaned = re.sub(r"[^\d\+\-\s\(\)\.x]", "", self._strip_nul(value)).strip()
         digits = re.sub(r"\D", "", cleaned)
         if len(digits) < 6 or len(digits) > 15:
             return ""
@@ -78,7 +78,11 @@ class Normalizer:
     def _url(self, value):
         if not value:
             return ""
-        value = str(value).strip()
+        value = self._strip_nul(value).strip()
         if not value.startswith(("http://", "https://")):
             value = "https://" + value
         return value[:500] if URL_RE.match(value) else ""
+
+    @staticmethod
+    def _strip_nul(value):
+        return str(value).replace("\x00", "")
