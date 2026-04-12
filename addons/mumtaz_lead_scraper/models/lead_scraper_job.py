@@ -79,7 +79,26 @@ class LeadScraperJob(models.Model):
     # ── Helpers ───────────────────────────────────────────────────────────
     def append_log(self, message):
         ts = datetime.datetime.utcnow().strftime("%H:%M:%S")
-        self.log_text = (self.log_text or "") + f"[{ts}] {message}\n"
+        safe_message = str(message or "").replace("\x00", "")
+        self.log_text = (self.log_text or "").replace("\x00", "") + f"[{ts}] {safe_message}\n"
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        sanitized = [self._sanitize_nul_strings(vals) for vals in vals_list]
+        return super().create(sanitized)
+
+    def write(self, vals):
+        return super().write(self._sanitize_nul_strings(vals))
+
+    @staticmethod
+    def _sanitize_nul_strings(vals):
+        clean = {}
+        for key, value in (vals or {}).items():
+            if isinstance(value, str):
+                clean[key] = value.replace("\x00", "")
+            else:
+                clean[key] = value
+        return clean
 
     # ── Actions ───────────────────────────────────────────────────────────
     def action_view_records(self):
@@ -96,23 +115,40 @@ class LeadScraperJob(models.Model):
         """Push all normalized unique records from this job to CRM."""
         self.ensure_one()
         from ..services.crm_mapper import CRMMapper
+        from ..services.deduplicator import Deduplicator
+
         mapper = CRMMapper(self.env)
-        records = self.record_ids.filtered(
-            lambda r: r.processing_status == "normalized"
-            and r.duplicate_status != "duplicate"
+        deduplicator = Deduplicator(self.env)
+        created_before = len(
+            self.record_ids.filtered(lambda r: r.processing_status == "crm_created")
         )
-        for record in records:
-            mapper.create_lead(record)
+        candidates = self.record_ids.filtered(
+            lambda r: r.processing_status == "normalized"
+        )
+        created_attempts = 0
+
+        for record in candidates:
+            if record.duplicate_status == "unchecked":
+                deduplicator.check(record)
+            if record.duplicate_status == "unique":
+                mapper.create_lead(record)
+                created_attempts += 1
+
         created = self.record_ids.filtered(
             lambda r: r.processing_status == "crm_created"
         )
+        created_now = max(len(created) - created_before, 0)
         self.total_created = len(created)
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
                 "title": _("CRM Push Complete"),
-                "message": _("%d leads pushed to CRM.", len(records)),
+                "message": _(
+                    "%(created)s leads pushed to CRM (%(attempted)s attempted).",
+                    created=created_now,
+                    attempted=created_attempts,
+                ),
                 "type": "success",
             },
         }
