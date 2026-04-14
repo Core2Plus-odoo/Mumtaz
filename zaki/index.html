@@ -15,15 +15,15 @@ button{cursor:pointer;border:none;background:none;font:inherit}
 input,select,textarea{font:inherit;border:none;outline:none;background:none}
 a{color:inherit;text-decoration:none}
 
-/* ══ MUMTAZ DESIGN TOKENS ══ */
+/* ══ MUMTAZ DESIGN TOKENS — Light (default) ══ */
 :root{
   /* Backgrounds */
-  --bg:      #07101e;
-  --bg-1:    #0b1829;
-  --bg-2:    #0f2040;
-  --surface: #111e33;
-  --card:    #162338;
-  --card-2:  #1a2a42;
+  --bg:      #f8fafc;
+  --bg-1:    #f1f5f9;
+  --bg-2:    #e8eef6;
+  --surface: #ffffff;
+  --card:    #ffffff;
+  --card-2:  #f8fafc;
 
   /* Brand */
   --blue:    #3b82f6;
@@ -37,31 +37,52 @@ a{color:inherit;text-decoration:none}
   --grad-h:  linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);
 
   /* Text */
-  --text:    #f0f6ff;
-  --text-2:  #94a3b8;
-  --text-3:  #64748b;
+  --text:    #0f172a;
+  --text-2:  #475569;
+  --text-3:  #94a3b8;
 
   /* Borders */
-  --border:  rgba(255,255,255,.07);
-  --border-2:rgba(255,255,255,.13);
+  --border:  #e2e8f0;
+  --border-2:#cbd5e1;
 
   /* Semantic */
-  --success-bg: rgba(16,185,129,.12);
-  --danger-bg:  rgba(239,68,68,.12);
-  --warn-bg:    rgba(245,158,11,.12);
-  --blue-bg:    rgba(59,130,246,.12);
-  --purple-bg:  rgba(139,92,246,.12);
+  --success-bg: rgba(16,185,129,.1);
+  --danger-bg:  rgba(239,68,68,.1);
+  --warn-bg:    rgba(245,158,11,.1);
+  --blue-bg:    rgba(59,130,246,.08);
+  --purple-bg:  rgba(139,92,246,.08);
 
   /* UI */
   --font:    'Inter', system-ui, sans-serif;
   --mono:    'JetBrains Mono', 'Courier New', monospace;
   --radius:  10px;
   --radius-lg: 14px;
-  --shadow:  0 4px 24px rgba(0,0,0,.4);
+  --shadow:  0 4px 24px rgba(15,23,42,.1);
   --shadow-blue: 0 4px 20px rgba(59,130,246,.3);
   --sidebar: 224px;
   --topbar:  52px;
   --tr: .17s ease;
+}
+
+/* ══ Dark theme ══ */
+body.dark{
+  --bg:      #07101e;
+  --bg-1:    #0b1829;
+  --bg-2:    #0f2040;
+  --surface: #111e33;
+  --card:    #162338;
+  --card-2:  #1a2a42;
+  --text:    #f0f6ff;
+  --text-2:  #94a3b8;
+  --text-3:  #64748b;
+  --border:  rgba(255,255,255,.07);
+  --border-2:rgba(255,255,255,.13);
+  --success-bg: rgba(16,185,129,.12);
+  --danger-bg:  rgba(239,68,68,.12);
+  --warn-bg:    rgba(245,158,11,.12);
+  --blue-bg:    rgba(59,130,246,.12);
+  --purple-bg:  rgba(139,92,246,.12);
+  --shadow:  0 4px 24px rgba(0,0,0,.4);
 }
 
 /* ── Base ── */
@@ -142,10 +163,21 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
 
 /* ── Global topbar ── */
 #topbar{
-  height:var(--topbar);background:rgba(7,16,30,.92);backdrop-filter:blur(20px);
+  height:var(--topbar);background:rgba(255,255,255,.92);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);display:flex;align-items:center;
   padding:0 20px;gap:20px;flex-shrink:0;z-index:50;
 }
+body.dark #topbar{background:rgba(7,16,30,.92)}
+
+/* ── Theme toggle ── */
+.theme-toggle{
+  width:34px;height:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg-1);border:1px solid var(--border-2);
+  color:var(--text-2);font-size:.95rem;
+  transition:all var(--tr);cursor:pointer;flex-shrink:0;
+}
+.theme-toggle:hover{background:var(--border);color:var(--text)}
 .topbar-brand{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
 .topbar-mark{
   width:30px;height:30px;border-radius:8px;background:var(--grad);
@@ -511,6 +543,7 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
         ERP Login
       </a>
       <div id="topbar-api-dot" title="AI not connected — click to configure" onclick="showPanel('settings')"></div>
+      <button class="theme-toggle" id="btn-theme" onclick="toggleTheme()" title="Toggle light/dark theme">🌙</button>
     </nav>
   </header>
 
@@ -1403,9 +1436,26 @@ function skipSetup() {
   launchApp()
 }
 
+function toggleTheme() {
+  const isDark = document.body.classList.toggle('dark')
+  S.prefs = S.prefs || {}
+  S.prefs.theme = isDark ? 'dark' : 'light'
+  const btn = document.getElementById('btn-theme')
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙'
+  save()
+}
+
+function applyTheme() {
+  const isDark = S.prefs?.theme === 'dark'
+  document.body.classList.toggle('dark', isDark)
+  const btn = document.getElementById('btn-theme')
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙'
+}
+
 function launchApp() {
   document.getElementById('setup').style.display = 'none'
   document.getElementById('app').classList.remove('hide')
+  applyTheme()
   const h = new Date().getHours()
   document.getElementById('greeting-time').textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'
   document.getElementById('greeting-name').textContent = S.me.firstName || S.me.name
