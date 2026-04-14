@@ -467,6 +467,10 @@ a{color:inherit;text-decoration:none}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Talk to Zaki
       </div>
+      <div class="nav-item" onclick="showPanel('ledger')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="7" y2="15"/><line x1="12" y1="15" x2="17" y2="15"/></svg>
+        Transaction Ledger
+      </div>
     </div>
 
     <div class="nav-section">
@@ -588,6 +592,123 @@ a{color:inherit;text-decoration:none}
         </div>
         <div style="font-size:.72rem;color:var(--muted);text-align:center">
           Zaki has full context of your financial data · Press Enter to send, Shift+Enter for new line
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEDGER ── -->
+    <div class="panel" id="panel-ledger">
+      <div class="panel-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="panel-title">Transaction <em>Ledger</em></div>
+          <div class="panel-desc">Add, import, and manage your income & expenses — powers all Zaki analysis</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="btn-outline" style="cursor:pointer" title="Import CSV or Excel">
+            <input type="file" id="csv-file-input" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none" onchange="importCSV(this)">
+            ↑ Import CSV
+          </label>
+          <button class="btn-outline" onclick="exportLedgerCSV()">↓ Export</button>
+          <button class="btn-primary" style="max-width:140px" onclick="openAddTx()">+ Add Transaction</button>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div id="ledger-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
+
+      <!-- Add/Edit form (hidden by default) -->
+      <div id="tx-form" class="hide" style="background:var(--paper2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px">
+        <div style="font-weight:600;color:var(--ink);margin-bottom:14px;font-size:.95rem" id="tx-form-title">Add Transaction</div>
+        <input type="hidden" id="tx-edit-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="field">
+            <label>Date</label>
+            <input id="tx-date" type="date" style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="tx-type" style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+              <option value="income">Income / Revenue</option>
+              <option value="expense">Expense / Cost</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount (<span id="tx-curr-label">AED</span>)</label>
+            <input id="tx-amount" type="number" min="0" step="0.01" placeholder="0.00" style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <select id="tx-category" style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+              <option value="">— Select —</option>
+              <optgroup label="Income">
+                <option value="Sales">Sales</option>
+                <option value="Service Revenue">Service Revenue</option>
+                <option value="Retainer">Retainer</option>
+                <option value="Commission">Commission</option>
+                <option value="Other Income">Other Income</option>
+              </optgroup>
+              <optgroup label="Expenses">
+                <option value="Salary">Salary / Payroll</option>
+                <option value="Rent">Rent / Lease</option>
+                <option value="Marketing">Marketing & Ads</option>
+                <option value="Technology">Technology / SaaS</option>
+                <option value="Travel">Travel & Transport</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Legal">Legal & Professional</option>
+                <option value="Insurance">Insurance</option>
+                <option value="Bank Charges">Bank Charges</option>
+                <option value="VAT">VAT / Tax</option>
+                <option value="Cost of Goods">Cost of Goods</option>
+                <option value="Other Expense">Other Expense</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Description</label>
+          <input id="tx-desc" type="text" placeholder="Invoice #123 — Client name" style="background:white;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" style="max-width:140px" onclick="saveTx()">Save</button>
+          <button class="btn-outline" onclick="closeTxForm()">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Filters bar -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <select id="ledger-filter-month" onchange="renderLedger()" style="background:white;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:.82rem;color:var(--ink)">
+          <option value="">All time</option>
+        </select>
+        <select id="ledger-filter-type" onchange="renderLedger()" style="background:white;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:.82rem;color:var(--ink)">
+          <option value="">All types</option>
+          <option value="income">Income only</option>
+          <option value="expense">Expenses only</option>
+        </select>
+        <select id="ledger-filter-cat" onchange="renderLedger()" style="background:white;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:.82rem;color:var(--ink)">
+          <option value="">All categories</option>
+        </select>
+        <div style="margin-left:auto;font-size:.78rem;color:var(--muted)" id="ledger-count">0 transactions</div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto">
+        <table id="ledger-table" style="width:100%;border-collapse:collapse;font-size:.83rem">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);text-align:left">
+              <th style="padding:8px 10px;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Date</th>
+              <th style="padding:8px 10px;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Type</th>
+              <th style="padding:8px 10px;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Category</th>
+              <th style="padding:8px 10px;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Description</th>
+              <th style="padding:8px 10px;color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;text-align:right">Amount</th>
+              <th style="padding:8px 4px;width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="ledger-rows"></tbody>
+        </table>
+        <div id="ledger-empty" class="hide" style="text-align:center;padding:48px 24px;color:var(--muted)">
+          <div style="font-size:2rem;margin-bottom:8px">📊</div>
+          <div style="font-weight:600;color:var(--ink);margin-bottom:4px">No transactions yet</div>
+          <div style="font-size:.82rem">Add your first transaction or import a CSV file to get started</div>
         </div>
       </div>
     </div>
@@ -767,8 +888,33 @@ a{color:inherit;text-decoration:none}
         </div>
       </div>
 
+      <!-- ZAKI Server (Own LLM) -->
       <div class="card" style="margin-bottom:14px">
-        <div class="card-title">Financials</div>
+        <div class="card-title">Zaki Server <span style="font-size:.75rem;color:var(--teal);font-weight:500;margin-left:6px">Own LLM — no API key needed</span></div>
+        <div style="background:var(--teal-bg);border:1px solid #9dd4c8;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:var(--teal)">
+          Connect to your Mumtaz account — AI is powered by our server so <strong>you need zero API keys</strong>. Falls back to your own key if not connected.
+        </div>
+        <div id="zaki-server-status" style="margin-bottom:12px"></div>
+        <div id="zaki-server-login-form">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+            <div class="field">
+              <label>Mumtaz Email</label>
+              <input id="cfg-zaki-email" type="email" placeholder="you@company.com" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input id="cfg-zaki-pass" type="password" placeholder="••••••••" style="background:var(--paper2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:.85rem;color:var(--ink)">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-primary" style="max-width:160px" onclick="loginZakiServer()">Connect Account</button>
+            <button class="btn-outline" onclick="logoutZakiServer()" id="btn-zaki-logout" style="display:none">Disconnect</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Financials <span style="font-size:.75rem;color:var(--muted);font-weight:400;margin-left:6px">— override if no transactions added</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="field"><label>Monthly Revenue</label><input id="cfg-rev" type="number"></div>
           <div class="field"><label>Monthly Expenses</label><input id="cfg-exp" type="number"></div>
@@ -800,28 +946,80 @@ a{color:inherit;text-decoration:none}
 // STATE
 // ═══════════════════════════════════════════
 const S = {
-  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB' },
+  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://app.mumtaz.digital' },
   co: { name: '', industry: '', country: '', currency: 'AED' },
   me: { name: '', firstName: '' },
   fin: { rev:0, exp:0, cash:0, payroll:0, ar:0, arOverdue:0, ap:0, vat:0 },
   ctx: { pipeline:'', clients:'', worry:'' },
   chat: [],
+  transactions: [],
   prefs: { readAloud: false },
   _cache: {}
+}
+
+// ── Derive S.fin from transactions if any exist ──
+function computeFin() {
+  const txs = S.transactions
+  if (!txs || txs.length === 0) return
+  const now = new Date()
+  const cm = now.getMonth(), cy = now.getFullYear()
+  const pm = cm === 0 ? 11 : cm - 1
+  const py = cm === 0 ? cy - 1 : cy
+
+  const currTxs = txs.filter(t => { const d = new Date(t.date); return d.getFullYear()===cy && d.getMonth()===cm })
+  const prevTxs = txs.filter(t => { const d = new Date(t.date); return d.getFullYear()===py && d.getMonth()===pm })
+
+  const sum = (arr, type) => arr.filter(t=>t.type===type).reduce((a,t)=>a+Number(t.amount),0)
+  S.fin.rev  = sum(currTxs, 'income')
+  S.fin.exp  = sum(currTxs, 'expense')
+  S.fin.payroll = sum(currTxs.filter(t=>/(salary|payroll|staff|wages)/i.test(t.category||'')), 'expense')
+  // cash = all-time income minus all-time expenses as proxy
+  const totalInc = sum(txs, 'income'), totalExp = sum(txs, 'expense')
+  if (totalInc > 0 || totalExp > 0) S.fin.cash = Math.max(0, totalInc - totalExp)
 }
 
 function save() { try { localStorage.setItem('zaki_v3', JSON.stringify(S)) } catch(e){} }
 function load() {
   try {
     const d = localStorage.getItem('zaki_v3')
-    if (d) Object.assign(S, JSON.parse(d))
+    if (d) {
+      const parsed = JSON.parse(d)
+      Object.assign(S, parsed)
+      if (!S.transactions) S.transactions = []
+      if (!S.keys.zakiJwt) S.keys.zakiJwt = ''
+      if (!S.keys.zakiEmail) S.keys.zakiEmail = ''
+      if (!S.keys.zakiUrl) S.keys.zakiUrl = 'https://app.mumtaz.digital'
+    }
   } catch(e){}
+  computeFin()
 }
 
 // ═══════════════════════════════════════════
 // ZAKI SYSTEM PROMPT
 // ═══════════════════════════════════════════
+function buildTransactionContext() {
+  const txs = S.transactions || []
+  if (txs.length === 0) return ''
+  const now = new Date(), cm = now.getMonth(), cy = now.getFullYear()
+  const pm = cm === 0 ? 11 : cm - 1, py = cm === 0 ? cy - 1 : cy
+  const currTxs = txs.filter(t => { const d=new Date(t.date); return d.getFullYear()===cy&&d.getMonth()===cm })
+  const prevTxs = txs.filter(t => { const d=new Date(t.date); return d.getFullYear()===py&&d.getMonth()===pm })
+  const sum = (arr,type) => arr.filter(t=>t.type===type).reduce((a,t)=>a+Number(t.amount),0)
+  const ci = sum(currTxs,'income'), ce = sum(currTxs,'expense')
+  const pi = sum(prevTxs,'income'), pe = sum(prevTxs,'expense')
+  const catMap = {}
+  currTxs.filter(t=>t.type==='expense').forEach(t=>{ const k=t.category||'Other'; catMap[k]=(catMap[k]||0)+Number(t.amount) })
+  const topCats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`  ${k}: ${S.co.currency} ${fmt(v)}`).join('\n')
+  const recent = txs.slice(0,8).map(t=>`  ${t.date} | ${t.type==='income'?'IN ':'OUT'} ${S.co.currency} ${fmt(t.amount)} | ${t.category||'—'} | ${t.description||'—'}`).join('\n')
+  // 6-month trend
+  const mMap = {}
+  txs.forEach(t=>{ const k=t.date?.slice(0,7); if(k){if(!mMap[k])mMap[k]={i:0,e:0}; mMap[k][t.type==='income'?'i':'e']+=Number(t.amount) }})
+  const trend = Object.entries(mMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6).map(([k,v])=>`  ${k}: Income ${S.co.currency} ${fmt(v.i)} | Expenses ${S.co.currency} ${fmt(v.e)} | Net ${S.co.currency} ${fmt(v.i-v.e)}`).join('\n')
+  return `\nTRANSACTION DATA (${txs.length} records in ledger)\nCurrent month: Income ${S.co.currency} ${fmt(ci)} | Expenses ${S.co.currency} ${fmt(ce)} | Net ${S.co.currency} ${fmt(ci-ce)}\nPrior month:   Income ${S.co.currency} ${fmt(pi)} | Expenses ${S.co.currency} ${fmt(pe)} | Net ${S.co.currency} ${fmt(pi-pe)}\nTop expense categories:\n${topCats||'  (none)'}\n6-month trend:\n${trend||'  (insufficient data)'}\nRecent transactions:\n${recent||'  (none)'}`
+}
+
 function buildPrompt() {
+  computeFin()
   const f = S.fin
   const net = f.rev - f.exp
   const margin = f.rev > 0 ? (net/f.rev*100).toFixed(1) : 'N/A'
@@ -857,7 +1055,8 @@ YOUR STYLE AS ZAKI
 - For structured analysis: use ## headers, bullet lists, and markdown tables
 - Flag risks with ⚠️, opportunities with ✅, critical with 🔴, positive with 🟢
 - End analysis with numbered action items
-- CEO's first name: ${S.me.firstName}`
+- CEO's first name: ${S.me.firstName}
+${buildTransactionContext()}`
 }
 
 // ═══════════════════════════════════════════
@@ -1100,7 +1299,8 @@ function showPanel(id) {
   if (id === 'risks' && !S._cache.risks) loadRisks()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
   if (id === 'board' && !S._cache.board) loadBoard()
-  if (id === 'settings') populateSettings()
+  if (id === 'settings') { populateSettings(); renderZakiServerStatus() }
+  if (id === 'ledger') renderLedger()
 }
 
 function autoResize(el) {
@@ -1147,8 +1347,8 @@ function launchApp() {
   // Nav user
   document.getElementById('nav-name').textContent = S.me.name
   document.getElementById('nav-avatar').textContent = (S.me.firstName || 'Z')[0].toUpperCase()
-  // Show API key banner if no key set
-  if (!S.keys.anthropic) {
+  // Show API key banner only if neither direct key nor ZAKI server connected
+  if (!S.keys.anthropic && !S.keys.zakiJwt) {
     document.getElementById('nav-api-banner')?.classList.remove('hide')
   }
   // Init briefing KPIs
@@ -1161,6 +1361,8 @@ function launchApp() {
 // ═══════════════════════════════════════════
 function populateSettings() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || '' }
+  renderZakiServerStatus()
+  set('cfg-zaki-email', S.keys.zakiEmail)
   set('cfg-anthropic', S.keys.anthropic)
   set('cfg-eleven', S.keys.eleven)
   set('cfg-fname', S.me.firstName)
@@ -1197,7 +1399,7 @@ function saveSettings() {
   document.getElementById('nav-name').textContent = S.me.name
   document.getElementById('nav-avatar').textContent = (S.me.firstName||'Z')[0].toUpperCase()
   document.getElementById('greeting-name').textContent = S.me.firstName
-  if (S.keys.anthropic) {
+  if (S.keys.anthropic || S.keys.zakiJwt) {
     document.getElementById('nav-api-banner')?.classList.add('hide')
   } else {
     document.getElementById('nav-api-banner')?.classList.remove('hide')
@@ -1211,12 +1413,399 @@ function resetAll() {
     location.reload()
   }
 }
+
+// ═══════════════════════════════════════════
+// ZAKI SERVER — OWN LLM
+// ═══════════════════════════════════════════
+async function loginZakiServer() {
+  const email = document.getElementById('cfg-zaki-email')?.value?.trim()
+  const pass = document.getElementById('cfg-zaki-pass')?.value
+  const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
+  if (!email || !pass) { showToast('Enter email and password', 'error'); return }
+  const btn = document.querySelector('[onclick="loginZakiServer()"]')
+  if (btn) { btn.textContent = 'Connecting…'; btn.disabled = true }
+  try {
+    const r = await fetch(`${url}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    })
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail || `Login failed (${r.status})`) }
+    const data = await r.json()
+    const token = data.access_token || data.token || data.jwt
+    if (!token) throw new Error('No token received from server')
+    S.keys.zakiJwt = token
+    S.keys.zakiEmail = email
+    save()
+    renderZakiServerStatus()
+    showToast('Connected to Zaki Server — AI powered by Mumtaz!')
+    document.getElementById('cfg-zaki-pass').value = ''
+    document.getElementById('nav-api-banner')?.classList.add('hide')
+  } catch(e) {
+    showToast('Connection failed: ' + e.message, 'error')
+  } finally {
+    if (btn) { btn.textContent = 'Connect Account'; btn.disabled = false }
+  }
+}
+
+function logoutZakiServer() {
+  S.keys.zakiJwt = ''
+  save()
+  renderZakiServerStatus()
+  showToast('Disconnected from Zaki Server')
+  if (!S.keys.anthropic) document.getElementById('nav-api-banner')?.classList.remove('hide')
+}
+
+function renderZakiServerStatus() {
+  const el = document.getElementById('zaki-server-status')
+  const logoutBtn = document.getElementById('btn-zaki-logout')
+  if (!el) return
+  if (S.keys.zakiJwt) {
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--teal-bg);border:1px solid #9dd4c8;border-radius:8px;font-size:.82rem;color:var(--teal)">
+      <span style="width:8px;height:8px;background:var(--teal);border-radius:50%;flex-shrink:0"></span>
+      <strong>Connected</strong> as ${S.keys.zakiEmail || 'Mumtaz User'} — AI runs on our server
+    </div>`
+    if (logoutBtn) logoutBtn.style.display = 'inline-flex'
+    const emailEl = document.getElementById('cfg-zaki-email')
+    if (emailEl) emailEl.value = S.keys.zakiEmail || ''
+  } else {
+    el.innerHTML = `<div style="font-size:.8rem;color:var(--muted)">Not connected — AI will use your Anthropic key below</div>`
+    if (logoutBtn) logoutBtn.style.display = 'none'
+  }
+}
+
+// Modify streamClaude to prefer ZAKI server if JWT available
+const _origStreamClaude = streamClaude
+streamClaude = async function(messages, onChunk, systemOverride) {
+  if (S.keys.zakiJwt) {
+    return streamZaki(messages, onChunk, systemOverride)
+  }
+  return _origStreamClaude(messages, onChunk, systemOverride)
+}
+
+async function streamZaki(messages, onChunk, systemOverride) {
+  const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
+  const sys = systemOverride || buildPrompt()
+  // Prepend system as first user message if backend doesn't support system param
+  const msgs = [{ role: 'user', content: `[System context — follow these instructions for this conversation]\n\n${sys}\n\n---\n\n${messages[0]?.content || ''}` },
+    ...messages.slice(1)]
+  const resp = await fetch(`${url}/api/v1/ai/chat/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${S.keys.zakiJwt}`
+    },
+    body: JSON.stringify({ message: messages[messages.length-1]?.content || '', session_id: null })
+  })
+  if (resp.status === 401) {
+    S.keys.zakiJwt = ''
+    save()
+    showToast('Session expired — reconnect in Settings', 'error')
+    throw new Error('Session expired')
+  }
+  if (!resp.ok) throw new Error(`Server error ${resp.status}`)
+  const reader = resp.body.getReader()
+  const dec = new TextDecoder()
+  let full = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    for (const line of dec.decode(value).split('\n')) {
+      if (!line.startsWith('data: ')) continue
+      const data = line.slice(6)
+      if (data === '[DONE]') continue
+      try {
+        const j = JSON.parse(data)
+        const text = j.text || j.delta?.text || ''
+        if (text) { full += text; onChunk(text, full) }
+      } catch {}
+    }
+  }
+  return full
+}
+
+// ═══════════════════════════════════════════
+// TRANSACTION LEDGER
+// ═══════════════════════════════════════════
+const TX_CATS = ['Sales','Service Revenue','Retainer','Commission','Other Income','Salary','Rent','Marketing','Technology','Travel','Utilities','Legal','Insurance','Bank Charges','VAT','Cost of Goods','Other Expense']
+
+function openAddTx() {
+  document.getElementById('tx-form-title').textContent = 'Add Transaction'
+  document.getElementById('tx-edit-id').value = ''
+  document.getElementById('tx-date').value = new Date().toISOString().split('T')[0]
+  document.getElementById('tx-type').value = 'income'
+  document.getElementById('tx-amount').value = ''
+  document.getElementById('tx-category').value = ''
+  document.getElementById('tx-desc').value = ''
+  document.getElementById('tx-curr-label').textContent = S.co.currency || 'AED'
+  document.getElementById('tx-form').classList.remove('hide')
+  document.getElementById('tx-amount').focus()
+}
+
+function closeTxForm() { document.getElementById('tx-form').classList.add('hide') }
+
+function editTx(id) {
+  const tx = S.transactions.find(t => t.id === id)
+  if (!tx) return
+  document.getElementById('tx-form-title').textContent = 'Edit Transaction'
+  document.getElementById('tx-edit-id').value = id
+  document.getElementById('tx-date').value = tx.date
+  document.getElementById('tx-type').value = tx.type
+  document.getElementById('tx-amount').value = tx.amount
+  document.getElementById('tx-category').value = tx.category || ''
+  document.getElementById('tx-desc').value = tx.description || ''
+  document.getElementById('tx-curr-label').textContent = S.co.currency || 'AED'
+  document.getElementById('tx-form').classList.remove('hide')
+  document.getElementById('tx-amount').focus()
+}
+
+function saveTx() {
+  const date = document.getElementById('tx-date').value
+  const type = document.getElementById('tx-type').value
+  const amount = parseFloat(document.getElementById('tx-amount').value)
+  const category = document.getElementById('tx-category').value
+  const description = document.getElementById('tx-desc').value.trim()
+  if (!date || !amount || amount <= 0) { showToast('Date and amount are required', 'error'); return }
+  const editId = document.getElementById('tx-edit-id').value
+  if (editId) {
+    const idx = S.transactions.findIndex(t => t.id === editId)
+    if (idx >= 0) S.transactions[idx] = { ...S.transactions[idx], date, type, amount, category, description }
+  } else {
+    S.transactions.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), date, type, amount, category, description })
+  }
+  computeFin()
+  S._cache = {}
+  save()
+  closeTxForm()
+  renderLedger()
+  showToast('Transaction saved')
+}
+
+function deleteTx(id) {
+  if (!confirm('Delete this transaction?')) return
+  S.transactions = S.transactions.filter(t => t.id !== id)
+  computeFin()
+  S._cache = {}
+  save()
+  renderLedger()
+}
+
+function renderLedger() {
+  const txs = S.transactions || []
+  const filterMonth = document.getElementById('ledger-filter-month')?.value || ''
+  const filterType  = document.getElementById('ledger-filter-type')?.value  || ''
+  const filterCat   = document.getElementById('ledger-filter-cat')?.value   || ''
+
+  // Populate month filter
+  const months = [...new Set(txs.map(t => t.date?.slice(0,7)))].sort().reverse()
+  const mSel = document.getElementById('ledger-filter-month')
+  if (mSel) {
+    const cur = mSel.value
+    mSel.innerHTML = '<option value="">All time</option>' + months.map(m => `<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('')
+  }
+  // Populate category filter
+  const cats = [...new Set(txs.map(t => t.category).filter(Boolean))].sort()
+  const cSel = document.getElementById('ledger-filter-cat')
+  if (cSel) {
+    const cur = cSel.value
+    cSel.innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('')
+  }
+
+  let filtered = txs
+  if (filterMonth) filtered = filtered.filter(t => t.date?.startsWith(filterMonth))
+  if (filterType)  filtered = filtered.filter(t => t.type === filterType)
+  if (filterCat)   filtered = filtered.filter(t => t.category === filterCat)
+  filtered = [...filtered].sort((a,b) => b.date.localeCompare(a.date))
+
+  const cur = S.co.currency || 'AED'
+  const inc = filtered.filter(t=>t.type==='income').reduce((a,t)=>a+Number(t.amount),0)
+  const exp = filtered.filter(t=>t.type==='expense').reduce((a,t)=>a+Number(t.amount),0)
+  const net = inc - exp
+
+  document.getElementById('ledger-kpis').innerHTML =
+    kpiCard('Total Income', `${cur} ${fmt(inc)}`, `${filtered.filter(t=>t.type==='income').length} transactions`, 'green') +
+    kpiCard('Total Expenses', `${cur} ${fmt(exp)}`, `${filtered.filter(t=>t.type==='expense').length} transactions`, '') +
+    kpiCard('Net', `${cur} ${fmt(net)}`, net >= 0 ? 'Profitable' : 'Net loss', net >= 0 ? 'green' : 'red') +
+    kpiCard('Total Entries', txs.length.toString(), `${filtered.length} shown`, '')
+
+  document.getElementById('ledger-count').textContent = `${filtered.length} transaction${filtered.length===1?'':'s'}`
+
+  const tbody = document.getElementById('ledger-rows')
+  const empty = document.getElementById('ledger-empty')
+  if (filtered.length === 0) {
+    tbody.innerHTML = ''
+    empty?.classList.remove('hide')
+    return
+  }
+  empty?.classList.add('hide')
+  tbody.innerHTML = filtered.map(t => `
+    <tr style="border-bottom:1px solid var(--border);transition:background .12s" onmouseover="this.style.background='var(--paper2)'" onmouseout="this.style.background=''">
+      <td style="padding:9px 10px;font-variant-numeric:tabular-nums;white-space:nowrap">${t.date}</td>
+      <td style="padding:9px 10px">
+        <span class="tag ${t.type==='income'?'tag-green':'tag-red'}">${t.type==='income'?'↑ Income':'↓ Expense'}</span>
+      </td>
+      <td style="padding:9px 10px;color:var(--muted);font-size:.8rem">${t.category||'—'}</td>
+      <td style="padding:9px 10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(t.description||'').replace(/"/g,'&quot;')}">${t.description||'—'}</td>
+      <td style="padding:9px 10px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:${t.type==='income'?'var(--teal)':'var(--coral)'}">${t.type==='income'?'+':'−'} ${cur} ${fmt(t.amount)}</td>
+      <td style="padding:9px 4px;text-align:right;white-space:nowrap">
+        <button onclick="editTx('${t.id}')" style="color:var(--muted);font-size:.75rem;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:white;margin-right:3px" title="Edit">✎</button>
+        <button onclick="deleteTx('${t.id}')" style="color:var(--coral);font-size:.75rem;padding:3px 6px;border-radius:4px;border:1px solid var(--border);background:white" title="Delete">✕</button>
+      </td>
+    </tr>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// CSV IMPORT
+// ═══════════════════════════════════════════
+function importCSV(input) {
+  const file = input.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    try {
+      const text = e.target.result
+      const rows = parseCSVText(text)
+      if (rows.length < 2) { showToast('File appears empty or unreadable', 'error'); return }
+      const headers = rows[0].map(h => h.toLowerCase().trim())
+      const colIdx = autoMapColumns(headers)
+      let imported = 0, skipped = 0
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i]
+        if (row.every(c => !c.trim())) continue
+        const rawDate   = row[colIdx.date]?.trim() || ''
+        const rawAmount = row[colIdx.amount]?.trim() || ''
+        const rawType   = row[colIdx.type]?.trim()  || ''
+        const rawCat    = row[colIdx.cat]?.trim()   || ''
+        const rawDesc   = row[colIdx.desc]?.trim()  || ''
+        const date = parseDate(rawDate)
+        const amount = Math.abs(parseFloat(rawAmount.replace(/[^0-9.\-]/g, '')))
+        if (!date || !amount || isNaN(amount)) { skipped++; continue }
+        const type = guessType(rawType, rawAmount, rawCat)
+        S.transactions.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2,6) + imported,
+          date, type, amount,
+          category: mapCategory(rawCat || rawDesc),
+          description: rawDesc || rawCat || ''
+        })
+        imported++
+      }
+      computeFin()
+      S._cache = {}
+      save()
+      renderLedger()
+      showToast(`Imported ${imported} transactions${skipped ? ` (${skipped} skipped)` : ''}`)
+    } catch(err) {
+      showToast('Import error: ' + err.message, 'error')
+    }
+    input.value = ''
+  }
+  reader.readAsText(file)
+}
+
+function parseCSVText(text) {
+  const rows = []
+  // Handle both comma and tab delimited
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
+  const delim = text.indexOf('\t') > -1 && text.indexOf('\t') < text.indexOf('\n') ? '\t' : ','
+  for (const line of lines) {
+    if (!line.trim()) continue
+    const cols = []
+    let cur = '', inQ = false
+    for (let ci = 0; ci < line.length; ci++) {
+      const ch = line[ci]
+      if (ch === '"') { inQ = !inQ }
+      else if (ch === delim && !inQ) { cols.push(cur); cur = '' }
+      else cur += ch
+    }
+    cols.push(cur)
+    rows.push(cols.map(c => c.trim().replace(/^"|"$/g,'')))
+  }
+  return rows
+}
+
+function autoMapColumns(headers) {
+  const find = (...keys) => {
+    for (const k of keys) {
+      const i = headers.findIndex(h => h.includes(k))
+      if (i >= 0) return i
+    }
+    return -1
+  }
+  return {
+    date:   find('date', 'day', 'time', 'period') !== -1 ? find('date', 'day', 'time', 'period') : 0,
+    amount: find('amount', 'value', 'sum', 'total', 'debit', 'credit', 'price') !== -1 ? find('amount', 'value', 'sum', 'total', 'debit', 'credit', 'price') : 1,
+    type:   find('type', 'direction', 'flow', 'dr/cr', 'debit/credit'),
+    cat:    find('category', 'cat', 'account', 'tag', 'group'),
+    desc:   find('description', 'desc', 'narration', 'memo', 'reference', 'particulars', 'note')
+  }
+}
+
+function parseDate(raw) {
+  if (!raw) return null
+  // ISO format
+  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0,10)
+  // DD/MM/YYYY or MM/DD/YYYY
+  const m = raw.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/)
+  if (m) {
+    let [, a, b, y] = m
+    if (y.length === 2) y = '20' + y
+    // Assume DD/MM/YYYY if first part > 12, else MM/DD/YYYY guessing DD/MM for UAE/UK locale
+    const day = parseInt(a) > 12 ? a.padStart(2,'0') : b.padStart(2,'0')
+    const mon = parseInt(a) > 12 ? b.padStart(2,'0') : a.padStart(2,'0')
+    const date = `${y}-${mon}-${day}`
+    if (!isNaN(new Date(date))) return date
+  }
+  const d = new Date(raw)
+  if (!isNaN(d)) return d.toISOString().split('T')[0]
+  return null
+}
+
+function guessType(rawType, rawAmount, rawCat) {
+  const t = (rawType + rawCat).toLowerCase()
+  if (/(income|revenue|receipt|credit|deposit|inflow|cr|sale|payment\s*in)/i.test(t)) return 'income'
+  if (/(expense|cost|debit|payment|dr|salary|rent|fee|charge|purchase)/i.test(t)) return 'expense'
+  // Negative amount = expense
+  if (rawAmount.trim().startsWith('-')) return 'expense'
+  return 'expense'
+}
+
+function mapCategory(raw) {
+  if (!raw) return 'Other Expense'
+  const r = raw.toLowerCase()
+  if (/(salary|payroll|wage|staff|hr)/i.test(r)) return 'Salary'
+  if (/(rent|lease|office)/i.test(r)) return 'Rent'
+  if (/(marketing|ads|adverti|promo)/i.test(r)) return 'Marketing'
+  if (/(tech|software|saas|cloud|hosting|server|it )/i.test(r)) return 'Technology'
+  if (/(travel|transport|flight|hotel|uber|taxi)/i.test(r)) return 'Travel'
+  if (/(legal|lawyer|consult|account|audit)/i.test(r)) return 'Legal'
+  if (/(insurance|policy)/i.test(r)) return 'Insurance'
+  if (/(bank|fee|charge|commission)/i.test(r)) return 'Bank Charges'
+  if (/(vat|tax|duty|gst)/i.test(r)) return 'VAT'
+  if (/(sale|revenue|service|invoice|retainer)/i.test(r)) return 'Sales'
+  if (/(util|electric|water|internet)/i.test(r)) return 'Utilities'
+  return raw.length > 0 ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Other Expense'
+}
+
+function exportLedgerCSV() {
+  const txs = S.transactions || []
+  if (txs.length === 0) { showToast('No transactions to export', 'error'); return }
+  const cur = S.co.currency || 'AED'
+  const rows = [['Date','Type','Category','Description',`Amount (${cur})`]]
+  txs.forEach(t => rows.push([t.date, t.type, t.category||'', t.description||'', t.amount]))
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = `zaki-ledger-${new Date().toISOString().slice(0,10)}.csv`
+  a.click()
+}
 </script>
 <script>
 // ═══════════════════════════════════════════
 // BRIEFING PANEL
 // ═══════════════════════════════════════════
 function renderBriefingKPIs() {
+  computeFin()
   const f = S.fin
   const net = f.rev - f.exp
   const runway = f.exp > 0 ? Math.round(f.cash / (f.exp / 30)) : 999
