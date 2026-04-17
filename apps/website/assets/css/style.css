@@ -528,3 +528,156 @@ h4 { font-size: 1rem; font-weight: 600; }
   .hero-ctas { flex-direction: column; }
   .hero-ctas .btn { width: 100%; justify-content: center; }
 }
+
+/* ================================================================
+   Platform Switcher Bar — cross-product navigation
+   ================================================================ */
+.platform-bar {
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  padding: .45rem 0;
+  font-size: .78rem;
+}
+.platform-bar .container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.platform-bar-label {
+  color: var(--text-3);
+  font-weight: 500;
+  margin-right: .25rem;
+  flex-shrink: 0;
+}
+.platform-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--text-2);
+  font-weight: 500;
+  padding: .25rem .6rem;
+  border-radius: var(--radius-sm);
+  transition: all .18s;
+  border: 1px solid transparent;
+}
+.platform-link:hover {
+  color: var(--text);
+  background: rgba(255,255,255,.05);
+  border-color: var(--border-2);
+}
+.platform-link.active {
+  color: var(--blue-light);
+  background: rgba(59,130,246,.08);
+  border-color: rgba(59,130,246,.2);
+}
+.platform-link-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .5;
+}
+.platform-bar-cta {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: .35rem;
+  color: var(--blue-light);
+  font-weight: 600;
+  font-size: .78rem;
+}
+.platform-bar-cta:hover { color: var(--text); }
+
+/* ================================================================
+   ZAKI AI Hero Card — shown on index + ai pages
+   ================================================================ */
+.zaki-hero-card {
+  background: linear-gradient(135deg, rgba(139,92,246,.12) 0%, rgba(59,130,246,.1) 100%);
+  border: 1px solid rgba(139,92,246,.25);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: center;
+  margin-top: 2rem;
+}
+.zaki-hero-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: .5rem;
+  background: linear-gradient(135deg,#a78bfa,#60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.zaki-hero-card p { color: var(--text-2); font-size: .92rem; margin-bottom: 1.25rem; }
+.zaki-chat-preview {
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  min-width: 260px;
+  font-size: .82rem;
+}
+.zaki-chat-line {
+  display: flex; align-items: flex-start; gap: .6rem;
+  margin-bottom: .8rem;
+}
+.zaki-chat-line:last-child { margin-bottom: 0; }
+.zaki-chat-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+  display: grid; place-items: center;
+  color: #fff; font-size: .6rem; font-weight: 700;
+  flex-shrink: 0;
+}
+.zaki-chat-bubble {
+  background: rgba(255,255,255,.06);
+  border-radius: 8px;
+  padding: .4rem .7rem;
+  color: var(--text-2);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+/* ================================================================
+   Interlink CTA strip — bottom of every page
+   ================================================================ */
+.interlink-strip {
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 0;
+}
+.interlink-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 1rem;
+}
+.interlink-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  transition: all .22s;
+}
+.interlink-card:hover {
+  border-color: var(--border-2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+.interlink-icon { font-size: 1.6rem; margin-bottom: .25rem; }
+.interlink-title { font-size: .95rem; font-weight: 700; color: var(--text); }
+.interlink-desc { font-size: .8rem; color: var(--text-2); line-height: 1.5; }
+.interlink-arrow {
+  margin-top: auto;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--blue-light);
+}
+
+@media (max-width: 768px) {
+  .interlink-grid { grid-template-columns: 1fr; }
+  .zaki-hero-card { grid-template-columns: 1fr; }
+  .zaki-chat-preview { display: none; }
+  .platform-bar-label { display: none; }
+}
