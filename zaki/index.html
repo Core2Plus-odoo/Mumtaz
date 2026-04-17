@@ -621,6 +621,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         Valuation
       </div>
+      <div class="nav-item" onclick="showPanel('scenario')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Scenario Simulator
+      </div>
     </div>
 
     <div class="nav-section">
@@ -674,6 +678,9 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
 
       <div id="briefing-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
+
+      <!-- Proactive alerts -->
+      <div id="proactive-alerts" style="margin-bottom:20px"></div>
 
       <div class="briefing-text" id="briefing-text">Generating your briefing…</div>
 
@@ -1040,6 +1047,39 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
     </div>
 
+    <!-- ── SCENARIO SIMULATOR ── -->
+    <div class="panel" id="panel-scenario">
+      <div class="panel-header">
+        <div><div class="panel-title"><em>Scenario Simulator</em></div><div class="panel-desc">Run what-if analysis — get a clear YES/NO with numbers, not guesses</div></div>
+      </div>
+
+      <!-- Quick scenarios -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:12px">Quick Scenarios</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('revenue_drop')">📉 Sales drop 20%</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('hire_5')">👥 Hire 5 employees</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('breakeven')">⚖️ Break-even point</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('double_ar')">📋 AR doubles (slow payers)</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('cost_cut_15')">✂️ Cut costs 15%</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('expand_market')">🌍 Enter new market</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('raise_prices')">💰 Raise prices 10%</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('lose_top_client')">⚠️ Lose top client</button>
+        </div>
+      </div>
+
+      <!-- Custom scenario -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:10px">Custom Scenario</div>
+        <div style="display:flex;gap:8px">
+          <input id="scenario-input" type="text" placeholder='e.g. "What if we take a loan of AED 500,000?"' style="flex:1;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;font-size:.85rem;color:var(--text);font-family:var(--font)" onkeydown="if(event.key==='Enter')runCustomScenario()">
+          <button class="btn-primary" onclick="runCustomScenario()">Simulate</button>
+        </div>
+      </div>
+
+      <div id="scenario-result" style="font-size:.88rem;line-height:1.7;color:var(--text)"></div>
+    </div>
+
     <!-- ── SETTINGS ── -->
     <div class="panel" id="panel-settings">
       <div class="panel-header">
@@ -1366,16 +1406,45 @@ Apply these when relevant:
 
 ---
 
-## YOUR COMMUNICATION STYLE
-- Address the CEO by first name: **${S.me.firstName || 'CEO'}**
-- Lead with the most important number or decision — no preamble
-- Be direct, specific, and decisive — like a trusted CFO, not a consultant
-- Use ${S.co.currency} amounts throughout
-- Structure analysis with ## headers, tables, and bullet points
-- Flag risks with ⚠️, opportunities with ✅, critical alerts with 🔴, positives with 🟢
-- Always end analysis sections with **numbered action items**
-- Never hedge without giving a clear recommendation
-- If data is missing, say so and ask — do not fabricate
+## CFO RESPONSE FORMAT (MANDATORY)
+
+For every substantive question, structure your response exactly as:
+
+**💡 INSIGHT**
+One sentence — the single most important financial truth right now.
+
+**📊 ANALYSIS**
+Data-driven breakdown. Use tables and specific ${S.co.currency} numbers. Compare to benchmarks.
+
+**⚠️ RISKS**
+What could go wrong. Quantify the downside where possible.
+
+**✅ RECOMMENDATION**
+Exactly what to do. Be specific — amounts, timelines, who should act.
+
+**🎯 NEXT ACTION**
+One concrete thing the CEO should do in the next 7 days.
+
+---
+
+For scenario questions ("what if…", "can we afford…", "what happens if…"):
+- Run the numbers explicitly with the scenario applied
+- Show base case vs scenario case side by side
+- Give a clear YES / NO / CONDITIONAL answer
+- Show the break-even point or threshold
+
+For compliance questions:
+- Cite the exact standard (e.g., "IFRS 15 §31", "UAE CT Law Art.12")
+- Give the journal entry if relevant
+- State the deadline and penalty for non-compliance
+
+For voice responses: keep answers under 120 words — crisp, decisive, no filler.
+
+## STYLE
+- Address CEO as: **${S.me.firstName || 'CEO'}**
+- Never say "it depends" without immediately resolving the dependency
+- Use ${S.co.currency} amounts. Be specific.
+- If data is missing, say what data you need and why
 
 ${buildTransactionContext()}`
 }
@@ -1628,6 +1697,7 @@ function showPanel(id) {
   if (id === 'ratios') renderRatiosGrid()
   if (id === 'tax') loadTax()
   if (id === 'valuation') loadValuation()
+  if (id === 'scenario') {}
 }
 
 function autoResize(el) {
@@ -1694,6 +1764,7 @@ function launchApp() {
   if (dot) { dot.classList.toggle('connected', connected); dot.title = connected ? 'AI connected' : 'AI not configured — click Settings' }
   if (!connected) document.getElementById('nav-api-banner')?.classList.remove('hide')
   renderBriefingKPIs()
+  runProactiveAlerts()
   showPanel('briefing')
 }
 
@@ -2614,6 +2685,200 @@ Write in professional board-ready language. Use specific numbers throughout.` }]
 }
 
 function printBoard() { window.print() }
+
+// ═══════════════════════════════════════════
+// PROACTIVE INTELLIGENCE ENGINE
+// ═══════════════════════════════════════════
+function runProactiveAlerts() {
+  computeFin()
+  const f = S.fin; const c = S.co.currency
+  const alerts = []
+
+  const net = f.rev - f.exp
+  const runway = f.exp > f.rev && f.exp > 0 ? f.cash / ((f.exp - f.rev) / 30) : Infinity
+  const arPct = f.ar > 0 ? f.arOverdue / f.ar * 100 : 0
+  const currentRatio = f.ap > 0 ? (f.ar + f.cash) / f.ap : Infinity
+  const payrollPct = f.rev > 0 ? f.payroll / f.rev * 100 : 0
+  const dso = f.rev > 0 ? f.ar / (f.rev / 30) : 0
+
+  if (runway < 30) alerts.push({ level:'critical', icon:'🔴', title:'Cash Runway Critical', msg:`Only ${Math.round(runway)} days of cash left at current burn rate. Immediate action required.`, action:"Review cash flow", panel:'cashflow' })
+  else if (runway < 90) alerts.push({ level:'warn', icon:'⚠️', title:'Cash Runway Warning', msg:`${Math.round(runway)} days runway. Monitor closely and prepare contingency.`, action:"View cash flow", panel:'cashflow' })
+
+  if (arPct > 30) alerts.push({ level:'critical', icon:'🔴', title:'Overdue AR High', msg:`${arPct.toFixed(0)}% of receivables (${c} ${fmt(f.arOverdue)}) overdue >30 days. Bad debt risk rising.`, action:"Review AR", panel:'health' })
+  else if (arPct > 15) alerts.push({ level:'warn', icon:'⚠️', title:'Overdue AR Elevated', msg:`${arPct.toFixed(0)}% of AR overdue. Begin collections on oldest invoices.`, action:"Review AR", panel:'health' })
+
+  if (net < 0) alerts.push({ level:'critical', icon:'🔴', title:'Loss-Making This Month', msg:`Net loss of ${c} ${fmt(Math.abs(net))}. Expenses exceed revenue by ${(Math.abs(net)/f.rev*100).toFixed(0)}%.`, action:"Analyse costs", panel:'health' })
+
+  if (currentRatio < 1 && f.ap > 0) alerts.push({ level:'critical', icon:'🔴', title:'Liquidity Risk', msg:`Current ratio ${currentRatio.toFixed(2)}x — liabilities exceed liquid assets. AP obligations may not be met.`, action:"View ratios", panel:'ratios' })
+
+  if (payrollPct > 70 && f.rev > 0) alerts.push({ level:'warn', icon:'⚠️', title:'Payroll Ratio High', msg:`Payroll is ${payrollPct.toFixed(0)}% of revenue — well above the 50% healthy threshold.`, action:"Review costs", panel:'health' })
+
+  if (f.vat > 0 && f.cash < f.vat * 1.2) alerts.push({ level:'warn', icon:'⚠️', title:'VAT Coverage Low', msg:`Cash barely covers VAT liability of ${c} ${fmt(f.vat)}. Ensure funds set aside before filing date.`, action:"Tax advisor", panel:'tax' })
+
+  if (dso > 60 && f.rev > 0) alerts.push({ level:'warn', icon:'⚠️', title:'Slow Collections (DSO ${dso.toFixed(0)} days)', msg:`Customers taking ${dso.toFixed(0)} days to pay. Industry benchmark is <30 days.`, action:"Review AR", panel:'health' })
+
+  const el = document.getElementById('proactive-alerts')
+  if (!el) return
+  if (alerts.length === 0) {
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;font-size:.82rem;color:#15803d">
+      🟢 <strong>No critical alerts.</strong> Financials look healthy based on current data.
+    </div>`
+    return
+  }
+  el.innerHTML = `<div style="font-size:.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">⚡ Proactive Alerts (${alerts.length})</div>` +
+    alerts.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:${a.level==='critical'?'rgba(239,68,68,.07)':'rgba(245,158,11,.07)'};border:1px solid ${a.level==='critical'?'rgba(239,68,68,.25)':'rgba(245,158,11,.25)'};border-radius:10px;margin-bottom:8px">
+      <span style="font-size:1rem;flex-shrink:0;margin-top:1px">${a.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:2px">${a.title}</div>
+        <div style="font-size:.78rem;color:var(--text-2);line-height:1.5">${a.msg}</div>
+      </div>
+      <button class="btn-outline" style="font-size:.72rem;padding:4px 9px;white-space:nowrap;flex-shrink:0" onclick="showPanel('${a.panel}')">${a.action} →</button>
+    </div>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// SCENARIO SIMULATOR
+// ═══════════════════════════════════════════
+const SCENARIOS = {
+  revenue_drop: {
+    label: 'Sales drop 20%',
+    prompt: (f, c) => `SCENARIO: Monthly revenue drops 20% from ${c} ${fmt(f.rev)} to ${c} ${fmt(f.rev * 0.8)}.
+Current costs remain at ${c} ${fmt(f.exp)}.
+Run this scenario analysis:
+- New net profit/loss vs current
+- Cash runway impact (current ${f.cash > 0 ? (f.cash / Math.max(1, (f.exp - f.rev * 0.8) / 30)).toFixed(0) + ' days' : 'N/A'})
+- Which cost lines must be cut immediately to stay cash positive
+- Break-even revenue at current cost structure
+Give a clear YES/NO on whether we survive this scenario and what we must do in the first 30 days.`
+  },
+  hire_5: {
+    label: 'Hire 5 employees',
+    prompt: (f, c) => `SCENARIO: We want to hire 5 additional employees.
+Assume average fully-loaded cost per employee = ${c} ${fmt(Math.max(f.payroll / Math.max(f.payroll > 0 ? 3 : 1, 1), 15000))} per month (estimate from our payroll).
+Current monthly surplus/deficit: ${c} ${fmt(f.rev - f.exp)}
+Can we afford this hire? Run:
+- Cost impact on monthly P&L
+- Impact on cash runway
+- Revenue threshold needed to absorb the cost
+- Recommended hiring approach (all at once vs phased)
+Give a clear YES / NO / CONDITIONAL answer.`
+  },
+  breakeven: {
+    label: 'Break-even analysis',
+    prompt: (f, c) => `Calculate our break-even point precisely.
+Fixed costs (payroll + overhead): estimate from our expense structure
+Variable costs: estimate from industry norms for ${S.co.industry || 'our sector'}
+Current revenue: ${c} ${fmt(f.rev)} / month
+Current total expenses: ${c} ${fmt(f.exp)} / month
+Provide:
+- Monthly break-even revenue
+- Break-even units/transactions (estimate)
+- Margin of safety (current revenue vs break-even)
+- How many more/fewer customers needed to break even
+- Sensitivity: what if costs rise 10%?`
+  },
+  double_ar: {
+    label: 'AR doubles (slow payers)',
+    prompt: (f, c) => `SCENARIO: Our accounts receivable doubles to ${c} ${fmt(f.ar * 2)} because customers are paying slower.
+Current AR: ${c} ${fmt(f.ar)} | Current cash: ${c} ${fmt(f.cash)}
+Analyse:
+- Cash gap created by the AR increase
+- Whether we can fund operations during this gap
+- Cash runway impact
+- Financing options (invoice factoring, credit line)
+- Collections actions to prevent this
+- IFRS 9 provisioning implications if AR becomes doubtful`
+  },
+  cost_cut_15: {
+    label: 'Cut costs 15%',
+    prompt: (f, c) => `SCENARIO: We implement a 15% cost reduction across the business.
+Current monthly expenses: ${c} ${fmt(f.exp)}
+After 15% cut: ${c} ${fmt(f.exp * 0.85)}
+Analyse:
+- New monthly net profit
+- Cash runway improvement
+- Which cost categories are realistic to cut (payroll is ${c} ${fmt(f.payroll)} = ${f.exp > 0 ? (f.payroll / f.exp * 100).toFixed(0) : 0}% of costs)
+- Implementation risks and IFRS implications (IAS 19 for redundancies, IAS 37 for restructuring provision)
+- Recommended sequence for cuts`
+  },
+  expand_market: {
+    label: 'Enter new market',
+    prompt: (f, c) => `SCENARIO: We want to expand into a new country/market.
+Current cash position: ${c} ${fmt(f.cash)} | Monthly surplus: ${c} ${fmt(f.rev - f.exp)}
+Analyse from a CFO perspective:
+- How much expansion capital we can self-fund from current operations
+- Minimum runway to maintain at home base while expanding
+- Key financial risks of market entry
+- Tax/compliance considerations for ${S.co.country || 'UAE'}-based company expanding into GCC
+- Recommended financial structure for the expansion (branch vs subsidiary)
+- Break-even timeline for new market`
+  },
+  raise_prices: {
+    label: 'Raise prices 10%',
+    prompt: (f, c) => `SCENARIO: We raise our prices by 10%.
+Current revenue: ${c} ${fmt(f.rev)} | If volume stays same: ${c} ${fmt(f.rev * 1.1)}
+Analyse:
+- Revenue and profit impact at 0%, 5%, 10%, 20% volume loss due to price increase
+- Price elasticity breakeven: how much volume can we lose and still be better off?
+- Margin impact table (show as a sensitivity table)
+- Customer segment risk (which clients are most price-sensitive based on context)
+- VAT implications of price change
+- Recommended implementation approach`
+  },
+  lose_top_client: {
+    label: 'Lose top client',
+    prompt: (f, c) => `SCENARIO: We lose our top/largest client.
+Assume top client = 30–40% of revenue (adjust if you know exact figure from context).
+Current revenue: ${c} ${fmt(f.rev)}
+Analyse:
+- Revenue loss and immediate P&L impact
+- Revised cash runway
+- Emergency cost actions needed in first 30 days
+- Pipeline conversion needed to replace the revenue
+- Bad debt provision needed if client owes us money (IFRS 9)
+- Communication and contractual obligations
+Give a 90-day survival plan.`
+  }
+}
+
+async function runScenario(key) {
+  const el = document.getElementById('scenario-result')
+  if (!aiReady()) { el.innerHTML = noKeyState('Scenario Simulator requires AI.'); return }
+  computeFin()
+  const sc = SCENARIOS[key]
+  if (!sc) return
+  el.innerHTML = `<div style="color:var(--text-3);font-size:.82rem;margin-bottom:8px">Running scenario: <strong>${sc.label}</strong></div><span class="spinner"></span>`
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content: sc.prompt(S.fin, S.co.currency) }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+async function runCustomScenario() {
+  const inp = document.getElementById('scenario-input')
+  const q = inp?.value?.trim()
+  if (!q) return
+  const el = document.getElementById('scenario-result')
+  if (!aiReady()) { el.innerHTML = noKeyState('Scenario Simulator requires AI.'); return }
+  inp.value = ''
+  el.innerHTML = `<div style="color:var(--text-3);font-size:.82rem;margin-bottom:8px">Simulating your scenario…</div><span class="spinner"></span>`
+  computeFin()
+  const f = S.fin; const c = S.co.currency
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:`SCENARIO ANALYSIS REQUEST: ${q}
+
+Our current financials:
+- Revenue: ${c} ${fmt(f.rev)}/month | Expenses: ${c} ${fmt(f.exp)}/month | Net: ${c} ${fmt(f.rev-f.exp)}
+- Cash: ${c} ${fmt(f.cash)} | Runway: ${f.exp>f.rev?(f.cash/((f.exp-f.rev)/30)).toFixed(0)+' days':'profitable'}
+- AR: ${c} ${fmt(f.ar)} | AP: ${c} ${fmt(f.ap)} | Payroll: ${c} ${fmt(f.payroll)}
+
+Apply the CFO response format. Give a clear YES/NO/CONDITIONAL answer with specific numbers.` }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
 
 // ═══════════════════════════════════════════
 // IFRS ADVISOR
