@@ -1181,6 +1181,189 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
+// ZAKI KNOWLEDGE BASE (embedded — 20 core objects)
+// ═══════════════════════════════════════════
+const ZAKI_KB = [
+  { id:'ifrs15', tags:['revenue','recognition','contracts','performance obligation','IFRS 15'],
+    countries:['ALL'], title:'IFRS 15 — Revenue from Contracts with Customers',
+    ref:'IFRS 15', effective:'2018-01-01', confidence:97,
+    summary:'Revenue recognised when (or as) performance obligations satisfied. 5-step model must be applied.',
+    steps:['1. Identify the contract','2. Identify performance obligations','3. Determine transaction price','4. Allocate price to POs','5. Recognise revenue when PO satisfied'],
+    key_rules:['Variable consideration: constrain to highly probable amount','Contract modifications: new contract or continuation depending on facts','Principal vs agent: gross vs net revenue','Bill-and-hold: specific criteria required'],
+    erp:'Odoo: enable revenue recognition in Accounting > Settings. Set deferred revenue account per product category.',
+    common_mistakes:['Recognising revenue at invoice date not delivery','Not deferring advance payments','Ignoring variable consideration constraints'] },
+
+  { id:'ifrs9', tags:['financial instruments','ECL','expected credit loss','trade receivables','IFRS 9','provisioning'],
+    countries:['ALL'], title:'IFRS 9 — Financial Instruments & ECL',
+    ref:'IFRS 9', effective:'2018-01-01', confidence:96,
+    summary:'Trade receivables must be provisioned using Expected Credit Loss (ECL) model — not just when actually bad.',
+    key_rules:['Stage 1: 12-month ECL (current)','Stage 2: Lifetime ECL (significant credit deterioration)','Stage 3: Lifetime ECL (credit impaired — not accruing interest)','Simplified approach for trade receivables: use provision matrix by aging bucket'],
+    erp:'Odoo: create provision matrix in Accounting > Configuration. Set up bad debt journal entries. Run aging report monthly.',
+    common_mistakes:['Waiting until debt is written off before provisioning','Not updating provision matrix for historical data','Ignoring ECL on intercompany receivables'] },
+
+  { id:'ifrs16', tags:['leases','right of use','IFRS 16','operating lease','finance lease'],
+    countries:['ALL'], title:'IFRS 16 — Leases',
+    ref:'IFRS 16', effective:'2019-01-01', confidence:95,
+    summary:'Lessees recognise right-of-use (ROU) asset and lease liability for most leases. No more off-balance-sheet operating leases.',
+    key_rules:['Exemptions: short-term leases (<12 months) and low-value assets (<USD 5,000)','IBR (Incremental Borrowing Rate) used when implicit rate not determinable','Depreciate ROU asset over shorter of lease term or useful life','Interest on lease liability — effective interest method'],
+    erp:'Odoo 16+: Assets module handles ROU. Create asset for each lease. Set depreciation schedule.',
+    common_mistakes:['Using straight-line rent expense instead of split depreciation+interest','Wrong IBR (should be lessee\'s borrowing rate, not lessor\'s)','Not reassessing lease term on significant events'] },
+
+  { id:'ias1', tags:['presentation','going concern','financial statements','IAS 1','disclosure','materiality'],
+    countries:['ALL'], title:'IAS 1 — Presentation of Financial Statements',
+    ref:'IAS 1', effective:'2005-01-01', confidence:97,
+    summary:'Sets overall requirements for financial statements: going concern, accrual basis, comparative information, materiality.',
+    key_rules:['Going concern: assess ability to continue for at least 12 months','Comparative: prior year figures required for all amounts','Materiality: omissions/misstatements material if they could influence decisions','Complete set: statement of financial position, P&L+OCI, changes in equity, cash flow, notes'],
+    erp:'Odoo: generate standard financial statements from Accounting > Reports. Ensure comparative periods enabled.',
+    going_concern_triggers:['Cash runway < 6 months','Net liability position','Loan covenant breaches','Significant operating losses'] },
+
+  { id:'ias2', tags:['inventory','IAS 2','FIFO','weighted average','NRV','write-down'],
+    countries:['ALL'], title:'IAS 2 — Inventories',
+    ref:'IAS 2', effective:'2005-01-01', confidence:96,
+    summary:'Inventories measured at lower of cost and net realisable value (NRV). LIFO prohibited under IFRS.',
+    key_rules:['Cost methods: FIFO or Weighted Average (LIFO not permitted)','NRV = estimated selling price minus costs to complete and sell','Write-down when NRV < cost — reverse if circumstances change','Cost of manufactured goods: direct materials + labour + allocated overhead'],
+    erp:'Odoo: set costing method per product category (FIFO or Average). Enable inventory valuation journal. Run NRV review quarterly.' },
+
+  { id:'ias7', tags:['cash flow','IAS 7','operating','investing','financing','direct','indirect'],
+    countries:['ALL'], title:'IAS 7 — Statement of Cash Flows',
+    ref:'IAS 7', effective:'1994-01-01', confidence:97,
+    summary:'Cash flows classified into operating, investing, financing. Both direct and indirect method acceptable but indirect more common.',
+    key_rules:['Operating: cash from core business (indirect: start with net profit, adjust non-cash)','Investing: purchase/sale of assets, investments','Financing: borrowings, equity, dividends','Interest paid: operating or financing (accounting policy choice)','Dividends received: operating or investing (policy choice)'],
+    erp:'Odoo: Cash Flow Statement auto-generated if accounts tagged correctly. Tag accounts to operating/investing/financing.' },
+
+  { id:'ias16', tags:['PPE','property plant equipment','depreciation','IAS 16','revaluation','impairment'],
+    countries:['ALL'], title:'IAS 16 — Property, Plant and Equipment',
+    ref:'IAS 16', effective:'2005-01-01', confidence:96,
+    summary:'PPE recognised at cost less accumulated depreciation and impairment. Revaluation model allowed as alternative.',
+    key_rules:['Depreciation: systematic allocation over useful life','Methods: straight-line, reducing balance, units of production','Residual value reviewed annually','Revaluation model: carry at fair value, revalue regularly','Componentisation: significant parts depreciated separately','Borrowing costs: capitalise if directly attributable to qualifying asset (IAS 23)'],
+    erp:'Odoo Assets module: set up asset categories, useful lives, depreciation methods. Run depreciation board monthly.' },
+
+  { id:'ias37', tags:['provisions','contingent liabilities','IAS 37','restructuring','warranty'],
+    countries:['ALL'], title:'IAS 37 — Provisions, Contingent Liabilities and Assets',
+    ref:'IAS 37', effective:'1999-01-01', confidence:95,
+    summary:'Provision recognised when: present obligation exists, probable outflow, reliable estimate. Contingent liabilities only disclosed.',
+    key_rules:['Three criteria ALL required: obligation, probable outflow, reliable estimate','Best estimate: expected value for large populations, most likely for single event','Restructuring provision: only when detailed formal plan AND raised valid expectation','Onerous contracts: provision for unavoidable losses','No provisions for future operating losses'],
+    erp:'Odoo: journal entry Cr: Provision account, Dr: P&L expense. Create provision asset and depreciate if long-term.' },
+
+  { id:'ias19', tags:['employee benefits','IAS 19','gratuity','EOSB','leave','bonus'],
+    countries:['ALL'], title:'IAS 19 — Employee Benefits',
+    ref:'IAS 19', effective:'2013-01-01', confidence:94,
+    summary:'End of service benefits (gratuity) are defined benefit obligations — must be actuarially calculated and accrued.',
+    key_rules:['Short-term benefits (leave, bonus): accrue in period earned','End of service/gratuity: defined benefit — actuarial valuation required for material amounts','Actuarial gains/losses: recognised in OCI (not P&L)','Discount rate: high-quality corporate bond rate (or government bond rate where no deep market)'],
+    erp:'Odoo HR: enable EOSB. Set up accrual journal entries. For material amounts, engage actuary annually.'},
+
+  { id:'ias36', tags:['impairment','IAS 36','goodwill','CGU','recoverable amount','VIU'],
+    countries:['ALL'], title:'IAS 36 — Impairment of Assets',
+    ref:'IAS 36', effective:'2004-01-01', confidence:95,
+    summary:'Assets tested for impairment when indicators exist. Recoverable amount = higher of FVLCD and Value in Use.',
+    key_rules:['Annual test required: goodwill and indefinite-life intangibles','Indicators: market decline, obsolescence, poor performance, rising discount rates','CGU: smallest group of assets generating independent cash flows','VIU: present value of future cash flows using pre-tax discount rate','Impairment loss: written off in P&L. Goodwill impairment never reversed.'],
+    erp:'Odoo: manual impairment journal. Dr: Impairment loss (P&L), Cr: Accumulated impairment (asset contra).' },
+
+  { id:'ias38', tags:['intangibles','IAS 38','R&D','software','amortisation','development costs'],
+    countries:['ALL'], title:'IAS 38 — Intangible Assets',
+    ref:'IAS 38', effective:'2004-01-01', confidence:94,
+    summary:'Intangible asset recognised only if: identifiable, probable future economic benefits, cost reliably measurable. Internally generated goodwill NOT recognised.',
+    key_rules:['Research costs: expensed always','Development costs: capitalise only if all 6 criteria met (technical feasibility, intent, ability, market, resources, reliably measured)','Amortise over useful life if finite. Indefinite-life: annual impairment test.','Computer software: capitalise direct development costs, expense maintenance'],
+    erp:'Odoo Assets: create intangible asset type. Set useful life, amortisation method.' },
+
+  { id:'uae_ct', tags:['corporate tax','UAE CT','9%','taxable income','small business relief','free zone'],
+    countries:['UAE'], title:'UAE Corporate Tax — 9% (Federal Decree-Law 47/2022)',
+    ref:'UAE CT Law', effective:'2023-06-01', confidence:96,
+    summary:'9% CT on taxable income exceeding AED 375,000. Taxable persons include mainland companies, foreign companies with UAE PE.',
+    key_rules:['Rate: 0% on ≤AED 375,000; 9% on amount above','Small Business Relief: elect if revenue ≤AED 3M (treat taxable income as zero)','Free zone qualifying income: 0% if substance requirements met','Non-qualifying income: 9% even for free zone entities','First tax period: financial year starting on or after 1 June 2023','Registration deadline: within 3 months of becoming taxable person'],
+    deadlines:['CT registration: within 3 months of financial year start','CT return: within 9 months of financial year end','Tax payment: with return filing'],
+    penalties:['Late registration: AED 10,000','Late return: AED 500/month (first 12 months), AED 1,000/month thereafter'],
+    erp:'Odoo: create tax group UAE CT 9%. Set up deferred tax account (275000). Enable CT provision in period-end.' },
+
+  { id:'uae_vat', tags:['VAT','UAE VAT','5%','input tax','output tax','FTA','tax group'],
+    countries:['UAE'], title:'UAE VAT — 5% (Federal Decree-Law 8/2017)',
+    ref:'UAE VAT Law', effective:'2018-01-01', confidence:97,
+    summary:'5% VAT on taxable supplies. Registration mandatory if taxable supplies >AED 375,000/year. Quarterly or monthly returns.',
+    key_rules:['Standard rated: 5% — most goods and services','Zero rated: exports, international transport, healthcare, education, first residential sale','Exempt: residential rent, local passenger transport, bare land','Input tax recovery: only on business purposes, proportional if mixed use','Tax invoice requirements: TRN, date, description, amounts, VAT amount','Return frequency: monthly if >AED 150M; quarterly otherwise'],
+    deadlines:['VAT return: 28th of month following period end','VAT payment: with return'],
+    penalties:['Late registration: AED 20,000','Late return: AED 1,000 first time, AED 2,000 thereafter','Tax evasion: 5x tax amount'],
+    erp:'Odoo: install l10n_ae. Configure 5% tax group. Set TRN in company settings. Use UAE VAT report for FTA filing.' },
+
+  { id:'uae_esr', tags:['ESR','economic substance','UAE','relevant activity','substance test'],
+    countries:['UAE'], title:'UAE Economic Substance Regulations (ESR)',
+    ref:'Cabinet Resolution 57/2020', effective:'2020-01-01', confidence:90,
+    summary:'Companies conducting relevant activities must demonstrate adequate economic substance in UAE.',
+    key_rules:['Relevant activities: banking, insurance, investment fund management, lease-finance, HQ, shipping, holding company, IP, distribution/service centre','Substance test: CIGA conducted in UAE, adequate employees/expenditure/physical assets in UAE','Holding company: reduced substance test','IP: high substance test (hard to satisfy)'],
+    deadlines:['ESR notification: 6 months after FY end','ESR report: 12 months after FY end'],
+    penalties:['Failure to meet substance: AED 50,000 first year, AED 400,000 subsequent years','Failure to file: AED 20,000–50,000'] },
+
+  { id:'ksa_vat', tags:['VAT','Saudi Arabia','ZATCA','15%','e-invoicing','Fatoorah'],
+    countries:['KSA'], title:'KSA VAT — 15% (Royal Decree M/113)',
+    ref:'KSA VAT Law', effective:'2020-07-01', confidence:95,
+    summary:'15% VAT (increased from 5% in July 2020). E-invoicing (Fatoorah) mandatory in phases.',
+    key_rules:['Standard rate: 15% on most supplies','Zero rated: exports, medicines, medical equipment','E-invoicing Phase 1 (Dec 2021): generate compliant e-invoice','E-invoicing Phase 2 (integration): link to ZATCA portal — phased rollout by revenue size','Return: monthly if >SAR 40M annual revenue; quarterly otherwise'],
+    deadlines:['Monthly return: last day of month following period','Quarterly return: last day of month following quarter'],
+    erp:'Odoo: configure 15% KSA tax. Enable e-invoicing module. Integrate with ZATCA API for Phase 2.' },
+
+  { id:'ksa_zakat', tags:['Zakat','Saudi Arabia','ZATCA','2.5%','zakatable','net worth'],
+    countries:['KSA'], title:'KSA Zakat (for Saudi/GCC shareholders)',
+    ref:'KSA Zakat Law', effective:'1992-01-01', confidence:92,
+    summary:'Zakat at 2.5% on zakatable base (net worth method) for Saudi/GCC national shareholders. Foreign shareholders pay 20% CT instead.',
+    key_rules:['Zakatable base: equity + long-term debt less fixed assets and long-term investments (simplified)','Rate: 2.5% of zakatable base','Mixed ownership: Zakat on Saudi/GCC share, CT on foreign share','Filing: within 120 days of financial year end','Advance payments: quarterly instalments required for companies with prior year liability >SAR 500,000'],
+    erp:'Odoo: create Zakat provision account. Calculate zakatable base annually. Engage tax advisor for exact computation.' },
+
+  { id:'pak_ct', tags:['corporate tax','Pakistan','29%','FBR','super tax','advance tax'],
+    countries:['PAK'], title:'Pakistan Corporate Tax — 29% (Income Tax Ordinance 2001)',
+    ref:'Income Tax Ordinance 2001', effective:'2023-07-01', confidence:91,
+    summary:'29% CT on taxable income for non-banking companies. Super Tax 10% for income >PKR 300M. Complex advance tax regime.',
+    key_rules:['Standard rate: 29%','Banking: 39% (35% + 4% super tax)','Super tax: 10% on income >PKR 300M','Minimum tax: 1.25% of turnover if tax on turnover exceeds tax on income','Advance tax: quarterly instalments (April, June, September, December)','WHT: extensive withholding tax regime — 39 heads of withholding'],
+    deadlines:['Annual return: 31 December (for June FY)','Advance tax: 25th of quarter end month'],
+    erp:'Odoo: configure 29% CT. Set up multiple WHT tax groups. Enable advance tax tracking.' },
+
+  { id:'pak_salestax', tags:['sales tax','Pakistan','FBR','18%','input tax','SRB','PRA'],
+    countries:['PAK'], title:'Pakistan Sales Tax — 18% Federal + Provincial',
+    ref:'Sales Tax Act 1990', effective:'2023-07-01', confidence:89,
+    summary:'18% federal sales tax on goods. Services taxed provincially (SRB 13% Sindh, PRA 16% Punjab, etc.). Complex input tax rules.',
+    key_rules:['Federal: 18% on most goods (FBR)','Sindh services: 13% (SRB)','Punjab services: 16% (PRA)','Zero rated: exports','Exempt: basic food items, medicines','Monthly return: 15th of following month','Input tax: claimable only on registered suppliers — maintain proper records'],
+    erp:'Odoo: configure multiple tax groups (Federal 18%, Sindh 13%, Punjab 16%). Set up provincial tax reports.' },
+
+  { id:'wc_mgmt', tags:['working capital','DSO','DPO','DIO','cash conversion cycle','liquidity'],
+    countries:['ALL'], title:'Working Capital Management — CFO Framework',
+    ref:'FP&A Best Practice', effective:'2020-01-01', confidence:88,
+    summary:'Cash Conversion Cycle = DSO + DIO - DPO. Minimise CCC to maximise cash generation without raising external finance.',
+    key_rules:['DSO target: <30 days (B2B), <15 days (B2C)','DPO target: 30–60 days (without damaging supplier relationships)','DIO target: industry-specific (30 days trading, 60 days manufacturing)','Early payment discount: calculate if NPV-positive vs cost of capital','Invoice factoring: viable if factoring cost < cost of credit line'],
+    ratios:{ current: '>1.5 healthy', quick: '>1.0 acceptable', cash: '>0.5 safe' },
+    erp:'Odoo: use AR aging report, AP aging report. Set payment terms on customer and vendor records.' },
+
+  { id:'going_concern', tags:['going concern','IAS 1','cash runway','distress','viability'],
+    countries:['ALL'], title:'Going Concern Assessment — IAS 1.25',
+    ref:'IAS 1 §25', effective:'2005-01-01', confidence:95,
+    summary:'Management must assess ability to continue for at least 12 months from reporting date. Material uncertainty must be disclosed.',
+    triggers:['Cash runway < 6 months','Net liability position','Loan covenant breach likely','Operating losses with no recovery plan','Loss of major customer with no replacement','Key supplier failure'],
+    key_rules:['Prepare cash flow forecast for at least 12 months','Consider all available mitigating actions (asset sales, new finance, cost cuts)','Disclose material uncertainty prominently in notes','If not going concern: liquidation basis — assets at realisable values'],
+    erp:'Odoo: run 12-month cash flow projection. Compare to committed facilities. Document assumptions.' }
+]
+
+// KB retrieval — match by keywords in question
+function retrieveKB(question) {
+  if (!question) return []
+  const q = question.toLowerCase()
+  const scored = ZAKI_KB.map(obj => {
+    const haystack = (obj.tags.join(' ') + ' ' + obj.title + ' ' + obj.summary).toLowerCase()
+    const score = obj.tags.filter(t => q.includes(t.toLowerCase())).length
+      + (q.includes(obj.id) ? 3 : 0)
+      + (obj.countries.includes('ALL') || obj.countries.some(c => q.includes(c.toLowerCase())) ? 1 : 0)
+    return { obj, score }
+  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score).slice(0,3)
+  return scored.map(x => x.obj)
+}
+
+function kbContext(kbObjs) {
+  if (!kbObjs.length) return ''
+  return '\n\n## RETRIEVED KNOWLEDGE BASE\n' + kbObjs.map(k =>
+    `### ${k.title} (${k.ref} | Confidence: ${k.confidence}%)\n${k.summary}\n` +
+    (k.key_rules ? 'Key rules:\n' + k.key_rules.map(r=>'- '+r).join('\n') : '') +
+    (k.deadlines ? '\nDeadlines: ' + k.deadlines.join(' | ') : '') +
+    (k.erp ? '\nERP: ' + k.erp : '')
+  ).join('\n\n') + '\n\nCite these standards in your answer using their ref (e.g. "Under IFRS 15...").\n'
+}
+
+// ═══════════════════════════════════════════
 const S = {
   keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://app.mumtaz.digital' },
   co: { name: '', industry: '', country: '', currency: 'AED' },
@@ -2379,12 +2562,15 @@ async function sendChat() {
   const btn = document.getElementById('btn-send')
   if (btn) btn.disabled = true
 
+  const kbHits = retrieveKB(text)
+  const sysWithKB = buildPrompt() + kbContext(kbHits)
+
   try {
     let full = ''
     await streamClaude(S.chat.slice(-20), (_, acc) => {
       full = acc
       updateMsg(msgId, acc)
-    })
+    }, sysWithKB)
     S.chat.push({ role: 'assistant', content: full })
     save()
     if (S.prefs.readAloud) speak(full)
@@ -2894,7 +3080,7 @@ async function askIfrs(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildPrompt() + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
+      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
@@ -3002,7 +3188,7 @@ async function askTax(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildPrompt() + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
+      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
