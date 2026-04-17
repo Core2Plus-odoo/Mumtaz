@@ -955,42 +955,11 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <div class="panel-desc">Update your profile, financials, and AI keys</div>
       </div>
 
+      <!-- ZAKI Server (Own LLM) — primary AI source -->
       <div class="card" style="margin-bottom:14px">
-        <div class="card-title">AI Configuration</div>
-        <div style="background:var(--gold-bg);border:1px solid #e5d080;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:var(--amber)">
-          🔑 AI features (briefing, chat, analysis) require an Anthropic API key. Get one free at <strong>console.anthropic.com</strong>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field">
-            <label>Anthropic API Key</label>
-            <input id="cfg-anthropic" type="password" placeholder="sk-ant-…" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
-          </div>
-          <div class="field">
-            <label>ElevenLabs Key <span style="color:var(--text-3)">(optional — voice)</span></label>
-            <input id="cfg-eleven" type="password" placeholder="Leave blank for browser TTS" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
-          </div>
-        </div>
-        <div class="field" style="margin-top:4px">
-          <label>Your First Name</label>
-          <input id="cfg-fname" type="text" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="field">
-            <label>Company</label>
-            <input id="cfg-company" type="text" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
-          </div>
-          <div class="field">
-            <label>Country</label>
-            <input id="cfg-country" type="text" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
-          </div>
-        </div>
-      </div>
-
-      <!-- ZAKI Server (Own LLM) -->
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-title">Zaki Server <span style="font-size:.75rem;color:var(--green);font-weight:500;margin-left:6px">Own LLM — no API key needed</span></div>
-        <div style="background:var(--success-bg);border:1px solid #9dd4c8;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:var(--green)">
-          Connect to your Mumtaz account — AI is powered by our server so <strong>you need zero API keys</strong>. Falls back to your own key if not connected.
+        <div class="card-title">AI — Zaki Server <span style="font-size:.75rem;color:var(--green);font-weight:500;margin-left:6px">✦ Recommended — no API key needed</span></div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:.82rem;color:#15803d">
+          Sign in with your Mumtaz account — AI runs on our servers, <strong>no Anthropic key required</strong>.
         </div>
         <div id="zaki-server-status" style="margin-bottom:12px"></div>
         <div id="zaki-server-login-form">
@@ -1010,6 +979,42 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
           </div>
         </div>
       </div>
+
+      <!-- Profile -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Profile</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Your First Name</label>
+            <input id="cfg-fname" type="text" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
+          </div>
+          <div class="field">
+            <label>Company</label>
+            <input id="cfg-company" type="text" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
+          </div>
+          <div class="field">
+            <label>Country</label>
+            <input id="cfg-country" type="text" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced: own API keys -->
+      <details class="card" style="margin-bottom:14px">
+        <summary style="cursor:pointer;font-weight:600;font-size:.9rem;color:var(--text-2);list-style:none;display:flex;align-items:center;gap:6px">
+          <span style="font-size:.7rem;color:var(--text-3)">▶</span> Advanced — bring your own API keys <span style="font-size:.75rem;color:var(--text-3);font-weight:400;margin-left:4px">(optional)</span>
+        </summary>
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field">
+            <label>Anthropic API Key <span style="color:var(--text-3)">(optional override)</span></label>
+            <input id="cfg-anthropic" type="password" placeholder="sk-ant-…" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
+          </div>
+          <div class="field">
+            <label>ElevenLabs Key <span style="color:var(--text-3)">(voice — optional)</span></label>
+            <input id="cfg-eleven" type="password" placeholder="Leave blank for browser TTS" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text)">
+          </div>
+        </div>
+      </details>
 
       <div class="card" style="margin-bottom:14px">
         <div class="card-title">Financials <span style="font-size:.75rem;color:var(--text-3);font-weight:400;margin-left:6px">— override if no transactions added</span></div>
@@ -1174,11 +1179,13 @@ function showToast(msg, type) {
   setTimeout(() => t.remove(), 3000)
 }
 
-// ── No API key prompt ──
+// ── No AI connection prompt ──
 function noKeyPrompt() {
-  showToast('Add your Anthropic API key in Settings to enable AI features', 'error')
+  showToast('Connect to Zaki Server (Settings) to enable AI features', 'error')
   setTimeout(() => showPanel('settings'), 400)
 }
+
+function aiReady() { return !!(S.keys.zakiJwt || S.keys.anthropic) }
 
 async function streamClaude(messages, onChunk, systemOverride) {
   if (!S.keys.anthropic) { noKeyPrompt(); throw new Error('No API key') }
@@ -1569,7 +1576,7 @@ function logoutZakiServer() {
   save()
   renderZakiServerStatus()
   showToast('Disconnected from Zaki Server')
-  if (!S.keys.anthropic) document.getElementById('nav-api-banner')?.classList.remove('hide')
+  if (!aiReady()) document.getElementById('nav-api-banner')?.classList.remove('hide')
 }
 
 function renderZakiServerStatus() {
@@ -1939,8 +1946,8 @@ let briefingAudio = null, briefingPlaying = false
 
 function noKeyState(msg) {
   return `<div class="no-key-state">
-    <div class="no-key-icon">🔑</div>
-    <div class="no-key-title">AI feature — API key needed</div>
+    <div class="no-key-icon">✦</div>
+    <div class="no-key-title">Connect to Zaki Server to unlock AI</div>
     <div class="no-key-desc">${msg || 'Add your free Anthropic API key in Settings to enable this.'}</div>
     <button class="no-key-btn" onclick="showPanel('settings')">Add API key in Settings →</button>
   </div>`
@@ -1951,10 +1958,10 @@ async function loadBriefing() {
   const el = document.getElementById('briefing-text')
   const title = document.getElementById('briefing-player-title')
 
-  if (!S.keys.anthropic) {
-    el.innerHTML = noKeyState('Your morning briefing is an AI-generated spoken summary of your finances. Add an API key to unlock it.')
+  if (!aiReady()) {
+    el.innerHTML = noKeyState('Your morning briefing is an AI-generated spoken summary of your finances. Connect to Zaki Server to unlock it.')
     el.classList.remove('loading')
-    title.textContent = 'API key required'
+    title.textContent = 'Connect to Zaki Server'
     return
   }
 
@@ -2070,7 +2077,7 @@ async function sendChat() {
   const inp = document.getElementById('chat-input')
   const text = inp?.value?.trim()
   if (!text) return
-  if (!S.keys.anthropic) { noKeyPrompt(); return }
+  if (!aiReady()) { noKeyPrompt(); return }
   inp.value = ''; autoResize(inp); updateSendBtn()
 
   S.chat.push({ role: 'user', content: text })
@@ -2101,7 +2108,7 @@ async function sendChat() {
 // FINANCIAL HEALTH
 // ═══════════════════════════════════════════
 async function loadHealth() {
-  if (!S.keys.anthropic) {
+  if (!aiReady()) {
     document.getElementById('health-text').innerHTML = noKeyState('Financial health assessment uses AI to score your liquidity, profitability and risk.')
     return
   }
@@ -2172,7 +2179,7 @@ Be direct and specific with numbers from my data.`
 async function loadOpportunities(force) {
   if (!force && S._cache.opp) return
   const grid = document.getElementById('opp-grid')
-  if (!S.keys.anthropic) {
+  if (!aiReady()) {
     grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Opportunity finder uses AI to surface revenue and growth opportunities from your data.')}</div>`
     return
   }
@@ -2212,7 +2219,7 @@ async function loadOpportunities(force) {
 async function loadRisks(force) {
   if (!force && S._cache.risks) return
   const grid = document.getElementById('risk-grid')
-  if (!S.keys.anthropic) {
+  if (!aiReady()) {
     grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Risk Radar uses AI to identify financial threats and suggest mitigations.')}</div>`
     return
   }
@@ -2302,7 +2309,7 @@ async function runCustomScenario() {
 // ═══════════════════════════════════════════
 async function loadCashflow(force) {
   if (!force && S._cache.cashflow) return
-  if (!S.keys.anthropic) {
+  if (!aiReady()) {
     document.getElementById('cashflow-text').innerHTML = noKeyState('90-day cash flow projection is generated by AI from your financial data.')
     return
   }
@@ -2345,7 +2352,7 @@ Use actual figures. Be specific.` }], (_, acc) => {
 async function loadBoard(force) {
   if (!force && S._cache.board) return
   const el = document.getElementById('board-content')
-  if (!S.keys.anthropic) {
+  if (!aiReady()) {
     el.innerHTML = noKeyState('Board Pack generates an executive-ready financial report using AI.')
     return
   }
