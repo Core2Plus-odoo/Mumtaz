@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt as _bcrypt
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -33,7 +33,14 @@ ODOO_DB     = os.environ.get("ODOO_DB",             "mumtaz")
 ODOO_ADMIN  = os.environ.get("ODOO_ADMIN_USER",     "admin")
 ODOO_PASS   = os.environ.get("ODOO_ADMIN_PASS",     "admin")
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def _hash_pw(password: str) -> str:
+    return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
+
+def _verify_pw(password: str, hashed: str) -> bool:
+    try:
+        return _bcrypt.checkpw(password.encode(), hashed.encode())
+    except Exception:
+        return False
 
 # ── App ───────────────────────────────────────────────────────────────
 app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0")
@@ -52,38 +59,61 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+_USERS_DDL = """
+    CREATE TABLE users (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        email         TEXT    UNIQUE NOT NULL,
+        password_hash TEXT,
+        name          TEXT,
+        company       TEXT,
+        odoo_uid      INTEGER,
+        tenant_id     INTEGER,
+        plan          TEXT    DEFAULT 'trial',
+        active        INTEGER DEFAULT 1,
+        created_at    INTEGER DEFAULT (strftime('%s','now'))
+    )
+"""
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            email         TEXT    UNIQUE NOT NULL,
-            password_hash TEXT,
-            name          TEXT,
-            company       TEXT,
-            odoo_uid      INTEGER,
-            tenant_id     INTEGER,
-            plan          TEXT    DEFAULT 'trial',
-            active        INTEGER DEFAULT 1,
-            created_at    INTEGER DEFAULT (strftime('%s','now'))
-        )
-    """)
-    # Migrations for older DB schemas (add any missing columns)
-    for col, definition in [
-        ("name",          "TEXT"),
-        ("company",       "TEXT"),
-        ("password_hash", "TEXT"),
-        ("odoo_uid",      "INTEGER"),
-        ("tenant_id",     "INTEGER"),
-        ("plan",          "TEXT DEFAULT 'trial'"),
-        ("active",        "INTEGER DEFAULT 1"),
-        ("created_at",    "INTEGER DEFAULT (strftime('%s','now'))"),
-    ]:
+    conn.execute(f"CREATE TABLE IF NOT EXISTS users {_USERS_DDL.split('CREATE TABLE users')[1]}")
+
+    # Detect old schema with NOT NULL on password_hash — recreate preserving data
+    cols = {r[1]: r for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+    need_rebuild = cols.get("password_hash") and cols["password_hash"][3]  # notnull flag
+    if need_rebuild:
+        print("[init_db] old schema detected — rebuilding users table")
+        conn.execute("ALTER TABLE users RENAME TO users_old")
+        conn.execute(_USERS_DDL)
         try:
-            conn.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
-        except Exception:
-            pass  # column already exists
+            conn.execute("""
+                INSERT INTO users (id, email, password_hash, name, company,
+                                   odoo_uid, tenant_id, plan, active, created_at)
+                SELECT id, email, password_hash,
+                       COALESCE(name, ''), COALESCE(company, ''),
+                       odoo_uid, tenant_id,
+                       COALESCE(plan, 'trial'), COALESCE(active, 1),
+                       COALESCE(created_at, strftime('%s','now'))
+                FROM users_old
+            """)
+        except Exception as e:
+            print(f"[init_db] data migration error: {e}")
+        conn.execute("DROP TABLE IF EXISTS users_old")
+    else:
+        # Add any columns missing from older nullable schemas
+        for col, defn in [
+            ("name",      "TEXT"), ("company", "TEXT"),
+            ("odoo_uid",  "INTEGER"), ("tenant_id", "INTEGER"),
+            ("plan",      "TEXT DEFAULT 'trial'"),
+            ("active",    "INTEGER DEFAULT 1"),
+            ("created_at","INTEGER DEFAULT (strftime('%s','now'))"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
+            except Exception:
+                pass
+
     conn.commit()
     conn.close()
 
@@ -222,6 +252,64 @@ def odoo_read_tenant(tenant_id: int) -> dict:
     except Exception:
         return {}
 
+# ── Module map: portal_id → Odoo technical name ───────────────────────
+MODULE_MAP = {
+    "crm":             "crm",
+    "invoicing":       "account",
+    "accounting":      "account_accountant",
+    "inventory":       "stock",
+    "purchase":        "purchase",
+    "hr":              "hr",
+    "project":         "project",
+    "expenses":        "hr_expense",
+    "timesheets":      "hr_timesheet",
+    "mrp":             "mrp",
+    "pos":             "point_of_sale",
+    "ecommerce":       "website_sale",
+    "helpdesk":        "helpdesk",
+    "email_marketing": "mass_mailing",
+}
+INSTALLED_STATES = {"installed", "to install", "to upgrade"}
+
+def odoo_get_module_states() -> dict:
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid:
+        return {}
+    try:
+        rows = _odoo_object().execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", "search_read",
+            [[["name", "in", list(MODULE_MAP.values())]]],
+            {"fields": ["name", "state"]}
+        )
+        name_to_state = {r["name"]: r["state"] for r in rows}
+        return {
+            portal_id: name_to_state.get(odoo_name, "uninstalled") in INSTALLED_STATES
+            for portal_id, odoo_name in MODULE_MAP.items()
+        }
+    except Exception as e:
+        print(f"[modules] get states error: {e}")
+        return {}
+
+def odoo_toggle_module(portal_id: str, install: bool) -> bool:
+    odoo_name = MODULE_MAP.get(portal_id)
+    if not odoo_name:
+        return False
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid:
+        return False
+    try:
+        obj = _odoo_object()
+        ids = obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", "search",
+                             [[["name", "=", odoo_name]]])
+        if not ids:
+            return False
+        method = "button_immediate_install" if install else "button_immediate_uninstall"
+        obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", method, [ids])
+        return True
+    except Exception as e:
+        print(f"[modules] toggle error ({portal_id}, install={install}): {e}")
+        return False
+
 # ── Pydantic models ───────────────────────────────────────────────────
 class SignupReq(BaseModel):
     name: str
@@ -277,7 +365,7 @@ def signup(req: SignupReq):
     tenant_id = odoo_create_tenant(req.company, email, req.name)
 
     # 3. Cache in SQLite
-    ph = pwd_ctx.hash(req.password)
+    ph = _hash_pw(req.password)
     db.execute(
         "INSERT INTO users (email, password_hash, name, company, odoo_uid, tenant_id, plan) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -340,7 +428,7 @@ def login(req: LoginReq):
             # Fallback: local SQLite
             row = db.execute("SELECT * FROM users WHERE email=? AND active=1", (email,)).fetchone()
             if not row or not row["password_hash"] or \
-                    not pwd_ctx.verify(req.password, row["password_hash"]):
+                    not _verify_pw(req.password, row["password_hash"]):
                 db.close()
                 raise HTTPException(401, detail="Invalid email or password.")
     except HTTPException:
@@ -397,6 +485,32 @@ async def tenant_me(auth: dict = Depends(require_auth)):
     if not tenant_id:
         return {"tenant": None}
     return {"tenant": odoo_read_tenant(int(tenant_id))}
+
+@app.get("/api/v1/modules")
+async def get_modules(auth: dict = Depends(require_auth)):
+    """Return installed state of each portal module from Odoo ERP."""
+    return {"modules": odoo_get_module_states()}
+
+class ModuleToggleReq(BaseModel):
+    module_id: str
+
+@app.post("/api/v1/modules/install")
+async def install_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
+    if req.module_id not in MODULE_MAP:
+        raise HTTPException(400, f"Unknown module: {req.module_id}")
+    ok = odoo_toggle_module(req.module_id, install=True)
+    if not ok:
+        raise HTTPException(500, f"Failed to install {req.module_id}")
+    return {"ok": True, "module": req.module_id, "installed": True}
+
+@app.post("/api/v1/modules/uninstall")
+async def uninstall_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
+    if req.module_id not in MODULE_MAP:
+        raise HTTPException(400, f"Unknown module: {req.module_id}")
+    ok = odoo_toggle_module(req.module_id, install=False)
+    if not ok:
+        raise HTTPException(500, f"Failed to uninstall {req.module_id}")
+    return {"ok": True, "module": req.module_id, "installed": False}
 
 @app.post("/api/v1/ai/chat/stream")
 async def chat_stream(req: ChatReq, auth: dict = Depends(require_auth)):

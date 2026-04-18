@@ -53,56 +53,91 @@ input,select,textarea{font-family:var(--font);outline:none}
 .auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--text-3);font-size:.78rem}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
 
-/* ── Onboarding wizard ── */
-#onboard{display:none;min-height:100vh;background:var(--bg);padding:32px 20px}
-#onboard.open{display:block}
-.ob-wrap{max-width:760px;margin:0 auto}
-.ob-header{text-align:center;margin-bottom:36px}
-.ob-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
-.ob-logo-mark{width:38px;height:38px;background:var(--grad);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
-.ob-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px}
-.ob-step{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--text-3)}
-.ob-step.active{color:var(--indigo)}
-.ob-step.done{color:var(--green)}
-.ob-step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;background:var(--surface)}
-.ob-step.active .ob-step-num{border-color:var(--indigo);background:var(--indigo);color:#fff}
-.ob-step.done .ob-step-num{border-color:var(--green);background:var(--green);color:#fff}
-.ob-step-line{width:40px;height:2px;background:var(--border);margin:0 4px}
-.ob-step-line.done{background:var(--green)}
-.ob-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:var(--shadow);margin-bottom:20px}
-.ob-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
-.ob-sub{font-size:.85rem;color:var(--text-2);margin-bottom:24px}
-.ob-foot{display:flex;justify-content:space-between;align-items:center}
+/* ── Onboarding wizard — Split-screen ── */
+#onboard{display:none;min-height:100vh}
+#onboard.open{display:flex;min-height:100vh}
+.ob-sidebar{width:260px;flex-shrink:0;background:linear-gradient(160deg,#1e1b4b 0%,#312e81 55%,#4c1d95 100%);padding:36px 24px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+.ob-brand{display:flex;align-items:center;gap:10px;margin-bottom:44px}
+.ob-brand-mark{width:34px;height:34px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.95rem}
+.ob-brand-name{color:#fff;font-size:.95rem;font-weight:700}
+.ob-step-list{flex:1;display:flex;flex-direction:column}
+.ob-sl-item{display:flex;align-items:flex-start;gap:13px;padding:10px 0;position:relative}
+.ob-sl-item::after{content:'';position:absolute;left:12px;top:38px;width:2px;height:calc(100% - 14px);background:rgba(255,255,255,.12)}
+.ob-sl-item:last-child::after{display:none}
+.ob-sl-num{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);flex-shrink:0;transition:all .3s;z-index:1;background:transparent}
+.ob-sl-item.done .ob-sl-num{background:#10b981;border-color:#10b981;color:#fff}
+.ob-sl-item.active .ob-sl-num{background:#fff;border-color:#fff;color:#4338ca}
+.ob-sl-label{font-size:.76rem;font-weight:600;color:rgba(255,255,255,.4);transition:color .3s;line-height:1.3;padding-top:3px}
+.ob-sl-item.done .ob-sl-label{color:rgba(255,255,255,.6)}
+.ob-sl-item.active .ob-sl-label{color:#fff;font-weight:700}
+.ob-sl-desc{font-size:.68rem;color:rgba(255,255,255,.25);margin-top:1px}
+.ob-sl-item.active .ob-sl-desc{color:rgba(255,255,255,.5)}
+.ob-progress-bar{height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:28px;overflow:hidden}
+.ob-progress-fill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:2px;transition:width .5s ease}
+.ob-sidebar-foot{margin-top:16px;font-size:.68rem;color:rgba(255,255,255,.25)}
+.ob-main{flex:1;overflow-y:auto;background:var(--bg);display:flex;flex-direction:column}
+.ob-main-inner{max-width:620px;width:100%;margin:0 auto;padding:48px 40px;flex:1;display:flex;flex-direction:column}
+.ob-step-tag{font-size:.7rem;font-weight:700;color:var(--indigo);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.ob-h1{font-size:1.65rem;font-weight:700;margin-bottom:8px;line-height:1.25}
+.ob-p{font-size:.875rem;color:var(--text-2);margin-bottom:28px;line-height:1.65}
+.ob-body{flex:1}
+.ob-foot{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+/* ob fields */
+.ob-field{margin-bottom:16px}
+.ob-field label{display:block;font-size:.7rem;font-weight:600;color:var(--text-2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.ob-field input,.ob-field select{width:100%;padding:10px 13px;background:var(--surface);border:1.5px solid var(--border-2);border-radius:9px;font-size:.875rem;color:var(--text);transition:border .15s}
+.ob-field input:focus,.ob-field select:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.08);outline:none}
+.ob-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.team-btns{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+.team-btn{padding:7px 13px;border-radius:7px;font-size:.78rem;font-weight:500;border:1.5px solid var(--border-2);background:transparent;color:var(--text-2);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.team-btn:hover,.team-btn.active{border-color:var(--indigo);color:var(--indigo);background:rgba(99,102,241,.06)}
 /* Product cards */
-.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:8px}
-.prod-card{border:2px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all var(--tr);position:relative}
-.prod-card:hover{border-color:var(--indigo);box-shadow:var(--shadow)}
-.prod-card.selected{border-color:var(--indigo);background:rgba(99,102,241,.04)}
-.prod-card.selected::after{content:'✓';position:absolute;top:10px;right:12px;width:20px;height:20px;background:var(--indigo);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
-.prod-icon{font-size:2rem;margin-bottom:10px}
-.prod-name{font-size:.9rem;font-weight:700;margin-bottom:4px}
-.prod-desc{font-size:.75rem;color:var(--text-2);line-height:1.5}
-.prod-price{font-size:.75rem;font-weight:600;color:var(--indigo);margin-top:8px}
-/* Module cards in onboarding */
-.ob-mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.ob-mod{border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all var(--tr);display:flex;align-items:center;gap:10px}
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.prod-card{border:2px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;transition:all .2s;position:relative;background:var(--surface)}
+.prod-card:hover{border-color:var(--indigo);transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,.1)}
+.prod-card.selected{border-color:var(--indigo);background:rgba(99,102,241,.035)}
+.prod-check{position:absolute;top:11px;right:11px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;transition:all .2s;color:transparent;background:var(--surface)}
+.prod-card.selected .prod-check{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.prod-icon-wrap{width:48px;height:48px;border-radius:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.prod-name{font-size:.9rem;font-weight:700;margin-bottom:3px}
+.prod-tag{font-size:.68rem;font-weight:600;margin-bottom:10px}
+.prod-features{list-style:none;padding:0;margin:0}
+.prod-features li{font-size:.7rem;color:var(--text-2);padding:2px 0;display:flex;align-items:flex-start;gap:5px;line-height:1.35}
+.prod-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+.prod-price-line{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.72rem;font-weight:600}
+/* Module grid */
+.ob-mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px}
+.ob-mod{border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:9px;background:var(--surface)}
 .ob-mod:hover{border-color:var(--indigo)}
 .ob-mod.selected{border-color:var(--indigo);background:rgba(99,102,241,.05)}
 .ob-mod.core{border-color:var(--green);background:rgba(16,185,129,.04);cursor:default}
-.ob-mod-icon{font-size:1.2rem;flex-shrink:0}
-.ob-mod-info{flex:1;min-width:0}
-.ob-mod-name{font-size:.8rem;font-weight:600}
-.ob-mod-tag{font-size:.66rem;color:var(--text-3)}
-/* Plan cards in onboarding */
+.ob-mod-icon{font-size:1.1rem;flex-shrink:0}
+.ob-mod-name{font-size:.76rem;font-weight:600;line-height:1.2}
+.ob-mod-tag{font-size:.62rem;color:var(--text-3);margin-top:1px}
+/* Plan cards */
 .ob-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.ob-plan{border:2px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all var(--tr)}
-.ob-plan:hover{border-color:var(--indigo)}
+.ob-plan{border:2px solid var(--border);border-radius:14px;padding:20px 16px;cursor:pointer;transition:all .2s;background:var(--surface);position:relative}
+.ob-plan:hover{border-color:var(--indigo);transform:translateY(-2px)}
 .ob-plan.selected{border-color:var(--indigo);background:rgba(99,102,241,.04)}
-.ob-plan-name{font-size:1rem;font-weight:700;margin-bottom:4px}
-.ob-plan-price{font-size:1.6rem;font-weight:700;margin-bottom:10px;color:var(--indigo)}
-.ob-plan-feature{font-size:.75rem;color:var(--text-2);margin-bottom:4px}
-/* Summary */
-.ob-summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.84rem}
+.ob-plan.popular{border-color:var(--indigo)}
+.ob-plan-badge{display:inline-block;background:var(--grad);color:#fff;font-size:.62rem;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.ob-plan-name{font-size:.88rem;font-weight:700;margin-bottom:6px}
+.ob-plan-price{font-size:1.8rem;font-weight:800;color:var(--indigo);line-height:1;margin-bottom:3px}
+.ob-plan-period{font-size:.78rem;color:var(--text-3);font-weight:400;margin-bottom:14px}
+.ob-plan-feats{list-style:none;padding:0;margin:0}
+.ob-plan-feats li{font-size:.74rem;color:var(--text-2);padding:3px 0;display:flex;align-items:center;gap:6px}
+.ob-plan-feats li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+/* Review */
+.ob-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.ob-review-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.ob-review-lbl{font-size:.66rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.ob-review-val{font-size:.85rem;font-weight:600}
+.ob-review-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ob-review-tag{font-size:.7rem;background:rgba(99,102,241,.08);color:var(--indigo);border-radius:20px;padding:3px 9px;font-weight:500}
+.ob-total-box{background:var(--grad);border-radius:12px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+.ob-total-lbl{font-size:.82rem;opacity:.85}
+.ob-total-amt{font-size:1.5rem;font-weight:700}
+@media(max-width:700px){.ob-sidebar{display:none}.ob-main-inner{padding:32px 20px}.prod-grid,.ob-plan-grid{grid-template-columns:1fr}}
 .ob-summary-row:last-child{border-bottom:none;font-weight:700;font-size:.9rem}
 #app{display:none;min-height:100vh;flex-direction:row}
 #app.ready{display:flex}
@@ -188,6 +223,61 @@ input,select,textarea{font-family:var(--font);outline:none}
 .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 /* Progress bar */
 .prog-bar{height:6px;background:var(--bg-1);border-radius:3px;overflow:hidden}
+/* ZAKI Wizard */
+#zaki-wizard{position:fixed;inset:0;z-index:200;display:none;background:var(--bg)}
+#zaki-wizard.open{display:flex}
+.zw-sidebar{width:240px;flex-shrink:0;background:linear-gradient(160deg,#2d1b69 0%,#4c1d95 55%,#6d28d9 100%);padding:32px 22px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.zw-brand{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+.zw-brand-icon{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.zw-brand-name{color:#fff;font-size:.95rem;font-weight:700;line-height:1.2}
+.zw-brand-sub{color:rgba(255,255,255,.5);font-size:.65rem}
+.zw-steps{flex:1;display:flex;flex-direction:column;gap:4px}
+.zw-step{display:flex;align-items:flex-start;gap:11px;padding:9px 10px;border-radius:8px;transition:background .2s}
+.zw-step.active{background:rgba(255,255,255,.1)}
+.zw-step-num{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.3);flex-shrink:0;transition:all .3s}
+.zw-step.done .zw-step-num{background:#10b981;border-color:#10b981;color:#fff;font-size:.8rem}
+.zw-step.active .zw-step-num{background:#fff;border-color:#fff;color:#6d28d9;font-size:.7rem}
+.zw-step-label{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.35);padding-top:2px;transition:color .2s}
+.zw-step.done .zw-step-label{color:rgba(255,255,255,.6)}
+.zw-step.active .zw-step-label{color:#fff}
+.zw-pbar{height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:24px;overflow:hidden}
+.zw-pfill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:2px;transition:width .4s ease}
+.zw-main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.zw-inner{max-width:580px;width:100%;margin:0 auto;padding:44px 40px}
+.zw-tag{font-size:.68rem;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.zw-title{font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.25}
+.zw-sub{font-size:.88rem;color:var(--text-2);margin-bottom:28px;line-height:1.6}
+.zw-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:24px}
+.zw-card{border:2px solid var(--border);border-radius:12px;padding:16px 14px;cursor:pointer;transition:all .2s;text-align:center;background:var(--surface)}
+.zw-card:hover{border-color:var(--purple);background:rgba(139,92,246,.04)}
+.zw-card.sel{border-color:var(--purple);background:rgba(139,92,246,.07)}
+.zw-card-icon{font-size:1.6rem;margin-bottom:8px}
+.zw-card-label{font-size:.78rem;font-weight:600;color:var(--text)}
+.zw-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:24px}
+.zw-check-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;background:var(--surface)}
+.zw-check-item:hover{border-color:var(--purple)}
+.zw-check-item.sel{border-color:var(--purple);background:rgba(139,92,246,.06)}
+.zw-check-item input[type=checkbox]{accent-color:var(--purple);width:15px;height:15px;flex-shrink:0}
+.zw-check-icon{font-size:1rem}
+.zw-check-label{font-size:.78rem;font-weight:500;color:var(--text);line-height:1.3}
+.zw-field{margin-bottom:16px}
+.zw-field label{display:block;font-size:.72rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.zw-field select,.zw-field input{width:100%;padding:10px 13px;background:var(--bg-1);border:1.5px solid var(--border-2);border-radius:8px;font-size:.87rem;color:var(--text);transition:border .2s}
+.zw-field select:focus,.zw-field input:focus{border-color:var(--purple);background:var(--surface)}
+.zw-foot{display:flex;justify-content:space-between;align-items:center;margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}
+.zw-btn-back{background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:10px 22px;font-size:.85rem;color:var(--text-2);font-weight:500}
+.zw-btn-back:hover{border-color:var(--border-2);background:var(--bg-1)}
+.zw-btn-next{background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;border-radius:8px;padding:10px 26px;font-size:.85rem;font-weight:600;border:none}
+.zw-btn-next:hover{opacity:.9}
+.zw-finish{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:8px;padding:10px 26px;font-size:.85rem;font-weight:600;border:none}
+.zw-finish:hover{opacity:.9}
+.zw-welcome-hero{background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(109,40,217,.05));border:1.5px solid rgba(139,92,246,.2);border-radius:16px;padding:28px;margin-bottom:28px;display:flex;gap:20px;align-items:flex-start}
+.zw-welcome-icon{font-size:2.5rem;line-height:1}
+.zw-feature-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.zw-feature-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.zw-feature-row-icon{font-size:1.1rem;width:32px;text-align:center}
+.zw-done-check{width:64px;height:64px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px}
+.zw-done-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
 .prog-fill{height:100%;border-radius:3px;transition:width .4s ease}
 </style>
 </head>
@@ -240,13 +330,19 @@ input,select,textarea{font-family:var(--font);outline:none}
 
 <!-- ══ ONBOARDING ══ -->
 <div id="onboard">
-  <div class="ob-wrap">
-    <div class="ob-logo">
-      <div class="ob-logo-mark">M</div>
-      <span style="font-size:1.1rem;font-weight:700">Mumtaz Platform</span>
+  <div class="ob-sidebar">
+    <div class="ob-brand">
+      <div class="ob-brand-mark">M</div>
+      <span class="ob-brand-name">Mumtaz Platform</span>
     </div>
-    <div id="ob-steps-bar"></div>
-    <div id="ob-step-content"></div>
+    <div id="ob-step-list" class="ob-step-list"></div>
+    <div class="ob-progress-bar"><div id="ob-progress-fill" class="ob-progress-fill" style="width:0%"></div></div>
+    <div class="ob-sidebar-foot">Setup takes about 3 minutes</div>
+  </div>
+  <div class="ob-main">
+    <div class="ob-main-inner">
+      <div id="ob-step-content"></div>
+    </div>
   </div>
 </div>
 
@@ -265,6 +361,10 @@ input,select,textarea{font-family:var(--font);outline:none}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
       </div>
       <div class="sb-section">Platform</div>
+      <div class="sb-item" onclick="nav('products')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="6" height="6" rx="1"/><rect x="16" y="3" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="9" y="10" width="6" height="6" rx="1"/><rect x="16" y="10" width="6" height="6" rx="1"/></svg>Products
+        <span class="sb-badge" id="sb-prod-badge" style="background:rgba(16,185,129,.1);color:var(--green)"></span>
+      </div>
       <div class="sb-item" onclick="nav('modules')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.5V18L12 22 3 17.5V6.5z"/><polyline points="12 22 12 12"/><polyline points="21 6.5 12 12 3 6.5"/></svg>Modules
         <span class="sb-badge badge-indigo" id="sb-mod-count" style="background:rgba(99,102,241,.12);color:var(--indigo)"></span>
@@ -337,8 +437,9 @@ const TOKEN_KEY  = 'mumtaz_token'
 let P = {
   user: { name:'', email:'', company:'', role:'Admin', avatar:'' },
   plan: 'growth',
-  seats: 10, seatsUsed: 7,
+  seats: 10, seatsUsed: 1,
   modules: {},
+  products: { erp: true, zaki: false, marketplace: false },
   theme: 'light'
 }
 let TOKEN = ''
@@ -441,14 +542,14 @@ dashboard: `
 <div class="page-title">Good morning, <span id="dash-name"></span> 👋</div>
 <div class="page-sub">Here's what's happening with <span id="dash-co"></span> today.</div>
 <div class="grid4" style="margin-bottom:20px">
-  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">7</div><div class="stat-sub">of 10 seats used</div></div>
-  <div class="stat-card"><div class="stat-label">Modules Active</div><div class="stat-val" id="d-mods">6</div><div class="stat-sub">4 available to add</div></div>
-  <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">$480</div><div class="stat-sub">Next billing May 18</div></div>
-  <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">2</div><div class="stat-sub"><span class="badge badge-amber">1 open</span></div></div>
+  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">1</div><div class="stat-sub" id="d-users-sub">of — seats used</div></div>
+  <div class="stat-card"><div class="stat-label">Modules Active</div><div class="stat-val" id="d-mods">0</div><div class="stat-sub" id="d-mods-sub">— available to add</div></div>
+  <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">—</div><div class="stat-sub" id="d-mrr-sub">14-day free trial active</div></div>
+  <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">0</div><div class="stat-sub"><span class="badge badge-green">All clear</span></div></div>
 </div>
 <div class="grid2" style="margin-bottom:20px">
   <div class="card">
-    <div class="card-title">Your Products <a class="btn btn-ghost btn-sm" onclick="nav('modules')">Manage →</a></div>
+    <div class="card-title">Your Products <a class="btn btn-ghost btn-sm" onclick="nav('products')">Manage →</a></div>
     <div id="product-list"></div>
   </div>
   <div class="card">
@@ -469,6 +570,11 @@ dashboard: `
   </div>
 </div>`,
 
+products: `
+<div class="page-title">Products</div>
+<div class="page-sub">Manage your active products and add new ones to your workspace.</div>
+<div id="prod-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:8px"></div>`,
+
 modules: `
 <div class="page-title">Modules</div>
 <div class="page-sub">Enable or disable platform modules. Changes apply immediately.</div>
@@ -479,9 +585,9 @@ users: `
 <div class="page-title">Users &amp; Teams</div>
 <div class="page-sub">Manage access, roles, and seat allocation.</div>
 <div class="grid3" style="margin-bottom:20px">
-  <div class="stat-card"><div class="stat-label">Seats Used</div><div class="stat-val" id="u-used">7 / 10</div><div class="stat-sub">3 seats available</div></div>
-  <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-val">2</div><div class="stat-sub">Full access</div></div>
-  <div class="stat-card"><div class="stat-label">Last Invited</div><div class="stat-val" style="font-size:1rem">3 days ago</div><div class="stat-sub">sara@company.com</div></div>
+  <div class="stat-card"><div class="stat-label">Seats Used</div><div class="stat-val" id="u-used">1 / —</div><div class="stat-sub" id="u-avail">—</div></div>
+  <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-val">1</div><div class="stat-sub">Full access</div></div>
+  <div class="stat-card"><div class="stat-label">Last Invited</div><div class="stat-val" style="font-size:1rem">—</div><div class="stat-sub">No invitations yet</div></div>
 </div>
 <div class="card">
   <div class="card-title">Team Members
@@ -702,22 +808,20 @@ const MODULES_DATA = [
   {id:'maintenance',name:'Maintenance',           cat:'Operations', icon:'🔧', desc:'Asset maintenance, work orders, and preventive scheduling.',  price:19,  included:false},
 ]
 
-const USERS_DATA = [
-  {name:'Umer Sheikh',   email:'umer@mumtaz.digital',    role:'Admin',     status:'active', last:'Just now',   mods:['crm','invoicing','hr']},
-  {name:'Sara Ahmed',    email:'sara@mumtaz.digital',    role:'Manager',   status:'active', last:'2h ago',     mods:['crm','project']},
-  {name:'Ali Hassan',    email:'ali@mumtaz.digital',     role:'User',      status:'active', last:'Yesterday',  mods:['inventory','purchase']},
-  {name:'Fatima Malik',  email:'fatima@mumtaz.digital',  role:'User',      status:'active', last:'3 days ago', mods:['accounting','invoicing']},
-  {name:'Omar Qureshi',  email:'omar@mumtaz.digital',    role:'User',      status:'active', last:'1 week ago', mods:['hr','timesheets']},
-  {name:'Zainab Raza',   email:'zainab@mumtaz.digital',  role:'Read Only', status:'inactive',last:'2 weeks ago',mods:['project']},
-  {name:'Bilal Khan',    email:'bilal@mumtaz.digital',   role:'User',      status:'active', last:'Today',      mods:['crm','expenses']},
-]
+// USERS_DATA is built dynamically from the logged-in user
+function buildUsersData(){
+  return [{
+    name:   P.user.name  || 'Account Owner',
+    email:  P.user.email || '',
+    role:   'Admin',
+    status: 'active',
+    last:   'Just now',
+    mods:   ['crm','invoicing','hr']
+  }]
+}
+const USERS_DATA = buildUsersData()
 
-const INVOICES_DATA = [
-  {id:'INV-2026-004', date:'Apr 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
-  {id:'INV-2026-003', date:'Mar 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
-  {id:'INV-2026-002', date:'Feb 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
-  {id:'INV-2026-001', date:'Jan 1 2026',  amount:'$399', plan:'Starter',status:'paid'},
-]
+const INVOICES_DATA = []
 
 const PLANS_DATA = [
   {id:'starter', name:'Starter', price:149, seats:3,  color:'var(--teal)',   features:['5 core modules','3 user seats','5 GB storage','Email support']},
@@ -725,13 +829,7 @@ const PLANS_DATA = [
   {id:'enterprise',name:'Enterprise',price:999,seats:50,color:'var(--purple)',features:['All modules + custom','Unlimited seats','100 GB storage','Dedicated CSM','Full white label','Custom integrations']},
 ]
 
-const ACTIVITY = [
-  {t:'2m ago',  icon:'👤', msg:'New user <b>Bilal Khan</b> added'},
-  {t:'1h ago',  icon:'🧾', msg:'Invoice <b>INV-2026-004</b> paid — $480'},
-  {t:'3h ago',  icon:'📦', msg:'Module <b>Inventory</b> enabled'},
-  {t:'Yesterday',icon:'🔑',msg:'API key generated for ERP integration'},
-  {t:'2d ago',  icon:'📣', msg:'<b>Marketing Automation</b> trial started'},
-]
+const ACTIVITY = []
 
 const FAQ_DATA = [
   {q:'How do I add more users?',       a:'Go to Users & Teams and click Invite User. Each seat is billed monthly.'},
@@ -747,7 +845,7 @@ if(!P.modules || !Object.keys(P.modules).length){
 }
 
 // ── Navigation ─────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',modules:'Modules',users:'Users & Teams',billing:'Billing & Plans',whitelabel:'White Label',settings:'Settings',support:'Support'}
+const PANEL_TITLES = {dashboard:'Dashboard',products:'Products',modules:'Modules',users:'Users & Teams',billing:'Billing & Plans',whitelabel:'White Label',settings:'Settings',support:'Support'}
 
 function nav(id){
   document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'))
@@ -763,6 +861,7 @@ function nav(id){
 
 function renderPanel(id){
   if(id==='dashboard')   renderDashboard()
+  if(id==='products')    renderProducts()
   if(id==='modules')     renderModules()
   if(id==='users')       renderUsers()
   if(id==='billing')     renderBilling()
@@ -777,22 +876,28 @@ function renderDashboard(){
   document.getElementById('dash-name').textContent = name
   document.getElementById('dash-co').textContent = P.user.company || 'your company'
   const active = MODULES_DATA.filter(m => P.modules[m.id])
+  const plan = PLANS_DATA.find(p=>p.id===P.plan)||PLANS_DATA[1]
   document.getElementById('d-mods').textContent = active.length
+  document.getElementById('d-mods-sub').textContent = (MODULES_DATA.length - active.length) + ' available to add'
   document.getElementById('d-users').textContent = P.seatsUsed
-  // Products
-  const prods = [
-    {name:'Mumtaz ERP',    icon:'🏢', url:'https://erp.mumtaz.digital',  status:'active'},
-    {name:'ZAKI AI CFO',   icon:'🤖', url:'https://zaki.mumtaz.digital', status:'active'},
-    {name:'Marketplace',   icon:'🛒', url:'https://marketplace.mumtaz.digital', status:'coming'},
-  ]
-  document.getElementById('product-list').innerHTML = prods.map(p=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:1.2rem">${p.icon}</span>
-      <span style="font-size:.85rem;font-weight:500;flex:1">${p.name}</span>
-      ${p.status==='active'
-        ? `<a href="${p.url}" target="_blank" class="btn btn-outline btn-sm">Open →</a>`
-        : `<span class="badge badge-gray">Soon</span>`}
-    </div>`).join('')
+  document.getElementById('d-users-sub').textContent = 'of ' + P.seats + ' seats used'
+  document.getElementById('d-mrr').textContent = '$' + plan.price + '/mo'
+  document.getElementById('u-used').textContent = P.seatsUsed + ' / ' + P.seats
+  document.getElementById('u-avail').textContent = (P.seats - P.seatsUsed) + ' seats available'
+  // Products — dynamic from PRODUCTS_CATALOG + P.products
+  document.getElementById('product-list').innerHTML = (typeof PRODUCTS_CATALOG !== 'undefined' ? PRODUCTS_CATALOG : []).map(prod=>{
+    const on = !!(P.products && P.products[prod.id])
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.2rem">${prod.icon}</span>
+      <span style="font-size:.85rem;font-weight:500;flex:1">${prod.name}</span>
+      ${on
+        ? `<a href="${prod.url}" target="_blank" class="btn btn-outline btn-sm">Open →</a>`
+        : `<button onclick="nav('products')" class="btn btn-ghost btn-sm" style="color:var(--indigo)">+ Add</button>`}
+    </div>`
+  }).join('')
+  // Update products sidebar badge
+  const prodBadge = document.getElementById('sb-prod-badge')
+  if(prodBadge && P.products) prodBadge.textContent = Object.values(P.products).filter(Boolean).length
   // Seats
   const pct = Math.round(P.seatsUsed/P.seats*100)
   document.getElementById('seat-label').textContent = `${P.seatsUsed} of ${P.seats} seats used`
@@ -813,50 +918,197 @@ function renderDashboard(){
     <span>${a.icon}</span><span style="font-size:.83rem">${a.label}</span>
   </button>`).join('')
   // Activity
-  document.getElementById('activity-feed').innerHTML = ACTIVITY.map(a=>`
-    <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:1rem">${a.icon}</span>
-      <div><div style="line-height:1.4">${a.msg}</div><div style="font-size:.72rem;color:var(--text-3);margin-top:2px">${a.t}</div></div>
-    </div>`).join('')
+  document.getElementById('activity-feed').innerHTML = ACTIVITY.length
+    ? ACTIVITY.map(a=>`
+      <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:1rem">${a.icon}</span>
+        <div><div style="line-height:1.4">${a.msg}</div><div style="font-size:.72rem;color:var(--text-3);margin-top:2px">${a.t}</div></div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:24px 0;color:var(--text-3);font-size:.82rem">No activity yet — actions will appear here</div>'
+}
+
+// ── Products ───────────────────────────────────────────
+const PRODUCTS_CATALOG = [
+  {
+    id: 'erp',
+    name: 'ERP Suite',
+    icon: '🏢',
+    color: '#6366f1',
+    bg: 'rgba(99,102,241,.08)',
+    tagline: 'Full-featured business operations platform',
+    features: ['CRM & Sales', 'Accounting & Invoicing', 'Inventory & Warehouse', 'HR & Payroll', 'Projects & Timesheets'],
+    price: 'Included',
+    priceNote: 'in your plan',
+    url: 'https://erp.mumtaz.digital',
+    core: true,
+  },
+  {
+    id: 'zaki',
+    name: 'ZAKI AI CFO',
+    icon: '🤖',
+    color: '#8b5cf6',
+    bg: 'rgba(139,92,246,.08)',
+    tagline: 'AI-powered financial intelligence & forecasting',
+    features: ['Cash flow forecasting', 'Spend analysis & alerts', 'Invoice automation', 'Financial Q&A chat', 'Board-ready reports'],
+    price: '$99',
+    priceNote: '/month add-on',
+    url: 'https://zaki.mumtaz.digital',
+    core: false,
+  },
+  {
+    id: 'marketplace',
+    name: 'B2B Marketplace',
+    icon: '🛒',
+    color: '#10b981',
+    bg: 'rgba(16,185,129,.08)',
+    tagline: 'Connect with verified suppliers and buyers',
+    features: ['Supplier discovery', 'RFQ & procurement', 'Vendor portal', 'Order tracking', 'Analytics dashboard'],
+    price: '$49',
+    priceNote: '/month add-on',
+    url: 'https://marketplace.mumtaz.digital',
+    core: false,
+  },
+]
+
+if(!P.products) P.products = { erp: true, zaki: false, marketplace: false }
+
+function renderProducts(){
+  const grid = document.getElementById('prod-grid')
+  if(!grid) return
+  const active = PRODUCTS_CATALOG.filter(p => P.products[p.id])
+  const inactive = PRODUCTS_CATALOG.filter(p => !P.products[p.id])
+  // Update sidebar badge
+  const badge = document.getElementById('sb-prod-badge')
+  if(badge) badge.textContent = active.length
+
+  grid.innerHTML = PRODUCTS_CATALOG.map(prod => {
+    const isActive = !!P.products[prod.id]
+    return `
+    <div class="card" style="border:1.5px solid ${isActive ? prod.color+'44' : 'var(--border)'};transition:border .2s">
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px">
+        <div style="width:48px;height:48px;border-radius:12px;background:${prod.bg};display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">${prod.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-weight:700;font-size:1rem;color:var(--text)">${prod.name}</span>
+            ${prod.core ? '<span class="sb-badge" style="background:rgba(16,185,129,.1);color:var(--green);font-size:.6rem">CORE</span>' : ''}
+            ${isActive ? '<span class="sb-badge badge-indigo" style="font-size:.6rem">ACTIVE</span>' : ''}
+          </div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:2px">${prod.tagline}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-weight:700;color:${prod.color};font-size:1rem">${prod.price}</div>
+          <div style="font-size:.7rem;color:var(--muted)">${prod.priceNote}</div>
+        </div>
+      </div>
+      <ul style="list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:5px">
+        ${prod.features.map(f => `<li style="font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${prod.color}" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${f}</li>`).join('')}
+      </ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${isActive
+          ? `<a href="${prod.url}" target="_blank" class="btn btn-grad btn-sm" style="background:${prod.color};border-color:${prod.color}">Open ${prod.name} →</a>`
+          : ''
+        }
+        ${!prod.core
+          ? `<button onclick="toggleProduct('${prod.id}')" class="btn ${isActive ? 'btn-outline' : 'btn-grad'} btn-sm" style="${isActive ? '' : 'background:'+prod.color+';border-color:'+prod.color}">${isActive ? 'Disable' : 'Enable'}</button>`
+          : `<button class="btn btn-outline btn-sm" disabled title="Core product cannot be disabled">Core — Always On</button>`
+        }
+      </div>
+    </div>`
+  }).join('')
+}
+
+function toggleProduct(id){
+  if(!P.products) P.products = {}
+  const enabling = !P.products[id]
+  if(enabling && id === 'zaki'){
+    openZakiWizard()
+    return
+  }
+  P.products[id] = enabling
+  save()
+  renderProducts()
+  renderDashboard()
+  const prod = PRODUCTS_CATALOG.find(p => p.id === id)
+  showToast(enabling ? `${prod.name} enabled!` : `${prod.name} disabled`)
 }
 
 // ── Modules ────────────────────────────────────────────
 let modFilter = 'All'
-function renderModules(){
+let modSyncing = {}  // track which modules are currently installing
+
+async function renderModules(){
   const cats = ['All',...new Set(MODULES_DATA.map(m=>m.cat))]
   document.getElementById('mod-filters').innerHTML = cats.map(c=>`
-    <button onclick="setModFilter('${c}')" class="btn ${c===modFilter?'btn-grad':'btn-outline'} btn-sm" id="mf-${c.replace(/\s/g,'')}">${c}</button>`).join('')
+    <button onclick="setModFilter('${c}')" class="btn ${c===modFilter?'btn-grad':'btn-outline'} btn-sm">${c}</button>`).join('')
+  // Fetch real states from Odoo ERP
+  try {
+    const data = await apiFetch('/modules')
+    if(data.modules) {
+      Object.assign(P.modules, data.modules)
+      save()
+    }
+  } catch(e) {
+    console.warn('Could not sync module states from ERP:', e)
+  }
   renderModGrid()
 }
-function setModFilter(c){ modFilter=c; renderModules() }
+function setModFilter(c){ modFilter=c; renderModGrid() }
 function renderModGrid(){
   const list = modFilter==='All' ? MODULES_DATA : MODULES_DATA.filter(m=>m.cat===modFilter)
-  document.getElementById('mod-grid').innerHTML = list.map(m=>`
-    <div class="card" style="transition:box-shadow var(--tr)" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow=''">
+  document.getElementById('mod-grid').innerHTML = list.map(m=>{
+    const syncing = modSyncing[m.id]
+    const enabled = P.modules[m.id]
+    const erpLink = enabled
+      ? `<a href="http://erp.mumtaz.digital/odoo/${m.id.replace('_','-')}" target="_blank"
+           style="font-size:.7rem;color:var(--indigo);font-weight:600;margin-top:6px;display:inline-block">Open in ERP →</a>`
+      : ''
+    return `<div class="card" style="transition:box-shadow var(--tr);${syncing?'opacity:.7':''}">
       <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
         <span style="font-size:1.6rem">${m.icon}</span>
         <div style="flex:1">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:2px">${m.name}</div>
           <span class="badge ${m.included?'badge-green':'badge-blue'}">${m.included?'Included':'Add-on'}</span>
           ${!m.included?`<span style="font-size:.75rem;color:var(--text-3);margin-left:6px">$${m.price}/mo</span>`:''}
+          ${syncing?`<span style="font-size:.72rem;color:var(--amber);margin-left:6px">⟳ ${enabled?'Installing…':'Uninstalling…'}</span>`:''}
         </div>
-        <label class="toggle"><input type="checkbox" ${P.modules[m.id]?'checked':''} onchange="toggleMod('${m.id}',this.checked)"><span class="toggle-slider"></span></label>
+        <label class="toggle" style="${syncing?'pointer-events:none;opacity:.5':''}">
+          <input type="checkbox" ${enabled?'checked':''} onchange="toggleMod('${m.id}',this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
       <div style="font-size:.78rem;color:var(--text-2);line-height:1.5">${m.desc}</div>
-      <div style="margin-top:10px;font-size:.72rem;color:var(--text-3)">Category: ${m.cat}</div>
-    </div>`).join('')
-  // Update sidebar badge
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+        <span style="font-size:.72rem;color:var(--text-3)">Category: ${m.cat}</span>
+        ${erpLink}
+      </div>
+    </div>`
+  }).join('')
   const cnt = MODULES_DATA.filter(m=>P.modules[m.id]).length
   const el = document.getElementById('sb-mod-count')
   if(el) el.textContent = cnt
 }
-function toggleMod(id, val){
+async function toggleMod(id, val){
+  const m = MODULES_DATA.find(x=>x.id===id)
+  // Core modules always stay installed
+  if(m?.included && !val){ showToast('Core modules cannot be disabled','error'); renderModGrid(); return }
   P.modules[id] = val
   save()
-  showToast(val ? 'Module enabled' : 'Module disabled')
-  const cnt = MODULES_DATA.filter(m=>P.modules[m.id]).length
-  const el = document.getElementById('sb-mod-count')
-  if(el) el.textContent = cnt
+  renderModGrid()
+  modSyncing[id] = true
+  renderModGrid()
+  try {
+    await apiFetch(val ? '/modules/install' : '/modules/uninstall', {
+      method:'POST', body:JSON.stringify({module_id:id})
+    })
+    showToast(val ? `${m?.name||id} installed in ERP` : `${m?.name||id} removed from ERP`)
+  } catch(e) {
+    showToast(`ERP sync failed: ${e.message}`,'error')
+    P.modules[id] = !val  // revert
+    save()
+  } finally {
+    delete modSyncing[id]
+    renderModGrid()
+  }
 }
 
 // ── Users ──────────────────────────────────────────────
@@ -903,7 +1155,7 @@ function renderBilling(){
     <span><b>${plan.seats}</b> seats</span>
     <span>Next bill: <b>May 18, 2026</b></span>`
   // Usage meters
-  const meters = [{label:'Seats',used:P.seatsUsed,total:P.seats,unit:'users'},{label:'Storage',used:8.4,total:25,unit:'GB'},{label:'API Calls',used:12400,total:50000,unit:'calls'}]
+  const meters = [{label:'Seats',used:P.seatsUsed,total:P.seats,unit:'users'},{label:'Storage',used:0,total:25,unit:'GB'},{label:'API Calls',used:0,total:50000,unit:'calls'}]
   document.getElementById('usage-meters').innerHTML = meters.map(m=>{
     const p=Math.round(m.used/m.total*100)
     return `<div style="margin-bottom:12px">
@@ -920,7 +1172,8 @@ function renderBilling(){
       </button>
     </div>`).join('')
   // Invoices
-  document.getElementById('invoices-tbody').innerHTML = INVOICES_DATA.map(inv=>`
+  document.getElementById('invoices-tbody').innerHTML = INVOICES_DATA.length
+    ? INVOICES_DATA.map(inv=>`
     <tr>
       <td style="font-weight:600">${inv.id}</td>
       <td>${inv.date}</td>
@@ -929,6 +1182,7 @@ function renderBilling(){
       <td><span class="badge badge-green">${inv.status}</span></td>
       <td><button class="btn btn-ghost btn-sm">PDF</button></td>
     </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-3);font-size:.82rem">No invoices yet — your first bill will appear after your free trial</td></tr>'
 }
 function selectPlan(id){
   if(id===P.plan){showToast('Already on this plan');return}
@@ -1074,11 +1328,17 @@ let obData = {
   products:{erp:true, zaki:false, marketplace:false},
   erpMods:{}, plan:'growth'
 }
-const OB_STEPS = ['Company','Products','ERP Modules','Plan','Review']
+const OB_STEPS = [
+  {label:'Company Profile', desc:'Your business details'},
+  {label:'Choose Products', desc:'Select your modules'},
+  {label:'ERP Modules',     desc:'Customize your stack'},
+  {label:'Your Plan',       desc:'Pricing & features'},
+  {label:'Review & Launch', desc:'Confirm & activate'},
+]
 const OB_PRODS = [
-  {id:'erp',         name:'Mumtaz ERP',     icon:'🏢', desc:'Full business management — CRM, accounting, inventory, HR & more.',  price:'From $149/mo'},
-  {id:'zaki',        name:'ZAKI AI CFO',    icon:'🤖', desc:'AI-powered CFO with live P&L, cash flow forecasting & insights.',     price:'$79/mo add-on'},
-  {id:'marketplace', name:'Marketplace',    icon:'🛒', desc:'List & sell on the Mumtaz B2B marketplace across the UAE & GCC.',    price:'Free + 2% fee'},
+  {id:'erp',         icon:'🏢', color:'#6366f1', bg:'rgba(99,102,241,.1)',  name:'Mumtaz ERP',     tag:'Core Platform',       features:['CRM & Sales Pipeline','Accounting & Finance','Inventory & Warehouse','HR & Payroll','Project Management'], price:'From $149/mo'},
+  {id:'zaki',        icon:'🤖', color:'#8b5cf6', bg:'rgba(139,92,246,.1)', name:'ZAKI AI CFO',    tag:'AI Financial Advisor', features:['Live P&L & Cash Flow','AI-Powered Forecasting','Expense Analytics','Budget Alerts','Financial Reports'],   price:'$79/mo add-on'},
+  {id:'marketplace', icon:'🛒', color:'#14b8a6', bg:'rgba(20,184,166,.1)', name:'B2B Marketplace', tag:'Sales Channel',        features:['Storefront & Listings','RFQ Management','Buyer Discovery','UAE & GCC Market','Sales Analytics'],          price:'Free + 2% fee'},
 ]
 const OB_CORE_MODS = ['crm','invoicing','inventory','purchase','hr','project','expenses','timesheets']
 
@@ -1094,14 +1354,17 @@ function startOnboarding(){
 
 function obRender(){
   const skip3 = !obData.products.erp
-  document.getElementById('ob-steps-bar').innerHTML = '<div class="ob-steps">'+
-    OB_STEPS.map((s,i)=>{
-      const n=i+1, skip=n===3&&skip3, done=n<obStep, active=n===obStep
-      const line = i>0 ? '<div class="ob-step-line '+(done&&!skip?'done':'')+'"></div>' : ''
-      return line+'<div class="ob-step '+(done&&!skip?'done':'')+' '+(active?'active':'')+'">'
-        +'<div class="ob-step-num">'+(done&&!skip?'✓':n)+'</div>'
-        +'<span style="'+(skip?'opacity:.35;text-decoration:line-through':'')+'">'+s+'</span></div>'
-    }).join('')+'</div>'
+  const total = skip3 ? 4 : 5
+  const pct = Math.round(((obStep-1) / total) * 100)
+  document.getElementById('ob-progress-fill').style.width = pct + '%'
+  document.getElementById('ob-step-list').innerHTML = OB_STEPS.map((s,i)=>{
+    const n=i+1, skip=n===3&&skip3, done=n<obStep, active=n===obStep
+    if(skip) return ''
+    return '<div class="ob-sl-item '+(done?'done':active?'active':'')+'">'
+      +'<div class="ob-sl-num">'+(done?'✓':n)+'</div>'
+      +'<div><div class="ob-sl-label">'+s.label+'</div><div class="ob-sl-desc">'+s.desc+'</div></div>'
+      +'</div>'
+  }).join('')
   const fn = [null,obS1,obS2,obS3,obS4,obS5][obStep]
   document.getElementById('ob-step-content').innerHTML = fn ? fn() : ''
 }
@@ -1154,127 +1417,142 @@ function obLaunch(){
 }
 
 function obS1(){
-  const ss='width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)'
+  const ss='width:100%;padding:10px 13px;background:var(--surface);border:1.5px solid var(--border-2);border-radius:9px;font-size:.875rem;color:var(--text);font-family:var(--font)'
   const opt=(v,cur)=>'<option '+(cur===v?'selected':'')+'>'+v+'</option>'
   const teams=['1-5','6-15','16-50','51-200','200+']
-  return '<div class="ob-card">'
-    +'<div class="ob-title">Tell us about your company</div>'
-    +'<div class="ob-sub">Helps us personalise your setup and recommend the right modules.</div>'
-    +'<div class="field"><label>Company Name</label><input id="ob1-co" placeholder="Acme LLC" value="'+obData.company.replace(/"/g,'&quot;')+'"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div class="field"><label>Industry</label><select id="ob1-ind" style="'+ss+'">'
-    +['Technology','Retail','Manufacturing','Professional Services','Healthcare','Real Estate','Finance','Other'].map(v=>opt(v,obData.industry)).join('')
+  return '<div class="ob-step-tag">Step 1 of 5</div>'
+    +'<div class="ob-h1">Tell us about your company</div>'
+    +'<div class="ob-p">We\'ll personalise your setup and recommend the right tools for your team and industry.</div>'
+    +'<div class="ob-body">'
+    +'<div class="ob-field"><label>Company Name</label><input id="ob1-co" placeholder="e.g. Acme Trading LLC" value="'+obData.company.replace(/"/g,'&quot;')+'"></div>'
+    +'<div class="ob-grid-2">'
+    +'<div class="ob-field"><label>Industry</label><select id="ob1-ind" style="'+ss+'">'
+    +['Technology','Retail','Manufacturing','Professional Services','Healthcare','Real Estate','Finance','Logistics','Other'].map(v=>opt(v,obData.industry)).join('')
     +'</select></div>'
-    +'<div class="field"><label>Country</label><select id="ob1-cty" style="'+ss+'">'
+    +'<div class="ob-field"><label>Country</label><select id="ob1-cty" style="'+ss+'">'
     +['United Arab Emirates','Saudi Arabia','Pakistan','United Kingdom','United States','Other'].map(v=>opt(v,obData.country)).join('')
     +'</select></div></div>'
-    +'<div class="field"><label>Team Size</label>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">'
-    +teams.map(s=>'<button type="button" onclick="obSetTeam(\''+s+'\')" class="btn btn-sm '+(obData.teamSize===s?'btn-grad':'btn-outline')+'">'+s+' people</button>').join('')
-    +'</div></div></div>'
-    +'<div class="ob-foot"><div style="font-size:.8rem;color:var(--text-3)">Step 1 of 5 — Company Profile</div>'
-    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+    +'<div class="ob-field"><label>Team Size</label>'
+    +'<div class="team-btns">'
+    +teams.map(s=>'<button type="button" onclick="obSetTeam(\''+s+'\')" class="team-btn'+(obData.teamSize===s?' active':'')+'" >'+s+' people</button>').join('')
+    +'</div></div>'
+    +'</div>'
+    +'<div class="ob-foot"><div style="font-size:.78rem;color:var(--text-3)">Company name is required to continue</div>'
+    +'<button class="btn btn-grad" style="padding:11px 24px" onclick="obNext()">Continue →</button></div>'
 }
 
 function obS2(){
-  const cards = OB_PRODS.map(p=>'<div class="prod-card'+(obData.products[p.id]?' selected':'')+'" onclick="obToggleProd(\''+p.id+'\')">'
-    +'<div class="prod-icon">'+p.icon+'</div>'
-    +'<div class="prod-name">'+p.name+'</div>'
-    +'<div class="prod-desc">'+p.desc+'</div>'
-    +'<div class="prod-price">'+p.price+'</div></div>').join('')
-  return '<div class="ob-card">'
-    +'<div class="ob-title">Choose your products</div>'
-    +'<div class="ob-sub">Select everything you want to activate. You can add more later.</div>'
+  const cards = OB_PRODS.map(p=>{
+    const sel = obData.products[p.id]
+    return '<div class="prod-card'+(sel?' selected':'')+'" onclick="obToggleProd(\''+p.id+'\')">'
+      +'<div class="prod-check">✓</div>'
+      +'<div class="prod-icon-wrap" style="background:'+p.bg+'">'+p.icon+'</div>'
+      +'<div class="prod-name">'+p.name+'</div>'
+      +'<div class="prod-tag" style="color:'+p.color+'">'+p.tag+'</div>'
+      +'<ul class="prod-features">'+p.features.map(f=>'<li>'+f+'</li>').join('')+'</ul>'
+      +'<div class="prod-price-line" style="color:'+p.color+'">'+p.price+'</div>'
+      +'</div>'
+  }).join('')
+  return '<div class="ob-step-tag">Step 2 of 5</div>'
+    +'<div class="ob-h1">Choose your products</div>'
+    +'<div class="ob-p">Select what you want to activate. All products work together seamlessly — you can add or remove anytime.</div>'
+    +'<div class="ob-body">'
     +'<div class="prod-grid">'+cards+'</div>'
-    +'<div style="font-size:.78rem;color:var(--text-3);margin-top:12px">💡 ERP includes 8 core modules free. Premium add-ons can be enabled later.</div>'
+    +'<div style="font-size:.75rem;color:var(--text-2);margin-top:16px;padding:11px 14px;background:var(--bg-1);border-radius:9px;border:1px solid var(--border)">'
+    +'💡 <b>ERP</b> is your core platform. <b>ZAKI</b> adds AI financial intelligence. <b>Marketplace</b> connects you to GCC buyers.'
     +'</div>'
-    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
-    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+    +'</div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" style="padding:11px 20px" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" style="padding:11px 24px" onclick="obNext()">Continue →</button></div>'
 }
 
 function obS3(){
   const core = MODULES_DATA.filter(m=>OB_CORE_MODS.includes(m.id))
   const prem = MODULES_DATA.filter(m=>!OB_CORE_MODS.includes(m.id))
-  const coreHtml = core.map(m=>'<div class="ob-mod core"><div class="ob-mod-icon">'+m.icon+'</div><div class="ob-mod-info"><div class="ob-mod-name">'+m.name+'</div><div class="ob-mod-tag">Included free</div></div></div>').join('')
+  const coreHtml = core.map(m=>'<div class="ob-mod core">'
+    +'<div class="ob-mod-icon">'+m.icon+'</div>'
+    +'<div><div class="ob-mod-name">'+m.name+'</div><div class="ob-mod-tag" style="color:var(--green)">✓ Free</div></div>'
+    +'</div>').join('')
   const premHtml = prem.map(m=>'<div class="ob-mod'+(obData.erpMods[m.id]?' selected':'')+'" onclick="obToggleMod(\''+m.id+'\')">'
     +'<div class="ob-mod-icon">'+m.icon+'</div>'
-    +'<div class="ob-mod-info"><div class="ob-mod-name">'+m.name+'</div><div class="ob-mod-tag">$'+m.price+'/mo</div></div></div>').join('')
-  return '<div class="ob-card">'
-    +'<div class="ob-title">Choose your ERP modules</div>'
-    +'<div class="ob-sub">Core modules are included in all plans. Add premium modules anytime.</div>'
-    +'<div style="font-size:.8rem;font-weight:600;color:var(--green);margin-bottom:8px">✓ Included in all plans</div>'
+    +'<div><div class="ob-mod-name">'+m.name+'</div><div class="ob-mod-tag">+$'+m.price+'/mo</div></div>'
+    +'</div>').join('')
+  return '<div class="ob-step-tag">Step 3 of 5</div>'
+    +'<div class="ob-h1">Customize your ERP</div>'
+    +'<div class="ob-p">8 core modules are included free in every plan. Click any premium add-on to include it.</div>'
+    +'<div class="ob-body">'
+    +'<div style="font-size:.75rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">✓ Included in all plans</div>'
     +'<div class="ob-mod-grid" style="margin-bottom:20px">'+coreHtml+'</div>'
-    +'<div style="font-size:.8rem;font-weight:600;color:var(--text-2);margin-bottom:8px">Premium add-ons <span style="color:var(--text-3);font-weight:400">(click to add)</span></div>'
+    +'<div style="font-size:.75rem;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Premium add-ons <span style="font-weight:400;text-transform:none;letter-spacing:0">(click to activate)</span></div>'
     +'<div class="ob-mod-grid">'+premHtml+'</div>'
     +'</div>'
-    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
-    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" style="padding:11px 20px" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" style="padding:11px 24px" onclick="obNext()">Continue →</button></div>'
 }
 
 function obS4(){
   const addons = MODULES_DATA.filter(m=>!OB_CORE_MODS.includes(m.id)&&obData.erpMods[m.id]).reduce((s,m)=>s+m.price,0)
   const zakiCost = obData.products.zaki ? 79 : 0
   const plans = [
-    {id:'starter',    name:'Starter',    price:149, seats:3,  desc:'Best for small teams.',          highlight:false},
-    {id:'growth',     name:'Growth',     price:399, seats:10, desc:'Most popular for growing teams.', highlight:true},
-    {id:'enterprise', name:'Enterprise', price:999, seats:50, desc:'Full power for large orgs.',     highlight:false},
+    {id:'starter',    name:'Starter',    price:149, seats:3,  popular:false, feats:['Up to 3 users','All 8 core ERP modules','Email support','Basic reporting','14-day free trial']},
+    {id:'growth',     name:'Growth',     price:399, seats:10, popular:true,  feats:['Up to 10 users','All core modules + add-ons','Priority support','Advanced analytics','White-label option','14-day free trial']},
+    {id:'enterprise', name:'Enterprise', price:999, seats:50, popular:false, feats:['Up to 50 users','Unlimited modules','Dedicated support','Custom integrations','White-label + custom domain','SLA guarantee']},
   ]
   const planHtml = plans.map(pl=>{
-    const sel = obData.plan===pl.id ? 'selected' : ''
-    const hlStyle = pl.highlight ? ' style="border-color:var(--indigo)"' : ''
-    const pop = pl.highlight ? '<div style="font-size:.7rem;font-weight:700;color:var(--indigo);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Most Popular</div>' : ''
-    const extras = (pl.id==='enterprise'?'<div class="ob-plan-feature">✓ Unlimited custom</div>':'')+(pl.id!=='starter'?'<div class="ob-plan-feature">✓ White label</div>':'')
-    return '<div class="ob-plan '+sel+'"'+hlStyle+' onclick="obSelectPlan(\''+pl.id+'\')">'
-      +pop
+    const sel = obData.plan===pl.id
+    return '<div class="ob-plan'+(sel?' selected':'')+(pl.popular?' popular':'')+'" onclick="obSelectPlan(\''+pl.id+'\')">'
+      +(pl.popular?'<div class="ob-plan-badge">Most Popular</div>':'<div style="height:22px"></div>')
       +'<div class="ob-plan-name">'+pl.name+'</div>'
-      +'<div class="ob-plan-price">$'+pl.price+'<span style="font-size:.9rem;font-weight:400;color:var(--text-2)">/mo</span></div>'
-      +'<div class="ob-plan-feature">✓ Up to '+pl.seats+' users</div>'
-      +'<div class="ob-plan-feature">✓ All core modules</div>'
-      +extras
-      +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-2)">'+pl.desc+'</div></div>'
+      +'<div class="ob-plan-price">$'+pl.price+'</div>'
+      +'<div class="ob-plan-period">per month · up to '+pl.seats+' users</div>'
+      +'<ul class="ob-plan-feats">'+pl.feats.map(f=>'<li>'+f+'</li>').join('')+'</ul>'
+      +'</div>'
   }).join('')
   const curPlan = plans.find(p=>p.id===obData.plan)
   const total = (curPlan?curPlan.price:0) + addons + zakiCost
-  const estRows = []
-  if(curPlan) estRows.push('<div class="ob-summary-row"><span>Base plan ('+curPlan.name+')</span><span>$'+curPlan.price+'/mo</span></div>')
-  if(addons)  estRows.push('<div class="ob-summary-row"><span>ERP add-on modules</span><span>+$'+addons+'/mo</span></div>')
-  if(zakiCost) estRows.push('<div class="ob-summary-row"><span>ZAKI AI CFO</span><span>+$'+zakiCost+'/mo</span></div>')
-  if(addons||zakiCost) estRows.push('<div class="ob-summary-row"><span><b>Estimated total</b></span><span><b>$'+total+'/mo</b></span></div>')
-  const estimate = estRows.length ? '<div style="margin-top:14px;padding:12px 16px;background:var(--bg-1);border-radius:8px;font-size:.82rem">'+estRows.join('')+'</div>' : ''
-  return '<div class="ob-card">'
-    +'<div class="ob-title">Choose your plan</div>'
-    +'<div class="ob-sub">All plans include a 14-day free trial. No credit card required.</div>'
-    +'<div class="ob-plan-grid">'+planHtml+'</div>'+estimate
+  const stepN = obData.products.erp ? '4 of 5' : '3 of 4'
+  return '<div class="ob-step-tag">Step '+stepN+'</div>'
+    +'<div class="ob-h1">Choose your plan</div>'
+    +'<div class="ob-p">All plans start with a 14-day free trial. No credit card required. Cancel or change anytime.</div>'
+    +'<div class="ob-body">'
+    +'<div class="ob-plan-grid">'+planHtml+'</div>'
+    +(addons||zakiCost?'<div style="margin-top:16px;padding:12px 16px;background:var(--bg-1);border-radius:9px;border:1px solid var(--border);font-size:.8rem;display:flex;justify-content:space-between"><span style="color:var(--text-2)">Estimated monthly total</span><span style="font-weight:700;color:var(--indigo)">$'+total+'/mo</span></div>':'')
     +'</div>'
-    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
-    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" style="padding:11px 20px" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" style="padding:11px 24px" onclick="obNext()">Continue →</button></div>'
 }
 
 function obS5(){
   const plan = PLANS_DATA.find(p=>p.id===obData.plan)||PLANS_DATA[1]
-  const selProds = OB_PRODS.filter(p=>obData.products[p.id]).map(p=>p.name).join(', ')||'None'
+  const selProds = OB_PRODS.filter(p=>obData.products[p.id])
   const premMods = MODULES_DATA.filter(m=>!OB_CORE_MODS.includes(m.id)&&obData.erpMods[m.id])
   const addons = premMods.reduce((s,m)=>s+m.price,0)
   const zakiCost = obData.products.zaki ? 79 : 0
   const total = plan.price + addons + zakiCost
-  const row = (k,v) => '<div class="ob-summary-row"><span style="color:var(--text-3)">'+k+'</span><span>'+v+'</span></div>'
-  let rows = row('Company', obData.company||'—')
-    + row('Industry', obData.industry)
-    + row('Country', obData.country)
-    + row('Team Size', obData.teamSize+' people')
-    + row('Products', selProds)
-  if(obData.products.erp) rows += row('ERP Core Modules', '8 modules included free')
-  if(premMods.length) rows += row('ERP Add-ons', premMods.map(m=>m.name).join(', '))
-  rows += row('Plan', plan.name)
-  rows += '<div class="ob-summary-row"><span>Monthly Total</span><span style="color:var(--indigo);font-weight:700">$'+total+'/mo</span></div>'
-  return '<div class="ob-card">'
-    +'<div class="ob-title">Review &amp; Launch</div>'
-    +'<div class="ob-sub">Everything look good? Click Launch to activate your 14-day free trial.</div>'
-    +rows
-    +'<div style="margin-top:14px;font-size:.75rem;color:var(--text-3)">✓ 14-day free trial &nbsp;·&nbsp; ✓ No credit card required &nbsp;·&nbsp; ✓ Cancel anytime</div>'
+  const card = (lbl,val) => '<div class="ob-review-card"><div class="ob-review-lbl">'+lbl+'</div><div class="ob-review-val">'+val+'</div></div>'
+  const taglist = (items) => '<div class="ob-review-tags">'+items.map(t=>'<span class="ob-review-tag">'+t+'</span>').join('')+'</div>'
+  const stepN = obData.products.erp ? '5 of 5' : '4 of 4'
+  return '<div class="ob-step-tag">Step '+stepN+'</div>'
+    +'<div class="ob-h1">Review & Launch</div>'
+    +'<div class="ob-p">Everything look good? You can change any of this later from your settings.</div>'
+    +'<div class="ob-body">'
+    +'<div class="ob-review-grid">'
+    +'<div class="ob-review-card"><div class="ob-review-lbl">Company</div><div class="ob-review-val">'+(obData.company||'—')+'</div><div style="font-size:.75rem;color:var(--text-2);margin-top:3px">'+(obData.industry||'')+' · '+(obData.country||'')+'</div></div>'
+    +'<div class="ob-review-card"><div class="ob-review-lbl">Team Size</div><div class="ob-review-val">'+(obData.teamSize||'Not set')+' people</div></div>'
+    +'<div class="ob-review-card" style="grid-column:1/-1"><div class="ob-review-lbl">Active Products</div>'
+    +taglist(selProds.map(p=>p.name))
+    +(obData.products.erp&&premMods.length?'<div style="font-size:.72rem;color:var(--text-3);margin-top:6px">+ '+premMods.map(m=>m.name).join(', ')+'</div>':'')
     +'</div>'
-    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
-    +'<button class="btn btn-grad" style="padding:11px 28px;font-size:.95rem" onclick="obLaunch()">🚀 Launch My Account</button></div>'
+    +'<div class="ob-review-card"><div class="ob-review-lbl">Selected Plan</div><div class="ob-review-val">'+plan.name+'</div><div style="font-size:.75rem;color:var(--text-2);margin-top:3px">$'+plan.price+'/mo base</div></div>'
+    +'<div class="ob-review-card"><div class="ob-review-lbl">Billing Period</div><div class="ob-review-val">Monthly</div><div style="font-size:.75rem;color:var(--green);margin-top:3px">14-day free trial</div></div>'
+    +'</div>'
+    +'<div class="ob-total-box">'
+    +'<div><div class="ob-total-lbl">Estimated Monthly Total</div><div style="font-size:.72rem;opacity:.65;margin-top:2px">After free trial · No card required today</div></div>'
+    +'<div class="ob-total-amt">$'+total+'/mo</div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" style="padding:11px 20px" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" style="padding:13px 32px;font-size:.95rem;gap:8px" onclick="obLaunch()"><span>🚀</span> Launch My Account</button></div>'
 }
 
 // ── Boot ───────────────────────────────────────────────
@@ -1301,6 +1579,334 @@ function bootApp(){
 load()
 if(TOKEN && P.user.email){ bootApp() }
 else { document.getElementById('auth').style.display='flex' }
+
+// ── ZAKI Wizard ────────────────────────────────────────
+const ZW_STEPS = [
+  {num:1, label:'Welcome'},
+  {num:2, label:'Business Profile'},
+  {num:3, label:'Your Goals'},
+  {num:4, label:'Preferences'},
+  {num:5, label:'Connect ERP'},
+  {num:6, label:'All Set!'},
+]
+
+let zwStep = 1
+const zwData = {}
+
+function openZakiWizard(){
+  zwStep = 1
+  document.getElementById('zaki-wizard').classList.add('open')
+  zwRender()
+}
+
+function closeZakiWizard(complete){
+  document.getElementById('zaki-wizard').classList.remove('open')
+  if(complete){
+    if(!P.products) P.products = {}
+    P.products.zaki = true
+    P.zaki = Object.assign({}, zwData)
+    save()
+    renderProducts()
+    renderDashboard()
+    showToast('ZAKI AI CFO enabled! Welcome aboard.')
+  }
+}
+
+function zwRender(){
+  // Sidebar
+  document.getElementById('zw-step-list').innerHTML = ZW_STEPS.map(s => {
+    const cls = s.num < zwStep ? 'done' : s.num === zwStep ? 'active' : ''
+    const icon = s.num < zwStep ? '✓' : s.num
+    return `<div class="zw-step ${cls}">
+      <div class="zw-step-num">${icon}</div>
+      <div class="zw-step-label">${s.label}</div>
+    </div>`
+  }).join('')
+  const pct = Math.round(((zwStep-1) / (ZW_STEPS.length-1)) * 100)
+  document.getElementById('zw-pfill').style.width = pct + '%'
+  // Content
+  const fn = [null, zwS1, zwS2, zwS3, zwS4, zwS5, zwS6][zwStep]
+  document.getElementById('zw-content').innerHTML = fn()
+  zwBindEvents()
+}
+
+function zwNext(){
+  if(zwStep < ZW_STEPS.length){ zwStep++; zwRender() }
+}
+function zwBack(){
+  if(zwStep > 1){ zwStep--; zwRender() }
+}
+
+function zwBindEvents(){
+  document.querySelectorAll('#zw-content .zw-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const grp = el.dataset.group
+      document.querySelectorAll(`[data-group="${grp}"]`).forEach(x=>x.classList.remove('sel'))
+      el.classList.add('sel')
+      zwData[grp] = el.dataset.value
+    })
+  })
+  document.querySelectorAll('#zw-content .zw-check-item').forEach(el => {
+    el.addEventListener('click', () => {
+      el.classList.toggle('sel')
+      const cb = el.querySelector('input[type=checkbox]')
+      if(cb){ cb.checked = el.classList.contains('sel') }
+      const grp = el.dataset.group
+      if(!zwData[grp]) zwData[grp] = []
+      const val = el.dataset.value
+      if(el.classList.contains('sel')){ if(!zwData[grp].includes(val)) zwData[grp].push(val) }
+      else { zwData[grp] = zwData[grp].filter(v=>v!==val) }
+    })
+  })
+  document.querySelectorAll('#zw-content select, #zw-content input').forEach(el => {
+    el.addEventListener('change', () => { zwData[el.name] = el.value })
+  })
+}
+
+function zwS1(){
+  return `
+  <div class="zw-tag">Step 1 of 6 — Introduction</div>
+  <div class="zw-title">Meet ZAKI,<br>your AI CFO</div>
+  <div class="zw-sub">ZAKI is an intelligent financial co-pilot that analyzes your business data, forecasts cash flow, and gives you CFO-grade insights — without hiring one.</div>
+  <div class="zw-welcome-hero">
+    <div class="zw-welcome-icon">🤖</div>
+    <div>
+      <div style="font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:6px">What ZAKI does for you</div>
+      <div style="font-size:.8rem;color:var(--text-2);line-height:1.7">Connects to your ERP data, reads your financials, and answers complex CFO questions in plain language. No spreadsheets. No waiting for month-end reports.</div>
+    </div>
+  </div>
+  <div class="zw-feature-list">
+    ${[
+      ['📊','Cash Flow Forecasting','Predict cash position 30, 60, 90 days ahead'],
+      ['💳','Spend Analysis','Categorize expenses and flag anomalies automatically'],
+      ['🧾','Invoice Intelligence','Track overdue invoices and aging receivables'],
+      ['📈','Financial Reports','Board-ready P&L, balance sheet, and KPI dashboards'],
+      ['💬','AI Chat','Ask anything — "What is my burn rate?" — and get instant answers'],
+    ].map(([icon,title,desc]) => `
+    <div class="zw-feature-row">
+      <div class="zw-feature-row-icon">${icon}</div>
+      <div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text)">${title}</div>
+        <div style="font-size:.75rem;color:var(--text-2)">${desc}</div>
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="zw-foot">
+    <button class="zw-btn-back" onclick="closeZakiWizard(false)">Cancel</button>
+    <button class="zw-btn-next" onclick="zwNext()">Get Started →</button>
+  </div>`
+}
+
+function zwS2(){
+  const industries = [
+    {icon:'🛒',label:'Retail & E-comm'},
+    {icon:'🏭',label:'Manufacturing'},
+    {icon:'💼',label:'Professional Services'},
+    {icon:'🏗️',label:'Construction'},
+    {icon:'🍽️',label:'Food & Beverage'},
+    {icon:'🏥',label:'Healthcare'},
+    {icon:'💻',label:'Technology'},
+    {icon:'📦',label:'Distribution'},
+  ]
+  return `
+  <div class="zw-tag">Step 2 of 6 — Business Profile</div>
+  <div class="zw-title">Tell us about<br>your business</div>
+  <div class="zw-sub">ZAKI tailors its analysis and benchmarks to your industry.</div>
+  <div style="margin-bottom:8px;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em">Industry</div>
+  <div class="zw-card-grid">
+    ${industries.map(i => `
+    <div class="zw-card ${zwData.industry===i.label?'sel':''}" data-group="industry" data-value="${i.label}">
+      <div class="zw-card-icon">${i.icon}</div>
+      <div class="zw-card-label">${i.label}</div>
+    </div>`).join('')}
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="zw-field">
+      <label>Company Size</label>
+      <select name="companySize">
+        <option value="">Select…</option>
+        <option ${zwData.companySize==='1-10'?'selected':''}>1-10 employees</option>
+        <option ${zwData.companySize==='11-50'?'selected':''}>11-50 employees</option>
+        <option ${zwData.companySize==='51-200'?'selected':''}>51-200 employees</option>
+        <option ${zwData.companySize==='200+'?'selected':''}>200+ employees</option>
+      </select>
+    </div>
+    <div class="zw-field">
+      <label>Annual Revenue</label>
+      <select name="revenue">
+        <option value="">Select…</option>
+        <option ${zwData.revenue==='<1M'?'selected':''}>Under $1M</option>
+        <option ${zwData.revenue==='1-5M'?'selected':''}>$1M – $5M</option>
+        <option ${zwData.revenue==='5-20M'?'selected':''}>$5M – $20M</option>
+        <option ${zwData.revenue==='20M+'?'selected':''}>$20M+</option>
+      </select>
+    </div>
+  </div>
+  <div class="zw-foot">
+    <button class="zw-btn-back" onclick="zwBack()">← Back</button>
+    <button class="zw-btn-next" onclick="zwNext()">Continue →</button>
+  </div>`
+}
+
+function zwS3(){
+  const goals = [
+    {icon:'💰',label:'Cash Flow Forecasting', val:'cashflow'},
+    {icon:'📉',label:'Expense Reduction', val:'expenses'},
+    {icon:'🧾',label:'Invoice Tracking', val:'invoices'},
+    {icon:'📊',label:'Financial Reports', val:'reports'},
+    {icon:'🎯',label:'Budget vs Actuals', val:'budget'},
+    {icon:'💬',label:'AI Financial Chat', val:'aichat'},
+    {icon:'⚠️',label:'Spend Alerts', val:'alerts'},
+    {icon:'📤',label:'Board Presentations', val:'board'},
+  ]
+  const sel = zwData.goals || []
+  return `
+  <div class="zw-tag">Step 3 of 6 — Your Goals</div>
+  <div class="zw-title">What do you want<br>ZAKI to help with?</div>
+  <div class="zw-sub">Select all that apply. ZAKI will prioritize these in your dashboard.</div>
+  <div class="zw-check-grid">
+    ${goals.map(g => `
+    <div class="zw-check-item ${sel.includes(g.val)?'sel':''}" data-group="goals" data-value="${g.val}">
+      <input type="checkbox" ${sel.includes(g.val)?'checked':''} onclick="event.stopPropagation()">
+      <span class="zw-check-icon">${g.icon}</span>
+      <span class="zw-check-label">${g.label}</span>
+    </div>`).join('')}
+  </div>
+  <div class="zw-foot">
+    <button class="zw-btn-back" onclick="zwBack()">← Back</button>
+    <button class="zw-btn-next" onclick="zwNext()">Continue →</button>
+  </div>`
+}
+
+function zwS4(){
+  return `
+  <div class="zw-tag">Step 4 of 6 — Preferences</div>
+  <div class="zw-title">Reporting &<br>alert settings</div>
+  <div class="zw-sub">ZAKI will send you reports and alerts based on these preferences.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+    <div class="zw-field">
+      <label>Report Frequency</label>
+      <select name="reportFreq">
+        <option ${zwData.reportFreq==='daily'?'selected':''} value="daily">Daily</option>
+        <option ${zwData.reportFreq==='weekly'||!zwData.reportFreq?'selected':''} value="weekly">Weekly</option>
+        <option ${zwData.reportFreq==='monthly'?'selected':''} value="monthly">Monthly</option>
+      </select>
+    </div>
+    <div class="zw-field">
+      <label>Base Currency</label>
+      <select name="currency">
+        <option ${zwData.currency==='USD'||!zwData.currency?'selected':''} value="USD">USD — US Dollar</option>
+        <option ${zwData.currency==='PKR'?'selected':''} value="PKR">PKR — Pakistani Rupee</option>
+        <option ${zwData.currency==='AED'?'selected':''} value="AED">AED — UAE Dirham</option>
+        <option ${zwData.currency==='GBP'?'selected':''} value="GBP">GBP — British Pound</option>
+        <option ${zwData.currency==='EUR'?'selected':''} value="EUR">EUR — Euro</option>
+        <option ${zwData.currency==='SAR'?'selected':''} value="SAR">SAR — Saudi Riyal</option>
+      </select>
+    </div>
+  </div>
+  <div class="zw-field">
+    <label>Cash Alert Threshold</label>
+    <input type="number" name="alertThreshold" placeholder="e.g. 50000 — alert when cash drops below this" value="${zwData.alertThreshold||''}" style="margin-bottom:4px">
+    <div style="font-size:.72rem;color:var(--text-3)">Leave blank to skip alerts</div>
+  </div>
+  <div style="margin-bottom:8px;font-size:.75rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-top:16px">Fiscal Year Start</div>
+  <div class="zw-card-grid" style="grid-template-columns:repeat(4,1fr)">
+    ${['January','April','July','October'].map(m => `
+    <div class="zw-card ${zwData.fiscalStart===m?'sel':''}" data-group="fiscalStart" data-value="${m}" style="padding:12px 8px">
+      <div class="zw-card-label" style="font-size:.75rem">${m}</div>
+    </div>`).join('')}
+  </div>
+  <div class="zw-foot">
+    <button class="zw-btn-back" onclick="zwBack()">← Back</button>
+    <button class="zw-btn-next" onclick="zwNext()">Continue →</button>
+  </div>`
+}
+
+function zwS5(){
+  return `
+  <div class="zw-tag">Step 5 of 6 — Data Connection</div>
+  <div class="zw-title">Connect your<br>financial data</div>
+  <div class="zw-sub">ZAKI pulls data automatically from your Mumtaz ERP. You can also upload bank statements or spreadsheets later.</div>
+  <div class="zw-feature-list" style="margin-bottom:20px">
+    <div class="zw-feature-row" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04)">
+      <div class="zw-feature-row-icon">✅</div>
+      <div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text)">Mumtaz ERP — Connected</div>
+        <div style="font-size:.75rem;color:var(--text-2)">Invoices, expenses, payroll, and chart of accounts sync automatically</div>
+      </div>
+    </div>
+    <div class="zw-feature-row">
+      <div class="zw-feature-row-icon">🏦</div>
+      <div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text)">Bank Statements</div>
+        <div style="font-size:.75rem;color:var(--text-2)">Upload CSV or OFX files from your bank — available after activation</div>
+      </div>
+    </div>
+    <div class="zw-feature-row">
+      <div class="zw-feature-row-icon">📁</div>
+      <div>
+        <div style="font-size:.82rem;font-weight:600;color:var(--text)">Excel / Google Sheets</div>
+        <div style="font-size:.75rem;color:var(--text-2)">Import historical data from spreadsheets — available after activation</div>
+      </div>
+    </div>
+  </div>
+  <div style="background:rgba(139,92,246,.06);border:1.5px solid rgba(139,92,246,.2);border-radius:12px;padding:16px 18px;font-size:.8rem;color:var(--text-2);line-height:1.6">
+    <strong style="color:var(--purple)">🔒 Your data is secure.</strong> All financial data is encrypted at rest and in transit. ZAKI reads your data — it never modifies ERP records.
+  </div>
+  <div class="zw-foot">
+    <button class="zw-btn-back" onclick="zwBack()">← Back</button>
+    <button class="zw-btn-next" onclick="zwNext()">Continue →</button>
+  </div>`
+}
+
+function zwS6(){
+  const goals = zwData.goals || []
+  return `
+  <div style="text-align:center;padding:8px 0 20px">
+    <div class="zw-done-check">🎉</div>
+    <div style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:8px">ZAKI is ready!</div>
+    <div style="font-size:.88rem;color:var(--text-2);max-width:380px;margin:0 auto;line-height:1.6">Your AI CFO has been configured. Here's a summary of your setup:</div>
+  </div>
+  <div class="zw-done-grid">
+    ${[
+      ['🏢', 'Industry', zwData.industry || 'Not specified'],
+      ['👥', 'Team Size', zwData.companySize || 'Not specified'],
+      ['💱', 'Currency', zwData.currency || 'USD'],
+      ['📅', 'Reports', zwData.reportFreq || 'Weekly'],
+    ].map(([icon, label, val]) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:1.2rem">${icon}</span>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em">${label}</div>
+      <div style="font-size:.85rem;font-weight:600;color:var(--text)">${val}</div></div>
+    </div>`).join('')}
+  </div>
+  ${goals.length ? `<div style="background:rgba(139,92,246,.06);border:1.5px solid rgba(139,92,246,.2);border-radius:10px;padding:14px 16px;margin-bottom:8px">
+    <div style="font-size:.72rem;font-weight:600;color:var(--purple);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Active Goals (${goals.length})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${goals.map(g=>`<span style="background:rgba(139,92,246,.12);color:var(--purple);border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:500">${g}</span>`).join('')}</div>
+  </div>` : ''}
+  <div class="zw-foot" style="justify-content:center;gap:12px">
+    <button class="zw-btn-back" onclick="zwBack()">← Review</button>
+    <button class="zw-finish" onclick="closeZakiWizard(true);setTimeout(()=>window.open('https://zaki.mumtaz.digital','_blank'),300)">Launch ZAKI AI CFO 🚀</button>
+  </div>`
+}
 </script>
+
+<!-- ZAKI Wizard Overlay -->
+<div id="zaki-wizard">
+  <div class="zw-sidebar">
+    <div class="zw-brand">
+      <div class="zw-brand-icon">🤖</div>
+      <div>
+        <div class="zw-brand-name">ZAKI AI CFO</div>
+        <div class="zw-brand-sub">Setup Wizard</div>
+      </div>
+    </div>
+    <div class="zw-steps" id="zw-step-list"></div>
+    <div class="zw-pbar"><div class="zw-pfill" id="zw-pfill" style="width:0%"></div></div>
+  </div>
+  <div class="zw-main">
+    <div class="zw-inner" id="zw-content"></div>
+  </div>
+</div>
 </body>
 </html>
