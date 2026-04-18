@@ -306,6 +306,10 @@ input,select,textarea{font-family:var(--font);outline:none}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
       </div>
       <div class="sb-section">Platform</div>
+      <div class="sb-item" onclick="nav('products')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="9" y="3" width="6" height="6" rx="1"/><rect x="16" y="3" width="6" height="6" rx="1"/><rect x="2" y="10" width="6" height="6" rx="1"/><rect x="9" y="10" width="6" height="6" rx="1"/><rect x="16" y="10" width="6" height="6" rx="1"/></svg>Products
+        <span class="sb-badge" id="sb-prod-badge" style="background:rgba(16,185,129,.1);color:var(--green)"></span>
+      </div>
       <div class="sb-item" onclick="nav('modules')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 4.5V18L12 22 3 17.5V6.5z"/><polyline points="12 22 12 12"/><polyline points="21 6.5 12 12 3 6.5"/></svg>Modules
         <span class="sb-badge badge-indigo" id="sb-mod-count" style="background:rgba(99,102,241,.12);color:var(--indigo)"></span>
@@ -380,6 +384,7 @@ let P = {
   plan: 'growth',
   seats: 10, seatsUsed: 1,
   modules: {},
+  products: { erp: true, zaki: false, marketplace: false },
   theme: 'light'
 }
 let TOKEN = ''
@@ -489,7 +494,7 @@ dashboard: `
 </div>
 <div class="grid2" style="margin-bottom:20px">
   <div class="card">
-    <div class="card-title">Your Products <a class="btn btn-ghost btn-sm" onclick="nav('modules')">Manage →</a></div>
+    <div class="card-title">Your Products <a class="btn btn-ghost btn-sm" onclick="nav('products')">Manage →</a></div>
     <div id="product-list"></div>
   </div>
   <div class="card">
@@ -509,6 +514,11 @@ dashboard: `
     <div id="activity-feed" style="font-size:.82rem"></div>
   </div>
 </div>`,
+
+products: `
+<div class="page-title">Products</div>
+<div class="page-sub">Manage your active products and add new ones to your workspace.</div>
+<div id="prod-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:8px"></div>`,
 
 modules: `
 <div class="page-title">Modules</div>
@@ -780,7 +790,7 @@ if(!P.modules || !Object.keys(P.modules).length){
 }
 
 // ── Navigation ─────────────────────────────────────────
-const PANEL_TITLES = {dashboard:'Dashboard',modules:'Modules',users:'Users & Teams',billing:'Billing & Plans',whitelabel:'White Label',settings:'Settings',support:'Support'}
+const PANEL_TITLES = {dashboard:'Dashboard',products:'Products',modules:'Modules',users:'Users & Teams',billing:'Billing & Plans',whitelabel:'White Label',settings:'Settings',support:'Support'}
 
 function nav(id){
   document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'))
@@ -796,6 +806,7 @@ function nav(id){
 
 function renderPanel(id){
   if(id==='dashboard')   renderDashboard()
+  if(id==='products')    renderProducts()
   if(id==='modules')     renderModules()
   if(id==='users')       renderUsers()
   if(id==='billing')     renderBilling()
@@ -818,20 +829,20 @@ function renderDashboard(){
   document.getElementById('d-mrr').textContent = '$' + plan.price + '/mo'
   document.getElementById('u-used').textContent = P.seatsUsed + ' / ' + P.seats
   document.getElementById('u-avail').textContent = (P.seats - P.seatsUsed) + ' seats available'
-  // Products
-  const prods = [
-    {name:'Mumtaz ERP',    icon:'🏢', url:'https://erp.mumtaz.digital',  status:'active'},
-    {name:'ZAKI AI CFO',   icon:'🤖', url:'https://zaki.mumtaz.digital', status:'active'},
-    {name:'Marketplace',   icon:'🛒', url:'https://marketplace.mumtaz.digital', status:'coming'},
-  ]
-  document.getElementById('product-list').innerHTML = prods.map(p=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:1.2rem">${p.icon}</span>
-      <span style="font-size:.85rem;font-weight:500;flex:1">${p.name}</span>
-      ${p.status==='active'
-        ? `<a href="${p.url}" target="_blank" class="btn btn-outline btn-sm">Open →</a>`
-        : `<span class="badge badge-gray">Soon</span>`}
-    </div>`).join('')
+  // Products — dynamic from PRODUCTS_CATALOG + P.products
+  document.getElementById('product-list').innerHTML = (typeof PRODUCTS_CATALOG !== 'undefined' ? PRODUCTS_CATALOG : []).map(prod=>{
+    const on = !!(P.products && P.products[prod.id])
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.2rem">${prod.icon}</span>
+      <span style="font-size:.85rem;font-weight:500;flex:1">${prod.name}</span>
+      ${on
+        ? `<a href="${prod.url}" target="_blank" class="btn btn-outline btn-sm">Open →</a>`
+        : `<button onclick="nav('products')" class="btn btn-ghost btn-sm" style="color:var(--indigo)">+ Add</button>`}
+    </div>`
+  }).join('')
+  // Update products sidebar badge
+  const prodBadge = document.getElementById('sb-prod-badge')
+  if(prodBadge && P.products) prodBadge.textContent = Object.values(P.products).filter(Boolean).length
   // Seats
   const pct = Math.round(P.seatsUsed/P.seats*100)
   document.getElementById('seat-label').textContent = `${P.seatsUsed} of ${P.seats} seats used`
@@ -859,6 +870,106 @@ function renderDashboard(){
         <div><div style="line-height:1.4">${a.msg}</div><div style="font-size:.72rem;color:var(--text-3);margin-top:2px">${a.t}</div></div>
       </div>`).join('')
     : '<div style="text-align:center;padding:24px 0;color:var(--text-3);font-size:.82rem">No activity yet — actions will appear here</div>'
+}
+
+// ── Products ───────────────────────────────────────────
+const PRODUCTS_CATALOG = [
+  {
+    id: 'erp',
+    name: 'ERP Suite',
+    icon: '🏢',
+    color: '#6366f1',
+    bg: 'rgba(99,102,241,.08)',
+    tagline: 'Full-featured business operations platform',
+    features: ['CRM & Sales', 'Accounting & Invoicing', 'Inventory & Warehouse', 'HR & Payroll', 'Projects & Timesheets'],
+    price: 'Included',
+    priceNote: 'in your plan',
+    url: 'https://erp.mumtaz.digital',
+    core: true,
+  },
+  {
+    id: 'zaki',
+    name: 'ZAKI AI CFO',
+    icon: '🤖',
+    color: '#8b5cf6',
+    bg: 'rgba(139,92,246,.08)',
+    tagline: 'AI-powered financial intelligence & forecasting',
+    features: ['Cash flow forecasting', 'Spend analysis & alerts', 'Invoice automation', 'Financial Q&A chat', 'Board-ready reports'],
+    price: '$99',
+    priceNote: '/month add-on',
+    url: 'https://zaki.mumtaz.digital',
+    core: false,
+  },
+  {
+    id: 'marketplace',
+    name: 'B2B Marketplace',
+    icon: '🛒',
+    color: '#10b981',
+    bg: 'rgba(16,185,129,.08)',
+    tagline: 'Connect with verified suppliers and buyers',
+    features: ['Supplier discovery', 'RFQ & procurement', 'Vendor portal', 'Order tracking', 'Analytics dashboard'],
+    price: '$49',
+    priceNote: '/month add-on',
+    url: 'https://marketplace.mumtaz.digital',
+    core: false,
+  },
+]
+
+if(!P.products) P.products = { erp: true, zaki: false, marketplace: false }
+
+function renderProducts(){
+  const grid = document.getElementById('prod-grid')
+  if(!grid) return
+  const active = PRODUCTS_CATALOG.filter(p => P.products[p.id])
+  const inactive = PRODUCTS_CATALOG.filter(p => !P.products[p.id])
+  // Update sidebar badge
+  const badge = document.getElementById('sb-prod-badge')
+  if(badge) badge.textContent = active.length
+
+  grid.innerHTML = PRODUCTS_CATALOG.map(prod => {
+    const isActive = !!P.products[prod.id]
+    return `
+    <div class="card" style="border:1.5px solid ${isActive ? prod.color+'44' : 'var(--border)'};transition:border .2s">
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px">
+        <div style="width:48px;height:48px;border-radius:12px;background:${prod.bg};display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">${prod.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-weight:700;font-size:1rem;color:var(--text)">${prod.name}</span>
+            ${prod.core ? '<span class="sb-badge" style="background:rgba(16,185,129,.1);color:var(--green);font-size:.6rem">CORE</span>' : ''}
+            ${isActive ? '<span class="sb-badge badge-indigo" style="font-size:.6rem">ACTIVE</span>' : ''}
+          </div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:2px">${prod.tagline}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-weight:700;color:${prod.color};font-size:1rem">${prod.price}</div>
+          <div style="font-size:.7rem;color:var(--muted)">${prod.priceNote}</div>
+        </div>
+      </div>
+      <ul style="list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:5px">
+        ${prod.features.map(f => `<li style="font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${prod.color}" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>${f}</li>`).join('')}
+      </ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${isActive
+          ? `<a href="${prod.url}" target="_blank" class="btn btn-grad btn-sm" style="background:${prod.color};border-color:${prod.color}">Open ${prod.name} →</a>`
+          : ''
+        }
+        ${!prod.core
+          ? `<button onclick="toggleProduct('${prod.id}')" class="btn ${isActive ? 'btn-outline' : 'btn-grad'} btn-sm" style="${isActive ? '' : 'background:'+prod.color+';border-color:'+prod.color}">${isActive ? 'Disable' : 'Enable'}</button>`
+          : `<button class="btn btn-outline btn-sm" disabled title="Core product cannot be disabled">Core — Always On</button>`
+        }
+      </div>
+    </div>`
+  }).join('')
+}
+
+function toggleProduct(id){
+  if(!P.products) P.products = {}
+  P.products[id] = !P.products[id]
+  save()
+  renderProducts()
+  renderDashboard()
+  const prod = PRODUCTS_CATALOG.find(p => p.id === id)
+  showToast(P.products[id] ? `${prod.name} enabled!` : `${prod.name} disabled`)
 }
 
 // ── Modules ────────────────────────────────────────────
