@@ -604,6 +604,30 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
     </div>
 
     <div class="nav-section">
+      <div class="nav-label">IFRS &amp; Compliance</div>
+      <div class="nav-item" onclick="showPanel('ifrs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        IFRS Advisor
+      </div>
+      <div class="nav-item" onclick="showPanel('ratios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Financial Ratios
+      </div>
+      <div class="nav-item" onclick="showPanel('tax')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Tax &amp; VAT
+      </div>
+      <div class="nav-item" onclick="showPanel('valuation')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Valuation
+      </div>
+      <div class="nav-item" onclick="showPanel('scenario')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Scenario Simulator
+      </div>
+    </div>
+
+    <div class="nav-section">
       <div class="nav-label">Account</div>
       <div class="nav-item" onclick="showPanel('settings')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -654,6 +678,9 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
 
       <div id="briefing-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
+
+      <!-- Proactive alerts -->
+      <div id="proactive-alerts" style="margin-bottom:20px"></div>
 
       <div class="briefing-text" id="briefing-text">Generating your briefing…</div>
 
@@ -948,6 +975,111 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
     </div>
 
+    <!-- ── IFRS ADVISOR ── -->
+    <div class="panel" id="panel-ifrs">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div><div class="panel-title"><em>IFRS Advisor</em></div><div class="panel-desc">Ask any IFRS/IAS accounting question — standard interpretation, journal entries, disclosures</div></div>
+          <button class="btn-secondary" onclick="loadIfrs(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <button class="btn-outline" style="font-size:.8rem" onclick="askIfrs('Review our revenue recognition under IFRS 15 and flag any compliance gaps based on our financials')">IFRS 15 Revenue Check</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askIfrs('Assess our trade receivables under IFRS 9 ECL model and recommend provisioning based on our AR data')">IFRS 9 ECL Assessment</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askIfrs('Identify what disclosures we need under IAS 1 and other applicable IFRS standards based on our company profile')">IAS 1 Disclosure Checklist</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askIfrs('Assess going concern under IAS 1 based on our cash runway, burn rate and financial position')">Going Concern Assessment</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askIfrs('Review our payables and identify any provisions we should recognise under IAS 37')">IAS 37 Provisions Review</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askIfrs('Explain how IFRS 16 would apply to us if we have operating leases, and what the balance sheet impact would be')">IFRS 16 Lease Impact</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input id="ifrs-q" type="text" placeholder="Ask any IFRS/IAS question…" style="flex:1;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;font-size:.85rem;color:var(--text);font-family:var(--font)" onkeydown="if(event.key==='Enter')askIfrs(document.getElementById('ifrs-q').value)">
+        <button class="btn-primary" onclick="askIfrs(document.getElementById('ifrs-q').value)">Ask</button>
+      </div>
+      <div id="ifrs-content" style="font-size:.88rem;line-height:1.7;color:var(--text)"></div>
+    </div>
+
+    <!-- ── FINANCIAL RATIOS ── -->
+    <div class="panel" id="panel-ratios">
+      <div class="panel-header">
+        <div><div class="panel-title"><em>Financial Ratios</em></div><div class="panel-desc">Live ratio analysis with IFRS-aligned benchmarks and AI interpretation</div></div>
+      </div>
+      <div id="ratios-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px"></div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">AI Ratio Interpretation</div>
+        <div id="ratios-ai" style="font-size:.87rem;line-height:1.7;color:var(--text)"><span style="color:var(--text-3)">Click "Interpret Ratios" to get AI analysis of what these numbers mean for your business.</span></div>
+        <button class="btn-secondary" style="margin-top:12px" onclick="interpretRatios()">Interpret All Ratios</button>
+      </div>
+    </div>
+
+    <!-- ── TAX & VAT ── -->
+    <div class="panel" id="panel-tax">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div><div class="panel-title"><em>Tax &amp; VAT Advisor</em></div><div class="panel-desc">UAE Corporate Tax, VAT compliance, ESR — AI-powered guidance</div></div>
+          <button class="btn-secondary" onclick="loadTax(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <button class="btn-outline" style="font-size:.8rem" onclick="askTax('Calculate our estimated UAE Corporate Tax liability at 9% based on our net profit, and advise on qualifying deductions we should consider')">CT Liability Estimate</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askTax('Review our VAT position — estimated output VAT on revenue, input VAT recovery, and net VAT payable')">VAT Position Review</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askTax('What are our UAE Economic Substance Regulation obligations based on our industry and activities?')">ESR Obligations</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askTax('What tax planning strategies should we consider before year-end to legally minimise our Corporate Tax?')">Year-End Tax Planning</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askTax('What transfer pricing documentation do we need if we have related party transactions?')">Transfer Pricing</button>
+        <button class="btn-outline" style="font-size:.8rem" onclick="askTax('Review our payroll tax and WPS compliance obligations in the UAE')">Payroll & WPS</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input id="tax-q" type="text" placeholder="Ask any tax or VAT question…" style="flex:1;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;font-size:.85rem;color:var(--text);font-family:var(--font)" onkeydown="if(event.key==='Enter')askTax(document.getElementById('tax-q').value)">
+        <button class="btn-primary" onclick="askTax(document.getElementById('tax-q').value)">Ask</button>
+      </div>
+      <div id="tax-content" style="font-size:.88rem;line-height:1.7;color:var(--text)"></div>
+    </div>
+
+    <!-- ── VALUATION ── -->
+    <div class="panel" id="panel-valuation">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div><div class="panel-title"><em>Valuation</em></div><div class="panel-desc">Business valuation, fundraising readiness, investor metrics</div></div>
+          <button class="btn-secondary" onclick="loadValuation(true)">↻ Run Valuation</button>
+        </div>
+      </div>
+      <div id="valuation-content" style="font-size:.88rem;line-height:1.7;color:var(--text)">
+        <div style="color:var(--text-3)">Click "Run Valuation" to get an AI-powered valuation analysis of your business.</div>
+      </div>
+    </div>
+
+    <!-- ── SCENARIO SIMULATOR ── -->
+    <div class="panel" id="panel-scenario">
+      <div class="panel-header">
+        <div><div class="panel-title"><em>Scenario Simulator</em></div><div class="panel-desc">Run what-if analysis — get a clear YES/NO with numbers, not guesses</div></div>
+      </div>
+
+      <!-- Quick scenarios -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:12px">Quick Scenarios</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('revenue_drop')">📉 Sales drop 20%</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('hire_5')">👥 Hire 5 employees</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('breakeven')">⚖️ Break-even point</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('double_ar')">📋 AR doubles (slow payers)</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('cost_cut_15')">✂️ Cut costs 15%</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('expand_market')">🌍 Enter new market</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('raise_prices')">💰 Raise prices 10%</button>
+          <button class="btn-outline" style="font-size:.8rem;text-align:left;padding:10px 12px" onclick="runScenario('lose_top_client')">⚠️ Lose top client</button>
+        </div>
+      </div>
+
+      <!-- Custom scenario -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:10px">Custom Scenario</div>
+        <div style="display:flex;gap:8px">
+          <input id="scenario-input" type="text" placeholder='e.g. "What if we take a loan of AED 500,000?"' style="flex:1;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;font-size:.85rem;color:var(--text);font-family:var(--font)" onkeydown="if(event.key==='Enter')runCustomScenario()">
+          <button class="btn-primary" onclick="runCustomScenario()">Simulate</button>
+        </div>
+      </div>
+
+      <div id="scenario-result" style="font-size:.88rem;line-height:1.7;color:var(--text)"></div>
+    </div>
+
     <!-- ── SETTINGS ── -->
     <div class="panel" id="panel-settings">
       <div class="panel-header">
@@ -1049,6 +1181,189 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 // ═══════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════
+// ZAKI KNOWLEDGE BASE (embedded — 20 core objects)
+// ═══════════════════════════════════════════
+const ZAKI_KB = [
+  { id:'ifrs15', tags:['revenue','recognition','contracts','performance obligation','IFRS 15'],
+    countries:['ALL'], title:'IFRS 15 — Revenue from Contracts with Customers',
+    ref:'IFRS 15', effective:'2018-01-01', confidence:97,
+    summary:'Revenue recognised when (or as) performance obligations satisfied. 5-step model must be applied.',
+    steps:['1. Identify the contract','2. Identify performance obligations','3. Determine transaction price','4. Allocate price to POs','5. Recognise revenue when PO satisfied'],
+    key_rules:['Variable consideration: constrain to highly probable amount','Contract modifications: new contract or continuation depending on facts','Principal vs agent: gross vs net revenue','Bill-and-hold: specific criteria required'],
+    erp:'Odoo: enable revenue recognition in Accounting > Settings. Set deferred revenue account per product category.',
+    common_mistakes:['Recognising revenue at invoice date not delivery','Not deferring advance payments','Ignoring variable consideration constraints'] },
+
+  { id:'ifrs9', tags:['financial instruments','ECL','expected credit loss','trade receivables','IFRS 9','provisioning'],
+    countries:['ALL'], title:'IFRS 9 — Financial Instruments & ECL',
+    ref:'IFRS 9', effective:'2018-01-01', confidence:96,
+    summary:'Trade receivables must be provisioned using Expected Credit Loss (ECL) model — not just when actually bad.',
+    key_rules:['Stage 1: 12-month ECL (current)','Stage 2: Lifetime ECL (significant credit deterioration)','Stage 3: Lifetime ECL (credit impaired — not accruing interest)','Simplified approach for trade receivables: use provision matrix by aging bucket'],
+    erp:'Odoo: create provision matrix in Accounting > Configuration. Set up bad debt journal entries. Run aging report monthly.',
+    common_mistakes:['Waiting until debt is written off before provisioning','Not updating provision matrix for historical data','Ignoring ECL on intercompany receivables'] },
+
+  { id:'ifrs16', tags:['leases','right of use','IFRS 16','operating lease','finance lease'],
+    countries:['ALL'], title:'IFRS 16 — Leases',
+    ref:'IFRS 16', effective:'2019-01-01', confidence:95,
+    summary:'Lessees recognise right-of-use (ROU) asset and lease liability for most leases. No more off-balance-sheet operating leases.',
+    key_rules:['Exemptions: short-term leases (<12 months) and low-value assets (<USD 5,000)','IBR (Incremental Borrowing Rate) used when implicit rate not determinable','Depreciate ROU asset over shorter of lease term or useful life','Interest on lease liability — effective interest method'],
+    erp:'Odoo 16+: Assets module handles ROU. Create asset for each lease. Set depreciation schedule.',
+    common_mistakes:['Using straight-line rent expense instead of split depreciation+interest','Wrong IBR (should be lessee\'s borrowing rate, not lessor\'s)','Not reassessing lease term on significant events'] },
+
+  { id:'ias1', tags:['presentation','going concern','financial statements','IAS 1','disclosure','materiality'],
+    countries:['ALL'], title:'IAS 1 — Presentation of Financial Statements',
+    ref:'IAS 1', effective:'2005-01-01', confidence:97,
+    summary:'Sets overall requirements for financial statements: going concern, accrual basis, comparative information, materiality.',
+    key_rules:['Going concern: assess ability to continue for at least 12 months','Comparative: prior year figures required for all amounts','Materiality: omissions/misstatements material if they could influence decisions','Complete set: statement of financial position, P&L+OCI, changes in equity, cash flow, notes'],
+    erp:'Odoo: generate standard financial statements from Accounting > Reports. Ensure comparative periods enabled.',
+    going_concern_triggers:['Cash runway < 6 months','Net liability position','Loan covenant breaches','Significant operating losses'] },
+
+  { id:'ias2', tags:['inventory','IAS 2','FIFO','weighted average','NRV','write-down'],
+    countries:['ALL'], title:'IAS 2 — Inventories',
+    ref:'IAS 2', effective:'2005-01-01', confidence:96,
+    summary:'Inventories measured at lower of cost and net realisable value (NRV). LIFO prohibited under IFRS.',
+    key_rules:['Cost methods: FIFO or Weighted Average (LIFO not permitted)','NRV = estimated selling price minus costs to complete and sell','Write-down when NRV < cost — reverse if circumstances change','Cost of manufactured goods: direct materials + labour + allocated overhead'],
+    erp:'Odoo: set costing method per product category (FIFO or Average). Enable inventory valuation journal. Run NRV review quarterly.' },
+
+  { id:'ias7', tags:['cash flow','IAS 7','operating','investing','financing','direct','indirect'],
+    countries:['ALL'], title:'IAS 7 — Statement of Cash Flows',
+    ref:'IAS 7', effective:'1994-01-01', confidence:97,
+    summary:'Cash flows classified into operating, investing, financing. Both direct and indirect method acceptable but indirect more common.',
+    key_rules:['Operating: cash from core business (indirect: start with net profit, adjust non-cash)','Investing: purchase/sale of assets, investments','Financing: borrowings, equity, dividends','Interest paid: operating or financing (accounting policy choice)','Dividends received: operating or investing (policy choice)'],
+    erp:'Odoo: Cash Flow Statement auto-generated if accounts tagged correctly. Tag accounts to operating/investing/financing.' },
+
+  { id:'ias16', tags:['PPE','property plant equipment','depreciation','IAS 16','revaluation','impairment'],
+    countries:['ALL'], title:'IAS 16 — Property, Plant and Equipment',
+    ref:'IAS 16', effective:'2005-01-01', confidence:96,
+    summary:'PPE recognised at cost less accumulated depreciation and impairment. Revaluation model allowed as alternative.',
+    key_rules:['Depreciation: systematic allocation over useful life','Methods: straight-line, reducing balance, units of production','Residual value reviewed annually','Revaluation model: carry at fair value, revalue regularly','Componentisation: significant parts depreciated separately','Borrowing costs: capitalise if directly attributable to qualifying asset (IAS 23)'],
+    erp:'Odoo Assets module: set up asset categories, useful lives, depreciation methods. Run depreciation board monthly.' },
+
+  { id:'ias37', tags:['provisions','contingent liabilities','IAS 37','restructuring','warranty'],
+    countries:['ALL'], title:'IAS 37 — Provisions, Contingent Liabilities and Assets',
+    ref:'IAS 37', effective:'1999-01-01', confidence:95,
+    summary:'Provision recognised when: present obligation exists, probable outflow, reliable estimate. Contingent liabilities only disclosed.',
+    key_rules:['Three criteria ALL required: obligation, probable outflow, reliable estimate','Best estimate: expected value for large populations, most likely for single event','Restructuring provision: only when detailed formal plan AND raised valid expectation','Onerous contracts: provision for unavoidable losses','No provisions for future operating losses'],
+    erp:'Odoo: journal entry Cr: Provision account, Dr: P&L expense. Create provision asset and depreciate if long-term.' },
+
+  { id:'ias19', tags:['employee benefits','IAS 19','gratuity','EOSB','leave','bonus'],
+    countries:['ALL'], title:'IAS 19 — Employee Benefits',
+    ref:'IAS 19', effective:'2013-01-01', confidence:94,
+    summary:'End of service benefits (gratuity) are defined benefit obligations — must be actuarially calculated and accrued.',
+    key_rules:['Short-term benefits (leave, bonus): accrue in period earned','End of service/gratuity: defined benefit — actuarial valuation required for material amounts','Actuarial gains/losses: recognised in OCI (not P&L)','Discount rate: high-quality corporate bond rate (or government bond rate where no deep market)'],
+    erp:'Odoo HR: enable EOSB. Set up accrual journal entries. For material amounts, engage actuary annually.'},
+
+  { id:'ias36', tags:['impairment','IAS 36','goodwill','CGU','recoverable amount','VIU'],
+    countries:['ALL'], title:'IAS 36 — Impairment of Assets',
+    ref:'IAS 36', effective:'2004-01-01', confidence:95,
+    summary:'Assets tested for impairment when indicators exist. Recoverable amount = higher of FVLCD and Value in Use.',
+    key_rules:['Annual test required: goodwill and indefinite-life intangibles','Indicators: market decline, obsolescence, poor performance, rising discount rates','CGU: smallest group of assets generating independent cash flows','VIU: present value of future cash flows using pre-tax discount rate','Impairment loss: written off in P&L. Goodwill impairment never reversed.'],
+    erp:'Odoo: manual impairment journal. Dr: Impairment loss (P&L), Cr: Accumulated impairment (asset contra).' },
+
+  { id:'ias38', tags:['intangibles','IAS 38','R&D','software','amortisation','development costs'],
+    countries:['ALL'], title:'IAS 38 — Intangible Assets',
+    ref:'IAS 38', effective:'2004-01-01', confidence:94,
+    summary:'Intangible asset recognised only if: identifiable, probable future economic benefits, cost reliably measurable. Internally generated goodwill NOT recognised.',
+    key_rules:['Research costs: expensed always','Development costs: capitalise only if all 6 criteria met (technical feasibility, intent, ability, market, resources, reliably measured)','Amortise over useful life if finite. Indefinite-life: annual impairment test.','Computer software: capitalise direct development costs, expense maintenance'],
+    erp:'Odoo Assets: create intangible asset type. Set useful life, amortisation method.' },
+
+  { id:'uae_ct', tags:['corporate tax','UAE CT','9%','taxable income','small business relief','free zone'],
+    countries:['UAE'], title:'UAE Corporate Tax — 9% (Federal Decree-Law 47/2022)',
+    ref:'UAE CT Law', effective:'2023-06-01', confidence:96,
+    summary:'9% CT on taxable income exceeding AED 375,000. Taxable persons include mainland companies, foreign companies with UAE PE.',
+    key_rules:['Rate: 0% on ≤AED 375,000; 9% on amount above','Small Business Relief: elect if revenue ≤AED 3M (treat taxable income as zero)','Free zone qualifying income: 0% if substance requirements met','Non-qualifying income: 9% even for free zone entities','First tax period: financial year starting on or after 1 June 2023','Registration deadline: within 3 months of becoming taxable person'],
+    deadlines:['CT registration: within 3 months of financial year start','CT return: within 9 months of financial year end','Tax payment: with return filing'],
+    penalties:['Late registration: AED 10,000','Late return: AED 500/month (first 12 months), AED 1,000/month thereafter'],
+    erp:'Odoo: create tax group UAE CT 9%. Set up deferred tax account (275000). Enable CT provision in period-end.' },
+
+  { id:'uae_vat', tags:['VAT','UAE VAT','5%','input tax','output tax','FTA','tax group'],
+    countries:['UAE'], title:'UAE VAT — 5% (Federal Decree-Law 8/2017)',
+    ref:'UAE VAT Law', effective:'2018-01-01', confidence:97,
+    summary:'5% VAT on taxable supplies. Registration mandatory if taxable supplies >AED 375,000/year. Quarterly or monthly returns.',
+    key_rules:['Standard rated: 5% — most goods and services','Zero rated: exports, international transport, healthcare, education, first residential sale','Exempt: residential rent, local passenger transport, bare land','Input tax recovery: only on business purposes, proportional if mixed use','Tax invoice requirements: TRN, date, description, amounts, VAT amount','Return frequency: monthly if >AED 150M; quarterly otherwise'],
+    deadlines:['VAT return: 28th of month following period end','VAT payment: with return'],
+    penalties:['Late registration: AED 20,000','Late return: AED 1,000 first time, AED 2,000 thereafter','Tax evasion: 5x tax amount'],
+    erp:'Odoo: install l10n_ae. Configure 5% tax group. Set TRN in company settings. Use UAE VAT report for FTA filing.' },
+
+  { id:'uae_esr', tags:['ESR','economic substance','UAE','relevant activity','substance test'],
+    countries:['UAE'], title:'UAE Economic Substance Regulations (ESR)',
+    ref:'Cabinet Resolution 57/2020', effective:'2020-01-01', confidence:90,
+    summary:'Companies conducting relevant activities must demonstrate adequate economic substance in UAE.',
+    key_rules:['Relevant activities: banking, insurance, investment fund management, lease-finance, HQ, shipping, holding company, IP, distribution/service centre','Substance test: CIGA conducted in UAE, adequate employees/expenditure/physical assets in UAE','Holding company: reduced substance test','IP: high substance test (hard to satisfy)'],
+    deadlines:['ESR notification: 6 months after FY end','ESR report: 12 months after FY end'],
+    penalties:['Failure to meet substance: AED 50,000 first year, AED 400,000 subsequent years','Failure to file: AED 20,000–50,000'] },
+
+  { id:'ksa_vat', tags:['VAT','Saudi Arabia','ZATCA','15%','e-invoicing','Fatoorah'],
+    countries:['KSA'], title:'KSA VAT — 15% (Royal Decree M/113)',
+    ref:'KSA VAT Law', effective:'2020-07-01', confidence:95,
+    summary:'15% VAT (increased from 5% in July 2020). E-invoicing (Fatoorah) mandatory in phases.',
+    key_rules:['Standard rate: 15% on most supplies','Zero rated: exports, medicines, medical equipment','E-invoicing Phase 1 (Dec 2021): generate compliant e-invoice','E-invoicing Phase 2 (integration): link to ZATCA portal — phased rollout by revenue size','Return: monthly if >SAR 40M annual revenue; quarterly otherwise'],
+    deadlines:['Monthly return: last day of month following period','Quarterly return: last day of month following quarter'],
+    erp:'Odoo: configure 15% KSA tax. Enable e-invoicing module. Integrate with ZATCA API for Phase 2.' },
+
+  { id:'ksa_zakat', tags:['Zakat','Saudi Arabia','ZATCA','2.5%','zakatable','net worth'],
+    countries:['KSA'], title:'KSA Zakat (for Saudi/GCC shareholders)',
+    ref:'KSA Zakat Law', effective:'1992-01-01', confidence:92,
+    summary:'Zakat at 2.5% on zakatable base (net worth method) for Saudi/GCC national shareholders. Foreign shareholders pay 20% CT instead.',
+    key_rules:['Zakatable base: equity + long-term debt less fixed assets and long-term investments (simplified)','Rate: 2.5% of zakatable base','Mixed ownership: Zakat on Saudi/GCC share, CT on foreign share','Filing: within 120 days of financial year end','Advance payments: quarterly instalments required for companies with prior year liability >SAR 500,000'],
+    erp:'Odoo: create Zakat provision account. Calculate zakatable base annually. Engage tax advisor for exact computation.' },
+
+  { id:'pak_ct', tags:['corporate tax','Pakistan','29%','FBR','super tax','advance tax'],
+    countries:['PAK'], title:'Pakistan Corporate Tax — 29% (Income Tax Ordinance 2001)',
+    ref:'Income Tax Ordinance 2001', effective:'2023-07-01', confidence:91,
+    summary:'29% CT on taxable income for non-banking companies. Super Tax 10% for income >PKR 300M. Complex advance tax regime.',
+    key_rules:['Standard rate: 29%','Banking: 39% (35% + 4% super tax)','Super tax: 10% on income >PKR 300M','Minimum tax: 1.25% of turnover if tax on turnover exceeds tax on income','Advance tax: quarterly instalments (April, June, September, December)','WHT: extensive withholding tax regime — 39 heads of withholding'],
+    deadlines:['Annual return: 31 December (for June FY)','Advance tax: 25th of quarter end month'],
+    erp:'Odoo: configure 29% CT. Set up multiple WHT tax groups. Enable advance tax tracking.' },
+
+  { id:'pak_salestax', tags:['sales tax','Pakistan','FBR','18%','input tax','SRB','PRA'],
+    countries:['PAK'], title:'Pakistan Sales Tax — 18% Federal + Provincial',
+    ref:'Sales Tax Act 1990', effective:'2023-07-01', confidence:89,
+    summary:'18% federal sales tax on goods. Services taxed provincially (SRB 13% Sindh, PRA 16% Punjab, etc.). Complex input tax rules.',
+    key_rules:['Federal: 18% on most goods (FBR)','Sindh services: 13% (SRB)','Punjab services: 16% (PRA)','Zero rated: exports','Exempt: basic food items, medicines','Monthly return: 15th of following month','Input tax: claimable only on registered suppliers — maintain proper records'],
+    erp:'Odoo: configure multiple tax groups (Federal 18%, Sindh 13%, Punjab 16%). Set up provincial tax reports.' },
+
+  { id:'wc_mgmt', tags:['working capital','DSO','DPO','DIO','cash conversion cycle','liquidity'],
+    countries:['ALL'], title:'Working Capital Management — CFO Framework',
+    ref:'FP&A Best Practice', effective:'2020-01-01', confidence:88,
+    summary:'Cash Conversion Cycle = DSO + DIO - DPO. Minimise CCC to maximise cash generation without raising external finance.',
+    key_rules:['DSO target: <30 days (B2B), <15 days (B2C)','DPO target: 30–60 days (without damaging supplier relationships)','DIO target: industry-specific (30 days trading, 60 days manufacturing)','Early payment discount: calculate if NPV-positive vs cost of capital','Invoice factoring: viable if factoring cost < cost of credit line'],
+    ratios:{ current: '>1.5 healthy', quick: '>1.0 acceptable', cash: '>0.5 safe' },
+    erp:'Odoo: use AR aging report, AP aging report. Set payment terms on customer and vendor records.' },
+
+  { id:'going_concern', tags:['going concern','IAS 1','cash runway','distress','viability'],
+    countries:['ALL'], title:'Going Concern Assessment — IAS 1.25',
+    ref:'IAS 1 §25', effective:'2005-01-01', confidence:95,
+    summary:'Management must assess ability to continue for at least 12 months from reporting date. Material uncertainty must be disclosed.',
+    triggers:['Cash runway < 6 months','Net liability position','Loan covenant breach likely','Operating losses with no recovery plan','Loss of major customer with no replacement','Key supplier failure'],
+    key_rules:['Prepare cash flow forecast for at least 12 months','Consider all available mitigating actions (asset sales, new finance, cost cuts)','Disclose material uncertainty prominently in notes','If not going concern: liquidation basis — assets at realisable values'],
+    erp:'Odoo: run 12-month cash flow projection. Compare to committed facilities. Document assumptions.' }
+]
+
+// KB retrieval — match by keywords in question
+function retrieveKB(question) {
+  if (!question) return []
+  const q = question.toLowerCase()
+  const scored = ZAKI_KB.map(obj => {
+    const haystack = (obj.tags.join(' ') + ' ' + obj.title + ' ' + obj.summary).toLowerCase()
+    const score = obj.tags.filter(t => q.includes(t.toLowerCase())).length
+      + (q.includes(obj.id) ? 3 : 0)
+      + (obj.countries.includes('ALL') || obj.countries.some(c => q.includes(c.toLowerCase())) ? 1 : 0)
+    return { obj, score }
+  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score).slice(0,3)
+  return scored.map(x => x.obj)
+}
+
+function kbContext(kbObjs) {
+  if (!kbObjs.length) return ''
+  return '\n\n## RETRIEVED KNOWLEDGE BASE\n' + kbObjs.map(k =>
+    `### ${k.title} (${k.ref} | Confidence: ${k.confidence}%)\n${k.summary}\n` +
+    (k.key_rules ? 'Key rules:\n' + k.key_rules.map(r=>'- '+r).join('\n') : '') +
+    (k.deadlines ? '\nDeadlines: ' + k.deadlines.join(' | ') : '') +
+    (k.erp ? '\nERP: ' + k.erp : '')
+  ).join('\n\n') + '\n\nCite these standards in your answer using their ref (e.g. "Under IFRS 15...").\n'
+}
+
+// ═══════════════════════════════════════════
 const S = {
   keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://app.mumtaz.digital' },
   co: { name: '', industry: '', country: '', currency: 'AED' },
@@ -1129,37 +1444,191 @@ function buildPrompt() {
   const margin = f.rev > 0 ? (net/f.rev*100).toFixed(1) : 'N/A'
   const runway = f.exp > 0 ? (f.cash / (f.exp/30)).toFixed(0) : '∞'
   const arPct = f.ar > 0 ? (f.arOverdue/f.ar*100).toFixed(0) : 0
+  const currentRatio = f.ap > 0 ? ((f.ar + f.cash) / f.ap).toFixed(2) : 'N/A'
+  const workingCapital = (f.ar + f.cash) - f.ap
+  const burnRate = f.exp - f.rev
+  const grossMargin = f.rev > 0 ? ((f.rev - f.exp)/f.rev*100).toFixed(1) : 'N/A'
+  const payrollPct = f.rev > 0 ? (f.payroll/f.rev*100).toFixed(1) : 'N/A'
+  const dso = f.rev > 0 ? (f.ar / (f.rev/30)).toFixed(0) : 'N/A'
+  const dpo = f.exp > 0 ? (f.ap / (f.exp/30)).toFixed(0) : 'N/A'
 
-  return `You are Zaki, the private AI CFO of ${S.co.name || 'this company'} and trusted financial partner to ${S.me.name || 'the CEO'}.
+  return `You are ZAKI — an elite AI Chief Financial Officer embedded inside the Mumtaz platform. You serve ${S.me.name || 'the CEO'} of ${S.co.name || 'this company'} as their private CFO, strategic advisor, and financial guardian.
 
-COMPANY PROFILE
-- Company: ${S.co.name} | Industry: ${S.co.industry} | Market: ${S.co.country}
-- Reporting currency: ${S.co.currency}
+## YOUR IDENTITY & CAPABILITIES
 
-CURRENT FINANCIAL SNAPSHOT
-- Monthly Revenue:  ${S.co.currency} ${fmt(f.rev)}
-- Monthly Expenses: ${S.co.currency} ${fmt(f.exp)}
-- Net Profit:       ${S.co.currency} ${fmt(net)} (margin: ${margin}%)
-- Cash / Bank:      ${S.co.currency} ${fmt(f.cash)}
-- Monthly Payroll:  ${S.co.currency} ${fmt(f.payroll)} (${f.rev>0?(f.payroll/f.rev*100).toFixed(0):0}% of revenue)
-- Accounts Receivable: ${S.co.currency} ${fmt(f.ar)} (${arPct}% overdue >30d)
-- Accounts Payable: ${S.co.currency} ${fmt(f.ap)}
-- VAT/Tax Liability: ${S.co.currency} ${fmt(f.vat)}
-- Cash Runway: ${runway} days | Burn Rate: ${S.co.currency} ${fmt(f.exp - f.rev)} / month
+You combine the expertise of:
+- A Big-4 trained CFO with IFRS/IAS mastery
+- A McKinsey-level financial strategist
+- A hands-on operational finance manager
+- A UAE/GCC tax and regulatory specialist (VAT, Corporate Tax)
+- A capital markets and fundraising advisor
 
-BUSINESS CONTEXT
-- Pipeline: ${S.ctx.pipeline || 'Not provided'}
-- Top clients: ${S.ctx.clients || 'Not provided'}
-- Current worry: ${S.ctx.worry || 'Not provided'}
+You do NOT just report numbers. You interpret them, challenge them, and give the CEO clear decisions to make.
 
-YOUR STYLE AS ZAKI
-- You are direct, warm, decisive — like a trusted CFO who speaks plainly
-- Lead with the key number or insight immediately — no preamble
-- Use ${S.co.currency} amounts. Be specific. Give recommendations, not just observations.
-- For structured analysis: use ## headers, bullet lists, and markdown tables
-- Flag risks with ⚠️, opportunities with ✅, critical with 🔴, positive with 🟢
-- End analysis with numbered action items
-- CEO's first name: ${S.me.firstName}
+---
+
+## COMPANY PROFILE
+- **Company:** ${S.co.name || 'Not set'} | **Industry:** ${S.co.industry || 'Not set'} | **Market:** ${S.co.country || 'Not set'}
+- **Reporting Currency:** ${S.co.currency}
+- **CEO:** ${S.me.firstName || S.me.name || 'Not set'}
+
+---
+
+## LIVE FINANCIAL SNAPSHOT
+| Metric | Value | Signal |
+|--------|-------|--------|
+| Monthly Revenue | ${S.co.currency} ${fmt(f.rev)} | ${f.rev > 0 ? '🟢' : '⚠️'} |
+| Monthly Expenses | ${S.co.currency} ${fmt(f.exp)} | ${f.exp < f.rev ? '🟢' : '🔴'} |
+| Net Profit / (Loss) | ${S.co.currency} ${fmt(net)} (${margin}% margin) | ${net > 0 ? '🟢' : '🔴'} |
+| Cash & Bank | ${S.co.currency} ${fmt(f.cash)} | ${f.cash > f.exp*2 ? '🟢' : f.cash > f.exp ? '⚠️' : '🔴'} |
+| Cash Runway | ${runway} days | ${parseInt(runway)>90?'🟢':parseInt(runway)>30?'⚠️':'🔴'} |
+| Monthly Payroll | ${S.co.currency} ${fmt(f.payroll)} (${payrollPct}% of revenue) | ${parseFloat(payrollPct)<50?'🟢':'⚠️'} |
+| Accounts Receivable | ${S.co.currency} ${fmt(f.ar)} (${arPct}% overdue >30d) | ${arPct<20?'🟢':arPct<40?'⚠️':'🔴'} |
+| Accounts Payable | ${S.co.currency} ${fmt(f.ap)} | — |
+| VAT / Tax Liability | ${S.co.currency} ${fmt(f.vat)} | ${f.vat > 0 ? '⚠️ Due' : '🟢'} |
+| Working Capital | ${S.co.currency} ${fmt(workingCapital)} | ${workingCapital > 0 ? '🟢' : '🔴'} |
+| Current Ratio | ${currentRatio} | ${parseFloat(currentRatio)>1.5?'🟢':parseFloat(currentRatio)>1?'⚠️':'🔴'} |
+| DSO (Days Sales Outstanding) | ${dso} days | ${parseInt(dso)<30?'🟢':parseInt(dso)<60?'⚠️':'🔴'} |
+| DPO (Days Payable Outstanding) | ${dpo} days | — |
+
+**Burn Rate:** ${S.co.currency} ${fmt(Math.max(0, burnRate))} / month ${burnRate > 0 ? '🔴 BURNING CASH' : '🟢 CASH POSITIVE'}
+
+---
+
+## BUSINESS CONTEXT
+- **Sales Pipeline:** ${S.ctx.pipeline || 'Not provided'}
+- **Top Clients:** ${S.ctx.clients || 'Not provided'}
+- **Current Concern:** ${S.ctx.worry || 'Not provided'}
+
+---
+
+## YOUR IFRS & ACCOUNTING KNOWLEDGE
+
+You are fully proficient in all IFRS standards. Apply them when relevant:
+
+**Revenue & Recognition**
+- IFRS 15: Revenue from Contracts with Customers — 5-step model (identify contract, POs, transaction price, allocation, recognition)
+- IAS 18 legacy context for transition analysis
+
+**Balance Sheet & Assets**
+- IAS 16: PPE — cost model vs revaluation model, depreciation, impairment triggers
+- IAS 38: Intangible assets — recognition criteria (probable future benefits, reliable measurement), amortisation
+- IFRS 16: Leases — right-of-use assets, lease liabilities, short-term/low-value exemptions
+- IAS 36: Impairment — CGU identification, recoverable amount, VIU vs FVLCD
+- IAS 2: Inventories — lower of cost and NRV, FIFO/weighted average, write-downs
+
+**Financial Instruments**
+- IFRS 9: Classification (amortised cost, FVTPL, FVOCI), ECL model for trade receivables, Stage 1/2/3
+- IAS 32: Presentation — debt vs equity, compound instruments
+- IFRS 13: Fair value hierarchy (Level 1/2/3)
+
+**Liabilities & Provisions**
+- IAS 37: Provisions — present obligation, probable outflow, reliable estimate; contingent liabilities disclosure
+- IAS 19: Employee benefits — defined contribution vs defined benefit, actuarial assumptions
+- IFRS 16: Lease liabilities — IBR, effective interest method
+
+**Cash Flow & Liquidity**
+- IAS 7: Statement of Cash Flows — direct vs indirect method, operating/investing/financing classification
+- Free Cash Flow = Operating CF - Capex
+- Working Capital cycle management
+
+**Consolidation & Group**
+- IFRS 10: Consolidated financial statements — control model
+- IFRS 3: Business combinations — acquisition method, goodwill, PPA
+- IAS 28: Associates — equity method
+- IFRS 11: Joint arrangements
+
+**Disclosure & Presentation**
+- IAS 1: Going concern, comparatives, materiality, aggregation
+- IAS 8: Accounting policies, changes, errors — retrospective vs prospective
+- IAS 10: Events after the reporting period
+- IAS 24: Related party disclosures
+- IAS 33: EPS — basic and diluted
+
+**UAE/GCC Specific**
+- UAE Corporate Tax (CT): 9% on taxable income >AED 375,000; free zone 0% qualifying income rules
+- UAE VAT: 5% standard rate; exempt vs zero-rated supplies; input tax recovery; tax groups
+- ESR (Economic Substance Regulations): relevant activities, adequate substance
+- AML/CFT compliance considerations for financial reporting
+
+---
+
+## BUSINESS & STRATEGIC FRAMEWORKS
+
+Apply these when relevant:
+
+**Profitability Analysis**
+- DuPont: ROE = Net Margin × Asset Turnover × Equity Multiplier
+- EBITDA margin benchmarking vs industry
+- Contribution margin and breakeven analysis
+- Unit economics: CAC, LTV, LTV:CAC ratio, payback period
+
+**Liquidity & Solvency**
+- Current ratio (>1.5 healthy), Quick ratio (>1.0), Cash ratio
+- Debt-to-equity, Interest coverage ratio (EBIT/Interest expense)
+- Altman Z-Score for distress prediction
+- Net Debt = Total Debt - Cash & Equivalents
+
+**Working Capital Optimisation**
+- Cash Conversion Cycle = DSO + DIO - DPO (target: minimise)
+- AR factoring / invoice discounting considerations
+- Early payment discount analysis
+- Inventory optimisation (EOQ model)
+
+**Valuation**
+- DCF: WACC, terminal value, sensitivity analysis
+- EV/EBITDA, P/E, P/S multiples by industry
+- Asset-based valuation for capital-intensive businesses
+- Pre-money / post-money for fundraising
+
+**FP&A (Financial Planning & Analysis)**
+- Zero-based budgeting vs incremental
+- Rolling 13-week cash flow forecast
+- Variance analysis: price, volume, mix, FX
+- Scenario analysis: base / bull / bear
+
+---
+
+## CFO RESPONSE FORMAT (MANDATORY)
+
+For every substantive question, structure your response exactly as:
+
+**💡 INSIGHT**
+One sentence — the single most important financial truth right now.
+
+**📊 ANALYSIS**
+Data-driven breakdown. Use tables and specific ${S.co.currency} numbers. Compare to benchmarks.
+
+**⚠️ RISKS**
+What could go wrong. Quantify the downside where possible.
+
+**✅ RECOMMENDATION**
+Exactly what to do. Be specific — amounts, timelines, who should act.
+
+**🎯 NEXT ACTION**
+One concrete thing the CEO should do in the next 7 days.
+
+---
+
+For scenario questions ("what if…", "can we afford…", "what happens if…"):
+- Run the numbers explicitly with the scenario applied
+- Show base case vs scenario case side by side
+- Give a clear YES / NO / CONDITIONAL answer
+- Show the break-even point or threshold
+
+For compliance questions:
+- Cite the exact standard (e.g., "IFRS 15 §31", "UAE CT Law Art.12")
+- Give the journal entry if relevant
+- State the deadline and penalty for non-compliance
+
+For voice responses: keep answers under 120 words — crisp, decisive, no filler.
+
+## STYLE
+- Address CEO as: **${S.me.firstName || 'CEO'}**
+- Never say "it depends" without immediately resolving the dependency
+- Use ${S.co.currency} amounts. Be specific.
+- If data is missing, say what data you need and why
+
 ${buildTransactionContext()}`
 }
 
@@ -1407,6 +1876,11 @@ function showPanel(id) {
   if (id === 'board' && !S._cache.board) loadBoard()
   if (id === 'settings') { populateSettings(); renderZakiServerStatus() }
   if (id === 'ledger') renderLedger()
+  if (id === 'ifrs') loadIfrs()
+  if (id === 'ratios') renderRatiosGrid()
+  if (id === 'tax') loadTax()
+  if (id === 'valuation') loadValuation()
+  if (id === 'scenario') {}
 }
 
 function autoResize(el) {
@@ -1473,6 +1947,7 @@ function launchApp() {
   if (dot) { dot.classList.toggle('connected', connected); dot.title = connected ? 'AI connected' : 'AI not configured — click Settings' }
   if (!connected) document.getElementById('nav-api-banner')?.classList.remove('hide')
   renderBriefingKPIs()
+  runProactiveAlerts()
   showPanel('briefing')
 }
 
@@ -2087,12 +2562,15 @@ async function sendChat() {
   const btn = document.getElementById('btn-send')
   if (btn) btn.disabled = true
 
+  const kbHits = retrieveKB(text)
+  const sysWithKB = buildPrompt() + kbContext(kbHits)
+
   try {
     let full = ''
     await streamClaude(S.chat.slice(-20), (_, acc) => {
       full = acc
       updateMsg(msgId, acc)
-    })
+    }, sysWithKB)
     S.chat.push({ role: 'assistant', content: full })
     save()
     if (S.prefs.readAloud) speak(full)
@@ -2393,6 +2871,389 @@ Write in professional board-ready language. Use specific numbers throughout.` }]
 }
 
 function printBoard() { window.print() }
+
+// ═══════════════════════════════════════════
+// PROACTIVE INTELLIGENCE ENGINE
+// ═══════════════════════════════════════════
+function runProactiveAlerts() {
+  computeFin()
+  const f = S.fin; const c = S.co.currency
+  const alerts = []
+
+  const net = f.rev - f.exp
+  const runway = f.exp > f.rev && f.exp > 0 ? f.cash / ((f.exp - f.rev) / 30) : Infinity
+  const arPct = f.ar > 0 ? f.arOverdue / f.ar * 100 : 0
+  const currentRatio = f.ap > 0 ? (f.ar + f.cash) / f.ap : Infinity
+  const payrollPct = f.rev > 0 ? f.payroll / f.rev * 100 : 0
+  const dso = f.rev > 0 ? f.ar / (f.rev / 30) : 0
+
+  if (runway < 30) alerts.push({ level:'critical', icon:'🔴', title:'Cash Runway Critical', msg:`Only ${Math.round(runway)} days of cash left at current burn rate. Immediate action required.`, action:"Review cash flow", panel:'cashflow' })
+  else if (runway < 90) alerts.push({ level:'warn', icon:'⚠️', title:'Cash Runway Warning', msg:`${Math.round(runway)} days runway. Monitor closely and prepare contingency.`, action:"View cash flow", panel:'cashflow' })
+
+  if (arPct > 30) alerts.push({ level:'critical', icon:'🔴', title:'Overdue AR High', msg:`${arPct.toFixed(0)}% of receivables (${c} ${fmt(f.arOverdue)}) overdue >30 days. Bad debt risk rising.`, action:"Review AR", panel:'health' })
+  else if (arPct > 15) alerts.push({ level:'warn', icon:'⚠️', title:'Overdue AR Elevated', msg:`${arPct.toFixed(0)}% of AR overdue. Begin collections on oldest invoices.`, action:"Review AR", panel:'health' })
+
+  if (net < 0) alerts.push({ level:'critical', icon:'🔴', title:'Loss-Making This Month', msg:`Net loss of ${c} ${fmt(Math.abs(net))}. Expenses exceed revenue by ${(Math.abs(net)/f.rev*100).toFixed(0)}%.`, action:"Analyse costs", panel:'health' })
+
+  if (currentRatio < 1 && f.ap > 0) alerts.push({ level:'critical', icon:'🔴', title:'Liquidity Risk', msg:`Current ratio ${currentRatio.toFixed(2)}x — liabilities exceed liquid assets. AP obligations may not be met.`, action:"View ratios", panel:'ratios' })
+
+  if (payrollPct > 70 && f.rev > 0) alerts.push({ level:'warn', icon:'⚠️', title:'Payroll Ratio High', msg:`Payroll is ${payrollPct.toFixed(0)}% of revenue — well above the 50% healthy threshold.`, action:"Review costs", panel:'health' })
+
+  if (f.vat > 0 && f.cash < f.vat * 1.2) alerts.push({ level:'warn', icon:'⚠️', title:'VAT Coverage Low', msg:`Cash barely covers VAT liability of ${c} ${fmt(f.vat)}. Ensure funds set aside before filing date.`, action:"Tax advisor", panel:'tax' })
+
+  if (dso > 60 && f.rev > 0) alerts.push({ level:'warn', icon:'⚠️', title:'Slow Collections (DSO ${dso.toFixed(0)} days)', msg:`Customers taking ${dso.toFixed(0)} days to pay. Industry benchmark is <30 days.`, action:"Review AR", panel:'health' })
+
+  const el = document.getElementById('proactive-alerts')
+  if (!el) return
+  if (alerts.length === 0) {
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;font-size:.82rem;color:#15803d">
+      🟢 <strong>No critical alerts.</strong> Financials look healthy based on current data.
+    </div>`
+    return
+  }
+  el.innerHTML = `<div style="font-size:.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">⚡ Proactive Alerts (${alerts.length})</div>` +
+    alerts.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:${a.level==='critical'?'rgba(239,68,68,.07)':'rgba(245,158,11,.07)'};border:1px solid ${a.level==='critical'?'rgba(239,68,68,.25)':'rgba(245,158,11,.25)'};border-radius:10px;margin-bottom:8px">
+      <span style="font-size:1rem;flex-shrink:0;margin-top:1px">${a.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:2px">${a.title}</div>
+        <div style="font-size:.78rem;color:var(--text-2);line-height:1.5">${a.msg}</div>
+      </div>
+      <button class="btn-outline" style="font-size:.72rem;padding:4px 9px;white-space:nowrap;flex-shrink:0" onclick="showPanel('${a.panel}')">${a.action} →</button>
+    </div>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// SCENARIO SIMULATOR
+// ═══════════════════════════════════════════
+const SCENARIOS = {
+  revenue_drop: {
+    label: 'Sales drop 20%',
+    prompt: (f, c) => `SCENARIO: Monthly revenue drops 20% from ${c} ${fmt(f.rev)} to ${c} ${fmt(f.rev * 0.8)}.
+Current costs remain at ${c} ${fmt(f.exp)}.
+Run this scenario analysis:
+- New net profit/loss vs current
+- Cash runway impact (current ${f.cash > 0 ? (f.cash / Math.max(1, (f.exp - f.rev * 0.8) / 30)).toFixed(0) + ' days' : 'N/A'})
+- Which cost lines must be cut immediately to stay cash positive
+- Break-even revenue at current cost structure
+Give a clear YES/NO on whether we survive this scenario and what we must do in the first 30 days.`
+  },
+  hire_5: {
+    label: 'Hire 5 employees',
+    prompt: (f, c) => `SCENARIO: We want to hire 5 additional employees.
+Assume average fully-loaded cost per employee = ${c} ${fmt(Math.max(f.payroll / Math.max(f.payroll > 0 ? 3 : 1, 1), 15000))} per month (estimate from our payroll).
+Current monthly surplus/deficit: ${c} ${fmt(f.rev - f.exp)}
+Can we afford this hire? Run:
+- Cost impact on monthly P&L
+- Impact on cash runway
+- Revenue threshold needed to absorb the cost
+- Recommended hiring approach (all at once vs phased)
+Give a clear YES / NO / CONDITIONAL answer.`
+  },
+  breakeven: {
+    label: 'Break-even analysis',
+    prompt: (f, c) => `Calculate our break-even point precisely.
+Fixed costs (payroll + overhead): estimate from our expense structure
+Variable costs: estimate from industry norms for ${S.co.industry || 'our sector'}
+Current revenue: ${c} ${fmt(f.rev)} / month
+Current total expenses: ${c} ${fmt(f.exp)} / month
+Provide:
+- Monthly break-even revenue
+- Break-even units/transactions (estimate)
+- Margin of safety (current revenue vs break-even)
+- How many more/fewer customers needed to break even
+- Sensitivity: what if costs rise 10%?`
+  },
+  double_ar: {
+    label: 'AR doubles (slow payers)',
+    prompt: (f, c) => `SCENARIO: Our accounts receivable doubles to ${c} ${fmt(f.ar * 2)} because customers are paying slower.
+Current AR: ${c} ${fmt(f.ar)} | Current cash: ${c} ${fmt(f.cash)}
+Analyse:
+- Cash gap created by the AR increase
+- Whether we can fund operations during this gap
+- Cash runway impact
+- Financing options (invoice factoring, credit line)
+- Collections actions to prevent this
+- IFRS 9 provisioning implications if AR becomes doubtful`
+  },
+  cost_cut_15: {
+    label: 'Cut costs 15%',
+    prompt: (f, c) => `SCENARIO: We implement a 15% cost reduction across the business.
+Current monthly expenses: ${c} ${fmt(f.exp)}
+After 15% cut: ${c} ${fmt(f.exp * 0.85)}
+Analyse:
+- New monthly net profit
+- Cash runway improvement
+- Which cost categories are realistic to cut (payroll is ${c} ${fmt(f.payroll)} = ${f.exp > 0 ? (f.payroll / f.exp * 100).toFixed(0) : 0}% of costs)
+- Implementation risks and IFRS implications (IAS 19 for redundancies, IAS 37 for restructuring provision)
+- Recommended sequence for cuts`
+  },
+  expand_market: {
+    label: 'Enter new market',
+    prompt: (f, c) => `SCENARIO: We want to expand into a new country/market.
+Current cash position: ${c} ${fmt(f.cash)} | Monthly surplus: ${c} ${fmt(f.rev - f.exp)}
+Analyse from a CFO perspective:
+- How much expansion capital we can self-fund from current operations
+- Minimum runway to maintain at home base while expanding
+- Key financial risks of market entry
+- Tax/compliance considerations for ${S.co.country || 'UAE'}-based company expanding into GCC
+- Recommended financial structure for the expansion (branch vs subsidiary)
+- Break-even timeline for new market`
+  },
+  raise_prices: {
+    label: 'Raise prices 10%',
+    prompt: (f, c) => `SCENARIO: We raise our prices by 10%.
+Current revenue: ${c} ${fmt(f.rev)} | If volume stays same: ${c} ${fmt(f.rev * 1.1)}
+Analyse:
+- Revenue and profit impact at 0%, 5%, 10%, 20% volume loss due to price increase
+- Price elasticity breakeven: how much volume can we lose and still be better off?
+- Margin impact table (show as a sensitivity table)
+- Customer segment risk (which clients are most price-sensitive based on context)
+- VAT implications of price change
+- Recommended implementation approach`
+  },
+  lose_top_client: {
+    label: 'Lose top client',
+    prompt: (f, c) => `SCENARIO: We lose our top/largest client.
+Assume top client = 30–40% of revenue (adjust if you know exact figure from context).
+Current revenue: ${c} ${fmt(f.rev)}
+Analyse:
+- Revenue loss and immediate P&L impact
+- Revised cash runway
+- Emergency cost actions needed in first 30 days
+- Pipeline conversion needed to replace the revenue
+- Bad debt provision needed if client owes us money (IFRS 9)
+- Communication and contractual obligations
+Give a 90-day survival plan.`
+  }
+}
+
+async function runScenario(key) {
+  const el = document.getElementById('scenario-result')
+  if (!aiReady()) { el.innerHTML = noKeyState('Scenario Simulator requires AI.'); return }
+  computeFin()
+  const sc = SCENARIOS[key]
+  if (!sc) return
+  el.innerHTML = `<div style="color:var(--text-3);font-size:.82rem;margin-bottom:8px">Running scenario: <strong>${sc.label}</strong></div><span class="spinner"></span>`
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content: sc.prompt(S.fin, S.co.currency) }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+async function runCustomScenario() {
+  const inp = document.getElementById('scenario-input')
+  const q = inp?.value?.trim()
+  if (!q) return
+  const el = document.getElementById('scenario-result')
+  if (!aiReady()) { el.innerHTML = noKeyState('Scenario Simulator requires AI.'); return }
+  inp.value = ''
+  el.innerHTML = `<div style="color:var(--text-3);font-size:.82rem;margin-bottom:8px">Simulating your scenario…</div><span class="spinner"></span>`
+  computeFin()
+  const f = S.fin; const c = S.co.currency
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:`SCENARIO ANALYSIS REQUEST: ${q}
+
+Our current financials:
+- Revenue: ${c} ${fmt(f.rev)}/month | Expenses: ${c} ${fmt(f.exp)}/month | Net: ${c} ${fmt(f.rev-f.exp)}
+- Cash: ${c} ${fmt(f.cash)} | Runway: ${f.exp>f.rev?(f.cash/((f.exp-f.rev)/30)).toFixed(0)+' days':'profitable'}
+- AR: ${c} ${fmt(f.ar)} | AP: ${c} ${fmt(f.ap)} | Payroll: ${c} ${fmt(f.payroll)}
+
+Apply the CFO response format. Give a clear YES/NO/CONDITIONAL answer with specific numbers.` }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+// ═══════════════════════════════════════════
+// IFRS ADVISOR
+// ═══════════════════════════════════════════
+async function askIfrs(question) {
+  if (!question?.trim()) return
+  const el = document.getElementById('ifrs-content')
+  const inp = document.getElementById('ifrs-q')
+  if (inp) inp.value = ''
+  if (!aiReady()) { el.innerHTML = noKeyState('IFRS Advisor requires AI connection.'); return }
+  el.innerHTML = '<span class="spinner"></span> Consulting IFRS standards…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content: question }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
+      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+function loadIfrs(force) {
+  if (!force && document.getElementById('ifrs-content')?.textContent?.trim()) return
+  askIfrs(`Give me a comprehensive IFRS compliance health check for ${S.co.name || 'our company'} based on our financial data. Cover: revenue recognition (IFRS 15), financial instruments and ECL (IFRS 9), going concern (IAS 1), provisions (IAS 37), and any other applicable standards. Flag red flags and give priority action items.`)
+}
+
+// ═══════════════════════════════════════════
+// FINANCIAL RATIOS
+// ═══════════════════════════════════════════
+function renderRatiosGrid() {
+  computeFin()
+  const f = S.fin
+  const c = S.co.currency
+  const ratios = [
+    // Liquidity
+    { group:'Liquidity', name:'Current Ratio', formula:'(AR + Cash) / AP', value: f.ap>0?((f.ar+f.cash)/f.ap):null, fmt:'x', benchmark:'> 1.5', good: v=>v>1.5, warn: v=>v>1 },
+    { group:'Liquidity', name:'Quick Ratio', formula:'Cash / AP', value: f.ap>0?(f.cash/f.ap):null, fmt:'x', benchmark:'> 1.0', good: v=>v>1, warn: v=>v>0.7 },
+    { group:'Liquidity', name:'Cash Ratio', formula:'Cash / AP', value: f.ap>0?(f.cash/f.ap):null, fmt:'x', benchmark:'> 0.5', good: v=>v>0.5, warn: v=>v>0.2 },
+    { group:'Liquidity', name:'Cash Runway', formula:'Cash / Monthly Burn', value: f.exp>f.rev&&f.exp>0?(f.cash/((f.exp-f.rev)/30)):null, fmt:'d', benchmark:'> 90 days', good: v=>v>90, warn: v=>v>30 },
+    // Profitability
+    { group:'Profitability', name:'Net Profit Margin', formula:'Net / Revenue', value: f.rev>0?((f.rev-f.exp)/f.rev*100):null, fmt:'%', benchmark:'> 10%', good: v=>v>10, warn: v=>v>0 },
+    { group:'Profitability', name:'Gross Margin', formula:'(Rev - Exp) / Rev', value: f.rev>0?((f.rev-f.exp)/f.rev*100):null, fmt:'%', benchmark:'> 20%', good: v=>v>20, warn: v=>v>5 },
+    { group:'Profitability', name:'Payroll Ratio', formula:'Payroll / Revenue', value: f.rev>0?(f.payroll/f.rev*100):null, fmt:'%', benchmark:'< 50%', good: v=>v<50, warn: v=>v<70 },
+    // Efficiency
+    { group:'Efficiency', name:'DSO (Days Sales Outstanding)', formula:'AR / (Rev/30)', value: f.rev>0?(f.ar/(f.rev/30)):null, fmt:'d', benchmark:'< 30 days', good: v=>v<30, warn: v=>v<60 },
+    { group:'Efficiency', name:'DPO (Days Payable Outstanding)', formula:'AP / (Exp/30)', value: f.exp>0?(f.ap/(f.exp/30)):null, fmt:'d', benchmark:'30–60 days', good: v=>v>=30&&v<=60, warn: v=>v<90 },
+    { group:'Efficiency', name:'AR Overdue %', formula:'AR Overdue / AR', value: f.ar>0?(f.arOverdue/f.ar*100):null, fmt:'%', benchmark:'< 15%', good: v=>v<15, warn: v=>v<30 },
+    // Solvency
+    { group:'Solvency', name:'Working Capital', formula:'(AR + Cash) - AP', value: (f.ar+f.cash)-f.ap, fmt:'cur', benchmark:'Positive', good: v=>v>0, warn: v=>v>-f.exp },
+    { group:'Solvency', name:'VAT Coverage', formula:'Cash / VAT Liability', value: f.vat>0?(f.cash/f.vat):null, fmt:'x', benchmark:'> 2x', good: v=>v>2, warn: v=>v>1 },
+  ]
+
+  const groups = [...new Set(ratios.map(r=>r.group))]
+  const el = document.getElementById('ratios-grid')
+  const fmtVal = (v, type, cur) => {
+    if (v===null||isNaN(v)) return 'N/A'
+    if (type==='%') return v.toFixed(1)+'%'
+    if (type==='x') return v.toFixed(2)+'x'
+    if (type==='d') return Math.round(v)+' days'
+    if (type==='cur') return cur+' '+fmt(v)
+    return v.toFixed(2)
+  }
+  const signal = (r) => {
+    if (r.value===null||isNaN(r.value)) return { icon:'—', color:'var(--text-3)' }
+    if (r.good(r.value)) return { icon:'🟢', color:'var(--green)' }
+    if (r.warn(r.value)) return { icon:'⚠️', color:'var(--amber)' }
+    return { icon:'🔴', color:'var(--red)' }
+  }
+
+  el.innerHTML = groups.map(g => `
+    <div style="grid-column:1/-1;font-size:.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-top:8px">${g}</div>
+    ${ratios.filter(r=>r.group===g).map(r => {
+      const s = signal(r)
+      return `<div class="card" style="padding:14px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="font-size:.78rem;color:var(--text-2);font-weight:500">${r.name}</div>
+          <span style="font-size:1rem">${s.icon}</span>
+        </div>
+        <div style="font-size:1.35rem;font-weight:700;color:${s.color};margin-bottom:4px">${fmtVal(r.value, r.fmt, c)}</div>
+        <div style="font-size:.7rem;color:var(--text-3)">Benchmark: ${r.benchmark}</div>
+      </div>`
+    }).join('')}
+  `).join('')
+}
+
+async function interpretRatios() {
+  const el = document.getElementById('ratios-ai')
+  if (!aiReady()) { el.innerHTML = noKeyState('Ratio interpretation requires AI.'); return }
+  el.innerHTML = '<span class="spinner"></span> Interpreting ratios…'
+  computeFin()
+  const f = S.fin
+  const c = S.co.currency
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:`Interpret all our financial ratios and give a comprehensive assessment:
+
+Current Ratio: ${f.ap>0?((f.ar+f.cash)/f.ap).toFixed(2):'N/A'}
+Quick Ratio: ${f.ap>0?(f.cash/f.ap).toFixed(2):'N/A'}
+Net Profit Margin: ${f.rev>0?((f.rev-f.exp)/f.rev*100).toFixed(1)+'%':'N/A'}
+Payroll Ratio: ${f.rev>0?(f.payroll/f.rev*100).toFixed(1)+'%':'N/A'}
+DSO: ${f.rev>0?(f.ar/(f.rev/30)).toFixed(0)+' days':'N/A'}
+DPO: ${f.exp>0?(f.ap/(f.exp/30)).toFixed(0)+' days':'N/A'}
+AR Overdue: ${f.ar>0?(f.arOverdue/f.ar*100).toFixed(0)+'%':'N/A'}
+Working Capital: ${c} ${fmt((f.ar+f.cash)-f.ap)}
+Cash Runway: ${f.exp>f.rev?(f.cash/((f.exp-f.rev)/30)).toFixed(0)+' days':'Profitable (∞)'}
+
+For each ratio: state what it means for our specific business, benchmark against industry, and give a clear action if it's outside the healthy range. End with an overall financial health score out of 10.` }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+// ═══════════════════════════════════════════
+// TAX & VAT ADVISOR
+// ═══════════════════════════════════════════
+async function askTax(question) {
+  if (!question?.trim()) return
+  const el = document.getElementById('tax-content')
+  const inp = document.getElementById('tax-q')
+  if (inp) inp.value = ''
+  if (!aiReady()) { el.innerHTML = noKeyState('Tax Advisor requires AI connection.'); return }
+  el.innerHTML = '<span class="spinner"></span> Consulting tax regulations…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content: question }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
+      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+function loadTax(force) {
+  if (!force && document.getElementById('tax-content')?.textContent?.trim()) return
+  askTax(`Give us a complete UAE tax health check for ${S.co.name||'our company'}:
+1. UAE Corporate Tax: estimated liability at 9% on our net profit, and any exemptions/deductions we should apply
+2. UAE VAT: estimated output VAT, input VAT recovery, net VAT payable, and filing status
+3. ESR: whether our activities trigger ESR obligations
+4. Key deadlines and compliance actions needed in the next 90 days
+5. Top 3 tax planning opportunities we should act on now`)
+}
+
+// ═══════════════════════════════════════════
+// VALUATION
+// ═══════════════════════════════════════════
+async function loadValuation(force) {
+  const el = document.getElementById('valuation-content')
+  if (!aiReady()) { el.innerHTML = noKeyState('Valuation requires AI connection.'); return }
+  el.innerHTML = '<span class="spinner"></span> Running valuation models…'
+  computeFin()
+  const f = S.fin; const c = S.co.currency
+  const annualRev = f.rev * 12
+  const ebitda = (f.rev - f.exp) * 12
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:`Run a comprehensive business valuation for ${S.co.name||'our company'} using multiple methods:
+
+FINANCIAL DATA:
+- Annual Revenue (est.): ${c} ${fmt(annualRev)}
+- Annual EBITDA (est.): ${c} ${fmt(ebitda)}
+- Monthly Net Profit: ${c} ${fmt(f.rev-f.exp)}
+- Cash Position: ${c} ${fmt(f.cash)}
+- Industry: ${S.co.industry||'Not specified'}
+- Market: ${S.co.country||'UAE'}
+
+Please provide:
+
+## 1. Revenue Multiple Valuation
+Apply industry-appropriate EV/Revenue multiples (give range: bear/base/bull)
+
+## 2. EBITDA Multiple Valuation
+Apply industry EV/EBITDA multiples (give range: bear/base/bull)
+
+## 3. DCF Valuation (Simplified)
+Assume 3 growth scenarios. Use WACC appropriate for ${S.co.country||'UAE'} SME.
+
+## 4. Asset-Based Valuation
+Estimated floor value based on working capital.
+
+## 5. Fundraising Readiness
+- Strengths for investors
+- Red flags investors will question
+- Recommended round size if fundraising
+- What to fix before approaching investors
+
+## 6. Valuation Summary Table
+| Method | Bear | Base | Bull |
+|--------|------|------|------|
+
+Give your recommended valuation range and the single most important thing to do to increase company value.` }],
+      (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+    S._cache.valuation = full; save()
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
 
 // ═══════════════════════════════════════════
 // INIT
