@@ -333,6 +333,254 @@ function doLogout(){
   showView('login')
 }
 
+// ── Panel HTML definitions ─────────────────────────────
+const PANELS = {
+
+dashboard: `
+<div class="page-title">Good morning, <span id="dash-name"></span> 👋</div>
+<div class="page-sub">Here's what's happening with <span id="dash-co"></span> today.</div>
+<div class="grid4" style="margin-bottom:20px">
+  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">7</div><div class="stat-sub">of 10 seats used</div></div>
+  <div class="stat-card"><div class="stat-label">Modules Active</div><div class="stat-val" id="d-mods">6</div><div class="stat-sub">4 available to add</div></div>
+  <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">$480</div><div class="stat-sub">Next billing May 18</div></div>
+  <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">2</div><div class="stat-sub"><span class="badge badge-amber">1 open</span></div></div>
+</div>
+<div class="grid2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-title">Your Products <a class="btn btn-ghost btn-sm" onclick="nav('modules')">Manage →</a></div>
+    <div id="product-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Seat Usage <a class="btn btn-ghost btn-sm" onclick="nav('users')">Manage →</a></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:.82rem"><span id="seat-label"></span><span style="font-weight:600" id="seat-pct"></span></div>
+    <div class="prog-bar" style="margin-bottom:16px"><div class="prog-fill" id="seat-bar" style="background:var(--indigo)"></div></div>
+    <div id="user-pills"></div>
+  </div>
+</div>
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Quick Actions</div>
+    <div style="display:flex;flex-direction:column;gap:8px" id="quick-actions"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent Activity</div>
+    <div id="activity-feed" style="font-size:.82rem"></div>
+  </div>
+</div>`,
+
+modules: `
+<div class="page-title">Modules</div>
+<div class="page-sub">Enable or disable platform modules. Changes apply immediately.</div>
+<div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap" id="mod-filters"></div>
+<div id="mod-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>`,
+
+users: `
+<div class="page-title">Users &amp; Teams</div>
+<div class="page-sub">Manage access, roles, and seat allocation.</div>
+<div class="grid3" style="margin-bottom:20px">
+  <div class="stat-card"><div class="stat-label">Seats Used</div><div class="stat-val" id="u-used">7 / 10</div><div class="stat-sub">3 seats available</div></div>
+  <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-val">2</div><div class="stat-sub">Full access</div></div>
+  <div class="stat-card"><div class="stat-label">Last Invited</div><div class="stat-val" style="font-size:1rem">3 days ago</div><div class="stat-sub">sara@company.com</div></div>
+</div>
+<div class="card">
+  <div class="card-title">Team Members
+    <button class="btn btn-grad btn-sm" onclick="openInvite()">+ Invite User</button>
+  </div>
+  <table class="tbl"><thead><tr><th>User</th><th>Role</th><th>Modules</th><th>Status</th><th>Last Active</th><th></th></tr></thead>
+  <tbody id="users-tbody"></tbody></table>
+</div>`,
+
+billing: `
+<div class="page-title">Billing &amp; Plans</div>
+<div class="page-sub">Manage your subscription, seats, and payment method.</div>
+<div class="grid2" style="margin-bottom:20px">
+  <div class="card" style="border:2px solid var(--indigo)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div><div class="stat-label">Current Plan</div><div style="font-size:1.4rem;font-weight:700" id="b-plan-name">Growth</div></div>
+      <span class="badge badge-green">Active</span>
+    </div>
+    <div style="font-size:.82rem;color:var(--text-2);margin-bottom:14px" id="b-plan-desc"></div>
+    <div style="display:flex;gap:16px;font-size:.83rem;margin-bottom:16px" id="b-plan-stats"></div>
+    <div class="prog-bar" style="margin-bottom:6px"><div class="prog-fill" id="b-seat-bar" style="background:var(--indigo)"></div></div>
+    <div style="font-size:.75rem;color:var(--text-3);margin-bottom:16px" id="b-seat-label"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-grad btn-sm" onclick="nav('billing-upgrade')">Upgrade Plan</button>
+      <button class="btn btn-outline btn-sm">Add Seats</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Usage This Month</div>
+    <div id="usage-meters"></div>
+    <div class="card-title" style="margin-top:16px">Payment Method</div>
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-1);border-radius:8px">
+      <div style="font-size:1.4rem">💳</div>
+      <div><div style="font-size:.83rem;font-weight:600">Visa ending 4242</div><div style="font-size:.75rem;color:var(--text-3)">Expires 09/27</div></div>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto">Update</button>
+    </div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="card-title">Available Plans</div>
+  <div id="plan-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
+</div>
+<div class="card">
+  <div class="card-title">Invoice History <button class="btn btn-outline btn-sm">Download All</button></div>
+  <table class="tbl"><thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Plan</th><th>Status</th><th></th></tr></thead>
+  <tbody id="invoices-tbody"></tbody></table>
+</div>`,
+
+whitelabel: `
+<div class="page-title">White Label &amp; Embed</div>
+<div class="page-sub">Brand the platform as your own. Embed ERP into any website.</div>
+<div class="grid2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-title">Brand Identity</div>
+    <div class="field" style="margin-bottom:12px"><label>Company Display Name</label><input id="wl-name" placeholder="Your Company Name"></div>
+    <div class="field" style="margin-bottom:12px"><label>Support Email</label><input id="wl-email" type="email" placeholder="support@yourcompany.com"></div>
+    <div class="field" style="margin-bottom:12px"><label>Primary Colour</label>
+      <div style="display:flex;gap:8px;align-items:center"><input id="wl-color" type="color" value="#6366f1" style="width:40px;height:36px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input id="wl-color-hex" placeholder="#6366f1" style="flex:1;padding:8px 12px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.85rem;color:var(--text)"></div>
+    </div>
+    <div class="field" style="margin-bottom:16px"><label>Logo URL</label><input id="wl-logo" placeholder="https://yourcompany.com/logo.png"></div>
+    <button class="btn btn-grad btn-sm" onclick="saveWhiteLabel()">Save Branding</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Custom Domain</div>
+    <div style="font-size:.82rem;color:var(--text-2);margin-bottom:14px">Point your domain to the Mumtaz platform. Add a CNAME record in your DNS.</div>
+    <div class="field" style="margin-bottom:12px"><label>Your ERP Domain</label><input id="wl-domain" placeholder="erp.yourcompany.com"></div>
+    <div style="background:var(--bg-1);border-radius:8px;padding:12px;font-size:.78rem;font-family:monospace;color:var(--text-2);margin-bottom:14px">
+      CNAME &nbsp;<strong id="wl-domain-preview">erp.yourcompany.com</strong><br>→ &nbsp;erp.mumtaz.digital
+    </div>
+    <div style="font-size:.75rem;color:var(--text-3);margin-bottom:12px">⚠️ DNS propagation takes 10–30 minutes after adding the record.</div>
+    <button class="btn btn-grad btn-sm" onclick="verifyDomain()">Verify Domain</button>
+    <span id="domain-status" style="font-size:.78rem;margin-left:10px"></span>
+  </div>
+</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="card-title">Embed ERP in Your Website</div>
+  <div style="display:flex;gap:10px;margin-bottom:14px" id="embed-tabs">
+    <button class="btn btn-grad btn-sm" onclick="setEmbedTab('iframe')" id="etab-iframe">iFrame Embed</button>
+    <button class="btn btn-outline btn-sm" onclick="setEmbedTab('js')" id="etab-js">JS Widget</button>
+    <button class="btn btn-outline btn-sm" onclick="setEmbedTab('api')" id="etab-api">REST API</button>
+  </div>
+  <div id="embed-content"></div>
+</div>
+<div class="card">
+  <div class="card-title">White Label Modules</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px" id="wl-options"></div>
+</div>`,
+
+settings: `
+<div class="page-title">Settings</div>
+<div class="page-sub">Configure your account, integrations, and notifications.</div>
+<div class="grid2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-title">Company Profile</div>
+    <div class="field"><label>Company Name</label><input id="st-company" placeholder="Mumtaz Technology LLC"></div>
+    <div class="field"><label>Industry</label>
+      <select id="st-industry" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)">
+        <option>Technology</option><option>Retail</option><option>Manufacturing</option><option>Professional Services</option><option>Healthcare</option><option>Real Estate</option><option>Finance</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Country</label>
+      <select id="st-country" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)">
+        <option>United Arab Emirates</option><option>Saudi Arabia</option><option>Pakistan</option><option>United Kingdom</option><option>United States</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Currency</label>
+      <select id="st-currency" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)">
+        <option>AED — UAE Dirham</option><option>SAR — Saudi Riyal</option><option>PKR — Pakistani Rupee</option><option>USD — US Dollar</option><option>GBP — British Pound</option>
+      </select>
+    </div>
+    <button class="btn btn-grad btn-sm" onclick="saveSettings()">Save Changes</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Integrations</div>
+    <div id="integrations-list"></div>
+  </div>
+</div>
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Notifications</div>
+    <div id="notif-settings"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">API Keys</div>
+    <div style="font-size:.82rem;color:var(--text-2);margin-bottom:14px">Use these keys to connect third-party apps to your Mumtaz account.</div>
+    <div id="api-keys-list"></div>
+    <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="genApiKey()">+ Generate New Key</button>
+  </div>
+</div>`,
+
+support: `
+<div class="page-title">Support Center</div>
+<div class="page-sub">Get help, report issues, or browse documentation.</div>
+<div class="grid3" style="margin-bottom:20px">
+  <a href="https://docs.mumtaz.digital" target="_blank" class="card" style="cursor:pointer;text-decoration:none;transition:box-shadow var(--tr)" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow=''">
+    <div style="font-size:1.8rem;margin-bottom:8px">📚</div>
+    <div style="font-weight:700;margin-bottom:4px">Documentation</div>
+    <div style="font-size:.82rem;color:var(--text-2)">Guides, tutorials, and API reference</div>
+  </a>
+  <a href="https://mumtaz.digital" target="_blank" class="card" style="cursor:pointer;text-decoration:none;transition:box-shadow var(--tr)" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow=''">
+    <div style="font-size:1.8rem;margin-bottom:8px">💬</div>
+    <div style="font-weight:700;margin-bottom:4px">Live Chat</div>
+    <div style="font-size:.82rem;color:var(--text-2)">Chat with support Mon–Fri 9am–6pm GST</div>
+  </a>
+  <div class="card">
+    <div style="font-size:1.8rem;margin-bottom:8px">📧</div>
+    <div style="font-weight:700;margin-bottom:4px">Email Support</div>
+    <div style="font-size:.82rem;color:var(--text-2)">support@mumtaz.digital · 24h response</div>
+  </div>
+</div>
+<div class="grid2">
+  <div class="card">
+    <div class="card-title">Submit a Ticket</div>
+    <div class="field"><label>Subject</label><input id="tkt-subject" placeholder="Briefly describe the issue"></div>
+    <div class="field"><label>Module</label>
+      <select id="tkt-module" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)">
+        <option>General</option><option>ERP / Odoo</option><option>ZAKI CFO</option><option>Billing</option><option>White Label</option><option>API</option>
+      </select>
+    </div>
+    <div class="field"><label>Priority</label>
+      <select id="tkt-priority" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)">
+        <option>Normal</option><option>High</option><option>Critical</option>
+      </select>
+    </div>
+    <div class="field"><label>Description</label><textarea id="tkt-body" rows="4" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.85rem;color:var(--text);resize:none" placeholder="Describe the issue in detail…"></textarea></div>
+    <button class="btn btn-grad btn-sm" onclick="submitTicket()">Submit Ticket</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent Tickets</div>
+    <div id="tickets-list"></div>
+    <div class="card-title" style="margin-top:20px">FAQ</div>
+    <div id="faq-list"></div>
+  </div>
+</div>`
+
+} // end PANELS
+
+// ── Invite modal ───────────────────────────────────────
+document.body.insertAdjacentHTML('beforeend',`
+<div class="modal-bg" id="invite-modal">
+  <div class="modal">
+    <div class="modal-title">Invite Team Member</div>
+    <div class="modal-sub">They'll receive an email with setup instructions.</div>
+    <div class="field"><label>Full Name</label><input id="inv-name" placeholder="Sara Ahmed"></div>
+    <div class="field"><label>Work Email</label><input id="inv-email" type="email" placeholder="sara@company.com"></div>
+    <div class="field"><label>Role</label>
+      <select id="inv-role" style="width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)">
+        <option>Admin</option><option>Manager</option><option>User</option><option>Read Only</option>
+      </select>
+    </div>
+    <div class="field"><label>Module Access</label>
+      <div id="inv-mods" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('invite-modal')">Cancel</button>
+      <button class="btn btn-grad" onclick="sendInvite()">Send Invite</button>
+    </div>
+  </div>
+</div>`)
+
 // ── Boot ───────────────────────────────────────────────
 load()
 if(P.user.email){
