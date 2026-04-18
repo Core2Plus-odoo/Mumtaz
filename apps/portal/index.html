@@ -53,7 +53,57 @@ input,select,textarea{font-family:var(--font);outline:none}
 .auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--text-3);font-size:.78rem}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
 
-/* ── App shell ── */
+/* ── Onboarding wizard ── */
+#onboard{display:none;min-height:100vh;background:var(--bg);padding:32px 20px}
+#onboard.open{display:block}
+.ob-wrap{max-width:760px;margin:0 auto}
+.ob-header{text-align:center;margin-bottom:36px}
+.ob-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px}
+.ob-logo-mark{width:38px;height:38px;background:var(--grad);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.ob-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px}
+.ob-step{display:flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--text-3)}
+.ob-step.active{color:var(--indigo)}
+.ob-step.done{color:var(--green)}
+.ob-step-num{width:28px;height:28px;border-radius:50%;border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;background:var(--surface)}
+.ob-step.active .ob-step-num{border-color:var(--indigo);background:var(--indigo);color:#fff}
+.ob-step.done .ob-step-num{border-color:var(--green);background:var(--green);color:#fff}
+.ob-step-line{width:40px;height:2px;background:var(--border);margin:0 4px}
+.ob-step-line.done{background:var(--green)}
+.ob-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;box-shadow:var(--shadow);margin-bottom:20px}
+.ob-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
+.ob-sub{font-size:.85rem;color:var(--text-2);margin-bottom:24px}
+.ob-foot{display:flex;justify-content:space-between;align-items:center}
+/* Product cards */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:8px}
+.prod-card{border:2px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all var(--tr);position:relative}
+.prod-card:hover{border-color:var(--indigo);box-shadow:var(--shadow)}
+.prod-card.selected{border-color:var(--indigo);background:rgba(99,102,241,.04)}
+.prod-card.selected::after{content:'✓';position:absolute;top:10px;right:12px;width:20px;height:20px;background:var(--indigo);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+.prod-icon{font-size:2rem;margin-bottom:10px}
+.prod-name{font-size:.9rem;font-weight:700;margin-bottom:4px}
+.prod-desc{font-size:.75rem;color:var(--text-2);line-height:1.5}
+.prod-price{font-size:.75rem;font-weight:600;color:var(--indigo);margin-top:8px}
+/* Module cards in onboarding */
+.ob-mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.ob-mod{border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all var(--tr);display:flex;align-items:center;gap:10px}
+.ob-mod:hover{border-color:var(--indigo)}
+.ob-mod.selected{border-color:var(--indigo);background:rgba(99,102,241,.05)}
+.ob-mod.core{border-color:var(--green);background:rgba(16,185,129,.04);cursor:default}
+.ob-mod-icon{font-size:1.2rem;flex-shrink:0}
+.ob-mod-info{flex:1;min-width:0}
+.ob-mod-name{font-size:.8rem;font-weight:600}
+.ob-mod-tag{font-size:.66rem;color:var(--text-3)}
+/* Plan cards in onboarding */
+.ob-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ob-plan{border:2px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all var(--tr)}
+.ob-plan:hover{border-color:var(--indigo)}
+.ob-plan.selected{border-color:var(--indigo);background:rgba(99,102,241,.04)}
+.ob-plan-name{font-size:1rem;font-weight:700;margin-bottom:4px}
+.ob-plan-price{font-size:1.6rem;font-weight:700;margin-bottom:10px;color:var(--indigo)}
+.ob-plan-feature{font-size:.75rem;color:var(--text-2);margin-bottom:4px}
+/* Summary */
+.ob-summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.84rem}
+.ob-summary-row:last-child{border-bottom:none;font-weight:700;font-size:.9rem}
 #app{display:none;min-height:100vh;flex-direction:row}
 #app.ready{display:flex}
 .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0}
@@ -188,6 +238,18 @@ input,select,textarea{font-family:var(--font);outline:none}
   </div>
 </div>
 
+<!-- ══ ONBOARDING ══ -->
+<div id="onboard">
+  <div class="ob-wrap">
+    <div class="ob-logo">
+      <div class="ob-logo-mark">M</div>
+      <span style="font-size:1.1rem;font-weight:700">Mumtaz Platform</span>
+    </div>
+    <div id="ob-steps-bar"></div>
+    <div id="ob-step-content"></div>
+  </div>
+</div>
+
 <!-- ══ APP ══ -->
 <div id="app">
   <!-- Sidebar -->
@@ -315,7 +377,7 @@ function doSignup(){
   if(pass.length < 8){ err.textContent='Password must be at least 8 characters.'; err.style.display='block'; return }
   P.user = { name: fname+' '+lname, email, company, role:'Admin', avatar:'' }
   save()
-  bootApp()
+  startOnboarding()
 }
 
 function doForgot(){
@@ -964,6 +1026,216 @@ function showToast(msg, type=''){
 function toggleTheme(){
   document.body.classList.toggle('dark')
   P.theme=document.body.classList.contains('dark')?'dark':'light'; save()
+}
+
+// ── Onboarding ─────────────────────────────────────────
+let obStep = 1
+let obData = {
+  company:'', industry:'Technology', country:'United Arab Emirates', teamSize:'6-15',
+  products:{erp:true, zaki:false, marketplace:false},
+  erpMods:{}, plan:'growth'
+}
+const OB_STEPS = ['Company','Products','ERP Modules','Plan','Review']
+const OB_PRODS = [
+  {id:'erp',         name:'Mumtaz ERP',     icon:'🏢', desc:'Full business management — CRM, accounting, inventory, HR & more.',  price:'From $149/mo'},
+  {id:'zaki',        name:'ZAKI AI CFO',    icon:'🤖', desc:'AI-powered CFO with live P&L, cash flow forecasting & insights.',     price:'$79/mo add-on'},
+  {id:'marketplace', name:'Marketplace',    icon:'🛒', desc:'List & sell on the Mumtaz B2B marketplace across the UAE & GCC.',    price:'Free + 2% fee'},
+]
+const OB_CORE_MODS = ['crm','invoicing','inventory','purchase','hr','project','expenses','timesheets']
+
+function startOnboarding(){
+  obData.company = P.user.company||''
+  obStep = 1
+  obData.erpMods = {}
+  OB_CORE_MODS.forEach(id=>{ obData.erpMods[id]=true })
+  document.getElementById('auth').style.display='none'
+  document.getElementById('onboard').classList.add('open')
+  obRender()
+}
+
+function obRender(){
+  const skip3 = !obData.products.erp
+  document.getElementById('ob-steps-bar').innerHTML = '<div class="ob-steps">'+
+    OB_STEPS.map((s,i)=>{
+      const n=i+1, skip=n===3&&skip3, done=n<obStep, active=n===obStep
+      const line = i>0 ? '<div class="ob-step-line '+(done&&!skip?'done':'')+'"></div>' : ''
+      return line+'<div class="ob-step '+(done&&!skip?'done':'')+' '+(active?'active':'')+'">'
+        +'<div class="ob-step-num">'+(done&&!skip?'✓':n)+'</div>'
+        +'<span style="'+(skip?'opacity:.35;text-decoration:line-through':'')+'">'+s+'</span></div>'
+    }).join('')+'</div>'
+  const fn = [null,obS1,obS2,obS3,obS4,obS5][obStep]
+  document.getElementById('ob-step-content').innerHTML = fn ? fn() : ''
+}
+
+function obSaveStep(){
+  if(obStep===1){
+    const co=document.getElementById('ob1-co'), ind=document.getElementById('ob1-ind'), cty=document.getElementById('ob1-cty')
+    if(co)  obData.company  = co.value.trim()
+    if(ind) obData.industry = ind.value
+    if(cty) obData.country  = cty.value
+  }
+}
+
+function obSetTeam(s){ obSaveStep(); obData.teamSize=s; obRender() }
+function obToggleProd(id){ obData.products[id]=!obData.products[id]; obRender() }
+function obToggleMod(id){ if(OB_CORE_MODS.includes(id)) return; obData.erpMods[id]=!obData.erpMods[id]; obRender() }
+function obSelectPlan(id){ obData.plan=id; obRender() }
+
+function obNext(){
+  obSaveStep()
+  if(obStep===1 && !obData.company){ showToast('Enter your company name','error'); return }
+  if(obStep===2 && !Object.values(obData.products).some(v=>v)){ showToast('Select at least one product','error'); return }
+  obStep++
+  if(obStep===3 && !obData.products.erp) obStep++
+  obRender(); window.scrollTo(0,0)
+}
+
+function obBack(){
+  obSaveStep()
+  obStep--
+  if(obStep===3 && !obData.products.erp) obStep--
+  if(obStep<1) obStep=1
+  obRender(); window.scrollTo(0,0)
+}
+
+function obLaunch(){
+  obSaveStep()
+  P.user.company = obData.company
+  P.plan = obData.plan
+  const planSeats = {starter:3, growth:10, enterprise:50}
+  P.seats = planSeats[obData.plan]||10
+  if(obData.products.erp){
+    MODULES_DATA.forEach(m=>{ P.modules[m.id]=!!obData.erpMods[m.id] })
+  } else {
+    MODULES_DATA.forEach(m=>{ P.modules[m.id]=false })
+  }
+  save()
+  document.getElementById('onboard').classList.remove('open')
+  bootApp()
+}
+
+function obS1(){
+  const ss='width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.88rem;color:var(--text)'
+  const opt=(v,cur)=>'<option '+(cur===v?'selected':'')+'>'+v+'</option>'
+  const teams=['1-5','6-15','16-50','51-200','200+']
+  return '<div class="ob-card">'
+    +'<div class="ob-title">Tell us about your company</div>'
+    +'<div class="ob-sub">Helps us personalise your setup and recommend the right modules.</div>'
+    +'<div class="field"><label>Company Name</label><input id="ob1-co" placeholder="Acme LLC" value="'+obData.company.replace(/"/g,'&quot;')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div class="field"><label>Industry</label><select id="ob1-ind" style="'+ss+'">'
+    +['Technology','Retail','Manufacturing','Professional Services','Healthcare','Real Estate','Finance','Other'].map(v=>opt(v,obData.industry)).join('')
+    +'</select></div>'
+    +'<div class="field"><label>Country</label><select id="ob1-cty" style="'+ss+'">'
+    +['United Arab Emirates','Saudi Arabia','Pakistan','United Kingdom','United States','Other'].map(v=>opt(v,obData.country)).join('')
+    +'</select></div></div>'
+    +'<div class="field"><label>Team Size</label>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">'
+    +teams.map(s=>'<button type="button" onclick="obSetTeam(\''+s+'\')" class="btn btn-sm '+(obData.teamSize===s?'btn-grad':'btn-outline')+'">'+s+' people</button>').join('')
+    +'</div></div></div>'
+    +'<div class="ob-foot"><div style="font-size:.8rem;color:var(--text-3)">Step 1 of 5 — Company Profile</div>'
+    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+}
+
+function obS2(){
+  const cards = OB_PRODS.map(p=>'<div class="prod-card'+(obData.products[p.id]?' selected':'')+'" onclick="obToggleProd(\''+p.id+'\')">'
+    +'<div class="prod-icon">'+p.icon+'</div>'
+    +'<div class="prod-name">'+p.name+'</div>'
+    +'<div class="prod-desc">'+p.desc+'</div>'
+    +'<div class="prod-price">'+p.price+'</div></div>').join('')
+  return '<div class="ob-card">'
+    +'<div class="ob-title">Choose your products</div>'
+    +'<div class="ob-sub">Select everything you want to activate. You can add more later.</div>'
+    +'<div class="prod-grid">'+cards+'</div>'
+    +'<div style="font-size:.78rem;color:var(--text-3);margin-top:12px">💡 ERP includes 8 core modules free. Premium add-ons can be enabled later.</div>'
+    +'</div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+}
+
+function obS3(){
+  const core = MODULES_DATA.filter(m=>OB_CORE_MODS.includes(m.id))
+  const prem = MODULES_DATA.filter(m=>!OB_CORE_MODS.includes(m.id))
+  const coreHtml = core.map(m=>'<div class="ob-mod core"><div class="ob-mod-icon">'+m.icon+'</div><div class="ob-mod-info"><div class="ob-mod-name">'+m.name+'</div><div class="ob-mod-tag">Included free</div></div></div>').join('')
+  const premHtml = prem.map(m=>'<div class="ob-mod'+(obData.erpMods[m.id]?' selected':'')+'" onclick="obToggleMod(\''+m.id+'\')">'
+    +'<div class="ob-mod-icon">'+m.icon+'</div>'
+    +'<div class="ob-mod-info"><div class="ob-mod-name">'+m.name+'</div><div class="ob-mod-tag">$'+m.price+'/mo</div></div></div>').join('')
+  return '<div class="ob-card">'
+    +'<div class="ob-title">Choose your ERP modules</div>'
+    +'<div class="ob-sub">Core modules are included in all plans. Add premium modules anytime.</div>'
+    +'<div style="font-size:.8rem;font-weight:600;color:var(--green);margin-bottom:8px">✓ Included in all plans</div>'
+    +'<div class="ob-mod-grid" style="margin-bottom:20px">'+coreHtml+'</div>'
+    +'<div style="font-size:.8rem;font-weight:600;color:var(--text-2);margin-bottom:8px">Premium add-ons <span style="color:var(--text-3);font-weight:400">(click to add)</span></div>'
+    +'<div class="ob-mod-grid">'+premHtml+'</div>'
+    +'</div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+}
+
+function obS4(){
+  const addons = MODULES_DATA.filter(m=>!OB_CORE_MODS.includes(m.id)&&obData.erpMods[m.id]).reduce((s,m)=>s+m.price,0)
+  const zakiCost = obData.products.zaki ? 79 : 0
+  const plans = [
+    {id:'starter',    name:'Starter',    price:149, seats:3,  desc:'Best for small teams.',          highlight:false},
+    {id:'growth',     name:'Growth',     price:399, seats:10, desc:'Most popular for growing teams.', highlight:true},
+    {id:'enterprise', name:'Enterprise', price:999, seats:50, desc:'Full power for large orgs.',     highlight:false},
+  ]
+  const planHtml = plans.map(pl=>{
+    const sel = obData.plan===pl.id ? 'selected' : ''
+    const hlStyle = pl.highlight ? ' style="border-color:var(--indigo)"' : ''
+    const pop = pl.highlight ? '<div style="font-size:.7rem;font-weight:700;color:var(--indigo);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Most Popular</div>' : ''
+    const extras = (pl.id==='enterprise'?'<div class="ob-plan-feature">✓ Unlimited custom</div>':'')+(pl.id!=='starter'?'<div class="ob-plan-feature">✓ White label</div>':'')
+    return '<div class="ob-plan '+sel+'"'+hlStyle+' onclick="obSelectPlan(\''+pl.id+'\')">'
+      +pop
+      +'<div class="ob-plan-name">'+pl.name+'</div>'
+      +'<div class="ob-plan-price">$'+pl.price+'<span style="font-size:.9rem;font-weight:400;color:var(--text-2)">/mo</span></div>'
+      +'<div class="ob-plan-feature">✓ Up to '+pl.seats+' users</div>'
+      +'<div class="ob-plan-feature">✓ All core modules</div>'
+      +extras
+      +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-2)">'+pl.desc+'</div></div>'
+  }).join('')
+  const curPlan = plans.find(p=>p.id===obData.plan)
+  const total = (curPlan?curPlan.price:0) + addons + zakiCost
+  const estRows = []
+  if(curPlan) estRows.push('<div class="ob-summary-row"><span>Base plan ('+curPlan.name+')</span><span>$'+curPlan.price+'/mo</span></div>')
+  if(addons)  estRows.push('<div class="ob-summary-row"><span>ERP add-on modules</span><span>+$'+addons+'/mo</span></div>')
+  if(zakiCost) estRows.push('<div class="ob-summary-row"><span>ZAKI AI CFO</span><span>+$'+zakiCost+'/mo</span></div>')
+  if(addons||zakiCost) estRows.push('<div class="ob-summary-row"><span><b>Estimated total</b></span><span><b>$'+total+'/mo</b></span></div>')
+  const estimate = estRows.length ? '<div style="margin-top:14px;padding:12px 16px;background:var(--bg-1);border-radius:8px;font-size:.82rem">'+estRows.join('')+'</div>' : ''
+  return '<div class="ob-card">'
+    +'<div class="ob-title">Choose your plan</div>'
+    +'<div class="ob-sub">All plans include a 14-day free trial. No credit card required.</div>'
+    +'<div class="ob-plan-grid">'+planHtml+'</div>'+estimate
+    +'</div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" onclick="obNext()">Continue →</button></div>'
+}
+
+function obS5(){
+  const plan = PLANS_DATA.find(p=>p.id===obData.plan)||PLANS_DATA[1]
+  const selProds = OB_PRODS.filter(p=>obData.products[p.id]).map(p=>p.name).join(', ')||'None'
+  const premMods = MODULES_DATA.filter(m=>!OB_CORE_MODS.includes(m.id)&&obData.erpMods[m.id])
+  const addons = premMods.reduce((s,m)=>s+m.price,0)
+  const zakiCost = obData.products.zaki ? 79 : 0
+  const total = plan.price + addons + zakiCost
+  const row = (k,v) => '<div class="ob-summary-row"><span style="color:var(--text-3)">'+k+'</span><span>'+v+'</span></div>'
+  let rows = row('Company', obData.company||'—')
+    + row('Industry', obData.industry)
+    + row('Country', obData.country)
+    + row('Team Size', obData.teamSize+' people')
+    + row('Products', selProds)
+  if(obData.products.erp) rows += row('ERP Core Modules', '8 modules included free')
+  if(premMods.length) rows += row('ERP Add-ons', premMods.map(m=>m.name).join(', '))
+  rows += row('Plan', plan.name)
+  rows += '<div class="ob-summary-row"><span>Monthly Total</span><span style="color:var(--indigo);font-weight:700">$'+total+'/mo</span></div>'
+  return '<div class="ob-card">'
+    +'<div class="ob-title">Review &amp; Launch</div>'
+    +'<div class="ob-sub">Everything look good? Click Launch to activate your 14-day free trial.</div>'
+    +rows
+    +'<div style="margin-top:14px;font-size:.75rem;color:var(--text-3)">✓ 14-day free trial &nbsp;·&nbsp; ✓ No credit card required &nbsp;·&nbsp; ✓ Cancel anytime</div>'
+    +'</div>'
+    +'<div class="ob-foot"><button class="btn btn-outline" onclick="obBack()">← Back</button>'
+    +'<button class="btn btn-grad" style="padding:11px 28px;font-size:.95rem" onclick="obLaunch()">🚀 Launch My Account</button></div>'
 }
 
 // ── Boot ───────────────────────────────────────────────
