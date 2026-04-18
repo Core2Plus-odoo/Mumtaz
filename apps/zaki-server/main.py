@@ -69,6 +69,21 @@ def init_db():
             created_at    INTEGER DEFAULT (strftime('%s','now'))
         )
     """)
+    # Migrations for older DB schemas (add any missing columns)
+    for col, definition in [
+        ("name",          "TEXT"),
+        ("company",       "TEXT"),
+        ("password_hash", "TEXT"),
+        ("odoo_uid",      "INTEGER"),
+        ("tenant_id",     "INTEGER"),
+        ("plan",          "TEXT DEFAULT 'trial'"),
+        ("active",        "INTEGER DEFAULT 1"),
+        ("created_at",    "INTEGER DEFAULT (strftime('%s','now'))"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
+        except Exception:
+            pass  # column already exists
     conn.commit()
     conn.close()
 
@@ -304,30 +319,36 @@ def login(req: LoginReq):
     email = req.email.strip().lower()
     db    = get_db()
 
-    # Primary: validate against Odoo
-    odoo_uid = odoo_authenticate(email, req.password)
+    try:
+        # Primary: validate against Odoo
+        odoo_uid = odoo_authenticate(email, req.password)
 
-    if odoo_uid:
-        row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        if not row:
-            # First Odoo login — seed local cache
-            info = odoo_read_user(odoo_uid)
-            db.execute(
-                "INSERT OR IGNORE INTO users (email, name, odoo_uid, plan) VALUES (?, ?, ?, ?)",
-                (email, info.get("name", email.split("@")[0]), odoo_uid, "growth")
-            )
-            db.commit()
+        if odoo_uid:
             row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            if not row:
+                info = odoo_read_user(odoo_uid)
+                db.execute(
+                    "INSERT OR IGNORE INTO users (email, name, odoo_uid, plan) VALUES (?, ?, ?, ?)",
+                    (email, info.get("name", email.split("@")[0]), odoo_uid, "growth")
+                )
+                db.commit()
+                row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            else:
+                db.execute("UPDATE users SET odoo_uid=? WHERE email=?", (odoo_uid, email))
+                db.commit()
         else:
-            db.execute("UPDATE users SET odoo_uid=? WHERE email=?", (odoo_uid, email))
-            db.commit()
-    else:
-        # Fallback: local SQLite (demo / pre-seeded admin users)
-        row = db.execute("SELECT * FROM users WHERE email=? AND active=1", (email,)).fetchone()
-        if not row or not row["password_hash"] or \
-                not pwd_ctx.verify(req.password, row["password_hash"]):
-            db.close()
-            raise HTTPException(401, detail="Invalid email or password.")
+            # Fallback: local SQLite
+            row = db.execute("SELECT * FROM users WHERE email=? AND active=1", (email,)).fetchone()
+            if not row or not row["password_hash"] or \
+                    not pwd_ctx.verify(req.password, row["password_hash"]):
+                db.close()
+                raise HTTPException(401, detail="Invalid email or password.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[login] unexpected error: {e}")
+        db.close()
+        raise HTTPException(500, detail=f"Login error: {e}")
 
     if not row:
         db.close()
