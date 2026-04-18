@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from jose import jwt, JWTError
-from passlib.context import CryptContext
+import bcrypt as _bcrypt
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -33,7 +33,14 @@ ODOO_DB     = os.environ.get("ODOO_DB",             "mumtaz")
 ODOO_ADMIN  = os.environ.get("ODOO_ADMIN_USER",     "admin")
 ODOO_PASS   = os.environ.get("ODOO_ADMIN_PASS",     "admin")
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def _hash_pw(password: str) -> str:
+    return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
+
+def _verify_pw(password: str, hashed: str) -> bool:
+    try:
+        return _bcrypt.checkpw(password.encode(), hashed.encode())
+    except Exception:
+        return False
 
 # ── App ───────────────────────────────────────────────────────────────
 app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0")
@@ -300,7 +307,7 @@ def signup(req: SignupReq):
     tenant_id = odoo_create_tenant(req.company, email, req.name)
 
     # 3. Cache in SQLite
-    ph = pwd_ctx.hash(req.password)
+    ph = _hash_pw(req.password)
     db.execute(
         "INSERT INTO users (email, password_hash, name, company, odoo_uid, tenant_id, plan) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -363,7 +370,7 @@ def login(req: LoginReq):
             # Fallback: local SQLite
             row = db.execute("SELECT * FROM users WHERE email=? AND active=1", (email,)).fetchone()
             if not row or not row["password_hash"] or \
-                    not pwd_ctx.verify(req.password, row["password_hash"]):
+                    not _verify_pw(req.password, row["password_hash"]):
                 db.close()
                 raise HTTPException(401, detail="Invalid email or password.")
     except HTTPException:
