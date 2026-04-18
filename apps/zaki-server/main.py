@@ -211,7 +211,14 @@ def odoo_read_tenant(tenant_id: int) -> dict:
 class SignupReq(BaseModel):
     name: str
     email: str
-    company: str
+    company: str = ""
+    password: str
+
+class RegisterReq(BaseModel):
+    """Alias schema used by ZAKI CFO frontend (company is optional)."""
+    name: str
+    email: str
+    company: str | None = None
     password: str
 
 class LoginReq(BaseModel):
@@ -281,6 +288,16 @@ def signup(req: SignupReq):
             "tenant_id": tenant_id,
         },
     }
+
+@app.post("/api/v1/auth/register")
+def register(req: RegisterReq):
+    """Alias for /auth/signup — accepts optional company for ZAKI CFO frontend."""
+    return signup(SignupReq(
+        name=req.name,
+        email=req.email,
+        company=req.company or "",
+        password=req.password,
+    ))
 
 @app.post("/api/v1/auth/login")
 def login(req: LoginReq):

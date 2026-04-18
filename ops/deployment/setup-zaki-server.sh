@@ -64,10 +64,10 @@ systemctl enable zaki-server
 systemctl restart zaki-server
 
 echo ""
-echo "✅ ZAKI Server is running on 127.0.0.1:8000"
+echo "✅ ZAKI Server is running on 127.0.0.1:8001"
 echo ""
 echo "Next steps:"
 echo "  1. Set Anthropic key:  nano $DEST/.env && systemctl restart zaki-server"
 echo "  2. Create your user:   $DEST/venv/bin/python $DEST/create_user.py umer@mumtaz.digital PASSWORD"
-echo "  3. Check health:       curl http://127.0.0.1:8000/health"
+echo "  3. Check health:       curl http://127.0.0.1:8001/health"
 echo ""
