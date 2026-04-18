@@ -1,197 +1,79 @@
 # Mumtaz Platform — Architecture
 
-## Addon Dependency Graph
+## 1. Domains / Subdomains
 
-```
-mumtaz_tenant_manager          (base: mail, base)
-    ├── mumtaz_control_plane   (extends mumtaz.tenant with subscription/commercial fields)
-    ├── mumtaz_sme_profile     (mumtaz.sme.profile → links to mumtaz.tenant)
-    │       └── mumtaz_cfo_workspace  (mumtaz.cfo.workspace → links to mumtaz.sme.profile)
-    └── mumtaz_brand           (mumtaz.brand → referenced by mumtaz.tenant + mumtaz.sme.profile)
+| Domain | Purpose |
+|---|---|
+| `mumtaz.digital` | Marketing website (static) |
+| `app.mumtaz.digital` | Customer portal — signup, onboarding, billing |
+| `erp.mumtaz.digital` | Odoo ERP (customer-facing) |
+| `zaki.mumtaz.digital` | ZAKI AI CFO — frontend + API |
+| `marketplace.mumtaz.digital` | B2B Marketplace — storefront + vendor portal |
+| `admin.mumtaz.digital` | Odoo backend UI (internal) |
 
-mumtaz_marketplace             (standalone, optional Odoo module)
-```
+---
 
-## Data Flow Between Modules
+## 2. Portals / Apps
 
-```
-Customer signs up at app.mumtaz.digital
-    │
-    ▼
-ZAKI Server (FastAPI, port 8001)
-    ├── XML-RPC → Odoo: create res.users (email, name, password)
-    ├── XML-RPC → Odoo: create mumtaz.tenant (name, code, database_name, admin_email, state=draft)
-    ├── SQLite:  cache user row (email, odoo_uid, tenant_id, plan)
-    └── Return JWT
-
-JWT contains: { sub, email, name, company, odoo_uid, tenant_id, plan, exp }
-    │
-    ├── Portal uses JWT for all /api/v1/* calls
-    ├── ZAKI CFO uses same JWT (same ZAKI server)
-    └── Odoo login uses same email+password (created in Odoo during signup)
-
-Odoo Control Plane (admin.mumtaz.digital)
-    └── mumtaz.tenant record
-            ├── state: draft → provisioning → active → suspended → archived
-            ├── bundle_id → mumtaz.module.bundle (which Odoo modules to install)
-            ├── brand_id  → mumtaz.brand (white-label config)
-            └── partner_id → res.partner (white-label owner/reseller)
-```
-
-## Multi-Tenant Provisioning Workflow
-
-```
-1. Signup (app.mumtaz.digital)
-   └── ZAKI server creates mumtaz.tenant with state=draft
-
-2. Admin Review (admin.mumtaz.digital → Odoo backend)
-   └── Platform admin opens mumtaz.tenant record
-       ├── Fills in: bundle_id, database_name, brand_id (if white-label)
-       └── Clicks "Provision Tenant" → state=provisioning
-
-3. Provisioning
-   └── Triggers mumtaz.provision.wizard
-       ├── Creates new PostgreSQL database
-       ├── Installs Odoo + selected bundle modules
-       ├── Creates admin user in tenant DB
-       └── Sets state=active, records provisioned_on timestamp
-
-4. Active Tenant
-   └── Tenant accesses their Odoo at subdomain (e.g. acme.mumtaz.io)
-       ├── ZAKI CFO connects via erp_api_key
-       └── Marketplace profile linked to tenant
-```
-
-## Module: mumtaz_tenant_manager
-
-**Model:** `mumtaz.tenant`
-
-| Field | Type | Purpose |
+| App | File | Auth |
 |---|---|---|
-| `name` | Char | Display name of org |
-| `code` | Char | Slug: `[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]` |
-| `database_name` | Char | PostgreSQL DB name: `[a-z][a-z0-9_]{1,62}` |
-| `subdomain` | Char | Subdomain prefix |
-| `custom_domain` | Char | Fully-qualified custom domain |
-| `state` | Selection | draft/provisioning/active/suspended/archived |
-| `bundle_id` | Many2one | → mumtaz.module.bundle |
-| `brand_id` | Many2one | → mumtaz.brand |
-| `partner_id` | Many2one | → res.partner (reseller) |
-| `admin_email` | Char | Initial admin user email |
-| `subscription_start` | Date | |
-| `subscription_end` | Date | |
-| `provision_log` | Text | Append-only provisioning log |
+| Customer Portal | `apps/portal/index.html` | JWT via ZAKI server |
+| ZAKI AI CFO | `apps/zaki-server/main.py` (API) | JWT |
+| B2B Marketplace Storefront | `apps/marketplace/index.html` | None (public) |
+| Vendor Portal | `apps/marketplace/vendor.html` | JWT via ZAKI server |
+| Odoo ERP | Odoo (port 8069) | Odoo session |
 
-**Actions:**
-- `action_start_provisioning()` — draft → provisioning
-- `action_mark_active()` — → active
-- `action_suspend()` — → suspended
-- `action_archive_tenant()` — → archived, active=False
-- `action_open_provision_wizard()` — opens mumtaz.provision.wizard
-- `action_create_sme_profile()` — creates mumtaz.sme.profile
-- `action_create_cfo_workspace()` — creates mumtaz.cfo.workspace
-- `action_run_smoke_tests()` — verifies SME profiles + workspaces exist
+**ZAKI Server** (`apps/zaki-server/main.py`) is the central auth API for all portals:
+- `POST /api/v1/auth/signup` — register (also creates Odoo user + tenant)
+- `POST /api/v1/auth/register` — alias for signup (ZAKI CFO compat)
+- `POST /api/v1/auth/login` — login via Odoo first, SQLite fallback
+- `GET  /api/v1/auth/me` — profile
+- `POST /api/v1/ai/chat/stream` — Claude AI (SSE)
+- `GET  /health`
 
-## Module: mumtaz_control_plane
+Runs as systemd service on **port 8001**. nginx proxies `zaki.mumtaz.digital/api/` → `127.0.0.1:8001`.
 
-Extends `mumtaz.tenant` with subscription health fields (computed, read-only on the form).
+---
 
-**Computed fields added to mumtaz.tenant:**
-- `cp_subscription_health` — badge (healthy/warning/critical)
-- `cp_subscription_status` — badge (active/grace/expired/trial)
-- `cp_plan_name` — plan display name
-- `cp_renewal_date` — next renewal date
-- `cp_grace_days_remaining` — days left in grace period
-- `cp_quota_usage_summary` — text summary of quota usage
+## 3. Odoo Role
 
-**Buttons added to mumtaz.tenant form:**
-- Open Subscription, Reactivate Sub, Extend Grace
+- **Database:** `Mumtaz_ERP` (PostgreSQL, user: `odoo`)
+- **Admin:** `umer@mumtaz.digital`
+- **Single source of truth for auth** — ZAKI server validates all logins via Odoo XML-RPC
+- **Tenant registry** — `mumtaz.tenant` model stores one record per customer org (state: draft → active)
+- **Custom addons:**
 
-**View inheritance:** Extends `mumtaz_tenant_manager.mumtaz_tenant_form_view` and `mumtaz_tenant_list_view`.
+| Addon | Purpose |
+|---|---|
+| `mumtaz_tenant_manager` | Core `mumtaz.tenant` model, provisioning wizard |
+| `mumtaz_control_plane` | Subscription health fields on tenant form/list |
+| `mumtaz_sme_profile` | SME business profile per tenant |
+| `mumtaz_cfo_workspace` | ZAKI CFO workspace linked to SME profile |
+| `mumtaz_brand` | White-label brand config |
 
-## Module Organization
+---
 
-```
-addons/
-├── mumtaz_tenant_manager/
-│   ├── models/
-│   │   ├── mumtaz_tenant.py          Main tenant model
-│   │   ├── mumtaz_module_bundle.py   Bundle definition
-│   │   └── mumtaz_provision_wizard.py Provisioning wizard
-│   ├── views/
-│   │   ├── mumtaz_tenant_views.xml
-│   │   └── mumtaz_module_bundle_views.xml
-│   ├── security/
-│   │   ├── ir.model.access.csv
-│   │   └── mumtaz_security.xml       Groups: platform_admin, tenant_manager
-│   └── __manifest__.py
-│
-├── mumtaz_control_plane/
-│   ├── models/
-│   │   └── mumtaz_tenant_commercial.py  Computed subscription fields
-│   ├── views/
-│   │   └── tenant_commercial_views.xml  Form/list view extensions
-│   └── __manifest__.py
-│
-├── mumtaz_sme_profile/
-│   ├── models/mumtaz_sme_profile.py
-│   └── __manifest__.py
-│
-├── mumtaz_cfo_workspace/
-│   ├── models/mumtaz_cfo_workspace.py
-│   └── __manifest__.py
-│
-└── mumtaz_brand/
-    ├── models/mumtaz_brand.py
-    └── __manifest__.py
-```
+## 4. Completed
 
-## ZAKI Server API
+- [x] Customer portal (`app.mumtaz.digital`) — full SPA with real JWT auth
+- [x] 5-step onboarding wizard (company → products → ERP modules → plan → review)
+- [x] ZAKI server v2 — unified auth backed by Odoo XML-RPC (`odoo_live: true`)
+- [x] Signup creates Odoo user + `mumtaz.tenant` record automatically
+- [x] Same credentials work at `erp.mumtaz.digital` (Odoo login)
+- [x] `/auth/register` alias added for ZAKI CFO frontend compatibility
+- [x] Fixed `mumtaz_control_plane` xpath install error (changed to `//notebook` anchor)
+- [x] nginx config updated — `app.mumtaz.digital` serves static SPA (not Odoo proxy)
+- [x] Marketplace architecture defined (public storefront + vendor portal)
 
-Base URL: `https://zaki.mumtaz.digital/api/v1`
+---
 
-```
-POST /auth/signup          Register + create Odoo user + mumtaz.tenant
-POST /auth/register        Alias for /signup (ZAKI CFO frontend compat)
-POST /auth/login           Validate via Odoo XML-RPC → JWT
-GET  /auth/me              Profile from JWT + SQLite
-GET  /tenant/me            mumtaz.tenant data from Odoo
-POST /ai/chat/stream       SSE streaming chat via Claude (claude-sonnet-4-5)
-GET  /health               { status, ai_ready, odoo_live, odoo_url, odoo_db }
-```
+## 5. Pending
 
-JWT signed with `HS256`, 30-day expiry. Payload:
-```json
-{ "sub": "1", "email": "...", "name": "...", "company": "...",
-  "odoo_uid": 5, "tenant_id": 3, "plan": "trial", "exp": 1234567890 }
-```
-
-## Infrastructure
-
-```
-VPS (Ubuntu)
-├── nginx (port 80/443)
-│   ├── mumtaz.digital         → /var/www/mumtaz.digital (static)
-│   ├── app.mumtaz.digital     → /var/www/app.mumtaz.digital (static SPA)
-│   ├── erp.mumtaz.digital     → proxy 127.0.0.1:8069 (Odoo)
-│   ├── zaki.mumtaz.digital    → /var/www/zaki.mumtaz.digital (static)
-│   │                             + /api/ → proxy 127.0.0.1:8001
-│   ├── marketplace.mumtaz.digital → /var/www/marketplace.mumtaz.digital (static)
-│   └── admin.mumtaz.digital   → proxy 127.0.0.1:8069 (Odoo backend)
-│
-├── Odoo (port 8069, user: odoo)
-│   ├── Database: Mumtaz_ERP
-│   ├── Longpolling: port 8072
-│   └── Custom addons: /opt/custom_addons/Mumtaz/addons/
-│
-├── PostgreSQL (user: odoo)
-│   └── Mumtaz_ERP database
-│
-├── ZAKI Server (port 8001, systemd: zaki-server)
-│   ├── /opt/zaki-server/main.py
-│   ├── /opt/zaki-server/.env
-│   ├── /opt/zaki-server/users.db   (SQLite cache)
-│   └── /opt/zaki-server/venv/
-│
-└── Git repo: /opt/custom_addons/Mumtaz (branch: claude/odoo-architecture-review-ujm0W)
-```
+| Item | Notes |
+|---|---|
+| Marketplace HTML | `apps/marketplace/index.html` + `vendor.html` — in progress |
+| Nginx redeploy on VPS | New config separates `app.` (static) from `erp.` (Odoo) — fixes blank page |
+| Marketplace nginx block | Update to serve static files instead of proxying to Odoo |
+| Install `mumtaz_control_plane` | VPS needs `git pull` then install from Odoo UI |
+| SSL certificates | Run certbot after DNS is set for all domains |
+| Odoo admin password rotation | Currently `Admin1234!` — change after testing |
