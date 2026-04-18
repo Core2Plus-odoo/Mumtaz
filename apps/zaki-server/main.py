@@ -52,38 +52,61 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+_USERS_DDL = """
+    CREATE TABLE users (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        email         TEXT    UNIQUE NOT NULL,
+        password_hash TEXT,
+        name          TEXT,
+        company       TEXT,
+        odoo_uid      INTEGER,
+        tenant_id     INTEGER,
+        plan          TEXT    DEFAULT 'trial',
+        active        INTEGER DEFAULT 1,
+        created_at    INTEGER DEFAULT (strftime('%s','now'))
+    )
+"""
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_db()
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            email         TEXT    UNIQUE NOT NULL,
-            password_hash TEXT,
-            name          TEXT,
-            company       TEXT,
-            odoo_uid      INTEGER,
-            tenant_id     INTEGER,
-            plan          TEXT    DEFAULT 'trial',
-            active        INTEGER DEFAULT 1,
-            created_at    INTEGER DEFAULT (strftime('%s','now'))
-        )
-    """)
-    # Migrations for older DB schemas (add any missing columns)
-    for col, definition in [
-        ("name",          "TEXT"),
-        ("company",       "TEXT"),
-        ("password_hash", "TEXT"),
-        ("odoo_uid",      "INTEGER"),
-        ("tenant_id",     "INTEGER"),
-        ("plan",          "TEXT DEFAULT 'trial'"),
-        ("active",        "INTEGER DEFAULT 1"),
-        ("created_at",    "INTEGER DEFAULT (strftime('%s','now'))"),
-    ]:
+    conn.execute(f"CREATE TABLE IF NOT EXISTS users {_USERS_DDL.split('CREATE TABLE users')[1]}")
+
+    # Detect old schema with NOT NULL on password_hash — recreate preserving data
+    cols = {r[1]: r for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+    need_rebuild = cols.get("password_hash") and cols["password_hash"][3]  # notnull flag
+    if need_rebuild:
+        print("[init_db] old schema detected — rebuilding users table")
+        conn.execute("ALTER TABLE users RENAME TO users_old")
+        conn.execute(_USERS_DDL)
         try:
-            conn.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
-        except Exception:
-            pass  # column already exists
+            conn.execute("""
+                INSERT INTO users (id, email, password_hash, name, company,
+                                   odoo_uid, tenant_id, plan, active, created_at)
+                SELECT id, email, password_hash,
+                       COALESCE(name, ''), COALESCE(company, ''),
+                       odoo_uid, tenant_id,
+                       COALESCE(plan, 'trial'), COALESCE(active, 1),
+                       COALESCE(created_at, strftime('%s','now'))
+                FROM users_old
+            """)
+        except Exception as e:
+            print(f"[init_db] data migration error: {e}")
+        conn.execute("DROP TABLE IF EXISTS users_old")
+    else:
+        # Add any columns missing from older nullable schemas
+        for col, defn in [
+            ("name",      "TEXT"), ("company", "TEXT"),
+            ("odoo_uid",  "INTEGER"), ("tenant_id", "INTEGER"),
+            ("plan",      "TEXT DEFAULT 'trial'"),
+            ("active",    "INTEGER DEFAULT 1"),
+            ("created_at","INTEGER DEFAULT (strftime('%s','now'))"),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
+            except Exception:
+                pass
+
     conn.commit()
     conn.close()
 
