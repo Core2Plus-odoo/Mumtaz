@@ -106,24 +106,24 @@
     }
 }
 
-/* Scroll-reveal: driven by IntersectionObserver adding .in-view */
-.reveal, .reveal-slow, .reveal-fast {
+/* Scroll-reveal: JS adds .js-ready to <body> first */
+.js-ready .reveal, .js-ready .reveal-slow, .js-ready .reveal-fast {
     opacity: 0;
     transform: translateY(22px);
     transition: opacity .65s ease, transform .65s ease;
 }
-.reveal-slow  { transition-duration: 1s; }
-.reveal-fast  { transition-duration: .35s; }
+.js-ready .reveal-slow  { transition-duration: 1s; }
+.js-ready .reveal-fast  { transition-duration: .35s; }
 
-.slide-in-left {
+.js-ready .slide-in-left {
     opacity: 0; transform: translateX(-30px);
     transition: opacity .65s ease, transform .65s ease;
 }
-.slide-in-right {
+.js-ready .slide-in-right {
     opacity: 0; transform: translateX(30px);
     transition: opacity .65s ease, transform .65s ease;
 }
-.scale-in {
+.js-ready .scale-in {
     opacity: 0; transform: scale(0.92);
     transition: opacity .55s ease, transform .55s ease;
 }

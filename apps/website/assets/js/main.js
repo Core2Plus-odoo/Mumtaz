@@ -97,6 +97,7 @@ class MumtazWebsite {
 
     // Intersection Observer for elements
     initIntersectionObserver() {
+        document.body.classList.add('js-ready');
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -100px 0px'
