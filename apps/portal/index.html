@@ -378,7 +378,7 @@ const TOKEN_KEY  = 'mumtaz_token'
 let P = {
   user: { name:'', email:'', company:'', role:'Admin', avatar:'' },
   plan: 'growth',
-  seats: 10, seatsUsed: 7,
+  seats: 10, seatsUsed: 1,
   modules: {},
   theme: 'light'
 }
@@ -482,10 +482,10 @@ dashboard: `
 <div class="page-title">Good morning, <span id="dash-name"></span> 👋</div>
 <div class="page-sub">Here's what's happening with <span id="dash-co"></span> today.</div>
 <div class="grid4" style="margin-bottom:20px">
-  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">7</div><div class="stat-sub">of 10 seats used</div></div>
-  <div class="stat-card"><div class="stat-label">Modules Active</div><div class="stat-val" id="d-mods">6</div><div class="stat-sub">4 available to add</div></div>
-  <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">$480</div><div class="stat-sub">Next billing May 18</div></div>
-  <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">2</div><div class="stat-sub"><span class="badge badge-amber">1 open</span></div></div>
+  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">1</div><div class="stat-sub" id="d-users-sub">of — seats used</div></div>
+  <div class="stat-card"><div class="stat-label">Modules Active</div><div class="stat-val" id="d-mods">0</div><div class="stat-sub" id="d-mods-sub">— available to add</div></div>
+  <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">—</div><div class="stat-sub" id="d-mrr-sub">14-day free trial active</div></div>
+  <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">0</div><div class="stat-sub"><span class="badge badge-green">All clear</span></div></div>
 </div>
 <div class="grid2" style="margin-bottom:20px">
   <div class="card">
@@ -520,9 +520,9 @@ users: `
 <div class="page-title">Users &amp; Teams</div>
 <div class="page-sub">Manage access, roles, and seat allocation.</div>
 <div class="grid3" style="margin-bottom:20px">
-  <div class="stat-card"><div class="stat-label">Seats Used</div><div class="stat-val" id="u-used">7 / 10</div><div class="stat-sub">3 seats available</div></div>
-  <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-val">2</div><div class="stat-sub">Full access</div></div>
-  <div class="stat-card"><div class="stat-label">Last Invited</div><div class="stat-val" style="font-size:1rem">3 days ago</div><div class="stat-sub">sara@company.com</div></div>
+  <div class="stat-card"><div class="stat-label">Seats Used</div><div class="stat-val" id="u-used">1 / —</div><div class="stat-sub" id="u-avail">—</div></div>
+  <div class="stat-card"><div class="stat-label">Admins</div><div class="stat-val">1</div><div class="stat-sub">Full access</div></div>
+  <div class="stat-card"><div class="stat-label">Last Invited</div><div class="stat-val" style="font-size:1rem">—</div><div class="stat-sub">No invitations yet</div></div>
 </div>
 <div class="card">
   <div class="card-title">Team Members
@@ -743,22 +743,20 @@ const MODULES_DATA = [
   {id:'maintenance',name:'Maintenance',           cat:'Operations', icon:'🔧', desc:'Asset maintenance, work orders, and preventive scheduling.',  price:19,  included:false},
 ]
 
-const USERS_DATA = [
-  {name:'Umer Sheikh',   email:'umer@mumtaz.digital',    role:'Admin',     status:'active', last:'Just now',   mods:['crm','invoicing','hr']},
-  {name:'Sara Ahmed',    email:'sara@mumtaz.digital',    role:'Manager',   status:'active', last:'2h ago',     mods:['crm','project']},
-  {name:'Ali Hassan',    email:'ali@mumtaz.digital',     role:'User',      status:'active', last:'Yesterday',  mods:['inventory','purchase']},
-  {name:'Fatima Malik',  email:'fatima@mumtaz.digital',  role:'User',      status:'active', last:'3 days ago', mods:['accounting','invoicing']},
-  {name:'Omar Qureshi',  email:'omar@mumtaz.digital',    role:'User',      status:'active', last:'1 week ago', mods:['hr','timesheets']},
-  {name:'Zainab Raza',   email:'zainab@mumtaz.digital',  role:'Read Only', status:'inactive',last:'2 weeks ago',mods:['project']},
-  {name:'Bilal Khan',    email:'bilal@mumtaz.digital',   role:'User',      status:'active', last:'Today',      mods:['crm','expenses']},
-]
+// USERS_DATA is built dynamically from the logged-in user
+function buildUsersData(){
+  return [{
+    name:   P.user.name  || 'Account Owner',
+    email:  P.user.email || '',
+    role:   'Admin',
+    status: 'active',
+    last:   'Just now',
+    mods:   ['crm','invoicing','hr']
+  }]
+}
+const USERS_DATA = buildUsersData()
 
-const INVOICES_DATA = [
-  {id:'INV-2026-004', date:'Apr 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
-  {id:'INV-2026-003', date:'Mar 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
-  {id:'INV-2026-002', date:'Feb 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
-  {id:'INV-2026-001', date:'Jan 1 2026',  amount:'$399', plan:'Starter',status:'paid'},
-]
+const INVOICES_DATA = []
 
 const PLANS_DATA = [
   {id:'starter', name:'Starter', price:149, seats:3,  color:'var(--teal)',   features:['5 core modules','3 user seats','5 GB storage','Email support']},
@@ -766,13 +764,7 @@ const PLANS_DATA = [
   {id:'enterprise',name:'Enterprise',price:999,seats:50,color:'var(--purple)',features:['All modules + custom','Unlimited seats','100 GB storage','Dedicated CSM','Full white label','Custom integrations']},
 ]
 
-const ACTIVITY = [
-  {t:'2m ago',  icon:'👤', msg:'New user <b>Bilal Khan</b> added'},
-  {t:'1h ago',  icon:'🧾', msg:'Invoice <b>INV-2026-004</b> paid — $480'},
-  {t:'3h ago',  icon:'📦', msg:'Module <b>Inventory</b> enabled'},
-  {t:'Yesterday',icon:'🔑',msg:'API key generated for ERP integration'},
-  {t:'2d ago',  icon:'📣', msg:'<b>Marketing Automation</b> trial started'},
-]
+const ACTIVITY = []
 
 const FAQ_DATA = [
   {q:'How do I add more users?',       a:'Go to Users & Teams and click Invite User. Each seat is billed monthly.'},
@@ -818,8 +810,14 @@ function renderDashboard(){
   document.getElementById('dash-name').textContent = name
   document.getElementById('dash-co').textContent = P.user.company || 'your company'
   const active = MODULES_DATA.filter(m => P.modules[m.id])
+  const plan = PLANS_DATA.find(p=>p.id===P.plan)||PLANS_DATA[1]
   document.getElementById('d-mods').textContent = active.length
+  document.getElementById('d-mods-sub').textContent = (MODULES_DATA.length - active.length) + ' available to add'
   document.getElementById('d-users').textContent = P.seatsUsed
+  document.getElementById('d-users-sub').textContent = 'of ' + P.seats + ' seats used'
+  document.getElementById('d-mrr').textContent = '$' + plan.price + '/mo'
+  document.getElementById('u-used').textContent = P.seatsUsed + ' / ' + P.seats
+  document.getElementById('u-avail').textContent = (P.seats - P.seatsUsed) + ' seats available'
   // Products
   const prods = [
     {name:'Mumtaz ERP',    icon:'🏢', url:'https://erp.mumtaz.digital',  status:'active'},
@@ -854,11 +852,13 @@ function renderDashboard(){
     <span>${a.icon}</span><span style="font-size:.83rem">${a.label}</span>
   </button>`).join('')
   // Activity
-  document.getElementById('activity-feed').innerHTML = ACTIVITY.map(a=>`
-    <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:1rem">${a.icon}</span>
-      <div><div style="line-height:1.4">${a.msg}</div><div style="font-size:.72rem;color:var(--text-3);margin-top:2px">${a.t}</div></div>
-    </div>`).join('')
+  document.getElementById('activity-feed').innerHTML = ACTIVITY.length
+    ? ACTIVITY.map(a=>`
+      <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:1rem">${a.icon}</span>
+        <div><div style="line-height:1.4">${a.msg}</div><div style="font-size:.72rem;color:var(--text-3);margin-top:2px">${a.t}</div></div>
+      </div>`).join('')
+    : '<div style="text-align:center;padding:24px 0;color:var(--text-3);font-size:.82rem">No activity yet — actions will appear here</div>'
 }
 
 // ── Modules ────────────────────────────────────────────
@@ -944,7 +944,7 @@ function renderBilling(){
     <span><b>${plan.seats}</b> seats</span>
     <span>Next bill: <b>May 18, 2026</b></span>`
   // Usage meters
-  const meters = [{label:'Seats',used:P.seatsUsed,total:P.seats,unit:'users'},{label:'Storage',used:8.4,total:25,unit:'GB'},{label:'API Calls',used:12400,total:50000,unit:'calls'}]
+  const meters = [{label:'Seats',used:P.seatsUsed,total:P.seats,unit:'users'},{label:'Storage',used:0,total:25,unit:'GB'},{label:'API Calls',used:0,total:50000,unit:'calls'}]
   document.getElementById('usage-meters').innerHTML = meters.map(m=>{
     const p=Math.round(m.used/m.total*100)
     return `<div style="margin-bottom:12px">
@@ -961,7 +961,8 @@ function renderBilling(){
       </button>
     </div>`).join('')
   // Invoices
-  document.getElementById('invoices-tbody').innerHTML = INVOICES_DATA.map(inv=>`
+  document.getElementById('invoices-tbody').innerHTML = INVOICES_DATA.length
+    ? INVOICES_DATA.map(inv=>`
     <tr>
       <td style="font-weight:600">${inv.id}</td>
       <td>${inv.date}</td>
@@ -970,6 +971,7 @@ function renderBilling(){
       <td><span class="badge badge-green">${inv.status}</span></td>
       <td><button class="btn btn-ghost btn-sm">PDF</button></td>
     </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-3);font-size:.82rem">No invoices yet — your first bill will appear after your free trial</td></tr>'
 }
 function selectPlan(id){
   if(id===P.plan){showToast('Already on this plan');return}
