@@ -675,6 +675,129 @@ h4 { font-size: 1rem; font-weight: 600; }
   color: var(--blue-light);
 }
 
+/* ── How It Works ────────────────────────────────────────── */
+.hiw-grid {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr 40px 1fr;
+  align-items: start;
+  gap: 0;
+  margin-top: 2.5rem;
+}
+.hiw-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+}
+.hiw-num {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  background: var(--grad-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  font-weight: 800;
+  color: #fff;
+}
+.hiw-icon { font-size: 2rem; margin-bottom: 1rem; }
+.hiw-card h4 { margin-bottom: .5rem; }
+.hiw-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 3.5rem;
+  color: var(--text-3);
+  font-size: 1.4rem;
+}
+.hiw-connector::before { content: '→'; }
+
+/* ── Testimonials ────────────────────────────────────────── */
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+.testi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.testi-stars { color: var(--amber); font-size: 1rem; letter-spacing: 2px; }
+.testi-quote {
+  font-size: .88rem;
+  color: var(--text-2);
+  line-height: 1.7;
+  flex: 1;
+  margin: 0;
+  font-style: italic;
+}
+.testi-author { display: flex; align-items: center; gap: .75rem; }
+.testi-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--grad-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.testi-name { font-size: .82rem; font-weight: 600; color: var(--text); }
+.testi-role { font-size: .72rem; color: var(--text-3); margin-top: 1px; }
+
+/* ── FAQ ─────────────────────────────────────────────────── */
+.faq-item {
+  border-bottom: 1px solid var(--border);
+}
+.faq-q {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 1.1rem 0;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-family: 'Inter', sans-serif;
+}
+.faq-q:hover { color: var(--blue-light); }
+.faq-chevron { font-size: 1rem; transition: transform .25s; flex-shrink: 0; color: var(--text-3); }
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+.faq-a {
+  font-size: .875rem;
+  color: var(--text-2);
+  line-height: 1.75;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s ease, padding .25s;
+  padding-bottom: 0;
+}
+.faq-item.open .faq-a {
+  max-height: 300px;
+  padding-bottom: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  .testi-grid { grid-template-columns: 1fr; }
+  .hiw-grid { grid-template-columns: 1fr; }
+  .hiw-connector { display: none; }
+}
+
 @media (max-width: 768px) {
   .interlink-grid { grid-template-columns: 1fr; }
   .zaki-hero-card { grid-template-columns: 1fr; }

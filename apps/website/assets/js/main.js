@@ -220,3 +220,36 @@ window.utils = {
 };
 
 window.smoothScroll = smoothScroll;
+
+// ── FAQ accordion ──────────────────────────────────────
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+window.toggleFaq = toggleFaq;
+
+// ── Animated counters ──────────────────────────────────
+function animateCounter(el, target, suffix) {
+  let start = 0;
+  const step = target / 60;
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) { start = target; clearInterval(timer); }
+    el.textContent = Math.floor(start) + suffix;
+  }, 16);
+}
+
+const counterObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const val = el.dataset.count;
+    const suffix = el.dataset.suffix || '';
+    animateCounter(el, parseFloat(val), suffix);
+    counterObs.unobserve(el);
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('[data-count]').forEach(el => counterObs.observe(el));

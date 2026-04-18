@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vendor Portal — Mumtaz Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc;--bg-1:#f1f5f9;--surface:#fff;
+  --text:#0f172a;--text-2:#475569;--text-3:#94a3b8;
+  --border:#e2e8f0;--border-2:#cbd5e1;
+  --green:#10b981;--indigo:#6366f1;--purple:#8b5cf6;--red:#ef4444;--amber:#f59e0b;
+  --grad:linear-gradient(135deg,#10b981 0%,#059669 100%);
+  --font:'Inter',system-ui,sans-serif;
+  --shadow:0 1px 4px rgba(15,23,42,.08),0 4px 16px rgba(15,23,42,.06);
+  --shadow-lg:0 8px 32px rgba(15,23,42,.12);
+  --r:10px;--tr:.15s ease;
+}
+body.dark{
+  --bg:#07101e;--bg-1:#0b1829;--surface:#111e33;
+  --text:#f0f6ff;--text-2:#94a3b8;--text-3:#64748b;
+  --border:rgba(255,255,255,.07);--border-2:rgba(255,255,255,.13);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none;transition:all var(--tr)}
+input,select,textarea{font-family:var(--font);outline:none}
+
+/* ── Auth ── */
+#auth-screen{min-height:100vh;display:flex}
+.auth-left{width:420px;flex-shrink:0;background:linear-gradient(160deg,#064e3b 0%,#065f46 50%,#047857 100%);padding:48px 40px;display:flex;flex-direction:column;color:#fff}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:48px}
+.auth-logo-mark{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem}
+.auth-logo-name{font-size:1rem;font-weight:700}
+.auth-logo-sub{font-size:.68rem;color:rgba(255,255,255,.6);margin-top:1px}
+.auth-left-title{font-size:1.6rem;font-weight:800;line-height:1.25;margin-bottom:12px}
+.auth-left-sub{font-size:.88rem;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:40px}
+.auth-left-perks{display:flex;flex-direction:column;gap:14px;flex:1}
+.auth-perk{display:flex;align-items:flex-start;gap:12px}
+.auth-perk-icon{width:32px;height:32px;background:rgba(255,255,255,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.auth-perk-text strong{display:block;font-size:.82rem;font-weight:600;margin-bottom:2px}
+.auth-perk-text span{font-size:.75rem;color:rgba(255,255,255,.6)}
+.auth-left-foot{font-size:.72rem;color:rgba(255,255,255,.35);margin-top:32px}
+
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.auth-card{width:100%;max-width:400px}
+.auth-card-title{font-size:1.3rem;font-weight:800;margin-bottom:4px}
+.auth-card-sub{font-size:.83rem;color:var(--text-2);margin-bottom:28px}
+.auth-tabs{display:flex;gap:2px;background:var(--bg-1);border-radius:9px;padding:3px;margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;border-radius:7px;font-size:.82rem;font-weight:600;color:var(--text-2);background:none;border:none;cursor:pointer;transition:all var(--tr)}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:.72rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.field input,.field select{width:100%;padding:10px 13px;background:var(--bg-1);border:1.5px solid var(--border-2);border-radius:8px;font-size:.87rem;color:var(--text);transition:border var(--tr)}
+.field input:focus,.field select:focus{border-color:var(--green);background:var(--surface)}
+.btn-submit{width:100%;padding:12px;background:var(--grad);color:#fff;border-radius:9px;font-size:.9rem;font-weight:700;margin-top:4px}
+.btn-submit:hover{opacity:.88}
+.auth-err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:9px 13px;font-size:.82rem;color:var(--red);margin-bottom:13px;display:none}
+.auth-note{font-size:.75rem;color:var(--text-3);text-align:center;margin-top:14px;line-height:1.6}
+.auth-note a{color:var(--green);font-weight:500;cursor:pointer}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-hint{font-size:.7rem;color:var(--text-3);margin-top:3px}
+
+/* ── App shell ── */
+#app{display:none;min-height:100vh}
+.vd-wrap{display:flex;min-height:100vh}
+/* Sidebar */
+.vd-sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.vd-brand{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.vd-brand-mark{width:30px;height:30px;background:var(--grad);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem;flex-shrink:0}
+.vd-brand-name{font-size:.82rem;font-weight:700}
+.vd-brand-sub{font-size:.62rem;color:var(--text-3)}
+.vd-nav{padding:10px 8px;flex:1}
+.vd-section{font-size:.62rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;padding:10px 8px 4px}
+.vd-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:.8rem;font-weight:500;color:var(--text-2);cursor:pointer;transition:all var(--tr);margin-bottom:1px}
+.vd-item:hover{background:var(--bg-1);color:var(--text)}
+.vd-item.active{background:rgba(16,185,129,.1);color:var(--green);font-weight:600}
+.vd-item svg{width:15px;height:15px;flex-shrink:0}
+.vd-badge{margin-left:auto;background:var(--green);color:#fff;border-radius:20px;padding:1px 7px;font-size:.62rem;font-weight:700}
+.vd-badge.amber{background:var(--amber)}
+.vd-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.vd-user{display:flex;align-items:center;gap:8px}
+.vd-avatar{width:28px;height:28px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;font-weight:700;flex-shrink:0}
+.vd-uname{font-size:.76rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vd-uemail{font-size:.65rem;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Main */
+.vd-main{flex:1;overflow-y:auto;background:var(--bg)}
+.vd-topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10}
+.vd-page-title{font-size:.95rem;font-weight:700}
+.vd-topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.vd-content{padding:24px}
+/* Stats */
+.vd-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.vd-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px}
+.vd-stat-label{font-size:.72rem;color:var(--text-3);font-weight:500;margin-bottom:6px}
+.vd-stat-val{font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:2px}
+.vd-stat-sub{font-size:.72rem;color:var(--text-3)}
+.vd-stat-sub.up{color:var(--green)}
+.vd-stat-sub.down{color:var(--red)}
+/* Cards */
+.vd-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.vd-card-title{font-size:.88rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.vd-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+/* Table */
+.vd-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.vd-table th{text-align:left;padding:8px 12px;font-size:.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+.vd-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-2)}
+.vd-table tr:last-child td{border-bottom:none}
+.vd-table tr:hover td{background:var(--bg-1)}
+/* Badges */
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.68rem;font-weight:600}
+.pill-green{background:rgba(16,185,129,.1);color:var(--green)}
+.pill-amber{background:rgba(245,158,11,.1);color:var(--amber)}
+.pill-red{background:rgba(239,68,68,.1);color:var(--red)}
+.pill-indigo{background:rgba(99,102,241,.1);color:var(--indigo)}
+/* Buttons */
+.btn{padding:7px 14px;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all var(--tr);border:none}
+.btn-grad{background:var(--grad);color:#fff}.btn-grad:hover{opacity:.88}
+.btn-outline{background:none;border:1px solid var(--border-2);color:var(--text-2)}.btn-outline:hover{border-color:var(--green);color:var(--green)}
+.btn-sm{padding:5px 11px;font-size:.72rem}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;padding:26px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1rem;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:.8rem;color:var(--text-2);margin-bottom:18px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:var(--text-3)}
+.empty-icon{font-size:2rem;margin-bottom:10px}
+.empty-text{font-size:.85rem;margin-bottom:14px}
+#toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:10px;font-size:.83rem;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+#toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="auth-screen">
+  <div class="auth-left">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">M</div>
+      <div>
+        <div class="auth-logo-name">Mumtaz Marketplace</div>
+        <div class="auth-logo-sub">Vendor Portal</div>
+      </div>
+    </div>
+    <div class="auth-left-title">Grow your B2B sales across UAE & GCC</div>
+    <div class="auth-left-sub">Join thousands of verified suppliers reaching enterprise buyers on one platform.</div>
+    <div class="auth-left-perks">
+      <div class="auth-perk"><div class="auth-perk-icon">🏪</div><div class="auth-perk-text"><strong>Manage your storefront</strong><span>Update products, pricing, and MOQs in real time</span></div></div>
+      <div class="auth-perk"><div class="auth-perk-icon">📋</div><div class="auth-perk-text"><strong>Handle RFQs & orders</strong><span>Respond to quote requests and track order status</span></div></div>
+      <div class="auth-perk"><div class="auth-perk-icon">📊</div><div class="auth-perk-text"><strong>Analytics dashboard</strong><span>Views, inquiries, conversion rates at a glance</span></div></div>
+      <div class="auth-perk"><div class="auth-perk-icon">✅</div><div class="auth-perk-text"><strong>Verified badge</strong><span>Build trust with buyers through our verification process</span></div></div>
+    </div>
+    <div class="auth-left-foot">By signing in you agree to the Mumtaz Vendor Terms &amp; Conditions.</div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-card-title">Vendor Portal</div>
+      <div class="auth-card-sub">Access your supplier dashboard</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- Login -->
+      <div id="tab-login">
+        <div class="auth-err" id="login-err"></div>
+        <div class="field"><label>Email</label><input id="l-email" type="email" placeholder="vendor@company.com"></div>
+        <div class="field"><label>Password</label><input id="l-pass" type="password" placeholder="••••••••"></div>
+        <button class="btn-submit" onclick="doLogin()">Sign In →</button>
+        <div class="auth-note">Forgot password? <a onclick="showForgot()">Reset it here</a></div>
+      </div>
+
+      <!-- Register -->
+      <div id="tab-register" style="display:none">
+        <div class="auth-err" id="reg-err"></div>
+        <div class="field-row">
+          <div class="field"><label>First Name</label><input id="r-fname" placeholder="Ahmed"></div>
+          <div class="field"><label>Last Name</label><input id="r-lname" placeholder="Al Rashid"></div>
+        </div>
+        <div class="field"><label>Work Email</label><input id="r-email" type="email" placeholder="ahmed@company.com"></div>
+        <div class="field"><label>Company Name</label><input id="r-company" placeholder="Al Rashid Trading LLC"></div>
+        <div class="field">
+          <label>Country</label>
+          <select id="r-country">
+            <option value="">Select country…</option>
+            <option>United Arab Emirates</option>
+            <option>Saudi Arabia</option>
+            <option>Qatar</option>
+            <option>Kuwait</option>
+            <option>Bahrain</option>
+            <option>Oman</option>
+            <option>Pakistan</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Password</label><input id="r-pass" type="password" placeholder="Min 8 characters">
+          <div class="field-hint">Must be at least 8 characters</div>
+        </div>
+        <button class="btn-submit" onclick="doRegister()">Create Vendor Account →</button>
+        <div class="auth-note">Already registered? <a onclick="switchTab('login')">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- App Shell (loaded after auth) -->
+<div id="app"></div>
+<div id="toast"></div>
+
+<script>
+const API = '/api/v1'
+let TOKEN = localStorage.getItem('vendor_token') || ''
+let V = {}  // vendor profile
+
+function switchTab(t){
+  document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('active', (i===0&&t==='login')||(i===1&&t==='register')))
+  document.getElementById('tab-login').style.display    = t==='login'    ? '' : 'none'
+  document.getElementById('tab-register').style.display = t==='register' ? '' : 'none'
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast')
+  t.textContent = msg; t.classList.add('show')
+  setTimeout(()=>t.classList.remove('show'), 3000)
+}
+
+async function doLogin(){
+  const email = document.getElementById('l-email').value.trim()
+  const pass  = document.getElementById('l-pass').value
+  const err   = document.getElementById('login-err')
+  const btn   = document.querySelector('#tab-login .btn-submit')
+  err.style.display = 'none'
+  if(!email||!pass){ err.textContent='Enter your email and password.'; err.style.display='block'; return }
+  btn.textContent = 'Signing in…'; btn.disabled = true
+  try {
+    const res = await fetch(API+'/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password:pass})
+    })
+    const data = await res.json()
+    if(!res.ok) throw new Error(data.detail || 'Login failed')
+    TOKEN = data.access_token
+    localStorage.setItem('vendor_token', TOKEN)
+    V = data.user || {email, name: email.split('@')[0]}
+    bootVendor()
+  } catch(e){
+    err.textContent = e.message; err.style.display = 'block'
+  } finally {
+    btn.textContent = 'Sign In →'; btn.disabled = false
+  }
+}
+
+async function doRegister(){
+  const fname   = document.getElementById('r-fname').value.trim()
+  const lname   = document.getElementById('r-lname').value.trim()
+  const email   = document.getElementById('r-email').value.trim()
+  const company = document.getElementById('r-company').value.trim()
+  const country = document.getElementById('r-country').value
+  const pass    = document.getElementById('r-pass').value
+  const err     = document.getElementById('reg-err')
+  const btn     = document.querySelector('#tab-register .btn-submit')
+  err.style.display = 'none'
+  if(!fname||!lname||!email||!company||!country||!pass){ err.textContent='Please fill in all fields.'; err.style.display='block'; return }
+  if(pass.length<8){ err.textContent='Password must be at least 8 characters.'; err.style.display='block'; return }
+  btn.textContent = 'Creating account…'; btn.disabled = true
+  try {
+    const res = await fetch(API+'/auth/signup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name:`${fname} ${lname}`, email, password:pass, company, country, role:'vendor'})
+    })
+    const data = await res.json()
+    if(!res.ok) throw new Error(data.detail || 'Registration failed')
+    TOKEN = data.access_token
+    localStorage.setItem('vendor_token', TOKEN)
+    V = data.user || {email, name:`${fname} ${lname}`, company}
+    bootVendor()
+    showToast('Welcome to Mumtaz Marketplace!')
+  } catch(e){
+    err.textContent = e.message; err.style.display = 'block'
+  } finally {
+    btn.textContent = 'Create Vendor Account →'; btn.disabled = false
+  }
+}
+
+function showForgot(){
+  showToast('Password reset — feature coming soon. Contact support@mumtaz.digital')
+}
+
+function bootVendor(){
+  document.getElementById('auth-screen').style.display = 'none'
+  document.getElementById('app').style.display = 'block'
+  renderApp()
+}
+
+function doLogout(){
+  localStorage.removeItem('vendor_token')
+  TOKEN = ''; V = {}
+  document.getElementById('auth-screen').style.display = 'flex'
+  document.getElementById('app').style.display = 'none'
+}
+
+// ── Bootstrap ──────────────────────────────────────────
+if(TOKEN){ bootVendor() }
+
+// ── Nav state ─────────────────────────────────────────
+let currentPage = 'dashboard'
+
+const NAV = [
+  {id:'dashboard', icon:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>', label:'Dashboard'},
+  {id:'listings',  icon:'<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>', label:'My Listings', badge:'3'},
+  {id:'rfq',       icon:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', label:'RFQ Inbox', badge:'2', badgeClass:'amber'},
+  {id:'orders',    icon:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>', label:'Orders'},
+  {id:'analytics', icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', label:'Analytics'},
+  {id:'profile',   icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', label:'Company Profile'},
+  {id:'settings',  icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>', label:'Settings'},
+]
+
+const PAGE_TITLES = {dashboard:'Dashboard',listings:'My Listings',rfq:'RFQ Inbox',orders:'Orders',analytics:'Analytics',profile:'Company Profile',settings:'Settings'}
+
+function renderApp(){
+  const initials = (V.name||'V').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+  document.getElementById('app').innerHTML = `
+  <div class="vd-wrap">
+    <aside class="vd-sidebar">
+      <div class="vd-brand">
+        <div class="vd-brand-mark">M</div>
+        <div><div class="vd-brand-name">Mumtaz</div><div class="vd-brand-sub">Vendor Portal</div></div>
+      </div>
+      <nav class="vd-nav">
+        <div class="vd-section">Menu</div>
+        ${NAV.map(n=>`
+        <div class="vd-item ${n.id===currentPage?'active':''}" onclick="navTo('${n.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${n.icon}</svg>
+          ${n.label}
+          ${n.badge?`<span class="vd-badge ${n.badgeClass||''}">${n.badge}</span>`:''}
+        </div>`).join('')}
+      </nav>
+      <div class="vd-footer">
+        <div class="vd-user">
+          <div class="vd-avatar">${initials}</div>
+          <div style="min-width:0;flex:1">
+            <div class="vd-uname">${V.name||'Vendor'}</div>
+            <div class="vd-uemail">${V.email||''}</div>
+          </div>
+          <button onclick="doLogout()" title="Sign out" style="background:none;border:none;color:var(--text-3);cursor:pointer;font-size:.9rem;padding:2px 4px">↗</button>
+        </div>
+      </div>
+    </aside>
+    <div class="vd-main">
+      <div class="vd-topbar">
+        <div class="vd-page-title" id="vd-title">${PAGE_TITLES[currentPage]}</div>
+        <div class="vd-topbar-right">
+          <button class="btn btn-grad btn-sm" onclick="openAddListing()">+ Add Listing</button>
+        </div>
+      </div>
+      <div class="vd-content" id="vd-panel"></div>
+    </div>
+  </div>
+  ${addListingModalHTML()}`
+  renderPage(currentPage)
+}
+
+function navTo(id){
+  currentPage = id
+  document.querySelectorAll('.vd-item').forEach(el=>el.classList.toggle('active', el.getAttribute('onclick')?.includes("'"+id+"'")))
+  document.getElementById('vd-title').textContent = PAGE_TITLES[id] || id
+  renderPage(id)
+}
+
+function renderPage(id){
+  const p = document.getElementById('vd-panel')
+  if(!p) return
+  if(id==='dashboard') p.innerHTML = pageDashboard()
+  else if(id==='listings') p.innerHTML = pageListings()
+  else if(id==='rfq')  p.innerHTML = pageRFQ()
+  else if(id==='orders') p.innerHTML = pageOrders()
+  else if(id==='analytics') p.innerHTML = pageAnalytics()
+  else if(id==='profile') p.innerHTML = pageProfile()
+  else if(id==='settings') p.innerHTML = pageSettings()
+}
+
+// ── Sample data ───────────────────────────────────────
+const LISTINGS = [
+  {id:1, name:'Industrial Steel Pipes — Grade A', category:'Raw Materials', price:'$85/ton', moq:'5 tons', status:'active', views:342, inquiries:12},
+  {id:2, name:'PP Woven Bags 50kg', category:'Packaging', price:'$0.45/pc', moq:'5,000 pcs', status:'active', views:189, inquiries:7},
+  {id:3, name:'PVC Electrical Conduits', category:'Construction', price:'$1.20/m', moq:'500 m', status:'pending', views:0, inquiries:0},
+]
+const RFQS = [
+  {id:'RFQ-001', buyer:'Emirates Steel Co.', product:'Industrial Steel Pipes', qty:'20 tons', date:'Apr 17, 2026', status:'new'},
+  {id:'RFQ-002', buyer:'Gulf Packaging Ltd', product:'PP Woven Bags 50kg', qty:'50,000 pcs', date:'Apr 16, 2026', status:'responded'},
+]
+const ORDERS = [
+  {id:'ORD-8821', buyer:'Dubai Manufacturing LLC', product:'Steel Pipes', amount:'$8,500', date:'Apr 15, 2026', status:'processing'},
+  {id:'ORD-8819', buyer:'Al Futtaim Group', product:'PP Woven Bags', amount:'$2,250', date:'Apr 10, 2026', status:'shipped'},
+  {id:'ORD-8810', buyer:'Carrefour UAE', product:'PP Woven Bags', amount:'$1,800', date:'Apr 2, 2026', status:'delivered'},
+]
+
+// ── Pages ─────────────────────────────────────────────
+function pageDashboard(){
+  return `
+  <div class="vd-stats">
+    <div class="vd-stat"><div class="vd-stat-label">Active Listings</div><div class="vd-stat-val">3</div><div class="vd-stat-sub up">↑ 1 this week</div></div>
+    <div class="vd-stat"><div class="vd-stat-label">Open RFQs</div><div class="vd-stat-val">2</div><div class="vd-stat-sub">Awaiting response</div></div>
+    <div class="vd-stat"><div class="vd-stat-label">Revenue (Apr)</div><div class="vd-stat-val">$12,550</div><div class="vd-stat-sub up">↑ 18% vs last month</div></div>
+    <div class="vd-stat"><div class="vd-stat-label">Profile Views</div><div class="vd-stat-val">531</div><div class="vd-stat-sub up">↑ 34 this week</div></div>
+  </div>
+  <div class="vd-grid2">
+    <div class="vd-card">
+      <div class="vd-card-title">Recent RFQs <button class="btn btn-outline btn-sm" onclick="navTo('rfq')">View all</button></div>
+      <table class="vd-table"><thead><tr><th>Buyer</th><th>Product</th><th>Status</th></tr></thead><tbody>
+      ${RFQS.map(r=>`<tr><td>${r.buyer}</td><td>${r.product}</td><td><span class="pill ${r.status==='new'?'pill-amber':'pill-green'}">${r.status}</span></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+    <div class="vd-card">
+      <div class="vd-card-title">Recent Orders <button class="btn btn-outline btn-sm" onclick="navTo('orders')">View all</button></div>
+      <table class="vd-table"><thead><tr><th>Order</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+      ${ORDERS.map(o=>`<tr><td>${o.id}</td><td style="color:var(--green);font-weight:600">${o.amount}</td><td><span class="pill ${o.status==='delivered'?'pill-green':o.status==='shipped'?'pill-indigo':'pill-amber'}">${o.status}</span></td></tr>`).join('')}
+      </tbody></table>
+    </div>
+  </div>
+  <div class="vd-card">
+    <div class="vd-card-title">Top Listings by Views</div>
+    ${LISTINGS.map(l=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:38px;height:38px;background:rgba(16,185,129,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">📦</div>
+      <div style="flex:1;min-width:0"><div style="font-size:.83rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.name}</div>
+      <div style="font-size:.73rem;color:var(--text-3)">${l.category} · ${l.price}</div></div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:.82rem;font-weight:700">${l.views} views</div>
+        <div style="font-size:.72rem;color:var(--green)">${l.inquiries} inquiries</div>
+      </div>
+    </div>`).join('')}
+  </div>`
+}
+
+function pageListings(){
+  return `
+  <div class="vd-card">
+    <div class="vd-card-title">My Product Listings <button class="btn btn-grad btn-sm" onclick="openAddListing()">+ Add Listing</button></div>
+    <table class="vd-table">
+      <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>MOQ</th><th>Views</th><th>Inquiries</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      ${LISTINGS.map(l=>`
+      <tr>
+        <td style="font-weight:600;color:var(--text)">${l.name}</td>
+        <td>${l.category}</td>
+        <td style="color:var(--green);font-weight:600">${l.price}</td>
+        <td>${l.moq}</td>
+        <td>${l.views}</td>
+        <td>${l.inquiries}</td>
+        <td><span class="pill ${l.status==='active'?'pill-green':'pill-amber'}">${l.status}</span></td>
+        <td><button class="btn btn-outline btn-sm" onclick="showToast('Edit listing — coming soon')">Edit</button></td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`
+}
+
+function pageRFQ(){
+  return `
+  <div class="vd-card">
+    <div class="vd-card-title">Quote Requests</div>
+    ${RFQS.length ? RFQS.map(r=>`
+    <div style="border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:.85rem;font-weight:700;margin-bottom:2px">${r.buyer}</div>
+          <div style="font-size:.75rem;color:var(--text-3)">${r.id} · ${r.date}</div>
+        </div>
+        <span class="pill ${r.status==='new'?'pill-amber':'pill-green'}">${r.status}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg-1);border-radius:7px;padding:10px">
+          <div style="font-size:.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Product</div>
+          <div style="font-size:.82rem;font-weight:500">${r.product}</div>
+        </div>
+        <div style="background:var(--bg-1);border-radius:7px;padding:10px">
+          <div style="font-size:.68rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Quantity</div>
+          <div style="font-size:.82rem;font-weight:500">${r.qty}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${r.status==='new'?`<button class="btn btn-grad btn-sm" onclick="showToast('Quote response — coming soon')">Respond to RFQ</button>`:''}
+        <button class="btn btn-outline btn-sm" onclick="showToast('Message buyer — coming soon')">Message Buyer</button>
+      </div>
+    </div>`).join('') : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No RFQs yet. They will appear here when buyers request quotes.</div></div>'}
+  </div>`
+}
+
+function pageOrders(){
+  return `
+  <div class="vd-card">
+    <div class="vd-card-title">Orders</div>
+    <table class="vd-table">
+      <thead><tr><th>Order ID</th><th>Buyer</th><th>Product</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      ${ORDERS.map(o=>`
+      <tr>
+        <td style="font-weight:600">${o.id}</td>
+        <td>${o.buyer}</td>
+        <td>${o.product}</td>
+        <td style="color:var(--green);font-weight:700">${o.amount}</td>
+        <td>${o.date}</td>
+        <td><span class="pill ${o.status==='delivered'?'pill-green':o.status==='shipped'?'pill-indigo':'pill-amber'}">${o.status}</span></td>
+        <td><button class="btn btn-outline btn-sm" onclick="showToast('Order details — coming soon')">View</button></td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`
+}
+
+function pageAnalytics(){
+  return `
+  <div class="vd-stats">
+    <div class="vd-stat"><div class="vd-stat-label">Total Views (30d)</div><div class="vd-stat-val">531</div><div class="vd-stat-sub up">↑ 34%</div></div>
+    <div class="vd-stat"><div class="vd-stat-label">Inquiries (30d)</div><div class="vd-stat-val">19</div><div class="vd-stat-sub up">↑ 12%</div></div>
+    <div class="vd-stat"><div class="vd-stat-label">Conversion Rate</div><div class="vd-stat-val">3.6%</div><div class="vd-stat-sub">Views → Inquiries</div></div>
+    <div class="vd-stat"><div class="vd-stat-label">Revenue (30d)</div><div class="vd-stat-val">$12,550</div><div class="vd-stat-sub up">↑ 18%</div></div>
+  </div>
+  <div class="vd-card">
+    <div class="vd-card-title">Top Performing Listings</div>
+    <table class="vd-table">
+      <thead><tr><th>Product</th><th>Views</th><th>Inquiries</th><th>Conv. Rate</th></tr></thead>
+      <tbody>
+      ${LISTINGS.map(l=>`<tr>
+        <td style="font-weight:600">${l.name}</td>
+        <td>${l.views}</td>
+        <td>${l.inquiries}</td>
+        <td style="color:var(--green);font-weight:600">${l.views?((l.inquiries/l.views*100).toFixed(1))+'%':'—'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`
+}
+
+function pageProfile(){
+  return `
+  <div class="vd-card" style="max-width:600px">
+    <div class="vd-card-title">Company Profile</div>
+    <div style="display:grid;gap:13px">
+      <div class="field"><label>Company Name</label><input value="${V.company||''}" placeholder="Al Rashid Trading LLC"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label>Contact Name</label><input value="${V.name||''}" placeholder="Ahmed Al Rashid"></div>
+        <div class="field"><label>Work Email</label><input value="${V.email||''}" type="email"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label>Phone</label><input placeholder="+971 50 000 0000"></div>
+        <div class="field"><label>Country</label>
+          <select><option>United Arab Emirates</option><option>Saudi Arabia</option><option>Qatar</option><option>Pakistan</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Business Description</label><textarea rows="3" placeholder="Describe your company and main products…" style="width:100%;padding:10px 12px;background:var(--bg-1);border:1.5px solid var(--border-2);border-radius:8px;font-size:.86rem;color:var(--text);resize:vertical"></textarea></div>
+      <button class="btn btn-grad" style="width:fit-content" onclick="showToast('Profile saved!')">Save Changes</button>
+    </div>
+  </div>`
+}
+
+function pageSettings(){
+  return `
+  <div class="vd-card" style="max-width:520px">
+    <div class="vd-card-title">Account Settings</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      ${[
+        ['Email Notifications','New RFQ received','rfq-notif',true],
+        ['Email Notifications','Order status updates','order-notif',true],
+        ['Email Notifications','Weekly analytics report','weekly-notif',false],
+      ].map(([grp,label,id,checked])=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:.83rem;font-weight:500">${label}</div><div style="font-size:.72rem;color:var(--text-3)">${grp}</div></div>
+        <label style="position:relative;display:inline-block;width:38px;height:20px;cursor:pointer">
+          <input type="checkbox" ${checked?'checked':''} style="opacity:0;width:0;height:0" onchange="showToast('Setting saved')">
+          <span style="position:absolute;inset:0;background:${checked?'var(--green)':'var(--border-2)'};border-radius:20px;transition:.2s"></span>
+          <span style="position:absolute;left:${checked?'20px':'2px'};top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s"></span>
+        </label>
+      </div>`).join('')}
+      <div style="padding-top:8px">
+        <button class="btn btn-outline" style="color:var(--red);border-color:rgba(239,68,68,.3)" onclick="if(confirm('Sign out?'))doLogout()">Sign Out</button>
+      </div>
+    </div>
+  </div>`
+}
+
+// ── Add Listing Modal ─────────────────────────────────
+function addListingModalHTML(){
+  return `
+  <div class="modal-bg" id="add-listing-modal">
+    <div class="modal">
+      <div class="modal-title">Add New Listing</div>
+      <div class="modal-sub">Your listing will be reviewed before going live.</div>
+      <div class="field"><label>Product Name</label><input id="al-name" placeholder="e.g. Industrial Steel Pipes Grade A"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>Category</label>
+          <select id="al-cat">
+            <option>Raw Materials</option><option>Packaging</option><option>Construction</option>
+            <option>IT & Technology</option><option>Logistics</option><option>Professional Services</option>
+          </select>
+        </div>
+        <div class="field"><label>Unit Price</label><input id="al-price" placeholder="e.g. $85/ton"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field"><label>MOQ</label><input id="al-moq" placeholder="e.g. 5 tons"></div>
+        <div class="field"><label>Lead Time</label><input id="al-lead" placeholder="e.g. 7-10 days"></div>
+      </div>
+      <div class="field"><label>Description</label><textarea id="al-desc" rows="3" style="width:100%;padding:10px 12px;background:var(--bg-1);border:1.5px solid var(--border-2);border-radius:8px;font-size:.86rem;color:var(--text);resize:vertical" placeholder="Describe your product, specifications, certifications…"></textarea></div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeAddListing()">Cancel</button>
+        <button class="btn btn-grad" onclick="submitListing()">Submit Listing</button>
+      </div>
+    </div>
+  </div>`
+}
+
+function openAddListing(){ document.getElementById('add-listing-modal').classList.add('open') }
+function closeAddListing(){ document.getElementById('add-listing-modal').classList.remove('open') }
+function submitListing(){
+  const name = document.getElementById('al-name').value.trim()
+  if(!name){ showToast('Enter a product name'); return }
+  closeAddListing()
+  showToast('Listing submitted for review!')
+}
+</script>
+</body>
+</html>
