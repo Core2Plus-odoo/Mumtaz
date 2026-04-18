@@ -18,6 +18,9 @@ cp apps/zaki-server/main.py $DEST/
 cp apps/zaki-server/requirements.txt $DEST/
 cp apps/zaki-server/create_user.py $DEST/
 
+echo "==> Ensuring Python venv support..."
+apt-get install -y python3-venv python3-pip 2>/dev/null || true
+
 echo "==> Creating Python venv..."
 if [ ! -d $DEST/venv ]; then
   python3 -m venv $DEST/venv
