@@ -1222,9 +1222,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <div class="field"><label>Top Clients</label><textarea id="cfg-clients" rows="2" style="width:100%;resize:none;background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);font-family:var(--font)"></textarea></div>
         <div class="field"><label>Current Financial Worry</label><textarea id="cfg-worry" rows="2" style="width:100%;resize:none;background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);font-family:var(--font)"></textarea></div>
       </div>
-      <div style="display:flex;gap:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-primary" style="max-width:180px" onclick="saveSettings()">Save Changes</button>
         <button class="btn-outline" onclick="resetAll()">Reset everything</button>
+        <button class="btn-outline" style="color:var(--blue);border-color:var(--blue)" onclick="loadDemoData()">⚡ Load Demo Data</button>
       </div>
     </div>
 
@@ -2066,6 +2067,94 @@ function resetAll() {
     localStorage.removeItem('zaki_v3')
     location.reload()
   }
+}
+
+function loadDemoData() {
+  if (!confirm('Load 6 months of demo data for Mumtaz Technology LLC (UAE)?\nThis will replace any existing transactions.')) return
+
+  // Company setup
+  S.me.firstName = 'CEO'
+  S.me.name = 'CEO'
+  S.co.name = 'Mumtaz Technology LLC'
+  S.co.industry = 'Technology Services'
+  S.co.country = 'UAE'
+  S.co.currency = 'AED'
+  S.ctx.pipeline = '3 enterprise deals worth AED 850K in advanced negotiation — Emaar Smart Cities (AED 420K), ADNOC Digital transformation (AED 280K), RTA fleet management SaaS (AED 150K). Expected close Q2 2026.'
+  S.ctx.clients = 'Emaar Properties, ADNOC Digital, Majid Al Futtaim Retail, du Telecom, DEWA Innovation, RTA Dubai'
+  S.ctx.worry = 'Two overdue AR balances: Majid Al Futtaim (AED 28,500, 68 days) and du Telecom (AED 16,800, 52 days). Payroll % creeping above 45%. Cloud infra costs up 22% MoM due to new client onboarding.'
+
+  // AR / AP / VAT overrides
+  S.fin.ar = 224000
+  S.fin.arOverdue = 45300
+  S.fin.ap = 82500
+  S.fin.vat = 16800
+
+  // Build 6 months of transactions
+  const now = new Date()
+  const txs = []
+  let id = 1
+
+  const add = (date, type, amount, category, description) =>
+    txs.push({ id: id++, date, type, amount, category, description })
+
+  // Helper: date string for month offset and day
+  const d = (monthOffset, day) => {
+    const dt = new Date(now.getFullYear(), now.getMonth() + monthOffset, day)
+    return dt.toISOString().split('T')[0]
+  }
+
+  // ── 6 months of data (current month = 0, going back to -5) ──
+  for (let m = -5; m <= 0; m++) {
+    const scale = m === 0 ? 0.75 : 1  // current month partial
+
+    // INCOME
+    add(d(m,  3), 'income',  Math.round(82000*scale),  'Service Revenue',   'Emaar Properties — monthly ERP maintenance')
+    add(d(m,  5), 'income',  Math.round(120000*scale), 'Service Revenue',   'ADNOC Digital — implementation milestone')
+    add(d(m,  8), 'income',  Math.round(47500*scale),  'SaaS Subscription', 'Platform subscriptions — 19 clients')
+    add(d(m, 12), 'income',  Math.round(38000*scale),  'Consulting',        'du Telecom — digital transformation advisory')
+    add(d(m, 15), 'income',  Math.round(24000*scale),  'Service Revenue',   'Majid Al Futtaim — BI dashboard license')
+    add(d(m, 20), 'income',  Math.round(16500*scale),  'Commission',        'Partner referral commission — DEWA project')
+    if (m < 0) {
+      add(d(m, 25), 'income', 8200, 'Other Income', 'Training workshop — Odoo for finance teams')
+    }
+
+    // EXPENSES
+    add(d(m,  1), 'expense', Math.round(115000*scale), 'Salary',    'Monthly payroll — 12 staff (incl. bonuses)')
+    add(d(m,  1), 'expense', 28000,                    'Rent',      'Office — Dubai Internet City, Level 4')
+    add(d(m,  2), 'expense', Math.round(18500*scale),  'Technology', 'AWS + Azure cloud infrastructure')
+    add(d(m,  4), 'expense', Math.round(14200*scale),  'Marketing', 'LinkedIn Ads + Google Ads + events')
+    add(d(m,  7), 'expense', 8500,                     'Legal',     'Monthly retainer — Al Tamimi & Co.')
+    add(d(m, 10), 'expense', Math.round(7800*scale),   'Travel',    'Client visits — Abu Dhabi + Riyadh')
+    add(d(m, 14), 'expense', 4200,                     'Utilities', 'Internet, phones, office utilities')
+    add(d(m, 16), 'expense', 2800,                     'Bank Charges', 'Bank fees + FX conversion charges')
+    add(d(m, 18), 'expense', Math.round(6500*scale),   'Technology', 'SaaS tools — Figma, Slack, Notion, Jira')
+    add(d(m, 22), 'expense', Math.round(9500*scale),   'Marketing', 'PR + content agency monthly retainer')
+    if (m % 3 === 0) {
+      add(d(m, 25), 'expense', 14500, 'Legal', 'Quarterly VAT filing & compliance — auditors')
+    }
+    if (m === -3) {
+      add(d(m, 10), 'expense', 38000, 'Technology', 'Annual Microsoft 365 & Odoo Enterprise renewal')
+    }
+    if (m === -5) {
+      add(d(m, 15), 'expense', 22000, 'Travel', 'GITEX participation — booth + travel')
+    }
+    if (m === -1) {
+      add(d(m, 20), 'expense', 18000, 'Marketing', 'Annual website redesign — agency final payment')
+    }
+  }
+
+  S.transactions = txs.sort((a, b) => b.date.localeCompare(a.date))
+  S._cache = {}
+  computeFin()
+  save()
+
+  // Refresh UI
+  populateSettings()
+  renderBriefingKPIs()
+  renderDashboard()
+  runProactiveAlerts()
+  showToast('Demo data loaded — 6 months, ' + txs.length + ' transactions. Refreshing dashboard…')
+  setTimeout(() => showPanel('briefing'), 600)
 }
 
 // ═══════════════════════════════════════════
