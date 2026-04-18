@@ -156,8 +156,8 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
     </div>
     <div class="header-actions">
       <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme">🌙</button>
-      <a href="/vendor" class="btn btn-outline btn-sm">Vendor Login</a>
-      <a href="/vendor#register" class="btn btn-grad btn-sm">List Your Business</a>
+      <a href="vendor.html" class="btn btn-outline btn-sm">Vendor Login</a>
+      <a href="vendor.html#register" class="btn btn-grad btn-sm">List Your Business</a>
     </div>
   </div>
 </header>
@@ -247,7 +247,7 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 <div class="cta-banner">
   <h2>Are you a supplier?</h2>
   <p>Join 2,400+ verified businesses. Get 50 qualified leads per month — free forever.</p>
-  <a href="/vendor#register" class="btn">Start Listing Free →</a>
+  <a href="vendor.html#register" class="btn">Start Listing Free →</a>
 </div>
 
 <!-- Footer -->
@@ -258,11 +258,11 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
       <div><div style="font-size:.85rem;font-weight:700">Mumtaz Marketplace</div><div style="font-size:.7rem;color:var(--text-3)">© 2026 Mumtaz Digital</div></div>
     </div>
     <div class="footer-links">
-      <a href="#">About</a>
-      <a href="#">For Suppliers</a>
-      <a href="#">Pricing</a>
-      <a href="/vendor">Vendor Login</a>
-      <a href="#">Contact</a>
+      <a href="https://mumtaz.digital/about.html">About</a>
+      <a href="vendor.html">For Suppliers</a>
+      <a href="https://mumtaz.digital/pricing.html">Pricing</a>
+      <a href="vendor.html">Vendor Login</a>
+      <a href="https://mumtaz.digital/contact.html">Contact</a>
     </div>
   </div>
 </footer>
@@ -294,6 +294,9 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 
 <div id="toast"></div>
 
+<!-- Supplier Profile Modal (dynamic) -->
+<div id="profile-modal" class="modal-bg" style="display:none" onclick="if(event.target===this)closeProfile()"></div>
+
 <script>
 const CATS = [
   {icon:'🏭',name:'Manufacturing & Industry',count:'380+ suppliers'},
@@ -311,13 +314,21 @@ const CATS = [
 ]
 
 const SUPPLIERS = [
-  {init:'AN',name:'Al Noor Trading LLC',       cat:'IT & Technology',      loc:'Dubai, UAE',      rating:4.8, reviews:124, tags:['Computers','Networking','Software'],   verified:true},
-  {init:'GS',name:'Gulf Steel Industries',     cat:'Manufacturing',        loc:'Sharjah, UAE',    rating:4.6, reviews:89,  tags:['Steel','Aluminium','Fabrication'],     verified:true},
-  {init:'RG',name:'Riyadh Global Logistics',   cat:'Logistics & Freight',  loc:'Riyadh, KSA',     rating:4.7, reviews:203, tags:['Freight','Customs','Last-Mile'],       verified:true},
-  {init:'PC',name:'PakChem Raw Materials',     cat:'Raw Materials',        loc:'Karachi, PK',     rating:4.5, reviews:67,  tags:['Chemicals','Polymers','Adhesives'],    verified:true},
-  {init:'EA',name:'Emirates Agri Foods',       cat:'Food & Beverage',      loc:'Abu Dhabi, UAE',  rating:4.9, reviews:312, tags:['Bulk Food','Frozen','Halal Cert'],     verified:true},
-  {init:'MT',name:'Mashreq Tech Solutions',    cat:'Professional Services', loc:'Dubai, UAE',     rating:4.7, reviews:56,  tags:['ERP','Cloud','Consulting'],           verified:true},
+  {init:'AN',name:'Al Noor Trading LLC',       cat:'IT & Technology',       loc:'Dubai, UAE',     rating:4.8,reviews:124,tags:['Computers','Networking','Software'],  verified:true, moq:'1 unit',lead:'2-5 days',  desc:'Leading IT distributor in the UAE with 20+ years experience. Supplying enterprise hardware, networking equipment, and software licenses to over 500 corporate clients across GCC.'},
+  {init:'GS',name:'Gulf Steel Industries',     cat:'Manufacturing & Industry',loc:'Sharjah, UAE', rating:4.6,reviews:89, tags:['Steel','Aluminium','Fabrication'],   verified:true, moq:'1 tonne', lead:'7-14 days',desc:'ISO 9001 certified steel fabricator. Supplying structural steel, aluminium profiles, and custom metal fabrication to construction and industrial clients across UAE and KSA.'},
+  {init:'RG',name:'Riyadh Global Logistics',   cat:'Logistics & Freight',   loc:'Riyadh, KSA',   rating:4.7,reviews:203,tags:['Freight','Customs','Last-Mile'],      verified:true, moq:'Any',     lead:'1-3 days', desc:'Full-service freight and logistics provider covering Saudi Arabia, UAE, and Qatar. Specialising in customs clearance, warehousing, and last-mile B2B delivery.'},
+  {init:'PC',name:'PakChem Raw Materials',     cat:'Raw Materials',         loc:'Karachi, PK',   rating:4.5,reviews:67, tags:['Chemicals','Polymers','Adhesives'],   verified:true, moq:'500 kg',  lead:'10-21 days',desc:'Bulk chemical and polymer supplier exporting to 30+ countries. Competitive pricing on industrial chemicals, adhesives, and specialty polymers for manufacturing.'},
+  {init:'EA',name:'Emirates Agri Foods',       cat:'Food & Beverage',       loc:'Abu Dhabi, UAE',rating:4.9,reviews:312,tags:['Bulk Food','Frozen','Halal Cert'],    verified:true, moq:'100 kg',  lead:'3-7 days', desc:'Halal-certified food distributor supplying restaurants, hotel chains, and supermarkets across the UAE. Specialising in frozen goods, grains, and fresh produce.'},
+  {init:'MT',name:'Mashreq Tech Solutions',    cat:'Professional Services', loc:'Dubai, UAE',    rating:4.7,reviews:56, tags:['ERP','Cloud','Consulting'],            verified:true, moq:'Project', lead:'By scope',  desc:'ERP implementation and cloud consulting firm. Certified partner for SAP, Oracle, and Microsoft Dynamics. Serving mid-market enterprises across UAE, Qatar, and Bahrain.'},
+  {init:'AQ',name:'Al Qudra Construction',     cat:'Construction',          loc:'Dubai, UAE',    rating:4.5,reviews:142,tags:['Contracting','MEP','Fit-out'],         verified:true, moq:'Project', lead:'By scope',  desc:'Grade A construction contractor specialising in commercial fit-out, MEP works, and civil engineering. Registered with Dubai Municipality. 15+ years of delivery.'},
+  {init:'NP',name:'NovaPharma Gulf',           cat:'Healthcare & Pharma',   loc:'Dubai, UAE',    rating:4.8,reviews:78, tags:['Pharma','Medical Devices','Wholesale'],verified:true, moq:'50 units',lead:'5-10 days', desc:'Licensed pharmaceutical wholesaler and medical device distributor. Supplying hospitals, clinics, and pharmacies across the UAE with MOHAP-approved products.'},
+  {init:'FS',name:'Future Staffing Group',     cat:'HR & Staffing',         loc:'Dubai, UAE',    rating:4.4,reviews:93, tags:['Recruitment','Temp Staff','Payroll'],  verified:true, moq:'5 staff', lead:'3-10 days', desc:'UAE-registered staffing agency specialising in blue-collar and white-collar placement. Handles visa, WPS payroll, and government compliance for 200+ corporate clients.'},
+  {init:'GM',name:'Gulf Media Hub',            cat:'Marketing & Media',     loc:'Dubai, UAE',    rating:4.6,reviews:44, tags:['Digital Marketing','Print','Events'],   verified:true, moq:'Project', lead:'5-14 days', desc:'360-degree marketing agency offering digital advertising, print production, and event management. Clients include FMCG brands, real estate developers, and government entities.'},
+  {init:'OA',name:'Oman Agro Exports',         cat:'Raw Materials',         loc:'Muscat, OM',    rating:4.3,reviews:31, tags:['Dates','Nuts','Agricultural'],          verified:true, moq:'200 kg',  lead:'7-14 days', desc:'Premium Omani agricultural exporter. Supplying bulk dates, nuts, dried fruits, and honey to retailers and distributors in 15+ countries with export certifications.'},
+  {init:'KF',name:'Kuwait Finance Advisors',   cat:'Financial Services',    loc:'Kuwait City, KW',rating:4.7,reviews:28,tags:['Trade Finance','LCBG','Insurance'],   verified:true, moq:'Project', lead:'2-5 days',  desc:'Licensed financial services firm offering trade finance, letters of credit, bank guarantees, and commercial insurance brokerage for GCC importers and exporters.'},
 ]
+
+let activeFilter = ''
 
 function renderCats(){
   document.getElementById('cat-grid').innerHTML = CATS.map(c=>`
@@ -329,36 +340,86 @@ function renderCats(){
 }
 
 function renderSuppliers(list){
-  document.getElementById('supplier-grid').innerHTML = list.map(s=>`
+  const grid = document.getElementById('supplier-grid')
+  if(!list.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-3)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><div style="font-weight:600">No suppliers found</div><div style="font-size:.82rem;margin-top:4px">Try a different search term or category</div></div>'
+    return
+  }
+  grid.innerHTML = list.map(s=>`
     <div class="supplier-card">
       <div class="supplier-header">
         <div class="supplier-logo">${s.init}</div>
         <div style="flex:1;min-width:0">
           <div class="supplier-name">${s.name}</div>
           <div class="supplier-meta">${s.cat} · ${s.loc}</div>
-          ${s.verified?'<span class="verified">✓ Verified</span>':''}
+          ${s.verified?'<span class="verified">✓ KYB Verified</span>':''}
         </div>
         <div class="rating"><span class="stars">★</span>${s.rating} <span style="color:var(--text-3);font-weight:400">(${s.reviews})</span></div>
       </div>
       <div>${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:.74rem;color:var(--text-3)">
+        <span>📦 MOQ: ${s.moq}</span>
+        <span>⏱ Lead: ${s.lead}</span>
+      </div>
       <div class="supplier-footer">
-        <button class="btn btn-outline btn-sm" onclick="showToast('Profile view coming soon')">View Profile</button>
+        <button class="btn btn-outline btn-sm" onclick="viewProfile(${SUPPLIERS.indexOf(s)})">View Profile</button>
         <button class="btn btn-grad btn-sm" onclick="openRFQ('${s.name}')">Request Quote</button>
       </div>
     </div>`).join('')
 }
 
 function filterCat(name){
+  activeFilter = name
   const q = document.getElementById('hero-q')
-  if(q) q.value = name
-  showToast('Filtering by: '+name)
+  if(q) q.value = ''
+  const filtered = SUPPLIERS.filter(s => s.cat === name || s.tags.some(t => name.toLowerCase().includes(t.toLowerCase())))
+  renderSuppliers(filtered.length ? filtered : SUPPLIERS.filter(s => s.cat.toLowerCase().includes(name.split(' ')[0].toLowerCase())))
+  document.getElementById('supplier-grid').scrollIntoView({behavior:'smooth', block:'nearest'})
 }
 
 function doSearch(){
-  const q = (document.getElementById('hero-q')||document.getElementById('hdr-q')).value.trim()
-  if(!q){ showToast('Enter a search term','warn'); return }
-  showToast('Searching for: '+q)
+  const heroQ = document.getElementById('hero-q')
+  const hdrQ  = document.getElementById('hdr-q')
+  const q = ((heroQ&&heroQ.value)||(hdrQ&&hdrQ.value)||'').trim().toLowerCase()
+  if(!q){ renderSuppliers(SUPPLIERS); return }
+  const results = SUPPLIERS.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    s.cat.toLowerCase().includes(q)  ||
+    s.loc.toLowerCase().includes(q)  ||
+    s.tags.some(t => t.toLowerCase().includes(q)) ||
+    s.desc.toLowerCase().includes(q)
+  )
+  renderSuppliers(results)
+  document.getElementById('supplier-grid').scrollIntoView({behavior:'smooth', block:'nearest'})
 }
+
+function viewProfile(idx){
+  const s = SUPPLIERS[idx]
+  if(!s) return
+  document.getElementById('profile-modal').innerHTML = `
+    <div class="modal" style="max-width:560px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <div class="supplier-logo" style="width:52px;height:52px;font-size:1.2rem">${s.init}</div>
+        <div>
+          <div style="font-size:1.05rem;font-weight:700">${s.name}</div>
+          <div style="font-size:.8rem;color:var(--text-2);margin-top:2px">${s.cat} · ${s.loc}</div>
+          <div style="margin-top:5px">${s.verified?'<span class="verified">✓ KYB Verified</span>':''} <span class="rating" style="display:inline-flex;margin-left:6px"><span class="stars">★</span>${s.rating} <span style="color:var(--text-3);font-weight:400;margin-left:3px">(${s.reviews} reviews)</span></span></div>
+        </div>
+      </div>
+      <p style="font-size:.85rem;color:var(--text-2);line-height:1.7;margin-bottom:18px">${s.desc}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+        <div style="background:var(--bg-1);border-radius:8px;padding:12px"><div style="font-size:.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Min. Order</div><div style="font-size:.88rem;font-weight:600">${s.moq}</div></div>
+        <div style="background:var(--bg-1);border-radius:8px;padding:12px"><div style="font-size:.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Lead Time</div><div style="font-size:.88rem;font-weight:600">${s.lead}</div></div>
+      </div>
+      <div style="margin-bottom:20px">${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" style="flex:1" onclick="closeProfile()">Close</button>
+        <button class="btn btn-grad" style="flex:1" onclick="closeProfile();openRFQ('${s.name}')">Request Quote →</button>
+      </div>
+    </div>`
+  document.getElementById('profile-modal').style.display='flex'
+}
+function closeProfile(){ document.getElementById('profile-modal').style.display='none' }
 
 function openRFQ(supplier){
   const t = document.getElementById('rfq-title')
@@ -371,27 +432,36 @@ function closeModal(id){ document.getElementById(id).classList.remove('open') }
 function submitRFQ(){
   const co    = document.getElementById('rfq-co').value.trim()
   const email = document.getElementById('rfq-email').value.trim()
-  if(!co||!email){ showToast('Enter company name and email','error'); return }
+  if(!co||!email){ showToast('Please enter your company name and email','error'); return }
   closeModal('rfq-modal')
-  showToast('RFQ submitted! The supplier will respond within 24 hours.')
+  showToast('RFQ submitted! The supplier will respond within 24 hours. ✓')
   ;['rfq-co','rfq-name','rfq-email','rfq-phone','rfq-qty','rfq-budget','rfq-msg'].forEach(id=>{
-    const el = document.getElementById(id)
-    if(el) el.value = ''
+    const el = document.getElementById(id); if(el) el.value = ''
   })
 }
 
 function showToast(msg, type=''){
   const t = document.getElementById('toast')
   t.textContent = msg
-  t.style.background = type==='error'?'#dc2626':'#1e293b'
+  t.style.background = type==='error' ? '#dc2626' : '#1e293b'
   t.classList.add('show')
   clearTimeout(window._tto)
   window._tto = setTimeout(()=>t.classList.remove('show'), 3200)
 }
 
-function toggleTheme(){
-  document.body.classList.toggle('dark')
-}
+function toggleTheme(){ document.body.classList.toggle('dark') }
+
+// Sync search inputs
+document.addEventListener('DOMContentLoaded', () => {
+  const heroQ = document.getElementById('hero-q')
+  const hdrQ  = document.getElementById('hdr-q')
+  if(heroQ && hdrQ){
+    heroQ.addEventListener('input', () => hdrQ.value = heroQ.value)
+    hdrQ.addEventListener('input',  () => heroQ.value = hdrQ.value)
+    heroQ.addEventListener('keydown', e => { if(e.key==='Enter') doSearch() })
+    hdrQ.addEventListener('keydown',  e => { if(e.key==='Enter') doSearch() })
+  }
+})
 
 renderCats()
 renderSuppliers(SUPPLIERS)
