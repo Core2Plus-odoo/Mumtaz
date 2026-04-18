@@ -252,6 +252,64 @@ def odoo_read_tenant(tenant_id: int) -> dict:
     except Exception:
         return {}
 
+# ── Module map: portal_id → Odoo technical name ───────────────────────
+MODULE_MAP = {
+    "crm":             "crm",
+    "invoicing":       "account",
+    "accounting":      "account_accountant",
+    "inventory":       "stock",
+    "purchase":        "purchase",
+    "hr":              "hr",
+    "project":         "project",
+    "expenses":        "hr_expense",
+    "timesheets":      "hr_timesheet",
+    "mrp":             "mrp",
+    "pos":             "point_of_sale",
+    "ecommerce":       "website_sale",
+    "helpdesk":        "helpdesk",
+    "email_marketing": "mass_mailing",
+}
+INSTALLED_STATES = {"installed", "to install", "to upgrade"}
+
+def odoo_get_module_states() -> dict:
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid:
+        return {}
+    try:
+        rows = _odoo_object().execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", "search_read",
+            [[["name", "in", list(MODULE_MAP.values())]]],
+            {"fields": ["name", "state"]}
+        )
+        name_to_state = {r["name"]: r["state"] for r in rows}
+        return {
+            portal_id: name_to_state.get(odoo_name, "uninstalled") in INSTALLED_STATES
+            for portal_id, odoo_name in MODULE_MAP.items()
+        }
+    except Exception as e:
+        print(f"[modules] get states error: {e}")
+        return {}
+
+def odoo_toggle_module(portal_id: str, install: bool) -> bool:
+    odoo_name = MODULE_MAP.get(portal_id)
+    if not odoo_name:
+        return False
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid:
+        return False
+    try:
+        obj = _odoo_object()
+        ids = obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", "search",
+                             [[["name", "=", odoo_name]]])
+        if not ids:
+            return False
+        method = "button_immediate_install" if install else "button_immediate_uninstall"
+        obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", method, [ids])
+        return True
+    except Exception as e:
+        print(f"[modules] toggle error ({portal_id}, install={install}): {e}")
+        return False
+
 # ── Pydantic models ───────────────────────────────────────────────────
 class SignupReq(BaseModel):
     name: str
@@ -427,6 +485,32 @@ async def tenant_me(auth: dict = Depends(require_auth)):
     if not tenant_id:
         return {"tenant": None}
     return {"tenant": odoo_read_tenant(int(tenant_id))}
+
+@app.get("/api/v1/modules")
+async def get_modules(auth: dict = Depends(require_auth)):
+    """Return installed state of each portal module from Odoo ERP."""
+    return {"modules": odoo_get_module_states()}
+
+class ModuleToggleReq(BaseModel):
+    module_id: str
+
+@app.post("/api/v1/modules/install")
+async def install_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
+    if req.module_id not in MODULE_MAP:
+        raise HTTPException(400, f"Unknown module: {req.module_id}")
+    ok = odoo_toggle_module(req.module_id, install=True)
+    if not ok:
+        raise HTTPException(500, f"Failed to install {req.module_id}")
+    return {"ok": True, "module": req.module_id, "installed": True}
+
+@app.post("/api/v1/modules/uninstall")
+async def uninstall_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
+    if req.module_id not in MODULE_MAP:
+        raise HTTPException(400, f"Unknown module: {req.module_id}")
+    ok = odoo_toggle_module(req.module_id, install=False)
+    if not ok:
+        raise HTTPException(500, f"Failed to uninstall {req.module_id}")
+    return {"ok": True, "module": req.module_id, "installed": False}
 
 @app.post("/api/v1/ai/chat/stream")
 async def chat_stream(req: ChatReq, auth: dict = Depends(require_auth)):

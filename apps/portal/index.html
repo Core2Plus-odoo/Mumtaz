@@ -863,41 +863,81 @@ function renderDashboard(){
 
 // ── Modules ────────────────────────────────────────────
 let modFilter = 'All'
-function renderModules(){
+let modSyncing = {}  // track which modules are currently installing
+
+async function renderModules(){
   const cats = ['All',...new Set(MODULES_DATA.map(m=>m.cat))]
   document.getElementById('mod-filters').innerHTML = cats.map(c=>`
-    <button onclick="setModFilter('${c}')" class="btn ${c===modFilter?'btn-grad':'btn-outline'} btn-sm" id="mf-${c.replace(/\s/g,'')}">${c}</button>`).join('')
+    <button onclick="setModFilter('${c}')" class="btn ${c===modFilter?'btn-grad':'btn-outline'} btn-sm">${c}</button>`).join('')
+  // Fetch real states from Odoo ERP
+  try {
+    const data = await apiFetch('/modules')
+    if(data.modules) {
+      Object.assign(P.modules, data.modules)
+      save()
+    }
+  } catch(e) {
+    console.warn('Could not sync module states from ERP:', e)
+  }
   renderModGrid()
 }
-function setModFilter(c){ modFilter=c; renderModules() }
+function setModFilter(c){ modFilter=c; renderModGrid() }
 function renderModGrid(){
   const list = modFilter==='All' ? MODULES_DATA : MODULES_DATA.filter(m=>m.cat===modFilter)
-  document.getElementById('mod-grid').innerHTML = list.map(m=>`
-    <div class="card" style="transition:box-shadow var(--tr)" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow=''">
+  document.getElementById('mod-grid').innerHTML = list.map(m=>{
+    const syncing = modSyncing[m.id]
+    const enabled = P.modules[m.id]
+    const erpLink = enabled
+      ? `<a href="http://erp.mumtaz.digital/odoo/${m.id.replace('_','-')}" target="_blank"
+           style="font-size:.7rem;color:var(--indigo);font-weight:600;margin-top:6px;display:inline-block">Open in ERP →</a>`
+      : ''
+    return `<div class="card" style="transition:box-shadow var(--tr);${syncing?'opacity:.7':''}">
       <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
         <span style="font-size:1.6rem">${m.icon}</span>
         <div style="flex:1">
           <div style="font-weight:700;font-size:.88rem;margin-bottom:2px">${m.name}</div>
           <span class="badge ${m.included?'badge-green':'badge-blue'}">${m.included?'Included':'Add-on'}</span>
           ${!m.included?`<span style="font-size:.75rem;color:var(--text-3);margin-left:6px">$${m.price}/mo</span>`:''}
+          ${syncing?`<span style="font-size:.72rem;color:var(--amber);margin-left:6px">⟳ ${enabled?'Installing…':'Uninstalling…'}</span>`:''}
         </div>
-        <label class="toggle"><input type="checkbox" ${P.modules[m.id]?'checked':''} onchange="toggleMod('${m.id}',this.checked)"><span class="toggle-slider"></span></label>
+        <label class="toggle" style="${syncing?'pointer-events:none;opacity:.5':''}">
+          <input type="checkbox" ${enabled?'checked':''} onchange="toggleMod('${m.id}',this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
       <div style="font-size:.78rem;color:var(--text-2);line-height:1.5">${m.desc}</div>
-      <div style="margin-top:10px;font-size:.72rem;color:var(--text-3)">Category: ${m.cat}</div>
-    </div>`).join('')
-  // Update sidebar badge
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+        <span style="font-size:.72rem;color:var(--text-3)">Category: ${m.cat}</span>
+        ${erpLink}
+      </div>
+    </div>`
+  }).join('')
   const cnt = MODULES_DATA.filter(m=>P.modules[m.id]).length
   const el = document.getElementById('sb-mod-count')
   if(el) el.textContent = cnt
 }
-function toggleMod(id, val){
+async function toggleMod(id, val){
+  const m = MODULES_DATA.find(x=>x.id===id)
+  // Core modules always stay installed
+  if(m?.included && !val){ showToast('Core modules cannot be disabled','error'); renderModGrid(); return }
   P.modules[id] = val
   save()
-  showToast(val ? 'Module enabled' : 'Module disabled')
-  const cnt = MODULES_DATA.filter(m=>P.modules[m.id]).length
-  const el = document.getElementById('sb-mod-count')
-  if(el) el.textContent = cnt
+  renderModGrid()
+  modSyncing[id] = true
+  renderModGrid()
+  try {
+    await apiFetch(val ? '/modules/install' : '/modules/uninstall', {
+      method:'POST', body:JSON.stringify({module_id:id})
+    })
+    showToast(val ? `${m?.name||id} installed in ERP` : `${m?.name||id} removed from ERP`)
+  } catch(e) {
+    showToast(`ERP sync failed: ${e.message}`,'error')
+    P.modules[id] = !val  // revert
+    save()
+  } finally {
+    delete modSyncing[id]
+    renderModGrid()
+  }
 }
 
 // ── Users ──────────────────────────────────────────────
