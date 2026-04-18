@@ -328,8 +328,12 @@ input,select,textarea{font-family:var(--font);outline:none}
 <div id="toast"></div>
 
 <script>
+// ── Config ─────────────────────────────────────────────
+const API_BASE   = 'https://zaki.mumtaz.digital/api/v1'
+const STORE_KEY  = 'mumtaz_portal_v2'
+const TOKEN_KEY  = 'mumtaz_token'
+
 // ── State ──────────────────────────────────────────────
-const STORE_KEY = 'mumtaz_portal_v2'
 let P = {
   user: { name:'', email:'', company:'', role:'Admin', avatar:'' },
   plan: 'growth',
@@ -337,13 +341,26 @@ let P = {
   modules: {},
   theme: 'light'
 }
+let TOKEN = ''
 
 function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(P)) }catch(e){} }
+function saveToken(t){ try{ TOKEN=t; localStorage.setItem(TOKEN_KEY, t) }catch(e){} }
 function load(){
   try{
     const d = localStorage.getItem(STORE_KEY)
     if(d) Object.assign(P, JSON.parse(d))
+    TOKEN = localStorage.getItem(TOKEN_KEY) || ''
   }catch(e){}
+}
+
+async function apiFetch(path, opts={}){
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { 'Content-Type':'application/json', 'Authorization': TOKEN ? 'Bearer '+TOKEN : '', ...(opts.headers||{}) }
+  })
+  const data = await res.json().catch(()=>({}))
+  if(!res.ok) throw new Error(data.detail || 'Request failed')
+  return data
 }
 
 // ── Auth helpers ───────────────────────────────────────
@@ -351,33 +368,52 @@ function showView(v){
   ['login','signup','forgot'].forEach(x => document.getElementById('view-'+x).style.display = x===v?'':'none')
 }
 
-function doLogin(){
+async function doLogin(){
   const email = document.getElementById('l-email').value.trim()
   const pass  = document.getElementById('l-pass').value
   const err   = document.getElementById('login-err')
+  const btn   = document.querySelector('#view-login .btn-primary')
   err.style.display = 'none'
-  if(!email || !pass){ err.textContent='Enter email and password.'; err.style.display='block'; return }
-  // MVP: accept any email+pass, store user
-  P.user.email   = email
-  P.user.name    = email.split('@')[0].replace(/\./g,' ').replace(/\b\w/g,c=>c.toUpperCase())
-  P.user.company = P.user.company || 'My Company'
-  save()
-  bootApp()
+  if(!email||!pass){ err.textContent='Enter email and password.'; err.style.display='block'; return }
+  btn.textContent='Signing in…'; btn.disabled=true
+  try{
+    const data = await apiFetch('/auth/login', {method:'POST', body:JSON.stringify({email, password:pass})})
+    saveToken(data.access_token)
+    P.user = { name:data.user.name, email:data.user.email, company:data.user.company||'', role:'Admin', avatar:'' }
+    P.plan = data.user.plan || 'growth'
+    save()
+    bootApp()
+  }catch(e){
+    err.textContent = e.message; err.style.display='block'
+  }finally{
+    btn.textContent='Sign In →'; btn.disabled=false
+  }
 }
 
-function doSignup(){
+async function doSignup(){
   const fname   = document.getElementById('s-fname').value.trim()
   const lname   = document.getElementById('s-lname').value.trim()
   const email   = document.getElementById('s-email').value.trim()
   const company = document.getElementById('s-company').value.trim()
   const pass    = document.getElementById('s-pass').value
   const err     = document.getElementById('signup-err')
+  const btn     = document.querySelector('#view-signup .btn-primary')
   err.style.display = 'none'
   if(!fname||!email||!company||!pass){ err.textContent='Fill all fields.'; err.style.display='block'; return }
-  if(pass.length < 8){ err.textContent='Password must be at least 8 characters.'; err.style.display='block'; return }
-  P.user = { name: fname+' '+lname, email, company, role:'Admin', avatar:'' }
-  save()
-  startOnboarding()
+  if(pass.length<8){ err.textContent='Password must be at least 8 characters.'; err.style.display='block'; return }
+  btn.textContent='Creating account…'; btn.disabled=true
+  try{
+    const data = await apiFetch('/auth/signup', {method:'POST', body:JSON.stringify({name:fname+' '+lname, email, company, password:pass})})
+    saveToken(data.access_token)
+    P.user = { name:data.user.name, email:data.user.email, company:data.user.company||company, role:'Admin', avatar:'' }
+    P.plan = data.user.plan || 'trial'
+    save()
+    startOnboarding()
+  }catch(e){
+    err.textContent = e.message; err.style.display='block'
+  }finally{
+    btn.textContent='Create Account →'; btn.disabled=false
+  }
 }
 
 function doForgot(){
@@ -389,7 +425,10 @@ function doForgot(){
 
 function doLogout(){
   P.user.email = ''
+  TOKEN = ''
+  try{ localStorage.removeItem(TOKEN_KEY) }catch(e){}
   save()
+  document.getElementById('app').classList.remove('ready')
   document.getElementById('app').style.display = 'none'
   document.getElementById('auth').style.display = 'flex'
   showView('login')
@@ -1260,7 +1299,7 @@ function bootApp(){
 }
 
 load()
-if(P.user.email){ bootApp() }
+if(TOKEN && P.user.email){ bootApp() }
 else { document.getElementById('auth').style.display='flex' }
 </script>
 </body>

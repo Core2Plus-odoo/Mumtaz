@@ -34,11 +34,27 @@ if [ ! -f $DEST/.env ]; then
 JWT_SECRET=$(openssl rand -hex 32)
 ANTHROPIC_API_KEY=sk-ant-YOUR-KEY-HERE
 DB_PATH=/opt/zaki-server/users.db
+# Odoo connection (single source of truth for auth)
+ODOO_URL=http://127.0.0.1:8069
+ODOO_DB=mumtaz
+ODOO_ADMIN_USER=admin
+ODOO_ADMIN_PASS=YOUR-ODOO-ADMIN-PASSWORD
 EOF
   echo ""
-  echo "⚠️  IMPORTANT: Set your Anthropic API key in $DEST/.env"
+  echo "⚠️  IMPORTANT: Edit $DEST/.env and set:"
+  echo "   ANTHROPIC_API_KEY  — your Anthropic key"
+  echo "   ODOO_ADMIN_PASS    — your Odoo admin password"
   echo "   nano $DEST/.env"
   echo ""
+else
+  # Add Odoo vars if missing from existing .env
+  grep -q "ODOO_URL" $DEST/.env || cat >> $DEST/.env <<EOF
+ODOO_URL=http://127.0.0.1:8069
+ODOO_DB=mumtaz
+ODOO_ADMIN_USER=admin
+ODOO_ADMIN_PASS=YOUR-ODOO-ADMIN-PASSWORD
+EOF
+  echo "⚠️  Odoo vars appended to $DEST/.env — update ODOO_ADMIN_PASS"
 fi
 
 echo "==> Installing systemd service..."
