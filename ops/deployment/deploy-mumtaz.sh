@@ -33,6 +33,16 @@ nginx -t
 echo "==> Reloading nginx..."
 systemctl reload nginx
 
+echo "==> Re-applying SSL certificates..."
+certbot --nginx --reinstall --non-interactive \
+  -d mumtaz.digital -d www.mumtaz.digital \
+  -d app.mumtaz.digital \
+  -d zaki.mumtaz.digital \
+  -d marketplace.mumtaz.digital \
+  -d admin.mumtaz.digital 2>/dev/null || true
+
+nginx -t && systemctl reload nginx
+
 echo ""
 echo "✅ Deploy complete!"
 echo ""
