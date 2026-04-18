@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mumtaz Marketplace — UAE & GCC B2B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc;--bg-1:#f1f5f9;--surface:#fff;
+  --text:#0f172a;--text-2:#475569;--text-3:#94a3b8;
+  --border:#e2e8f0;--border-2:#cbd5e1;
+  --indigo:#6366f1;--purple:#8b5cf6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--teal:#14b8a6;
+  --grad:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);
+  --font:'Inter',system-ui,sans-serif;
+  --shadow:0 1px 4px rgba(15,23,42,.08),0 4px 16px rgba(15,23,42,.06);
+  --shadow-lg:0 8px 32px rgba(15,23,42,.12);
+  --tr:.15s ease;--r:10px;
+}
+body.dark{
+  --bg:#07101e;--bg-1:#0b1829;--surface:#111e33;
+  --text:#f0f6ff;--text-2:#94a3b8;--text-3:#64748b;
+  --border:rgba(255,255,255,.07);--border-2:rgba(255,255,255,.13);
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text)}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none;transition:all var(--tr)}
+input,select,textarea{font-family:var(--font);outline:none}
+
+/* ── Header ── */
+.header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.header-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:16px}
+.logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.logo-mark{width:34px;height:34px;background:var(--grad);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.95rem}
+.logo-text{font-size:.95rem;font-weight:700}
+.logo-sub{font-size:.7rem;color:var(--text-3);font-weight:500}
+.header-search{flex:1;max-width:480px;display:flex;gap:0;border:1px solid var(--border-2);border-radius:9px;overflow:hidden;background:var(--bg-1)}
+.header-search select{padding:0 12px;background:var(--bg-1);border:none;border-right:1px solid var(--border-2);font-size:.8rem;color:var(--text-2);cursor:pointer}
+.header-search input{flex:1;padding:9px 12px;background:transparent;border:none;font-size:.85rem;color:var(--text)}
+.header-search button{padding:0 16px;background:var(--grad);color:#fff;font-size:.82rem;font-weight:600}
+.header-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+.btn{padding:8px 16px;border-radius:8px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all var(--tr)}
+.btn-grad{background:var(--grad);color:#fff;border:none}.btn-grad:hover{opacity:.88}
+.btn-outline{background:transparent;border:1px solid var(--border-2);color:var(--text-2)}.btn-outline:hover{border-color:var(--indigo);color:var(--indigo)}
+.btn-ghost{background:transparent;border:none;color:var(--text-2)}.btn-ghost:hover{color:var(--indigo)}
+.btn-sm{padding:6px 14px;font-size:.78rem}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%);padding:64px 24px;text-align:center;color:#fff}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:.75rem;font-weight:600;margin-bottom:20px;backdrop-filter:blur(4px)}
+.hero h1{font-size:2.4rem;font-weight:700;line-height:1.2;margin-bottom:12px}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,.75);margin-bottom:32px;max-width:560px;margin-left:auto;margin-right:auto}
+.hero-search{max-width:640px;margin:0 auto 28px;display:flex;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.hero-search select{padding:0 16px;border:none;border-right:1px solid var(--border);font-size:.85rem;color:var(--text-2);background:#fff;cursor:pointer;min-width:140px}
+.hero-search input{flex:1;padding:14px 16px;border:none;font-size:.92rem;color:var(--text)}
+.hero-search button{padding:0 24px;background:var(--grad);color:#fff;font-weight:700;font-size:.9rem;white-space:nowrap}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
+.hero-stat{color:rgba(255,255,255,.85);font-size:.85rem}
+.hero-stat strong{color:#fff;font-size:1.1rem;display:block}
+
+/* ── Section ── */
+.section{max-width:1200px;margin:0 auto;padding:48px 24px}
+.section-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:.85rem;color:var(--text-2);margin-bottom:24px}
+
+/* ── Categories ── */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center;cursor:pointer;transition:all var(--tr)}
+.cat-card:hover{border-color:var(--indigo);box-shadow:var(--shadow);transform:translateY(-2px)}
+.cat-icon{font-size:1.8rem;margin-bottom:8px}
+.cat-name{font-size:.8rem;font-weight:600;margin-bottom:2px}
+.cat-count{font-size:.72rem;color:var(--text-3)}
+
+/* ── Supplier cards ── */
+.supplier-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:all var(--tr)}
+.supplier-card:hover{border-color:var(--indigo);box-shadow:var(--shadow-lg)}
+.supplier-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.supplier-logo{width:44px;height:44px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0}
+.supplier-name{font-weight:700;font-size:.9rem;margin-bottom:2px}
+.supplier-meta{font-size:.75rem;color:var(--text-3)}
+.verified{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:600;color:#059669;background:rgba(16,185,129,.1);padding:2px 7px;border-radius:20px}
+.rating{display:flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600}
+.stars{color:var(--amber)}
+.tag{display:inline-block;font-size:.68rem;font-weight:500;padding:2px 8px;border-radius:20px;background:rgba(99,102,241,.08);color:var(--indigo);margin:2px 2px 0 0}
+.supplier-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ── How it works ── */
+.hiw{background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:56px 24px}
+.hiw-inner{max-width:1200px;margin:0 auto}
+.hiw-cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+.hiw-col-title{font-size:1rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.hiw-steps{display:flex;flex-direction:column;gap:18px}
+.hiw-step{display:flex;gap:14px;align-items:flex-start}
+.hiw-num{width:32px;height:32px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0}
+.hiw-step-text strong{display:block;font-size:.88rem;font-weight:600;margin-bottom:2px}
+.hiw-step-text span{font-size:.8rem;color:var(--text-2);line-height:1.5}
+
+/* ── CTA banner ── */
+.cta-banner{background:var(--grad);color:#fff;padding:48px 24px;text-align:center}
+.cta-banner h2{font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.cta-banner p{color:rgba(255,255,255,.8);margin-bottom:24px;font-size:.92rem}
+.cta-banner .btn{background:#fff;color:var(--indigo);padding:12px 28px;font-size:.92rem}
+.cta-banner .btn:hover{opacity:.92}
+
+/* ── Footer ── */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:32px 24px}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-links{display:flex;gap:20px;font-size:.8rem;color:var(--text-3)}
+.footer-links a:hover{color:var(--indigo)}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.05rem;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:.82rem;color:var(--text-2);margin-bottom:20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.73rem;font-weight:600;color:var(--text-2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.86rem;color:var(--text)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--indigo);background:var(--surface)}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:10px;font-size:.83rem;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+#toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">M</div>
+      <div>
+        <div class="logo-text">Mumtaz</div>
+        <div class="logo-sub">Marketplace</div>
+      </div>
+    </div>
+    <div class="header-search">
+      <select id="hdr-cat">
+        <option>All Categories</option>
+        <option>Manufacturing</option>
+        <option>IT & Technology</option>
+        <option>Logistics</option>
+        <option>Raw Materials</option>
+        <option>Construction</option>
+        <option>Professional Services</option>
+      </select>
+      <input id="hdr-q" placeholder="Search suppliers, products, services…" onkeydown="if(event.key==='Enter')doSearch()">
+      <button onclick="doSearch()">Search</button>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <a href="/vendor" class="btn btn-outline btn-sm">Vendor Login</a>
+      <a href="/vendor#register" class="btn btn-grad btn-sm">List Your Business</a>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">🇦🇪 UAE & GCC Verified B2B Platform</div>
+  <h1>Connect with Trusted<br>B2B Suppliers</h1>
+  <p class="hero-sub">Browse verified manufacturers, wholesalers, and service providers across the UAE, Saudi Arabia, and GCC region.</p>
+  <div class="hero-search">
+    <select id="hero-cat">
+      <option>All Categories</option>
+      <option>Manufacturing & Industry</option>
+      <option>IT & Technology</option>
+      <option>Office Supplies</option>
+      <option>Logistics & Freight</option>
+      <option>Raw Materials</option>
+      <option>Construction</option>
+      <option>Food & Beverage</option>
+      <option>Healthcare & Pharma</option>
+      <option>Professional Services</option>
+      <option>Financial Services</option>
+      <option>HR & Staffing</option>
+      <option>Marketing & Media</option>
+    </select>
+    <input id="hero-q" placeholder="What are you looking for? e.g. steel, software, logistics…">
+    <button onclick="doSearch()">Find Suppliers →</button>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><strong>2,400+</strong>Verified Suppliers</div>
+    <div class="hero-stat"><strong>15,000+</strong>Products & Services</div>
+    <div class="hero-stat"><strong>40+</strong>Categories</div>
+    <div class="hero-stat"><strong>AED · SAR · PKR</strong>Multi-currency</div>
+  </div>
+</section>
+
+<!-- Categories -->
+<div class="section">
+  <div class="section-title">Browse by Category</div>
+  <div class="section-sub">Find suppliers across every industry in the UAE & GCC region.</div>
+  <div class="cat-grid" id="cat-grid"></div>
+</div>
+
+<!-- Featured Suppliers -->
+<div style="background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+  <div class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <div class="section-title">Featured Suppliers</div>
+        <div class="section-sub" style="margin-bottom:0">Verified businesses ready to quote.</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="showToast('Browse all coming soon')">View All →</button>
+    </div>
+    <div class="supplier-grid" id="supplier-grid"></div>
+  </div>
+</div>
+
+<!-- How it Works -->
+<div class="hiw">
+  <div class="hiw-inner">
+    <div style="text-align:center;margin-bottom:36px">
+      <div class="section-title">How It Works</div>
+      <div style="font-size:.85rem;color:var(--text-2)">Simple, fast, and free to get started.</div>
+    </div>
+    <div class="hiw-cols">
+      <div>
+        <div class="hiw-col-title">🏢 For Buyers</div>
+        <div class="hiw-steps">
+          <div class="hiw-step"><div class="hiw-num">1</div><div class="hiw-step-text"><strong>Browse Verified Suppliers</strong><span>Search by category, location, and certification. All suppliers are KYB-verified.</span></div></div>
+          <div class="hiw-step"><div class="hiw-num">2</div><div class="hiw-step-text"><strong>Submit an RFQ — Free</strong><span>Send your requirement to one or multiple suppliers. No account needed to submit.</span></div></div>
+          <div class="hiw-step"><div class="hiw-num">3</div><div class="hiw-step-text"><strong>Compare Quotes & Deal</strong><span>Receive competing quotes, negotiate terms, and close the deal — all on one platform.</span></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="hiw-col-title">🏭 For Suppliers</div>
+        <div class="hiw-steps">
+          <div class="hiw-step"><div class="hiw-num">1</div><div class="hiw-step-text"><strong>Create Your Profile</strong><span>Register your business, upload certifications, and get verified — takes 10 minutes.</span></div></div>
+          <div class="hiw-step"><div class="hiw-num">2</div><div class="hiw-step-text"><strong>List Products & Services</strong><span>Add your catalogue with pricing, MOQ, lead times, and specifications.</span></div></div>
+          <div class="hiw-step"><div class="hiw-num">3</div><div class="hiw-step-text"><strong>Receive Qualified Leads</strong><span>Get inbound RFQs from serious B2B buyers across the GCC. First 50 leads/month free.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-banner">
+  <h2>Are you a supplier?</h2>
+  <p>Join 2,400+ verified businesses. Get 50 qualified leads per month — free forever.</p>
+  <a href="/vendor#register" class="btn">Start Listing Free →</a>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-inner">
+    <div class="logo">
+      <div class="logo-mark" style="width:28px;height:28px;font-size:.8rem">M</div>
+      <div><div style="font-size:.85rem;font-weight:700">Mumtaz Marketplace</div><div style="font-size:.7rem;color:var(--text-3)">© 2026 Mumtaz Digital</div></div>
+    </div>
+    <div class="footer-links">
+      <a href="#">About</a>
+      <a href="#">For Suppliers</a>
+      <a href="#">Pricing</a>
+      <a href="/vendor">Vendor Login</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- RFQ Modal -->
+<div class="modal-bg" id="rfq-modal">
+  <div class="modal">
+    <div class="modal-title" id="rfq-title">Request a Quote</div>
+    <div class="modal-sub">Fill in your requirements. The supplier will respond within 24 hours.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>Company Name</label><input id="rfq-co" placeholder="Acme LLC"></div>
+      <div class="field"><label>Your Name</label><input id="rfq-name" placeholder="Muhammad Ali"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>Email</label><input id="rfq-email" type="email" placeholder="you@company.com"></div>
+      <div class="field"><label>Phone</label><input id="rfq-phone" placeholder="+971 50 000 0000"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>Quantity / Volume</label><input id="rfq-qty" placeholder="e.g. 500 units / month"></div>
+      <div class="field"><label>Budget (AED)</label><input id="rfq-budget" placeholder="e.g. 50,000"></div>
+    </div>
+    <div class="field"><label>Requirements</label><textarea id="rfq-msg" rows="3" placeholder="Describe what you need, specifications, delivery location…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('rfq-modal')">Cancel</button>
+      <button class="btn btn-grad" onclick="submitRFQ()">Submit RFQ →</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const CATS = [
+  {icon:'🏭',name:'Manufacturing & Industry',count:'380+ suppliers'},
+  {icon:'💻',name:'IT & Technology',        count:'290+ suppliers'},
+  {icon:'📦',name:'Office & Stationery',    count:'210+ suppliers'},
+  {icon:'🚚',name:'Logistics & Freight',    count:'175+ suppliers'},
+  {icon:'🪨',name:'Raw Materials',           count:'320+ suppliers'},
+  {icon:'🏗️',name:'Construction',           count:'260+ suppliers'},
+  {icon:'🍽️',name:'Food & Beverage',        count:'190+ suppliers'},
+  {icon:'💊',name:'Healthcare & Pharma',    count:'145+ suppliers'},
+  {icon:'🤝',name:'Professional Services',  count:'230+ suppliers'},
+  {icon:'🏦',name:'Financial Services',     count:'110+ suppliers'},
+  {icon:'👥',name:'HR & Staffing',          count:'95+ suppliers'},
+  {icon:'📣',name:'Marketing & Media',      count:'160+ suppliers'},
+]
+
+const SUPPLIERS = [
+  {init:'AN',name:'Al Noor Trading LLC',       cat:'IT & Technology',      loc:'Dubai, UAE',      rating:4.8, reviews:124, tags:['Computers','Networking','Software'],   verified:true},
+  {init:'GS',name:'Gulf Steel Industries',     cat:'Manufacturing',        loc:'Sharjah, UAE',    rating:4.6, reviews:89,  tags:['Steel','Aluminium','Fabrication'],     verified:true},
+  {init:'RG',name:'Riyadh Global Logistics',   cat:'Logistics & Freight',  loc:'Riyadh, KSA',     rating:4.7, reviews:203, tags:['Freight','Customs','Last-Mile'],       verified:true},
+  {init:'PC',name:'PakChem Raw Materials',     cat:'Raw Materials',        loc:'Karachi, PK',     rating:4.5, reviews:67,  tags:['Chemicals','Polymers','Adhesives'],    verified:true},
+  {init:'EA',name:'Emirates Agri Foods',       cat:'Food & Beverage',      loc:'Abu Dhabi, UAE',  rating:4.9, reviews:312, tags:['Bulk Food','Frozen','Halal Cert'],     verified:true},
+  {init:'MT',name:'Mashreq Tech Solutions',    cat:'Professional Services', loc:'Dubai, UAE',     rating:4.7, reviews:56,  tags:['ERP','Cloud','Consulting'],           verified:true},
+]
+
+function renderCats(){
+  document.getElementById('cat-grid').innerHTML = CATS.map(c=>`
+    <div class="cat-card" onclick="filterCat('${c.name}')">
+      <div class="cat-icon">${c.icon}</div>
+      <div class="cat-name">${c.name}</div>
+      <div class="cat-count">${c.count}</div>
+    </div>`).join('')
+}
+
+function renderSuppliers(list){
+  document.getElementById('supplier-grid').innerHTML = list.map(s=>`
+    <div class="supplier-card">
+      <div class="supplier-header">
+        <div class="supplier-logo">${s.init}</div>
+        <div style="flex:1;min-width:0">
+          <div class="supplier-name">${s.name}</div>
+          <div class="supplier-meta">${s.cat} · ${s.loc}</div>
+          ${s.verified?'<span class="verified">✓ Verified</span>':''}
+        </div>
+        <div class="rating"><span class="stars">★</span>${s.rating} <span style="color:var(--text-3);font-weight:400">(${s.reviews})</span></div>
+      </div>
+      <div>${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>
+      <div class="supplier-footer">
+        <button class="btn btn-outline btn-sm" onclick="showToast('Profile view coming soon')">View Profile</button>
+        <button class="btn btn-grad btn-sm" onclick="openRFQ('${s.name}')">Request Quote</button>
+      </div>
+    </div>`).join('')
+}
+
+function filterCat(name){
+  const q = document.getElementById('hero-q')
+  if(q) q.value = name
+  showToast('Filtering by: '+name)
+}
+
+function doSearch(){
+  const q = (document.getElementById('hero-q')||document.getElementById('hdr-q')).value.trim()
+  if(!q){ showToast('Enter a search term','warn'); return }
+  showToast('Searching for: '+q)
+}
+
+function openRFQ(supplier){
+  const t = document.getElementById('rfq-title')
+  if(t) t.textContent = 'Request Quote — ' + supplier
+  document.getElementById('rfq-modal').classList.add('open')
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+
+function submitRFQ(){
+  const co    = document.getElementById('rfq-co').value.trim()
+  const email = document.getElementById('rfq-email').value.trim()
+  if(!co||!email){ showToast('Enter company name and email','error'); return }
+  closeModal('rfq-modal')
+  showToast('RFQ submitted! The supplier will respond within 24 hours.')
+  ;['rfq-co','rfq-name','rfq-email','rfq-phone','rfq-qty','rfq-budget','rfq-msg'].forEach(id=>{
+    const el = document.getElementById(id)
+    if(el) el.value = ''
+  })
+}
+
+function showToast(msg, type=''){
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.style.background = type==='error'?'#dc2626':'#1e293b'
+  t.classList.add('show')
+  clearTimeout(window._tto)
+  window._tto = setTimeout(()=>t.classList.remove('show'), 3200)
+}
+
+function toggleTheme(){
+  document.body.classList.toggle('dark')
+}
+
+renderCats()
+renderSuppliers(SUPPLIERS)
+</script>
+</body>
+</html>
