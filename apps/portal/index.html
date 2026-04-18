@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mumtaz — Platform Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc;--bg-1:#f1f5f9;--surface:#fff;--card:#fff;
+  --text:#0f172a;--text-2:#475569;--text-3:#94a3b8;
+  --border:#e2e8f0;--border-2:#cbd5e1;
+  --blue:#3b82f6;--purple:#8b5cf6;--green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --grad:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);
+  --font:'Inter',system-ui,sans-serif;
+  --shadow:0 4px 24px rgba(15,23,42,.08);
+  --tr:.17s ease;
+}
+body.dark{
+  --bg:#07101e;--bg-1:#0b1829;--surface:#111e33;--card:#162338;
+  --text:#f0f6ff;--text-2:#94a3b8;--text-3:#64748b;
+  --border:rgba(255,255,255,.07);--border-2:rgba(255,255,255,.13);
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background var(--tr),color var(--tr)}
+a{color:inherit;text-decoration:none}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none}
+input,textarea{font-family:var(--font);outline:none}
+
+/* ── Auth screen ── */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:var(--shadow)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.auth-mark{width:38px;height:38px;background:var(--grad);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;flex-shrink:0}
+.auth-title{font-size:1.25rem;font-weight:700;color:var(--text)}
+.auth-sub{font-size:.82rem;color:var(--text-3);margin-top:1px}
+.auth-heading{font-size:1.35rem;font-weight:700;margin-bottom:6px}
+.auth-desc{font-size:.85rem;color:var(--text-2);margin-bottom:24px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.78rem;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.field input{width:100%;padding:10px 13px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.9rem;color:var(--text);transition:border var(--tr)}
+.field input:focus{border-color:var(--blue)}
+.btn-primary{width:100%;padding:11px;background:var(--grad);color:#fff;border-radius:8px;font-size:.9rem;font-weight:600;transition:opacity var(--tr)}
+.btn-primary:hover{opacity:.88}
+.auth-switch{text-align:center;font-size:.82rem;color:var(--text-3);margin-top:16px}
+.auth-switch a{color:var(--blue);font-weight:500;cursor:pointer}
+.auth-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:10px 13px;font-size:.82rem;color:var(--red);margin-bottom:14px;display:none}
+
+/* ── Topbar ── */
+#topbar{height:52px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;position:sticky;top:0;z-index:100}
+body.dark #topbar{background:rgba(7,16,30,.92)}
+.topbar-brand{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.topbar-mark{width:30px;height:30px;background:var(--grad);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.9rem}
+.topbar-name{font-size:.9rem;font-weight:700;color:var(--text)}
+.topbar-sep{width:1px;height:20px;background:var(--border-2);flex-shrink:0}
+.topbar-product{font-size:.78rem;font-weight:600;color:var(--text-3);flex-shrink:0}
+.topbar-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+.topbar-link{font-size:.8rem;color:var(--text-2);padding:5px 10px;border-radius:6px;transition:all var(--tr);font-weight:500}
+.topbar-link:hover{background:var(--bg-1);color:var(--text)}
+.theme-toggle{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:var(--bg-1);border:1px solid var(--border-2);color:var(--text-2);font-size:.85rem;cursor:pointer;transition:all var(--tr);flex-shrink:0}
+.user-btn{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;border-radius:8px;background:var(--bg-1);border:1px solid var(--border-2);cursor:pointer;transition:all var(--tr)}
+.user-btn:hover{border-color:var(--border-2);background:var(--border)}
+.user-avatar{width:26px;height:26px;border-radius:6px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:700}
+.user-name{font-size:.78rem;font-weight:600;color:var(--text)}
+
+/* ── App layout ── */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.visible{display:flex}
+.app-body{flex:1;max-width:1200px;width:100%;margin:0 auto;padding:28px 20px}
+
+/* ── Cards / sections ── */
+.section-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:14px}
+.section-sub{font-size:.82rem;color:var(--text-3);margin-top:-10px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+
+/* ── Welcome banner ── */
+.welcome-banner{background:var(--grad);border-radius:14px;padding:24px 28px;color:#fff;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.welcome-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
+.welcome-sub{font-size:.85rem;opacity:.85}
+.welcome-badge{background:rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:600;white-space:nowrap}
+
+/* ── Product grid ── */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:28px}
+.product-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;transition:all var(--tr);cursor:pointer;display:flex;flex-direction:column;gap:14px}
+.product-card:hover{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.08),var(--shadow)}
+.product-card.inactive{opacity:.6;cursor:default}
+.product-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.product-name{font-size:.95rem;font-weight:700;color:var(--text)}
+.product-desc{font-size:.8rem;color:var(--text-2);line-height:1.5}
+.product-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.product-status{font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:20px}
+.status-active{background:#dcfce7;color:#15803d}
+.status-inactive{background:var(--bg-1);color:var(--text-3)}
+body.dark .status-active{background:rgba(16,185,129,.15);color:#34d399}
+.product-launch{font-size:.78rem;font-weight:600;color:var(--blue)}
+
+/* ── Stats row ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.stat-label{font-size:.72rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.stat-value{font-size:1.4rem;font-weight:700;color:var(--text)}
+.stat-change{font-size:.75rem;margin-top:3px}
+
+/* ── Plan badge ── */
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.plan-icon{font-size:1.8rem}
+.plan-name{font-size:1rem;font-weight:700}
+.plan-desc{font-size:.8rem;color:var(--text-2);margin-top:2px}
+.btn-upgrade{padding:8px 18px;background:var(--grad);color:#fff;border-radius:8px;font-size:.82rem;font-weight:600;margin-left:auto;flex-shrink:0}
+
+/* ── Utility ── */
+.hide{display:none!important}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border-2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="auth">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-mark">M</div>
+      <div><div class="auth-title">Mumtaz</div><div class="auth-sub">Platform Portal</div></div>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- Login form -->
+    <div id="form-login">
+      <div class="auth-heading">Welcome back</div>
+      <div class="auth-desc">Sign in to your Mumtaz workspace</div>
+      <div class="field"><label>Email</label><input id="login-email" type="email" placeholder="you@company.com" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+      <div class="auth-switch">Don't have an account? <a onclick="showForm('signup')">Sign up free</a></div>
+    </div>
+
+    <!-- Signup form -->
+    <div id="form-signup" class="hide">
+      <div class="auth-heading">Create your workspace</div>
+      <div class="auth-desc">Get started with Mumtaz in 30 seconds</div>
+      <div class="field"><label>Your Name</label><input id="signup-name" type="text" placeholder="Ahmed Al Farsi"></div>
+      <div class="field"><label>Company Name</label><input id="signup-company" type="text" placeholder="Your Company LLC"></div>
+      <div class="field"><label>Email</label><input id="signup-email" type="email" placeholder="you@company.com"></div>
+      <div class="field"><label>Password</label><input id="signup-pass" type="password" placeholder="Create a password"></div>
+      <button class="btn-primary" onclick="doSignup()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="showForm('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app">
+  <!-- Topbar -->
+  <header id="topbar">
+    <a class="topbar-brand" href="https://mumtaz.digital">
+      <div class="topbar-mark">M</div>
+      <span class="topbar-name">Mumtaz</span>
+    </a>
+    <div class="topbar-sep"></div>
+    <span class="topbar-product">Portal</span>
+    <nav class="topbar-nav">
+      <a class="topbar-link" href="https://zaki.mumtaz.digital" target="_blank">ZAKI CFO</a>
+      <a class="topbar-link" href="https://erp.mumtaz.digital" target="_blank">ERP</a>
+      <a class="topbar-link" href="https://mumtaz.digital" target="_blank">Website</a>
+      <button class="theme-toggle" id="btn-theme" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <div class="user-btn" onclick="doLogout()">
+        <div class="user-avatar" id="user-avatar">Z</div>
+        <span class="user-name" id="user-name">User</span>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Body -->
+  <div class="app-body">
+    <!-- Welcome -->
+    <div class="welcome-banner">
+      <div>
+        <div class="welcome-title">Good <span id="greeting-time">morning</span>, <span id="greeting-name">CEO</span> 👋</div>
+        <div class="welcome-sub">Your Mumtaz workspace is active. All systems running.</div>
+      </div>
+      <div class="welcome-badge" id="plan-badge">Free Plan</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Active Products</div>
+        <div class="stat-value" id="stat-products">2</div>
+        <div class="stat-change" style="color:var(--green)">↑ ERP + ZAKI</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Team Members</div>
+        <div class="stat-value" id="stat-users">1</div>
+        <div class="stat-change" style="color:var(--text-3)">Just you for now</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Account Status</div>
+        <div class="stat-value" style="font-size:1rem;color:var(--green)">✓ Active</div>
+        <div class="stat-change" style="color:var(--text-3)">All services online</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tenant ID</div>
+        <div class="stat-value" style="font-size:.9rem;font-family:monospace" id="stat-tenant">—</div>
+        <div class="stat-change" style="color:var(--text-3)">Your workspace ID</div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="section-title">Your Products</div>
+    <div class="section-sub">Click any product to launch it</div>
+    <div class="product-grid" id="product-grid"></div>
+
+    <!-- Plan -->
+    <div class="plan-card">
+      <div class="plan-icon">⚡</div>
+      <div>
+        <div class="plan-name" id="plan-name">Free Plan</div>
+        <div class="plan-desc">Upgrade to unlock full ERP, advanced AI, and team features</div>
+      </div>
+      <button class="btn-upgrade" onclick="alert('Upgrade coming soon — contact sales@mumtaz.digital')">Upgrade Plan</button>
+    </div>
+
+    <!-- Company info -->
+    <div class="section-title">Company Settings</div>
+    <div class="card" style="margin-bottom:28px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="field"><label>Company Name</label><input id="cfg-company" type="text" placeholder="Your Company"></div>
+        <div class="field"><label>Country</label><input id="cfg-country" type="text" placeholder="UAE"></div>
+        <div class="field"><label>Industry</label><input id="cfg-industry" type="text" placeholder="Trading"></div>
+        <div class="field"><label>Currency</label><input id="cfg-currency" type="text" placeholder="AED"></div>
+      </div>
+      <button style="padding:9px 20px;background:var(--grad);color:#fff;border-radius:8px;font-size:.85rem;font-weight:600" onclick="saveCompany()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRODUCTS = [
+  { key:'erp', icon:'🏢', color:'#dbeafe', name:'Mumtaz ERP', desc:'Full ERP powered by Odoo — invoicing, CRM, inventory, HR, accounting.', url:'https://erp.mumtaz.digital', active:true },
+  { key:'zaki', icon:'🤖', color:'#ede9fe', name:'ZAKI AI CFO', desc:'AI-powered CFO — briefings, IFRS advisor, scenario simulator, tax guidance.', url:'https://zaki.mumtaz.digital', active:true },
+  { key:'finance', icon:'📊', color:'#dcfce7', name:'Finance Dashboard', desc:'CFO-level P&L, cash flow, and balance sheet reporting.', url:'#', active:false },
+  { key:'marketplace', icon:'🛒', color:'#fef3c7', name:'Marketplace', desc:'Buy and sell on the Mumtaz B2B marketplace.', url:'https://marketplace.mumtaz.digital', active:false },
+]
+
+const P = JSON.parse(localStorage.getItem('mumtaz_portal') || '{}')
+
+function save() { localStorage.setItem('mumtaz_portal', JSON.stringify(P)) }
+
+function showForm(f) {
+  document.getElementById('form-login').classList.toggle('hide', f !== 'login')
+  document.getElementById('form-signup').classList.toggle('hide', f !== 'signup')
+  document.getElementById('auth-error').style.display = 'none'
+}
+
+function showError(msg) {
+  const el = document.getElementById('auth-error')
+  el.textContent = msg; el.style.display = 'block'
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pass = document.getElementById('login-pass').value
+  if (!email || !pass) { showError('Please enter email and password.'); return }
+  P.user = { email, name: email.split('@')[0], initials: email[0].toUpperCase() }
+  P.tenant = P.tenant || 't_' + Math.random().toString(36).slice(2,7).toUpperCase()
+  save(); launchApp()
+}
+
+function doSignup() {
+  const name = document.getElementById('signup-name').value.trim()
+  const company = document.getElementById('signup-company').value.trim()
+  const email = document.getElementById('signup-email').value.trim()
+  const pass = document.getElementById('signup-pass').value
+  if (!name || !email || !pass) { showError('Please fill all required fields.'); return }
+  P.user = { email, name, initials: name[0].toUpperCase() }
+  P.company = { name: company }
+  P.tenant = 't_' + Math.random().toString(36).slice(2,7).toUpperCase()
+  save(); launchApp()
+}
+
+function doLogout() {
+  if (!confirm('Sign out?')) return
+  delete P.user; save()
+  document.getElementById('app').classList.remove('visible')
+  document.getElementById('auth').style.display = 'flex'
+}
+
+function launchApp() {
+  document.getElementById('auth').style.display = 'none'
+  document.getElementById('app').classList.add('visible')
+  applyTheme()
+  const h = new Date().getHours()
+  document.getElementById('greeting-time').textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'
+  document.getElementById('greeting-name').textContent = (P.user?.name || 'CEO').split(' ')[0]
+  document.getElementById('user-name').textContent = (P.user?.name || 'User').split(' ')[0]
+  document.getElementById('user-avatar').textContent = P.user?.initials || 'U'
+  document.getElementById('stat-tenant').textContent = P.tenant || '—'
+  if (P.company?.name) document.getElementById('cfg-company').value = P.company.name
+  if (P.company?.country) document.getElementById('cfg-country').value = P.company.country
+  if (P.company?.industry) document.getElementById('cfg-industry').value = P.company.industry
+  if (P.company?.currency) document.getElementById('cfg-currency').value = P.company.currency
+  renderProducts()
+}
+
+function renderProducts() {
+  document.getElementById('product-grid').innerHTML = PRODUCTS.map(p => `
+    <div class="product-card ${p.active ? '' : 'inactive'}" onclick="${p.active && p.url !== '#' ? `window.open('${p.url}','_blank')` : p.active ? '' : `showUpgrade('${p.name}')`}">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="product-icon" style="background:${p.color}">${p.icon}</div>
+        <div class="product-name">${p.name}</div>
+      </div>
+      <div class="product-desc">${p.desc}</div>
+      <div class="product-footer">
+        <span class="product-status ${p.active ? 'status-active' : 'status-inactive'}">${p.active ? 'Active' : 'Coming Soon'}</span>
+        ${p.active && p.url !== '#' ? `<span class="product-launch">Launch →</span>` : ''}
+      </div>
+    </div>`).join('')
+}
+
+function showUpgrade(name) { alert(`${name} is coming soon. Upgrade your plan to get early access.`) }
+
+function saveCompany() {
+  P.company = P.company || {}
+  P.company.name = document.getElementById('cfg-company').value.trim()
+  P.company.country = document.getElementById('cfg-country').value.trim()
+  P.company.industry = document.getElementById('cfg-industry').value.trim()
+  P.company.currency = document.getElementById('cfg-currency').value.trim()
+  save()
+  const btn = event.target; btn.textContent = '✓ Saved'; setTimeout(() => btn.textContent = 'Save', 1500)
+}
+
+function toggleTheme() {
+  const dark = document.body.classList.toggle('dark')
+  P.theme = dark ? 'dark' : 'light'; save()
+  document.getElementById('btn-theme').textContent = dark ? '☀️' : '🌙'
+}
+
+function applyTheme() {
+  const dark = P.theme === 'dark'
+  document.body.classList.toggle('dark', dark)
+  const btn = document.getElementById('btn-theme')
+  if (btn) btn.textContent = dark ? '☀️' : '🌙'
+}
+
+// Init
+applyTheme()
+if (P.user) { launchApp() }
+else { document.getElementById('auth').style.display = 'flex' }
+
+// Enter key on login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (!document.getElementById('form-login').classList.contains('hide')) doLogin()
+    else if (!document.getElementById('form-signup').classList.contains('hide')) doSignup()
+  }
+})
+</script>
+</body>
+</html>
