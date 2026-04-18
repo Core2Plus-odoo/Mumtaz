@@ -581,13 +581,415 @@ document.body.insertAdjacentHTML('beforeend',`
   </div>
 </div>`)
 
-// ── Boot ───────────────────────────────────────────────
-load()
-if(P.user.email){
-  bootApp()
-} else {
-  document.getElementById('auth').style.display = 'flex'
+// ── Data ───────────────────────────────────────────────
+const MODULES_DATA = [
+  {id:'crm',        name:'CRM & Sales',          cat:'Sales',      icon:'🤝', desc:'Pipeline, leads, quotes, and customer management.',         price:0,   included:true},
+  {id:'invoicing',  name:'Invoicing',             cat:'Finance',    icon:'🧾', desc:'Create invoices, track payments, manage receivables.',        price:0,   included:true},
+  {id:'accounting', name:'Full Accounting',       cat:'Finance',    icon:'📒', desc:'IFRS-compliant GL, journal entries, financial statements.',   price:29,  included:false},
+  {id:'inventory',  name:'Inventory',             cat:'Operations', icon:'📦', desc:'Stock management, warehouses, and product tracking.',         price:0,   included:true},
+  {id:'purchase',   name:'Purchase',              cat:'Operations', icon:'🛒', desc:'Purchase orders, vendor management, and RFQs.',              price:0,   included:true},
+  {id:'hr',         name:'HR & Payroll',          cat:'HR',         icon:'👥', desc:'Employee records, leave management, and payroll processing.', price:0,   included:true},
+  {id:'project',    name:'Project Management',    cat:'Operations', icon:'📋', desc:'Tasks, timelines, milestones, and team collaboration.',       price:0,   included:true},
+  {id:'mrp',        name:'Manufacturing',         cat:'Operations', icon:'🏭', desc:'Bills of material, work orders, and production planning.',    price:49,  included:false},
+  {id:'ecommerce',  name:'E-Commerce',            cat:'Sales',      icon:'🛍️', desc:'Online store with product catalog and checkout.',            price:39,  included:false},
+  {id:'marketing',  name:'Marketing Automation',  cat:'Sales',      icon:'📣', desc:'Email campaigns, lead scoring, and automation flows.',       price:29,  included:false},
+  {id:'helpdesk',   name:'Helpdesk',              cat:'Operations', icon:'🎧', desc:'Ticket management, SLA tracking, and customer support.',      price:29,  included:false},
+  {id:'pos',        name:'Point of Sale',         cat:'Sales',      icon:'🖥️', desc:'Retail POS with offline mode and receipt printing.',         price:29,  included:false},
+  {id:'fleet',      name:'Fleet Management',      cat:'Operations', icon:'🚗', desc:'Vehicle tracking, maintenance schedules, and fuel logs.',     price:19,  included:false},
+  {id:'expenses',   name:'Expenses',              cat:'HR',         icon:'💳', desc:'Employee expense claims, approvals, and reimbursements.',     price:0,   included:true},
+  {id:'timesheets', name:'Timesheets',            cat:'HR',         icon:'⏱️', desc:'Log hours against projects, clients, and tasks.',            price:0,   included:true},
+  {id:'maintenance',name:'Maintenance',           cat:'Operations', icon:'🔧', desc:'Asset maintenance, work orders, and preventive scheduling.',  price:19,  included:false},
+]
+
+const USERS_DATA = [
+  {name:'Umer Sheikh',   email:'umer@mumtaz.digital',    role:'Admin',     status:'active', last:'Just now',   mods:['crm','invoicing','hr']},
+  {name:'Sara Ahmed',    email:'sara@mumtaz.digital',    role:'Manager',   status:'active', last:'2h ago',     mods:['crm','project']},
+  {name:'Ali Hassan',    email:'ali@mumtaz.digital',     role:'User',      status:'active', last:'Yesterday',  mods:['inventory','purchase']},
+  {name:'Fatima Malik',  email:'fatima@mumtaz.digital',  role:'User',      status:'active', last:'3 days ago', mods:['accounting','invoicing']},
+  {name:'Omar Qureshi',  email:'omar@mumtaz.digital',    role:'User',      status:'active', last:'1 week ago', mods:['hr','timesheets']},
+  {name:'Zainab Raza',   email:'zainab@mumtaz.digital',  role:'Read Only', status:'inactive',last:'2 weeks ago',mods:['project']},
+  {name:'Bilal Khan',    email:'bilal@mumtaz.digital',   role:'User',      status:'active', last:'Today',      mods:['crm','expenses']},
+]
+
+const INVOICES_DATA = [
+  {id:'INV-2026-004', date:'Apr 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
+  {id:'INV-2026-003', date:'Mar 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
+  {id:'INV-2026-002', date:'Feb 1 2026',  amount:'$480', plan:'Growth', status:'paid'},
+  {id:'INV-2026-001', date:'Jan 1 2026',  amount:'$399', plan:'Starter',status:'paid'},
+]
+
+const PLANS_DATA = [
+  {id:'starter', name:'Starter', price:149, seats:3,  color:'var(--teal)',   features:['5 core modules','3 user seats','5 GB storage','Email support']},
+  {id:'growth',  name:'Growth',  price:399, seats:10, color:'var(--indigo)', features:['All core modules','10 user seats','25 GB storage','Priority support','White label basic'], current:true},
+  {id:'enterprise',name:'Enterprise',price:999,seats:50,color:'var(--purple)',features:['All modules + custom','Unlimited seats','100 GB storage','Dedicated CSM','Full white label','Custom integrations']},
+]
+
+const ACTIVITY = [
+  {t:'2m ago',  icon:'👤', msg:'New user <b>Bilal Khan</b> added'},
+  {t:'1h ago',  icon:'🧾', msg:'Invoice <b>INV-2026-004</b> paid — $480'},
+  {t:'3h ago',  icon:'📦', msg:'Module <b>Inventory</b> enabled'},
+  {t:'Yesterday',icon:'🔑',msg:'API key generated for ERP integration'},
+  {t:'2d ago',  icon:'📣', msg:'<b>Marketing Automation</b> trial started'},
+]
+
+const FAQ_DATA = [
+  {q:'How do I add more users?',       a:'Go to Users & Teams and click Invite User. Each seat is billed monthly.'},
+  {q:'Can I white-label the ERP?',     a:'Yes — on Growth and Enterprise plans you can add your logo, colors, and custom domain.'},
+  {q:'How does billing work?',         a:'Monthly subscription billed on the 1st. Cancel anytime with 30 days notice.'},
+  {q:'What modules are included free?',a:'CRM, Invoicing, Inventory, Purchase, HR, Project, Expenses, and Timesheets are included in all plans.'},
+]
+
+// ── Default module state ───────────────────────────────
+if(!P.modules || !Object.keys(P.modules).length){
+  P.modules = {}
+  MODULES_DATA.forEach(m => { P.modules[m.id] = m.included })
 }
+
+// ── Navigation ─────────────────────────────────────────
+const PANEL_TITLES = {dashboard:'Dashboard',modules:'Modules',users:'Users & Teams',billing:'Billing & Plans',whitelabel:'White Label',settings:'Settings',support:'Support'}
+
+function nav(id){
+  document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'))
+  document.querySelectorAll('.sb-item').forEach(el => {
+    if(el.getAttribute('onclick')?.includes("'"+id+"'")) el.classList.add('active')
+  })
+  const panels = document.getElementById('panels')
+  if(!PANELS[id]){ showToast('Coming soon'); return }
+  panels.innerHTML = '<div class="panel active">'+PANELS[id]+'</div>'
+  document.getElementById('tb-title').textContent = PANEL_TITLES[id] || id
+  renderPanel(id)
+}
+
+function renderPanel(id){
+  if(id==='dashboard')   renderDashboard()
+  if(id==='modules')     renderModules()
+  if(id==='users')       renderUsers()
+  if(id==='billing')     renderBilling()
+  if(id==='whitelabel')  renderWhiteLabel()
+  if(id==='settings')    renderSettings()
+  if(id==='support')     renderSupport()
+}
+
+// ── Dashboard ──────────────────────────────────────────
+function renderDashboard(){
+  const name = P.user.name?.split(' ')[0] || 'there'
+  document.getElementById('dash-name').textContent = name
+  document.getElementById('dash-co').textContent = P.user.company || 'your company'
+  const active = MODULES_DATA.filter(m => P.modules[m.id])
+  document.getElementById('d-mods').textContent = active.length
+  document.getElementById('d-users').textContent = P.seatsUsed
+  // Products
+  const prods = [
+    {name:'Mumtaz ERP',    icon:'🏢', url:'https://erp.mumtaz.digital',  status:'active'},
+    {name:'ZAKI AI CFO',   icon:'🤖', url:'https://zaki.mumtaz.digital', status:'active'},
+    {name:'Marketplace',   icon:'🛒', url:'https://marketplace.mumtaz.digital', status:'coming'},
+  ]
+  document.getElementById('product-list').innerHTML = prods.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1.2rem">${p.icon}</span>
+      <span style="font-size:.85rem;font-weight:500;flex:1">${p.name}</span>
+      ${p.status==='active'
+        ? `<a href="${p.url}" target="_blank" class="btn btn-outline btn-sm">Open →</a>`
+        : `<span class="badge badge-gray">Soon</span>`}
+    </div>`).join('')
+  // Seats
+  const pct = Math.round(P.seatsUsed/P.seats*100)
+  document.getElementById('seat-label').textContent = `${P.seatsUsed} of ${P.seats} seats used`
+  document.getElementById('seat-pct').textContent = pct+'%'
+  document.getElementById('seat-bar').style.width = pct+'%'
+  document.getElementById('user-pills').innerHTML = USERS_DATA.slice(0,5).map(u=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:.75rem;background:var(--bg-1);padding:3px 8px;border-radius:20px;margin:2px">
+      <span style="width:7px;height:7px;border-radius:50%;background:${u.status==='active'?'var(--green)':'var(--border-2)'}"></span>${u.name.split(' ')[0]}
+    </span>`).join('')
+  // Quick actions
+  document.getElementById('quick-actions').innerHTML = [
+    {icon:'➕',label:'Add a user',        fn:"nav('users')"},
+    {icon:'🧩',label:'Enable a module',   fn:"nav('modules')"},
+    {icon:'🌐',label:'Set up white label',fn:"nav('whitelabel')"},
+    {icon:'🤖',label:'Open ZAKI CFO',     fn:"window.open('https://zaki.mumtaz.digital','_blank')"},
+    {icon:'📊',label:'Open ERP',          fn:"window.open('https://erp.mumtaz.digital','_blank')"},
+  ].map(a=>`<button onclick="${a.fn}" class="btn btn-outline" style="text-align:left;display:flex;align-items:center;gap:8px;padding:9px 14px">
+    <span>${a.icon}</span><span style="font-size:.83rem">${a.label}</span>
+  </button>`).join('')
+  // Activity
+  document.getElementById('activity-feed').innerHTML = ACTIVITY.map(a=>`
+    <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1rem">${a.icon}</span>
+      <div><div style="line-height:1.4">${a.msg}</div><div style="font-size:.72rem;color:var(--text-3);margin-top:2px">${a.t}</div></div>
+    </div>`).join('')
+}
+
+// ── Modules ────────────────────────────────────────────
+let modFilter = 'All'
+function renderModules(){
+  const cats = ['All',...new Set(MODULES_DATA.map(m=>m.cat))]
+  document.getElementById('mod-filters').innerHTML = cats.map(c=>`
+    <button onclick="setModFilter('${c}')" class="btn ${c===modFilter?'btn-grad':'btn-outline'} btn-sm" id="mf-${c.replace(/\s/g,'')}">${c}</button>`).join('')
+  renderModGrid()
+}
+function setModFilter(c){ modFilter=c; renderModules() }
+function renderModGrid(){
+  const list = modFilter==='All' ? MODULES_DATA : MODULES_DATA.filter(m=>m.cat===modFilter)
+  document.getElementById('mod-grid').innerHTML = list.map(m=>`
+    <div class="card" style="transition:box-shadow var(--tr)" onmouseover="this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.boxShadow=''">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <span style="font-size:1.6rem">${m.icon}</span>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:2px">${m.name}</div>
+          <span class="badge ${m.included?'badge-green':'badge-blue'}">${m.included?'Included':'Add-on'}</span>
+          ${!m.included?`<span style="font-size:.75rem;color:var(--text-3);margin-left:6px">$${m.price}/mo</span>`:''}
+        </div>
+        <label class="toggle"><input type="checkbox" ${P.modules[m.id]?'checked':''} onchange="toggleMod('${m.id}',this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+      <div style="font-size:.78rem;color:var(--text-2);line-height:1.5">${m.desc}</div>
+      <div style="margin-top:10px;font-size:.72rem;color:var(--text-3)">Category: ${m.cat}</div>
+    </div>`).join('')
+  // Update sidebar badge
+  const cnt = MODULES_DATA.filter(m=>P.modules[m.id]).length
+  const el = document.getElementById('sb-mod-count')
+  if(el) el.textContent = cnt
+}
+function toggleMod(id, val){
+  P.modules[id] = val
+  save()
+  showToast(val ? 'Module enabled' : 'Module disabled')
+  const cnt = MODULES_DATA.filter(m=>P.modules[m.id]).length
+  const el = document.getElementById('sb-mod-count')
+  if(el) el.textContent = cnt
+}
+
+// ── Users ──────────────────────────────────────────────
+function renderUsers(){
+  const roleColor = {Admin:'badge-purple',Manager:'badge-blue',User:'badge-green','Read Only':'badge-gray'}
+  document.getElementById('u-used').textContent = P.seatsUsed + ' / ' + P.seats
+  document.getElementById('users-tbody').innerHTML = USERS_DATA.map((u,i)=>`
+    <tr>
+      <td><div style="font-weight:600;font-size:.84rem">${u.name}</div><div style="font-size:.73rem;color:var(--text-3)">${u.email}</div></td>
+      <td><span class="badge ${roleColor[u.role]||'badge-gray'}">${u.role}</span></td>
+      <td><span style="font-size:.78rem;color:var(--text-2)">${u.mods.length} modules</span></td>
+      <td><span class="badge ${u.status==='active'?'badge-green':'badge-gray'}">${u.status}</span></td>
+      <td style="color:var(--text-3);font-size:.78rem">${u.last}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="removeUser(${i})">Remove</button></td>
+    </tr>`).join('')
+  document.getElementById('sb-seat-badge').textContent = P.seatsUsed+'/'+P.seats
+}
+function openInvite(){
+  document.getElementById('inv-mods').innerHTML = MODULES_DATA.filter(m=>P.modules[m.id]).map(m=>`
+    <label style="display:flex;align-items:center;gap:5px;font-size:.75rem;cursor:pointer;background:var(--bg-1);padding:3px 8px;border-radius:6px">
+      <input type="checkbox" style="margin:0"> ${m.name}
+    </label>`).join('')
+  document.getElementById('invite-modal').classList.add('open')
+}
+function sendInvite(){
+  const name=document.getElementById('inv-name').value.trim()
+  const email=document.getElementById('inv-email').value.trim()
+  if(!name||!email){showToast('Fill name and email','error');return}
+  closeModal('invite-modal')
+  showToast('Invite sent to '+email)
+}
+function removeUser(i){ showToast('User removed (demo — no real deletion)') }
+
+// ── Billing ────────────────────────────────────────────
+function renderBilling(){
+  const plan = PLANS_DATA.find(p=>p.id===P.plan)||PLANS_DATA[1]
+  document.getElementById('b-plan-name').textContent = plan.name
+  document.getElementById('b-plan-desc').innerHTML = plan.features.map(f=>`<span style="margin-right:12px">✓ ${f}</span>`).join('')
+  const pct = Math.round(P.seatsUsed/P.seats*100)
+  document.getElementById('b-seat-bar').style.width = pct+'%'
+  document.getElementById('b-seat-label').textContent = `${P.seatsUsed} of ${P.seats} seats · ${pct}% used`
+  document.getElementById('b-plan-stats').innerHTML = `
+    <span><b>$${plan.price}</b>/mo</span>
+    <span><b>${plan.seats}</b> seats</span>
+    <span>Next bill: <b>May 18, 2026</b></span>`
+  // Usage meters
+  const meters = [{label:'Seats',used:P.seatsUsed,total:P.seats,unit:'users'},{label:'Storage',used:8.4,total:25,unit:'GB'},{label:'API Calls',used:12400,total:50000,unit:'calls'}]
+  document.getElementById('usage-meters').innerHTML = meters.map(m=>{
+    const p=Math.round(m.used/m.total*100)
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px"><span>${m.label}</span><span>${m.used} / ${m.total} ${m.unit}</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${p}%;background:${p>80?'var(--red)':p>60?'var(--amber)':'var(--indigo)'}"></div></div></div>`}).join('')
+  // Plan cards
+  document.getElementById('plan-cards').innerHTML = PLANS_DATA.map(pl=>`
+    <div class="card" style="border:2px solid ${pl.current?'var(--indigo)':'var(--border)'}">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:4px">${pl.name}</div>
+      <div style="font-size:1.5rem;font-weight:700;margin-bottom:10px">$${pl.price}<span style="font-size:.8rem;font-weight:400;color:var(--text-2)">/mo</span></div>
+      ${pl.features.map(f=>`<div style="font-size:.78rem;color:var(--text-2);margin-bottom:4px">✓ ${f}</div>`).join('')}
+      <button class="btn ${pl.current?'btn-outline':'btn-grad'} btn-sm" style="width:100%;margin-top:12px" onclick="selectPlan('${pl.id}')">
+        ${pl.current?'Current Plan':'Upgrade'}
+      </button>
+    </div>`).join('')
+  // Invoices
+  document.getElementById('invoices-tbody').innerHTML = INVOICES_DATA.map(inv=>`
+    <tr>
+      <td style="font-weight:600">${inv.id}</td>
+      <td>${inv.date}</td>
+      <td style="font-weight:600">${inv.amount}</td>
+      <td>${inv.plan}</td>
+      <td><span class="badge badge-green">${inv.status}</span></td>
+      <td><button class="btn btn-ghost btn-sm">PDF</button></td>
+    </tr>`).join('')
+}
+function selectPlan(id){
+  if(id===P.plan){showToast('Already on this plan');return}
+  P.plan=id; save(); showToast('Plan updated!'); renderBilling()
+}
+
+// ── White Label ────────────────────────────────────────
+let embedTab='iframe'
+function renderWhiteLabel(){
+  document.getElementById('wl-name').value = P.user.company||''
+  document.getElementById('wl-email').value = 'support@'+((P.user.email||'').split('@')[1]||'company.com')
+  setEmbedTab('iframe')
+  document.getElementById('wl-options').innerHTML = [
+    {label:'Hide "Powered by Mumtaz" footer', checked:false},
+    {label:'Custom login page branding',       checked:true},
+    {label:'White-label email notifications',  checked:false},
+    {label:'Remove Mumtaz from browser title', checked:true},
+  ].map(o=>`
+    <label style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-1);border-radius:8px;cursor:pointer;font-size:.83rem">
+      <label class="toggle"><input type="checkbox" ${o.checked?'checked':''}><span class="toggle-slider"></span></label>
+      ${o.label}
+    </label>`).join('')
+}
+function setEmbedTab(t){
+  embedTab=t
+  const tabs={
+    iframe:`<div style="background:var(--bg-1);border-radius:8px;padding:14px;font-family:monospace;font-size:.78rem;color:var(--text-2);margin-bottom:10px;overflow-x:auto;white-space:pre">&lt;iframe
+  src="https://erp.mumtaz.digital"
+  width="100%" height="800"
+  style="border:none;border-radius:12px"
+  allow="fullscreen"
+  title="${P.user.company||'ERP'} Portal"&gt;
+&lt;/iframe&gt;</div><button class="btn btn-outline btn-sm" onclick="copyCode('iframe')">Copy Code</button>`,
+    js:`<div style="background:var(--bg-1);border-radius:8px;padding:14px;font-family:monospace;font-size:.78rem;color:var(--text-2);margin-bottom:10px;overflow-x:auto;white-space:pre">&lt;script&gt;
+  window.MumtazConfig = {
+    apiKey: 'mk_live_xxxxxxxxxxxx',
+    tenant: '${(P.user.company||'company').toLowerCase().replace(/\s/g,'-')}',
+    theme: 'light'
+  }
+&lt;/script&gt;
+&lt;script src="https://cdn.mumtaz.digital/widget.js"&gt;&lt;/script&gt;</div><button class="btn btn-outline btn-sm" onclick="copyCode('js')">Copy Code</button>`,
+    api:`<div style="background:var(--bg-1);border-radius:8px;padding:14px;font-family:monospace;font-size:.78rem;color:var(--text-2);margin-bottom:10px;overflow-x:auto;white-space:pre">curl -X GET https://erp.mumtaz.digital/api/v2/invoices \\
+  -H "Authorization: Bearer mk_live_xxxxxxxxxxxx" \\
+  -H "Content-Type: application/json"</div>
+<div style="font-size:.78rem;color:var(--text-2);margin-bottom:10px">Base URL: <b>https://erp.mumtaz.digital/api/v2/</b><br>Docs: <a href="https://docs.mumtaz.digital" target="_blank" style="color:var(--indigo)">docs.mumtaz.digital</a></div>
+<button class="btn btn-outline btn-sm" onclick="copyCode('api')">Copy Code</button>`
+  }
+  document.getElementById('embed-content').innerHTML = tabs[t]||''
+  document.getElementById('etab-iframe').className='btn btn-sm '+(t==='iframe'?'btn-grad':'btn-outline')
+  document.getElementById('etab-js').className   ='btn btn-sm '+(t==='js'   ?'btn-grad':'btn-outline')
+  document.getElementById('etab-api').className  ='btn btn-sm '+(t==='api'  ?'btn-grad':'btn-outline')
+}
+function copyCode(t){ navigator.clipboard?.writeText(document.querySelector('#embed-content pre, #embed-content div[style*="monospace"]')?.textContent||''); showToast('Code copied!') }
+function saveWhiteLabel(){ showToast('Branding saved!') }
+function verifyDomain(){
+  const d=document.getElementById('wl-domain').value.trim()
+  if(!d){showToast('Enter a domain first','error');return}
+  document.getElementById('domain-status').innerHTML='<span class="badge badge-amber">Checking…</span>'
+  setTimeout(()=>{ document.getElementById('domain-status').innerHTML='<span class="badge badge-amber">DNS propagating — check back in 15 min</span>' },1500)
+}
+
+// ── Settings ───────────────────────────────────────────
+function renderSettings(){
+  document.getElementById('st-company').value = P.user.company||''
+  document.getElementById('integrations-list').innerHTML = [
+    {name:'ZAKI AI CFO',    icon:'🤖', status:'connected', url:'https://zaki.mumtaz.digital'},
+    {name:'Odoo ERP',       icon:'🏢', status:'connected', url:'https://erp.mumtaz.digital'},
+    {name:'Slack',          icon:'💬', status:'disconnected'},
+    {name:'QuickBooks',     icon:'📊', status:'disconnected'},
+    {name:'Stripe',         icon:'💳', status:'disconnected'},
+  ].map(i=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+    <span style="font-size:1.1rem">${i.icon}</span>
+    <span style="font-size:.84rem;font-weight:500;flex:1">${i.name}</span>
+    ${i.status==='connected'
+      ? `<span class="badge badge-green">Connected</span>`
+      : `<button class="btn btn-outline btn-sm" onclick="showToast('Integration coming soon')">Connect</button>`}
+  </div>`).join('')
+  document.getElementById('notif-settings').innerHTML = [
+    {label:'New invoice paid',              on:true},
+    {label:'Seat limit reached (80%)',       on:true},
+    {label:'Module enabled/disabled',        on:false},
+    {label:'New team member joined',         on:true},
+    {label:'Support ticket update',         on:true},
+    {label:'Billing renewal reminder',      on:true},
+  ].map(n=>`<label style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.83rem;cursor:pointer">
+    ${n.label}
+    <label class="toggle"><input type="checkbox" ${n.on?'checked':''}><span class="toggle-slider"></span></label>
+  </label>`).join('')
+  document.getElementById('api-keys-list').innerHTML = [
+    {name:'ERP Integration Key', key:'mk_live_4f8a…9c2e', created:'Jan 12 2026'},
+    {name:'ZAKI Server Key',     key:'mk_live_7b3d…1f8a', created:'Mar 5 2026'},
+  ].map(k=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+    <div style="font-size:.82rem;font-weight:600">${k.name}</div>
+    <div style="font-family:monospace;font-size:.75rem;color:var(--text-3)">${k.key} · Created ${k.created}</div>
+  </div>`).join('')
+}
+function saveSettings(){ P.user.company=document.getElementById('st-company').value.trim(); save(); showToast('Settings saved') }
+function genApiKey(){ showToast('New API key generated: mk_live_'+Math.random().toString(36).slice(2,10)+'…') }
+
+// ── Support ────────────────────────────────────────────
+function renderSupport(){
+  document.getElementById('tickets-list').innerHTML = [
+    {id:'TKT-041', subject:'ERP login redirect issue', status:'open',   priority:'high',   t:'2h ago'},
+    {id:'TKT-040', subject:'Invoice PDF formatting',   status:'resolved',priority:'normal', t:'3d ago'},
+  ].map(t=>`<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+      <span style="font-size:.82rem;font-weight:600">${t.subject}</span>
+      <span class="badge ${t.status==='open'?'badge-amber':'badge-green'}">${t.status}</span>
+    </div>
+    <div style="font-size:.72rem;color:var(--text-3)">${t.id} · ${t.t} · <span class="badge ${t.priority==='high'?'badge-red':'badge-gray'}">${t.priority}</span></div>
+  </div>`).join('')
+  document.getElementById('faq-list').innerHTML = FAQ_DATA.map((f,i)=>`
+    <details style="border-bottom:1px solid var(--border);padding:8px 0">
+      <summary style="font-size:.83rem;font-weight:600;cursor:pointer;list-style:none">${f.q}</summary>
+      <div style="font-size:.8rem;color:var(--text-2);margin-top:6px;line-height:1.6">${f.a}</div>
+    </details>`).join('')
+}
+function submitTicket(){
+  const s=document.getElementById('tkt-subject').value.trim()
+  if(!s){showToast('Enter a subject','error');return}
+  showToast('Ticket submitted — we\'ll respond within 24h')
+  document.getElementById('tkt-subject').value=''
+  document.getElementById('tkt-body').value=''
+}
+
+// ── Helpers ────────────────────────────────────────────
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+function showToast(msg, type=''){
+  const t=document.getElementById('toast')
+  t.textContent=msg; t.style.background=type==='error'?'#dc2626':'#1e293b'
+  t.classList.add('show'); clearTimeout(window._tto)
+  window._tto=setTimeout(()=>t.classList.remove('show'),3000)
+}
+function toggleTheme(){
+  document.body.classList.toggle('dark')
+  P.theme=document.body.classList.contains('dark')?'dark':'light'; save()
+}
+
+// ── Boot ───────────────────────────────────────────────
+function bootApp(){
+  document.getElementById('auth').style.display='none'
+  const app=document.getElementById('app')
+  app.classList.add('ready')
+  if(P.theme==='dark') document.body.classList.add('dark')
+  document.getElementById('sb-avatar').textContent=(P.user.name||'U')[0].toUpperCase()
+  document.getElementById('sb-uname').textContent=P.user.name||'User'
+  document.getElementById('sb-uemail').textContent=P.user.email||''
+  const plan=PLANS_DATA.find(pl=>pl.id===P.plan)||PLANS_DATA[1]
+  document.getElementById('sb-plan-badge').textContent=plan.name
+  if(!P.modules||!Object.keys(P.modules).length){
+    P.modules={}; MODULES_DATA.forEach(m=>{P.modules[m.id]=m.included})
+  }
+  const cnt=MODULES_DATA.filter(m=>P.modules[m.id]).length
+  const sbMod=document.getElementById('sb-mod-count')
+  if(sbMod) sbMod.textContent=cnt
+  document.getElementById('sb-seat-badge').textContent=P.seatsUsed+'/'+P.seats
+  nav('dashboard')
+}
+
+load()
+if(P.user.email){ bootApp() }
+else { document.getElementById('auth').style.display='flex' }
 </script>
 </body>
 </html>
