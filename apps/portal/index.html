@@ -223,6 +223,61 @@ input,select,textarea{font-family:var(--font);outline:none}
 .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 /* Progress bar */
 .prog-bar{height:6px;background:var(--bg-1);border-radius:3px;overflow:hidden}
+/* Marketplace Wizard */
+#mkt-wizard{position:fixed;inset:0;z-index:200;display:none;background:var(--bg)}
+#mkt-wizard.open{display:flex}
+.mw-sidebar{width:240px;flex-shrink:0;background:linear-gradient(160deg,#064e3b 0%,#065f46 55%,#047857 100%);padding:32px 22px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.mw-brand{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+.mw-brand-icon{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.mw-brand-name{color:#fff;font-size:.95rem;font-weight:700;line-height:1.2}
+.mw-brand-sub{color:rgba(255,255,255,.5);font-size:.65rem}
+.mw-steps{flex:1;display:flex;flex-direction:column;gap:4px}
+.mw-step{display:flex;align-items:flex-start;gap:11px;padding:9px 10px;border-radius:8px;transition:background .2s}
+.mw-step.active{background:rgba(255,255,255,.1)}
+.mw-step-num{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.3);flex-shrink:0;transition:all .3s}
+.mw-step.done .mw-step-num{background:#10b981;border-color:#10b981;color:#fff;font-size:.8rem}
+.mw-step.active .mw-step-num{background:#fff;border-color:#fff;color:#065f46;font-size:.7rem}
+.mw-step-label{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.35);padding-top:2px;transition:color .2s}
+.mw-step.done .mw-step-label{color:rgba(255,255,255,.6)}
+.mw-step.active .mw-step-label{color:#fff}
+.mw-pbar{height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:24px;overflow:hidden}
+.mw-pfill{height:100%;background:linear-gradient(90deg,#10b981,#34d399);border-radius:2px;transition:width .4s ease}
+.mw-main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.mw-inner{max-width:580px;width:100%;margin:0 auto;padding:44px 40px}
+.mw-tag{font-size:.68rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.mw-title{font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.25}
+.mw-sub{font-size:.88rem;color:var(--text-2);margin-bottom:28px;line-height:1.6}
+.mw-role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.mw-role-card{border:2px solid var(--border);border-radius:12px;padding:20px 14px;cursor:pointer;transition:all .2s;text-align:center;background:var(--surface)}
+.mw-role-card:hover{border-color:var(--green)}
+.mw-role-card.sel{border-color:var(--green);background:rgba(16,185,129,.07)}
+.mw-role-icon{font-size:1.8rem;margin-bottom:8px}
+.mw-role-label{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.mw-role-desc{font-size:.72rem;color:var(--text-2)}
+.mw-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:24px}
+.mw-cat-item{display:flex;align-items:center;gap:8px;padding:11px 12px;border:2px solid var(--border);border-radius:9px;cursor:pointer;transition:all .2s;background:var(--surface)}
+.mw-cat-item:hover{border-color:var(--green)}
+.mw-cat-item.sel{border-color:var(--green);background:rgba(16,185,129,.06)}
+.mw-cat-item input[type=checkbox]{accent-color:var(--green);width:14px;height:14px;flex-shrink:0}
+.mw-cat-icon{font-size:.95rem}
+.mw-cat-label{font-size:.76rem;font-weight:500;color:var(--text)}
+.mw-country-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:24px}
+.mw-country-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border);border-radius:9px;cursor:pointer;transition:all .2s;background:var(--surface)}
+.mw-country-item:hover{border-color:var(--green)}
+.mw-country-item.sel{border-color:var(--green);background:rgba(16,185,129,.06)}
+.mw-field{margin-bottom:16px}
+.mw-field label{display:block;font-size:.72rem;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.mw-field select,.mw-field input{width:100%;padding:10px 13px;background:var(--bg-1);border:1.5px solid var(--border-2);border-radius:8px;font-size:.87rem;color:var(--text);transition:border .2s}
+.mw-field select:focus,.mw-field input:focus{border-color:var(--green);background:var(--surface)}
+.mw-foot{display:flex;justify-content:space-between;align-items:center;margin-top:32px;padding-top:20px;border-top:1px solid var(--border)}
+.mw-btn-back{background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:10px 22px;font-size:.85rem;color:var(--text-2);font-weight:500;cursor:pointer}
+.mw-btn-next{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:8px;padding:10px 26px;font-size:.85rem;font-weight:600;border:none;cursor:pointer}
+.mw-btn-next:hover,.mw-finish-btn:hover{opacity:.9}
+.mw-finish-btn{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:8px;padding:10px 26px;font-size:.85rem;font-weight:600;border:none;cursor:pointer}
+.mw-feature-row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.mw-done-check{width:64px;height:64px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px}
+.mw-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
+
 /* ZAKI Wizard */
 #zaki-wizard{position:fixed;inset:0;z-index:200;display:none;background:var(--bg)}
 #zaki-wizard.open{display:flex}
@@ -1020,10 +1075,8 @@ function renderProducts(){
 function toggleProduct(id){
   if(!P.products) P.products = {}
   const enabling = !P.products[id]
-  if(enabling && id === 'zaki'){
-    openZakiWizard()
-    return
-  }
+  if(enabling && id === 'zaki'){       openZakiWizard(); return }
+  if(enabling && id === 'marketplace'){ openMktWizard(); return }
   P.products[id] = enabling
   save()
   renderProducts()
@@ -1580,6 +1633,284 @@ load()
 if(TOKEN && P.user.email){ bootApp() }
 else { document.getElementById('auth').style.display='flex' }
 
+// ── Marketplace Wizard ────────────────────────────────
+const MW_STEPS = [
+  {num:1,label:'Welcome'},
+  {num:2,label:'Your Role'},
+  {num:3,label:'Categories'},
+  {num:4,label:'Countries'},
+  {num:5,label:'Connect ERP'},
+  {num:6,label:'All Set!'},
+]
+let mwStep = 1
+const mwData = {}
+
+function openMktWizard(){
+  mwStep = 1
+  document.getElementById('mkt-wizard').classList.add('open')
+  mwRender()
+}
+
+function closeMktWizard(complete){
+  document.getElementById('mkt-wizard').classList.remove('open')
+  if(complete){
+    if(!P.products) P.products = {}
+    P.products.marketplace = true
+    P.marketplace = Object.assign({}, mwData)
+    save(); renderProducts(); renderDashboard()
+    showToast('B2B Marketplace enabled!')
+  }
+}
+
+function mwRender(){
+  document.getElementById('mw-step-list').innerHTML = MW_STEPS.map(s=>{
+    const cls = s.num < mwStep ? 'done' : s.num === mwStep ? 'active' : ''
+    return `<div class="mw-step ${cls}">
+      <div class="mw-step-num">${s.num < mwStep ? '✓' : s.num}</div>
+      <div class="mw-step-label">${s.label}</div>
+    </div>`
+  }).join('')
+  document.getElementById('mw-pfill').style.width = Math.round(((mwStep-1)/(MW_STEPS.length-1))*100)+'%'
+  const fn = [null,mwS1,mwS2,mwS3,mwS4,mwS5,mwS6][mwStep]
+  document.getElementById('mw-content').innerHTML = fn()
+  mwBindEvents()
+}
+
+function mwNext(){ if(mwStep < MW_STEPS.length){ mwStep++; mwRender() } }
+function mwBack(){ if(mwStep > 1){ mwStep--; mwRender() } }
+
+function mwBindEvents(){
+  document.querySelectorAll('#mw-content .mw-role-card').forEach(el=>{
+    el.addEventListener('click',()=>{
+      document.querySelectorAll('.mw-role-card').forEach(x=>x.classList.remove('sel'))
+      el.classList.add('sel'); mwData.role = el.dataset.value
+    })
+  })
+  document.querySelectorAll('#mw-content .mw-cat-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      el.classList.toggle('sel')
+      const cb = el.querySelector('input'); if(cb) cb.checked = el.classList.contains('sel')
+      if(!mwData.categories) mwData.categories = []
+      const v = el.dataset.value
+      if(el.classList.contains('sel')){ if(!mwData.categories.includes(v)) mwData.categories.push(v) }
+      else { mwData.categories = mwData.categories.filter(x=>x!==v) }
+    })
+  })
+  document.querySelectorAll('#mw-content .mw-country-item').forEach(el=>{
+    el.addEventListener('click',()=>{
+      el.classList.toggle('sel')
+      if(!mwData.countries) mwData.countries = []
+      const v = el.dataset.value
+      if(el.classList.contains('sel')){ if(!mwData.countries.includes(v)) mwData.countries.push(v) }
+      else { mwData.countries = mwData.countries.filter(x=>x!==v) }
+    })
+  })
+  document.querySelectorAll('#mw-content select,#mw-content input').forEach(el=>{
+    el.addEventListener('change',()=>{ mwData[el.name]=el.value })
+  })
+}
+
+function mwS1(){
+  return `
+  <div class="mw-tag">Step 1 of 6 — Introduction</div>
+  <div class="mw-title">Join the GCC<br>B2B Marketplace</div>
+  <div class="mw-sub">Connect with verified buyers and suppliers across UAE, Saudi Arabia, Qatar, and the wider GCC — directly from your Mumtaz workspace.</div>
+  <div style="background:rgba(16,185,129,.06);border:1.5px solid rgba(16,185,129,.2);border-radius:16px;padding:20px;margin-bottom:24px;display:flex;gap:16px;align-items:flex-start">
+    <div style="font-size:2rem;line-height:1">🛒</div>
+    <div>
+      <div style="font-weight:700;font-size:.92rem;color:var(--text);margin-bottom:6px">What the Marketplace gives you</div>
+      <div style="font-size:.8rem;color:var(--text-2);line-height:1.7">Discover verified suppliers, post RFQs, receive competitive quotes, and create purchase orders — all synced back to your ERP automatically.</div>
+    </div>
+  </div>
+  ${[
+    ['🏪','Vendor Storefront','List your products and receive B2B inquiries from enterprise buyers'],
+    ['📋','RFQ Management','Post requests for quotes and compare supplier responses side by side'],
+    ['🔗','ERP Sync','Approved POs flow directly into your Odoo purchasing module'],
+    ['✅','Verified Network','All suppliers are KYC-verified with trade licence checks'],
+    ['📊','Market Intelligence','Benchmark your pricing against live market rates in your category'],
+  ].map(([i,t,d])=>`
+  <div class="mw-feature-row">
+    <div style="font-size:1.1rem;width:32px;text-align:center">${i}</div>
+    <div><div style="font-size:.82rem;font-weight:600;color:var(--text)">${t}</div>
+    <div style="font-size:.75rem;color:var(--text-2)">${d}</div></div>
+  </div>`).join('')}
+  <div class="mw-foot">
+    <button class="mw-btn-back" onclick="closeMktWizard(false)">Cancel</button>
+    <button class="mw-btn-next" onclick="mwNext()">Get Started →</button>
+  </div>`
+}
+
+function mwS2(){
+  const roles = [
+    {icon:'🛒',label:'Buyer',desc:'Source products & services from verified suppliers',val:'buyer'},
+    {icon:'🏪',label:'Seller',desc:'List your products and receive B2B inquiries',val:'seller'},
+    {icon:'🔄',label:'Both',desc:'Buy and sell within the marketplace',val:'both'},
+  ]
+  return `
+  <div class="mw-tag">Step 2 of 6 — Your Role</div>
+  <div class="mw-title">How will you use<br>the Marketplace?</div>
+  <div class="mw-sub">Select your primary role. You can always change this later in settings.</div>
+  <div class="mw-role-grid">
+    ${roles.map(r=>`
+    <div class="mw-role-card ${mwData.role===r.val?'sel':''}" data-value="${r.val}">
+      <div class="mw-role-icon">${r.icon}</div>
+      <div class="mw-role-label">${r.label}</div>
+      <div class="mw-role-desc">${r.desc}</div>
+    </div>`).join('')}
+  </div>
+  <div class="mw-field">
+    <label>Company Type</label>
+    <select name="companyType">
+      <option value="">Select…</option>
+      <option ${mwData.companyType==='manufacturer'?'selected':''} value="manufacturer">Manufacturer</option>
+      <option ${mwData.companyType==='trader'?'selected':''} value="trader">Trader / Distributor</option>
+      <option ${mwData.companyType==='retailer'?'selected':''} value="retailer">Retailer</option>
+      <option ${mwData.companyType==='services'?'selected':''} value="services">Service Provider</option>
+      <option ${mwData.companyType==='contractor'?'selected':''} value="contractor">Contractor</option>
+    </select>
+  </div>
+  <div class="mw-foot">
+    <button class="mw-btn-back" onclick="mwBack()">← Back</button>
+    <button class="mw-btn-next" onclick="mwNext()">Continue →</button>
+  </div>`
+}
+
+function mwS3(){
+  const cats = [
+    {icon:'🏭',label:'Manufacturing',val:'manufacturing'},
+    {icon:'📦',label:'Raw Materials',val:'raw_materials'},
+    {icon:'💻',label:'IT & Technology',val:'it'},
+    {icon:'🏗️',label:'Construction',val:'construction'},
+    {icon:'🚚',label:'Logistics',val:'logistics'},
+    {icon:'🍽️',label:'Food & Beverage',val:'food'},
+    {icon:'⚗️',label:'Chemicals',val:'chemicals'},
+    {icon:'🧴',label:'Packaging',val:'packaging'},
+    {icon:'⚡',label:'Energy',val:'energy'},
+    {icon:'💼',label:'Professional Services',val:'services'},
+    {icon:'🏥',label:'Healthcare',val:'healthcare'},
+    {icon:'🛍️',label:'Consumer Goods',val:'consumer'},
+  ]
+  const sel = mwData.categories || []
+  return `
+  <div class="mw-tag">Step 3 of 6 — Categories</div>
+  <div class="mw-title">What categories do<br>you operate in?</div>
+  <div class="mw-sub">Select all that apply — we use this to match you with relevant buyers and suppliers.</div>
+  <div class="mw-cat-grid">
+    ${cats.map(c=>`
+    <div class="mw-cat-item ${sel.includes(c.val)?'sel':''}" data-value="${c.val}">
+      <input type="checkbox" ${sel.includes(c.val)?'checked':''} onclick="event.stopPropagation()">
+      <span class="mw-cat-icon">${c.icon}</span>
+      <span class="mw-cat-label">${c.label}</span>
+    </div>`).join('')}
+  </div>
+  <div class="mw-foot">
+    <button class="mw-btn-back" onclick="mwBack()">← Back</button>
+    <button class="mw-btn-next" onclick="mwNext()">Continue →</button>
+  </div>`
+}
+
+function mwS4(){
+  const countries = [
+    {flag:'🇦🇪',label:'UAE',val:'uae'},
+    {flag:'🇸🇦',label:'Saudi Arabia',val:'ksa'},
+    {flag:'🇶🇦',label:'Qatar',val:'qatar'},
+    {flag:'🇰🇼',label:'Kuwait',val:'kuwait'},
+    {flag:'🇧🇭',label:'Bahrain',val:'bahrain'},
+    {flag:'🇴🇲',label:'Oman',val:'oman'},
+    {flag:'🇵🇰',label:'Pakistan',val:'pakistan'},
+    {flag:'🇮🇳',label:'India',val:'india'},
+    {flag:'🌍',label:'Other',val:'other'},
+  ]
+  const sel = mwData.countries || []
+  return `
+  <div class="mw-tag">Step 4 of 6 — Markets</div>
+  <div class="mw-title">Which countries do<br>you trade in?</div>
+  <div class="mw-sub">We show you buyers and suppliers relevant to your operating markets.</div>
+  <div class="mw-country-grid">
+    ${countries.map(c=>`
+    <div class="mw-country-item ${sel.includes(c.val)?'sel':''}" data-value="${c.val}">
+      <span style="font-size:1.2rem">${c.flag}</span>
+      <span style="font-size:.8rem;font-weight:500;color:var(--text)">${c.label}</span>
+    </div>`).join('')}
+  </div>
+  <div class="mw-field">
+    <label>Annual Procurement / Sales Volume</label>
+    <select name="volume">
+      <option value="">Select range…</option>
+      <option ${mwData.volume==='<100k'?'selected':''} value="<100k">Under $100K</option>
+      <option ${mwData.volume==='100k-500k'?'selected':''} value="100k-500k">$100K – $500K</option>
+      <option ${mwData.volume==='500k-2m'?'selected':''} value="500k-2m">$500K – $2M</option>
+      <option ${mwData.volume==='>2m'?'selected':''} value=">2m">Over $2M</option>
+    </select>
+  </div>
+  <div class="mw-foot">
+    <button class="mw-btn-back" onclick="mwBack()">← Back</button>
+    <button class="mw-btn-next" onclick="mwNext()">Continue →</button>
+  </div>`
+}
+
+function mwS5(){
+  return `
+  <div class="mw-tag">Step 5 of 6 — ERP Connection</div>
+  <div class="mw-title">Sync with<br>your ERP</div>
+  <div class="mw-sub">Mumtaz Marketplace connects directly to your ERP. Purchase orders, vendor bills, and inventory updates flow automatically.</div>
+  <div class="mw-feature-row" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04);margin-bottom:10px">
+    <div style="font-size:1.1rem;width:32px;text-align:center">✅</div>
+    <div><div style="font-size:.82rem;font-weight:600;color:var(--text)">Mumtaz ERP — Connected</div>
+    <div style="font-size:.75rem;color:var(--text-2)">Products, vendors, and purchase orders sync in real time</div></div>
+  </div>
+  <div class="mw-feature-row" style="margin-bottom:10px">
+    <div style="font-size:1.1rem;width:32px;text-align:center">📦</div>
+    <div><div style="font-size:.82rem;font-weight:600;color:var(--text)">Product Catalogue Sync</div>
+    <div style="font-size:.75rem;color:var(--text-2)">Your Odoo product list becomes your marketplace storefront automatically</div></div>
+  </div>
+  <div class="mw-feature-row" style="margin-bottom:10px">
+    <div style="font-size:1.1rem;width:32px;text-align:center">🧾</div>
+    <div><div style="font-size:.82rem;font-weight:600;color:var(--text)">Auto Purchase Orders</div>
+    <div style="font-size:.75rem;color:var(--text-2)">Approved quotes create draft POs in Odoo — no double entry</div></div>
+  </div>
+  <div style="background:rgba(16,185,129,.06);border:1.5px solid rgba(16,185,129,.2);border-radius:12px;padding:14px 16px;font-size:.8rem;color:var(--text-2);line-height:1.6;margin-top:4px">
+    <strong style="color:var(--green)">🔒 Secure &amp; Private.</strong> Your product catalogue and trade data are never shared with competitors. Buyers only see what you choose to list publicly.
+  </div>
+  <div class="mw-foot">
+    <button class="mw-btn-back" onclick="mwBack()">← Back</button>
+    <button class="mw-btn-next" onclick="mwNext()">Continue →</button>
+  </div>`
+}
+
+function mwS6(){
+  const cats = mwData.categories || []
+  const countries = mwData.countries || []
+  const roleLabel = {buyer:'Buyer',seller:'Seller',both:'Buyer & Seller'}[mwData.role] || 'Not set'
+  return `
+  <div style="text-align:center;padding:8px 0 20px">
+    <div class="mw-done-check">🎉</div>
+    <div style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:8px">Marketplace is ready!</div>
+    <div style="font-size:.88rem;color:var(--text-2);max-width:380px;margin:0 auto;line-height:1.6">Your B2B Marketplace profile is configured. Here is a summary:</div>
+  </div>
+  <div class="mw-summary-grid">
+    ${[
+      ['🔄','Role',roleLabel],
+      ['🏢','Company Type',mwData.companyType||'Not set'],
+      ['📊','Volume',mwData.volume||'Not set'],
+      ['🌍','Markets',countries.length ? countries.length+' selected' : 'Not set'],
+    ].map(([icon,label,val])=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:1.2rem">${icon}</span>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em">${label}</div>
+      <div style="font-size:.85rem;font-weight:600;color:var(--text)">${val}</div></div>
+    </div>`).join('')}
+  </div>
+  ${cats.length ? `<div style="background:rgba(16,185,129,.06);border:1.5px solid rgba(16,185,129,.2);border-radius:10px;padding:14px 16px;margin-bottom:8px">
+    <div style="font-size:.72rem;font-weight:600;color:var(--green);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Categories (${cats.length})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${cats.map(c=>`<span style="background:rgba(16,185,129,.12);color:var(--green);border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:500">${c}</span>`).join('')}</div>
+  </div>` : ''}
+  <div class="mw-foot" style="justify-content:center;gap:12px">
+    <button class="mw-btn-back" onclick="mwBack()">← Review</button>
+    <button class="mw-finish-btn" onclick="closeMktWizard(true);setTimeout(()=>window.open('https://marketplace.mumtaz.digital','_blank'),300)">Open Marketplace 🛒</button>
+  </div>`
+}
+
 // ── ZAKI Wizard ────────────────────────────────────────
 const ZW_STEPS = [
   {num:1, label:'Welcome'},
@@ -1906,6 +2237,24 @@ function zwS6(){
   </div>
   <div class="zw-main">
     <div class="zw-inner" id="zw-content"></div>
+  </div>
+</div>
+
+<!-- Marketplace Wizard Overlay -->
+<div id="mkt-wizard">
+  <div class="mw-sidebar">
+    <div class="mw-brand">
+      <div class="mw-brand-icon">🛒</div>
+      <div>
+        <div class="mw-brand-name">B2B Marketplace</div>
+        <div class="mw-brand-sub">Setup Wizard</div>
+      </div>
+    </div>
+    <div class="mw-steps" id="mw-step-list"></div>
+    <div class="mw-pbar"><div class="mw-pfill" id="mw-pfill" style="width:0%"></div></div>
+  </div>
+  <div class="mw-main">
+    <div class="mw-inner" id="mw-content"></div>
   </div>
 </div>
 </body>
