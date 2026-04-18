@@ -69,12 +69,16 @@ def init_db():
             created_at    INTEGER DEFAULT (strftime('%s','now'))
         )
     """)
-    # Migrations for older DB schemas
+    # Migrations for older DB schemas (add any missing columns)
     for col, definition in [
-        ("active",        "INTEGER DEFAULT 1"),
-        ("password_hash", "TEXT"),
+        ("name",          "TEXT"),
         ("company",       "TEXT"),
+        ("password_hash", "TEXT"),
+        ("odoo_uid",      "INTEGER"),
         ("tenant_id",     "INTEGER"),
+        ("plan",          "TEXT DEFAULT 'trial'"),
+        ("active",        "INTEGER DEFAULT 1"),
+        ("created_at",    "INTEGER DEFAULT (strftime('%s','now'))"),
     ]:
         try:
             conn.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
