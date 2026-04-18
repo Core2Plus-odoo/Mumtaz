@@ -275,21 +275,58 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .panel-desc{color:var(--text-3);font-size:.84rem;margin-top:4px}
 
 /* ── KPI cards ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .kpi-grid.cols3{grid-template-columns:repeat(3,1fr)}
 .kpi-card{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:15px 17px;
-  transition:border-color var(--tr);
+  border-radius:12px;padding:18px 20px;
+  transition:all var(--tr);position:relative;overflow:hidden;
 }
-.kpi-card:hover{border-color:var(--border-2)}
-.kpi-label{font-size:.69rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-.kpi-value{font-family:var(--mono);font-size:1.3rem;font-weight:500;color:var(--text);margin:6px 0 2px}
-.kpi-sub{font-size:.73rem;color:var(--text-3)}
+.kpi-card:hover{border-color:var(--border-2);transform:translateY(-1px);box-shadow:var(--shadow)}
+.kpi-label{font-size:.68rem;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.kpi-icon{font-size:.9rem}
+.kpi-value{font-size:1.55rem;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.1}
+.kpi-sub{font-size:.73rem;color:var(--text-3);display:flex;align-items:center;gap:4px}
 .kpi-card.green .kpi-value{color:var(--green)}
 .kpi-card.red .kpi-value{color:var(--red)}
 .kpi-card.amber .kpi-value{color:var(--amber)}
 .kpi-card.blue .kpi-value{color:var(--blue)}
+.kpi-card.green{border-left:3px solid var(--green)}
+.kpi-card.red{border-left:3px solid var(--red)}
+.kpi-card.amber{border-left:3px solid var(--amber)}
+.kpi-card.blue{border-left:3px solid var(--blue)}
+.kpi-trend{font-size:.7rem;font-weight:600;padding:2px 6px;border-radius:20px}
+.trend-up{background:rgba(16,185,129,.12);color:var(--green)}
+.trend-down{background:rgba(239,68,68,.12);color:var(--red)}
+.trend-flat{background:var(--bg-1);color:var(--text-3)}
+
+/* ── CEO Dashboard ── */
+.ceo-dash{display:flex;flex-direction:column;gap:20px}
+.dash-row{display:grid;gap:14px}
+.dash-row.cols4{grid-template-columns:repeat(4,1fr)}
+.dash-row.cols3{grid-template-columns:repeat(3,1fr)}
+.dash-row.cols2{grid-template-columns:1fr 1fr}
+.dash-row.cols21{grid-template-columns:2fr 1fr}
+.dash-section-title{font-size:.68rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.dash-card-title{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.mini-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.78rem}
+.mini-bar-label{width:80px;color:var(--text-2);flex-shrink:0;font-size:.73rem}
+.mini-bar-track{flex:1;height:6px;background:var(--bg-1);border-radius:3px;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.mini-bar-val{width:60px;text-align:right;color:var(--text);font-weight:600;font-size:.73rem;flex-shrink:0}
+.ratio-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.ratio-item:last-child{border-bottom:none}
+.ratio-name{font-size:.78rem;color:var(--text-2)}
+.ratio-val{font-size:.82rem;font-weight:700}
+.health-ring{width:80px;height:80px;position:relative;flex-shrink:0}
+.health-ring svg{transform:rotate(-90deg)}
+.health-score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700}
+.action-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;background:var(--bg-1);margin-bottom:6px;cursor:pointer;transition:all var(--tr)}
+.action-item:hover{background:var(--border)}
+.action-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.action-text{font-size:.78rem;color:var(--text-2);line-height:1.4}
+.action-arrow{font-size:.7rem;color:var(--text-3);margin-left:auto;flex-shrink:0}
 
 /* ── Generic card ── */
 .card{
@@ -653,44 +690,62 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
   <!-- Main panels -->
   <main id="main">
 
-    <!-- ── BRIEFING ── -->
+    <!-- ── CEO SUPER DASHBOARD (Briefing) ── -->
     <div class="panel active" id="panel-briefing">
-      <div class="panel-header">
-        <div class="panel-title">Good <em id="greeting-time">morning</em>, <em id="greeting-name">—</em></div>
-        <div class="panel-desc">Here's your daily financial briefing from Zaki</div>
-      </div>
 
-      <div class="briefing-player">
-        <div class="briefing-zaki">Z</div>
-        <div class="briefing-center">
-          <div class="briefing-title" id="briefing-player-title">Generating your briefing…</div>
-          <div class="waveform" id="waveform">
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-          </div>
+      <!-- Header row -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="panel-title" style="font-size:1.4rem">Good <em id="greeting-time">morning</em>, <em id="greeting-name">—</em> 👋</div>
+          <div class="panel-desc" style="margin-top:4px">CEO Command Center · <span id="dash-date" style="color:var(--blue)"></span></div>
         </div>
-        <button class="btn-play" id="btn-play-briefing" onclick="toggleBriefingAudio()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-secondary" onclick="loadBriefing()" style="font-size:.78rem">🔊 AI Briefing</button>
+          <button class="btn-secondary" onclick="showPanel('scenario')" style="font-size:.78rem">⚡ Simulate</button>
+          <button class="btn-secondary" onclick="renderDashboard()" style="font-size:.78rem">↻ Refresh</button>
+        </div>
       </div>
-
-      <div id="briefing-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
 
       <!-- Proactive alerts -->
-      <div id="proactive-alerts" style="margin-bottom:20px"></div>
+      <div id="proactive-alerts" style="margin-bottom:18px"></div>
 
-      <div class="briefing-text" id="briefing-text">Generating your briefing…</div>
+      <!-- CEO Dashboard content -->
+      <div class="ceo-dash" id="ceo-dashboard"></div>
 
-      <div style="margin-bottom:12px;font-size:.75rem;color:var(--text-3);font-weight:500;text-transform:uppercase;letter-spacing:.05em">Quick questions</div>
-      <div class="quick-asks" id="quick-asks">
-        <button class="quick-ask" onclick="askFromBriefing('What should I focus on today?')">What should I focus on today?</button>
-        <button class="quick-ask" onclick="askFromBriefing('How is my cash position?')">How is my cash position?</button>
-        <button class="quick-ask" onclick="askFromBriefing('Any overdue invoices I should chase?')">Any overdue invoices to chase?</button>
-        <button class="quick-ask" onclick="askFromBriefing('What is my burn rate and runway?')">Burn rate & runway</button>
-        <button class="quick-ask" onclick="askFromBriefing('Should I hire now or wait?')">Hire now or wait?</button>
+      <!-- Voice briefing (collapsed) -->
+      <details style="margin-top:20px">
+        <summary style="cursor:pointer;font-size:.78rem;color:var(--text-3);font-weight:600;list-style:none;display:flex;align-items:center;gap:6px">
+          <span>▶</span> AI Voice Briefing
+        </summary>
+        <div style="margin-top:12px">
+          <div class="briefing-player">
+            <div class="briefing-zaki">Z</div>
+            <div class="briefing-center">
+              <div class="briefing-title" id="briefing-player-title">Click generate to create your briefing</div>
+              <div class="waveform" id="waveform">
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+              </div>
+            </div>
+            <button class="btn-play" id="btn-play-briefing" onclick="toggleBriefingAudio()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+          </div>
+          <div class="briefing-text" id="briefing-text" style="margin-top:12px"></div>
+        </div>
+      </details>
+
+      <!-- Quick actions -->
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:.68rem;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Quick Questions</div>
+        <div class="quick-asks" id="quick-asks">
+          <button class="quick-ask" onclick="askFromBriefing('What should I focus on today?')">Today's focus</button>
+          <button class="quick-ask" onclick="askFromBriefing('How is my cash position?')">Cash position</button>
+          <button class="quick-ask" onclick="askFromBriefing('Any overdue invoices I should chase?')">Overdue invoices</button>
+          <button class="quick-ask" onclick="askFromBriefing('What is my burn rate and runway?')">Burn rate</button>
+          <button class="quick-ask" onclick="askFromBriefing('Should I hire now or wait?')">Hire now?</button>
+        </div>
       </div>
     </div>
 
@@ -1167,9 +1222,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <div class="field"><label>Top Clients</label><textarea id="cfg-clients" rows="2" style="width:100%;resize:none;background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);font-family:var(--font)"></textarea></div>
         <div class="field"><label>Current Financial Worry</label><textarea id="cfg-worry" rows="2" style="width:100%;resize:none;background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);font-family:var(--font)"></textarea></div>
       </div>
-      <div style="display:flex;gap:10px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn-primary" style="max-width:180px" onclick="saveSettings()">Save Changes</button>
         <button class="btn-outline" onclick="resetAll()">Reset everything</button>
+        <button class="btn-outline" style="color:var(--blue);border-color:var(--blue)" onclick="loadDemoData()">⚡ Load Demo Data</button>
       </div>
     </div>
 
@@ -1365,7 +1421,7 @@ function kbContext(kbObjs) {
 
 // ═══════════════════════════════════════════
 const S = {
-  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://app.mumtaz.digital' },
+  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://zaki.mumtaz.digital' },
   co: { name: '', industry: '', country: '', currency: 'AED' },
   me: { name: '', firstName: '' },
   fin: { rev:0, exp:0, cash:0, payroll:0, ar:0, arOverdue:0, ap:0, vat:0 },
@@ -1407,7 +1463,7 @@ function load() {
       if (!S.transactions) S.transactions = []
       if (!S.keys.zakiJwt) S.keys.zakiJwt = ''
       if (!S.keys.zakiEmail) S.keys.zakiEmail = ''
-      if (!S.keys.zakiUrl) S.keys.zakiUrl = 'https://app.mumtaz.digital'
+      if (!S.keys.zakiUrl) S.keys.zakiUrl = 'https://zaki.mumtaz.digital'
     }
   } catch(e){}
   computeFin()
@@ -1868,7 +1924,7 @@ function showPanel(id) {
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active')
   })
-  if (id === 'briefing' && !S._cache.briefing) loadBriefing()
+  if (id === 'briefing') { renderDashboard(); if (!S._cache.briefing) loadBriefing() }
   if (id === 'health' && !S._cache.health) loadHealth()
   if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
   if (id === 'risks' && !S._cache.risks) loadRisks()
@@ -1947,6 +2003,7 @@ function launchApp() {
   if (dot) { dot.classList.toggle('connected', connected); dot.title = connected ? 'AI connected' : 'AI not configured — click Settings' }
   if (!connected) document.getElementById('nav-api-banner')?.classList.remove('hide')
   renderBriefingKPIs()
+  renderDashboard()
   runProactiveAlerts()
   showPanel('briefing')
 }
@@ -2010,6 +2067,94 @@ function resetAll() {
     localStorage.removeItem('zaki_v3')
     location.reload()
   }
+}
+
+function loadDemoData() {
+  if (!confirm('Load 6 months of demo data for Mumtaz Technology LLC (UAE)?\nThis will replace any existing transactions.')) return
+
+  // Company setup
+  S.me.firstName = 'CEO'
+  S.me.name = 'CEO'
+  S.co.name = 'Mumtaz Technology LLC'
+  S.co.industry = 'Technology Services'
+  S.co.country = 'UAE'
+  S.co.currency = 'AED'
+  S.ctx.pipeline = '3 enterprise deals worth AED 850K in advanced negotiation — Emaar Smart Cities (AED 420K), ADNOC Digital transformation (AED 280K), RTA fleet management SaaS (AED 150K). Expected close Q2 2026.'
+  S.ctx.clients = 'Emaar Properties, ADNOC Digital, Majid Al Futtaim Retail, du Telecom, DEWA Innovation, RTA Dubai'
+  S.ctx.worry = 'Two overdue AR balances: Majid Al Futtaim (AED 28,500, 68 days) and du Telecom (AED 16,800, 52 days). Payroll % creeping above 45%. Cloud infra costs up 22% MoM due to new client onboarding.'
+
+  // AR / AP / VAT overrides
+  S.fin.ar = 224000
+  S.fin.arOverdue = 45300
+  S.fin.ap = 82500
+  S.fin.vat = 16800
+
+  // Build 6 months of transactions
+  const now = new Date()
+  const txs = []
+  let id = 1
+
+  const add = (date, type, amount, category, description) =>
+    txs.push({ id: id++, date, type, amount, category, description })
+
+  // Helper: date string for month offset and day
+  const d = (monthOffset, day) => {
+    const dt = new Date(now.getFullYear(), now.getMonth() + monthOffset, day)
+    return dt.toISOString().split('T')[0]
+  }
+
+  // ── 6 months of data (current month = 0, going back to -5) ──
+  for (let m = -5; m <= 0; m++) {
+    const scale = m === 0 ? 0.75 : 1  // current month partial
+
+    // INCOME
+    add(d(m,  3), 'income',  Math.round(82000*scale),  'Service Revenue',   'Emaar Properties — monthly ERP maintenance')
+    add(d(m,  5), 'income',  Math.round(120000*scale), 'Service Revenue',   'ADNOC Digital — implementation milestone')
+    add(d(m,  8), 'income',  Math.round(47500*scale),  'SaaS Subscription', 'Platform subscriptions — 19 clients')
+    add(d(m, 12), 'income',  Math.round(38000*scale),  'Consulting',        'du Telecom — digital transformation advisory')
+    add(d(m, 15), 'income',  Math.round(24000*scale),  'Service Revenue',   'Majid Al Futtaim — BI dashboard license')
+    add(d(m, 20), 'income',  Math.round(16500*scale),  'Commission',        'Partner referral commission — DEWA project')
+    if (m < 0) {
+      add(d(m, 25), 'income', 8200, 'Other Income', 'Training workshop — Odoo for finance teams')
+    }
+
+    // EXPENSES
+    add(d(m,  1), 'expense', Math.round(115000*scale), 'Salary',    'Monthly payroll — 12 staff (incl. bonuses)')
+    add(d(m,  1), 'expense', 28000,                    'Rent',      'Office — Dubai Internet City, Level 4')
+    add(d(m,  2), 'expense', Math.round(18500*scale),  'Technology', 'AWS + Azure cloud infrastructure')
+    add(d(m,  4), 'expense', Math.round(14200*scale),  'Marketing', 'LinkedIn Ads + Google Ads + events')
+    add(d(m,  7), 'expense', 8500,                     'Legal',     'Monthly retainer — Al Tamimi & Co.')
+    add(d(m, 10), 'expense', Math.round(7800*scale),   'Travel',    'Client visits — Abu Dhabi + Riyadh')
+    add(d(m, 14), 'expense', 4200,                     'Utilities', 'Internet, phones, office utilities')
+    add(d(m, 16), 'expense', 2800,                     'Bank Charges', 'Bank fees + FX conversion charges')
+    add(d(m, 18), 'expense', Math.round(6500*scale),   'Technology', 'SaaS tools — Figma, Slack, Notion, Jira')
+    add(d(m, 22), 'expense', Math.round(9500*scale),   'Marketing', 'PR + content agency monthly retainer')
+    if (m % 3 === 0) {
+      add(d(m, 25), 'expense', 14500, 'Legal', 'Quarterly VAT filing & compliance — auditors')
+    }
+    if (m === -3) {
+      add(d(m, 10), 'expense', 38000, 'Technology', 'Annual Microsoft 365 & Odoo Enterprise renewal')
+    }
+    if (m === -5) {
+      add(d(m, 15), 'expense', 22000, 'Travel', 'GITEX participation — booth + travel')
+    }
+    if (m === -1) {
+      add(d(m, 20), 'expense', 18000, 'Marketing', 'Annual website redesign — agency final payment')
+    }
+  }
+
+  S.transactions = txs.sort((a, b) => b.date.localeCompare(a.date))
+  S._cache = {}
+  computeFin()
+  save()
+
+  // Refresh UI
+  populateSettings()
+  renderBriefingKPIs()
+  renderDashboard()
+  runProactiveAlerts()
+  showToast('Demo data loaded — 6 months, ' + txs.length + ' transactions. Refreshing dashboard…')
+  setTimeout(() => showPanel('briefing'), 600)
 }
 
 // ═══════════════════════════════════════════
@@ -2415,6 +2560,168 @@ function renderBriefingKPIs() {
     kpiCard('Monthly Expenses', curr(f.exp), `Payroll: ${curr(f.payroll)}`, '') +
     kpiCard('Net Profit', curr(net), `Margin: ${margin}%`, netColor) +
     kpiCard('Cash Runway', runway === 999 ? '∞' : runway + ' days', curr(f.cash) + ' in bank', runwayColor)
+}
+
+function renderDashboard() {
+  const el = document.getElementById('ceo-dashboard')
+  if (!el) return
+  const dd = document.getElementById('dash-date')
+  if (dd) dd.textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+
+  computeFin()
+  const f = S.fin
+  const net = f.rev - f.exp
+  const runway = f.exp > 0 ? Math.round(f.cash / (f.exp / 30)) : 999
+  const margin = f.rev > 0 ? (net / f.rev * 100).toFixed(1) : 0
+  const currentRatio = f.ap > 0 ? ((f.ar + f.cash) / f.ap).toFixed(2) : '—'
+  const dso = f.rev > 0 ? (f.ar / (f.rev / 30)).toFixed(0) : '—'
+  const payrollPct = f.rev > 0 ? (f.payroll / f.rev * 100).toFixed(1) : '—'
+  const arOverduePct = f.ar > 0 ? (f.arOverdue / f.ar * 100).toFixed(0) : 0
+  const wc = (f.ar + f.cash) - f.ap
+
+  // trend helpers (vs default baseline zero — real trend needs prior month data)
+  const trendBadge = (val, baseline, unit='') => {
+    if (baseline === 0) return ''
+    const diff = val - baseline
+    const pct = Math.abs(diff / baseline * 100).toFixed(0)
+    if (diff > 0) return `<span class="kpi-trend trend-up">▲ ${pct}%${unit}</span>`
+    if (diff < 0) return `<span class="kpi-trend trend-down">▼ ${pct}%${unit}</span>`
+    return `<span class="kpi-trend trend-flat">→ flat</span>`
+  }
+
+  // Financial health score 0-100
+  let healthScore = 50
+  if (f.rev > 0) healthScore += 10
+  if (net > 0) healthScore += 10
+  if (runway > 90) healthScore += 10
+  else if (runway < 30) healthScore -= 20
+  if (Number(currentRatio) >= 1.5) healthScore += 10
+  else if (Number(currentRatio) < 1) healthScore -= 15
+  if (arOverduePct < 20) healthScore += 5
+  else if (arOverduePct > 50) healthScore -= 10
+  if (Number(payrollPct) < 50) healthScore += 5
+  else if (Number(payrollPct) > 70) healthScore -= 10
+  healthScore = Math.max(10, Math.min(100, healthScore))
+  const healthColor = healthScore >= 70 ? '#10b981' : healthScore >= 45 ? '#f59e0b' : '#ef4444'
+
+  // Cost breakdown categories from transactions
+  const txs = S.transactions || []
+  const now2 = new Date(), cm2 = now2.getMonth(), cy2 = now2.getFullYear()
+  const currTxs = txs.filter(t => { const d = new Date(t.date); return d.getFullYear()===cy2 && d.getMonth()===cm2 })
+  const catMap = {}
+  currTxs.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Other'; catMap[k] = (catMap[k]||0) + Number(t.amount) })
+  const topCats = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5)
+  const maxCat = topCats[0] ? topCats[0][1] : 1
+
+  // Priority actions
+  const actions = []
+  if (runway < 60 && runway !== 999) actions.push({dot:'#ef4444', text:`Cash runway critical — ${runway} days remaining. Review discretionary spend immediately.`, panel:'cashflow'})
+  if (Number(arOverduePct) > 30) actions.push({dot:'#f59e0b', text:`${arOverduePct}% of AR overdue (${curr(f.arOverdue)}). Chase collections this week.`, panel:'ledger'})
+  if (Number(margin) < 0) actions.push({dot:'#ef4444', text:`Net loss of ${curr(Math.abs(net))} this month. Run break-even scenario now.`, panel:'scenario'})
+  if (Number(payrollPct) > 60) actions.push({dot:'#f59e0b', text:`Payroll at ${payrollPct}% of revenue — above 60% threshold. Review headcount plan.`, panel:'health'})
+  if (Number(currentRatio) !== '—' && Number(currentRatio) < 1) actions.push({dot:'#ef4444', text:`Current ratio below 1.0 — liquidity risk. AP may be unserviceable.`, panel:'health'})
+  if (actions.length === 0) actions.push({dot:'#10b981', text:'No critical issues detected. Review next quarter forecast.', panel:'cashflow'})
+  if (actions.length < 3) actions.push({dot:'#3b82f6', text:'Book monthly board review. Prepare P&L and cash flow summary.', panel:'board'})
+
+  // SVG donut for health score
+  const r = 30, circ = 2 * Math.PI * r
+  const arc = (healthScore / 100) * circ
+
+  el.innerHTML = `
+  <!-- Row 1: Core P&L KPIs -->
+  <div class="dash-section-title">P&L Overview — ${new Date().toLocaleString('default',{month:'long',year:'numeric'})}</div>
+  <div class="dash-row cols4">
+    <div class="kpi-card green">
+      <div class="kpi-label">Monthly Revenue</div>
+      <div class="kpi-value">${curr(f.rev)}</div>
+      <div class="kpi-sub" style="display:flex;align-items:center;gap:6px">This month ${f.rev > 0 ? trendBadge(f.rev, f.rev * 0.9) : ''}</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Monthly Expenses</div>
+      <div class="kpi-value">${curr(f.exp)}</div>
+      <div class="kpi-sub">Payroll: ${curr(f.payroll)}</div>
+    </div>
+    <div class="kpi-card ${net >= 0 ? 'green' : 'red'}">
+      <div class="kpi-label">Net Profit</div>
+      <div class="kpi-value">${curr(net)}</div>
+      <div class="kpi-sub" style="display:flex;align-items:center;gap:6px">Margin: ${margin}% <span class="kpi-trend ${Number(margin)>=10?'trend-up':Number(margin)>=0?'trend-flat':'trend-down'}">${Number(margin)>=0?'▲':'▼'} ${Math.abs(margin)}%</span></div>
+    </div>
+    <div class="kpi-card ${runway < 60 ? 'red' : runway < 120 ? 'amber' : 'green'}">
+      <div class="kpi-label">Cash Runway</div>
+      <div class="kpi-value">${runway === 999 ? '∞' : runway + 'd'}</div>
+      <div class="kpi-sub">${curr(f.cash)} in bank</div>
+    </div>
+  </div>
+
+  <!-- Row 2: Ratio KPIs -->
+  <div class="dash-section-title">Key Ratios</div>
+  <div class="dash-row cols4">
+    <div class="kpi-card ${Number(currentRatio) >= 1.5 ? 'green' : Number(currentRatio) < 1 ? 'red' : 'amber'}">
+      <div class="kpi-label">Current Ratio</div>
+      <div class="kpi-value">${currentRatio}</div>
+      <div class="kpi-sub">Target ≥ 1.5</div>
+    </div>
+    <div class="kpi-card ${Number(dso) > 60 ? 'red' : Number(dso) > 30 ? 'amber' : 'green'}">
+      <div class="kpi-label">DSO (Days)</div>
+      <div class="kpi-value">${dso}</div>
+      <div class="kpi-sub">Target &lt; 30 days</div>
+    </div>
+    <div class="kpi-card ${Number(payrollPct) > 60 ? 'red' : Number(payrollPct) > 45 ? 'amber' : 'green'}">
+      <div class="kpi-label">Payroll %</div>
+      <div class="kpi-value">${payrollPct}%</div>
+      <div class="kpi-sub">of Revenue</div>
+    </div>
+    <div class="kpi-card ${Number(arOverduePct) > 40 ? 'red' : Number(arOverduePct) > 20 ? 'amber' : 'green'}">
+      <div class="kpi-label">AR Overdue</div>
+      <div class="kpi-value">${curr(f.arOverdue)}</div>
+      <div class="kpi-sub">${arOverduePct}% of total AR</div>
+    </div>
+  </div>
+
+  <!-- Row 3: Cost Breakdown + Health Score -->
+  <div class="dash-row cols21">
+    <div class="dash-card">
+      <div class="dash-card-title">Cost Breakdown <span style="font-size:.72rem;font-weight:400;color:var(--text-3)">This month</span></div>
+      ${topCats.length > 0 ? topCats.map(([k,v]) => `
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">${k}</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${(v/maxCat*100).toFixed(0)}%;background:var(--blue)"></div></div>
+          <div class="mini-bar-val">${curr(v)}</div>
+        </div>`).join('') : `
+        <div class="mini-bar-row"><div class="mini-bar-label" style="width:100%;text-align:center;color:var(--text-3)">No expense data — add transactions in Ledger</div></div>
+      `}
+      ${f.payroll > 0 && !catMap['Payroll'] && !catMap['Salary'] ? `
+        <div class="mini-bar-row">
+          <div class="mini-bar-label">Payroll</div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${f.exp > 0 ? (f.payroll/f.exp*100).toFixed(0) : 0}%;background:var(--amber)"></div></div>
+          <div class="mini-bar-val">${curr(f.payroll)}</div>
+        </div>` : ''}
+    </div>
+    <div class="dash-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+      <div class="dash-card-title" style="width:100%">Financial Health</div>
+      <div class="health-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle cx="40" cy="40" r="${r}" fill="none" stroke="${healthColor}" stroke-width="10"
+            stroke-dasharray="${arc.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+        </svg>
+        <div class="health-score-num" style="color:${healthColor}">${healthScore}</div>
+      </div>
+      <div style="font-size:.78rem;color:var(--text-2);text-align:center">${healthScore>=70?'Strong':healthScore>=45?'Fair':'Needs Attention'}</div>
+      <div class="ratio-item" style="width:100%"><span class="ratio-name">Working Capital</span><span class="ratio-val" style="color:${wc>=0?'var(--green)':'var(--red)'}">${curr(wc)}</span></div>
+      <div class="ratio-item" style="width:100%;border-bottom:none"><span class="ratio-name">AP Balance</span><span class="ratio-val">${curr(f.ap)}</span></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Priority Actions -->
+  <div class="dash-card">
+    <div class="dash-card-title">Priority Actions <span style="font-size:.72rem;font-weight:400;color:var(--text-3)">AI-recommended</span></div>
+    ${actions.map(a => `
+      <div class="action-item" onclick="showPanel('${a.panel}')">
+        <div class="action-dot" style="background:${a.dot}"></div>
+        <div class="action-text">${a.text}</div>
+      </div>`).join('')}
+  </div>`
 }
 
 let briefingAudio = null, briefingPlaying = false
