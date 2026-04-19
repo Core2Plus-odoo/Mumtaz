@@ -17,11 +17,6 @@ class SaleOrder(models.Model):
             )
 
     def _market_demand_domain(self):
-        """
-        Demand = open inquiries on ANY published listing whose
-        product/category overlaps with this SO's lines.
-        Includes own-company listings so the button shows up from day one.
-        """
         product_ids = self.order_line.mapped("product_id.product_tmpl_id").ids
         categ_ids = self.order_line.mapped("product_id.categ_id").ids
 
@@ -41,7 +36,6 @@ class SaleOrder(models.Model):
         ]
 
     def _so_matching_categ_ids(self, product_categ_ids):
-        """Find marketplace categories whose names overlap with the SO product categories."""
         product_categs = self.env["product.category"].browse(product_categ_ids)
         keywords = [c.name.split("/")[-1].strip() for c in product_categs]
         mkt_categs = self.env["mumtaz.marketplace.category"].search([
@@ -60,31 +54,3 @@ class SaleOrder(models.Model):
             "domain": domain,
             "context": {},
         }
-
-
-class SaleOrderLine(models.Model):
-    _inherit = "sale.order.line"
-
-    marketplace_demand_count = fields.Integer(
-        compute="_compute_line_demand_count",
-        string="Buyers Looking",
-    )
-
-    def _compute_line_demand_count(self):
-        Listing = self.env["mumtaz.marketplace.listing"].sudo()
-        Inquiry = self.env["mumtaz.marketplace.inquiry"].sudo()
-        for line in self:
-            tmpl = line.product_id.product_tmpl_id
-            if not tmpl:
-                line.marketplace_demand_count = 0
-                continue
-            listings = Listing.search([
-                ("state", "=", "published"),
-                "|",
-                ("product_tmpl_id", "=", tmpl.id),
-                ("name", "ilike", tmpl.name.split()[0]),
-            ])
-            line.marketplace_demand_count = Inquiry.search_count([
-                ("listing_id", "in", listings.ids),
-                ("state", "in", ["new", "in_progress"]),
-            ])

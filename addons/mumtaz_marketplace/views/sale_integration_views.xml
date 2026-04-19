@@ -7,8 +7,6 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-
-            <!-- Smart button — always visible so the panel is discoverable -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_market_demand"
                         type="object"
@@ -18,28 +16,7 @@
                            string="Market Demand"/>
                 </button>
             </xpath>
-
         </field>
     </record>
-
-    <!-- ── Sale Order Line: demand count column ── -->
-    <record id="view_sale_order_line_marketplace" model="ir.ui.view">
-        <field name="name">sale.order.line.marketplace</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_order_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='order_line']/list//field[@name='price_subtotal']"
-                   position="after">
-                <field name="marketplace_demand_count"
-                       string="Buyers Seeking"
-                       optional="show"
-                       readonly="1"
-                       widget="badge"
-                       decoration-success="marketplace_demand_count > 0"
-                       decoration-muted="marketplace_demand_count == 0"/>
-            </xpath>
-        </field>
-    </record>
-
 
 </odoo>
