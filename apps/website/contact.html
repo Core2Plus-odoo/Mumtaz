@@ -4,16 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contact | Mumtaz</title>
-  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
+  <meta name="description" content="Contact Mumtaz — speak with product, sales, and implementation experts. Based in Dubai, serving GCC enterprises.">
   <link rel="icon" href="assets/images/favicon.svg">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/animations.css">
+  <style>
+    /* Contact layout */
+    .contact-grid { display:grid; grid-template-columns:1fr 1.2fr; gap:40px; align-items:start; }
+    @media(max-width:768px){ .contact-grid { grid-template-columns:1fr; } }
+
+    /* Contact info */
+    .contact-info-item { display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-bottom:1px solid var(--border); }
+    .contact-info-item:last-child { border-bottom:none; }
+    .contact-icon { width:44px; height:44px; background:rgba(26,115,232,.1); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+    .contact-label { font-size:.72rem; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .contact-value { font-size:.9rem; color:var(--text); font-weight:500; }
+    .contact-sub { font-size:.78rem; color:var(--text-2); margin-top:2px; }
+
+    /* Form */
+    .contact-form { display:flex; flex-direction:column; gap:16px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:520px){ .form-row { grid-template-columns:1fr; } }
+    .form-field { display:flex; flex-direction:column; gap:6px; }
+    .form-field label { font-size:.78rem; font-weight:600; color:var(--text-2); }
+    .form-field input,
+    .form-field select,
+    .form-field textarea { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; font-size:.88rem; color:var(--text); font-family:inherit; transition:border-color .2s; width:100%; box-sizing:border-box; }
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus { outline:none; border-color:var(--primary); }
+    .form-field textarea { resize:vertical; }
+    .form-success { display:none; background:rgba(16,185,129,.08); border:1.5px solid rgba(16,185,129,.3); border-radius:12px; padding:20px; text-align:center; color:var(--green); font-weight:600; }
+
+    /* Office cards */
+    .office-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+    .office-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+    .office-flag { font-size:1.6rem; margin-bottom:8px; }
+    .office-city { font-weight:700; color:var(--text); margin-bottom:4px; }
+    .office-detail { font-size:.8rem; color:var(--text-2); line-height:1.5; }
+
+    /* Map */
+    .map-wrap { border-radius:16px; overflow:hidden; border:1.5px solid var(--border); }
+    .map-wrap iframe { display:block; }
+  </style>
 </head>
 <body>
 <header class="site-header">
   <div class="container nav-wrap">
     <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle>Menu</button>
+    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation">Menu</button>
     <nav class="nav-menu" data-nav-menu>
       <a class="nav-link" href="index.html">Home</a>
       <a class="nav-link" href="platform.html">Platform</a>
@@ -21,7 +60,6 @@
       <a class="nav-link" href="pricing.html">Pricing</a>
       <a class="nav-link" href="docs.html">Docs</a>
       <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link" href="blog.html">Blog</a>
       <a class="nav-link active" href="contact.html">Contact</a>
     </nav>
     <div class="nav-actions">
@@ -30,19 +68,226 @@
     </div>
   </div>
 </header>
+
 <main>
 
-<section class="hero"><div class="container"><div class="section-header reveal"><span class="badge">Contact</span><h1>Talk to product and implementation experts</h1><p>Get deployment advice, pricing consultation, or schedule a custom demo.</p></div><div class="grid-2"><div class="glass card reveal"><h3>Contact Form</h3><form class="form-grid" data-contact-form><input type="text" placeholder="Full name" required><input type="email" placeholder="Work email" required><select required><option value="">Team size</option><option>1-20</option><option>21-100</option><option>100+</option></select><textarea rows="4" placeholder="What are you looking to achieve?" required></textarea><button class="btn btn-primary" type="submit">Send Request</button></form></div><div class="glass card reveal"><h3>Reach Us</h3><p><strong>Email:</strong> hello@mumtaz.digital</p><p><strong>Phone:</strong> +971-000-0000</p><p><strong>Location:</strong> GCC Regional HQ, Dubai</p><iframe title="map" style="width:100%;height:220px;border:0;border-radius:12px" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=55.2%2C25.0%2C55.5%2C25.3&amp;layer=mapnik"></iframe><p class="small">Calendar booking and live chat can be embedded in production analytics stack.</p></div></div></div></section>
+<!-- Hero -->
+<section class="hero" style="padding-bottom:0">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="badge">Contact</span>
+      <h1>Talk to our team</h1>
+      <p>Whether you need a demo, a custom quote, or technical guidance — we respond within one business day.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Contact grid -->
+<section class="section" style="padding-top:40px">
+  <div class="container">
+    <div class="contact-grid">
+
+      <!-- Left: info -->
+      <div class="reveal">
+        <div class="contact-info-item">
+          <div class="contact-icon">✉️</div>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-value">hello@mumtaz.digital</div>
+            <div class="contact-sub">General enquiries & partnership</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">💼</div>
+          <div>
+            <div class="contact-label">Sales</div>
+            <div class="contact-value">sales@mumtaz.digital</div>
+            <div class="contact-sub">Pricing, demos & enterprise plans</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">🛠️</div>
+          <div>
+            <div class="contact-label">Support</div>
+            <div class="contact-value">support@mumtaz.digital</div>
+            <div class="contact-sub">Technical help for existing customers</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">📍</div>
+          <div>
+            <div class="contact-label">Headquarters</div>
+            <div class="contact-value">Dubai, United Arab Emirates</div>
+            <div class="contact-sub">Regional offices across GCC</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-icon">⏰</div>
+          <div>
+            <div class="contact-label">Business Hours</div>
+            <div class="contact-value">Sun – Thu, 9am – 6pm GST</div>
+            <div class="contact-sub">Enterprise 24/7 support available</div>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div class="map-wrap" style="margin-top:28px">
+          <iframe
+            title="Mumtaz HQ – Dubai"
+            width="100%"
+            height="200"
+            loading="lazy"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=55.2%2C25.0%2C55.5%2C25.3&layer=mapnik">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- Right: form -->
+      <div class="glass card reveal" style="padding:32px">
+        <h3 style="margin-bottom:4px">Send us a message</h3>
+        <p class="small" style="color:var(--text-2);margin-bottom:24px">We will reply within one business day.</p>
+
+        <div id="form-success" class="form-success">
+          Thank you — your message has been received. We will be in touch shortly.
+        </div>
+
+        <form class="contact-form" id="contact-form" onsubmit="handleContactSubmit(event)">
+          <div class="form-row">
+            <div class="form-field">
+              <label for="cf-name">Full name *</label>
+              <input type="text" id="cf-name" placeholder="Ahmed Al-Rashid" required>
+            </div>
+            <div class="form-field">
+              <label for="cf-email">Work email *</label>
+              <input type="email" id="cf-email" placeholder="ahmed@company.ae" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label for="cf-company">Company</label>
+              <input type="text" id="cf-company" placeholder="Company name">
+            </div>
+            <div class="form-field">
+              <label for="cf-size">Team size</label>
+              <select id="cf-size">
+                <option value="">Select size</option>
+                <option>1 – 10</option>
+                <option>11 – 50</option>
+                <option>51 – 200</option>
+                <option>200+</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="cf-subject">What can we help with? *</label>
+            <select id="cf-subject" required>
+              <option value="">Select a topic</option>
+              <option>Product demo</option>
+              <option>Pricing & plans</option>
+              <option>Enterprise / custom deployment</option>
+              <option>Technical support</option>
+              <option>Partnership</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="cf-message">Message *</label>
+            <textarea id="cf-message" rows="5" placeholder="Tell us about your business and what you are looking to achieve…" required></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" style="width:100%">Send Message →</button>
+          <p class="small" style="color:var(--text-3);text-align:center">By submitting you agree to our Privacy Policy.</p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Regional offices -->
+<section class="section">
+  <div class="container">
+    <div class="section-header reveal" style="margin-bottom:28px">
+      <h2>Regional presence</h2>
+      <p>Local expertise across the Gulf Cooperation Council.</p>
+    </div>
+    <div class="office-grid">
+      <div class="office-card reveal">
+        <div class="office-flag">🇦🇪</div>
+        <div class="office-city">Dubai, UAE</div>
+        <div class="office-detail">Regional HQ<br>DIFC & Downtown operations<br>Sun – Thu, 9am – 6pm GST</div>
+      </div>
+      <div class="office-card reveal">
+        <div class="office-flag">🇸🇦</div>
+        <div class="office-city">Riyadh, KSA</div>
+        <div class="office-detail">Kingdom operations<br>SAMA compliance centre<br>Sun – Thu, 8am – 5pm AST</div>
+      </div>
+      <div class="office-card reveal">
+        <div class="office-flag">🇶🇦</div>
+        <div class="office-city">Doha, Qatar</div>
+        <div class="office-detail">Enterprise accounts<br>QFC registered entity<br>Sun – Thu, 9am – 6pm AST</div>
+      </div>
+      <div class="office-card reveal">
+        <div class="office-flag">🇰🇼</div>
+        <div class="office-city">Kuwait City</div>
+        <div class="office-detail">Gulf coverage<br>Partner network<br>By appointment</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Book demo strip -->
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <div class="glass card reveal" style="text-align:center;padding:48px 32px;background:linear-gradient(135deg,rgba(26,115,232,.06),rgba(16,185,129,.04))">
+      <h2 style="margin-bottom:10px">Prefer a live walkthrough?</h2>
+      <p style="color:var(--text-2);max-width:480px;margin:0 auto 24px">Book a 30-minute product demo with one of our solutions engineers. We will tailor it to your industry and company size.</p>
+      <a class="btn btn-primary" href="demo.html">Book a Demo →</a>
+    </div>
+  </div>
+</section>
+
 </main>
+
 <footer class="footer">
   <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
-    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
-    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
-    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+    <div>
+      <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
+      <p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p>
+    </div>
+    <div class="footer-col">
+      <strong>Product</strong>
+      <a href="platform.html">Platform</a>
+      <a href="solutions.html">Solutions</a>
+      <a href="pricing.html">Pricing</a>
+    </div>
+    <div class="footer-col">
+      <strong>Resources</strong>
+      <a href="docs.html">Documentation</a>
+      <a href="blog.html">Blog</a>
+      <a href="demo.html">Book Demo</a>
+    </div>
+    <div class="footer-col">
+      <strong>Company</strong>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="https://app.mumtaz.digital">Sign In</a>
+    </div>
+  </div>
+  <div class="container" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+    <p class="small" style="color:var(--text-3)">© 2026 Mumtaz Technologies. All rights reserved.</p>
+    <p class="small" style="color:var(--text-3)">Dubai, United Arab Emirates</p>
   </div>
 </footer>
+
 <script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
+<script>
+function handleContactSubmit(e) {
+  e.preventDefault();
+  // Show success state (in production, POST to API)
+  document.getElementById('contact-form').style.display = 'none';
+  document.getElementById('form-success').style.display = 'block';
+  window.scrollTo({ top: document.getElementById('form-success').offsetTop - 80, behavior: 'smooth' });
+}
+</script>
 </body>
 </html>

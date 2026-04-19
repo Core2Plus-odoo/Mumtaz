@@ -67,6 +67,17 @@ class MumtazMarketplaceListing(models.Model):
     published_date = fields.Datetime(readonly=True)
     inquiry_count = fields.Integer(compute="_compute_inquiry_count")
     tag_ids = fields.Many2many("mumtaz.marketplace.tag", string="Tags")
+
+    # ── Odoo product link ────────────────────────────────────────────
+    product_tmpl_id = fields.Many2one(
+        "product.template",
+        string="Odoo Product",
+        ondelete="set null",
+        index=True,
+        help="Link this listing to an Odoo product for PO/SO marketplace panels.",
+    )
+    min_order_qty = fields.Float("Min. Order Qty", default=1.0)
+    lead_time_days = fields.Integer("Lead Time (days)", default=7)
     marketplace_feature_enabled = fields.Boolean(compute="_compute_marketplace_feature_access")
     marketplace_feature_note = fields.Char(compute="_compute_marketplace_feature_access")
 

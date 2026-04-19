@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Purchase Order: smart button + alternatives button ── -->
+    <record id="view_purchase_order_marketplace" model="ir.ui.view">
+        <field name="name">purchase.order.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart button -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_marketplace_alternatives"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-search"
+                        invisible="marketplace_alt_count == 0">
+                    <field name="marketplace_alt_count" widget="statinfo"
+                           string="Mkt. Vendors"/>
+                </button>
+            </xpath>
+
+            <!-- Marketplace RFQ button in header -->
+            <xpath expr="//button[@name='button_confirm']" position="after">
+                <button name="action_marketplace_send_rfq"
+                        string="Send RFQ to Marketplace"
+                        type="object"
+                        class="btn btn-secondary"
+                        icon="fa-paper-plane"
+                        invisible="state not in ('draft','sent')"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ── PO Line: alternatives column ── -->
+    <record id="view_purchase_order_line_marketplace" model="ir.ui.view">
+        <field name="name">purchase.order.line.marketplace</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list//field[@name='price_subtotal']"
+                   position="after">
+                <field name="marketplace_listing_count"
+                       string="Mkt. Alternatives"
+                       optional="show"
+                       readonly="1"
+                       widget="badge"
+                       decoration-warning="marketplace_listing_count > 0"
+                       decoration-muted="marketplace_listing_count == 0"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── RFQ Wizard ── -->
+    <record id="view_marketplace_po_rfq_wizard" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.po.rfq.wizard.form</field>
+        <field name="model">mumtaz.marketplace.po.rfq.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send RFQ to Marketplace Supplier">
+                <sheet>
+                    <group string="Select Supplier">
+                        <field name="listing_id"
+                               domain="[('state','=','published'),('listing_type','=','product')]"
+                               options="{'no_create': True}"/>
+                    </group>
+                    <group string="Your Contact Details" col="2">
+                        <field name="inquirer_name"/>
+                        <field name="inquirer_email"/>
+                        <field name="inquirer_company"/>
+                        <field name="inquirer_phone"/>
+                    </group>
+                    <group string="Requirements">
+                        <field name="message" nolabel="1"
+                               placeholder="Describe quantities, specs, delivery location, and any other requirements…"
+                               widget="text"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_send" string="Send RFQ" type="object"
+                            class="btn btn-primary" icon="fa-paper-plane"/>
+                    <button string="Cancel" class="btn btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_marketplace_po_rfq_wizard" model="ir.actions.act_window">
+        <field name="name">Send RFQ to Marketplace</field>
+        <field name="res_model">mumtaz.marketplace.po.rfq.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

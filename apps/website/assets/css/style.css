@@ -467,12 +467,13 @@ h4 { font-size: 1rem; font-weight: 600; }
 .footer-legal a:hover { color: var(--text); }
 
 /* ── Animations ─────────────────────────────────────────────────── */
-.reveal {
+/* JS adds .js-ready to body → only then hide .reveal elements */
+.js-ready .reveal {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity .6s ease, transform .6s ease;
 }
-.reveal.in-view { opacity: 1; transform: none; }
+.js-ready .reveal.in-view { opacity: 1; transform: none; }
 
 /* ── Divider line ───────────────────────────────────────────────── */
 .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
