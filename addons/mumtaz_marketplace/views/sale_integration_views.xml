@@ -8,13 +8,12 @@
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
 
-            <!-- Smart button -->
+            <!-- Smart button — always visible so the panel is discoverable -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_market_demand"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-signal"
-                        invisible="marketplace_demand_count == 0">
+                        icon="fa-signal">
                     <field name="marketplace_demand_count" widget="statinfo"
                            string="Market Demand"/>
                 </button>

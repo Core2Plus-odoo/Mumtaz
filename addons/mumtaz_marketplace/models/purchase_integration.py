@@ -10,8 +10,9 @@ class PurchaseOrder(models.Model):
     )
 
     def _compute_marketplace_alt_count(self):
+        Listing = self.env["mumtaz.marketplace.listing"].sudo()
         for order in self:
-            order.marketplace_alt_count = self.env["mumtaz.marketplace.listing"].search_count(
+            order.marketplace_alt_count = Listing.search_count(
                 order._marketplace_alternatives_domain()
             )
 

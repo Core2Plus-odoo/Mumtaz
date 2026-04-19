@@ -13,8 +13,7 @@
                 <button name="action_view_marketplace_alternatives"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-search"
-                        invisible="marketplace_alt_count == 0">
+                        icon="fa-search">
                     <field name="marketplace_alt_count" widget="statinfo"
                            string="Mkt. Vendors"/>
                 </button>

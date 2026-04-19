@@ -10,31 +10,31 @@ class SaleOrder(models.Model):
     )
 
     def _compute_marketplace_demand_count(self):
+        Inquiry = self.env["mumtaz.marketplace.inquiry"].sudo()
         for order in self:
-            order.marketplace_demand_count = self.env["mumtaz.marketplace.inquiry"].search_count(
+            order.marketplace_demand_count = Inquiry.search_count(
                 order._market_demand_domain()
             )
 
     def _market_demand_domain(self):
         """
-        Demand = open inquiries on listings from OTHER companies
-        whose product/category overlaps with this SO's lines.
+        Demand = open inquiries on ANY published listing whose
+        product/category overlaps with this SO's lines.
+        Includes own-company listings so the button shows up from day one.
         """
         product_ids = self.order_line.mapped("product_id.product_tmpl_id").ids
         categ_ids = self.order_line.mapped("product_id.categ_id").ids
 
-        listing_domain = [
-            ("state", "=", "published"),
-            ("company_id", "!=", self.env.company.id),
-        ]
+        listing_domain = [("state", "=", "published")]
         if product_ids:
+            mkt_categ_ids = self._so_matching_categ_ids(categ_ids)
             listing_domain += [
                 "|",
                 ("product_tmpl_id", "in", product_ids),
-                ("category_id", "in", self._so_matching_categ_ids(categ_ids)),
+                ("category_id", "in", mkt_categ_ids),
             ]
 
-        matching_listings = self.env["mumtaz.marketplace.listing"].search(listing_domain)
+        matching_listings = self.env["mumtaz.marketplace.listing"].sudo().search(listing_domain)
         return [
             ("listing_id", "in", matching_listings.ids),
             ("state", "in", ["new", "in_progress"]),
@@ -71,19 +71,20 @@ class SaleOrderLine(models.Model):
     )
 
     def _compute_line_demand_count(self):
+        Listing = self.env["mumtaz.marketplace.listing"].sudo()
+        Inquiry = self.env["mumtaz.marketplace.inquiry"].sudo()
         for line in self:
             tmpl = line.product_id.product_tmpl_id
             if not tmpl:
                 line.marketplace_demand_count = 0
                 continue
-            listings = self.env["mumtaz.marketplace.listing"].search([
+            listings = Listing.search([
                 ("state", "=", "published"),
-                ("company_id", "!=", line.company_id.id),
                 "|",
                 ("product_tmpl_id", "=", tmpl.id),
                 ("name", "ilike", tmpl.name.split()[0]),
             ])
-            line.marketplace_demand_count = self.env["mumtaz.marketplace.inquiry"].search_count([
+            line.marketplace_demand_count = Inquiry.search_count([
                 ("listing_id", "in", listings.ids),
                 ("state", "in", ["new", "in_progress"]),
             ])
