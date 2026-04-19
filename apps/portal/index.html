@@ -1666,8 +1666,10 @@ let mwStep = 1
 const mwData = {}
 
 function openMktWizard(){
+  const el = document.getElementById('mkt-wizard')
+  if(!el){ window.open('https://marketplace.mumtaz.digital','_blank'); return }
   mwStep = 1
-  document.getElementById('mkt-wizard').classList.add('open')
+  el.classList.add('open')
   mwRender()
 }
 
