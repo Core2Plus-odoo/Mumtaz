@@ -1,0 +1,277 @@
+/* =============================================================
+   Mumtaz Platform — Login / Auth Page
+   Split-screen: dark brand panel left + form right
+============================================================= */
+
+/* ── Reset Odoo login defaults ─────────────────────────────── */
+body.o_login_page {
+    margin: 0;
+    padding: 0;
+    background: #0f172a !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+}
+
+/* ── Full-screen split wrapper ─────────────────────────────── */
+.mumtaz-login-wrap {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* ── Left brand panel ──────────────────────────────────────── */
+.mumtaz-login-left {
+    width: 420px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, #0c1527 0%, #0f2040 50%, #0a1930 100%);
+    padding: 48px 44px;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.mumtaz-login-left::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(26,115,232,.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.mumtaz-login-left::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -60px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(16,185,129,.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Brand mark */
+.mumtaz-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 56px;
+    position: relative;
+    z-index: 1;
+}
+
+.mumtaz-brand-icon {
+    width: 42px;
+    height: 42px;
+    background: #1a73e8;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(26,115,232,.4);
+}
+
+.mumtaz-brand-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: .02em;
+}
+
+.mumtaz-brand-tagline {
+    font-size: .72rem;
+    color: rgba(255,255,255,.5);
+    letter-spacing: .03em;
+    margin-top: 1px;
+}
+
+/* Headline */
+.mumtaz-login-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.mumtaz-login-subtitle {
+    font-size: .9rem;
+    color: rgba(255,255,255,.65);
+    line-height: 1.7;
+    margin-bottom: 44px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Feature list */
+.mumtaz-features {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.mumtaz-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.mumtaz-feature-icon {
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    flex-shrink: 0;
+}
+
+.mumtaz-feature-text strong {
+    display: block;
+    font-size: .84rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: rgba(255,255,255,.92);
+}
+
+.mumtaz-feature-text span {
+    font-size: .76rem;
+    color: rgba(255,255,255,.5);
+    line-height: 1.5;
+}
+
+.mumtaz-login-footer {
+    font-size: .7rem;
+    color: rgba(255,255,255,.28);
+    margin-top: 36px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Right form panel ──────────────────────────────────────── */
+.mumtaz-login-right {
+    flex: 1;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 40px;
+}
+
+.mumtaz-login-form-wrap {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Override Odoo's own login card styles */
+.o_login_form {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.o_login_form h5.card-title,
+.o_login_form .o_login_auth_text {
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin-bottom: 6px !important;
+}
+
+.o_login_form .o_login_auth_subtitle,
+.o_login_form p.text-muted {
+    font-size: .85rem !important;
+    color: #64748b !important;
+    margin-bottom: 28px !important;
+}
+
+/* Form inputs */
+.o_login_form .form-control,
+.o_login_form input[type="text"],
+.o_login_form input[type="email"],
+.o_login_form input[type="password"] {
+    background: #f8fafc !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 11px 14px !important;
+    font-size: .88rem !important;
+    color: #0f172a !important;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+.o_login_form .form-control:focus,
+.o_login_form input:focus {
+    border-color: #1a73e8 !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 3px rgba(26,115,232,.12) !important;
+    outline: none !important;
+}
+
+/* Labels */
+.o_login_form label {
+    font-size: .78rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    margin-bottom: 5px !important;
+}
+
+/* Submit button */
+.o_login_form .btn-primary,
+.o_login_form button[type="submit"],
+.o_login_form .btn.btn-primary {
+    background: #1a73e8 !important;
+    border-color: #1a73e8 !important;
+    border-radius: 10px !important;
+    padding: 12px !important;
+    font-size: .9rem !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    transition: background .2s !important;
+}
+
+.o_login_form .btn-primary:hover {
+    background: #0d5bc5 !important;
+    border-color: #0d5bc5 !important;
+}
+
+/* Links (forgot password etc.) */
+.o_login_form a {
+    color: #1a73e8 !important;
+    font-weight: 500;
+}
+
+/* ── Responsive: stack on mobile ───────────────────────────── */
+@media (max-width: 768px) {
+    .mumtaz-login-wrap {
+        flex-direction: column;
+    }
+    .mumtaz-login-left {
+        width: 100%;
+        padding: 32px 28px;
+    }
+    .mumtaz-features { display: none; }
+    .mumtaz-login-title { font-size: 1.4rem; margin-bottom: 8px; }
+    .mumtaz-login-subtitle { margin-bottom: 0; }
+    .mumtaz-login-right { padding: 32px 24px; }
+}

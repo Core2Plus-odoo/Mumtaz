@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Favicon ──────────────────────────────────────────────── -->
+    <template id="mumtaz_favicon" inherit_id="web.layout" name="Mumtaz Favicon">
+        <xpath expr="//link[@rel='shortcut icon']" position="replace">
+            <link rel="shortcut icon"
+                  href="/mumtaz_theme/static/src/img/favicon.svg"
+                  type="image/svg+xml"/>
+        </xpath>
+    </template>
+
+    <!-- ── Login page ────────────────────────────────────────────── -->
+    <template id="mumtaz_login_page" inherit_id="web.login" name="Mumtaz Login">
+
+        <!-- Replace the default body/form wrapper with our split layout -->
+        <xpath expr="//div[hasclass('o_login_page')]" position="replace">
+            <div class="o_login_page">
+                <div class="mumtaz-login-wrap">
+
+                    <!-- ── Left brand panel ── -->
+                    <div class="mumtaz-login-left">
+                        <div class="mumtaz-brand">
+                            <div class="mumtaz-brand-icon">M</div>
+                            <div>
+                                <div class="mumtaz-brand-name">Mumtaz</div>
+                                <div class="mumtaz-brand-tagline">AI-Powered ERP Platform</div>
+                            </div>
+                        </div>
+
+                        <div class="mumtaz-login-title">
+                            Your business,<br/>fully automated.
+                        </div>
+                        <p class="mumtaz-login-subtitle">
+                            AI-driven ERP, embedded finance, and B2B marketplace —
+                            built for GCC enterprises.
+                        </p>
+
+                        <div class="mumtaz-features">
+                            <div class="mumtaz-feature">
+                                <div class="mumtaz-feature-icon">🤖</div>
+                                <div class="mumtaz-feature-text">
+                                    <strong>ZAKI AI CFO</strong>
+                                    <span>Natural language financial insights and forecasting</span>
+                                </div>
+                            </div>
+                            <div class="mumtaz-feature">
+                                <div class="mumtaz-feature-icon">📦</div>
+                                <div class="mumtaz-feature-text">
+                                    <strong>B2B Marketplace</strong>
+                                    <span>Trade with verified GCC suppliers directly from ERP</span>
+                                </div>
+                            </div>
+                            <div class="mumtaz-feature">
+                                <div class="mumtaz-feature-icon">💳</div>
+                                <div class="mumtaz-feature-text">
+                                    <strong>Embedded Finance</strong>
+                                    <span>Payments, credit, and trade finance in one platform</span>
+                                </div>
+                            </div>
+                            <div class="mumtaz-feature">
+                                <div class="mumtaz-feature-icon">🏛️</div>
+                                <div class="mumtaz-feature-text">
+                                    <strong>GCC Compliant</strong>
+                                    <span>UAE VAT, KSA ZATCA, SAMA, and CBUAE ready</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mumtaz-login-footer">
+                            © 2026 Mumtaz Technologies · Dubai, UAE
+                        </div>
+                    </div>
+
+                    <!-- ── Right form panel ── -->
+                    <div class="mumtaz-login-right">
+                        <div class="mumtaz-login-form-wrap">
+                            <!-- Inject the original Odoo login form here -->
+                            <t t-call="web.login_form"/>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </xpath>
+
+    </template>
+
+    <!-- ── Backend navbar: replace Odoo logo with Mumtaz logo ─── -->
+    <template id="mumtaz_navbar_logo" inherit_id="web.navbar" name="Mumtaz Navbar Logo">
+        <xpath expr="//img[hasclass('o_brand_logo')]" position="replace">
+            <img class="o_brand_logo"
+                 src="/mumtaz_theme/static/src/img/mumtaz_logo.svg"
+                 alt="Mumtaz"
+                 style="height:28px;width:auto;"/>
+        </xpath>
+    </template>
+
+</odoo>
