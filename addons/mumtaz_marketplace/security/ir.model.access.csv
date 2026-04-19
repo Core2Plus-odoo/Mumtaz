@@ -11,3 +11,4 @@ access_mumtaz_marketplace_category_system,mumtaz_marketplace_category system,mod
 access_mumtaz_marketplace_inquiry_system,mumtaz_marketplace_inquiry system,model_mumtaz_marketplace_inquiry,base.group_system,1,1,1,1
 access_mumtaz_marketplace_listing_system,mumtaz_marketplace_listing system,model_mumtaz_marketplace_listing,base.group_system,1,1,1,1
 access_mumtaz_marketplace_tag_system,mumtaz_marketplace_tag system,model_mumtaz_marketplace_tag,base.group_system,1,1,1,1
+access_marketplace_po_rfq_wizard_user,marketplace.po.rfq.wizard user,model_mumtaz_marketplace_po_rfq_wizard,base.group_user,1,1,1,1

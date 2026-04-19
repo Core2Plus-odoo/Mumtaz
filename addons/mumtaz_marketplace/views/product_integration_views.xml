@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Product Template: smart button + Marketplace tab ── -->
+    <record id="view_product_template_marketplace_form" model="ir.ui.view">
+        <field name="name">product.template.marketplace.form</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+
+            <!-- Smart button -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_marketplace_listings"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-store"
+                        invisible="marketplace_listing_count == 0">
+                    <field name="marketplace_listing_count" widget="statinfo" string="On Marketplace"/>
+                </button>
+            </xpath>
+
+            <!-- Publish button in header -->
+            <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <div class="alert alert-success mb-3 d-flex align-items-center justify-content-between"
+                     invisible="not marketplace_published"
+                     role="status">
+                    <span><i class="fa fa-check-circle me-2"/>This product is <strong>live on the Mumtaz Marketplace</strong>.</span>
+                    <button name="action_view_marketplace_listings" type="object"
+                            class="btn btn-sm btn-success">View Listings</button>
+                </div>
+            </xpath>
+
+            <!-- Marketplace tab -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Marketplace" name="marketplace_tab">
+                    <group>
+                        <group string="Marketplace Status">
+                            <field name="marketplace_published" readonly="1"/>
+                            <field name="marketplace_listing_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <div class="o_field_widget mb-3" invisible="marketplace_listing_count > 0">
+                        <div class="alert alert-info" role="status">
+                            <i class="fa fa-info-circle me-2"/>
+                            This product is not yet listed on the Mumtaz Marketplace.
+                            Click <strong>Publish to Marketplace</strong> to create a listing.
+                        </div>
+                        <button name="action_publish_to_marketplace"
+                                string="Publish to Marketplace"
+                                type="object"
+                                class="btn btn-primary mt-2"
+                                icon="fa-upload"/>
+                    </div>
+
+                    <field name="marketplace_listing_ids"
+                           invisible="marketplace_listing_count == 0"
+                           mode="list" nolabel="1">
+                        <list string="Listings" editable="bottom">
+                            <field name="name"/>
+                            <field name="category_id"/>
+                            <field name="price" widget="monetary"/>
+                            <field name="price_type"/>
+                            <field name="min_order_qty"/>
+                            <field name="lead_time_days" string="Lead Time (days)"/>
+                            <field name="inquiry_count" string="Inquiries" readonly="1"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'published'"
+                                   decoration-warning="state == 'draft'"
+                                   decoration-muted="state == 'closed'"/>
+                        </list>
+                    </field>
+
+                    <div invisible="marketplace_listing_count == 0" class="mt-2">
+                        <button name="action_publish_to_marketplace"
+                                string="Add Another Listing"
+                                type="object"
+                                class="btn btn-secondary btn-sm"
+                                icon="fa-plus"/>
+                    </div>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ── Listing form: show linked Odoo product ── -->
+    <record id="view_marketplace_listing_product_link" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.listing.product.link</field>
+        <field name="model">mumtaz.marketplace.listing</field>
+        <field name="inherit_id" ref="mumtaz_marketplace.view_mumtaz_marketplace_listing_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_title')]" position="after">
+                <group string="Product &amp; Fulfilment" col="2">
+                    <field name="product_tmpl_id"
+                           options="{'no_create': True}"
+                           placeholder="Link to an Odoo product (optional)"/>
+                    <field name="min_order_qty"/>
+                    <field name="lead_time_days" string="Lead Time (days)"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

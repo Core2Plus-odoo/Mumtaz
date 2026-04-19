@@ -5,7 +5,7 @@
     "category": "Mumtaz Platform",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["mumtaz_sme_profile", "mail", "mumtaz_control_plane"],
+    "depends": ["mumtaz_sme_profile", "mail", "mumtaz_control_plane", "purchase", "sale"],
     "data": [
         "security/mumtaz_marketplace_security.xml",
         "security/ir.model.access.csv",
@@ -14,6 +14,9 @@
         "views/mumtaz_marketplace_listing_views.xml",
         "views/mumtaz_marketplace_inquiry_views.xml",
         "views/mumtaz_marketplace_category_views.xml",
+        "views/product_integration_views.xml",
+        "views/purchase_integration_views.xml",
+        "views/sale_integration_views.xml",
         "views/mumtaz_menus.xml",
     ],
     "installable": True,
