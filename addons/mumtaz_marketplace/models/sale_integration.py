@@ -58,7 +58,7 @@ class SaleOrder(models.Model):
             "res_model": "mumtaz.marketplace.inquiry",
             "view_mode": "list,form",
             "domain": domain,
-            "context": {"search_default_group_listing": 1},
+            "context": {},
         }
 
 

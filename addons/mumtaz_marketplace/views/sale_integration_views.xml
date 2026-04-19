@@ -41,24 +41,5 @@
         </field>
     </record>
 
-    <!-- ── Inquiry search: group by listing ── -->
-    <record id="view_marketplace_inquiry_demand_search" model="ir.ui.view">
-        <field name="name">mumtaz.marketplace.inquiry.demand.search</field>
-        <field name="model">mumtaz.marketplace.inquiry</field>
-        <field name="arch" type="xml">
-            <search string="Market Demand">
-                <field name="listing_id" string="Listing"/>
-                <field name="inquirer_company" string="Buyer Company"/>
-                <filter name="open_only" string="Open Inquiries"
-                        domain="[('state','in',['new','in_progress'])]"/>
-                <group expand="1" string="Group By">
-                    <filter name="group_listing" string="Listing"
-                            context="{'group_by': 'listing_id'}"/>
-                    <filter name="group_state" string="Status"
-                            context="{'group_by': 'state'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
 
 </odoo>
