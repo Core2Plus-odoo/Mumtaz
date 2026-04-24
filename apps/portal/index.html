@@ -602,6 +602,7 @@ dashboard: `
   <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">—</div><div class="stat-sub" id="d-mrr-sub">14-day free trial active</div></div>
   <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">0</div><div class="stat-sub"><span class="badge badge-green">All clear</span></div></div>
 </div>
+<div id="mkt-activate-banner"></div>
 <div class="grid2" style="margin-bottom:20px">
   <div class="card">
     <div class="card-title">Your Products <a class="btn btn-ghost btn-sm" onclick="nav('products')">Manage →</a></div>
@@ -939,15 +940,30 @@ function renderDashboard(){
   document.getElementById('d-mrr').textContent = '$' + plan.price + '/mo'
   document.getElementById('u-used').textContent = P.seatsUsed + ' / ' + P.seats
   document.getElementById('u-avail').textContent = (P.seats - P.seatsUsed) + ' seats available'
+  // Marketplace activation banner
+  const mktBanner = document.getElementById('mkt-activate-banner')
+  if(mktBanner){
+    const mktOn = !!(P.products && P.products.marketplace)
+    mktBanner.innerHTML = mktOn ? '' : `
+    <div style="background:linear-gradient(135deg,rgba(20,184,166,.12) 0%,rgba(99,102,241,.1) 100%);border:1.5px solid rgba(20,184,166,.3);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:18px;margin-bottom:20px;flex-wrap:wrap">
+      <div style="font-size:2rem">🛒</div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:3px">Activate B2B Marketplace</div>
+        <div style="font-size:.8rem;color:var(--text-2);line-height:1.5">Connect with verified GCC suppliers and buyers. List your products, send RFQs, and grow your trade network — all from your ERP.</div>
+      </div>
+      <button onclick="openMktWizard()" class="btn btn-grad btn-sm" style="background:linear-gradient(135deg,#14b8a6,#6366f1);border:none;white-space:nowrap;padding:10px 20px;font-size:.85rem">Enable Marketplace →</button>
+    </div>`
+  }
   // Products — dynamic from PRODUCTS_CATALOG + P.products
   document.getElementById('product-list').innerHTML = (typeof PRODUCTS_CATALOG !== 'undefined' ? PRODUCTS_CATALOG : []).map(prod=>{
     const on = !!(P.products && P.products[prod.id])
+    const addAction = prod.id === 'marketplace' ? 'openMktWizard()' : prod.id === 'zaki' ? 'openZakiWizard()' : "nav('products')"
     return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
       <span style="font-size:1.2rem">${prod.icon}</span>
       <span style="font-size:.85rem;font-weight:500;flex:1">${prod.name}</span>
       ${on
         ? `<a href="${prod.url}" target="_blank" class="btn btn-outline btn-sm">Open →</a>`
-        : `<button onclick="nav('products')" class="btn btn-ghost btn-sm" style="color:var(--indigo)">+ Add</button>`}
+        : `<button onclick="${addAction}" class="btn btn-ghost btn-sm" style="color:var(--indigo)">+ Enable</button>`}
     </div>`
   }).join('')
   // Update products sidebar badge
@@ -963,12 +979,16 @@ function renderDashboard(){
       <span style="width:7px;height:7px;border-radius:50%;background:${u.status==='active'?'var(--green)':'var(--border-2)'}"></span>${u.name.split(' ')[0]}
     </span>`).join('')
   // Quick actions
+  const mktEnabled = !!(P.products && P.products.marketplace)
   document.getElementById('quick-actions').innerHTML = [
     {icon:'➕',label:'Add a user',        fn:"nav('users')"},
     {icon:'🧩',label:'Enable a module',   fn:"nav('modules')"},
     {icon:'🌐',label:'Set up white label',fn:"nav('whitelabel')"},
     {icon:'🤖',label:'Open ZAKI CFO',     fn:"window.open('https://zaki.mumtaz.digital','_blank')"},
     {icon:'📊',label:'Open ERP',          fn:"window.open('https://erp.mumtaz.digital','_blank')"},
+    mktEnabled
+      ? {icon:'🛒',label:'Open Marketplace', fn:"window.open('https://marketplace.mumtaz.digital','_blank')"}
+      : {icon:'🛒',label:'Enable Marketplace', fn:'openMktWizard()'},
   ].map(a=>`<button onclick="${a.fn}" class="btn btn-outline" style="text-align:left;display:flex;align-items:center;gap:8px;padding:9px 14px">
     <span>${a.icon}</span><span style="font-size:.83rem">${a.label}</span>
   </button>`).join('')
@@ -1075,8 +1095,16 @@ function renderProducts(){
 function toggleProduct(id){
   if(!P.products) P.products = {}
   const enabling = !P.products[id]
-  if(enabling && id === 'zaki'){       openZakiWizard(); return }
-  if(enabling && id === 'marketplace'){ openMktWizard(); return }
+  if(enabling && id === 'zaki'){ openZakiWizard(); return }
+  if(enabling && id === 'marketplace'){
+    // Try wizard first; if not available redirect directly
+    const wizEl = document.getElementById('mkt-wizard')
+    if(wizEl){ openMktWizard(); return }
+    P.products.marketplace = true; save(); renderProducts(); renderDashboard()
+    showToast('B2B Marketplace enabled!')
+    setTimeout(()=>window.open('https://marketplace.mumtaz.digital','_blank'),400)
+    return
+  }
   P.products[id] = enabling
   save()
   renderProducts()
@@ -1630,8 +1658,41 @@ function bootApp(){
 }
 
 load()
-if(TOKEN && P.user.email){ bootApp() }
-else { document.getElementById('auth').style.display='flex' }
+// Auto-boot without auth — portal works from localStorage state
+if(!P.user.name) P.user.name = 'Admin'
+if(!P.user.email) P.user.email = 'admin@' + (P.user.company || 'mumtaz').toLowerCase().replace(/\s+/g,'') + '.com'
+bootApp()
+// Try to sync real module states from Odoo in background
+syncOdooModules()
+
+// ── Odoo live sync ────────────────────────────────────
+async function syncOdooModules(){
+  try {
+    const res = await fetch('/odoo/web/dataset/call_kw', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        jsonrpc:'2.0', method:'call', id:1,
+        params:{
+          model:'ir.module.module',
+          method:'search_read',
+          args:[[['state','=','installed']]],
+          kwargs:{fields:['name','state'],limit:200,context:{}}
+        }
+      })
+    })
+    const data = await res.json()
+    if(data.result && Array.isArray(data.result)){
+      const installed = new Set(data.result.map(m=>m.name))
+      let changed = false
+      MODULES_DATA.forEach(m=>{
+        const live = installed.has(m.id)
+        if(P.modules[m.id] !== live){ P.modules[m.id] = live; changed = true }
+      })
+      if(changed){ save(); renderModGrid(); renderDashboard() }
+    }
+  } catch(e){ /* Odoo unreachable or not logged in — keep localStorage state */ }
+}
 
 // ── Marketplace Wizard ────────────────────────────────
 const MW_STEPS = [
@@ -1646,8 +1707,10 @@ let mwStep = 1
 const mwData = {}
 
 function openMktWizard(){
+  const el = document.getElementById('mkt-wizard')
+  if(!el){ window.open('https://marketplace.mumtaz.digital','_blank'); return }
   mwStep = 1
-  document.getElementById('mkt-wizard').classList.add('open')
+  el.classList.add('open')
   mwRender()
 }
 

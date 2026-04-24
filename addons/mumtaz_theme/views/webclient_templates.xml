@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Favicon ──────────────────────────────────────────────── -->
+    <template id="mumtaz_favicon" inherit_id="web.layout" name="Mumtaz Favicon">
+        <xpath expr="//link[@rel='shortcut icon']" position="replace">
+            <link rel="shortcut icon"
+                  href="/mumtaz_theme/static/src/img/favicon.svg"
+                  type="image/svg+xml"/>
+        </xpath>
+    </template>
+
+</odoo>

@@ -1,0 +1,195 @@
+/* =============================================================
+   Mumtaz Platform — Odoo Backend Theme
+   Matches: app.mumtaz.digital portal + mumtaz.digital brand
+============================================================= */
+
+/* ── Brand tokens ──────────────────────────────────────────── */
+:root {
+    --mumtaz-blue:    #1a73e8;
+    --mumtaz-blue-dk: #0d5bc5;
+    --mumtaz-green:   #10b981;
+    --mumtaz-dark:    #0f172a;
+    --mumtaz-surface: #1e293b;
+    --mumtaz-border:  rgba(255,255,255,0.07);
+    --mumtaz-text:    #f8fafc;
+    --mumtaz-muted:   #94a3b8;
+
+    /* Override Odoo primary */
+    --o-brand-primary:   #1a73e8;
+    --o-brand-secondary: #0d5bc5;
+}
+
+/* ── Top Navigation Bar ────────────────────────────────────── */
+.o_main_navbar {
+    background: var(--mumtaz-dark) !important;
+    border-bottom: 1px solid var(--mumtaz-border) !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,.35) !important;
+    color: var(--mumtaz-text) !important;
+}
+
+/* All navbar links and icons */
+.o_main_navbar a,
+.o_main_navbar button,
+.o_main_navbar .o_dropdown_title,
+.o_main_navbar .o_menu_brand,
+.o_main_navbar .o_user_menu .o_dropdown_title {
+    color: rgba(255,255,255,.88) !important;
+}
+
+.o_main_navbar a:hover,
+.o_main_navbar button:hover {
+    color: #fff !important;
+    background: rgba(255,255,255,.08) !important;
+}
+
+/* App name in navbar */
+.o_main_navbar .o_menu_brand {
+    font-weight: 700 !important;
+    letter-spacing: .02em;
+}
+
+/* Active app section underline */
+.o_main_navbar .o_menu_sections .o_nav_entry.o_focused,
+.o_main_navbar .o_menu_sections > .o_dropdown.show > .o_dropdown_button {
+    color: #fff !important;
+    border-bottom: 2px solid var(--mumtaz-blue) !important;
+}
+
+/* Debug mode badge */
+.o_main_navbar .o_debug_manager .btn {
+    border-color: rgba(255,255,255,.25) !important;
+    color: rgba(255,255,255,.7) !important;
+}
+
+/* ── Home / App Menu (grid) ────────────────────────────────── */
+.o_home_menu {
+    background: linear-gradient(160deg, #0f172a 0%, #1a2744 60%, #0f2040 100%) !important;
+}
+
+.o_home_menu .o_app:hover .o_app_icon,
+.o_home_menu .o_app.o_focused .o_app_icon {
+    box-shadow: 0 0 0 3px var(--mumtaz-blue) !important;
+}
+
+.o_home_menu .o_app .o_caption {
+    color: rgba(255,255,255,.85) !important;
+    font-weight: 500;
+}
+
+.o_home_menu .o_search_hidden {
+    background: rgba(255,255,255,.08) !important;
+    border-color: rgba(255,255,255,.15) !important;
+    color: #fff !important;
+}
+
+/* ── Primary Buttons ───────────────────────────────────────── */
+.btn-primary {
+    background-color: var(--mumtaz-blue) !important;
+    border-color:     var(--mumtaz-blue) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--mumtaz-blue-dk) !important;
+    border-color:     var(--mumtaz-blue-dk) !important;
+}
+
+/* ── Links ─────────────────────────────────────────────────── */
+a { color: var(--mumtaz-blue); }
+a:hover { color: var(--mumtaz-blue-dk); }
+
+/* ── Form / List focus states ──────────────────────────────── */
+.o_field_widget input:focus,
+.o_field_widget textarea:focus,
+.form-control:focus,
+.o_input:focus {
+    border-color: var(--mumtaz-blue) !important;
+    box-shadow: 0 0 0 3px rgba(26,115,232,.14) !important;
+}
+
+/* ── Status bar buttons ────────────────────────────────────── */
+.o_statusbar_buttons .btn-primary,
+.o_form_buttons_view .btn-primary {
+    background: var(--mumtaz-blue) !important;
+    border-color: var(--mumtaz-blue) !important;
+}
+
+/* ── Stat buttons ──────────────────────────────────────────── */
+.oe_stat_button:hover {
+    color: var(--mumtaz-blue) !important;
+}
+
+/* ── Kanban header ─────────────────────────────────────────── */
+.o_kanban_header .o_kanban_add_column {
+    color: var(--mumtaz-blue) !important;
+}
+
+/* ── Search bar ────────────────────────────────────────────── */
+.o_searchview_facet {
+    background: rgba(26,115,232,.1) !important;
+    border-color: rgba(26,115,232,.3) !important;
+    color: var(--mumtaz-blue) !important;
+}
+
+.o_searchview_facet .o_facet_remove:hover {
+    color: var(--mumtaz-blue-dk) !important;
+}
+
+/* ── Badges ────────────────────────────────────────────────── */
+.badge.bg-primary,
+.o_tag.o_tag_color_0,
+span.badge[style*="background-color"] {
+    background-color: var(--mumtaz-blue) !important;
+}
+
+/* ── Progress bars ─────────────────────────────────────────── */
+.progress-bar {
+    background-color: var(--mumtaz-blue) !important;
+}
+
+/* ── Chatter / Activity ────────────────────────────────────── */
+.o_mail_activity_action .btn-primary {
+    background: var(--mumtaz-blue) !important;
+    border-color: var(--mumtaz-blue) !important;
+}
+
+/* ── Dropdown items active ─────────────────────────────────── */
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item.active {
+    background-color: rgba(26,115,232,.08) !important;
+    color: var(--mumtaz-blue) !important;
+}
+
+/* ── Checkbox / toggle ─────────────────────────────────────── */
+.form-check-input:checked {
+    background-color: var(--mumtaz-blue) !important;
+    border-color:     var(--mumtaz-blue) !important;
+}
+
+/* ── Pivot / graph accent ──────────────────────────────────── */
+.o_graph_renderer .o_graph_with_search {
+    border-top: 3px solid var(--mumtaz-blue);
+}
+
+/* ── Page background ───────────────────────────────────────── */
+.o_form_view .o_form_sheet_bg {
+    background: #f8fafc;
+}
+
+/* ── Sidebar (Settings, Configuration menus) ───────────────── */
+.o_setting_box .o_settings_container .col {
+    border-left: 3px solid var(--mumtaz-blue) !important;
+}
+
+/* ── Remove raw Odoo.com links from backend notifications ──── */
+.o_notification_content a[href*="odoo.com"] {
+    display: none !important;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--mumtaz-blue); }

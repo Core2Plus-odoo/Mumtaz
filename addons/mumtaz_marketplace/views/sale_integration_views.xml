@@ -7,58 +7,15 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
-
-            <!-- Smart button -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_market_demand"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-signal"
-                        invisible="marketplace_demand_count == 0">
+                        icon="fa-signal">
                     <field name="marketplace_demand_count" widget="statinfo"
                            string="Market Demand"/>
                 </button>
             </xpath>
-
-        </field>
-    </record>
-
-    <!-- ── Sale Order Line: demand count column ── -->
-    <record id="view_sale_order_line_marketplace" model="ir.ui.view">
-        <field name="name">sale.order.line.marketplace</field>
-        <field name="model">sale.order</field>
-        <field name="inherit_id" ref="sale.view_order_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='order_line']/list//field[@name='price_subtotal']"
-                   position="after">
-                <field name="marketplace_demand_count"
-                       string="Buyers Seeking"
-                       optional="show"
-                       readonly="1"
-                       widget="badge"
-                       decoration-success="marketplace_demand_count > 0"
-                       decoration-muted="marketplace_demand_count == 0"/>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- ── Inquiry search: group by listing ── -->
-    <record id="view_marketplace_inquiry_demand_search" model="ir.ui.view">
-        <field name="name">mumtaz.marketplace.inquiry.demand.search</field>
-        <field name="model">mumtaz.marketplace.inquiry</field>
-        <field name="arch" type="xml">
-            <search string="Market Demand">
-                <field name="listing_id" string="Listing"/>
-                <field name="inquirer_company" string="Buyer Company"/>
-                <filter name="open_only" string="Open Inquiries"
-                        domain="[('state','in',['new','in_progress'])]"/>
-                <group expand="1" string="Group By">
-                    <filter name="group_listing" string="Listing"
-                            context="{'group_by': 'listing_id'}"/>
-                    <filter name="group_state" string="Status"
-                            context="{'group_by': 'state'}"/>
-                </group>
-            </search>
         </field>
     </record>
 

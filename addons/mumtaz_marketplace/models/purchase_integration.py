@@ -10,13 +10,13 @@ class PurchaseOrder(models.Model):
     )
 
     def _compute_marketplace_alt_count(self):
+        Listing = self.env["mumtaz.marketplace.listing"].sudo()
         for order in self:
-            order.marketplace_alt_count = self.env["mumtaz.marketplace.listing"].search_count(
+            order.marketplace_alt_count = Listing.search_count(
                 order._marketplace_alternatives_domain()
             )
 
     def _marketplace_alternatives_domain(self):
-        """Return domain for marketplace listings that are alternatives for this PO's products."""
         product_ids = self.order_line.mapped("product_id.product_tmpl_id").ids
         categ_ids = self.order_line.mapped("product_id.categ_id").ids
 
@@ -27,7 +27,6 @@ class PurchaseOrder(models.Model):
         ]
 
         if product_ids:
-            # Direct product link OR same category
             return base + [
                 "|",
                 ("product_tmpl_id", "in", product_ids),
@@ -48,14 +47,10 @@ class PurchaseOrder(models.Model):
             "res_model": "mumtaz.marketplace.listing",
             "view_mode": "list,form",
             "domain": domain,
-            "context": {
-                "search_default_groupby_category": 1,
-                "po_id": self.id,
-            },
+            "context": {"po_id": self.id},
         }
 
     def action_marketplace_send_rfq(self):
-        """Open an RFQ inquiry wizard pre-filled from this PO."""
         self.ensure_one()
         lines_summary = "\n".join(
             f"- {l.product_id.display_name}: {l.product_qty} {l.product_uom.name}"
@@ -78,36 +73,6 @@ class PurchaseOrder(models.Model):
                 "default_inquirer_company": self.env.company.name,
             },
         }
-
-
-class PurchaseOrderLine(models.Model):
-    _inherit = "purchase.order.line"
-
-    marketplace_listing_ids = fields.Many2many(
-        "mumtaz.marketplace.listing",
-        string="Marketplace Alternatives",
-        compute="_compute_line_marketplace_listings",
-    )
-    marketplace_listing_count = fields.Integer(
-        compute="_compute_line_marketplace_listings",
-        string="Alternatives",
-    )
-
-    def _compute_line_marketplace_listings(self):
-        for line in self:
-            tmpl = line.product_id.product_tmpl_id
-            if tmpl:
-                listings = self.env["mumtaz.marketplace.listing"].search([
-                    ("state", "=", "published"),
-                    ("company_id", "!=", line.company_id.id),
-                    "|",
-                    ("product_tmpl_id", "=", tmpl.id),
-                    ("name", "ilike", tmpl.name.split()[0]),
-                ], limit=10)
-            else:
-                listings = self.env["mumtaz.marketplace.listing"]
-            line.marketplace_listing_ids = listings
-            line.marketplace_listing_count = len(listings)
 
 
 class MarketplacePORFQWizard(models.TransientModel):
@@ -138,7 +103,6 @@ class MarketplacePORFQWizard(models.TransientModel):
             "inquirer_phone": self.inquirer_phone or "",
             "message": self.message,
         })
-        # Post note on PO chatter
         if self.purchase_order_id:
             self.purchase_order_id.message_post(
                 body=(
