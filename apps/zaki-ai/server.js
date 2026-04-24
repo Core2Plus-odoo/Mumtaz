@@ -30,32 +30,41 @@ app.use(session({
 
 /* ── Auth Middleware ────────────────────────────────────────────── */
 function requireAuth(req, res, next) {
-  if (req.session && req.session.odooSessionId) return next();
+  if (req.session && req.session.odooConn) return next();
   res.status(401).json({ error: 'Not authenticated', code: 'NOT_AUTHENTICATED' });
 }
 
 /* ── Auth Routes ────────────────────────────────────────────────── */
 app.post('/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, odooUrl, db } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required.' });
   }
+  if (!odooUrl || !db) {
+    return res.status(400).json({ error: 'Odoo URL and database name required.' });
+  }
+
+  // Normalise URL — strip trailing slash
+  const baseUrl = odooUrl.replace(/\/+$/, '');
 
   try {
-    const { uid, name, sessionId } = await authenticate(email, password);
-    req.session.odooSessionId = sessionId;
-    req.session.odooUid       = uid;
-    req.session.userName      = name;
-    res.json({ ok: true, name, uid });
+    const { uid, name, sessionId } = await authenticate(baseUrl, db, email, password);
+    req.session.odooConn  = { baseUrl, db, sessionId };
+    req.session.odooUid   = uid;
+    req.session.userName  = name;
+    res.json({ ok: true, name, uid, baseUrl, db });
   } catch (err) {
     res.status(401).json({ error: err.message || 'Login failed.' });
   }
 });
 
 app.get('/auth/me', requireAuth, (req, res) => {
+  const { baseUrl, db } = req.session.odooConn;
   res.json({
-    name:  req.session.userName,
-    uid:   req.session.odooUid,
+    name:    req.session.userName,
+    uid:     req.session.odooUid,
+    baseUrl,
+    db,
   });
 });
 
@@ -81,7 +90,7 @@ app.post('/api/chat', requireAuth, async (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no'); // for nginx
   res.flushHeaders();
 
-  const sessionId = req.session.odooSessionId;
+  const conn = req.session.odooConn;
 
   function writeSSE(data) {
     if (res.writableEnded) return;
@@ -94,7 +103,7 @@ app.post('/api/chat', requireAuth, async (req, res) => {
   }, 15000);
 
   try {
-    await zaki.chat({ message: message.trim(), history: sanitisedHistory, sessionId, writeSSE });
+    await zaki.chat({ message: message.trim(), history: sanitisedHistory, conn, writeSSE });
   } catch (err) {
     console.error('[ZAKI] Chat error:', err);
     if (!res.writableEnded) {

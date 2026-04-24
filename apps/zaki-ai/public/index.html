@@ -23,9 +23,30 @@
     </div>
 
     <form id="login-form" autocomplete="on">
+
+      <!-- Connection settings (collapsible) -->
+      <div class="conn-toggle" id="conn-toggle">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Connection settings</span>
+      </div>
+      <div id="conn-fields" class="conn-fields">
+        <div class="form-group">
+          <label for="odoo-url">Odoo URL</label>
+          <input id="odoo-url" name="odoo-url" type="url" placeholder="https://yourcompany.odoo.com"
+                 value="https://aj-arabia.odoo.com" autocomplete="off" required />
+        </div>
+        <div class="form-group">
+          <label for="odoo-db">Database</label>
+          <input id="odoo-db" name="odoo-db" type="text" placeholder="your-database-name"
+                 value="aj-arabia" autocomplete="off" required />
+        </div>
+      </div>
+
       <div class="form-group">
         <label for="email">Odoo Email</label>
-        <input id="email" name="email" type="email" placeholder="you@aj-arabia.com" autocomplete="email" required />
+        <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
       </div>
       <div class="form-group">
         <label for="password">Password</label>
@@ -33,12 +54,12 @@
       </div>
       <div id="login-error" class="login-error" hidden></div>
       <button type="submit" id="login-btn" class="btn btn-primary">
-        <span id="login-label">Sign in to Odoo</span>
+        <span id="login-label">Connect to Odoo</span>
         <span id="login-spinner" class="spinner" hidden></span>
       </button>
     </form>
 
-    <p class="login-note">Your Odoo credentials are used only to authenticate with aj-arabia.odoo.com.</p>
+    <p class="login-note">Credentials are sent directly to your Odoo server. They are never stored by ZAKI.</p>
   </div>
 </div>
 
@@ -74,7 +95,7 @@
         <div class="user-avatar" id="user-avatar">—</div>
         <div class="user-details">
           <div class="user-name" id="user-name">Loading…</div>
-          <div class="user-role">AJ Arabia</div>
+          <div class="user-role" id="user-role">Odoo</div>
         </div>
       </div>
       <button id="logout-btn" class="btn-logout" title="Sign out">
