@@ -289,7 +289,7 @@ async function doRegister(){
 }
 
 function showForgot(){
-  showToast('Password reset — feature coming soon. Contact support@mumtaz.digital')
+  window.open('mailto:support@mumtaz.digital?subject=Password Reset Request&body=Please reset my vendor account password.','_blank')
 }
 
 function bootVendor(){
@@ -455,7 +455,7 @@ function pageListings(){
         <td>${l.views}</td>
         <td>${l.inquiries}</td>
         <td><span class="pill ${l.status==='active'?'pill-green':'pill-amber'}">${l.status}</span></td>
-        <td><button class="btn btn-outline btn-sm" onclick="showToast('Edit listing — coming soon')">Edit</button></td>
+        <td><button class="btn btn-outline btn-sm" onclick="window.open('https://erp.mumtaz.digital/web#action=mumtaz_marketplace.action_listing_my','_blank')">Edit in ERP</button></td>
       </tr>`).join('')}
       </tbody>
     </table>
@@ -486,8 +486,8 @@ function pageRFQ(){
         </div>
       </div>
       <div style="display:flex;gap:8px">
-        ${r.status==='new'?`<button class="btn btn-grad btn-sm" onclick="showToast('Quote response — coming soon')">Respond to RFQ</button>`:''}
-        <button class="btn btn-outline btn-sm" onclick="showToast('Message buyer — coming soon')">Message Buyer</button>
+        ${r.status==='new'?`<button class="btn btn-grad btn-sm" onclick="window.open('https://erp.mumtaz.digital/web#action=mumtaz_marketplace.action_inquiry_vendor','_blank')">Respond in ERP</button>`:''}
+        <button class="btn btn-outline btn-sm" onclick="window.open('mailto:${r.buyer.toLowerCase().replace(/\s/g,'.')}@example.com?subject=Re: RFQ ${r.id}','_blank')">Message Buyer</button>
       </div>
     </div>`).join('') : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No RFQs yet. They will appear here when buyers request quotes.</div></div>'}
   </div>`
@@ -508,7 +508,7 @@ function pageOrders(){
         <td style="color:var(--green);font-weight:700">${o.amount}</td>
         <td>${o.date}</td>
         <td><span class="pill ${o.status==='delivered'?'pill-green':o.status==='shipped'?'pill-indigo':'pill-amber'}">${o.status}</span></td>
-        <td><button class="btn btn-outline btn-sm" onclick="showToast('Order details — coming soon')">View</button></td>
+        <td><button class="btn btn-outline btn-sm" onclick="window.open('https://erp.mumtaz.digital/web#action=sale.action_quotations_with_onboarding','_blank')">View in ERP</button></td>
       </tr>`).join('')}
       </tbody>
     </table>
