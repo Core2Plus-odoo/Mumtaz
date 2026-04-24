@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ZAKI — AI CFO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f172a;color:#f8fafc;min-height:100vh;display:flex}
+:root{
+  --bg:#0f172a;--surface:#1e293b;--border:rgba(255,255,255,.07);
+  --teal:#14b8a6;--teal-dk:#0d9488;--blue:#3b82f6;
+  --text:#f8fafc;--muted:#94a3b8;--muted2:#64748b;
+}
+/* Sidebar */
+#sidebar{width:220px;flex-shrink:0;background:#0a1628;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:22px 20px;border-bottom:1px solid var(--border)}
+.sb-logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0}
+.sb-logo-name{font-size:1rem;font-weight:800;letter-spacing:.02em}
+.sb-logo-tag{font-size:.62rem;color:var(--muted);letter-spacing:.04em}
+nav{padding:16px 12px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--muted);transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.nav-item.active{background:rgba(20,184,166,.12);color:var(--teal)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.sb-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted2)}
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-size:1rem;font-weight:700}
+.topbar-status{font-size:.72rem;color:var(--teal);background:rgba(20,184,166,.1);border:1px solid rgba(20,184,166,.2);padding:3px 10px;border-radius:20px}
+.content{flex:1;overflow-y:auto;padding:28px}
+/* Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.kpi-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi-val{font-size:1.6rem;font-weight:800;margin-bottom:4px}
+.kpi-sub{font-size:.72rem;color:var(--muted)}
+.kpi-sub.up{color:#10b981}.kpi-sub.down{color:#f87171}
+/* Chat */
+#chat-section{display:none;flex-direction:column;height:100%}
+#chat-section.active{display:flex}
+.chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+.msg{display:flex;gap:12px;max-width:780px}
+.msg.user{flex-direction:row-reverse;align-self:flex-end}
+.msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
+.msg.zaki .msg-avatar{background:var(--teal);color:#fff}
+.msg.user .msg-avatar{background:#3b82f6;color:#fff}
+.msg-body{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:.85rem;line-height:1.6;color:var(--text)}
+.msg.user .msg-body{background:#1e3a5f;border-color:rgba(59,130,246,.25)}
+.chat-input-wrap{padding:20px 24px;border-top:1px solid var(--border);display:flex;gap:10px}
+.chat-input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 16px;font-size:.88rem;color:var(--text);outline:none;font-family:inherit;resize:none}
+.chat-input:focus{border-color:var(--teal)}
+.chat-send{background:var(--teal);border:none;color:#fff;padding:11px 20px;border-radius:10px;font-weight:600;font-size:.85rem;cursor:pointer;transition:background .15s}
+.chat-send:hover{background:var(--teal-dk)}
+/* Table */
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:1px solid var(--border)}
+th{text-align:left;font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:10px 12px}
+td{padding:11px 12px;font-size:.82rem;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.tag{font-size:.68rem;padding:2px 8px;border-radius:20px;font-weight:600}
+.tag-in{background:rgba(16,185,129,.12);color:#10b981}
+.tag-out{background:rgba(248,113,113,.12);color:#f87171}
+/* Sections */
+.section{display:none}.section.active{display:block}
+/* Demo banner */
+.demo-banner{background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.2);border-radius:10px;padding:10px 16px;font-size:.78rem;color:var(--teal);margin-bottom:20px}
+/* Thinking */
+.thinking{display:inline-flex;gap:4px;padding:4px 0}
+.thinking span{width:6px;height:6px;background:var(--teal);border-radius:50%;animation:blink 1.2s infinite}
+.thinking span:nth-child(2){animation-delay:.2s}.thinking span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">Z</div>
+    <div><div class="sb-logo-name">ZAKI</div><div class="sb-logo-tag">AI CFO · Mumtaz</div></div>
+  </div>
+  <nav>
+    <button class="nav-item active" onclick="showSection('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+    </button>
+    <button class="nav-item" onclick="showSection('chat',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Ask ZAKI
+    </button>
+    <button class="nav-item" onclick="showSection('transactions',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Transactions
+    </button>
+    <button class="nav-item" onclick="showSection('reports',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Reports
+    </button>
+  </nav>
+  <div class="sb-footer">Connected to Mumtaz ERP</div>
+</div>
+
+<div id="main">
+  <div class="topbar">
+    <span class="topbar-title" id="page-title">Dashboard</span>
+    <span class="topbar-status" id="api-status">● Demo Mode</span>
+  </div>
+  <div class="content" id="content-area">
+
+    <!-- Dashboard -->
+    <div class="section active" id="sec-dashboard">
+      <div class="demo-banner" id="demo-note">⚡ Demo mode — connect ZAKI backend for live financial data.</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Revenue (Apr)</div><div class="kpi-val" style="color:#10b981">AED 284,500</div><div class="kpi-sub up">▲ 18% vs Mar</div></div>
+        <div class="kpi"><div class="kpi-label">Expenses (Apr)</div><div class="kpi-val" style="color:#f87171">AED 142,300</div><div class="kpi-sub down">▲ 5% vs Mar</div></div>
+        <div class="kpi"><div class="kpi-label">Net Profit</div><div class="kpi-val" style="color:var(--teal)">AED 142,200</div><div class="kpi-sub up">50% margin ✅</div></div>
+        <div class="kpi"><div class="kpi-label">Cash Balance</div><div class="kpi-val">AED 89,400</div><div class="kpi-sub">14 month runway</div></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+        <div style="font-size:.78rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">ZAKI Insight</div>
+        <div style="font-size:.88rem;line-height:1.7;color:var(--text)"><strong>Revenue is strong at AED 284,500 (+18% MoM).</strong> Profit margin held at 50% — excellent for a GCC SME. ⚠️ Watch: AED 22,000 rent payment due next week. Recommendation: move AED 30K idle cash to a higher-yield account.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:600">Recent Transactions</div>
+        <table id="dash-tx"></table>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="section" id="sec-chat" style="display:none;flex-direction:column;height:calc(100vh - 120px)">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:100%;overflow:hidden">
+        <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px"></div>
+        <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:10px">
+          <input id="chat-in" class="chat-input" placeholder="Ask ZAKI anything about your finances…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"/>
+          <button class="chat-send" onclick="sendChat()">Send →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="section" id="sec-transactions" style="display:none">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:600">All Transactions</div>
+        <table id="all-tx"></table>
+      </div>
+    </div>
+
+    <!-- Reports -->
+    <div class="section" id="sec-reports" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;cursor:pointer" onclick="showSection('chat',document.querySelectorAll('.nav-item')[1]);document.getElementById('chat-in').value='Give me a full P&L analysis';sendChat()">
+          <div style="font-size:1.5rem;margin-bottom:10px">📊</div>
+          <div style="font-weight:700;margin-bottom:4px">P&amp;L Analysis</div>
+          <div style="font-size:.78rem;color:var(--muted)">Revenue, expenses and profit breakdown</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;cursor:pointer" onclick="showSection('chat',document.querySelectorAll('.nav-item')[1]);document.getElementById('chat-in').value='Analyse my cash flow and runway';sendChat()">
+          <div style="font-size:1.5rem;margin-bottom:10px">💧</div>
+          <div style="font-weight:700;margin-bottom:4px">Cash Flow</div>
+          <div style="font-size:.78rem;color:var(--muted)">Cash position and runway forecast</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;cursor:pointer" onclick="showSection('chat',document.querySelectorAll('.nav-item')[1]);document.getElementById('chat-in').value='What are my top 5 expenses this month?';sendChat()">
+          <div style="font-size:1.5rem;margin-bottom:10px">✂️</div>
+          <div style="font-weight:700;margin-bottom:4px">Cost Optimisation</div>
+          <div style="font-size:.78rem;color:var(--muted)">Top expenses and reduction opportunities</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;cursor:pointer" onclick="showSection('chat',document.querySelectorAll('.nav-item')[1]);document.getElementById('chat-in').value='Forecast next 3 months revenue';sendChat()">
+          <div style="font-size:1.5rem;margin-bottom:10px">📈</div>
+          <div style="font-weight:700;margin-bottom:4px">Forecast</div>
+          <div style="font-size:.78rem;color:var(--muted)">3-month revenue and expense projection</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = '/api/v1'
+let token = localStorage.getItem('zaki_token') || ''
+let demoMode = true
+
+const TX = [
+  {date:'24 Apr',desc:'Al Noor Trading Co — Invoice #1042',type:'in', amt:'AED 48,000'},
+  {date:'23 Apr',desc:'Al Barsha Office Rent',            type:'out',amt:'AED 22,000'},
+  {date:'22 Apr',desc:'Emirates Freight Solutions',       type:'in', amt:'AED 31,500'},
+  {date:'21 Apr',desc:'Staff Salaries — April',           type:'out',amt:'AED 48,000'},
+  {date:'19 Apr',desc:'Gulf Supplies LLC — Payment',      type:'in', amt:'AED 27,000'},
+  {date:'18 Apr',desc:'Etisalat Business — Telecom',      type:'out',amt:'AED 3,200'},
+  {date:'17 Apr',desc:'Dubai Customs Duty',               type:'out',amt:'AED 8,400'},
+  {date:'15 Apr',desc:'Saudi Partner Remittance',         type:'in', amt:'AED 62,000'},
+]
+
+function txRows(rows){
+  return `<thead><tr><th>Date</th><th>Description</th><th>Type</th><th style="text-align:right">Amount</th></tr></thead><tbody>`
+    + rows.map(t=>`<tr><td style="color:var(--muted)">${t.date}</td><td>${t.desc}</td><td><span class="tag ${t.type==='in'?'tag-in':'tag-out'}">${t.type==='in'?'Income':'Expense'}</span></td><td style="text-align:right;font-weight:600;color:${t.type==='in'?'#10b981':'#f87171'}">${t.amt}</td></tr>`).join('')
+    + '</tbody>'
+}
+
+document.getElementById('dash-tx').innerHTML = txRows(TX.slice(0,5))
+document.getElementById('all-tx').innerHTML  = txRows(TX)
+
+// Check backend
+async function checkBackend(){
+  try{
+    const r = await fetch(API+'/health',{signal:AbortSignal.timeout(3000)})
+    if(r.ok){ demoMode=false; document.getElementById('api-status').textContent='● Live'; document.getElementById('api-status').style.color='#10b981'; document.getElementById('demo-note').style.display='none' }
+  }catch(e){}
+}
+checkBackend()
+
+function showSection(id, btn){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none')
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'))
+  const sec = document.getElementById('sec-'+id)
+  sec.style.display = id==='chat' ? 'flex' : 'block'
+  if(btn) btn.classList.add('active')
+  const titles={dashboard:'Dashboard',chat:'Ask ZAKI',transactions:'Transactions',reports:'Reports'}
+  document.getElementById('page-title').textContent = titles[id]||id
+  if(id==='chat' && document.getElementById('chat-msgs').children.length===0) addZakiMsg('👋 Hi! I\'m **ZAKI**, your AI CFO. Ask me anything about your finances — cash flow, expenses, forecasts, or anything else.')
+}
+
+function addUserMsg(txt){
+  const d=document.createElement('div'); d.className='msg user'
+  d.innerHTML=`<div class="msg-avatar">U</div><div class="msg-body">${txt}</div>`
+  document.getElementById('chat-msgs').appendChild(d)
+  d.scrollIntoView({behavior:'smooth'})
+}
+
+function addZakiMsg(md){
+  const d=document.createElement('div'); d.className='msg zaki'
+  d.innerHTML=`<div class="msg-avatar">Z</div><div class="msg-body">${md.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`
+  document.getElementById('chat-msgs').appendChild(d)
+  d.scrollIntoView({behavior:'smooth'})
+  return d
+}
+
+function addThinking(){
+  const d=document.createElement('div'); d.className='msg zaki'; d.id='thinking'
+  d.innerHTML=`<div class="msg-avatar">Z</div><div class="msg-body"><div class="thinking"><span></span><span></span><span></span></div></div>`
+  document.getElementById('chat-msgs').appendChild(d)
+  d.scrollIntoView({behavior:'smooth'})
+}
+
+const DEMO_REPLIES = {
+  default: '**Your finances look healthy this month.** Revenue: AED 284,500 (+18% MoM ✅). Expenses: AED 142,300. Net profit: **AED 142,200 (50% margin)**.\n\n⚠️ Watch: AED 22K rent due next week.\n🟢 Runway: 14 months at current burn rate.\n\n**CFO Recommendation:** Move AED 30K idle cash to a higher-yield account — you\'re losing ~4% annually to inflation on inactive funds.',
+  cash:  '**Cash position: AED 89,400** — solid for your revenue level.\n\nInflows this month: AED 168,500. Outflows: AED 81,600. Net: **+AED 86,900**.\n\n🟢 Runway: **14 months** at current burn.\n⚠️ Upcoming: AED 22K rent + AED 48K salaries = AED 70K due this week.\n\n**Recommendation:** Maintain AED 60K minimum reserve. You have healthy headroom.',
+  expense: '**Top 5 Expenses — April 2026:**\n\n| Expense | Amount |\n|---------|--------|\n| Salaries | AED 48,000 |\n| Office Rent | AED 22,000 |\n| Dubai Customs | AED 8,400 |\n| Telecom | AED 3,200 |\n| Misc | AED 2,100 |\n\n**Total: AED 83,700** (58.8% of expenses)\n\n✅ Salaries are 33% of revenue — within healthy range for services.',
+  forecast: '**3-Month Revenue Forecast:**\n\n📊 May: **AED 298,000** (+4.7%) — seasonal uptick expected\n📊 Jun: **AED 312,000** (+4.7%) — Q2 close pushes enterprise deals\n📊 Jul: **AED 285,000** (-8.7%) — Eid slowdown typical in GCC\n\nConservative case: AED 840K over 3 months.\n**CFO note:** Lock in 2 enterprise contracts before Eid to buffer July dip.',
+}
+
+function getDemoReply(q){
+  const lq = q.toLowerCase()
+  if(lq.includes('cash')||lq.includes('flow')||lq.includes('runway')) return DEMO_REPLIES.cash
+  if(lq.includes('expens')||lq.includes('cost')||lq.includes('spend')) return DEMO_REPLIES.expense
+  if(lq.includes('forecast')||lq.includes('predict')||lq.includes('next')) return DEMO_REPLIES.forecast
+  return DEMO_REPLIES.default
+}
+
+async function sendChat(){
+  const inp = document.getElementById('chat-in')
+  const q = inp.value.trim(); if(!q) return
+  inp.value = ''
+  addUserMsg(q)
+  addThinking()
+  if(demoMode){
+    await new Promise(r=>setTimeout(r,900))
+    document.getElementById('thinking')?.remove()
+    addZakiMsg(getDemoReply(q))
+    return
+  }
+  try{
+    const r = await fetch(API+'/ai/chat/stream',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message:q,session_id:null})})
+    document.getElementById('thinking')?.remove()
+    const node = addZakiMsg('')
+    const body = node.querySelector('.msg-body')
+    const reader = r.body.getReader(); const dec = new TextDecoder()
+    let buf = ''
+    while(true){
+      const {done,value} = await reader.read(); if(done) break
+      buf += dec.decode(value,{stream:true})
+      const lines = buf.split('\n'); buf = lines.pop()
+      for(const line of lines){
+        if(line.startsWith('data: ')){
+          try{ const d=JSON.parse(line.slice(6)); if(d.content) body.innerHTML += d.content.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') }catch(e){}
+        }
+      }
+      node.scrollIntoView({behavior:'smooth'})
+    }
+  }catch(e){
+    document.getElementById('thinking')?.remove()
+    addZakiMsg('Sorry, I could not connect to the backend. Check that the ZAKI API is running.')
+  }
+}
+</script>
+</body>
+</html>
