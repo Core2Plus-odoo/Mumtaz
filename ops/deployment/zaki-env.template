@@ -1,0 +1,8 @@
+# ZAKI AI CFO Backend — Environment Variables
+# Copy to /opt/zaki-server/.env and fill in real values
+
+DATABASE_URL=postgresql://zaki:CHANGE_PASSWORD@localhost:5432/zaki_db
+SECRET_KEY=CHANGE_THIS_TO_A_RANDOM_64_CHAR_STRING
+ANTHROPIC_API_KEY=sk-ant-REPLACE_WITH_REAL_KEY
+FRONTEND_URL=https://zaki.mumtaz.digital
+DEBUG=false

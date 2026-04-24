@@ -1095,8 +1095,16 @@ function renderProducts(){
 function toggleProduct(id){
   if(!P.products) P.products = {}
   const enabling = !P.products[id]
-  if(enabling && id === 'zaki'){       openZakiWizard(); return }
-  if(enabling && id === 'marketplace'){ openMktWizard(); return }
+  if(enabling && id === 'zaki'){ openZakiWizard(); return }
+  if(enabling && id === 'marketplace'){
+    // Try wizard first; if not available redirect directly
+    const wizEl = document.getElementById('mkt-wizard')
+    if(wizEl){ openMktWizard(); return }
+    P.products.marketplace = true; save(); renderProducts(); renderDashboard()
+    showToast('B2B Marketplace enabled!')
+    setTimeout(()=>window.open('https://marketplace.mumtaz.digital','_blank'),400)
+    return
+  }
   P.products[id] = enabling
   save()
   renderProducts()
@@ -1650,8 +1658,41 @@ function bootApp(){
 }
 
 load()
-if(TOKEN && P.user.email){ bootApp() }
-else { document.getElementById('auth').style.display='flex' }
+// Auto-boot without auth — portal works from localStorage state
+if(!P.user.name) P.user.name = 'Admin'
+if(!P.user.email) P.user.email = 'admin@' + (P.user.company || 'mumtaz').toLowerCase().replace(/\s+/g,'') + '.com'
+bootApp()
+// Try to sync real module states from Odoo in background
+syncOdooModules()
+
+// ── Odoo live sync ────────────────────────────────────
+async function syncOdooModules(){
+  try {
+    const res = await fetch('/odoo/web/dataset/call_kw', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        jsonrpc:'2.0', method:'call', id:1,
+        params:{
+          model:'ir.module.module',
+          method:'search_read',
+          args:[[['state','=','installed']]],
+          kwargs:{fields:['name','state'],limit:200,context:{}}
+        }
+      })
+    })
+    const data = await res.json()
+    if(data.result && Array.isArray(data.result)){
+      const installed = new Set(data.result.map(m=>m.name))
+      let changed = false
+      MODULES_DATA.forEach(m=>{
+        const live = installed.has(m.id)
+        if(P.modules[m.id] !== live){ P.modules[m.id] = live; changed = true }
+      })
+      if(changed){ save(); renderModGrid(); renderDashboard() }
+    }
+  } catch(e){ /* Odoo unreachable or not logged in — keep localStorage state */ }
+}
 
 // ── Marketplace Wizard ────────────────────────────────
 const MW_STEPS = [

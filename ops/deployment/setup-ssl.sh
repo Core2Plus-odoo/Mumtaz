@@ -54,14 +54,9 @@ if [ -d "$REPO/apps/website" ]; then
   cp -r $REPO/apps/website/. /var/www/mumtaz.digital/
 fi
 
-# Deploy ZAKI static export
-if [ -d "$ZAKI_FRONTEND/out" ]; then
-  rm -rf /var/www/zaki.mumtaz.digital/*
-  cp -r $ZAKI_FRONTEND/out/. /var/www/zaki.mumtaz.digital/
-  echo "      ✓ ZAKI static export deployed"
-else
-  echo "      ⚠  ZAKI out/ not found — zaki.mumtaz.digital will show blank page until built"
-fi
+# Deploy ZAKI standalone HTML (no build step needed)
+cp $REPO/apps/zaki/static/index.html /var/www/zaki.mumtaz.digital/index.html
+echo "      ✓ ZAKI standalone HTML deployed"
 
 echo "      ✓ Static files deployed"
 
