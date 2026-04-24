@@ -47,28 +47,31 @@ echo "      ✓ marketplace → marketplace.mumtaz.digital"
 echo "[3/6] Syncing Odoo addons..."
 mkdir -p $CUSTOM
 
-rm -rf $CUSTOM/mumtaz_theme
-rm -rf $CUSTOM/mumtaz_marketplace
-cp -r $REPO/addons/mumtaz_theme       $CUSTOM/
-cp -r $REPO/addons/mumtaz_marketplace $CUSTOM/
-echo "      ✓ mumtaz_theme synced"
-echo "      ✓ mumtaz_marketplace synced"
+for addon in mumtaz_theme mumtaz_sme_profile mumtaz_control_plane mumtaz_marketplace; do
+  rm -rf $CUSTOM/$addon
+  cp -r $REPO/addons/$addon $CUSTOM/
+  echo "      ✓ $addon synced"
+done
 
 # ── 4. Install / upgrade Odoo modules ─────────────────────
 echo "[4/6] Installing/upgrading Odoo modules (this takes ~60s)..."
 sudo -u odoo odoo \
   -c $ODOO_CONF \
   -d $DB \
-  -i mumtaz_theme \
-  -u mumtaz_marketplace \
+  -u mumtaz_theme,mumtaz_sme_profile,mumtaz_control_plane,mumtaz_marketplace \
   --stop-after-init \
   --logfile="" 2>&1 | grep -E "INFO.*modules|ERROR|ParseError|installed|upgraded" | tail -15
 
 echo "      ✓ Odoo modules updated"
 
-# ── 5. Update nginx config ────────────────────────────────
+# ── 5. Update nginx config (only if SSL not already configured) ───────
 echo "[5/6] Updating nginx..."
-cp $REPO/ops/deployment/nginx-mumtaz-platform.conf $NGINX_CONF
+if grep -q "ssl_certificate" $NGINX_CONF 2>/dev/null; then
+  echo "      ↷ SSL config detected — skipping nginx overwrite (certbot manages this)"
+else
+  cp $REPO/ops/deployment/nginx-mumtaz-platform.conf $NGINX_CONF
+  echo "      ✓ Nginx config updated"
+fi
 ln -sf $NGINX_CONF /etc/nginx/sites-enabled/mumtaz
 rm -f /etc/nginx/sites-enabled/default
 

@@ -45,9 +45,12 @@ def _verify_pw(password: str, hashed: str) -> bool:
 # ── App ───────────────────────────────────────────────────────────────
 app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0")
 
+_cors_env = os.environ.get("CORS_ORIGINS", "")
+CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()] or ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -511,6 +514,70 @@ async def uninstall_module(req: ModuleToggleReq, auth: dict = Depends(require_au
     if not ok:
         raise HTTPException(500, f"Failed to uninstall {req.module_id}")
     return {"ok": True, "module": req.module_id, "installed": False}
+
+@app.get("/api/v1/dashboard")
+async def get_dashboard(auth: dict = Depends(require_auth)):
+    """Real KPIs pulled from Odoo: invoices, revenue, outstanding, user count."""
+    admin_uid = odoo_get_admin_uid()
+    obj = _odoo_object()
+
+    kpis = {
+        "invoiced": 0.0, "invoice_count": 0,
+        "outstanding": 0.0, "paid": 0.0,
+        "currency": "AED",
+    }
+    users_data = {"active": 1, "total": 1}
+    recent_invoices = []
+
+    if admin_uid:
+        try:
+            rows = obj.execute_kw(
+                ODOO_DB, admin_uid, ODOO_PASS, "account.move", "search_read",
+                [[["move_type", "=", "out_invoice"], ["state", "=", "posted"]]],
+                {"fields": ["name", "partner_id", "amount_total", "amount_residual",
+                            "invoice_date", "payment_state", "currency_id"],
+                 "order": "invoice_date desc", "limit": 100}
+            )
+            kpis["invoice_count"] = len(rows)
+            kpis["invoiced"]      = round(sum(r["amount_total"] for r in rows), 2)
+            kpis["outstanding"]   = round(sum(r["amount_residual"] for r in rows), 2)
+            kpis["paid"]          = round(kpis["invoiced"] - kpis["outstanding"], 2)
+            if rows and isinstance(rows[0].get("currency_id"), list):
+                kpis["currency"] = rows[0]["currency_id"][1]
+            recent_invoices = [
+                {
+                    "name":    r["name"],
+                    "partner": r["partner_id"][1] if isinstance(r["partner_id"], list) else "",
+                    "amount":  r["amount_total"],
+                    "residual":r["amount_residual"],
+                    "date":    r["invoice_date"],
+                    "status":  r["payment_state"],
+                    "currency":kpis["currency"],
+                }
+                for r in rows[:10]
+            ]
+        except Exception as e:
+            print(f"[dashboard] invoice fetch error: {e}")
+
+        try:
+            uid_list = obj.execute_kw(
+                ODOO_DB, admin_uid, ODOO_PASS, "res.users", "search",
+                [[["active", "=", True], ["share", "=", False]]]
+            )
+            users_data["active"] = len(uid_list)
+            users_data["total"]  = len(uid_list)
+        except Exception as e:
+            print(f"[dashboard] users fetch error: {e}")
+
+    # Pull plan from SQLite
+    plan = auth.get("plan", "trial")
+
+    return {
+        "kpis":            kpis,
+        "users":           users_data,
+        "recent_invoices": recent_invoices,
+        "plan":            plan,
+    }
 
 @app.post("/api/v1/ai/chat/stream")
 async def chat_stream(req: ChatReq, auth: dict = Depends(require_auth)):

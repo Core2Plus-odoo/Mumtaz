@@ -596,11 +596,17 @@ const PANELS = {
 dashboard: `
 <div class="page-title">Good morning, <span id="dash-name"></span> 👋</div>
 <div class="page-sub">Here's what's happening with <span id="dash-co"></span> today.</div>
+<div id="live-data-banner" style="display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:8px 14px;font-size:.78rem;color:var(--green);margin-bottom:14px">● Live data — connected to your ERP</div>
 <div class="grid4" style="margin-bottom:20px">
-  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">1</div><div class="stat-sub" id="d-users-sub">of — seats used</div></div>
+  <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-val" id="d-users">—</div><div class="stat-sub" id="d-users-sub">ERP users</div></div>
   <div class="stat-card"><div class="stat-label">Modules Active</div><div class="stat-val" id="d-mods">0</div><div class="stat-sub" id="d-mods-sub">— available to add</div></div>
-  <div class="stat-card"><div class="stat-label">Monthly Bill</div><div class="stat-val" id="d-mrr">—</div><div class="stat-sub" id="d-mrr-sub">14-day free trial active</div></div>
-  <div class="stat-card"><div class="stat-label">Support Tickets</div><div class="stat-val">0</div><div class="stat-sub"><span class="badge badge-green">All clear</span></div></div>
+  <div class="stat-card"><div class="stat-label">Total Invoiced</div><div class="stat-val" id="d-invoiced">—</div><div class="stat-sub" id="d-invoiced-sub">from ERP</div></div>
+  <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-val" id="d-outstanding">—</div><div class="stat-sub" id="d-outstanding-sub">receivables</div></div>
+</div>
+<div class="card" id="d-invoices-card" style="margin-bottom:20px;display:none">
+  <div class="card-title">Recent Invoices <a class="btn btn-ghost btn-sm" href="https://erp.mumtaz.digital/web#action=account.action_move_out_invoice_type" target="_blank">Open in ERP →</a></div>
+  <table class="tbl"><thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Outstanding</th><th>Date</th><th>Status</th></tr></thead>
+  <tbody id="d-invoices-tbody"></tbody></table>
 </div>
 <div id="mkt-activate-banner"></div>
 <div class="grid2" style="margin-bottom:20px">
@@ -932,14 +938,14 @@ function renderDashboard(){
   document.getElementById('dash-name').textContent = name
   document.getElementById('dash-co').textContent = P.user.company || 'your company'
   const active = MODULES_DATA.filter(m => P.modules[m.id])
-  const plan = PLANS_DATA.find(p=>p.id===P.plan)||PLANS_DATA[1]
   document.getElementById('d-mods').textContent = active.length
   document.getElementById('d-mods-sub').textContent = (MODULES_DATA.length - active.length) + ' available to add'
-  document.getElementById('d-users').textContent = P.seatsUsed
-  document.getElementById('d-users-sub').textContent = 'of ' + P.seats + ' seats used'
-  document.getElementById('d-mrr').textContent = '$' + plan.price + '/mo'
-  document.getElementById('u-used').textContent = P.seatsUsed + ' / ' + P.seats
-  document.getElementById('u-avail').textContent = (P.seats - P.seatsUsed) + ' seats available'
+  const liveUsers = P.liveData?.users?.active
+  document.getElementById('d-users').textContent = liveUsers ?? P.seatsUsed
+  document.getElementById('d-users-sub').textContent = liveUsers ? liveUsers + ' ERP users' : 'of ' + P.seats + ' seats used'
+  const plan = PLANS_DATA.find(p=>p.id===P.plan)||PLANS_DATA[1]
+  document.getElementById('u-used').textContent = (liveUsers ?? P.seatsUsed) + ' / ' + P.seats
+  document.getElementById('u-avail').textContent = (P.seats - (liveUsers ?? P.seatsUsed)) + ' seats available'
   // Marketplace activation banner
   const mktBanner = document.getElementById('mkt-activate-banner')
   if(mktBanner){
@@ -1664,6 +1670,62 @@ if(!P.user.email) P.user.email = 'admin@' + (P.user.company || 'mumtaz').toLower
 bootApp()
 // Try to sync real module states from Odoo in background
 syncOdooModules()
+syncRealData()
+
+// ── Live dashboard data from ZAKI server ──────────────
+async function syncRealData(){
+  if(!TOKEN) return
+  try{
+    const data = await apiFetch('/dashboard')
+    P.liveData = data
+    save()
+    // Update user count
+    const el_users = document.getElementById('d-users')
+    if(el_users) el_users.textContent = data.users.active
+    const el_usub = document.getElementById('d-users-sub')
+    if(el_usub) el_usub.textContent = data.users.active === 1 ? '1 ERP user' : data.users.active + ' ERP users'
+    // Update invoice KPIs
+    const cur = data.kpis.currency || 'AED'
+    const fmt = n => n >= 1000 ? (n/1000).toFixed(1)+'K' : n.toFixed(0)
+    const el_inv = document.getElementById('d-invoiced')
+    if(el_inv) el_inv.textContent = cur + ' ' + fmt(data.kpis.invoiced)
+    const el_invsub = document.getElementById('d-invoiced-sub')
+    if(el_invsub) el_invsub.textContent = data.kpis.invoice_count + ' posted invoices'
+    const el_out = document.getElementById('d-outstanding')
+    if(el_out) el_out.textContent = cur + ' ' + fmt(data.kpis.outstanding)
+    const el_outsub = document.getElementById('d-outstanding-sub')
+    if(el_outsub) el_outsub.textContent = 'from ' + data.kpis.invoice_count + ' invoices'
+    // Show live data banner
+    const banner = document.getElementById('live-data-banner')
+    if(banner) banner.style.display = 'block'
+    // Recent invoices table
+    if(data.recent_invoices && data.recent_invoices.length){
+      const card = document.getElementById('d-invoices-card')
+      if(card) card.style.display = 'block'
+      const tbody = document.getElementById('d-invoices-tbody')
+      if(tbody){
+        const statusBadge = s => {
+          if(s==='paid') return '<span class="badge badge-green">Paid</span>'
+          if(s==='partial') return '<span class="badge badge-blue">Partial</span>'
+          return '<span class="badge badge-amber">Unpaid</span>'
+        }
+        tbody.innerHTML = data.recent_invoices.map(inv => `
+          <tr>
+            <td style="font-weight:600;color:var(--indigo)">${inv.name}</td>
+            <td>${inv.partner}</td>
+            <td style="font-weight:600">${inv.currency} ${inv.amount.toLocaleString()}</td>
+            <td style="${inv.residual>0?'color:var(--amber)':''}">${inv.residual>0 ? inv.currency+' '+inv.residual.toLocaleString() : '—'}</td>
+            <td style="color:var(--text-3)">${inv.date||'—'}</td>
+            <td>${statusBadge(inv.status)}</td>
+          </tr>`).join('')
+      }
+    }
+    // Update plan if returned
+    if(data.plan) P.plan = data.plan
+    save()
+    renderDashboard()
+  }catch(e){ /* ZAKI server offline — keep static display */ }
+}
 
 // ── Odoo live sync ────────────────────────────────────
 async function syncOdooModules(){
