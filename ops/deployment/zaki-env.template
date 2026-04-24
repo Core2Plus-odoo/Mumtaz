@@ -1,8 +1,16 @@
-# ZAKI AI CFO Backend — Environment Variables
+# Mumtaz ZAKI Server — Environment Variables
 # Copy to /opt/zaki-server/.env and fill in real values
 
-DATABASE_URL=postgresql://zaki:CHANGE_PASSWORD@localhost:5432/zaki_db
-SECRET_KEY=CHANGE_THIS_TO_A_RANDOM_64_CHAR_STRING
+JWT_SECRET=CHANGE_THIS_TO_A_RANDOM_64_CHAR_STRING
 ANTHROPIC_API_KEY=sk-ant-REPLACE_WITH_REAL_KEY
-FRONTEND_URL=https://zaki.mumtaz.digital
+DB_PATH=/opt/zaki-server/users.db
+
+ODOO_URL=http://127.0.0.1:8069
+ODOO_DB=Mumtaz_ERP
+ODOO_ADMIN_USER=admin
+ODOO_ADMIN_PASS=CHANGE_THIS
+
+# Comma-separated allowed origins (set * only for local dev)
+CORS_ORIGINS=https://app.mumtaz.digital,https://zaki.mumtaz.digital,https://marketplace.mumtaz.digital
+
 DEBUG=false
