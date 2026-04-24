@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_vendor_po" name="Vendor Purchase Orders">
+    <t t-call="mumtaz_vendor_portal.portal_vendor_layout">
+        <t t-set="title">Purchase Orders</t>
+
+        <div class="mvp-card">
+            <div class="mvp-card-header">
+                <h3 class="mvp-card-title">All Purchase Orders</h3>
+                <span class="mvp-card-count">
+                    <t t-esc="pager['count']"/> orders
+                </span>
+            </div>
+
+            <div class="mvp-table-wrap">
+                <table class="mvp-table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Date</th>
+                            <th>Delivery Date</th>
+                            <th class="mvp-col-amount">Untaxed</th>
+                            <th class="mvp-col-amount">Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="orders" t-as="order">
+                            <tr class="mvp-tr-hover">
+                                <td>
+                                    <strong class="mvp-ref">
+                                        <t t-esc="order.name"/>
+                                    </strong>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-esc="order.date_order" t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-if="order.date_planned">
+                                        <t t-esc="order.date_planned" t-options="{'widget': 'date'}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="mvp-muted">—</span>
+                                    </t>
+                                </td>
+                                <td class="mvp-col-amount">
+                                    <t t-esc="'{:,.2f} {}'.format(order.amount_untaxed, order.currency_id.name)"/>
+                                </td>
+                                <td class="mvp-col-amount mvp-amount-strong">
+                                    <t t-esc="'{:,.2f} {}'.format(order.amount_total, order.currency_id.name)"/>
+                                </td>
+                                <td>
+                                    <span t-att-class="'mvp-badge mvp-badge-teal' if order.state == 'purchase' else 'mvp-badge mvp-badge-ink'">
+                                        <t t-esc="order.state.upper()"/>
+                                    </span>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-if="not orders">
+                            <tr>
+                                <td colspan="6" class="mvp-empty">No confirmed purchase orders found.</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pager -->
+            <t t-if="pager['page_count'] > 1">
+                <div class="mvp-pager">
+                    <t t-if="pager['page']['num'] > 1">
+                        <a t-att-href="pager['page_previous']['url']" class="mvp-pager-btn">&#8592; Previous</a>
+                    </t>
+                    <span class="mvp-pager-info">
+                        Page <t t-esc="pager['page']['num']"/> of <t t-esc="pager['page_count']"/>
+                    </span>
+                    <t t-if="pager['page']['num'] &lt; pager['page_count']">
+                        <a t-att-href="pager['page_next']['url']" class="mvp-pager-btn">Next &#8594;</a>
+                    </t>
+                </div>
+            </t>
+        </div>
+
+    </t>
+</template>
+
+</odoo>

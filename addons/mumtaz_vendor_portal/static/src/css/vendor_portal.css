@@ -1,0 +1,691 @@
+/* ============================================================
+   Mumtaz Vendor Portal — vendor_portal.css
+   Design tokens + full layout
+   ============================================================ */
+
+/* ── Design tokens ── */
+:root {
+  --ink:       #0C1118;
+  --paper:     #F5F3EF;
+  --paper2:    #EDEAE3;
+  --paper3:    #E0DDD6;
+  --surface:   #FFFFFF;
+  --gold:      #B8862A;
+  --gold2:     #D4A84C;
+  --gold-bg:   #FDF6E4;
+  --teal:      #0B7A64;
+  --teal-bg:   #E6F7F3;
+  --coral:     #C0402A;
+  --coral-bg:  #FCECEA;
+
+  --sidebar-w:    240px;
+  --topbar-h:     60px;
+  --radius:       10px;
+  --radius-sm:    6px;
+  --shadow-card:  0 1px 3px rgba(12,17,24,.08), 0 4px 12px rgba(12,17,24,.04);
+  --transition:   .18s ease;
+}
+
+/* ── Reset / base ── */
+.mumtaz-vendor-portal *,
+.mumtaz-vendor-portal *::before,
+.mumtaz-vendor-portal *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body.mumtaz-vendor-portal {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Shell grid ── */
+.mvp-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: 1fr;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.mvp-sidebar {
+  grid-column: 1;
+  grid-row: 1;
+  background: var(--ink);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+/* Brand mark */
+.mvp-brand {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  padding: 1.375rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.mvp-brand-mark {
+  width: 36px;
+  height: 36px;
+  background: var(--gold);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  color: #fff;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mvp-brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.1rem;
+  letter-spacing: .02em;
+  color: #fff;
+}
+
+/* Company pill */
+.mvp-company-pill {
+  margin: .875rem 1.25rem .5rem;
+  padding: .375rem .625rem;
+  background: rgba(255,255,255,.07);
+  border-radius: var(--radius-sm);
+  font-size: .75rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.65);
+  letter-spacing: .01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Nav */
+.mvp-nav {
+  flex: 1;
+  padding: .5rem .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .125rem;
+}
+
+.mvp-nav-link {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  padding: .6rem .75rem;
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,.65);
+  text-decoration: none;
+  font-size: .875rem;
+  font-weight: 400;
+  transition: background var(--transition), color var(--transition);
+  cursor: pointer;
+}
+
+.mvp-nav-link:hover {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  text-decoration: none;
+}
+
+.mvp-nav-link.active {
+  background: var(--gold);
+  color: #fff;
+  font-weight: 500;
+}
+
+.mvp-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+/* Sidebar footer */
+.mvp-sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.mvp-logout {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: rgba(255,255,255,.5);
+  text-decoration: none;
+  font-size: .8125rem;
+  transition: color var(--transition);
+}
+
+.mvp-logout:hover {
+  color: var(--coral);
+  text-decoration: none;
+}
+
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
+.mvp-main {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+/* Top bar */
+.mvp-topbar {
+  height: var(--topbar-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--paper3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.mvp-topbar-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.125rem;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.mvp-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+}
+
+.mvp-user-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--gold-bg);
+  border: 1.5px solid var(--gold2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.mvp-user-name {
+  font-size: .8125rem;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+/* Content padding */
+.mvp-content {
+  padding: 1.75rem;
+  flex: 1;
+}
+
+/* ============================================================
+   KPI ROW
+   ============================================================ */
+.mvp-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mvp-kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--paper3);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .875rem;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition);
+}
+
+.mvp-kpi-card:hover {
+  box-shadow: 0 2px 8px rgba(12,17,24,.12);
+}
+
+.mvp-kpi-card-highlight {
+  border-color: var(--gold2);
+  background: var(--gold-bg);
+}
+
+.mvp-kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mvp-kpi-icon-teal  { background: var(--teal-bg); color: var(--teal); }
+.mvp-kpi-icon-gold  { background: var(--gold-bg); color: var(--gold); }
+.mvp-kpi-icon-coral { background: var(--coral-bg); color: var(--coral); }
+.mvp-kpi-icon-ink   { background: var(--paper2); color: var(--ink); }
+
+.mvp-kpi-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mvp-kpi-label {
+  font-size: .75rem;
+  font-weight: 500;
+  color: rgba(12,17,24,.5);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: .25rem;
+}
+
+.mvp-kpi-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.mvp-kpi-value-amount {
+  font-size: 1.5rem;
+}
+
+.mvp-kpi-sub {
+  font-size: .75rem;
+  color: rgba(12,17,24,.4);
+  margin-top: .25rem;
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.mvp-card {
+  background: var(--surface);
+  border: 1px solid var(--paper3);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.mvp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--paper2);
+  background: var(--paper);
+}
+
+.mvp-card-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.mvp-card-count {
+  font-size: .8125rem;
+  color: rgba(12,17,24,.45);
+  font-weight: 400;
+}
+
+.mvp-link {
+  font-size: .8125rem;
+  color: var(--gold);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.mvp-link:hover {
+  color: var(--gold2);
+  text-decoration: none;
+}
+
+/* ============================================================
+   TABLE
+   ============================================================ */
+.mvp-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mvp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .875rem;
+}
+
+.mvp-table thead tr {
+  background: var(--paper2);
+}
+
+.mvp-table thead th {
+  padding: .625rem 1.25rem;
+  text-align: left;
+  font-size: .6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: rgba(12,17,24,.5);
+  white-space: nowrap;
+  border-bottom: 1px solid var(--paper3);
+}
+
+.mvp-table tbody tr {
+  border-bottom: 1px solid var(--paper2);
+  transition: background var(--transition);
+}
+
+.mvp-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.mvp-table tbody tr.mvp-tr-hover:hover,
+.mvp-table tbody tr:hover {
+  background: var(--paper);
+}
+
+.mvp-table tbody td {
+  padding: .75rem 1.25rem;
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.mvp-ref {
+  font-weight: 500;
+  color: var(--ink);
+  font-size: .875rem;
+}
+
+.mvp-col-date {
+  white-space: nowrap;
+  color: rgba(12,17,24,.65);
+}
+
+.mvp-col-amount {
+  text-align: right;
+  font-family: 'Instrument Serif', serif;
+  font-size: .9375rem;
+  white-space: nowrap;
+}
+
+.mvp-amount-strong {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.mvp-muted {
+  color: rgba(12,17,24,.35);
+}
+
+.mvp-small {
+  font-size: .75rem;
+}
+
+.mvp-empty {
+  text-align: center;
+  padding: 2.5rem 1rem !important;
+  color: rgba(12,17,24,.35);
+  font-style: italic;
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.mvp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .2rem .5rem;
+  border-radius: 4px;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+.mvp-badge-teal  { background: var(--teal-bg);  color: var(--teal); }
+.mvp-badge-gold  { background: var(--gold-bg);  color: var(--gold); }
+.mvp-badge-coral { background: var(--coral-bg); color: var(--coral); }
+.mvp-badge-ink   { background: var(--paper2);   color: var(--ink); }
+
+/* ============================================================
+   PAGER
+   ============================================================ */
+.mvp-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: .875rem 1.25rem;
+  border-top: 1px solid var(--paper2);
+  background: var(--paper);
+}
+
+.mvp-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: .375rem .875rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--paper3);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: .8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.mvp-pager-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.mvp-pager-info {
+  font-size: .8125rem;
+  color: rgba(12,17,24,.45);
+}
+
+/* ============================================================
+   SUMMARY BOX
+   ============================================================ */
+.mvp-summary-box {
+  background: var(--gold-bg);
+  border: 1px solid var(--gold2);
+  border-radius: var(--radius);
+  padding: 1.125rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mvp-summary-label {
+  font-size: .875rem;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.mvp-summary-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+/* ============================================================
+   MOBILE — hamburger toggle + responsive collapse
+   ============================================================ */
+
+/* Hidden checkbox that drives the toggle (no JS needed) */
+.mvp-nav-toggle-input {
+  display: none;
+}
+
+/* Hamburger button */
+.mvp-hamburger {
+  display: none;
+  position: fixed;
+  top: .875rem;
+  left: 1rem;
+  z-index: 300;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+}
+
+.mvp-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: transform .2s, opacity .2s;
+}
+
+/* Overlay behind sidebar on mobile */
+.mvp-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(12,17,24,.45);
+  z-index: 150;
+}
+
+@media (max-width: 768px) {
+
+  .mvp-shell {
+    grid-template-columns: 1fr;
+  }
+
+  /* Sidebar off-screen by default */
+  .mvp-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: var(--sidebar-w);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 200;
+  }
+
+  /* Show hamburger */
+  .mvp-hamburger {
+    display: flex;
+  }
+
+  /* Show overlay when open */
+  .mvp-nav-toggle-input:checked ~ .mvp-overlay {
+    display: block;
+  }
+
+  /* Slide sidebar in */
+  .mvp-nav-toggle-input:checked ~ .mvp-sidebar {
+    transform: translateX(0);
+  }
+
+  /* Hamburger → X animation */
+  .mvp-nav-toggle-input:checked ~ .mvp-hamburger span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .mvp-nav-toggle-input:checked ~ .mvp-hamburger span:nth-child(2) {
+    opacity: 0;
+  }
+  .mvp-nav-toggle-input:checked ~ .mvp-hamburger span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* Main takes full width, add top padding for hamburger */
+  .mvp-main {
+    grid-column: 1;
+    padding-top: 0;
+  }
+
+  .mvp-topbar {
+    padding-left: 3.5rem; /* room for hamburger */
+  }
+
+  .mvp-content {
+    padding: 1rem;
+  }
+
+  /* KPI grid stacks to 2 cols on mobile */
+  .mvp-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: .75rem;
+  }
+
+  .mvp-kpi-value {
+    font-size: 1.5rem;
+  }
+
+  .mvp-kpi-value-amount {
+    font-size: 1.125rem;
+  }
+
+  /* Table horizontal scroll already handled by mvp-table-wrap */
+  .mvp-table thead th,
+  .mvp-table tbody td {
+    padding: .625rem .875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mvp-kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mvp-kpi-card {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ============================================================
+   Scrollbar styling (webkit)
+   ============================================================ */
+.mvp-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.mvp-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mvp-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.15);
+  border-radius: 2px;
+}

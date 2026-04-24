@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_vendor_payments" name="Vendor Payments">
+    <t t-call="mumtaz_vendor_portal.portal_vendor_layout">
+        <t t-set="title">Payments</t>
+
+        <div class="mvp-card">
+            <div class="mvp-card-header">
+                <h3 class="mvp-card-title">Payments Made to You</h3>
+                <span class="mvp-card-count">Last 20 payments</span>
+            </div>
+
+            <div class="mvp-table-wrap">
+                <table class="mvp-table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Date</th>
+                            <th>Journal</th>
+                            <th class="mvp-col-amount">Amount</th>
+                            <th>State</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="payments" t-as="pmt">
+                            <tr class="mvp-tr-hover">
+                                <td>
+                                    <strong class="mvp-ref">
+                                        <t t-esc="pmt.name"/>
+                                    </strong>
+                                    <t t-if="pmt.ref">
+                                        <br/>
+                                        <span class="mvp-muted mvp-small">
+                                            <t t-esc="pmt.ref"/>
+                                        </span>
+                                    </t>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-esc="pmt.date" t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td>
+                                    <t t-esc="pmt.journal_id.name"/>
+                                </td>
+                                <td class="mvp-col-amount mvp-amount-strong">
+                                    <t t-esc="'{:,.2f} {}'.format(pmt.amount, pmt.currency_id.name)"/>
+                                </td>
+                                <td>
+                                    <t t-if="pmt.state == 'posted'">
+                                        <span class="mvp-badge mvp-badge-teal">POSTED</span>
+                                    </t>
+                                    <t t-elif="pmt.state == 'reconciled'">
+                                        <span class="mvp-badge mvp-badge-ink">RECONCILED</span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="mvp-badge mvp-badge-gold">
+                                            <t t-esc="pmt.state.upper()"/>
+                                        </span>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-if="not payments">
+                            <tr>
+                                <td colspan="5" class="mvp-empty">No payments recorded yet.</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary box if there are payments -->
+        <t t-if="payments">
+            <div class="mvp-summary-box" style="margin-top:1.25rem">
+                <div class="mvp-summary-label">Total Received (shown above)</div>
+                <div class="mvp-summary-value">
+                    <t t-esc="'AED {:,.2f}'.format(sum(payments.mapped('amount')))"/>
+                </div>
+            </div>
+        </t>
+
+    </t>
+</template>
+
+</odoo>

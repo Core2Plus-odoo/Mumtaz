@@ -1,0 +1,160 @@
+/* =============================================================================
+   Mumtaz E-Invoicing — Backend CSS
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   E-Invoice statusbar strip
+   --------------------------------------------------------------------------- */
+.o_mumtaz_einvoice_statusbar {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 4px 16px;
+    margin-bottom: 0;
+}
+
+.o_mumtaz_einvoice_statusbar .o_statusbar_status {
+    font-size: 0.8rem;
+}
+
+/* Status colour overrides for the e-invoice statusbar */
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button.btn-primary[data-value="accepted"],
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button[data-value="accepted"].o_arrow_button_current {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #fff !important;
+}
+
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button.btn-primary[data-value="rejected"],
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button[data-value="rejected"].o_arrow_button_current {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button.btn-primary[data-value="submitted"],
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button[data-value="submitted"].o_arrow_button_current {
+    background-color: #fd7e14 !important;
+    border-color: #fd7e14 !important;
+    color: #fff !important;
+}
+
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button.btn-primary[data-value="cancelled"],
+.o_mumtaz_einvoice_statusbar .o_statusbar_status button[data-value="cancelled"].o_arrow_button_current {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #fff !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Action buttons row in the "Other Info" tab
+   --------------------------------------------------------------------------- */
+.o_mumtaz_einvoice_buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+}
+
+.o_mumtaz_einvoice_buttons .btn {
+    min-width: 160px;
+}
+
+/* ---------------------------------------------------------------------------
+   QR code image container
+   --------------------------------------------------------------------------- */
+.o_field_image.o_mumtaz_qr_image img,
+.o_field_widget[name="einvoice_qr_image"] img {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 4px;
+    background: #fff;
+    max-width: 160px;
+    max-height: 160px;
+    display: block;
+}
+
+/* ---------------------------------------------------------------------------
+   Config form: action buttons
+   --------------------------------------------------------------------------- */
+.o_mumtaz_config_actions {
+    padding: 8px 0 4px 0;
+}
+
+.o_mumtaz_config_actions .btn {
+    min-width: 180px;
+}
+
+/* ---------------------------------------------------------------------------
+   Badge colour helpers for e-invoice status
+   --------------------------------------------------------------------------- */
+.badge.o_status_accepted,
+span.badge[data-value="accepted"] {
+    background-color: #198754;
+    color: #fff;
+}
+
+.badge.o_status_rejected,
+span.badge[data-value="rejected"] {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.badge.o_status_submitted,
+span.badge[data-value="submitted"] {
+    background-color: #fd7e14;
+    color: #fff;
+}
+
+.badge.o_status_draft,
+span.badge[data-value="draft"] {
+    background-color: #0dcaf0;
+    color: #000;
+}
+
+.badge.o_status_cancelled,
+span.badge[data-value="cancelled"] {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.badge.o_status_not_applicable,
+span.badge[data-value="not_applicable"] {
+    background-color: #e9ecef;
+    color: #6c757d;
+}
+
+/* ---------------------------------------------------------------------------
+   XML payload text area (make it monospaced and slightly taller)
+   --------------------------------------------------------------------------- */
+.o_field_widget[name="einvoice_xml_payload"] textarea,
+.o_field_widget[name="einvoice_validation_errors"] textarea {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.75rem;
+    min-height: 120px;
+    background-color: #f8f9fa;
+}
+
+/* ---------------------------------------------------------------------------
+   List view: e-invoice status column alignment
+   --------------------------------------------------------------------------- */
+.o_list_view .o_field_widget[name="einvoice_status"] {
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Smart button: highlight when accepted
+   --------------------------------------------------------------------------- */
+.o_statusbar_buttons .o_mumtaz_einvoice_accepted_btn {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive: hide QR on small screens
+   --------------------------------------------------------------------------- */
+@media (max-width: 576px) {
+    .o_field_widget[name="einvoice_qr_image"] {
+        display: none;
+    }
+}

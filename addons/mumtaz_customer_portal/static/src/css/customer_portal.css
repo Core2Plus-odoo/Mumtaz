@@ -1,0 +1,805 @@
+/* ============================================================
+   Mumtaz Customer Portal — customer_portal.css
+   Overrides Odoo's /my/ portal with Mumtaz brand system.
+   ============================================================ */
+
+/* ── Design tokens ── */
+:root {
+  --ink:       #0C1118;
+  --paper:     #F5F3EF;
+  --paper2:    #EDEAE3;
+  --paper3:    #E0DDD6;
+  --surface:   #FFFFFF;
+  --gold:      #B8862A;
+  --gold2:     #D4A84C;
+  --gold-bg:   #FDF6E4;
+  --teal:      #0B7A64;
+  --teal-bg:   #E6F7F3;
+  --coral:     #C0402A;
+  --coral-bg:  #FCECEA;
+
+  --radius:    10px;
+  --radius-sm: 6px;
+  --shadow:    0 1px 3px rgba(12,17,24,.08), 0 4px 12px rgba(12,17,24,.04);
+  --transition: .18s ease;
+}
+
+/* ============================================================
+   GLOBAL PORTAL BODY
+   ============================================================ */
+body.o_portal {
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif !important;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink) !important;
+  background: var(--paper) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   NAVBAR / HEADER
+   ============================================================ */
+body.o_portal .o_portal_navbar,
+body.o_portal .navbar {
+  background: var(--ink) !important;
+  border-bottom: none !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18) !important;
+}
+
+body.o_portal .o_portal_navbar .navbar-brand,
+body.o_portal .navbar .navbar-brand {
+  font-family: 'Instrument Serif', serif !important;
+  font-size: 1.1rem !important;
+  color: #fff !important;
+  letter-spacing: .02em;
+}
+
+body.o_portal .o_portal_navbar .nav-link,
+body.o_portal .navbar .nav-link {
+  color: rgba(255,255,255,.7) !important;
+  font-size: .875rem;
+  transition: color var(--transition);
+}
+
+body.o_portal .o_portal_navbar .nav-link:hover,
+body.o_portal .navbar .nav-link:hover,
+body.o_portal .o_portal_navbar .nav-link.active,
+body.o_portal .navbar .nav-link.active {
+  color: var(--gold2) !important;
+}
+
+body.o_portal .o_portal_navbar .o_portal_my_home a,
+body.o_portal .navbar .o_portal_my_home a {
+  color: rgba(255,255,255,.7) !important;
+}
+
+/* ============================================================
+   MAIN PORTAL CONTAINER
+   ============================================================ */
+body.o_portal #wrapwrap {
+  background: var(--paper) !important;
+}
+
+body.o_portal .container,
+body.o_portal .container-fluid {
+  max-width: 1160px;
+}
+
+/* ============================================================
+   HERO STRIP (our custom injection above the home grid)
+   ============================================================ */
+.mcp-hero {
+  background: var(--ink);
+  color: #fff;
+  padding: 2rem 0 1.75rem;
+  margin-bottom: 2rem;
+}
+
+/* If hero is inside a standard container, match gutters */
+.o_portal_wrap .mcp-hero {
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  padding-left: calc(50vw - 50% + 1.5rem);
+  padding-right: calc(50vw - 50% + 1.5rem);
+}
+
+.mcp-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: .875rem;
+}
+
+.mcp-brand-mark {
+  width: 44px;
+  height: 44px;
+  background: var(--gold);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  color: #fff;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mcp-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.mcp-brand-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.mcp-brand-tagline {
+  font-size: .75rem;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.mcp-hero-greeting {
+  font-size: .9375rem;
+  color: rgba(255,255,255,.75);
+}
+
+.mcp-hero-greeting strong {
+  color: #fff;
+  font-weight: 500;
+}
+
+/* ============================================================
+   SECTION HEADER
+   ============================================================ */
+.mcp-section-header {
+  margin-bottom: 1.5rem;
+}
+
+.mcp-page-title {
+  font-family: 'Instrument Serif', serif !important;
+  font-size: 1.5rem !important;
+  font-weight: 400 !important;
+  color: var(--ink) !important;
+}
+
+.mcp-subtitle {
+  font-size: .875rem;
+  color: rgba(12,17,24,.5);
+  margin-top: .25rem;
+}
+
+/* ============================================================
+   PORTAL HOME — document cards (override Bootstrap grid cards)
+   ============================================================ */
+body.o_portal .o_portal_my_home .row {
+  gap: 0;
+}
+
+body.o_portal .o_portal_my_home .col-md-4,
+body.o_portal .o_portal_my_home .col-sm-6,
+body.o_portal .o_portal_my_home .col-lg-3 {
+  padding: .5rem;
+}
+
+/* Document tile */
+body.o_portal .o_portal_my_home .panel,
+body.o_portal .o_portal_my_home .card {
+  background: var(--surface) !important;
+  border: 1px solid var(--paper3) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+body.o_portal .o_portal_my_home .panel:hover,
+body.o_portal .o_portal_my_home .card:hover {
+  box-shadow: 0 2px 12px rgba(12,17,24,.12) !important;
+  border-color: var(--gold2) !important;
+}
+
+body.o_portal .o_portal_my_home .panel .panel-heading,
+body.o_portal .o_portal_my_home .card .card-header {
+  background: var(--paper2) !important;
+  border-bottom: 1px solid var(--paper3) !important;
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: .8125rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: rgba(12,17,24,.5);
+}
+
+body.o_portal .o_portal_my_home .panel .panel-body,
+body.o_portal .o_portal_my_home .card .card-body {
+  padding: 1.125rem 1.25rem !important;
+}
+
+/* Count number on portal tiles */
+body.o_portal .o_portal_my_home .panel .panel-body h5,
+body.o_portal .o_portal_my_home .card .card-body .h5,
+body.o_portal .o_portal_my_home .card .card-body h5 {
+  font-family: 'Instrument Serif', serif !important;
+  font-size: 2rem !important;
+  font-weight: 400 !important;
+  color: var(--gold) !important;
+  line-height: 1;
+}
+
+/* ============================================================
+   PORTAL DOCUMENT LIST TABLES
+   ============================================================ */
+body.o_portal table.table {
+  background: var(--surface) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+  border: 1px solid var(--paper3);
+  box-shadow: var(--shadow);
+}
+
+body.o_portal table.table thead {
+  background: var(--paper2) !important;
+}
+
+body.o_portal table.table thead th {
+  font-size: .6875rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .06em !important;
+  color: rgba(12,17,24,.5) !important;
+  border-bottom: 1px solid var(--paper3) !important;
+  padding: .625rem 1rem !important;
+}
+
+body.o_portal table.table tbody tr {
+  border-bottom: 1px solid var(--paper2) !important;
+  transition: background var(--transition);
+}
+
+body.o_portal table.table tbody tr:last-child {
+  border-bottom: none !important;
+}
+
+body.o_portal table.table tbody tr:hover {
+  background: var(--paper) !important;
+}
+
+body.o_portal table.table tbody td {
+  padding: .75rem 1rem !important;
+  color: var(--ink) !important;
+  vertical-align: middle !important;
+  font-size: .875rem;
+  border-bottom: none !important;
+}
+
+/* ============================================================
+   PORTAL INVOICE / ORDER DETAIL
+   ============================================================ */
+
+/* Sidebar card panel */
+body.o_portal .o_portal_sidebar .card,
+body.o_portal .o_portal_sidebar .panel {
+  border: 1px solid var(--paper3) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--shadow) !important;
+  overflow: hidden;
+}
+
+body.o_portal .o_portal_sidebar .card-header,
+body.o_portal .o_portal_sidebar .panel-heading {
+  background: var(--paper2) !important;
+  border-bottom: 1px solid var(--paper3) !important;
+  font-size: .8125rem !important;
+  font-weight: 500 !important;
+  color: rgba(12,17,24,.55) !important;
+}
+
+/* Amount totals */
+body.o_portal .o_total_row,
+body.o_portal tfoot td,
+body.o_portal .o_subtotal {
+  font-family: 'Instrument Serif', serif !important;
+  font-size: 1rem !important;
+}
+
+body.o_portal .o_total_row strong,
+body.o_portal tfoot .o_price_total {
+  font-size: 1.25rem !important;
+  color: var(--ink) !important;
+}
+
+/* Buttons */
+body.o_portal .btn-primary {
+  background: var(--gold) !important;
+  border-color: var(--gold) !important;
+  color: #fff !important;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  border-radius: var(--radius-sm) !important;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+body.o_portal .btn-primary:hover,
+body.o_portal .btn-primary:focus {
+  background: var(--gold2) !important;
+  border-color: var(--gold2) !important;
+}
+
+body.o_portal .btn-secondary,
+body.o_portal .btn-light {
+  background: var(--surface) !important;
+  border-color: var(--paper3) !important;
+  color: var(--ink) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+body.o_portal .btn-secondary:hover,
+body.o_portal .btn-light:hover {
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+}
+
+/* Breadcrumb */
+body.o_portal .breadcrumb {
+  background: transparent !important;
+  padding: 0 !important;
+  margin-bottom: 1rem;
+}
+
+body.o_portal .breadcrumb-item a {
+  color: var(--gold) !important;
+  text-decoration: none;
+}
+
+body.o_portal .breadcrumb-item.active {
+  color: rgba(12,17,24,.5) !important;
+}
+
+/* Badges / status pills */
+body.o_portal .badge {
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: .6875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: .04em !important;
+  padding: .25rem .5rem !important;
+  border-radius: 4px !important;
+}
+
+body.o_portal .badge-success,
+body.o_portal .bg-success {
+  background: var(--teal-bg) !important;
+  color: var(--teal) !important;
+  border: none !important;
+}
+
+body.o_portal .badge-warning,
+body.o_portal .bg-warning {
+  background: var(--gold-bg) !important;
+  color: var(--gold) !important;
+  border: none !important;
+}
+
+body.o_portal .badge-danger,
+body.o_portal .bg-danger {
+  background: var(--coral-bg) !important;
+  color: var(--coral) !important;
+  border: none !important;
+}
+
+body.o_portal .badge-secondary,
+body.o_portal .bg-secondary {
+  background: var(--paper2) !important;
+  color: var(--ink) !important;
+  border: none !important;
+}
+
+/* ============================================================
+   E-INVOICE BLOCK (sidebar injection on invoice detail page)
+   ============================================================ */
+.mcp-einvoice-block {
+  background: var(--gold-bg);
+  border: 1px solid var(--gold2);
+  border-radius: var(--radius);
+  padding: 1.125rem;
+  margin-top: 1rem;
+}
+
+.mcp-einvoice-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .875rem;
+}
+
+.mcp-einvoice-icon {
+  color: var(--gold);
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.mcp-einvoice-title {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: .02em;
+}
+
+.mcp-einvoice-status-wrap {
+  margin-bottom: .75rem;
+}
+
+/* Status badges */
+.mcp-status {
+  display: inline-flex;
+  align-items: center;
+  padding: .2rem .55rem;
+  border-radius: 4px;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.mcp-status-accepted,
+.mcp-status-valid {
+  background: var(--teal-bg);
+  color: var(--teal);
+}
+
+.mcp-status-submitted,
+.mcp-status-pending {
+  background: var(--gold-bg);
+  color: var(--gold);
+}
+
+.mcp-status-rejected,
+.mcp-status-invalid,
+.mcp-status-error {
+  background: var(--coral-bg);
+  color: var(--coral);
+}
+
+.mcp-status-unknown,
+.mcp-status-draft {
+  background: var(--paper2);
+  color: var(--ink);
+}
+
+/* QR image */
+.mcp-qr-wrap {
+  display: flex;
+  justify-content: center;
+  margin: .875rem 0;
+}
+
+.mcp-qr-img {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--paper3);
+  background: var(--surface);
+  padding: .25rem;
+}
+
+.mcp-einvoice-hint {
+  font-size: .75rem;
+  color: rgba(12,17,24,.5);
+  text-align: center;
+  line-height: 1.4;
+  margin-top: .25rem;
+}
+
+/* ============================================================
+   ORDER DETAIL ENHANCEMENTS
+   ============================================================ */
+
+/* Brand strip above order */
+.mcp-order-brand-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ink);
+  color: #fff;
+  padding: .75rem 1.25rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin-bottom: -1px; /* connect to card below */
+}
+
+.mcp-order-brand-left {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.mcp-brand-mark-sm {
+  width: 28px;
+  height: 28px;
+  background: var(--gold);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mcp-order-brand-label {
+  font-size: .8125rem;
+  color: rgba(255,255,255,.7);
+  font-weight: 400;
+}
+
+/* Order status */
+.mcp-order-status {
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .625rem;
+  border-radius: 4px;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.mcp-order-status-sale    { background: var(--teal-bg);  color: var(--teal); }
+.mcp-order-status-done    { background: var(--paper2);   color: var(--ink); }
+.mcp-order-status-draft   { background: var(--gold-bg);  color: var(--gold); }
+.mcp-order-status-sent    { background: var(--teal-bg);  color: var(--teal); }
+.mcp-order-status-cancel  { background: var(--coral-bg); color: var(--coral); }
+
+/* Delivery block */
+.mcp-delivery-block {
+  background: var(--surface);
+  border: 1px solid var(--paper3);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.mcp-delivery-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: .75rem;
+}
+
+.mcp-delivery-header svg {
+  color: var(--teal);
+}
+
+.mcp-delivery-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+}
+
+.mcp-delivery-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem .625rem;
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  font-size: .8125rem;
+}
+
+.mcp-delivery-ref {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Picking states */
+.mcp-pick-state {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: .15rem .45rem;
+  border-radius: 3px;
+}
+
+.mcp-pick-state-done       { background: var(--teal-bg);  color: var(--teal); }
+.mcp-pick-state-assigned   { background: var(--gold-bg);  color: var(--gold); }
+.mcp-pick-state-waiting,
+.mcp-pick-state-confirmed  { background: var(--paper2);   color: var(--ink); }
+.mcp-pick-state-cancel     { background: var(--coral-bg); color: var(--coral); }
+
+/* ============================================================
+   FOOTER BRAND STRIP (invoice + order pages)
+   ============================================================ */
+.mcp-invoice-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 0;
+  margin: 1.25rem 0 .5rem;
+  border-top: 1px solid var(--paper3);
+  font-size: .8125rem;
+  color: rgba(12,17,24,.4);
+}
+
+.mcp-invoice-footer-mark {
+  width: 22px;
+  height: 22px;
+  background: var(--gold-bg);
+  border: 1px solid var(--gold2);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: .875rem;
+  color: var(--gold);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   CHATTER / MESSAGES
+   ============================================================ */
+body.o_portal .o_portal_chatter .o_chatter_avatar {
+  border-radius: 50%;
+}
+
+body.o_portal .o_portal_chatter .o_mail_message {
+  border: 1px solid var(--paper3) !important;
+  border-radius: var(--radius) !important;
+  background: var(--surface) !important;
+  margin-bottom: .75rem;
+}
+
+body.o_portal .o_portal_chatter .o_mail_message_content {
+  font-size: .875rem;
+  color: var(--ink);
+}
+
+/* ============================================================
+   FORM CONTROLS
+   ============================================================ */
+body.o_portal .form-control {
+  border-color: var(--paper3) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .875rem;
+  color: var(--ink);
+  background: var(--surface);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+body.o_portal .form-control:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px rgba(184,134,42,.15) !important;
+  outline: none;
+}
+
+/* ============================================================
+   PAGER
+   ============================================================ */
+body.o_portal .o_portal_pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1.25rem;
+}
+
+body.o_portal .o_portal_pager .page-link {
+  border: 1px solid var(--paper3) !important;
+  color: var(--ink) !important;
+  border-radius: var(--radius-sm) !important;
+  font-size: .8125rem;
+  padding: .375rem .75rem;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+body.o_portal .o_portal_pager .page-link:hover {
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+  background: var(--gold-bg) !important;
+}
+
+body.o_portal .o_portal_pager .active .page-link {
+  background: var(--gold) !important;
+  border-color: var(--gold) !important;
+  color: #fff !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .mcp-hero {
+    padding: 1.5rem 1rem 1.25rem;
+  }
+
+  .mcp-brand-mark {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+  }
+
+  .mcp-brand-name {
+    font-size: 1rem;
+  }
+
+  body.o_portal table.table thead {
+    display: none;
+  }
+
+  body.o_portal table.table tbody tr {
+    display: block;
+    margin-bottom: .75rem;
+    border: 1px solid var(--paper3) !important;
+    border-radius: var(--radius) !important;
+    padding: .5rem;
+  }
+
+  body.o_portal table.table tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: .375rem .5rem !important;
+  }
+
+  body.o_portal table.table tbody td::before {
+    content: attr(data-label);
+    font-size: .6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: rgba(12,17,24,.4);
+  }
+
+  .mcp-order-brand-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+    border-radius: var(--radius);
+  }
+}
+
+@media (max-width: 480px) {
+  .mcp-hero-greeting {
+    font-size: .875rem;
+  }
+
+  .mcp-qr-img {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* ============================================================
+   PRINT — keep it clean
+   ============================================================ */
+@media print {
+  .mcp-hero,
+  .o_portal_navbar,
+  .navbar {
+    display: none !important;
+  }
+
+  body.o_portal {
+    background: #fff !important;
+  }
+
+  .mcp-invoice-footer-brand {
+    border-top: 1pt solid #ccc;
+  }
+}

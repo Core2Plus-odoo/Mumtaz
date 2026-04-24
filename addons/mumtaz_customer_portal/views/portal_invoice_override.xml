@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!--
+    Extend the standard customer-facing invoice detail page.
+    Adds an e-invoice QR block to the sidebar when einvoice_qr_code
+    is available on the move (populated by mumtaz_einvoice or similar).
+-->
+<template id="portal_invoice_mumtaz"
+          inherit_id="account.portal_invoice_page"
+          name="Mumtaz Invoice — E-Invoice QR Block">
+
+    <!-- ── QR / status block in the right sidebar ── -->
+    <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+        <t t-if="invoice.get('einvoice_qr_code') if isinstance(invoice, dict) else hasattr(invoice, 'einvoice_qr_code') and invoice.einvoice_qr_code">
+            <div class="mcp-einvoice-block">
+                <div class="mcp-einvoice-header">
+                    <svg class="mcp-einvoice-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M14 14h2v2h-2zM18 14h3M14 18h3M18 18v3M21 18h-1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                    <span class="mcp-einvoice-title">E-Invoice</span>
+                </div>
+
+                <!-- Status badge -->
+                <t t-if="hasattr(invoice, 'einvoice_status') and invoice.einvoice_status">
+                    <div class="mcp-einvoice-status-wrap">
+                        <span t-att-class="'mcp-status mcp-status-' + (invoice.einvoice_status or 'unknown')">
+                            <t t-esc="dict(invoice._fields['einvoice_status'].selection).get(invoice.einvoice_status, invoice.einvoice_status)"/>
+                        </span>
+                    </div>
+                </t>
+
+                <!-- QR image -->
+                <div class="mcp-qr-wrap">
+                    <img t-att-src="'data:image/png;base64,' + invoice.einvoice_qr_code"
+                         alt="E-Invoice QR Code"
+                         class="mcp-qr-img"/>
+                </div>
+
+                <p class="mcp-einvoice-hint">
+                    Scan to verify this invoice on the government e-invoicing portal.
+                </p>
+            </div>
+        </t>
+    </xpath>
+
+    <!-- ── Mumtaz branding strip at the bottom of the invoice ── -->
+    <xpath expr="//div[hasclass('o_portal_chatter')]" position="before">
+        <div class="mcp-invoice-footer-brand">
+            <span class="mcp-invoice-footer-mark">م</span>
+            <span>Mumtaz · Verified Invoice</span>
+        </div>
+    </xpath>
+
+</template>
+
+</odoo>
