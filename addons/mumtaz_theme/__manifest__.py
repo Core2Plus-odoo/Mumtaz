@@ -13,9 +13,6 @@
         "web.assets_backend": [
             "mumtaz_theme/static/src/css/mumtaz_backend.css",
         ],
-        "web.assets_frontend": [
-            "mumtaz_theme/static/src/css/mumtaz_login.css",
-        ],
     },
     "installable": True,
     "auto_install": False,
