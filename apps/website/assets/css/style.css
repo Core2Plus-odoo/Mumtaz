@@ -43,6 +43,99 @@
   --shadow-glow: 0 0 40px rgba(59,130,246,0.15);
 }
 
+/* ── Light Mode Token Overrides ─────────────────────────────────── */
+[data-theme="light"] {
+  --bg:          #f5f7ff;
+  --bg-1:        #eef1fb;
+  --bg-2:        #e5eaf8;
+  --surface:     #ffffff;
+  --surface-2:   #f0f3fd;
+  --border:      rgba(15,23,42,0.08);
+  --border-2:    rgba(15,23,42,0.15);
+
+  --text:     #0f172a;
+  --text-2:   #374151;
+  --text-3:   #6b7280;
+
+  --grad-glow: radial-gradient(ellipse at 60% 0%,rgba(59,130,246,0.09),transparent 65%),
+               radial-gradient(ellipse at 10% 80%,rgba(139,92,246,0.07),transparent 55%);
+  --shadow-card: 0 2px 16px rgba(15,23,42,0.09);
+  --shadow-glow: 0 0 40px rgba(59,130,246,0.10);
+}
+
+/* Light: structural component overrides */
+[data-theme="light"] body {
+  background-image: var(--grad-glow);
+}
+[data-theme="light"] .site-header {
+  background: rgba(245,247,255,0.92);
+  border-bottom-color: var(--border);
+}
+[data-theme="light"] .platform-bar {
+  background: #fff;
+  border-bottom-color: var(--border);
+}
+[data-theme="light"] .hero::before {
+  background: radial-gradient(ellipse at 50% -10%,rgba(59,130,246,0.10),transparent 60%);
+}
+[data-theme="light"] .hero h1 {
+  background: linear-gradient(135deg,#0f172a 30%,#475569 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+[data-theme="light"] .hero-visual {
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(15,23,42,0.10);
+}
+[data-theme="light"] .dash-kpi,
+[data-theme="light"] .dash-chart,
+[data-theme="light"] .dash-alert {
+  background: var(--bg-1);
+  border-color: var(--border);
+}
+[data-theme="light"] .product-card {
+  background: #fff;
+}
+[data-theme="light"] .product-card.featured {
+  background: linear-gradient(160deg,#dce8ff 0%,#eff4ff 100%);
+  border-color: rgba(59,130,246,0.25);
+}
+[data-theme="light"] .pricing-card.popular {
+  background: linear-gradient(160deg,#dce8ff 0%,#eff4ff 100%);
+  border-color: rgba(59,130,246,0.30);
+}
+[data-theme="light"] .cta-box {
+  background: linear-gradient(135deg,#e0eaff 0%,#f0f5ff 100%);
+  border-color: rgba(59,130,246,0.22);
+}
+[data-theme="light"] .cta-box::before {
+  background: radial-gradient(circle,rgba(59,130,246,0.10),transparent 70%);
+}
+[data-theme="light"] .trust-logo-pill {
+  background: #fff;
+}
+[data-theme="light"] .interlink-strip {
+  background: #eef1fb;
+  border-top-color: var(--border);
+}
+[data-theme="light"] .interlink-card {
+  background: #fff;
+}
+[data-theme="light"] .footer {
+  background: #fff;
+  border-top-color: var(--border);
+}
+[data-theme="light"] .wl-console {
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(15,23,42,0.09);
+}
+[data-theme="light"] .wl-org-row {
+  background: var(--bg-1);
+}
+[data-theme="light"] .nav-menu {
+  background: #fff;
+}
+
 /* ── Reset ──────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -287,11 +380,22 @@ h4 { font-size: 1rem; font-weight: 600; }
 .trust-label { text-align: center; font-size: .82rem; color: var(--text-3); margin-bottom: 1.5rem; letter-spacing: .08em; text-transform: uppercase; }
 .trust-logos { display: flex; align-items: center; justify-content: center; gap: 3rem; flex-wrap: wrap; }
 .trust-logo {
-  font-size: .85rem; font-weight: 700; color: var(--text-3);
-  letter-spacing: .04em; text-transform: uppercase;
-  opacity: .55; transition: opacity .2s;
+  font-size: .82rem; font-weight: 600; color: var(--text-3);
+  letter-spacing: .02em;
+  opacity: .65; transition: opacity .2s;
 }
 .trust-logo:hover { opacity: 1; }
+.trust-logo-pill {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: .35rem .9rem;
+  font-size: .78rem;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: .75;
+}
+.trust-logo-pill:hover { opacity: 1; border-color: var(--border-2); }
 
 /* ── Section header ─────────────────────────────────────────────── */
 .section-header { text-align: center; max-width: 680px; margin: 0 auto 3rem; }
@@ -804,4 +908,143 @@ h4 { font-size: 1rem; font-weight: 600; }
   .zaki-hero-card { grid-template-columns: 1fr; }
   .zaki-chat-preview { display: none; }
   .platform-bar-label { display: none; }
+}
+
+/* ================================================================
+   Theme Toggle Button
+   ================================================================ */
+/* Theme transition — only elements that actually change color */
+body,
+.site-header, .platform-bar, .footer,
+.hero-visual, .dash-kpi, .dash-chart, .dash-alert,
+.product-card, .feature-card, .industry-card, .pricing-card,
+.testi-card, .interlink-card, .interlink-strip,
+.wl-console, .wl-org-row, .cta-box, .nav-menu,
+.stat-pill, .trust-logo-pill, .hiw-card, .badge {
+  transition: background .28s ease, border-color .28s ease, box-shadow .28s ease, color .28s ease;
+}
+
+.theme-toggle {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  cursor: pointer;
+  display: grid; place-items: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: background .2s, border-color .2s, transform .15s;
+}
+.theme-toggle:hover { background: var(--surface-2); transform: scale(1.08); }
+
+/* Show/hide sun vs moon based on current theme */
+.theme-icon { line-height: 1; }
+[data-theme="dark"]  .theme-icon-light  { display: none; }
+[data-theme="dark"]  .theme-icon-dark   { display: block; }
+[data-theme="light"] .theme-icon-dark   { display: none; }
+[data-theme="light"] .theme-icon-light  { display: block; }
+
+/* ================================================================
+   White Label Section
+   ================================================================ */
+.wl-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.wl-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.wl-feature {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.wl-feature-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  display: grid; place-items: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.wl-feature-title {
+  font-size: .93rem; font-weight: 600; color: var(--text);
+  margin-bottom: .25rem;
+}
+.wl-feature-desc {
+  font-size: .83rem; color: var(--text-2); line-height: 1.6;
+}
+
+/* Console mockup */
+.wl-console {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-card);
+}
+.wl-console-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+.wl-console-title {
+  font-size: .82rem; font-weight: 700; color: var(--text-2);
+  letter-spacing: .03em; text-transform: uppercase;
+}
+.wl-org-list {
+  display: flex; flex-direction: column; gap: .65rem;
+  margin-bottom: 1.25rem;
+}
+.wl-org-row {
+  display: flex; align-items: center; gap: .85rem;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: .7rem .9rem;
+}
+.wl-org-avatar {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: .68rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.wl-org-info { flex: 1; min-width: 0; }
+.wl-org-name {
+  font-size: .83rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wl-org-meta { font-size: .72rem; color: var(--text-3); }
+.wl-org-status {
+  font-size: .7rem; font-weight: 700; padding: .2rem .6rem;
+  border-radius: var(--radius-pill); flex-shrink: 0;
+}
+.status-active {
+  background: rgba(16,185,129,.12);
+  color: var(--green);
+  border: 1px solid rgba(16,185,129,.25);
+}
+.status-trial {
+  background: rgba(245,158,11,.12);
+  color: var(--amber);
+  border: 1px solid rgba(245,158,11,.25);
+}
+.wl-console-footer {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: .5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.wl-metric { text-align: center; }
+.wl-metric-val {
+  font-size: 1.1rem; font-weight: 800; color: var(--text);
+  background: var(--grad-primary);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.wl-metric-label { font-size: .72rem; color: var(--text-3); }
+
+@media (max-width: 900px) {
+  .wl-grid { grid-template-columns: 1fr; }
 }
