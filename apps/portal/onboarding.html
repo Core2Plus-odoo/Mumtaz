@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome to Mumtaz — Get Started</title>
+  <meta name="description" content="Set up your Mumtaz account in 2 minutes.">
+  <link rel="icon" href="../website/assets/images/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+
+<!-- ── Top bar ── -->
+<header class="ob-header">
+  <div class="ob-brand">
+    <div class="ob-brand-mark">M</div>
+    <span class="ob-brand-name">Mumtaz</span>
+  </div>
+  <div class="ob-step-track" id="stepTrack">
+    <div class="ob-step active" data-step="1"><span>1</span> Choose path</div>
+    <div class="ob-step-line"></div>
+    <div class="ob-step" data-step="2"><span>2</span> About you</div>
+    <div class="ob-step-line"></div>
+    <div class="ob-step" data-step="3"><span>3</span> Confirm</div>
+  </div>
+  <a href="https://mumtaz.digital" class="ob-exit">← Back to site</a>
+</header>
+
+<main class="ob-main">
+
+  <!-- ════════════ STEP 1: CHOOSE PATH ════════════ -->
+  <section class="ob-screen active" id="screen1">
+    <div class="ob-screen-inner">
+      <p class="ob-eyebrow">Welcome to Mumtaz</p>
+      <h1 class="ob-title">How will you use Mumtaz?</h1>
+      <p class="ob-sub">Choose your path — you can change this later.</p>
+
+      <div class="ob-path-grid">
+
+        <!-- Path A: Own company -->
+        <button class="ob-path-card" id="pathSme" onclick="choosePath('sme')">
+          <div class="ob-path-icon sme">🏢</div>
+          <h2>For my own company</h2>
+          <p>Use Mumtaz ERP + AI + Marketplace for your own team. Accounting, HR, sales, inventory — all in one place.</p>
+          <ul class="ob-path-features">
+            <li><span class="ob-check">✓</span> E-Invoicing &amp; VAT — <strong>free</strong></li>
+            <li><span class="ob-check">✓</span> CRM &amp; Sales — <strong>free</strong></li>
+            <li><span class="ob-check">✓</span> Zaki AI CFO from Growth plan</li>
+            <li><span class="ob-check">✓</span> B2B Marketplace access</li>
+          </ul>
+          <div class="ob-path-cta">Use for my company →</div>
+        </button>
+
+        <!-- Path B: Offer as SaaS -->
+        <button class="ob-path-card org" id="pathOrg" onclick="choosePath('org')">
+          <div class="ob-path-badge">Partner</div>
+          <div class="ob-path-icon org">🌐</div>
+          <h2>Offer to my network</h2>
+          <p>White-label Mumtaz and offer it to your members, clients, or dealers — under your own brand, your own pricing.</p>
+          <ul class="ob-path-features">
+            <li><span class="ob-check">✓</span> Your logo, colors, domain</li>
+            <li><span class="ob-check">✓</span> 2 free modules for every SME</li>
+            <li><span class="ob-check">✓</span> You set the pricing to your SMEs</li>
+            <li><span class="ob-check">✓</span> Recurring revenue per subscription</li>
+          </ul>
+          <div class="ob-path-features-who">
+            <span>🏦 Banks</span><span>🏢 Free Zones</span><span>🤝 Chambers</span><span>🏭 Enterprises</span>
+          </div>
+          <div class="ob-path-cta org-cta">Offer as white-label SaaS →</div>
+        </button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ STEP 2a: SME DETAILS ════════════ -->
+  <section class="ob-screen" id="screen2sme">
+    <div class="ob-screen-inner ob-narrow">
+      <button class="ob-back" onclick="goBack()">← Back</button>
+      <p class="ob-eyebrow">For my company</p>
+      <h1 class="ob-title">Tell us about your company</h1>
+      <p class="ob-sub">Takes 60 seconds. We'll set up your workspace right away.</p>
+
+      <form class="ob-form" id="smeForm" onsubmit="return false;">
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Company name <span class="ob-req">*</span></label>
+            <input class="ob-input" id="smeCompany" type="text" placeholder="e.g. Al Salam Trading LLC" required>
+          </div>
+          <div class="ob-field">
+            <label>Your name <span class="ob-req">*</span></label>
+            <input class="ob-input" id="smeName" type="text" placeholder="Full name" required>
+          </div>
+        </div>
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Work email <span class="ob-req">*</span></label>
+            <input class="ob-input" id="smeEmail" type="email" placeholder="you@company.com" required>
+          </div>
+          <div class="ob-field">
+            <label>Country</label>
+            <select class="ob-input" id="smeCountry">
+              <option value="ae" selected>🇦🇪 United Arab Emirates</option>
+              <option value="sa">🇸🇦 Saudi Arabia</option>
+              <option value="om">🇴🇲 Oman</option>
+              <option value="bh">🇧🇭 Bahrain</option>
+              <option value="qa">🇶🇦 Qatar</option>
+              <option value="kw">🇰🇼 Kuwait</option>
+              <option value="pk">🇵🇰 Pakistan</option>
+            </select>
+          </div>
+        </div>
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Industry</label>
+            <select class="ob-input" id="smeIndustry">
+              <option value="trading">Trading &amp; Distribution</option>
+              <option value="contracting">Contracting &amp; Construction</option>
+              <option value="retail">Retail</option>
+              <option value="services">Professional Services</option>
+              <option value="manufacturing">Manufacturing</option>
+              <option value="finance">Banking &amp; Finance</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="ob-field">
+            <label>Team size</label>
+            <select class="ob-input" id="smeSize">
+              <option value="1-5">1 – 5 people</option>
+              <option value="6-25" selected>6 – 25 people</option>
+              <option value="26-100">26 – 100 people</option>
+              <option value="100+">100+ people</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Module picker -->
+        <div class="ob-section-label">Select your modules</div>
+        <div class="ob-modules-grid">
+
+          <label class="ob-module-card free checked" data-module="einvoicing">
+            <input type="checkbox" checked disabled>
+            <div class="ob-module-icon">🧾</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">E-Invoicing &amp; VAT</div>
+              <div class="ob-module-desc">UAE FTA · KSA ZATCA · Pakistan FBR</div>
+            </div>
+            <div class="ob-module-price free-tag">Free</div>
+          </label>
+
+          <label class="ob-module-card free checked" data-module="crm">
+            <input type="checkbox" checked disabled>
+            <div class="ob-module-icon">📊</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">CRM &amp; Sales</div>
+              <div class="ob-module-desc">Pipeline, leads, quotations</div>
+            </div>
+            <div class="ob-module-price free-tag">Free</div>
+          </label>
+
+          <label class="ob-module-card" data-module="accounting">
+            <input type="checkbox" class="ob-mod-check">
+            <div class="ob-module-icon">📒</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">Full Accounting</div>
+              <div class="ob-module-desc">Journals, reconciliation, reports</div>
+            </div>
+            <div class="ob-module-price">AED 73/mo</div>
+          </label>
+
+          <label class="ob-module-card" data-module="inventory">
+            <input type="checkbox" class="ob-mod-check">
+            <div class="ob-module-icon">📦</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">Inventory &amp; Purchasing</div>
+              <div class="ob-module-desc">Stock, POs, receipts</div>
+            </div>
+            <div class="ob-module-price">AED 73/mo</div>
+          </label>
+
+          <label class="ob-module-card" data-module="hr">
+            <input type="checkbox" class="ob-mod-check">
+            <div class="ob-module-icon">👥</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">HR &amp; Payroll</div>
+              <div class="ob-module-desc">Employees, leaves, payslips</div>
+            </div>
+            <div class="ob-module-price">AED 92/mo</div>
+          </label>
+
+          <label class="ob-module-card" data-module="zaki">
+            <input type="checkbox" class="ob-mod-check">
+            <div class="ob-module-icon">🤖</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">Zaki AI CFO</div>
+              <div class="ob-module-desc">Voice briefings, financial insights</div>
+            </div>
+            <div class="ob-module-price">AED 128/mo</div>
+          </label>
+
+          <label class="ob-module-card" data-module="marketplace">
+            <input type="checkbox" class="ob-mod-check">
+            <div class="ob-module-icon">🛒</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">B2B Marketplace</div>
+              <div class="ob-module-desc">Buy/sell with platform SMEs</div>
+            </div>
+            <div class="ob-module-price">AED 55/mo</div>
+          </label>
+
+          <label class="ob-module-card" data-module="projects">
+            <input type="checkbox" class="ob-mod-check">
+            <div class="ob-module-icon">📋</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">Projects &amp; Tasks</div>
+              <div class="ob-module-desc">Gantt, timesheets, billing</div>
+            </div>
+            <div class="ob-module-price">AED 44/mo</div>
+          </label>
+
+        </div>
+
+        <div class="ob-cost-bar" id="smeCostBar">
+          <div class="ob-cost-label">Your estimated monthly cost</div>
+          <div class="ob-cost-amount"><span id="smeCost">AED 0</span> <span class="ob-cost-note">/ month · Free modules always included</span></div>
+        </div>
+
+        <button class="ob-btn-primary" onclick="submitSme()">
+          Set up my workspace →
+        </button>
+        <p class="ob-terms">14-day free trial · No credit card · Cancel anytime</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ════════════ STEP 2b: ORG DETAILS ════════════ -->
+  <section class="ob-screen" id="screen2org">
+    <div class="ob-screen-inner ob-narrow">
+      <button class="ob-back" onclick="goBack()">← Back</button>
+      <p class="ob-eyebrow">White-label partner</p>
+      <h1 class="ob-title">Set up your partner account</h1>
+      <p class="ob-sub">Tell us about your organization — we'll configure your branded portal.</p>
+
+      <form class="ob-form" id="orgForm" onsubmit="return false;">
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Organization name <span class="ob-req">*</span></label>
+            <input class="ob-input" id="orgName" type="text" placeholder="e.g. Al Faris Bank" required>
+          </div>
+          <div class="ob-field">
+            <label>Your name <span class="ob-req">*</span></label>
+            <input class="ob-input" id="orgContact" type="text" placeholder="Full name" required>
+          </div>
+        </div>
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Work email <span class="ob-req">*</span></label>
+            <input class="ob-input" id="orgEmail" type="email" placeholder="you@organization.com" required>
+          </div>
+          <div class="ob-field">
+            <label>Organization type</label>
+            <select class="ob-input" id="orgType">
+              <option value="bank">🏦 Bank / Financial Institution</option>
+              <option value="freezone">🏢 Free Zone Authority</option>
+              <option value="chamber">🤝 Chamber of Commerce</option>
+              <option value="enterprise">🏭 Enterprise / Corporate</option>
+              <option value="consulting">📊 Consulting / IT Firm</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Portal URL slug <span class="ob-req">*</span></label>
+            <div class="ob-input-prefix-wrap">
+              <span class="ob-input-prefix">mumtaz.digital/org/</span>
+              <input class="ob-input ob-input-slug" id="orgSlug" type="text"
+                     placeholder="al-faris-bank" pattern="[a-z0-9\-]+"
+                     title="Lowercase letters, numbers, hyphens only" required>
+            </div>
+          </div>
+          <div class="ob-field">
+            <label>Custom domain <span class="ob-opt">(optional)</span></label>
+            <input class="ob-input" id="orgDomain" type="text" placeholder="erp.yourcompany.com">
+          </div>
+        </div>
+
+        <!-- Brand color pickers -->
+        <div class="ob-section-label">Brand colours</div>
+        <div class="ob-field-row">
+          <div class="ob-field">
+            <label>Primary colour</label>
+            <div class="ob-color-row">
+              <input type="color" class="ob-color-swatch" id="orgPrimary" value="#0891B2">
+              <input class="ob-input" id="orgPrimaryHex" type="text" value="#0891B2" maxlength="7">
+            </div>
+          </div>
+          <div class="ob-field">
+            <label>Secondary colour</label>
+            <div class="ob-color-row">
+              <input type="color" class="ob-color-swatch" id="orgSecondary" value="#0F172A">
+              <input class="ob-input" id="orgSecondaryHex" type="text" value="#0F172A" maxlength="7">
+            </div>
+          </div>
+        </div>
+
+        <!-- Free modules for SMEs -->
+        <div class="ob-section-label">Free modules for every SME in your network</div>
+        <p class="ob-section-hint">These 2 modules are always free for your SMEs. You earn revenue from all others.</p>
+        <div class="ob-modules-grid ob-modules-small">
+          <label class="ob-module-card free checked">
+            <input type="checkbox" checked disabled>
+            <div class="ob-module-icon">🧾</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">E-Invoicing &amp; VAT</div>
+            </div>
+            <div class="ob-module-price free-tag">Free</div>
+          </label>
+          <label class="ob-module-card free checked">
+            <input type="checkbox" checked disabled>
+            <div class="ob-module-icon">📊</div>
+            <div class="ob-module-info">
+              <div class="ob-module-name">CRM &amp; Sales</div>
+            </div>
+            <div class="ob-module-price free-tag">Free</div>
+          </label>
+        </div>
+
+        <!-- Paid modules to offer -->
+        <div class="ob-section-label">Paid modules you can offer to your SMEs</div>
+        <p class="ob-section-hint">Select which modules your SMEs can subscribe to. You set the price — Mumtaz charges you a wholesale rate.</p>
+        <div class="ob-modules-grid ob-modules-small">
+          <label class="ob-module-card" data-module="accounting">
+            <input type="checkbox" class="ob-org-mod" checked>
+            <div class="ob-module-icon">📒</div>
+            <div class="ob-module-info"><div class="ob-module-name">Full Accounting</div></div>
+            <div class="ob-module-price">Wholesale AED 50/mo</div>
+          </label>
+          <label class="ob-module-card" data-module="inventory">
+            <input type="checkbox" class="ob-org-mod" checked>
+            <div class="ob-module-icon">📦</div>
+            <div class="ob-module-info"><div class="ob-module-name">Inventory &amp; Purchasing</div></div>
+            <div class="ob-module-price">Wholesale AED 50/mo</div>
+          </label>
+          <label class="ob-module-card" data-module="hr">
+            <input type="checkbox" class="ob-org-mod" checked>
+            <div class="ob-module-icon">👥</div>
+            <div class="ob-module-info"><div class="ob-module-name">HR &amp; Payroll</div></div>
+            <div class="ob-module-price">Wholesale AED 65/mo</div>
+          </label>
+          <label class="ob-module-card" data-module="zaki">
+            <input type="checkbox" class="ob-org-mod">
+            <div class="ob-module-icon">🤖</div>
+            <div class="ob-module-info"><div class="ob-module-name">Zaki AI CFO</div></div>
+            <div class="ob-module-price">Wholesale AED 90/mo</div>
+          </label>
+          <label class="ob-module-card" data-module="marketplace">
+            <input type="checkbox" class="ob-org-mod">
+            <div class="ob-module-icon">🛒</div>
+            <div class="ob-module-info"><div class="ob-module-name">B2B Marketplace</div></div>
+            <div class="ob-module-price">Wholesale AED 40/mo</div>
+          </label>
+          <label class="ob-module-card" data-module="projects">
+            <input type="checkbox" class="ob-org-mod">
+            <div class="ob-module-icon">📋</div>
+            <div class="ob-module-info"><div class="ob-module-name">Projects &amp; Tasks</div></div>
+            <div class="ob-module-price">Wholesale AED 30/mo</div>
+          </label>
+        </div>
+
+        <div class="ob-pricing-model-box">
+          <div class="ob-pricing-model-label">What Mumtaz charges you</div>
+          <div class="ob-pricing-model-detail">
+            <strong>AED 29 per active SME per month</strong> — regardless of which modules they use.<br>
+            You collect from your SMEs directly and keep the margin.
+          </div>
+        </div>
+
+        <button class="ob-btn-primary" onclick="submitOrg()">
+          Create my partner portal →
+        </button>
+        <p class="ob-terms">Our team will review and activate your account within 24 hours.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ════════════ STEP 3a: SME CONFIRMATION ════════════ -->
+  <section class="ob-screen" id="screen3sme">
+    <div class="ob-screen-inner ob-narrow ob-confirm">
+      <div class="ob-confirm-icon">✓</div>
+      <h1 class="ob-title">Your workspace is ready!</h1>
+      <p class="ob-sub">We've set up <strong id="confirmCompany">your company</strong> on Mumtaz.<br>
+      A welcome email has been sent to <strong id="confirmEmail">your email</strong>.</p>
+
+      <div class="ob-confirm-cards">
+        <a class="ob-confirm-card" href="https://app.mumtaz.digital" id="linkErp">
+          <div class="ob-cc-icon">⬡</div>
+          <div class="ob-cc-body">
+            <div class="ob-cc-title">Open your ERP</div>
+            <div class="ob-cc-desc">Odoo 19 — accounting, sales, HR, inventory</div>
+          </div>
+          <div class="ob-cc-arrow">→</div>
+        </a>
+        <a class="ob-confirm-card" href="https://zaki.mumtaz.digital">
+          <div class="ob-cc-icon">🤖</div>
+          <div class="ob-cc-body">
+            <div class="ob-cc-title">Talk to Zaki AI CFO</div>
+            <div class="ob-cc-desc">Ask anything about your finances</div>
+          </div>
+          <div class="ob-cc-arrow">→</div>
+        </a>
+        <a class="ob-confirm-card" href="https://marketplace.mumtaz.digital">
+          <div class="ob-cc-icon">🛒</div>
+          <div class="ob-cc-body">
+            <div class="ob-cc-title">Browse Marketplace</div>
+            <div class="ob-cc-desc">Buy from verified GCC suppliers</div>
+          </div>
+          <div class="ob-cc-arrow">→</div>
+        </a>
+      </div>
+
+      <a class="ob-btn-primary" href="https://app.mumtaz.digital">
+        Go to my ERP now →
+      </a>
+    </div>
+  </section>
+
+  <!-- ════════════ STEP 3b: ORG CONFIRMATION ════════════ -->
+  <section class="ob-screen" id="screen3org">
+    <div class="ob-screen-inner ob-narrow ob-confirm">
+      <div class="ob-confirm-icon org-icon">🌐</div>
+      <h1 class="ob-title">Partner application submitted!</h1>
+      <p class="ob-sub">We're reviewing your partner account for <strong id="confirmOrg">your organization</strong>.<br>
+      Expect activation within <strong>24 hours</strong> — we'll email <strong id="confirmOrgEmail">you</strong>.</p>
+
+      <div class="ob-confirm-box">
+        <div class="ob-confirm-box-row">
+          <span class="ob-confirm-box-label">Your portal URL</span>
+          <span class="ob-confirm-box-val" id="confirmSlug">mumtaz.digital/org/your-slug</span>
+        </div>
+        <div class="ob-confirm-box-row">
+          <span class="ob-confirm-box-label">Free SME modules</span>
+          <span class="ob-confirm-box-val">E-Invoicing + CRM</span>
+        </div>
+        <div class="ob-confirm-box-row">
+          <span class="ob-confirm-box-label">Wholesale rate</span>
+          <span class="ob-confirm-box-val">AED 29 / active SME / month</span>
+        </div>
+      </div>
+
+      <div class="ob-confirm-cards">
+        <a class="ob-confirm-card" href="https://app.mumtaz.digital">
+          <div class="ob-cc-icon">🏢</div>
+          <div class="ob-cc-body">
+            <div class="ob-cc-title">Partner admin portal</div>
+            <div class="ob-cc-desc">Manage your SME network, billing, branding</div>
+          </div>
+          <div class="ob-cc-arrow">→</div>
+        </a>
+        <a class="ob-confirm-card" href="https://mumtaz.digital/contact.html">
+          <div class="ob-cc-icon">💬</div>
+          <div class="ob-cc-body">
+            <div class="ob-cc-title">Talk to our team</div>
+            <div class="ob-cc-desc">Get onboarding support &amp; questions answered</div>
+          </div>
+          <div class="ob-cc-arrow">→</div>
+        </a>
+      </div>
+
+      <a class="ob-btn-primary" href="https://app.mumtaz.digital">
+        Go to partner portal →
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Progress dots (mobile) -->
+<div class="ob-progress-dots" id="progressDots">
+  <div class="ob-dot active"></div>
+  <div class="ob-dot"></div>
+  <div class="ob-dot"></div>
+</div>
+
+<script>
+// ── State ──
+let currentPath = null; // 'sme' | 'org'
+let currentStep = 1;
+
+// ── SME module pricing ──
+const MODULE_PRICES = {
+  accounting: 73, inventory: 73, hr: 92, zaki: 128, marketplace: 55, projects: 44
+};
+
+// ── Navigation ──
+function showScreen(id) {
+  document.querySelectorAll('.ob-screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepTrack(step) {
+  currentStep = step;
+  document.querySelectorAll('.ob-step').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.toggle('active', s === step);
+    el.classList.toggle('done', s < step);
+  });
+  document.querySelectorAll('.ob-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === step - 1);
+  });
+}
+
+function choosePath(path) {
+  currentPath = path;
+  // Highlight selected card
+  document.querySelectorAll('.ob-path-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(path === 'sme' ? 'pathSme' : 'pathOrg').classList.add('selected');
+
+  setTimeout(() => {
+    showScreen(path === 'sme' ? 'screen2sme' : 'screen2org');
+    updateStepTrack(2);
+  }, 180);
+}
+
+function goBack() {
+  showScreen('screen1');
+  updateStepTrack(1);
+  currentPath = null;
+}
+
+// ── SME cost calculator ──
+function recalcCost() {
+  let total = 0;
+  document.querySelectorAll('.ob-mod-check:checked').forEach(cb => {
+    const mod = cb.closest('.ob-module-card').dataset.module;
+    total += MODULE_PRICES[mod] || 0;
+  });
+  document.getElementById('smeCost').textContent = total > 0
+    ? `AED ${total.toLocaleString()}`
+    : 'AED 0';
+}
+
+document.querySelectorAll('.ob-mod-check').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.ob-module-card').classList.toggle('checked', cb.checked);
+    recalcCost();
+  });
+});
+
+// ── Color picker sync ──
+function syncColor(inputId, hexId) {
+  const picker = document.getElementById(inputId);
+  const hex = document.getElementById(hexId);
+  picker.addEventListener('input', () => { hex.value = picker.value; });
+  hex.addEventListener('input', () => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(hex.value)) picker.value = hex.value;
+  });
+}
+syncColor('orgPrimary', 'orgPrimaryHex');
+syncColor('orgSecondary', 'orgSecondaryHex');
+
+// ── Slug auto-generate from org name ──
+document.getElementById('orgName').addEventListener('input', function() {
+  const slug = this.value.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim().replace(/\s+/g, '-');
+  document.getElementById('orgSlug').value = slug;
+});
+
+// ── Submit SME ──
+function submitSme() {
+  const company = document.getElementById('smeCompany').value.trim();
+  const email   = document.getElementById('smeEmail').value.trim();
+  const name    = document.getElementById('smeName').value.trim();
+
+  if (!company || !email || !name) {
+    alert('Please fill in company name, your name, and email.');
+    return;
+  }
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+
+  // Collect selected modules
+  const modules = ['einvoicing', 'crm'];
+  document.querySelectorAll('.ob-mod-check:checked').forEach(cb => {
+    modules.push(cb.closest('.ob-module-card').dataset.module);
+  });
+
+  // Store in localStorage (real app would POST to API here)
+  localStorage.setItem('mumtaz_onboarding', JSON.stringify({
+    type: 'sme', company, email, name, modules,
+    country: document.getElementById('smeCountry').value,
+    industry: document.getElementById('smeIndustry').value,
+    size: document.getElementById('smeSize').value,
+  }));
+
+  document.getElementById('confirmCompany').textContent = company;
+  document.getElementById('confirmEmail').textContent = email;
+
+  showScreen('screen3sme');
+  updateStepTrack(3);
+}
+
+// ── Submit Org ──
+function submitOrg() {
+  const name    = document.getElementById('orgName').value.trim();
+  const email   = document.getElementById('orgEmail').value.trim();
+  const contact = document.getElementById('orgContact').value.trim();
+  const slug    = document.getElementById('orgSlug').value.trim();
+
+  if (!name || !email || !contact || !slug) {
+    alert('Please fill in all required fields.');
+    return;
+  }
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    alert('Portal URL can only contain lowercase letters, numbers, and hyphens.');
+    return;
+  }
+
+  // Collect org modules
+  const modules = [];
+  document.querySelectorAll('.ob-org-mod:checked').forEach(cb => {
+    modules.push(cb.closest('.ob-module-card').dataset.module);
+  });
+
+  localStorage.setItem('mumtaz_onboarding', JSON.stringify({
+    type: 'org', name, email, contact, slug, modules,
+    type_label: document.getElementById('orgType').value,
+    primary_color: document.getElementById('orgPrimaryHex').value,
+    secondary_color: document.getElementById('orgSecondaryHex').value,
+    custom_domain: document.getElementById('orgDomain').value.trim(),
+  }));
+
+  document.getElementById('confirmOrg').textContent = name;
+  document.getElementById('confirmOrgEmail').textContent = email;
+  document.getElementById('confirmSlug').textContent = `mumtaz.digital/org/${slug}`;
+
+  showScreen('screen3org');
+  updateStepTrack(3);
+}
+</script>
+
+</body>
+</html>
