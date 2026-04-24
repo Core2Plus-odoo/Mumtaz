@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!--
+    Extend the customer-facing sale order detail page with Mumtaz branding.
+    The CSS is already injected globally via web.assets_frontend;
+    this template adds the brand strip and any structural enhancements.
+-->
+<template id="portal_order_mumtaz"
+          inherit_id="sale.portal_order_page"
+          name="Mumtaz Order — Branding Enhancements">
+
+    <!-- ── Brand strip above order header ── -->
+    <xpath expr="//div[hasclass('o_portal_sidebar')]" position="before">
+        <div class="mcp-order-brand-strip">
+            <div class="mcp-order-brand-left">
+                <div class="mcp-brand-mark-sm">م</div>
+                <span class="mcp-order-brand-label">Mumtaz Order Confirmation</span>
+            </div>
+            <div class="mcp-order-status-wrap">
+                <span t-att-class="'mcp-order-status mcp-order-status-' + (order.state or 'draft')">
+                    <t t-esc="dict(order._fields['state'].selection).get(order.state, order.state or '').title()"/>
+                </span>
+            </div>
+        </div>
+    </xpath>
+
+    <!-- ── Delivery / tracking section in sidebar if picking exists ── -->
+    <xpath expr="//div[hasclass('o_portal_sidebar')]" position="inside">
+        <t t-if="order.picking_ids">
+            <div class="mcp-delivery-block">
+                <div class="mcp-delivery-header">
+                    <svg viewBox="0 0 24 24" fill="none" width="18" height="18" aria-hidden="true">
+                        <path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                        <circle cx="5.5" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="18.5" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                    <span>Deliveries</span>
+                </div>
+                <ul class="mcp-delivery-list">
+                    <t t-foreach="order.picking_ids" t-as="picking">
+                        <li class="mcp-delivery-item">
+                            <span class="mcp-delivery-ref"><t t-esc="picking.name"/></span>
+                            <span t-att-class="'mcp-pick-state mcp-pick-state-' + picking.state">
+                                <t t-esc="picking.state.replace('_', ' ').title()"/>
+                            </span>
+                        </li>
+                    </t>
+                </ul>
+            </div>
+        </t>
+    </xpath>
+
+    <!-- ── Mumtaz footer brand strip ── -->
+    <xpath expr="//div[hasclass('o_portal_chatter')]" position="before">
+        <div class="mcp-invoice-footer-brand">
+            <span class="mcp-invoice-footer-mark">م</span>
+            <span>Mumtaz · Verified Order</span>
+        </div>
+    </xpath>
+
+</template>
+
+</odoo>

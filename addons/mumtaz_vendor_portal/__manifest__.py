@@ -1,0 +1,23 @@
+{
+    'name': 'Mumtaz Vendor Portal',
+    'summary': 'Self-service portal for vendors/suppliers',
+    'version': '19.0.1.0.0',
+    'category': 'Mumtaz Platform',
+    'author': 'Mumtaz',
+    'license': 'LGPL-3',
+    'depends': ['portal', 'purchase', 'stock', 'account'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/portal_vendor_layout.xml',
+        'views/portal_vendor_dashboard.xml',
+        'views/portal_vendor_po.xml',
+        'views/portal_vendor_invoices.xml',
+        'views/portal_vendor_rfq.xml',
+        'views/portal_vendor_payments.xml',
+    ],
+    'assets': {
+        'web.assets_frontend': ['mumtaz_vendor_portal/static/src/css/vendor_portal.css'],
+    },
+    'installable': True,
+    'auto_install': False,
+}

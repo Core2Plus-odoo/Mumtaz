@@ -1,0 +1,96 @@
+/* Mumtaz Brand Tokens — v2 Clean White & Teal */
+:root {
+  /* Backgrounds */
+  --white: #FFFFFF;
+  --bg: #F8FAFC;
+  --bg2: #F1F5F9;
+  --bg3: #E8F0F5;
+  --surface: #FFFFFF;
+
+  /* Borders */
+  --border: #E2E8F0;
+  --border2: #CBD5E1;
+
+  /* Ink / Text */
+  --ink: #0F172A;
+  --ink2: #1E293B;
+  --ink3: #475569;
+  --ink4: #94A3B8;
+  --ink5: #CBD5E1;
+
+  /* Teal — Primary Brand */
+  --teal: #0891B2;
+  --teal2: #06B6D4;
+  --teal3: #67E8F9;
+  --teal-dark: #0E7490;
+  --teal-bg: #ECFEFF;
+  --teal-border: #A5F3FC;
+
+  /* Navy */
+  --navy: #0F172A;
+  --navy2: #1E293B;
+  --navy3: #334155;
+
+  /* Green */
+  --green: #059669;
+  --green2: #10B981;
+  --green-bg: #ECFDF5;
+  --green-border: #A7F3D0;
+
+  /* Amber */
+  --amber: #D97706;
+  --amber2: #F59E0B;
+  --amber-bg: #FFFBEB;
+  --amber-border: #FDE68A;
+
+  /* Red */
+  --red: #DC2626;
+  --red2: #EF4444;
+  --red-bg: #FEF2F2;
+  --red-border: #FECACA;
+
+  /* Purple */
+  --purple: #7C3AED;
+  --purple-bg: #F5F3FF;
+  --purple-border: #DDD6FE;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-sm: 0 1px 3px rgba(15,23,42,.06), 0 1px 8px rgba(15,23,42,.04);
+  --shadow: 0 2px 8px rgba(15,23,42,.08), 0 4px 24px rgba(15,23,42,.04);
+  --shadow-lg: 0 8px 32px rgba(15,23,42,.10), 0 2px 8px rgba(15,23,42,.04);
+  --shadow-teal: 0 4px 20px rgba(8,145,178,.20);
+
+  /* Radii */
+  --r-sm: 6px;
+  --r: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-full: 9999px;
+
+  /* Transitions */
+  --t-fast: 150ms;
+  --t-base: 200ms;
+  --t-slow: 300ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', 'Fira Code', monospace;
+}
+
+/* Dark mode for sites that support toggle */
+[data-theme="dark"] {
+  --bg: #0F172A;
+  --bg2: #1E293B;
+  --bg3: #334155;
+  --surface: #1E293B;
+  --border: #334155;
+  --border2: #475569;
+  --ink: #F8FAFC;
+  --ink2: #E2E8F0;
+  --ink3: #94A3B8;
+  --ink4: #64748B;
+  --ink5: #475569;
+}

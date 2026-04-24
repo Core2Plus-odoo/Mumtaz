@@ -1,0 +1,101 @@
+/* ================================================================
+   Mumtaz Design System — Token Layer
+   Light-first. GCC + Pakistan branding.
+   ================================================================ */
+
+:root {
+  /* ── Core Palette ─────────────────────────────────────────── */
+  --ink:          #0C1118;
+  --ink2:         #1E2A3A;
+  --ink3:         #6B7A90;
+  --paper:        #F5F3EF;
+  --paper2:       #EDEAE3;
+  --paper3:       #E0DDD6;
+  --surface:      #FFFFFF;
+
+  /* ── Gold (primary accent) ────────────────────────────────── */
+  --gold:         #B8862A;
+  --gold2:        #D4A84C;
+  --gold3:        #F0CC78;
+  --gold-bg:      #FDF6E4;
+  --gold-border:  #E8CC88;
+
+  /* ── Teal (success) ───────────────────────────────────────── */
+  --teal:         #0B7A64;
+  --teal2:        #0EA882;
+  --teal-bg:      #E6F7F3;
+
+  /* ── Coral (danger) ───────────────────────────────────────── */
+  --coral:        #C0402A;
+  --coral-bg:     #FCECEA;
+
+  /* ── Blue (info) ──────────────────────────────────────────── */
+  --blue:         #1E4FA0;
+  --blue-bg:      #EDF2FC;
+
+  /* ── Font Stacks ──────────────────────────────────────────── */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* ── Gradients ────────────────────────────────────────────── */
+  --grad-gold:    linear-gradient(135deg, #B8862A, #D4A84C);
+  --grad-gold-h:  linear-gradient(135deg, #D4A84C, #F0CC78);
+
+  /* ── Shadows ──────────────────────────────────────────────── */
+  --shadow-card:  0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 24px rgba(0,0,0,.10);
+  --shadow-modal: 0 8px 40px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+
+  /* ── Border Radius ────────────────────────────────────────── */
+  --radius-btn:   10px;
+  --radius-input: 10px;
+  --radius-card:  14px;
+  --radius-modal: 20px;
+  --radius-badge: 100px;
+  --radius-sm:    6px;
+  --radius-md:    10px;
+  --radius-lg:    14px;
+  --radius-xl:    20px;
+
+  /* ── Semantic aliases (light is default) ──────────────────── */
+  --bg:           var(--paper);
+  --bg2:          var(--paper2);
+  --bg3:          var(--paper3);
+  --fg:           var(--ink);
+  --fg2:          var(--ink2);
+  --fg3:          var(--ink3);
+  --border-color: var(--paper3);
+  --card-bg:      var(--surface);
+
+  /* ── Transition ───────────────────────────────────────────── */
+  --transition:   all .22s ease;
+}
+
+/* ── Dark Mode Overrides ──────────────────────────────────────
+   Maps ink→paper and paper→ink for theme toggle support.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* Remap surface/bg to dark ink palette */
+  --bg:           var(--ink);
+  --bg2:          var(--ink2);
+  --bg3:          #2A3750;
+  --fg:           #F0EDE8;
+  --fg2:          #C8C2B8;
+  --fg3:          var(--ink3);
+  --border-color: rgba(255,255,255,.08);
+  --card-bg:      var(--ink2);
+  --surface:      #1E2A3A;
+  --paper:        var(--ink);
+  --paper2:       var(--ink2);
+  --paper3:       #2A3750;
+
+  /* Teal/coral/blue tinted bgs darken in dark mode */
+  --teal-bg:      rgba(11,122,100,.18);
+  --coral-bg:     rgba(192,64,42,.15);
+  --blue-bg:      rgba(30,79,160,.18);
+  --gold-bg:      rgba(184,134,42,.12);
+  --gold-border:  rgba(232,204,136,.2);
+
+  color-scheme: dark;
+}

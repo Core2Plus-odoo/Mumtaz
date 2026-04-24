@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_vendor_dashboard" name="Vendor Dashboard">
+    <t t-call="mumtaz_vendor_portal.portal_vendor_layout">
+        <t t-set="title">Dashboard</t>
+
+        <!-- KPI row -->
+        <div class="mvp-kpi-row">
+            <div class="mvp-kpi-card">
+                <div class="mvp-kpi-icon mvp-kpi-icon-teal">
+                    <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                        <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="mvp-kpi-body">
+                    <div class="mvp-kpi-label">Purchase Orders</div>
+                    <div class="mvp-kpi-value"><t t-esc="po_count"/></div>
+                    <div class="mvp-kpi-sub">Confirmed orders</div>
+                </div>
+            </div>
+
+            <div class="mvp-kpi-card">
+                <div class="mvp-kpi-icon mvp-kpi-icon-gold">
+                    <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                        <path d="M12 3L14.5 9H21L15.5 13L17.5 19.5L12 16L6.5 19.5L8.5 13L3 9H9.5L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="mvp-kpi-body">
+                    <div class="mvp-kpi-label">Open RFQs</div>
+                    <div class="mvp-kpi-value"><t t-esc="rfq_count"/></div>
+                    <div class="mvp-kpi-sub">Awaiting your quote</div>
+                </div>
+            </div>
+
+            <div class="mvp-kpi-card">
+                <div class="mvp-kpi-icon mvp-kpi-icon-ink">
+                    <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                        <rect x="4" y="2" width="16" height="20" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="mvp-kpi-body">
+                    <div class="mvp-kpi-label">Invoices</div>
+                    <div class="mvp-kpi-value"><t t-esc="bill_count"/></div>
+                    <div class="mvp-kpi-sub">Posted bills</div>
+                </div>
+            </div>
+
+            <div class="mvp-kpi-card mvp-kpi-card-highlight">
+                <div class="mvp-kpi-icon mvp-kpi-icon-coral">
+                    <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                        <rect x="2" y="6" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M2 11h20" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="7" cy="16" r="1.2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="mvp-kpi-body">
+                    <div class="mvp-kpi-label">Amount Due to You</div>
+                    <div class="mvp-kpi-value mvp-kpi-value-amount">
+                        <t t-esc="'AED {:,.0f}'.format(pending_amount)"/>
+                    </div>
+                    <div class="mvp-kpi-sub">Pending payment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Purchase Orders -->
+        <div class="mvp-card">
+            <div class="mvp-card-header">
+                <h3 class="mvp-card-title">Recent Purchase Orders</h3>
+                <a href="/vendor/purchase-orders" class="mvp-link">View all &#8594;</a>
+            </div>
+            <div class="mvp-table-wrap">
+                <table class="mvp-table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Date</th>
+                            <th class="mvp-col-amount">Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="recent_pos" t-as="po">
+                            <tr>
+                                <td>
+                                    <strong class="mvp-ref">
+                                        <t t-esc="po.name"/>
+                                    </strong>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-esc="po.date_order" t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td class="mvp-col-amount">
+                                    <t t-esc="'{:,.2f} {}'.format(po.amount_total, po.currency_id.name)"/>
+                                </td>
+                                <td>
+                                    <span t-att-class="'mvp-badge mvp-badge-teal' if po.state == 'purchase' else 'mvp-badge mvp-badge-ink'">
+                                        <t t-esc="po.state.upper()"/>
+                                    </span>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-if="not recent_pos">
+                            <tr>
+                                <td colspan="4" class="mvp-empty">No purchase orders yet.</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent RFQs -->
+        <div class="mvp-card" style="margin-top:1.25rem">
+            <div class="mvp-card-header">
+                <h3 class="mvp-card-title">Open RFQs</h3>
+                <a href="/vendor/rfq" class="mvp-link">View all &#8594;</a>
+            </div>
+            <div class="mvp-table-wrap">
+                <table class="mvp-table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Date</th>
+                            <th class="mvp-col-amount">Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="recent_rfqs" t-as="rfq">
+                            <tr>
+                                <td>
+                                    <strong class="mvp-ref">
+                                        <t t-esc="rfq.name"/>
+                                    </strong>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-esc="rfq.date_order" t-options="{'widget': 'date'}"/>
+                                </td>
+                                <td class="mvp-col-amount">
+                                    <t t-esc="'{:,.2f} {}'.format(rfq.amount_total, rfq.currency_id.name)"/>
+                                </td>
+                                <td>
+                                    <span class="mvp-badge mvp-badge-gold">
+                                        <t t-esc="rfq.state.upper()"/>
+                                    </span>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-if="not recent_rfqs">
+                            <tr>
+                                <td colspan="4" class="mvp-empty">No open RFQs.</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </t>
+</template>
+
+</odoo>

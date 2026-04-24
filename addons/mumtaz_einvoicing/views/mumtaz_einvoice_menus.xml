@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Root menu: E-Invoicing (under Accounting/Finance)
+         ===================================================================== -->
+    <menuitem
+        id="menu_einvoice_root"
+        name="E-Invoicing"
+        parent="account.menu_finance"
+        sequence="100"
+        web_icon="mumtaz_einvoicing,static/src/css/einvoice.css"/>
+
+    <!-- =====================================================================
+         Sub-menu: Submissions
+         ===================================================================== -->
+    <menuitem
+        id="menu_einvoice_submissions"
+        name="Submissions"
+        parent="menu_einvoice_root"
+        action="mumtaz_einvoicing.action_mumtaz_einvoice_submissions"
+        sequence="10"
+        groups="account.group_account_user"/>
+
+    <!-- =====================================================================
+         Sub-menu: Configuration
+         ===================================================================== -->
+    <menuitem
+        id="menu_einvoice_config"
+        name="Configuration"
+        parent="menu_einvoice_root"
+        action="mumtaz_einvoicing.action_mumtaz_einvoice_config"
+        sequence="20"
+        groups="account.group_account_manager"/>
+
+</odoo>

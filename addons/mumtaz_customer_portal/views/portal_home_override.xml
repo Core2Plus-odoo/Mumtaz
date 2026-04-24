@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!--
+    Override the standard /my/ portal home page with Mumtaz branding.
+    Inherits from portal.portal_my_home (account/portal/sale modules extend
+    this with their own counters, which we leave intact).
+-->
+<template id="portal_my_home_mumtaz"
+          inherit_id="portal.portal_my_home"
+          name="Mumtaz Portal Home Branding"
+          priority="20">
+
+    <!-- ── Inject fonts (head may or may not exist depending on Odoo version) ── -->
+    <xpath expr="//link[last()]" position="after">
+        <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&amp;display=swap" rel="stylesheet"/>
+    </xpath>
+
+    <!-- ── Mumtaz brand header above the document list ── -->
+    <xpath expr="//div[hasclass('o_portal_my_home')]" position="before">
+        <div class="mcp-hero">
+            <div class="mcp-brand-lockup">
+                <div class="mcp-brand-mark">م</div>
+                <div class="mcp-brand-text">
+                    <span class="mcp-brand-name">Mumtaz</span>
+                    <span class="mcp-brand-tagline">Customer Portal</span>
+                </div>
+            </div>
+            <div class="mcp-hero-greeting">
+                Welcome back, <strong><t t-esc="request.env.user.name"/></strong>
+            </div>
+        </div>
+    </xpath>
+
+    <!-- ── Replace generic page-header title ── -->
+    <xpath expr="//h2[hasclass('page-header-title')]" position="replace">
+        <div class="mcp-section-header">
+            <h2 class="page-header-title mcp-page-title">My Documents</h2>
+            <p class="mcp-subtitle">Access your orders, invoices, and account information.</p>
+        </div>
+    </xpath>
+
+</template>
+
+</odoo>

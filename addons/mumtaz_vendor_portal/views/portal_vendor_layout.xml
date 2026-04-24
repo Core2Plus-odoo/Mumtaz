@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_vendor_layout" name="Vendor Portal Layout">
+    <t t-call="web.layout">
+        <t t-set="head">
+            <link rel="stylesheet" href="/mumtaz_vendor_portal/static/src/css/vendor_portal.css"/>
+            <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&amp;display=swap" rel="stylesheet"/>
+        </t>
+        <t t-set="body_classname">mumtaz-vendor-portal</t>
+
+        <div class="mvp-shell">
+
+            <!-- Hamburger toggle (mobile only) -->
+            <input type="checkbox" id="mvp-nav-toggle" class="mvp-nav-toggle-input"/>
+            <label for="mvp-nav-toggle" class="mvp-hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </label>
+            <label for="mvp-nav-toggle" class="mvp-overlay"></label>
+
+            <!-- Sidebar -->
+            <aside class="mvp-sidebar">
+                <div class="mvp-brand">
+                    <div class="mvp-brand-mark">م</div>
+                    <span class="mvp-brand-name">Mumtaz</span>
+                </div>
+                <div class="mvp-company-pill">
+                    <t t-esc="request.env.user.partner_id.commercial_partner_id.name"/>
+                </div>
+
+                <nav class="mvp-nav">
+                    <a href="/vendor"
+                       class="mvp-nav-link"
+                       t-att-class="'mvp-nav-link active' if request.httprequest.path == '/vendor' else 'mvp-nav-link'">
+                        <svg class="mvp-nav-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <rect x="2" y="2" width="7" height="7" rx="1.5" fill="currentColor" opacity=".9"/>
+                            <rect x="11" y="2" width="7" height="7" rx="1.5" fill="currentColor" opacity=".5"/>
+                            <rect x="2" y="11" width="7" height="7" rx="1.5" fill="currentColor" opacity=".5"/>
+                            <rect x="11" y="11" width="7" height="7" rx="1.5" fill="currentColor" opacity=".5"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <a href="/vendor/purchase-orders"
+                       class="mvp-nav-link"
+                       t-att-class="'mvp-nav-link active' if '/purchase-orders' in request.httprequest.path else 'mvp-nav-link'">
+                        <svg class="mvp-nav-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        Purchase Orders
+                    </a>
+                    <a href="/vendor/rfq"
+                       class="mvp-nav-link"
+                       t-att-class="'mvp-nav-link active' if request.httprequest.path.startswith('/vendor/rfq') else 'mvp-nav-link'">
+                        <svg class="mvp-nav-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <path d="M10 2L12.5 7.5H18L13.5 11L15.5 17L10 13.5L4.5 17L6.5 11L2 7.5H7.5L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        </svg>
+                        RFQs
+                    </a>
+                    <a href="/vendor/invoices"
+                       class="mvp-nav-link"
+                       t-att-class="'mvp-nav-link active' if '/invoices' in request.httprequest.path else 'mvp-nav-link'">
+                        <svg class="mvp-nav-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M7 6h6M7 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M10 13v3m0 0l-1.5-1.5M10 16l1.5-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        Invoices
+                    </a>
+                    <a href="/vendor/payments"
+                       class="mvp-nav-link"
+                       t-att-class="'mvp-nav-link active' if '/payments' in request.httprequest.path else 'mvp-nav-link'">
+                        <svg class="mvp-nav-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <rect x="2" y="5" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M2 9h16" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="6" cy="13" r="1" fill="currentColor"/>
+                        </svg>
+                        Payments
+                    </a>
+                </nav>
+
+                <div class="mvp-sidebar-footer">
+                    <a href="/web/session/logout" class="mvp-logout">
+                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" width="16" height="16">
+                            <path d="M13 3h3a1 1 0 011 1v12a1 1 0 01-1 1h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M9 13l4-3-4-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13 10H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        Sign out
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Main area -->
+            <main class="mvp-main">
+                <header class="mvp-topbar">
+                    <div class="mvp-topbar-title"><t t-out="title or 'Vendor Portal'"/></div>
+                    <div class="mvp-topbar-user">
+                        <div class="mvp-user-avatar">
+                            <t t-esc="(request.env.user.name or 'U')[0].upper()"/>
+                        </div>
+                        <span class="mvp-user-name"><t t-esc="request.env.user.name"/></span>
+                    </div>
+                </header>
+
+                <div class="mvp-content">
+                    <t t-out="0"/>
+                </div>
+            </main>
+
+        </div>
+    </t>
+</template>
+
+</odoo>

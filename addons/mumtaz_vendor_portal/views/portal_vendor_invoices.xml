@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_vendor_invoices" name="Vendor Invoices">
+    <t t-call="mumtaz_vendor_portal.portal_vendor_layout">
+        <t t-set="title">Invoices</t>
+
+        <div class="mvp-card">
+            <div class="mvp-card-header">
+                <h3 class="mvp-card-title">Your Invoices</h3>
+                <span class="mvp-card-count">
+                    <t t-esc="pager['count']"/> invoices
+                </span>
+            </div>
+
+            <div class="mvp-table-wrap">
+                <table class="mvp-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Invoice Date</th>
+                            <th>Due Date</th>
+                            <th class="mvp-col-amount">Amount</th>
+                            <th class="mvp-col-amount">Amount Due</th>
+                            <th>Payment Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="invoices" t-as="inv">
+                            <tr class="mvp-tr-hover">
+                                <td>
+                                    <strong class="mvp-ref">
+                                        <t t-esc="inv.name"/>
+                                    </strong>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-if="inv.invoice_date">
+                                        <t t-esc="inv.invoice_date" t-options="{'widget': 'date'}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="mvp-muted">—</span>
+                                    </t>
+                                </td>
+                                <td class="mvp-col-date">
+                                    <t t-if="inv.invoice_date_due">
+                                        <t t-esc="inv.invoice_date_due" t-options="{'widget': 'date'}"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="mvp-muted">—</span>
+                                    </t>
+                                </td>
+                                <td class="mvp-col-amount">
+                                    <t t-esc="'{:,.2f} {}'.format(inv.amount_total, inv.currency_id.name)"/>
+                                </td>
+                                <td class="mvp-col-amount">
+                                    <t t-if="inv.payment_state == 'paid'">
+                                        <span class="mvp-muted">Paid</span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="mvp-amount-strong">
+                                            <t t-esc="'{:,.2f} {}'.format(inv.amount_residual, inv.currency_id.name)"/>
+                                        </span>
+                                    </t>
+                                </td>
+                                <td>
+                                    <t t-if="inv.payment_state == 'paid'">
+                                        <span class="mvp-badge mvp-badge-teal">PAID</span>
+                                    </t>
+                                    <t t-elif="inv.payment_state == 'partial'">
+                                        <span class="mvp-badge mvp-badge-gold">PARTIAL</span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="mvp-badge mvp-badge-coral">UNPAID</span>
+                                    </t>
+                                </td>
+                            </tr>
+                        </t>
+                        <t t-if="not invoices">
+                            <tr>
+                                <td colspan="6" class="mvp-empty">No invoices found.</td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pager -->
+            <t t-if="pager['page_count'] > 1">
+                <div class="mvp-pager">
+                    <t t-if="pager['page']['num'] > 1">
+                        <a t-att-href="pager['page_previous']['url']" class="mvp-pager-btn">&#8592; Previous</a>
+                    </t>
+                    <span class="mvp-pager-info">
+                        Page <t t-esc="pager['page']['num']"/> of <t t-esc="pager['page_count']"/>
+                    </span>
+                    <t t-if="pager['page']['num'] &lt; pager['page_count']">
+                        <a t-att-href="pager['page_next']['url']" class="mvp-pager-btn">Next &#8594;</a>
+                    </t>
+                </div>
+            </t>
+        </div>
+
+    </t>
+</template>
+
+</odoo>
