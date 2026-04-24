@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZAKI — AJ Arabia Intelligence</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOGIN OVERLAY
+══════════════════════════════════════════════════════════════════ -->
+<div id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-mark">ذ</div>
+      <div class="login-brand">
+        <span class="login-zaki">ZAKI</span>
+        <span class="login-sub">AJ Arabia Intelligence</span>
+      </div>
+    </div>
+
+    <form id="login-form" autocomplete="on">
+      <div class="form-group">
+        <label for="email">Odoo Email</label>
+        <input id="email" name="email" type="email" placeholder="you@aj-arabia.com" autocomplete="email" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <div id="login-error" class="login-error" hidden></div>
+      <button type="submit" id="login-btn" class="btn btn-primary">
+        <span id="login-label">Sign in to Odoo</span>
+        <span id="login-spinner" class="spinner" hidden></span>
+      </button>
+    </form>
+
+    <p class="login-note">Your Odoo credentials are used only to authenticate with aj-arabia.odoo.com.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════════════════════════════ -->
+<div id="app" hidden>
+
+  <!-- ── LEFT SIDEBAR ───────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <div class="logo-mark">ذ</div>
+        <div class="logo-text">
+          <span class="logo-zaki">ZAKI</span>
+          <span class="logo-tag">Executive Intelligence</span>
+        </div>
+      </div>
+
+      <button id="new-chat-btn" class="btn btn-new-chat">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        New chat
+      </button>
+
+      <div class="sidebar-section-label">Recent</div>
+      <div id="history-list" class="history-list"></div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">—</div>
+        <div class="user-details">
+          <div class="user-name" id="user-name">Loading…</div>
+          <div class="user-role">AJ Arabia</div>
+        </div>
+      </div>
+      <button id="logout-btn" class="btn-logout" title="Sign out">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN PANEL ─────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title">ZAKI <span class="topbar-sep">·</span> AJ Arabia</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="period-selector">
+          <select id="period-month">
+            <option value="1">Jan</option><option value="2">Feb</option>
+            <option value="3">Mar</option><option value="4">Apr</option>
+            <option value="5">May</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Aug</option>
+            <option value="9">Sep</option><option value="10">Oct</option>
+            <option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+          <select id="period-year"></select>
+        </div>
+        <div id="odoo-status" class="odoo-status odoo-connected">
+          <span class="status-dot"></span> Odoo live
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat thread -->
+    <div class="thread" id="thread">
+      <!-- Welcome state -->
+      <div id="welcome" class="welcome">
+        <div class="welcome-icon">ذ</div>
+        <h2>Good day. I'm ZAKI.</h2>
+        <p>Your executive intelligence platform for AJ Arabia.<br />I have live access to your Odoo ERP.</p>
+        <div class="quick-questions">
+          <button class="quick-q" data-q="What is our current bank balance position?">💰 Bank balances</button>
+          <button class="quick-q" data-q="Show me aged receivables as of today.">📋 Aged receivables</button>
+          <button class="quick-q" data-q="Give me the P&amp;L summary for this month.">📊 P&amp;L this month</button>
+          <button class="quick-q" data-q="Who are our top customers by revenue this month?">🏆 Top customers</button>
+          <button class="quick-q" data-q="What is our FFF (Five Fine Fragrance) exposure?">🧴 FFF position</button>
+          <button class="quick-q" data-q="Which customers have gone dormant in the last 60 days?">⚠️ Dormant accounts</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reconnect banner (hidden by default) -->
+    <div id="reconnect-banner" class="reconnect-banner" hidden>
+      <span>⚠️ Odoo session expired.</span>
+      <button id="reconnect-btn" class="btn btn-reconnect">Reconnect</button>
+    </div>
+
+    <!-- Input area -->
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea
+          id="chat-input"
+          class="chat-input"
+          placeholder="Ask Zaki anything about your business…"
+          rows="1"
+          maxlength="4000"
+        ></textarea>
+        <button id="send-btn" class="send-btn" disabled title="Send">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M16 9L2 2l4 7-4 7 14-7z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">
+        <span id="agent-hint">Farid · CFO &nbsp;|&nbsp; Ayaz · Commercial</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
