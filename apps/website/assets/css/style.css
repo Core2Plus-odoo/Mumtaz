@@ -15,19 +15,19 @@
   --border:      rgba(255,255,255,0.07);
   --border-2:    rgba(255,255,255,0.12);
 
-  --blue:        #3b82f6;
-  --blue-light:  #60a5fa;
-  --purple:      #8b5cf6;
-  --purple-light:#a78bfa;
+  --blue:        #0891B2;
+  --blue-light:  #06B6D4;
+  --purple:      #0E7490;
+  --purple-light:#67E8F9;
   --cyan:        #06b6d4;
-  --green:       #10b981;
-  --amber:       #f59e0b;
-  --red:         #ef4444;
+  --green:       #059669;
+  --amber:       #D97706;
+  --red:         #DC2626;
 
-  --grad-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --grad-hero:    linear-gradient(135deg, #1d4ed8 0%, #7c3aed 60%, #0f172a 100%);
-  --grad-glow:    radial-gradient(ellipse at 60% 0%, rgba(59,130,246,0.18), transparent 65%),
-                  radial-gradient(ellipse at 10% 80%, rgba(139,92,246,0.14), transparent 55%);
+  --grad-primary: linear-gradient(135deg, #0891B2 0%, #06B6D4 100%);
+  --grad-hero:    linear-gradient(135deg, #0E7490 0%, #0891B2 60%, #0f172a 100%);
+  --grad-glow:    radial-gradient(ellipse at 60% 0%, rgba(8,145,178,0.15), transparent 65%),
+                  radial-gradient(ellipse at 10% 80%, rgba(6,182,212,0.10), transparent 55%);
 
   --text:     #f0f6ff;
   --text-2:   #94a3b8;
@@ -45,22 +45,22 @@
 
 /* ── Light Mode Token Overrides ─────────────────────────────────── */
 [data-theme="light"] {
-  --bg:          #f5f7ff;
-  --bg-1:        #eef1fb;
-  --bg-2:        #e5eaf8;
-  --surface:     #ffffff;
-  --surface-2:   #f0f3fd;
-  --border:      rgba(15,23,42,0.08);
-  --border-2:    rgba(15,23,42,0.15);
+  --bg:          #F8FAFC;
+  --bg-1:        #F1F5F9;
+  --bg-2:        #E8F0F5;
+  --surface:     #FFFFFF;
+  --surface-2:   #F1F5F9;
+  --border:      rgba(15,23,42,0.09);
+  --border-2:    rgba(15,23,42,0.16);
 
-  --text:     #0f172a;
-  --text-2:   #374151;
-  --text-3:   #6b7280;
+  --text:     #0F172A;
+  --text-2:   #334155;
+  --text-3:   #64748B;
 
-  --grad-glow: radial-gradient(ellipse at 60% 0%,rgba(59,130,246,0.09),transparent 65%),
-               radial-gradient(ellipse at 10% 80%,rgba(139,92,246,0.07),transparent 55%);
-  --shadow-card: 0 2px 16px rgba(15,23,42,0.09);
-  --shadow-glow: 0 0 40px rgba(59,130,246,0.10);
+  --grad-glow: radial-gradient(ellipse at 60% 0%,rgba(8,145,178,0.08),transparent 65%),
+               radial-gradient(ellipse at 10% 80%,rgba(6,182,212,0.06),transparent 55%);
+  --shadow-card: 0 1px 3px rgba(15,23,42,0.07), 0 4px 16px rgba(15,23,42,0.04);
+  --shadow-glow: 0 0 40px rgba(8,145,178,0.12);
 }
 
 /* Light: structural component overrides */
@@ -374,6 +374,26 @@ h4 { font-size: 1rem; font-weight: 600; }
 .dot-green  { background: var(--green); }
 .dot-amber  { background: var(--amber); }
 .dot-blue   { background: var(--blue); }
+
+/* ── Free modules strip ─────────────────────────────────────────── */
+.free-modules-strip {
+  background: var(--blue);
+  padding: .65rem 0;
+}
+.free-modules-strip .container {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  font-size: .82rem;
+}
+.free-strip-label { color: rgba(255,255,255,.7); font-weight: 500; flex-shrink: 0; }
+.free-strip-item  { color: #fff; font-weight: 500; }
+.free-strip-sep   { color: rgba(255,255,255,.4); }
+.free-strip-cta   {
+  margin-left: auto; color: #fff; font-weight: 600; font-size: .82rem;
+  border: 1px solid rgba(255,255,255,.35); border-radius: 999px;
+  padding: .25rem .85rem; transition: background .2s;
+}
+.free-strip-cta:hover { background: rgba(255,255,255,.15); }
+[data-theme="light"] .free-modules-strip { background: #0891B2; }
 
 /* ── Trust bar ──────────────────────────────────────────────────── */
 .trust-bar { padding: 2.5rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
