@@ -254,3 +254,15 @@ const counterObs = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 
 document.querySelectorAll('[data-count]').forEach(el => counterObs.observe(el));
+
+/* ── Pricing tab switcher ──────────────────────────────────────── */
+document.querySelectorAll('.pricing-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const panel = tab.dataset.tab;
+    document.querySelectorAll('.pricing-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('[data-tab-panel]').forEach(p => {
+      p.style.display = p.dataset.tabPanel === panel ? 'grid' : 'none';
+    });
+  });
+});
