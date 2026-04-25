@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mumtaz — Partner application</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, textarea, select { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    :root {
+      --gold:#B8862A; --gold2:#D4A84C; --gold-bg:#FDF6E4;
+      --teal:#0B7A64;
+      --ink:#0C1118; --ink2:#3D4A5C; --ink3:#7A8799;
+      --bg:#F5F3EF; --white:#FFFFFF; --border:#E4E0D8; --radius:10px;
+    }
+    body { background: var(--bg); color: var(--ink); }
+
+    .topbar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .tb-logo { display: flex; align-items: center; gap: 10px; }
+    .tb-logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff;
+    }
+    .tb-logo-name { font-weight: 600; }
+    .tb-back {
+      font-size: .85rem; color: var(--ink3);
+      padding: 6px 12px; border-radius: 8px;
+    }
+    .tb-back:hover { color: var(--ink); background: var(--bg); }
+
+    .wrap {
+      max-width: 1100px; margin: 0 auto; padding: 48px 28px 60px;
+      display: grid; grid-template-columns: 1fr 1.4fr; gap: 48px;
+    }
+    @media (max-width: 880px) { .wrap { grid-template-columns: 1fr; gap: 28px; } }
+
+    .pitch { padding-top: 16px; }
+    .pitch-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: .78rem;
+      color: var(--gold); letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .pitch h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(2rem, 4vw, 2.6rem);
+      font-weight: 400; line-height: 1.12;
+      letter-spacing: -.015em; margin-bottom: 16px;
+    }
+    .pitch h1 em { font-style: italic; color: var(--gold); }
+    .pitch p { color: var(--ink2); line-height: 1.6; margin-bottom: 16px; }
+    .pitch ul { list-style: none; margin-top: 24px; }
+    .pitch li {
+      display: flex; gap: 12px; align-items: flex-start;
+      margin-bottom: 14px;
+      font-size: .9rem; color: var(--ink2); line-height: 1.5;
+    }
+    .pitch li::before {
+      content: '✓'; flex-shrink: 0;
+      width: 22px; height: 22px;
+      background: var(--gold-bg); color: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .82rem;
+      margin-top: 1px;
+    }
+
+    .form-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 36px 28px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.04);
+    }
+    .form-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.4rem; font-weight: 400; margin-bottom: 4px;
+    }
+    .form-sub { color: var(--ink3); font-size: .87rem; margin-bottom: 24px; }
+    .row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    @media (max-width: 580px) { .row { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field label {
+      font-size: .78rem; font-weight: 600; color: var(--ink2);
+      letter-spacing: .03em;
+    }
+    .field input, .field select, .field textarea {
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .9375rem; color: var(--ink);
+      background: var(--white);
+      transition: border-color .15s; outline: none;
+      width: 100%;
+    }
+    .field textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+    .field-hint { font-size: .76rem; color: var(--ink3); }
+
+    .error {
+      font-size: .82rem; color: #C0402A;
+      background: #FCECEA;
+      border: 1px solid rgba(192,64,42,.2);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--gold); color: #fff;
+      font-weight: 600; font-size: .95rem;
+      padding: 12px;
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .15s;
+      margin-top: 10px;
+    }
+    .btn-submit:hover { opacity: .88; }
+    .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .success-card {
+      background: var(--white);
+      border: 1.5px solid var(--teal);
+      border-radius: 16px;
+      padding: 40px 36px;
+      text-align: center;
+      max-width: 480px;
+      margin: 80px auto;
+    }
+    .success-card .check {
+      width: 56px; height: 56px;
+      background: var(--teal); color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin: 0 auto 18px;
+    }
+    .success-card h2 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400; font-size: 1.5rem; margin-bottom: 10px;
+    }
+    .success-card p { color: var(--ink2); font-size: .9rem; line-height: 1.55; margin-bottom: 6px; }
+    .success-card .cta {
+      display: inline-block; margin-top: 18px;
+      background: var(--ink); color: #fff;
+      padding: 10px 22px; border-radius: 100px;
+      font-size: .85rem; font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a href="https://mumtaz.digital" class="tb-logo">
+      <div class="tb-logo-mark">م</div>
+      <span class="tb-logo-name">Mumtaz</span>
+    </a>
+    <a href="/" class="tb-back">Customer sign in →</a>
+  </header>
+
+  <main>
+    <div class="wrap" id="wrap">
+      <div class="pitch">
+        <div class="pitch-eyebrow">For Banks · Free Zones · Chambers · Enterprises</div>
+        <h1>Offer Mumtaz under <em>your</em> brand.</h1>
+        <p>Banks, free zones, chambers of commerce, and enterprises in the GCC use Mumtaz as a white-label platform — their clients see only their brand, not ours.</p>
+        <ul>
+          <li>Your domain, your brand identity, your support team</li>
+          <li>Set your own pricing and subscription tiers per module</li>
+          <li>Full ERP, ZAKI AI agents, and B2B Marketplace for your clients</li>
+          <li>Real-time revenue and adoption dashboards</li>
+          <li>Dedicated technical onboarding and integration support</li>
+          <li>ZATCA Phase 2 e-invoicing built-in (Saudi Arabia)</li>
+        </ul>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title">Apply for partner access</div>
+        <div class="form-sub">Tell us about your organization. We'll be in touch within 2 business days.</div>
+
+        <div class="error" id="error" hidden></div>
+
+        <form id="form">
+          <div class="row">
+            <div class="field">
+              <label for="company">Organization</label>
+              <input id="company" type="text" placeholder="Emirates NBD" required />
+            </div>
+            <div class="field">
+              <label for="kind">Type</label>
+              <select id="kind" required>
+                <option value="">Select…</option>
+                <option value="bank">Bank</option>
+                <option value="freezone">Free zone authority</option>
+                <option value="chamber">Chamber of commerce</option>
+                <option value="agency">Government agency</option>
+                <option value="enterprise">Large enterprise</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="contact_name">Your name</label>
+              <input id="contact_name" type="text" placeholder="Ahmed Al Mansoori" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="email">Work email</label>
+              <input id="email" type="email" placeholder="you@organization.com" autocomplete="email" required />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="phone">Phone (optional)</label>
+              <input id="phone" type="tel" placeholder="+971 50 123 4567" autocomplete="tel" />
+            </div>
+            <div class="field">
+              <label for="country">Country</label>
+              <select id="country">
+                <option value="">Select…</option>
+                <option>United Arab Emirates</option>
+                <option>Saudi Arabia</option>
+                <option>Qatar</option>
+                <option>Kuwait</option>
+                <option>Bahrain</option>
+                <option>Oman</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="clients">Estimated client base</label>
+              <select id="clients">
+                <option value="">Select…</option>
+                <option value="1-50">1–50 SMEs</option>
+                <option value="51-500">51–500 SMEs</option>
+                <option value="500-5000">500–5,000 SMEs</option>
+                <option value="5000+">5,000+ SMEs</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="domain">Desired white-label domain</label>
+              <input id="domain" type="text" placeholder="erp.mybank.ae" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes" placeholder="Tell us about your goals, timeline, integration requirements…"></textarea>
+          </div>
+
+          <button class="btn-submit" id="btn" type="submit">
+            <span id="label">Submit application →</span>
+            <span id="spinner" class="spinner" hidden></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="success" class="success-card" hidden>
+      <div class="check">✓</div>
+      <h2>Application received</h2>
+      <p>Thanks for your interest in partnering with Mumtaz.</p>
+      <p>Our team will review your application and get in touch within <strong>2 business days</strong> at the email you provided.</p>
+      <a href="https://mumtaz.digital" class="cta">Back to mumtaz.digital →</a>
+    </div>
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    $('form').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('error').hidden = true;
+      $('btn').disabled = true;
+      $('label').hidden = true;
+      $('spinner').hidden = false;
+
+      const payload = {
+        company:      $('company').value.trim(),
+        contact_name: $('contact_name').value.trim(),
+        email:        $('email').value.trim(),
+        phone:        $('phone').value.trim() || null,
+        country:      $('country').value || null,
+        kind:         $('kind').value || null,
+        clients:      $('clients').value || null,
+        domain:       $('domain').value.trim() || null,
+        notes:        $('notes').value.trim() || null,
+      };
+
+      try {
+        const r = await fetch('/api/partner/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || 'Could not submit application.');
+        $('wrap').hidden = true;
+        $('success').hidden = false;
+        window.scrollTo(0, 0);
+      } catch (err) {
+        $('error').textContent = err.message;
+        $('error').hidden = false;
+        $('btn').disabled = false;
+        $('label').hidden = false;
+        $('spinner').hidden = true;
+      }
+    });
+  </script>
+
+</body>
+</html>

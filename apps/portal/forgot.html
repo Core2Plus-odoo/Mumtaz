@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mumtaz — Reset your password</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    :root {
+      --gold:#B8862A; --gold2:#D4A84C; --teal:#0B7A64;
+      --ink:#0C1118; --ink2:#3D4A5C; --ink3:#7A8799;
+      --bg:#F5F3EF; --white:#FFFFFF; --border:#E4E0D8; --radius:10px;
+    }
+    body {
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 36px 28px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.06);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: 1.1rem; color: #fff;
+    }
+    .logo-name { font-weight: 600; font-size: 1.1rem; color: var(--ink); }
+
+    .title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem; font-weight: 400; color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .subtitle { font-size: .85rem; color: var(--ink3); margin-bottom: 24px; line-height: 1.5; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field label { font-size: .78rem; font-weight: 600; color: var(--ink2); letter-spacing: .03em; }
+    .field input {
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .9375rem; color: var(--ink);
+      background: var(--white);
+      transition: border-color .15s; outline: none;
+    }
+    .field input:focus { border-color: var(--gold); }
+
+    .error {
+      font-size: .82rem; color: #C0402A;
+      background: #FCECEA;
+      border: 1px solid rgba(192,64,42,.2);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      margin-bottom: 14px;
+    }
+    .success {
+      font-size: .85rem; color: var(--teal);
+      background: #E6F4F1;
+      border: 1px solid rgba(11,122,100,.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--gold); color: #fff;
+      font-weight: 600; font-size: .9375rem;
+      padding: 11px;
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .15s;
+      margin-top: 6px;
+    }
+    .btn-submit:hover { opacity: .88; }
+    .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer {
+      margin-top: 22px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: .82rem; color: var(--ink3);
+    }
+    .footer a { color: var(--gold); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">
+      <div class="logo-mark">م</div>
+      <span class="logo-name">Mumtaz</span>
+    </div>
+
+    <h1 class="title">Reset your password</h1>
+    <p class="subtitle">Enter the email you signed up with. If we find an account, we'll send you a link to set a new password.</p>
+
+    <div class="success" id="success" hidden></div>
+
+    <form id="form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@company.com" autocomplete="email" required />
+      </div>
+      <div class="error" id="error" hidden></div>
+      <button class="btn-submit" id="btn" type="submit">
+        <span id="label">Send reset link →</span>
+        <span id="spinner" class="spinner" hidden></span>
+      </button>
+    </form>
+
+    <div class="footer">
+      Remembered it? <a href="/">Back to sign in</a>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    $('form').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('error').hidden = true;
+      $('btn').disabled = true;
+      $('label').hidden = true;
+      $('spinner').hidden = false;
+
+      try {
+        const r = await fetch('/api/auth/forgot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: $('email').value.trim() }),
+        });
+        // Always show the same success message, even on 404 — email enumeration safety
+        if (!r.ok && r.status !== 200) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || 'Could not send reset link. Try again.');
+        }
+        $('success').textContent = 'Check your inbox. If your email is registered, you\'ll receive a reset link within a minute. The link expires in 1 hour.';
+        $('success').hidden = false;
+        $('form').hidden = true;
+      } catch (err) {
+        $('error').textContent = err.message;
+        $('error').hidden = false;
+      } finally {
+        $('btn').disabled = false;
+        $('label').hidden = false;
+        $('spinner').hidden = true;
+      }
+    });
+  </script>
+
+</body>
+</html>
