@@ -456,6 +456,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .invest-card{border-top:2px solid var(--purple,#a855f7)}
 .market-card{border-top:2px solid var(--cyan,#06b6d4)}
 .insight-card{border-top:2px solid var(--blue)}
+.investopt-card{border-top:2px solid var(--amber)}
 .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
 .card-name{font-weight:600;font-size:.9rem;color:var(--text)}
 .card-body{font-size:.81rem;color:var(--text-3);line-height:1.6;margin-bottom:9px}
@@ -661,6 +662,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div class="nav-item" onclick="showPanel('invest')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Where to Invest
+      </div>
+      <div class="nav-item" onclick="showPanel('investopts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg>
+        Investment Options
       </div>
       <div class="nav-item" onclick="showPanel('market')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -1106,6 +1111,33 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div id="insights-summary" style="margin-bottom:14px"></div>
       <div class="cards-grid" id="insights-grid">
         <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Skimming your books…</div>
+      </div>
+    </div>
+
+    <!-- ── INVESTMENT OPTIONS (PERSONAL / EXTERNAL) ── -->
+    <div class="panel" id="panel-investopts">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Investment <em>Options</em></div>
+            <div class="panel-desc">Where to park surplus cash <em>outside</em> the business — stocks, sukuk, real estate, funds — sized to your market</div>
+          </div>
+          <button class="btn-secondary" onclick="loadInvestOpts(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:.78rem;color:var(--text-3)">Risk profile:</label>
+        <select id="investopt-risk" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)" onchange="loadInvestOpts(true)">
+          <option value="conservative">Conservative</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="growth">Growth</option>
+        </select>
+        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px">Surplus to deploy:</label>
+        <input id="investopt-amount" type="number" placeholder="100000" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text);width:130px">
+        <span style="font-size:.78rem;color:var(--text-3)" id="investopt-currency">AED</span>
+      </div>
+      <div class="cards-grid" id="investopts-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Building investment menu…</div>
       </div>
     </div>
 
@@ -2036,6 +2068,11 @@ function showPanel(id) {
   if (id === 'insights' && !S._cache.insights) loadInsights()
   if (id === 'books') loadBooks()
   if (id === 'invest' && !S._cache.invest) loadInvest()
+  if (id === 'investopts') {
+    document.getElementById('investopt-currency').textContent = S.co.currency
+    if (!S._cache.investopts) loadInvestOpts()
+    else renderInvestOpts(S._cache.investopts)
+  }
   if (id === 'market' && !S._cache.market) loadMarket()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
   if (id === 'board' && !S._cache.board) loadBoard()
@@ -3448,6 +3485,62 @@ async function loadInvest(force) {
   } catch(e) {
     grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
   }
+}
+
+// ═══════════════════════════════════════════
+// INVESTMENT OPTIONS (PERSONAL / EXTERNAL)
+// ═══════════════════════════════════════════
+async function loadInvestOpts(force) {
+  const grid = document.getElementById('investopts-grid')
+  const risk = document.getElementById('investopt-risk').value
+  const amountInput = document.getElementById('investopt-amount').value
+  const surplus = Number(amountInput) || Math.max(0, S.fin.cash - S.fin.exp * 3)
+  if (!aiReady()) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Investment Options uses AI to recommend external vehicles sized to your market and risk profile.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Building investment menu…</div>'
+  try {
+    const prompt = `Recommend 6 specific external investment vehicles for a CEO with ${S.co.currency} ${fmt(surplus)} of surplus cash to deploy from a ${S.co.industry || 'business'} based in ${S.co.country || 'their market'}. Risk profile: ${risk}.
+
+Cover a mix across asset classes appropriate to ${S.co.country || 'the local market'}: equities (local index ETFs, blue chips), fixed income (sukuk / government bonds / money market), real estate (REITs or direct), private/alternatives, and cash equivalents. Be specific to the market — name actual instrument categories that exist in ${S.co.country || 'this market'}.
+
+Respond ONLY with valid JSON array, no other text:
+[{"name":"<specific instrument or category>","class":"Equity|Fixed Income|Real Estate|Alternative|Cash","allocation":"<% of surplus>","expectedReturn":"<annual % or range>","liquidity":"High|Medium|Low","horizon":"<e.g. 1-3y / 3-5y / 5y+>","thesis":"<why this fits this CEO in 1-2 sentences>","risks":"<key risk to be aware of>"}]`
+    const raw = await callClaude([{ role: 'user', content: prompt }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.investopts = { items, risk, surplus }
+    save()
+    renderInvestOpts(S._cache.investopts)
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+function renderInvestOpts(cache) {
+  const grid = document.getElementById('investopts-grid')
+  if (!cache || !cache.items) return
+  const classColor = c => /equity/i.test(c) ? 'var(--blue)'
+    : /fixed/i.test(c) ? 'var(--green)'
+    : /real/i.test(c) ? 'var(--purple,#a855f7)'
+    : /alt/i.test(c) ? 'var(--amber)' : 'var(--text-3)'
+  const liqTag = l => /high/i.test(l) ? 'tag-green' : /low/i.test(l) ? 'tag-red' : 'tag-amber'
+  grid.innerHTML = cache.items.map(o => `
+    <div class="investopt-card">
+      <div class="card-header">
+        <div class="card-name">${o.name}</div>
+        <span class="tag ${liqTag(o.liquidity)}">${o.liquidity} liquidity</span>
+      </div>
+      <div class="card-body">${o.thesis}</div>
+      <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Risk:</strong> ${o.risks}</div>
+      <div class="card-footer">
+        <div>
+          <div class="card-meta" style="color:${classColor(o.class)}">${o.class} · ${o.allocation}</div>
+          <div style="font-size:.72rem;color:var(--text-3)">${o.expectedReturn} · ${o.horizon}</div>
+        </div>
+        <button class="btn-card-action" onclick="askFromBriefing('Walk me through investing in ${o.name} — entry points, brokers, tax treatment in ${S.co.country || 'my market'}')">Discuss →</button>
+      </div>
+    </div>`).join('')
 }
 
 // ═══════════════════════════════════════════
