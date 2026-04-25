@@ -1935,6 +1935,225 @@ function filterInvestments(opts) {
   })
 }
 
+// ═══════════════════════════════════════════
+// SECTOR / BUSINESS KNOWLEDGE BASE
+// Industry profiles tuned for GCC + South Asia. Injected into Zaki's system
+// prompt when S.co.industry matches a sector — gives Zaki domain intuition
+// without burning tokens per request.
+// ═══════════════════════════════════════════
+const SECTOR_KB = [
+  { id:'fnb', label:'Restaurant / F&B',
+    tags:['restaurant','cafe','coffee','food','bakery','f&b','catering','cloud kitchen','dine','qsr'],
+    gross_margin:'60-70% (food cost ~30-40%)', net_margin:'8-15% mature, breakeven first 12-18mo',
+    payroll_pct:'25-35% of revenue',
+    ar_days:'0-7 (mostly card / cash)', ap_days:'15-30 (food suppliers)',
+    top_costs:['Food cost (COGS)','Rent (8-12% of revenue is healthy)','Payroll incl. service','Utilities','Marketing/aggregator commissions (Talabat/Careem 25-30%)'],
+    regulatory:['Food safety (Dubai Municipality / SFDA)','Trade license + commercial activity','VAT 5% UAE / 15% KSA','Halal certification if claimed','Liquor license (UAE only, separate)'],
+    growth_plays:['Reduce aggregator dependence — own delivery / direct app','Build catering / corporate channel (higher margin, lower CAC)','Add second daypart (breakfast → dinner)','Cluster locations to share commissary'],
+    pitfalls:['Theft / wastage if no POS/inventory tightness','Rent on revenue-share too inflexible','Aggregator commissions eating margin','Over-staffing slow shifts'],
+    kpis:['Average ticket','Covers / day','Food cost %','Labor cost %','Prime cost % (target <60%)','Aggregator share of revenue'] },
+  { id:'retail', label:'Retail',
+    tags:['retail','shop','store','boutique','outlet','mall','brand'],
+    gross_margin:'40-55% (apparel) / 25-35% (FMCG)', net_margin:'5-10%',
+    payroll_pct:'12-20%',
+    ar_days:'0-15', ap_days:'30-60 (inventory financing)',
+    top_costs:['Inventory / COGS','Rent (mall rents brutal — 15-25% of sales)','Staff','Mall service charges','Marketing'],
+    regulatory:['Trade license','Mall lease compliance','VAT','Consumer protection','Sale-event approvals (DET in UAE)'],
+    growth_plays:['Own e-commerce + click-and-collect','Loyalty program (capture identity, push margins)','Private label SKUs (higher margin)','Optimize store mix — close bottom 20%'],
+    pitfalls:['Dead stock killing cash','Rent escalation clauses','Promo addiction destroying brand pricing','Inventory shrinkage'],
+    kpis:['Sales / sqft','Inventory turnover','Same-store sales growth','Conversion rate','UPT (units per transaction)','Sell-through %'] },
+  { id:'ecom', label:'E-commerce',
+    tags:['ecommerce','e-commerce','online','shopify','marketplace','d2c','dtc'],
+    gross_margin:'45-65%', net_margin:'5-15% (often negative early)',
+    payroll_pct:'15-25%',
+    ar_days:'0-7 (PSP settlement)', ap_days:'30-60',
+    top_costs:['COGS','Last-mile delivery (8-15% of order)','Marketing / paid acquisition (CAC)','Returns handling (10-25% in apparel)','Payment processing 2-3%'],
+    regulatory:['E-commerce license','VAT (collect on delivery)','Consumer protection (return windows)','PCI-DSS','Privacy / data (GCC PDPL)'],
+    growth_plays:['Improve CAC payback to <6mo','Subscriptions / repeat purchase','Email/SMS retention >25% of revenue','Bundle to lift AOV','Marketplace + own site mix'],
+    pitfalls:['Burning cash on paid acquisition with no LTV proof','Returns destroying unit economics','Inventory mismatch — best-sellers OOS, dead SKUs piling','Payment fraud'],
+    kpis:['CAC','LTV','LTV/CAC (target >3)','Repeat purchase rate','AOV','Contribution margin','Cart abandonment'] },
+  { id:'logistics', label:'Logistics / Last-mile',
+    tags:['logistics','delivery','courier','last-mile','transport','freight','3pl','warehousing'],
+    gross_margin:'18-30%', net_margin:'4-10%',
+    payroll_pct:'30-45% (drivers)',
+    ar_days:'45-75', ap_days:'30-45',
+    top_costs:['Driver salaries','Fuel','Vehicle maintenance/lease','Insurance','Tech / dispatch software'],
+    regulatory:['RTA / transport authority licensing','Driver visas + license categories','Vehicle registration + Salik / RFID','Insurance mandatory','Free-zone vs mainland for cross-emirate work'],
+    growth_plays:['Density — more stops per route is the only real lever','Multi-vertical (food + grocery + retail) on same fleet','SaaS-ify dispatch and sell to other operators','Cold chain / pharma premium tiers'],
+    pitfalls:['Driver churn (often 100%+ annually)','Fuel exposure unhedged','Customer concentration with low-margin clients','Vehicle depreciation under-accrued'],
+    kpis:['Cost per drop','Drops per driver per day','On-time delivery %','Driver utilization','Fuel cost per km','Customer concentration %'] },
+  { id:'proservices', label:'Professional Services',
+    tags:['consulting','advisory','accounting','legal','audit','tax','professional services','firm','agency'],
+    gross_margin:'45-65%', net_margin:'15-30%',
+    payroll_pct:'45-60% (largest line)',
+    ar_days:'45-90 (chase aggressively)', ap_days:'30',
+    top_costs:['Senior + junior salaries','Office rent','Professional indemnity insurance','Software/IT','Marketing/BD'],
+    regulatory:['Practice license (DIFC, ADGM, mainland)','Professional registrations (ICAEW, SOCPA, Bar)','VAT on services','Anti-money laundering compliance','Client conflict checks'],
+    growth_plays:['Move from time-billing to fixed-fee / outcome-based','Productize a niche service','Cross-sell into existing book','Offshore juniors (India/Pakistan/Egypt) for leverage'],
+    pitfalls:['Utilization below 65% bleeds money','Clients ageing receivables — 90+ days = 80% likely write-off','Founder bottleneck on rainmaking','Scope creep on fixed fees'],
+    kpis:['Utilization %','Realization rate','Effective hourly rate','AR days','Pipeline coverage','Repeat-client revenue %'] },
+  { id:'construction', label:'Construction / Contracting',
+    tags:['construction','contracting','contractor','build','civil','mep','fitout','interior','build-out'],
+    gross_margin:'12-20%', net_margin:'3-8%',
+    payroll_pct:'15-25% (more in subcontractors)',
+    ar_days:'60-120 (retention 5-10% adds another 12mo)', ap_days:'30-60',
+    top_costs:['Materials (steel, cement, fitout)','Subcontractors','Labor / accommodation','Equipment hire','Performance bonds / bank guarantees'],
+    regulatory:['Trade license + grade classification','Municipality permits (Dubai Municipality, ADM)','Engineer registration with MOE','Health & safety compliance','VAT on construction services','Wages Protection System'],
+    growth_plays:['Specialize (MEP, fitout, joinery — better margins than general)','Better contracts: variation orders, milestone billing, retention shorter','Pre-fab / modular to compress timeline','Government / quasi-gov projects (slow but pays)'],
+    pitfalls:['Cash trap — paying subs and labor before client pays','Variation orders not documented = disputes + write-offs','Material price spikes on fixed-price contracts','Performance-bond exposure'],
+    kpis:['Project gross margin','WIP days','Retention as % of receivables','Subcontractor retention','Health & safety incidents','Bid win rate'] },
+  { id:'saas', label:'SaaS / Tech',
+    tags:['saas','software','tech','startup','platform','app','subscription'],
+    gross_margin:'70-85%', net_margin:'-30% to +25% (stage-dependent)',
+    payroll_pct:'50-70% (engineers + sales)',
+    ar_days:'15-45 (annual prepay = 0)', ap_days:'30',
+    top_costs:['Engineering salaries','Sales/AE comp','Cloud infra (AWS/GCP/Azure)','Sales & marketing','Customer success'],
+    regulatory:['Commercial license (often free zone)','Data hosting residency (KSA NDMO, UAE TDRA)','VAT on SaaS','Privacy laws (PDPL, GDPR if EU clients)','Source-code escrow if required by enterprise clients'],
+    growth_plays:['Annual prepay (collect 12mo upfront — kills churn, fixes cashflow)','Expansion revenue (NRR >110%)','Self-serve PLG funnel','Enterprise tier with SOC2','Channel partners in GCC'],
+    pitfalls:['Burning runway on growth without unit economics proof','Founder selling to enterprise without sales process','Free trials with no conversion mechanic','Cloud cost not metered to customers'],
+    kpis:['MRR / ARR','Net revenue retention','Logo churn','CAC payback months','Magic number','Gross margin','Burn multiple','Months of runway'] },
+  { id:'manufacturing', label:'Manufacturing',
+    tags:['manufacturing','factory','plant','production','industrial','assembly'],
+    gross_margin:'20-35%', net_margin:'5-12%',
+    payroll_pct:'15-25%',
+    ar_days:'45-90', ap_days:'45-75',
+    top_costs:['Raw materials','Labor (production + supervision)','Utilities (power-heavy)','Depreciation','Logistics in/out'],
+    regulatory:['Industrial license','Environmental clearance','Civil defense / fire safety','Customs (raw imports)','Labor compliance + worker housing'],
+    growth_plays:['Backward integration into key inputs','Forward into branded retail (margin)','Export — leverage GCC origin for tariff access','Lean / OEE improvements before capex'],
+    pitfalls:['Inventory tying up cash (RM + WIP + FG)','Capex over-investment vs utilization','Customer concentration on a few large buyers','Currency exposure on imports'],
+    kpis:['OEE','Capacity utilization','Inventory days','Raw material cost as % of revenue','Defect rate','Energy cost per unit'] },
+  { id:'healthcare', label:'Healthcare / Clinics',
+    tags:['clinic','hospital','medical','dental','healthcare','pharmacy','health'],
+    gross_margin:'45-65%', net_margin:'8-18%',
+    payroll_pct:'40-55% (doctors + nurses)',
+    ar_days:'60-120 (insurance claims)', ap_days:'45',
+    top_costs:['Medical staff salaries','Consumables / pharmacy','Equipment lease/depreciation','Rent (clinic-grade)','Insurance / malpractice'],
+    regulatory:['DOH / DHA / MOH licensing per emirate','Doctor PSV + scope-of-practice','Insurance network contracts (Daman, Thiqa, etc.)','Pharmacy license separate','HIPAA-equivalent data rules'],
+    growth_plays:['Multi-specialty under one license','Tele-health for repeat consults','Add cosmetic / cash-pay services (no insurance haircut)','Insurance approval lists (be on every major)'],
+    pitfalls:['Insurance rejection rate >10% drains margin','Doctor non-competes / churn on departure','Equipment over-spec for patient volume','Supply theft / consumable wastage'],
+    kpis:['Patient visits / day','Revenue per patient','Insurance rejection %','Doctor utilization','AR aging — insurance bucket','Cash-pay %'] },
+  { id:'education', label:'Education / Training',
+    tags:['school','education','training','tutoring','academy','institute','edu'],
+    gross_margin:'40-55%', net_margin:'12-25% (mature)',
+    payroll_pct:'45-60% (teachers)',
+    ar_days:'15-45 (term-fee billing)', ap_days:'30',
+    top_costs:['Teacher salaries','Premises (school building / fitout)','Curriculum + textbooks','Marketing (admissions cycles)','IT / LMS'],
+    regulatory:['KHDA / ADEK / MOE licensing','Teacher work permits + qualifications','Curriculum approval','Inspection scoring (KHDA Outstanding/Acceptable)','Health & safety + safeguarding'],
+    growth_plays:['Tuition price ladder via inspection ranking','Add-on revenue: aftercare, transport, summer camps, exams','Higher-grade extension (KG → grade 12)','Online courses (corporate training)'],
+    pitfalls:['Empty seats — capex committed, fees missing','Teacher attrition mid-year','KHDA rating drop = enrollment crash','Bus/transport money-loser if not priced right'],
+    kpis:['Enrollment','Capacity utilization','Revenue per student','Teacher cost per student','Retention rate (year-on-year)','KHDA rating'] },
+  { id:'realestate', label:'Real Estate Brokerage',
+    tags:['real estate','broker','property','realtor','listings','sales','leasing'],
+    gross_margin:'70-85% (commission-based)', net_margin:'15-30%',
+    payroll_pct:'40-60% (commission splits)',
+    ar_days:'30-60 (commission on transfer)', ap_days:'30',
+    top_costs:['Agent commission splits','Marketing (Property Finder, Bayut, Dubizzle listings)','CRM','Office rent','RERA fees / training'],
+    regulatory:['RERA registration (Dubai), DARI (AD)','Broker card per agent','Trade license','Trakheesi permits per ad','Anti-money-laundering for property'],
+    growth_plays:['Specialize (off-plan vs secondary, area-focus)','Build in-house lead-gen (vs paying portals)','Property management = recurring revenue','Mortgage referral fees'],
+    pitfalls:['Listing portal costs eating margin','Agent poaching with their pipelines','Deal fall-throughs at MOU stage','Commission disputes between buy/sell brokers'],
+    kpis:['Listings / agent','Conversion rate (lead → deal)','Average deal size','Days on market','Commission per agent','Repeat / referral %'] },
+  { id:'trading', label:'Trading / Distribution / Wholesale',
+    tags:['trading','distribution','wholesale','import','export','distributor'],
+    gross_margin:'15-30%', net_margin:'4-10%',
+    payroll_pct:'8-15%',
+    ar_days:'45-90', ap_days:'30-60',
+    top_costs:['COGS (the dominant line)','Logistics + warehousing','Sales commissions','Customs/duties','FX hedging cost'],
+    regulatory:['Import/export license','Customs registration','Agency agreements (commercial agency law)','VAT on import','Country-of-origin documentation'],
+    growth_plays:['Exclusive agency rights (defensible margin)','Add value-add services (configuration, after-sales)','Bypass distributor — direct from brand','Backward into manufacturing for top SKU'],
+    pitfalls:['Currency exposure on USD/EUR imports','Stock obsolescence in fast-moving categories','Customer concentration risk','Letter-of-credit costs'],
+    kpis:['Inventory turns','GMROI','AR days by customer','Stockout rate','Margin per category','Top-10 customer concentration %'] },
+  { id:'marketing', label:'Marketing / Agency / Media',
+    tags:['marketing','agency','media','advertising','digital agency','creative','pr','content'],
+    gross_margin:'40-60%', net_margin:'10-20%',
+    payroll_pct:'45-60%',
+    ar_days:'45-75 (chase clients)', ap_days:'30 (media payments are upfront)',
+    top_costs:['Creative + strategy talent','Media buying pass-through','Software (Adobe, Meta, Google)','Office','Freelancer / contractor budget'],
+    regulatory:['Trade license (advertising or media activity)','Media zone vs mainland','Influencer regulation (UAE National Media Council license)','VAT','IP ownership clauses'],
+    growth_plays:['Move from project fees to retainers','Build a productized service (e.g. SEO sprints, ad audits)','Performance-based pricing (revenue share)','Vertical specialization'],
+    pitfalls:['Cashflow gap — pay media before client pays you','Scope creep on retainers','Talent flight (best people leave to start their own)','Concentrating revenue on 2-3 big clients'],
+    kpis:['Utilization %','Effective hourly rate','Revenue per FTE','Retainer % of revenue','Media markup','Client retention'] },
+  { id:'itservices', label:'IT Services / Systems Integration',
+    tags:['it services','systems integration','si','msp','it consulting','infrastructure','reseller'],
+    gross_margin:'25-45%', net_margin:'8-15%',
+    payroll_pct:'40-55%',
+    ar_days:'45-75', ap_days:'30-45',
+    top_costs:['Engineer salaries','Hardware/software resold','Subcontractors / vendors','Certifications + training','Office'],
+    regulatory:['Trade license + IT activity','Vendor authorizations (Microsoft, Cisco, Dell partner tiers)','Data residency rules','Background checks for client access','VAT'],
+    growth_plays:['Recurring managed services (MSP) over project work','Cloud migration practice (high billable rates)','Cybersecurity tier','Annual maintenance contracts (AMC) on installed base'],
+    pitfalls:['Project overruns eating margin','Vendor rebates not chased','Customer concentration on 1-2 enterprise accounts','Commoditized resale margin compression'],
+    kpis:['Billable utilization','Recurring revenue %','Project margin','AMC renewal rate','Vendor rebates capture'] },
+  { id:'beauty', label:'Beauty / Salon / Wellness',
+    tags:['salon','spa','beauty','wellness','barber','aesthetics','medspa'],
+    gross_margin:'55-70%', net_margin:'10-20%',
+    payroll_pct:'30-45% (often commission-based)',
+    ar_days:'0-3 (mostly cash/card)', ap_days:'15-30',
+    top_costs:['Stylist commissions/salaries','Product cost (5-10%)','Rent (mall locations are brutal)','Marketing','License/permits + civil defense'],
+    regulatory:['Salon license (DM, ADM)','Therapist visa + qualification certificates','Health & safety','Civil defense','Cosmetic procedures need DHA approval'],
+    growth_plays:['Memberships / packages (cash upfront)','Retail products (high margin)','Add medspa services (laser, injectables) — premium pricing','Multi-location with shared back-office'],
+    pitfalls:['Stylist flight with their client book','No-shows killing utilization','Heavy first-time discounts with no retention','Inventory of cosmetics expiring'],
+    kpis:['Chair utilization','Revenue per chair','Client retention rate','Average ticket','Membership revenue %','Retail attach rate'] },
+  { id:'auto', label:'Auto / Mobility',
+    tags:['auto','automotive','car','garage','workshop','dealership','rental','mobility'],
+    gross_margin:'15-30% (parts higher, new car sales lower)', net_margin:'3-8%',
+    payroll_pct:'15-25%',
+    ar_days:'30-60 (insurance / fleet)', ap_days:'30-60',
+    top_costs:['Inventory (vehicles or parts)','Workshop labor','Real estate','Floor-plan financing','Marketing'],
+    regulatory:['ESMA approval for parts','EVDS / RTA workshop license','Insurance approvals (workshops)','Vehicle import + customs','Dealership franchise terms'],
+    growth_plays:['After-sales (service + parts) is where money is made','Fleet contracts with corporates','EV-ready certification','Used-car certified-pre-owned program'],
+    pitfalls:['Floor-plan interest eating margins','Old-stock cars depreciating','Insurance approval list — drop-off kills workshop','Tech disruption (EV servicing simpler)'],
+    kpis:['Inventory days (cars)','Service bay utilization','Parts attachment rate','GP per car sold','GP per RO (repair order)','Fleet contract %'] },
+  { id:'hospitality', label:'Hospitality / Hotels',
+    tags:['hotel','hospitality','resort','hostel','airbnb','holiday home','serviced'],
+    gross_margin:'60-75% (rooms only)', net_margin:'10-25%',
+    payroll_pct:'25-35%',
+    ar_days:'15-30 (OTAs settle 30d)', ap_days:'30-45',
+    top_costs:['Payroll','OTA commissions (Booking 15%, Expedia 18%)','F&B costs (if onsite)','Utilities (24/7)','Maintenance + furniture renewal'],
+    regulatory:['DTCM / DOT classification (stars)','Tourism dirham / fees','Liquor license (UAE)','Holiday-home permit (DTCM specific)','Civil defense + fire'],
+    growth_plays:['Direct bookings to bypass OTA commissions','Long-stay (corporate) for predictable occupancy','F&B as profit center','Loyalty / repeat guests'],
+    pitfalls:['OTA dependence killing margin','Seasonality cash crunch','Furniture/refurb under-accrued','Online review damage'],
+    kpis:['Occupancy %','ADR (avg daily rate)','RevPAR','GOP per available room','OTA % of bookings','Direct booking %'] },
+  { id:'finserv', label:'Financial Services / Fintech / Exchange',
+    tags:['fintech','exchange','remittance','financial services','payments','wealth','trading platform'],
+    gross_margin:'50-75%', net_margin:'10-25%',
+    payroll_pct:'35-50%',
+    ar_days:'0-15', ap_days:'15-30',
+    top_costs:['Engineering','Compliance/AML team','Licensing fees','Bank/processor partnerships','Marketing'],
+    regulatory:['CB-UAE / SAMA / SBP licensing','AML/CFT — AML Officer mandatory','PCI-DSS','Capital adequacy','Customer due diligence + KYC'],
+    growth_plays:['Add complementary product lines (remittance + cards + wallet)','Corridor expansion','B2B API (payments-as-a-service)','Wealth/investments tier'],
+    pitfalls:['Regulatory penalties eating profits','Reserve capital under-funded for license','Fraud losses','Bank partners de-risking and dropping you'],
+    kpis:['Revenue per active user','Take rate %','Transactions / user','Fraud loss %','Compliance flag rate','Capital adequacy ratio'] },
+]
+
+// Match S.co.industry to a sector profile via tag overlap
+function findSector(industryStr) {
+  if (!industryStr) return null
+  const q = industryStr.toLowerCase()
+  let best = null, bestScore = 0
+  for (const s of SECTOR_KB) {
+    const score = s.tags.reduce((n, t) => n + (q.includes(t.toLowerCase()) ? 1 : 0), 0)
+    if (score > bestScore) { best = s; bestScore = score }
+  }
+  return best
+}
+
+// Format sector profile for system-prompt injection
+function sectorContext(sector) {
+  if (!sector) return ''
+  return `\n\n## SECTOR PROFILE — ${sector.label}
+- **Typical gross margin:** ${sector.gross_margin}
+- **Typical net margin:** ${sector.net_margin}
+- **Payroll as % of revenue:** ${sector.payroll_pct}
+- **AR days (industry norm):** ${sector.ar_days}
+- **AP days (industry norm):** ${sector.ap_days}
+- **Top costs:** ${sector.top_costs.join(' · ')}
+- **Regulatory hotspots:** ${sector.regulatory.join(' · ')}
+- **Growth playbook:** ${sector.growth_plays.join(' · ')}
+- **Common pitfalls:** ${sector.pitfalls.join(' · ')}
+- **KPIs to watch:** ${sector.kpis.join(' · ')}
+
+Use these benchmarks to interpret this CEO's numbers. Call out variance from norms (e.g. "your payroll % at 48% is above the 25-35% F&B norm — investigate").`
+}
+
 // KB retrieval — match by keywords in question
 function retrieveKB(question) {
   if (!question) return []
@@ -2095,7 +2314,7 @@ You do NOT just report numbers. You interpret them, challenge them, and give the
 | DPO (Days Payable Outstanding) | ${dpo} days | — |
 
 **Burn Rate:** ${S.co.currency} ${fmt(Math.max(0, burnRate))} / month ${burnRate > 0 ? '🔴 BURNING CASH' : '🟢 CASH POSITIVE'}
-
+${sectorContext(findSector(S.co.industry))}
 ---
 
 ## BUSINESS CONTEXT
