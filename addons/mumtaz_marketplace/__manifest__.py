@@ -15,8 +15,17 @@
         "views/mumtaz_marketplace_inquiry_views.xml",
         "views/mumtaz_marketplace_category_views.xml",
         "views/product_integration_views.xml",
+        "views/purchase_integration_views.xml",
+        "views/sale_integration_views.xml",
         "views/mumtaz_menus.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "mumtaz_marketplace/static/src/js/po_suggestions_widget.js",
+            "mumtaz_marketplace/static/src/xml/po_suggestions_widget.xml",
+            "mumtaz_marketplace/static/src/scss/po_suggestions_widget.scss",
+        ],
+    },
     "installable": True,
     "auto_install": False,
     "application": False,

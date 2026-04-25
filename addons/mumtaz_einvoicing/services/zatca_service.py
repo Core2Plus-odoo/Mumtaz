@@ -19,8 +19,10 @@ _logger = logging.getLogger(__name__)
 class ZATCAService:
     """Service class for KSA ZATCA Phase 2 e-invoicing operations."""
 
-    SANDBOX_URL = 'https://gw-fatoorah.zatca.gov.sa/e-invoicing/developer-portal'
-    PROD_URL = 'https://gw-fatoorah.zatca.gov.sa/e-invoicing/core'
+    # Correct ZATCA gateway is gw-fatoora (singular, no 'h').
+    SANDBOX_URL    = 'https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal'
+    SIMULATION_URL = 'https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation'
+    PROD_URL       = 'https://gw-fatoora.zatca.gov.sa/e-invoicing/core'
 
     def __init__(self, config):
         """
@@ -28,11 +30,12 @@ class ZATCAService:
             config: ``mumtaz.einvoice.config`` Odoo recordset for the company.
         """
         self.config = config
-        self.base_url = (
-            self.SANDBOX_URL
-            if config.zatca_environment == 'sandbox'
-            else self.PROD_URL
-        )
+        env = (config.zatca_environment or 'sandbox').lower()
+        self.base_url = {
+            'sandbox':    self.SANDBOX_URL,
+            'simulation': self.SIMULATION_URL,
+            'production': self.PROD_URL,
+        }.get(env, self.SANDBOX_URL)
 
     # -------------------------------------------------------------------------
     # XML generation
@@ -89,6 +92,12 @@ class ZATCAService:
             <cbc:EmbeddedDocumentBinaryObject mimeCode="text/plain">
                 {self._get_pih_hash(invoice)}
             </cbc:EmbeddedDocumentBinaryObject>
+        </cac:Attachment>
+    </cac:AdditionalDocumentReference>
+    <cac:AdditionalDocumentReference>
+        <cbc:ID>QR</cbc:ID>
+        <cac:Attachment>
+            <cbc:EmbeddedDocumentBinaryObject mimeCode="text/plain">{self.build_qr(invoice)}</cbc:EmbeddedDocumentBinaryObject>
         </cac:Attachment>
     </cac:AdditionalDocumentReference>
     <cac:AccountingSupplierParty>
@@ -274,6 +283,144 @@ class ZATCAService:
             .replace('"', '&quot;')
             .replace("'", '&apos;')
         )
+
+    # -------------------------------------------------------------------------
+    # QR code (TLV-encoded base64) — ZATCA Phase 1 spec
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _tlv(tag: int, value) -> bytes:
+        """Encode a single Tag-Length-Value tuple per ZATCA QR spec."""
+        if isinstance(value, str):
+            value = value.encode('utf-8')
+        if len(value) > 255:
+            raise ValueError(f"TLV value too long for tag {tag}: {len(value)} bytes")
+        return bytes([tag, len(value)]) + value
+
+    def build_qr(self, invoice) -> str:
+        """Return a base64 TLV string suitable for a ZATCA QR code.
+
+        Tags (per ZATCA Phase 1 spec):
+          1 = seller name
+          2 = VAT registration number
+          3 = invoice timestamp (ISO 8601 UTC)
+          4 = invoice total (with VAT)
+          5 = VAT amount
+        Phase 2 adds 6 (XML hash), 7 (digital signature), 8 (public key).
+        """
+        seller_name = self.config.company_id.name or ''
+        vat_number  = self.config.zatca_vat_number or self.config.company_id.vat or ''
+
+        ts = invoice.invoice_date or datetime.now().date()
+        # Compose ISO 8601 UTC timestamp; ZATCA accepts either date+time or full ISO.
+        if hasattr(ts, 'isoformat'):
+            timestamp = f"{ts.isoformat()}T00:00:00Z"
+        else:
+            timestamp = str(ts)
+
+        total = f"{invoice.amount_total:.2f}" if invoice.amount_total is not None else '0.00'
+        vat   = f"{invoice.amount_tax:.2f}"   if invoice.amount_tax   is not None else '0.00'
+
+        payload = (
+            self._tlv(1, seller_name) +
+            self._tlv(2, vat_number)  +
+            self._tlv(3, timestamp)   +
+            self._tlv(4, total)       +
+            self._tlv(5, vat)
+        )
+        return base64.b64encode(payload).decode('ascii')
+
+    # -------------------------------------------------------------------------
+    # Phase 2 onboarding — CSR generation + submission
+    # -------------------------------------------------------------------------
+    def generate_keypair_and_csr(self, *, common_name, vat_number,
+                                 serial_number, organization,
+                                 organizational_unit='ZATCA',
+                                 country='SA') -> dict:
+        """Generate an EC SECP256K1 keypair + CSR with ZATCA-specific OIDs.
+
+        Returns a dict with:
+          - private_key_pem  PEM-encoded private key (string)
+          - csr_pem          PEM-encoded CSR (string)
+          - csr_base64       base64 of the PEM CSR — what ZATCA's API expects
+        """
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        key = ec.generate_private_key(ec.SECP256K1())
+
+        subject = x509.Name([
+            x509.NameAttribute(NameOID.COMMON_NAME,              common_name),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME,        organization),
+            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit),
+            x509.NameAttribute(NameOID.COUNTRY_NAME,             country),
+        ])
+
+        builder = (
+            x509.CertificateSigningRequestBuilder()
+            .subject_name(subject)
+            .add_extension(
+                x509.SubjectAlternativeName([
+                    x509.DirectoryName(x509.Name([
+                        # ZATCA-specific OIDs in the SAN DirectoryName
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.4"),                 serial_number),  # SN
+                        x509.NameAttribute(x509.ObjectIdentifier("0.9.2342.19200300.100.1.1"), vat_number),    # UID
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.12"),                "1100"),         # title — invoice types
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.26"),                "Saudi Arabia"), # registered address
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.15"),                organization),   # business category
+                    ]))
+                ]),
+                critical=False,
+            )
+        )
+        csr = builder.sign(key, hashes.SHA256())
+
+        pem_key = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        pem_csr = csr.public_bytes(serialization.Encoding.PEM)
+
+        return {
+            'private_key_pem': pem_key.decode('ascii'),
+            'csr_pem':         pem_csr.decode('ascii'),
+            'csr_base64':      base64.b64encode(pem_csr).decode('ascii'),
+        }
+
+    def submit_csr_for_csid(self, *, csr_base64: str, otp: str) -> dict:
+        """Exchange a CSR + OTP for a Compliance CSID via the ZATCA onboarding API.
+
+        Returns the parsed JSON response, which contains:
+          - dispositionMessage
+          - binarySecurityToken (the CSID — store as zatca_certificate)
+          - secret
+          - requestID
+        """
+        try:
+            import requests  # type: ignore[import]
+        except ImportError as exc:
+            raise RuntimeError("'requests' not installed — cannot reach ZATCA.") from exc
+
+        url = self.base_url + '/compliance'
+        response = requests.post(
+            url,
+            headers={
+                'Accept':         'application/json',
+                'Accept-Version': 'V2',
+                'OTP':            otp,
+                'Content-Type':   'application/json',
+            },
+            json={'csr': csr_base64},
+            timeout=30,
+        )
+        if response.status_code >= 400:
+            raise RuntimeError(
+                f"ZATCA onboarding failed: HTTP {response.status_code} — "
+                f"{response.text[:300]}"
+            )
+        return response.json()
 
     # -------------------------------------------------------------------------
     # Hash / signing helpers

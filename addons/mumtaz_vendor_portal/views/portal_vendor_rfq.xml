@@ -22,15 +22,19 @@
                             <th>Deadline</th>
                             <th class="mvp-col-amount">Amount</th>
                             <th>Status</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         <t t-foreach="rfqs" t-as="rfq">
                             <tr class="mvp-tr-hover">
                                 <td>
-                                    <strong class="mvp-ref">
-                                        <t t-esc="rfq.name"/>
-                                    </strong>
+                                    <a t-att-href="'/vendor/rfq/%d' % rfq.id"
+                                       class="mvp-ref-link">
+                                        <strong class="mvp-ref">
+                                            <t t-esc="rfq.name"/>
+                                        </strong>
+                                    </a>
                                 </td>
                                 <td class="mvp-col-date">
                                     <t t-esc="rfq.date_order" t-options="{'widget': 'date'}"/>
@@ -54,11 +58,18 @@
                                         <span class="mvp-badge mvp-badge-gold">DRAFT</span>
                                     </t>
                                 </td>
+                                <td>
+                                    <a t-att-href="'/vendor/rfq/%d' % rfq.id"
+                                       class="mvp-btn-primary"
+                                       style="padding:4px 12px; font-size:.75rem;">
+                                        Submit Quote
+                                    </a>
+                                </td>
                             </tr>
                         </t>
                         <t t-if="not rfqs">
                             <tr>
-                                <td colspan="5" class="mvp-empty">No open RFQs at this time.</td>
+                                <td colspan="6" class="mvp-empty">No open RFQs at this time.</td>
                             </tr>
                         </t>
                     </tbody>

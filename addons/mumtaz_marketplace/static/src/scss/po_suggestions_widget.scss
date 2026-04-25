@@ -1,0 +1,144 @@
+// Mumtaz Marketplace — PO suggestion widget styles
+// White & teal brand tokens (matches brand/tokens.css)
+
+$mum-teal:       #0891B2;
+$mum-teal-light: #ECFEFF;
+$mum-teal-border:#A5F3FC;
+$mum-ink:        #0F172A;
+$mum-ink2:       #475569;
+$mum-ink3:       #94A3B8;
+$mum-bg:         #F8FAFC;
+$mum-border:     #E2E8F0;
+
+.mum-po-suggestions {
+    background: #fff;
+    border: 1px solid $mum-border;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 8px 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid $mum-border;
+    }
+
+    &__title {
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: $mum-ink;
+
+        i {
+            color: $mum-teal;
+            margin-right: 6px;
+        }
+    }
+
+    &__rfq {
+        background: $mum-teal !important;
+        border-color: $mum-teal !important;
+        color: #fff !important;
+        font-weight: 600;
+        padding: 4px 10px;
+        font-size: 0.78rem;
+
+        i { margin-right: 4px; }
+
+        &:hover:not(:disabled) {
+            background: darken($mum-teal, 8%) !important;
+            border-color: darken($mum-teal, 8%) !important;
+        }
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    &__loading,
+    &__empty,
+    &__error {
+        text-align: center;
+        padding: 24px 12px;
+        color: $mum-ink3;
+        font-size: 0.85rem;
+
+        i { margin-right: 6px; }
+    }
+
+    &__error {
+        color: #DC2626;
+    }
+
+    &__cards {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+.mum-po-suggestion-card {
+    background: $mum-bg;
+    border: 1px solid $mum-border;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 150ms, transform 150ms, box-shadow 150ms;
+
+    &:hover {
+        border-color: $mum-teal;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(8,145,178,0.10);
+    }
+
+    &.mum-matched {
+        border-color: $mum-teal-border;
+        background: $mum-teal-light;
+    }
+
+    &__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 4px;
+    }
+
+    &__name {
+        font-weight: 600;
+        font-size: 0.86rem;
+        color: $mum-ink;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__price {
+        font-weight: 700;
+        font-size: 0.86rem;
+        color: $mum-teal;
+        white-space: nowrap;
+    }
+
+    &__meta {
+        font-size: 0.74rem;
+        color: $mum-ink2;
+    }
+
+    &__sep {
+        margin: 0 6px;
+        color: $mum-ink3;
+    }
+
+    &__matched {
+        margin-top: 6px;
+        font-size: 0.72rem;
+        color: $mum-teal;
+        font-weight: 600;
+
+        i { margin-right: 4px; }
+    }
+}

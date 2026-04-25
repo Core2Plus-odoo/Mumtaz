@@ -8,9 +8,15 @@
         <div class="mvp-card">
             <div class="mvp-card-header">
                 <h3 class="mvp-card-title">Your Invoices</h3>
-                <span class="mvp-card-count">
-                    <t t-esc="pager['count']"/> invoices
-                </span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span class="mvp-card-count">
+                        <t t-esc="pager['count']"/> invoices
+                    </span>
+                    <a href="/vendor/invoices/upload" class="mvp-btn-primary"
+                       style="padding:6px 14px; font-size:.78rem;">
+                        <i class="fa fa-upload"/> Upload Invoice
+                    </a>
+                </div>
             </div>
 
             <div class="mvp-table-wrap">

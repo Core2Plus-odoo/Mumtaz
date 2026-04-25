@@ -27,6 +27,15 @@
                         invisible="state not in ('draft','sent')"/>
             </xpath>
 
+            <!-- ── OWL 3 suggestion widget rendered above the order lines ── -->
+            <xpath expr="//notebook" position="before">
+                <field name="marketplace_alt_count"
+                       widget="mumtaz_po_suggestions"
+                       nolabel="1"
+                       readonly="1"
+                       invisible="state not in ('draft','sent')"/>
+            </xpath>
+
         </field>
     </record>
 

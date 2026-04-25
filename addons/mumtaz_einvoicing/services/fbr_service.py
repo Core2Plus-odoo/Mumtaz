@@ -14,10 +14,13 @@ _logger = logging.getLogger(__name__)
 class FBRService:
     """Service class for Pakistan FBR e-invoicing operations."""
 
-    # Both sandbox and production share the same endpoint path; the environment
-    # difference is controlled via credentials / hostname config on the FBR portal.
-    SANDBOX_URL = 'https://esp.fbr.gov.pk:8450/api/login'
-    PROD_URL = 'https://gw.fbr.gov.pk/imsp/v1/api/Invoice/GenerateInvoice'
+    # FBR IMSP gateway base URLs (environment-specific).
+    SANDBOX_BASE = 'https://esp.fbr.gov.pk:8450'
+    PROD_BASE    = 'https://gw.fbr.gov.pk/imsp/v1'
+
+    LOGIN_PATH    = '/api/login'
+    SUBMIT_PATH   = '/api/Invoice/GenerateInvoice'
+    CANCEL_PATH   = '/api/Invoice/CancelInvoice'
 
     def __init__(self, config):
         """
@@ -25,11 +28,20 @@ class FBRService:
             config: ``mumtaz.einvoice.config`` Odoo recordset for the company.
         """
         self.config = config
-        self.base_url = (
-            self.SANDBOX_URL
-            if config.fbr_environment == 'sandbox'
-            else self.PROD_URL
-        )
+        env = (config.fbr_environment or 'sandbox').lower()
+        self.base_url = self.SANDBOX_BASE if env == 'sandbox' else self.PROD_BASE
+
+    @property
+    def login_url(self) -> str:
+        return self.base_url + self.LOGIN_PATH
+
+    @property
+    def submit_url(self) -> str:
+        return self.base_url + self.SUBMIT_PATH
+
+    @property
+    def cancel_url(self) -> str:
+        return self.base_url + self.CANCEL_PATH
 
     # -------------------------------------------------------------------------
     # XML generation
@@ -131,6 +143,30 @@ class FBRService:
         )
 
     # -------------------------------------------------------------------------
+    # QR / verification URL
+    # -------------------------------------------------------------------------
+    def build_qr_url(self, invoice) -> str:
+        """Return the FBR public verification URL for the given invoice.
+
+        FBR generates a verification URL for each accepted invoice; printing
+        it as a QR on POS receipts lets customers verify authenticity.
+        Format (FBR IMSP standard):
+            https://esp.fbr.gov.pk/Verification/Invoice?inv={IRN}
+
+        Falls back to the einvoice_number if no IRN was returned.
+        """
+        irn = (getattr(invoice, 'einvoice_number', None) or '').strip()
+        if not irn:
+            return ''
+        # Use sandbox host for sandbox env, production host otherwise
+        host = (
+            'esp.fbr.gov.pk'
+            if (self.config.fbr_environment or 'sandbox').lower() == 'sandbox'
+            else 'gw.fbr.gov.pk'
+        )
+        return f"https://{host}/Verification/Invoice?inv={irn}"
+
+    # -------------------------------------------------------------------------
     # Authentication
     # -------------------------------------------------------------------------
     def _get_auth_token(self) -> str:
@@ -147,7 +183,7 @@ class FBRService:
                 'POSID': self.config.fbr_pos_id or '',
             }
             response = requests.post(
-                self.SANDBOX_URL if self.config.fbr_environment == 'sandbox' else 'https://gw.fbr.gov.pk/imsp/v1/api/login',
+                self.login_url,
                 json=payload,
                 timeout=30,
             )
@@ -209,7 +245,7 @@ class FBRService:
 
         try:
             response = requests.post(
-                self.PROD_URL,
+                self.submit_url,
                 data=xml.encode('utf-8'),
                 headers=headers,
                 timeout=30,
@@ -275,7 +311,7 @@ class FBRService:
         try:
             import requests  # type: ignore[import]
             response = requests.get(
-                'https://gw.fbr.gov.pk/imsp/v1/api/',
+                self.base_url + '/api/',
                 timeout=10,
             )
             if response.status_code < 500:
