@@ -1,7 +1,9 @@
 'use strict';
 
-const { searchRead } = require('../odoo/client');
+const odoo = require('../odoo/client');
 const { getRegion, isTester, round2, today, monthStart } = require('../odoo/models');
+
+const searchRead = (conn, ...a) => odoo.searchRead(conn, ...a);
 
 /* ── System Prompt ──────────────────────────────────────────────── */
 const SYSTEM_PROMPT = `You are Ayaz, the Commercial Director Agent for AJ Arabia Enterprise (WIDIAN brand).
@@ -69,13 +71,13 @@ const TOOLS = [
 
 /* ── Tool Implementations ───────────────────────────────────────── */
 
-async function getSalesSummary(args, sessionId) {
+async function getSalesSummary(args, conn) {
   const dateFrom = args.date_from || monthStart();
   const dateTo   = args.date_to   || today();
   const groupBy  = args.group_by  || 'customer';
 
   const lines = await searchRead(
-    'account.move.line',
+    conn, 'account.move.line',
     [
       ['move_id.move_type',    '=',  'out_invoice'],
       ['move_id.state',        '=',  'posted'],
@@ -83,40 +85,34 @@ async function getSalesSummary(args, sessionId) {
       ['move_id.invoice_date', '<=', dateTo],
       ['display_type',         '=',  'product'],
     ],
-    ['product_id', 'partner_id', 'quantity', 'price_subtotal',
-     'currency_id', 'move_id', 'name'],
+    ['product_id', 'partner_id', 'quantity', 'price_subtotal', 'currency_id', 'move_id', 'name'],
     { limit: 5000 },
-    sessionId,
   );
 
-  // Also fetch partner countries for region mapping
   const partnerIds = [...new Set(lines.map(l => l.partner_id ? l.partner_id[0] : null).filter(Boolean))];
   let countryMap   = {};
   if (partnerIds.length) {
     const partners = await searchRead(
-      'res.partner',
+      conn, 'res.partner',
       [['id', 'in', partnerIds]],
       ['id', 'country_id'],
       { limit: 500 },
-      sessionId,
     );
     for (const p of partners) {
       countryMap[p.id] = p.country_id ? p.country_id[1] : 'Unknown';
     }
   }
 
-  // Aggregate
   const agg = {};
   let totalRevenue = 0;
 
   for (const line of lines) {
-    const isTst = isTester(line.product_id ? line.product_id[1] : line.name);
+    const isTst    = isTester(line.product_id ? line.product_id[1] : line.name);
     const partnerId = line.partner_id ? line.partner_id[0] : 0;
     const country   = countryMap[partnerId] || 'Unknown';
     const region    = getRegion(country);
 
-    let key;
-    let label;
+    let key, label;
     if (groupBy === 'customer') {
       key   = String(partnerId);
       label = line.partner_id ? line.partner_id[1] : 'Unknown';
@@ -130,19 +126,19 @@ async function getSalesSummary(args, sessionId) {
 
     if (!agg[key]) {
       agg[key] = {
-        name:           label,
-        region:         groupBy === 'region' ? label : region,
-        fp_units:       0,
-        tester_units:   0,
-        revenue_aed:    0,
-        currency:       line.currency_id ? line.currency_id[1] : 'AED',
+        name:         label,
+        region:       groupBy === 'region' ? label : region,
+        fp_units:     0,
+        tester_units: 0,
+        revenue_aed:  0,
+        currency:     line.currency_id ? line.currency_id[1] : 'AED',
       };
     }
 
     if (isTst) {
       agg[key].tester_units += (line.quantity || 0);
     } else {
-      agg[key].fp_units     += (line.quantity || 0);
+      agg[key].fp_units    += (line.quantity || 0);
       agg[key].revenue_aed  = round2(agg[key].revenue_aed + (line.price_subtotal || 0));
       totalRevenue          = round2(totalRevenue + (line.price_subtotal || 0));
     }
@@ -158,21 +154,21 @@ async function getSalesSummary(args, sessionId) {
     }));
 
   return {
-    period:       { from: dateFrom, to: dateTo },
-    group_by:     groupBy,
+    period:            { from: dateFrom, to: dateTo },
+    group_by:          groupBy,
     total_revenue_aed: round2(totalRevenue),
     items,
-    line_count:   lines.length,
+    line_count:        lines.length,
   };
 }
 
-async function getTopSkus(args, sessionId) {
+async function getTopSkus(args, conn) {
   const dateFrom = args.date_from || monthStart();
   const dateTo   = args.date_to   || today();
   const limit    = args.limit     || 20;
 
   const lines = await searchRead(
-    'account.move.line',
+    conn, 'account.move.line',
     [
       ['move_id.move_type',    '=',  'out_invoice'],
       ['move_id.state',        '=',  'posted'],
@@ -182,10 +178,9 @@ async function getTopSkus(args, sessionId) {
     ],
     ['product_id', 'quantity', 'price_subtotal', 'name'],
     { limit: 10000 },
-    sessionId,
   );
 
-  const byProduct = {};
+  const byProduct  = {};
   let totalRevenue = 0;
 
   for (const line of lines) {
@@ -220,67 +215,66 @@ async function getTopSkus(args, sessionId) {
   return { period: { from: dateFrom, to: dateTo }, total_revenue_aed: round2(totalRevenue), items };
 }
 
-async function getDormantCustomers(args, sessionId) {
-  const days    = args.inactive_days || 60;
-  const cutoff  = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+async function getDormantCustomers(args, conn) {
+  const days   = args.inactive_days || 60;
+  const cutoff = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
 
-  // Get all customers
   const customers = await searchRead(
-    'res.partner',
+    conn, 'res.partner',
     [['customer_rank', '>', 0], ['is_company', '=', true]],
     ['id', 'name', 'country_id'],
     { limit: 1000 },
-    sessionId,
   );
 
-  // Get last invoice per customer
   const recentInvoices = await searchRead(
-    'account.move',
+    conn, 'account.move',
     [
-      ['move_type', '=',  'out_invoice'],
-      ['state',     '=',  'posted'],
+      ['move_type',    '=',  'out_invoice'],
+      ['state',        '=',  'posted'],
       ['invoice_date', '>=', cutoff],
     ],
     ['partner_id', 'invoice_date', 'amount_total'],
     { limit: 2000 },
-    sessionId,
   );
 
-  const activePartnerIds = new Set(recentInvoices.map(i => i.partner_id ? i.partner_id[0] : null).filter(Boolean));
+  const activePartnerIds = new Set(
+    recentInvoices.map(i => i.partner_id ? i.partner_id[0] : null).filter(Boolean)
+  );
 
-  const dormant = customers.filter(c => !activePartnerIds.has(c.id));
-
-  // For dormant customers, get their last invoice ever
+  const dormant    = customers.filter(c => !activePartnerIds.has(c.id));
   const dormantIds = dormant.map(c => c.id);
   let lastOrders   = {};
 
   if (dormantIds.length) {
     const lastInvoices = await searchRead(
-      'account.move',
+      conn, 'account.move',
       [
-        ['move_type',   '=',  'out_invoice'],
-        ['state',       '=',  'posted'],
-        ['partner_id',  'in', dormantIds],
+        ['move_type',  '=',  'out_invoice'],
+        ['state',      '=',  'posted'],
+        ['partner_id', 'in', dormantIds],
       ],
       ['partner_id', 'invoice_date', 'amount_total', 'currency_id'],
       { limit: 5000, order: 'invoice_date desc' },
-      sessionId,
     );
 
     for (const inv of lastInvoices) {
       const pid = inv.partner_id ? inv.partner_id[0] : null;
       if (pid && !lastOrders[pid]) {
-        lastOrders[pid] = { date: inv.invoice_date, value: inv.amount_total, currency: inv.currency_id ? inv.currency_id[1] : 'AED' };
+        lastOrders[pid] = {
+          date:     inv.invoice_date,
+          value:    inv.amount_total,
+          currency: inv.currency_id ? inv.currency_id[1] : 'AED',
+        };
       }
     }
   }
 
   const results = dormant.map(c => ({
-    partner_name:           c.name,
-    country:                c.country_id ? c.country_id[1] : 'Unknown',
-    region:                 getRegion(c.country_id ? c.country_id[1] : ''),
-    last_order_date:        lastOrders[c.id] ? lastOrders[c.id].date  : null,
-    last_order_value_aed:   lastOrders[c.id] ? round2(lastOrders[c.id].value) : null,
+    partner_name:         c.name,
+    country:              c.country_id ? c.country_id[1] : 'Unknown',
+    region:               getRegion(c.country_id ? c.country_id[1] : ''),
+    last_order_date:      lastOrders[c.id] ? lastOrders[c.id].date  : null,
+    last_order_value_aed: lastOrders[c.id] ? round2(lastOrders[c.id].value) : null,
   })).sort((a, b) => {
     if (!a.last_order_date) return 1;
     if (!b.last_order_date) return -1;
@@ -295,25 +289,22 @@ async function getDormantCustomers(args, sessionId) {
   };
 }
 
-async function getOrderPipeline(sessionId) {
+async function getOrderPipeline(conn) {
   const orders = await searchRead(
-    'sale.order',
+    conn, 'sale.order',
     [['state', 'in', ['draft', 'sent', 'sale']]],
     ['name', 'partner_id', 'amount_total', 'currency_id', 'state', 'date_order', 'validity_date'],
     { limit: 200, order: 'amount_total desc' },
-    sessionId,
   );
 
-  // Get partner countries
   const partnerIds = [...new Set(orders.map(o => o.partner_id ? o.partner_id[0] : null).filter(Boolean))];
   let countryMap   = {};
   if (partnerIds.length) {
     const partners = await searchRead(
-      'res.partner',
+      conn, 'res.partner',
       [['id', 'in', partnerIds]],
       ['id', 'country_id'],
       { limit: 500 },
-      sessionId,
     );
     for (const p of partners) countryMap[p.id] = p.country_id ? p.country_id[1] : 'Unknown';
   }
@@ -339,12 +330,12 @@ async function getOrderPipeline(sessionId) {
 }
 
 /* ── Tool Dispatcher ────────────────────────────────────────────── */
-async function executeTool(name, input, sessionId) {
+async function executeTool(name, input, conn) {
   switch (name) {
-    case 'get_sales_summary':    return getSalesSummary(input, sessionId);
-    case 'get_top_skus':         return getTopSkus(input, sessionId);
-    case 'get_dormant_customers': return getDormantCustomers(input, sessionId);
-    case 'get_order_pipeline':   return getOrderPipeline(sessionId);
+    case 'get_sales_summary':     return getSalesSummary(input, conn);
+    case 'get_top_skus':          return getTopSkus(input, conn);
+    case 'get_dormant_customers': return getDormantCustomers(input, conn);
+    case 'get_order_pipeline':    return getOrderPipeline(conn);
     default: throw new Error(`Unknown tool: ${name}`);
   }
 }

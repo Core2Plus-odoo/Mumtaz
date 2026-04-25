@@ -17,8 +17,11 @@ const loginError     = $('login-error');
 const loginBtn       = $('login-btn');
 const loginLabel     = $('login-label');
 const loginSpinner   = $('login-spinner');
+const connToggle     = $('conn-toggle');
+const connFields     = $('conn-fields');
 const appShell       = $('app');
 const userName       = $('user-name');
+const userRole       = $('user-role');
 const userAvatar     = $('user-avatar');
 const historyList    = $('history-list');
 const thread         = $('thread');
@@ -36,6 +39,13 @@ const odooStatus     = $('odoo-status');
 /* ── Init ───────────────────────────────────────────────────────── */
 (async function init() {
   populatePeriodSelectors();
+
+  // Connection settings toggle
+  connToggle.addEventListener('click', () => {
+    const open = connFields.classList.toggle('open');
+    connToggle.classList.toggle('open', open);
+  });
+
   try {
     const res  = await fetch('/auth/me');
     if (res.ok) {
@@ -67,8 +77,9 @@ function showLogin() {
 function showApp(user) {
   loginOverlay.style.display = 'none';
   appShell.hidden = false;
-  userName.textContent  = user.name || 'User';
+  userName.textContent   = user.name || 'User';
   userAvatar.textContent = (user.name || 'U')[0].toUpperCase();
+  if (user.db) userRole.textContent = user.db;
   loadChatsFromStorage();
   if (state.chats.length === 0) startNewChat();
   else renderHistoryList();
@@ -84,12 +95,14 @@ loginForm.addEventListener('submit', async e => {
 
   const email    = $('email').value.trim();
   const password = $('password').value;
+  const odooUrl  = $('odoo-url').value.trim();
+  const db       = $('odoo-db').value.trim();
 
   try {
     const res  = await fetch('/auth/login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email, password }),
+      body:    JSON.stringify({ email, password, odooUrl, db }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login failed');

@@ -57,7 +57,7 @@ async function routeQuestion(question, history = []) {
  * Stream a single agent's response via SSE.
  * writeSSE(object) sends a Server-Sent Event to the client.
  */
-async function streamAgent(agentName, systemPrompt, tools, executeTool, messages, sessionId, writeSSE) {
+async function streamAgent(agentName, systemPrompt, tools, executeTool, messages, conn, writeSSE) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   writeSSE({ type: 'agent_start', agent: agentName });
@@ -129,7 +129,7 @@ async function streamAgent(agentName, systemPrompt, tools, executeTool, messages
       for (const block of toolUseBlocks) {
         writeSSE({ type: 'tool_call', name: block.name, agent: agentName });
         try {
-          const result = await executeTool(block.name, block.input || {}, sessionId);
+          const result = await executeTool(block.name, block.input || {}, conn);
           toolResults.push({
             type:        'tool_result',
             tool_use_id: block.id,
@@ -172,7 +172,7 @@ async function streamAgent(agentName, systemPrompt, tools, executeTool, messages
 /**
  * Main entry point — routes and streams the full response.
  */
-async function chat({ message, history = [], sessionId, writeSSE }) {
+async function chat({ message, history = [], conn, writeSSE }) {
   // 1. Route
   const routing = await routeQuestion(message, history);
 
@@ -209,7 +209,7 @@ async function chat({ message, history = [], sessionId, writeSSE }) {
       farid.TOOLS,
       farid.executeTool,
       agentMessages,
-      sessionId,
+      conn,
       writeSSE,
     );
   }
@@ -221,7 +221,7 @@ async function chat({ message, history = [], sessionId, writeSSE }) {
       ayaz.TOOLS,
       ayaz.executeTool,
       agentMessages,
-      sessionId,
+      conn,
       writeSSE,
     );
   }

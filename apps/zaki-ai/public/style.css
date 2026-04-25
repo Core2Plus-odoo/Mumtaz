@@ -126,6 +126,27 @@ body {
 
 .login-note { font-size: .72rem; color: var(--text3); margin-top: 1.25rem; text-align: center; }
 
+/* Connection settings toggle */
+.conn-toggle {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .78rem; color: var(--text3);
+  cursor: pointer; margin-bottom: .5rem;
+  user-select: none; transition: color .15s;
+}
+.conn-toggle:hover { color: var(--text2); }
+.conn-toggle svg { transition: transform .2s; }
+.conn-toggle.open svg { transform: rotate(180deg); }
+
+.conn-fields {
+  display: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .75rem .75rem .25rem;
+  margin-bottom: .75rem;
+  background: var(--navy2);
+}
+.conn-fields.open { display: block; }
+
 /* ── App Shell ──────────────────────────────────────────────────── */
 #app {
   display: flex; height: 100vh;

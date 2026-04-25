@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
-import httpx
 
 from app.db.database import get_db
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token, get_current_user
-from app.core.config import settings
+from app.odoo.client import authenticate as odoo_authenticate
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -61,49 +60,52 @@ def me(current_user: User = Depends(get_current_user)):
     return _user_dict(current_user)
 
 
-# ── Odoo SSO ──────────────────────────────────────────────────────────────────
+# ── Odoo Login ────────────────────────────────────────────────────────────────
 
-class OdooSSORequest(BaseModel):
-    odoo_url: str          # e.g. https://app.mumtaz.digital
-    api_key: str           # user's Odoo API key
+class OdooLoginRequest(BaseModel):
+    odoo_url: str
+    db: str
+    email: str
+    password: str
 
 
 @router.post("/sso/odoo", response_model=TokenResponse)
-async def odoo_sso(req: OdooSSORequest, db: Session = Depends(get_db)):
-    """Authenticate via Mumtaz ERP API key."""
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(
-                f"{req.odoo_url.rstrip('/')}/api/mumtaz/v1/health",
-                headers={"X-API-Key": req.api_key},
-                timeout=10,
-            )
-            if resp.status_code != 200:
-                raise HTTPException(status_code=401, detail="Invalid Mumtaz ERP credentials")
+async def odoo_sso(req: OdooLoginRequest, db: Session = Depends(get_db)):
+    """Authenticate directly against any Odoo instance via JSON-RPC."""
+    base_url = req.odoo_url.rstrip("/")
+    try:
+        odoo = await odoo_authenticate(base_url, req.db, req.email, req.password)
+    except ConnectionError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
 
-            # Try to get user info
-            user_resp = await client.get(
-                f"{req.odoo_url.rstrip('/')}/web/session/get_session_info",
-                headers={"X-API-Key": req.api_key},
-                timeout=10,
-            )
-        except httpx.RequestError:
-            raise HTTPException(status_code=503, detail="Cannot reach Mumtaz ERP")
-
-    # Upsert user
-    odoo_email = req.api_key[:8] + "@erp.sso"  # fallback — real impl extracts from session
-    user = db.query(User).filter(User.erp_api_key == req.api_key).first()
+    # Upsert user — key on (odoo_instance_url + odoo_user_id) so the same
+    # Odoo account always maps to the same ZAKI user.
+    uid_str = str(odoo["uid"])
+    user = (
+        db.query(User)
+        .filter(User.odoo_instance_url == base_url, User.odoo_user_id == uid_str)
+        .first()
+    )
     if not user:
         user = User(
-            email=odoo_email,
-            name="ERP User",
-            erp_api_key=req.api_key,
-            odoo_instance_url=req.odoo_url,
+            email=req.email,
+            name=odoo["name"],
+            odoo_user_id=uid_str,
+            odoo_instance_url=base_url,
+            odoo_db=req.db,
+            odoo_session_id=odoo["session_id"],
             is_verified=True,
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+    else:
+        user.odoo_session_id = odoo["session_id"]
+        user.odoo_db = req.db
+        user.name = odoo["name"]
+
+    db.commit()
+    db.refresh(user)
 
     token = create_access_token({"sub": user.id})
     return {"access_token": token, "user": _user_dict(user)}
@@ -111,10 +113,11 @@ async def odoo_sso(req: OdooSSORequest, db: Session = Depends(get_db)):
 
 def _user_dict(user: User) -> dict:
     return {
-        "id": user.id,
-        "email": user.email,
-        "name": user.name,
+        "id":      user.id,
+        "email":   user.email,
+        "name":    user.name,
         "company": user.company,
-        "has_erp": bool(user.erp_api_key or user.odoo_access_token),
+        "has_erp": bool(user.odoo_session_id),
         "erp_url": user.odoo_instance_url,
+        "erp_db":  user.odoo_db,
     }
