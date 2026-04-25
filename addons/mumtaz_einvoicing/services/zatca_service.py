@@ -330,6 +330,99 @@ class ZATCAService:
         return base64.b64encode(payload).decode('ascii')
 
     # -------------------------------------------------------------------------
+    # Phase 2 onboarding — CSR generation + submission
+    # -------------------------------------------------------------------------
+    def generate_keypair_and_csr(self, *, common_name, vat_number,
+                                 serial_number, organization,
+                                 organizational_unit='ZATCA',
+                                 country='SA') -> dict:
+        """Generate an EC SECP256K1 keypair + CSR with ZATCA-specific OIDs.
+
+        Returns a dict with:
+          - private_key_pem  PEM-encoded private key (string)
+          - csr_pem          PEM-encoded CSR (string)
+          - csr_base64       base64 of the PEM CSR — what ZATCA's API expects
+        """
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        key = ec.generate_private_key(ec.SECP256K1())
+
+        subject = x509.Name([
+            x509.NameAttribute(NameOID.COMMON_NAME,              common_name),
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME,        organization),
+            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit),
+            x509.NameAttribute(NameOID.COUNTRY_NAME,             country),
+        ])
+
+        builder = (
+            x509.CertificateSigningRequestBuilder()
+            .subject_name(subject)
+            .add_extension(
+                x509.SubjectAlternativeName([
+                    x509.DirectoryName(x509.Name([
+                        # ZATCA-specific OIDs in the SAN DirectoryName
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.4"),                 serial_number),  # SN
+                        x509.NameAttribute(x509.ObjectIdentifier("0.9.2342.19200300.100.1.1"), vat_number),    # UID
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.12"),                "1100"),         # title — invoice types
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.26"),                "Saudi Arabia"), # registered address
+                        x509.NameAttribute(x509.ObjectIdentifier("2.5.4.15"),                organization),   # business category
+                    ]))
+                ]),
+                critical=False,
+            )
+        )
+        csr = builder.sign(key, hashes.SHA256())
+
+        pem_key = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        pem_csr = csr.public_bytes(serialization.Encoding.PEM)
+
+        return {
+            'private_key_pem': pem_key.decode('ascii'),
+            'csr_pem':         pem_csr.decode('ascii'),
+            'csr_base64':      base64.b64encode(pem_csr).decode('ascii'),
+        }
+
+    def submit_csr_for_csid(self, *, csr_base64: str, otp: str) -> dict:
+        """Exchange a CSR + OTP for a Compliance CSID via the ZATCA onboarding API.
+
+        Returns the parsed JSON response, which contains:
+          - dispositionMessage
+          - binarySecurityToken (the CSID — store as zatca_certificate)
+          - secret
+          - requestID
+        """
+        try:
+            import requests  # type: ignore[import]
+        except ImportError as exc:
+            raise RuntimeError("'requests' not installed — cannot reach ZATCA.") from exc
+
+        url = self.base_url + '/compliance'
+        response = requests.post(
+            url,
+            headers={
+                'Accept':         'application/json',
+                'Accept-Version': 'V2',
+                'OTP':            otp,
+                'Content-Type':   'application/json',
+            },
+            json={'csr': csr_base64},
+            timeout=30,
+        )
+        if response.status_code >= 400:
+            raise RuntimeError(
+                f"ZATCA onboarding failed: HTTP {response.status_code} — "
+                f"{response.text[:300]}"
+            )
+        return response.json()
+
+    # -------------------------------------------------------------------------
     # Hash / signing helpers
     # -------------------------------------------------------------------------
     def _hash_xml(self, xml: str) -> str:
