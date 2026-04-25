@@ -91,6 +91,49 @@
     @media (max-width: 720px) { .ob-grid-3 { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 480px) { .ob-grid-3 { grid-template-columns: 1fr; } }
 
+    /* ── Summary (step 6) ── */
+    .ob-summary {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 26px;
+      margin-bottom: 18px;
+    }
+    .ob-summary-row {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .ob-summary-row:last-child { border-bottom: none; }
+    .ob-summary-row:first-child { padding-top: 0; }
+    .ob-summary-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem; color: var(--ink3);
+      letter-spacing: .07em; text-transform: uppercase;
+      width: 130px; flex-shrink: 0; padding-top: 3px;
+    }
+    .ob-summary-value {
+      flex: 1; font-size: .95rem; color: var(--ink);
+      line-height: 1.55;
+    }
+    .ob-summary-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ob-summary-tag {
+      background: var(--gold-bg);
+      color: var(--gold);
+      font-size: .8rem; font-weight: 500;
+      padding: 3px 10px; border-radius: 100px;
+    }
+    .ob-summary-edit {
+      font-size: .78rem; color: var(--gold);
+      padding-top: 4px;
+      transition: opacity .15s;
+    }
+    .ob-summary-edit:hover { opacity: .75; text-decoration: underline; }
+    .ob-launch-note {
+      text-align: center; font-size: .82rem;
+      color: var(--ink3); margin-top: 14px;
+    }
+
     /* ── Wide product card (multi-select) ── */
     .ob-card-wide {
       background: var(--white);
@@ -489,7 +532,18 @@
           </div>
         </div>
 
-        <!-- Step 6 added in next patch -->
+        <!-- ── Step 6: Review ── -->
+        <div class="step" data-step="6">
+          <div class="ob-eyebrow">Almost there</div>
+          <h1 class="ob-title">You're all set, <span id="review-name">there</span>.</h1>
+          <p class="ob-sub">Here's your setup. We'll provision everything when you launch.</p>
+
+          <div class="ob-summary" id="review-summary">
+            <!-- populated by renderSummary() -->
+          </div>
+
+          <p class="ob-launch-note">You can change any of this later from Settings.</p>
+        </div>
 
       </div>
     </div>
@@ -595,6 +649,89 @@
       });
     });
 
+    /* ── Step 6: Review summary ── */
+    const LABELS = {
+      industry: {
+        trading: 'Trading & Distribution', retail: 'Retail',
+        services: 'Professional Services', construction: 'Construction',
+        manufacturing: 'Manufacturing', realestate: 'Real Estate',
+        hospitality: 'Hospitality & F&B', finance: 'Finance', other: 'Other',
+      },
+      products: { erp: 'Mumtaz ERP', zaki: 'ZAKI AI Agents', marketplace: 'B2B Marketplace' },
+      agents:   { cfo: 'CFO', marketing: 'Marketing', sales: 'Sales', hr: 'HR', ops: 'Operations', support: 'Customer Support' },
+      modules:  {
+        einvoicing: 'E-Invoicing & VAT', accounting: 'Accounting', crm: 'CRM & Sales',
+        inventory: 'Inventory', hr: 'HR & Payroll', manufacturing: 'Manufacturing',
+        project: 'Project Management', pos: 'Point of Sale',
+      },
+      team: { '1-5': '1–5 users · Starter plan', '6-25': '6–25 users · Growth plan',
+              '26-100': '26–100 users · Business plan', '100+': '100+ users · Enterprise' },
+    };
+
+    function tagify(items, dict) {
+      return '<div class="ob-summary-tags">' +
+        items.map(v => `<span class="ob-summary-tag">${dict[v] || v}</span>`).join('') +
+        '</div>';
+    }
+
+    function renderSummary() {
+      const rows = [
+        { label: 'Industry',  value: LABELS.industry[state.industry] || '—',  step: 1 },
+        { label: 'Products',  value: tagify(state.products, LABELS.products), step: 2 },
+      ];
+      if (state.products.includes('zaki')) {
+        rows.push({ label: 'AI Agents', value: tagify(state.agents, LABELS.agents), step: 3 });
+      }
+      if (state.products.includes('erp')) {
+        rows.push({ label: 'ERP Modules', value: tagify(state.modules, LABELS.modules), step: 4 });
+      }
+      rows.push({ label: 'Team Size', value: LABELS.team[state.teamSize] || '—', step: 5 });
+
+      $('review-summary').innerHTML = rows.map(r => `
+        <div class="ob-summary-row">
+          <div class="ob-summary-label">${r.label}</div>
+          <div class="ob-summary-value">${r.value}</div>
+          <button class="ob-summary-edit" onclick="gotoStep(${r.step})">Edit</button>
+        </div>`).join('');
+
+      // Friendly name in the title
+      const token = localStorage.getItem('mumtaz_token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const first = (payload.name || '').split(' ')[0];
+          if (first) $('review-name').textContent = first;
+        } catch {}
+      }
+    }
+    // expose for inline edit links
+    window.gotoStep = (n) => gotoStep(n);
+
+    /* ── Save preferences and finish ── */
+    async function savePreferences() {
+      const payload = {
+        industry: state.industry,
+        products: state.products,
+        agents:   state.agents,
+        modules:  state.modules,
+        teamSize: state.teamSize,
+        completedAt: new Date().toISOString(),
+      };
+      localStorage.setItem('mumtaz_onboarding', JSON.stringify(payload));
+
+      // Best-effort: tell the server (if endpoint exists). Ignore failure.
+      const token = localStorage.getItem('mumtaz_token');
+      if (token) {
+        try {
+          await fetch('/api/onboarding', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify(payload),
+          });
+        } catch {}
+      }
+    }
+
     /* ── Navigation ── */
     function updateProgress() {
       $('step-current').textContent = state.currentStep;
@@ -608,6 +745,9 @@
         applyModuleDefaults();
         modulesInitialized = true;
       }
+      // Render the summary every time we land on step 6 (in case user edited)
+      if (n === 6) renderSummary();
+
       document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
       const next = document.querySelector(`.step[data-step="${n}"]`);
       if (next) {
@@ -615,6 +755,8 @@
         state.currentStep = n;
         updateProgress();
         validateStep();
+        // Update Next button label on the last step
+        $('btn-next').textContent = (n === state.totalSteps) ? 'Launch your dashboard →' : 'Continue →';
       }
     }
 
@@ -626,7 +768,7 @@
       if (s === 3) ok = state.agents.length > 0;
       if (s === 4) ok = state.modules.length > 0;
       if (s === 5) ok = !!state.teamSize;
-      // step 6 added in next patch
+      if (s === 6) ok = true;
       $('btn-next').disabled = !ok;
     }
 
@@ -648,7 +790,15 @@
       return n;
     }
 
-    $('btn-next').addEventListener('click', () => {
+    $('btn-next').addEventListener('click', async () => {
+      // Final step: save and redirect
+      if (state.currentStep === state.totalSteps) {
+        $('btn-next').disabled = true;
+        $('btn-next').textContent = 'Setting up…';
+        await savePreferences();
+        window.location.href = '/dashboard.html';
+        return;
+      }
       const n = nextStep(state.currentStep);
       if (n <= state.totalSteps) gotoStep(n);
     });

@@ -278,9 +278,9 @@
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || data.error || 'Sign up failed');
         localStorage.setItem('mumtaz_token', data.access_token);
-        $('su-success').textContent = 'Account created. Redirecting…';
+        $('su-success').textContent = 'Account created. Setting up your workspace…';
         $('su-success').hidden = false;
-        setTimeout(() => { window.location.href = '/dashboard.html'; }, 800);
+        setTimeout(() => { window.location.href = '/onboarding.html'; }, 800);
       } catch (err) {
         $('su-error').textContent = err.message;
         $('su-error').hidden = false;
