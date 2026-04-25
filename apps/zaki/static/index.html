@@ -1647,7 +1647,7 @@ function kbContext(kbObjs) {
 
 // ═══════════════════════════════════════════
 const S = {
-  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://zaki.mumtaz.digital' },
+  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: '' },
   co: { name: '', industry: '', country: '', currency: 'AED' },
   me: { name: '', firstName: '' },
   fin: { rev:0, exp:0, cash:0, payroll:0, ar:0, arOverdue:0, ap:0, vat:0 },
@@ -1689,7 +1689,12 @@ function load() {
       if (!S.transactions) S.transactions = []
       if (!S.keys.zakiJwt) S.keys.zakiJwt = ''
       if (!S.keys.zakiEmail) S.keys.zakiEmail = ''
-      if (!S.keys.zakiUrl) S.keys.zakiUrl = 'https://zaki.mumtaz.digital'
+      // Migrate stale defaults to current origin so /api/v1 calls hit our nginx
+      if (!S.keys.zakiUrl ||
+          S.keys.zakiUrl === 'https://zaki.mumtaz.digital' ||
+          S.keys.zakiUrl === 'https://app.mumtaz.digital') {
+        S.keys.zakiUrl = ''
+      }
     }
   } catch(e){}
   computeFin()
@@ -2414,7 +2419,7 @@ function loadDemoData() {
 async function loginZakiServer() {
   const email = document.getElementById('cfg-zaki-email')?.value?.trim()
   const pass = document.getElementById('cfg-zaki-pass')?.value
-  const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
+  const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
   if (!email || !pass) { showToast('Enter email and password', 'error'); return }
   const btn = document.querySelector('[onclick="loginZakiServer()"]')
   if (btn) { btn.textContent = 'Connecting…'; btn.disabled = true }
@@ -2457,7 +2462,7 @@ async function syncFromOdoo() {
     status.innerHTML = '<span style="color:var(--red)">Sign in to your Mumtaz account first (above).</span>'
     return
   }
-  const url = (S.keys.zakiUrl || 'https://zaki.mumtaz.digital').replace(/\/$/, '')
+  const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
   status.innerHTML = '<span class="spinner"></span> Pulling invoices and bills from Odoo…'
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing…' }
   try {
@@ -2529,7 +2534,7 @@ streamClaude = async function(messages, onChunk, systemOverride) {
 }
 
 async function streamZaki(messages, onChunk, systemOverride) {
-  const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
+  const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
   const sys = systemOverride || buildZakiSystemPrompt()
   // Prepend system as first user message if backend doesn't support system param
   const msgs = [{ role: 'user', content: `[System context — follow these instructions for this conversation]\n\n${sys}\n\n---\n\n${messages[0]?.content || ''}` },
