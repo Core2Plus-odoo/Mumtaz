@@ -10,7 +10,7 @@ import os, json, re, time, sqlite3
 import xmlrpc.client
 from datetime import datetime, timezone, timedelta
 
-from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -20,6 +20,7 @@ from anthropic import Anthropic
 from dotenv import load_dotenv
 
 import mail as mailer
+import billing as billing_svc
 
 load_dotenv()
 
@@ -672,6 +673,86 @@ async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
     db.commit()
     db.close()
     return {"ok": True, "plan": PLANS[req.plan]}
+
+# ── Stripe billing ───────────────────────────────────────────────────
+class CheckoutReq(BaseModel):
+    plan: str
+
+@app.get("/api/v1/billing/status")
+def billing_status():
+    """Public — tells the front-end whether real Stripe Checkout is configured."""
+    return {"stripe_configured": billing_svc.is_configured()}
+
+@app.post("/api/v1/billing/checkout")
+def billing_checkout(req: CheckoutReq, auth: dict = Depends(require_auth)):
+    """Create a Stripe Checkout session for the given plan and return its URL."""
+    if not billing_svc.is_configured():
+        raise HTTPException(503, "Stripe is not configured. Plan changes happen directly via /api/v1/plan.")
+    if req.plan not in PLANS or req.plan == "trial":
+        raise HTTPException(400, "Invalid plan for checkout.")
+
+    db  = get_db()
+    row = db.execute("SELECT name FROM users WHERE email=?", (auth["email"],)).fetchone()
+    db.close()
+    name = row["name"] if row else None
+
+    success_url = f"{PORTAL_BASE_URL}/billing.html?checkout=success&session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url  = f"{PORTAL_BASE_URL}/billing.html?checkout=cancelled"
+
+    try:
+        url = billing_svc.create_checkout_session(
+            email=auth["email"], name=name, plan_key=req.plan,
+            success_url=success_url, cancel_url=cancel_url,
+        )
+    except RuntimeError as e:
+        raise HTTPException(500, str(e))
+    return {"url": url}
+
+@app.post("/api/v1/billing/portal")
+def billing_portal(auth: dict = Depends(require_auth)):
+    """Open the Stripe Customer Portal for the signed-in user."""
+    if not billing_svc.is_configured():
+        raise HTTPException(503, "Stripe is not configured.")
+    try:
+        url = billing_svc.create_portal_session(
+            email=auth["email"],
+            return_url=f"{PORTAL_BASE_URL}/billing.html",
+        )
+    except RuntimeError as e:
+        raise HTTPException(500, str(e))
+    return {"url": url}
+
+@app.post("/api/v1/billing/webhook")
+async def billing_webhook(request: Request):
+    """Receive Stripe webhook events. Updates the user's plan in SQLite when
+    a subscription is created, updated, or deleted."""
+    payload   = await request.body()
+    signature = request.headers.get("stripe-signature")
+    try:
+        event = billing_svc.parse_webhook(payload, signature)
+    except Exception as e:
+        raise HTTPException(400, f"Invalid webhook: {e}")
+
+    etype = event.get("type", "")
+    obj   = (event.get("data") or {}).get("object") or {}
+
+    if etype in ("customer.subscription.created", "customer.subscription.updated"):
+        plan_key = billing_svc.plan_from_event(obj)
+        email    = billing_svc.email_from_event(obj)
+        if plan_key and email:
+            db = get_db()
+            db.execute("UPDATE users SET plan=? WHERE email=?", (plan_key, email.lower()))
+            db.commit(); db.close()
+            print(f"[billing] subscription {etype} → {email} = {plan_key}")
+    elif etype == "customer.subscription.deleted":
+        email = billing_svc.email_from_event(obj)
+        if email:
+            db = get_db()
+            db.execute("UPDATE users SET plan='trial' WHERE email=?", (email.lower(),))
+            db.commit(); db.close()
+            print(f"[billing] subscription cancelled → {email} dropped to trial")
+
+    return {"received": True}
 
 # ── Admin ────────────────────────────────────────────────────────────
 @app.get("/api/v1/admin/ping")

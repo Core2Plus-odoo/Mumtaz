@@ -250,8 +250,15 @@
       <!-- populated by JS -->
     </div>
 
-    <div class="footer-note">
+    <div class="footer-note" id="footer-note">
       <strong>Heads-up.</strong> Payment integration is not live yet — clicking "Choose plan" updates your account immediately at no charge. We'll wire up Stripe / Tap once the catalog stabilizes.
+    </div>
+
+    <div id="manage-sub" hidden style="margin-top:18px;text-align:center">
+      <button id="manage-btn"
+              style="background:transparent;color:var(--ink2);border:1.5px solid var(--border);padding:10px 22px;border-radius:100px;font-size:.85rem;font-weight:600">
+        Manage subscription, invoices, payment method →
+      </button>
     </div>
 
   </main>
@@ -267,12 +274,26 @@
 
     let plans = [];
     let current = 'trial';
+    let stripeConfigured = false;
+
+    // Show success/cancellation toast from URL query string
+    (function () {
+      const qp = new URLSearchParams(window.location.search);
+      if (qp.get('checkout') === 'success') {
+        setTimeout(() => toast('Payment successful — your plan will update shortly.'), 600);
+        history.replaceState({}, '', '/billing.html');
+      } else if (qp.get('checkout') === 'cancelled') {
+        setTimeout(() => toast('Checkout cancelled.', true), 600);
+        history.replaceState({}, '', '/billing.html');
+      }
+    })();
 
     async function loadAll() {
       try {
-        const [plansRes, planRes] = await Promise.all([
+        const [plansRes, planRes, statusRes] = await Promise.all([
           fetch('/api/plans'),
-          fetch('/api/plan', { headers: { Authorization: 'Bearer ' + token() } }),
+          fetch('/api/plan',           { headers: { Authorization: 'Bearer ' + token() } }),
+          fetch('/api/billing/status').catch(() => null),
         ]);
         if (!planRes.ok) {
           if (planRes.status === 401) { localStorage.removeItem('mumtaz_token'); window.location.href = '/'; return; }
@@ -282,8 +303,17 @@
         const planData  = await planRes.json();
         plans = plansData.plans || [];
         current = planData.current || 'trial';
+        if (statusRes && statusRes.ok) {
+          const s = await statusRes.json();
+          stripeConfigured = !!s.stripe_configured;
+        }
         renderCurrent(planData.plan);
         renderPlans();
+        // Update footer note + show portal button when Stripe is configured
+        if (stripeConfigured) {
+          $('footer-note').innerHTML = '<strong>Secure payments.</strong> Subscriptions are powered by Stripe — your card details never touch our servers. Cancel any time from the customer portal below.';
+          if (current !== 'trial') $('manage-sub').hidden = false;
+        }
       } catch (err) {
         toast('Could not load plans. Refresh to retry.', true);
       }
@@ -343,7 +373,35 @@
 
     async function choosePlan(planKey, btn) {
       const original = btn.textContent;
-      btn.disabled = true; btn.textContent = 'Updating…';
+      btn.disabled = true;
+      btn.textContent = stripeConfigured && planKey !== 'trial' ? 'Opening checkout…' : 'Updating…';
+
+      // Real payment path — go via Stripe Checkout
+      if (stripeConfigured && planKey !== 'trial') {
+        try {
+          const r = await fetch('/api/billing/checkout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token(),
+            },
+            body: JSON.stringify({ plan: planKey }),
+          });
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            throw new Error(err.detail || 'Checkout failed');
+          }
+          const data = await r.json();
+          window.location.href = data.url;
+          return;
+        } catch (err) {
+          toast(err.message || 'Checkout failed.', true);
+          btn.disabled = false; btn.textContent = original;
+          return;
+        }
+      }
+
+      // No-payment path (trial / Stripe not configured): direct plan change
       try {
         const r = await fetch('/api/plan', {
           method: 'POST',
@@ -368,6 +426,23 @@
       }
     }
 
+    async function openCustomerPortal() {
+      try {
+        const r = await fetch('/api/billing/portal', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token() },
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || 'Could not open billing portal');
+        }
+        const data = await r.json();
+        window.location.href = data.url;
+      } catch (err) {
+        toast(err.message || 'Could not open billing portal.', true);
+      }
+    }
+
     let toastTimer;
     function toast(msg, isError = false) {
       const el = $('toast');
@@ -377,6 +452,8 @@
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
     }
+
+    document.getElementById('manage-btn').addEventListener('click', openCustomerPortal);
 
     loadAll();
   </script>
