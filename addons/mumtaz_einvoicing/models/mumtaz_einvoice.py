@@ -360,12 +360,21 @@ class AccountMove(models.Model):
             raise UserError(_('FBR submission failed: %s') % str(exc))
 
         if result.get('success'):
+            irn = result.get('einvoice_number') or f'FBR-{self.name}'
             self.write({
                 'einvoice_status': 'accepted',
-                'einvoice_number': result.get('einvoice_number') or f'FBR-{self.name}',
+                'einvoice_number': irn,
                 'einvoice_acceptance_date': datetime.now(),
                 'einvoice_validation_errors': False,
             })
+            # Set QR code to the FBR verification URL so the printed receipt
+            # carries a scannable verification link.
+            try:
+                qr_url = svc.build_qr_url(self)
+                if qr_url:
+                    self.write({'einvoice_qr_code': qr_url})
+            except Exception:
+                _logger.exception('FBR QR URL generation failed for %s', self.name)
             _logger.info('FBR invoice accepted for %s', self.name)
         else:
             errors = result.get('errors', [])
