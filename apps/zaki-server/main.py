@@ -8,6 +8,7 @@ Mumtaz Auth & AI API
 
 import os, json, re, time, sqlite3
 import xmlrpc.client
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks, Request
@@ -31,6 +32,7 @@ SECRET      = os.environ.get("JWT_SECRET",        "change-me-in-production")
 ALGO        = "HS256"
 TOKEN_DAYS  = 30
 ANT_KEY     = os.environ.get("ANTHROPIC_API_KEY", "")
+ZAKI_MODEL  = os.environ.get("ZAKI_MODEL",         "claude-opus-4-7")
 DB_PATH     = os.environ.get("DB_PATH",            "/opt/zaki-server/users.db")
 
 ODOO_URL    = os.environ.get("ODOO_URL",            "http://127.0.0.1:8069")
@@ -49,7 +51,13 @@ def _verify_pw(password: str, hashed: str) -> bool:
         return False
 
 # ── App ───────────────────────────────────────────────────────────────
-app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    settings.init_db()
+    yield
+
+app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0", lifespan=lifespan)
 
 _cors_env = os.environ.get("CORS_ORIGINS", "")
 CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()] or ["*"]
@@ -90,6 +98,13 @@ _RESET_TOKENS_DDL = """
         expires_at  INTEGER NOT NULL,
         used        INTEGER DEFAULT 0,
         created_at  INTEGER DEFAULT (strftime('%s','now'))
+    )
+"""
+
+_STRIPE_EVENTS_DDL = """
+    CREATE TABLE IF NOT EXISTS stripe_events (
+        event_id   TEXT PRIMARY KEY,
+        processed_at INTEGER DEFAULT (strftime('%s','now'))
     )
 """
 
@@ -153,6 +168,7 @@ def init_db():
                 pass
 
     conn.execute(_RESET_TOKENS_DDL)
+    conn.execute(_STRIPE_EVENTS_DDL)
     conn.execute(_PARTNERS_DDL)
     conn.commit()
     conn.close()
@@ -443,11 +459,6 @@ class ChatReq(BaseModel):
     session_id: str | None = None
 
 # ── Routes ────────────────────────────────────────────────────────────
-@app.on_event("startup")
-def startup():
-    init_db()
-    settings.init_db()
-
 @app.get("/health")
 @app.get("/api/v1/health")
 def health():
@@ -538,8 +549,15 @@ def admin_emails() -> set[str]:
 ADMIN_EMAILS = admin_emails()
 
 def require_admin(auth: dict = Depends(require_auth)) -> dict:
-    if (auth.get("email") or "").lower() not in admin_emails():
+    email = (auth.get("email") or "").lower()
+    if email not in admin_emails():
         raise HTTPException(403, "Admin access required.")
+    # Confirm the account is still active (catches deactivated tokens within their TTL).
+    db  = get_db()
+    row = db.execute("SELECT active FROM users WHERE email=?", (email,)).fetchone()
+    db.close()
+    if row and not row["active"]:
+        raise HTTPException(403, "Account is deactivated.")
     return auth
 
 @app.post("/api/v1/auth/forgot")
@@ -1150,13 +1168,28 @@ def billing_portal(auth: dict = Depends(require_auth)):
 @app.post("/api/v1/billing/webhook")
 async def billing_webhook(request: Request):
     """Receive Stripe webhook events. Updates the user's plan in SQLite when
-    a subscription is created, updated, or deleted."""
+    a subscription is created, updated, or deleted.
+
+    Idempotent: each Stripe event ID is recorded on first processing;
+    duplicates are acknowledged without re-applying the plan change."""
     payload   = await request.body()
     signature = request.headers.get("stripe-signature")
     try:
         event = billing_svc.parse_webhook(payload, signature)
     except Exception as e:
         raise HTTPException(400, f"Invalid webhook: {e}")
+
+    event_id = event.get("id") or ""
+    if event_id:
+        db = get_db()
+        already = db.execute(
+            "SELECT 1 FROM stripe_events WHERE event_id=?", (event_id,)
+        ).fetchone()
+        if already:
+            db.close()
+            return {"received": True, "duplicate": True}
+        db.execute("INSERT OR IGNORE INTO stripe_events (event_id) VALUES (?)", (event_id,))
+        db.commit(); db.close()
 
     etype = event.get("type", "")
     obj   = (event.get("data") or {}).get("object") or {}
@@ -1362,7 +1395,7 @@ async def chat_stream(req: ChatReq, auth: dict = Depends(require_auth)):
     async def generate():
         try:
             with client.messages.stream(
-                model="claude-sonnet-4-5",
+                model=ZAKI_MODEL,
                 max_tokens=2048,
                 system=system,
                 messages=[{"role": "user", "content": req.message}],
