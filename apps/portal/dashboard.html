@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mumtaz — Your Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    :root {
+      --gold:   #B8862A;
+      --gold2:  #D4A84C;
+      --gold-bg: #FDF6E4;
+      --teal:   #0B7A64;
+      --ink:    #0C1118;
+      --ink2:   #3D4A5C;
+      --ink3:   #7A8799;
+      --bg:     #F5F3EF;
+      --white:  #FFFFFF;
+      --border: #E4E0D8;
+      --radius: 12px;
+    }
+
+    body { background: var(--bg); color: var(--ink); }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .tb-left { display: flex; align-items: center; gap: 24px; }
+    .tb-logo { display: flex; align-items: center; gap: 10px; }
+    .tb-logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff;
+    }
+    .tb-logo-name { font-weight: 600; font-size: 1rem; color: var(--ink); }
+
+    /* Role selector */
+    .role-select {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      font-size: .85rem; font-weight: 500; color: var(--ink2);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .role-select:hover { border-color: var(--ink3); }
+    .role-select-label {
+      font-family: 'DM Mono', monospace; font-size: .68rem;
+      color: var(--ink3); letter-spacing: .07em; text-transform: uppercase;
+    }
+    .role-select select {
+      border: none; background: transparent; outline: none;
+      font: inherit; font-weight: 600; color: var(--ink);
+      cursor: pointer; padding-right: 4px;
+    }
+
+    .tb-right { display: flex; align-items: center; gap: 14px; }
+    .tb-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 12px 5px 5px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 100px; cursor: pointer;
+      transition: border-color .15s;
+    }
+    .tb-user:hover { border-color: var(--ink3); }
+    .tb-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #fff; font-weight: 600; font-size: .8rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .tb-user-name { font-size: .85rem; font-weight: 500; color: var(--ink); }
+    .tb-signout {
+      font-size: .8rem; color: var(--ink3);
+      padding: 6px 12px; border-radius: 8px;
+      transition: color .15s, background .15s;
+    }
+    .tb-signout:hover { color: var(--ink); background: var(--bg); }
+
+    /* ── Main ── */
+    .main { max-width: 1100px; margin: 0 auto; padding: 40px 28px 60px; }
+
+    .hello { margin-bottom: 36px; }
+    .hello-greeting {
+      font-family: 'DM Mono', monospace; font-size: .78rem;
+      color: var(--ink3); letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .hello-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 400; line-height: 1.15;
+      letter-spacing: -.015em; color: var(--ink);
+    }
+    .hello-title em { font-style: italic; color: var(--gold); }
+
+    /* ── Section header ── */
+    .sec-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; margin-top: 32px;
+    }
+    .sec-label {
+      font-family: 'DM Mono', monospace; font-size: .72rem;
+      color: var(--ink3); letter-spacing: .1em; text-transform: uppercase;
+    }
+    .sec-link {
+      font-size: .82rem; color: var(--gold); font-weight: 500;
+      transition: opacity .15s;
+    }
+    .sec-link:hover { opacity: .75; }
+
+    /* ── Product cards ── */
+    .products-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    @media (max-width: 860px) { .products-grid { grid-template-columns: 1fr; } }
+
+    .product-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      display: flex; flex-direction: column;
+      transition: border-color .15s, transform .12s;
+    }
+    .product-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .pc-icon {
+      width: 44px; height: 44px;
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+    }
+    .pc-icon.gold { background: var(--gold-bg); color: var(--gold); }
+    .pc-icon.teal { background: rgba(11,122,100,.1); color: var(--teal); }
+    .pc-icon.blue { background: #EEF2FF; color: #4F46E5; }
+    .pc-name {
+      font-size: 1.05rem; font-weight: 600; color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .pc-desc {
+      font-size: .875rem; color: var(--ink2);
+      line-height: 1.55; margin-bottom: 18px; flex: 1;
+    }
+    .pc-launch {
+      align-self: flex-start;
+      background: var(--gold); color: #fff;
+      font-size: .85rem; font-weight: 600;
+      padding: 8px 18px; border-radius: 100px;
+      transition: opacity .15s;
+    }
+    .pc-launch:hover { opacity: .88; }
+    .pc-card-disabled {
+      opacity: .55;
+    }
+    .pc-card-disabled .pc-launch {
+      background: var(--bg); color: var(--ink3);
+      border: 1.5px solid var(--border);
+    }
+
+    /* ── Empty state when no onboarding ── */
+    .empty-onboard {
+      background: var(--white);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+    }
+    .empty-onboard h3 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.25rem; font-weight: 400; color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .empty-onboard p { font-size: .9rem; color: var(--ink3); margin-bottom: 18px; }
+    .empty-onboard a {
+      display: inline-block;
+      background: var(--gold); color: #fff;
+      font-size: .875rem; font-weight: 600;
+      padding: 9px 20px; border-radius: 100px;
+    }
+
+    /* Placeholder for role-specific content (added in patch 2) */
+    #role-content { margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo">
+        <div class="tb-logo-mark">م</div>
+        <span class="tb-logo-name">Mumtaz</span>
+      </div>
+      <div class="role-select">
+        <span class="role-select-label">View as</span>
+        <select id="role-selector">
+          <option value="overview">Overview</option>
+          <option value="ceo">CEO</option>
+          <option value="cfo">CFO</option>
+          <option value="coo">COO / Ops</option>
+          <option value="cmo">CMO / Marketing</option>
+          <option value="sales">Sales</option>
+          <option value="hr">HR</option>
+        </select>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-user">
+        <div class="tb-avatar" id="user-avatar">U</div>
+        <span class="tb-user-name" id="user-name">User</span>
+      </div>
+      <button class="tb-signout" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Greeting -->
+    <div class="hello">
+      <div class="hello-greeting" id="greeting">Good morning</div>
+      <h1 class="hello-title">Welcome back, <em id="first-name">there</em>.</h1>
+    </div>
+
+    <!-- Products -->
+    <div class="sec-head">
+      <span class="sec-label">Your products</span>
+      <a href="/onboarding.html" class="sec-link">+ Add a product</a>
+    </div>
+    <div id="products-area">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Role-specific content placeholder (filled in patch 2) -->
+    <div id="role-content"></div>
+
+  </main>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    /* ── Auth check ── */
+    (async function () {
+      const token = localStorage.getItem('mumtaz_token');
+      if (!token) { window.location.href = '/'; return; }
+      try {
+        const r = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+        if (!r.ok) { localStorage.removeItem('mumtaz_token'); window.location.href = '/'; return; }
+        const user = await r.json();
+        renderUser(user);
+      } catch {
+        // offline fallback: read from token payload
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          renderUser({ name: payload.name, email: payload.email });
+        } catch {
+          window.location.href = '/';
+        }
+      }
+    })();
+
+    function renderUser(user) {
+      const name  = user.name || 'User';
+      const first = name.split(' ')[0];
+      $('user-name').textContent  = first;
+      $('user-avatar').textContent = (first[0] || 'U').toUpperCase();
+      $('first-name').textContent  = first;
+      // Greeting by time of day
+      const h = new Date().getHours();
+      $('greeting').textContent =
+        h < 5  ? 'Working late'  :
+        h < 12 ? 'Good morning'   :
+        h < 17 ? 'Good afternoon' :
+        h < 21 ? 'Good evening'   : 'Working late';
+    }
+
+    /* ── Sign out ── */
+    $('signout-btn').addEventListener('click', () => {
+      localStorage.removeItem('mumtaz_token');
+      window.location.href = '/';
+    });
+
+    /* ── Role selector ── */
+    const savedRole = localStorage.getItem('mumtaz_role') || 'overview';
+    $('role-selector').value = savedRole;
+    $('role-selector').addEventListener('change', e => {
+      localStorage.setItem('mumtaz_role', e.target.value);
+      renderRoleContent(e.target.value);
+    });
+
+    /* ── Products ── */
+    const PRODUCTS = {
+      erp: {
+        name: 'Mumtaz ERP',
+        desc: 'Accounting, sales, inventory, HR, payroll — pre-configured for GCC compliance.',
+        icon: '⬡', tone: 'teal',
+        launchUrl: 'https://app.mumtaz.digital/web/login',
+        launchLabel: 'Open ERP →',
+      },
+      zaki: {
+        name: 'ZAKI AI Agents',
+        desc: 'Your AI workforce — CFO, marketing, HR, operations. Instant answers from your live data.',
+        icon: 'ذ', tone: 'gold',
+        launchUrl: 'https://zaki.mumtaz.digital',
+        launchLabel: 'Open ZAKI →',
+      },
+      marketplace: {
+        name: 'B2B Marketplace',
+        desc: 'Trade with verified GCC businesses. Purchase orders and invoices flow into your ERP.',
+        icon: '⟁', tone: 'blue',
+        launchUrl: '#',
+        launchLabel: 'Coming soon',
+        disabled: true,
+      },
+    };
+
+    function renderProducts() {
+      const onboarding = JSON.parse(localStorage.getItem('mumtaz_onboarding') || 'null');
+      const area = $('products-area');
+
+      if (!onboarding || !onboarding.products || !onboarding.products.length) {
+        area.innerHTML = `
+          <div class="empty-onboard">
+            <h3>Let's set up your workspace</h3>
+            <p>Tell us about your business so we can configure the right products and modules for you.</p>
+            <a href="/onboarding.html">Start setup →</a>
+          </div>`;
+        return;
+      }
+
+      area.innerHTML = '<div class="products-grid">' +
+        onboarding.products.map(key => {
+          const p = PRODUCTS[key]; if (!p) return '';
+          return `
+            <div class="product-card ${p.disabled ? 'pc-card-disabled' : ''}">
+              <div class="pc-icon ${p.tone}">${p.icon}</div>
+              <div class="pc-name">${p.name}</div>
+              <div class="pc-desc">${p.desc}</div>
+              <a href="${p.launchUrl}" class="pc-launch" ${p.disabled ? 'aria-disabled="true"' : ''}>${p.launchLabel}</a>
+            </div>`;
+        }).join('') + '</div>';
+    }
+
+    /* Role-specific content — implemented in patch 2 */
+    function renderRoleContent(role) {
+      // placeholder — filled in next patch
+    }
+
+    renderProducts();
+    renderRoleContent(savedRole);
+  </script>
+
+</body>
+</html>
