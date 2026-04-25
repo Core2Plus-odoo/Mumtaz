@@ -614,6 +614,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
         Transaction Ledger
       </div>
+      <div class="nav-item" onclick="showPanel('books')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Bookkeeping
+      </div>
     </div>
 
     <div class="nav-section">
@@ -1068,6 +1072,23 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
       <div class="cards-grid" id="invest-grid">
         <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>
+      </div>
+    </div>
+
+    <!-- ── BOOKKEEPING ASSISTANT ── -->
+    <div class="panel" id="panel-books">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Bookkeeping <em>Assistant</em></div>
+            <div class="panel-desc">Catches uncategorized entries, likely duplicates, missing references, and reconciliation gaps</div>
+          </div>
+          <button class="btn-secondary" onclick="loadBooks(true)">↻ Re-scan</button>
+        </div>
+      </div>
+      <div id="books-summary" style="margin-bottom:14px"></div>
+      <div id="books-issues">
+        <div style="color:var(--text-3);font-size:.85rem"><span class="spinner"></span> Scanning your books…</div>
       </div>
     </div>
 
@@ -2013,6 +2034,7 @@ function showPanel(id) {
   if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
   if (id === 'risks' && !S._cache.risks) loadRisks()
   if (id === 'insights' && !S._cache.insights) loadInsights()
+  if (id === 'books') loadBooks()
   if (id === 'invest' && !S._cache.invest) loadInvest()
   if (id === 'market' && !S._cache.market) loadMarket()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
@@ -3253,6 +3275,139 @@ function renderInsights(items, digest) {
         <button class="btn-card-action" onclick="askFromBriefing('Tell me more: ${o.title}')">Discuss →</button>
       </div>
     </div>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// BOOKKEEPING ASSISTANT
+// ═══════════════════════════════════════════
+function scanBooks() {
+  const txs = (S.transactions || [])
+  const issues = { uncategorized: [], duplicates: [], missingRef: [], roundLarge: [], futureDated: [] }
+  const total = txs.length
+  if (!total) return { total: 0, issues, categorizedPct: 100, refPct: 100 }
+  let categorized = 0, withRef = 0
+  for (const t of txs) {
+    if (t.category && t.category.trim()) categorized++; else issues.uncategorized.push(t)
+    if (t.reference && t.reference.trim()) withRef++; else issues.missingRef.push(t)
+    const amt = Number(t.amount) || 0
+    // Flag suspicious round-thousand amounts ≥ 5,000 (often placeholders)
+    if (amt >= 5000 && amt % 1000 === 0) issues.roundLarge.push(t)
+    if (new Date(t.date) > new Date()) issues.futureDated.push(t)
+  }
+  // Duplicate detection: same |amount|, type, reference within ±3 days
+  const sorted = txs.slice().sort((a,b)=>new Date(a.date)-new Date(b.date))
+  for (let i = 0; i < sorted.length; i++) {
+    for (let j = i + 1; j < sorted.length; j++) {
+      const a = sorted[i], b = sorted[j]
+      const dDays = (new Date(b.date) - new Date(a.date)) / 86400000
+      if (dDays > 3) break
+      if (a.type === b.type && Number(a.amount) === Number(b.amount) &&
+          (a.reference || '').toLowerCase() === (b.reference || '').toLowerCase()) {
+        issues.duplicates.push({ a, b })
+      }
+    }
+  }
+  return {
+    total, categorized,
+    categorizedPct: Math.round(categorized / total * 100),
+    refPct: Math.round(withRef / total * 100),
+    issues
+  }
+}
+
+async function loadBooks(force) {
+  const summary = document.getElementById('books-summary')
+  const list = document.getElementById('books-issues')
+  const r = scanBooks()
+  if (!r.total) {
+    summary.innerHTML = ''
+    list.innerHTML = `<div style="color:var(--text-3);font-size:.85rem">Add transactions or load demo data — Bookkeeping scans your ledger for issues.</div>`
+    return
+  }
+  const score = Math.round((r.categorizedPct * 0.5) + (r.refPct * 0.3) +
+    ((r.issues.duplicates.length === 0 ? 100 : Math.max(0, 100 - r.issues.duplicates.length * 10)) * 0.2))
+  const scoreColor = score >= 85 ? 'var(--green)' : score >= 60 ? 'var(--amber)' : 'var(--red)'
+  summary.innerHTML = `
+    <div class="card" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:14px 18px">
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Hygiene Score</div><div style="font-size:1.3rem;font-weight:700;color:${scoreColor}">${score}/100</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Categorized</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${r.categorizedPct}%</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Has Reference</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${r.refPct}%</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Likely Dupes</div><div style="font-size:1.1rem;font-weight:600;color:${r.issues.duplicates.length?'var(--amber)':'var(--text)'}">${r.issues.duplicates.length}</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Round Amounts</div><div style="font-size:1.1rem;font-weight:600;color:${r.issues.roundLarge.length>3?'var(--amber)':'var(--text)'}">${r.issues.roundLarge.length}</div></div>
+    </div>`
+  const sec = (title, items, render, actionLabel) => items.length ? `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${title} <span style="font-weight:400;color:var(--text-3);font-size:.8rem">(${items.length})</span></span>
+        ${actionLabel ? `<button class="btn-secondary" style="font-size:.74rem" onclick="${actionLabel}">AI Suggest</button>` : ''}
+      </div>
+      <div style="font-size:.83rem;color:var(--text-2);line-height:1.6">${items.slice(0,8).map(render).join('')}</div>
+      ${items.length > 8 ? `<div style="font-size:.78rem;color:var(--text-3);margin-top:8px">+ ${items.length - 8} more — open Ledger to fix</div>` : ''}
+    </div>` : ''
+  const txRow = t => `<div style="padding:5px 0;border-bottom:1px dashed var(--border)">${new Date(t.date).toISOString().slice(0,10)} · <strong>${S.co.currency} ${fmt(t.amount)}</strong> · ${t.description || '(no description)'} ${t.category ? '· '+t.category : ''}</div>`
+  const dupRow = d => `<div style="padding:5px 0;border-bottom:1px dashed var(--border)">${new Date(d.a.date).toISOString().slice(0,10)} ↔ ${new Date(d.b.date).toISOString().slice(0,10)} · <strong>${S.co.currency} ${fmt(d.a.amount)}</strong> · ${d.a.description || '(no desc)'} ↔ ${d.b.description || '(no desc)'}</div>`
+  list.innerHTML = `
+    ${sec('Uncategorized transactions', r.issues.uncategorized, txRow, "suggestCategories()")}
+    ${sec('Likely duplicates', r.issues.duplicates, dupRow, '')}
+    ${sec('Missing reference / payee', r.issues.missingRef, txRow, '')}
+    ${sec('Suspicious round-thousand amounts (review)', r.issues.roundLarge, txRow, '')}
+    ${sec('Future-dated entries', r.issues.futureDated, txRow, '')}
+    <div class="card" style="margin-top:8px">
+      <div class="card-title">AI reconciliation tips</div>
+      <div id="books-ai" style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <span style="color:var(--text-3)">Click "Get tips" to ask Zaki for prioritized cleanup steps.</span>
+      </div>
+      <button class="btn-secondary" style="margin-top:10px" onclick="bookkeepingTips()">Get tips</button>
+    </div>`
+}
+
+async function bookkeepingTips() {
+  const el = document.getElementById('books-ai')
+  if (!aiReady()) { el.innerHTML = noKeyState('Connect AI for reconciliation tips.'); return }
+  const r = scanBooks()
+  el.innerHTML = '<span class="spinner"></span> Drafting tips…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:
+`You are reviewing the bookkeeping for a ${S.co.industry || 'business'} in ${S.co.country || 'this market'} (currency ${S.co.currency}).
+
+Stats:
+- Total transactions: ${r.total}
+- Categorized: ${r.categorizedPct}% | Has reference: ${r.refPct}%
+- Likely duplicates flagged: ${r.issues.duplicates.length}
+- Uncategorized: ${r.issues.uncategorized.length}
+- Suspicious round amounts: ${r.issues.roundLarge.length}
+- Future-dated: ${r.issues.futureDated.length}
+
+Give the CEO 5 prioritized, concrete reconciliation actions for THIS WEEK in plain prose. Format as a short numbered list with one sentence each. No markdown headers, no bold, no fluff.`
+    }], (_, acc) => { full = acc; el.textContent = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+async function suggestCategories() {
+  if (!aiReady()) { showToast('Connect AI for category suggestions','error'); return }
+  const r = scanBooks()
+  const sample = r.issues.uncategorized.slice(0, 20).map((t,i) => `${i+1}. ${t.type} ${S.co.currency} ${t.amount} · ${t.description || ''} · ${t.reference || ''}`).join('\n')
+  if (!sample) { showToast('Nothing to categorize'); return }
+  showToast('Asking Zaki for category suggestions…')
+  try {
+    const raw = await callClaude([{ role:'user', content:
+`For each uncategorized transaction below, suggest a category. Use standard categories for a ${S.co.industry || 'business'}: Sales, Service Revenue, Salary/Payroll, Rent, Utilities, Software, Marketing, Travel, Professional Fees, Bank Fees, Tax, Office Supplies, Cost of Goods, Other Income, Other Expense.
+
+Respond ONLY with valid JSON array of {"index":1,"category":"..."}.
+
+${sample}` }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    const list = r.issues.uncategorized
+    let updated = 0
+    items.forEach(s => {
+      const t = list[s.index - 1]
+      if (t && !t.category) { t.category = s.category; updated++ }
+    })
+    save()
+    showToast(`Suggested categories for ${updated} transactions`)
+    loadBooks(true)
+  } catch(e) { showToast('Error: ' + e.message, 'error') }
 }
 
 // ═══════════════════════════════════════════
