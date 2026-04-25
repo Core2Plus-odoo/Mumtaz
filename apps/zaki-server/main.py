@@ -79,6 +79,16 @@ _USERS_DDL = """
     )
 """
 
+_RESET_TOKENS_DDL = """
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        token       TEXT    PRIMARY KEY,
+        email       TEXT    NOT NULL,
+        expires_at  INTEGER NOT NULL,
+        used        INTEGER DEFAULT 0,
+        created_at  INTEGER DEFAULT (strftime('%s','now'))
+    )
+"""
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_db()
@@ -121,6 +131,7 @@ def init_db():
             except Exception:
                 pass
 
+    conn.execute(_RESET_TOKENS_DDL)
     conn.commit()
     conn.close()
 
@@ -403,6 +414,66 @@ def signup(req: SignupReq, background_tasks: BackgroundTasks = None):
             "tenant_id": tenant_id,
         },
     }
+
+class ForgotReq(BaseModel):
+    email: str
+
+class ResetReq(BaseModel):
+    token: str
+    password: str
+
+PORTAL_BASE_URL = os.environ.get("PORTAL_BASE_URL", "https://app.mumtaz.digital")
+RESET_TOKEN_TTL_SECS = 3600  # 1 hour
+
+@app.post("/api/v1/auth/forgot")
+def forgot_password(req: ForgotReq, background_tasks: BackgroundTasks = None):
+    """Initiate password reset. Always returns 200 to prevent email enumeration."""
+    import secrets
+    email = req.email.strip().lower()
+    db    = get_db()
+    row   = db.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
+    if row:
+        token   = secrets.token_urlsafe(32)
+        expires = int(time.time()) + RESET_TOKEN_TTL_SECS
+        db.execute(
+            "INSERT INTO password_reset_tokens (token, email, expires_at) VALUES (?, ?, ?)",
+            (token, email, expires),
+        )
+        db.commit()
+        if background_tasks is not None:
+            reset_url = f"{PORTAL_BASE_URL}/reset.html?token={token}"
+            subject, html, text = mailer.password_reset_email(row["name"] or "", reset_url)
+            background_tasks.add_task(mailer.send_email, email, subject, html, text)
+    db.close()
+    # Always 200 — don't reveal whether the email is registered.
+    return {"ok": True, "message": "If this email is registered, a reset link has been sent."}
+
+@app.post("/api/v1/auth/reset")
+def reset_password(req: ResetReq):
+    """Consume a reset token and update the user's password."""
+    if len(req.password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters.")
+    db  = get_db()
+    row = db.execute(
+        "SELECT email, expires_at, used FROM password_reset_tokens WHERE token=?",
+        (req.token,),
+    ).fetchone()
+    if not row:
+        db.close()
+        raise HTTPException(400, "Invalid or expired reset link.")
+    if row["used"]:
+        db.close()
+        raise HTTPException(400, "This reset link has already been used.")
+    if int(row["expires_at"]) < int(time.time()):
+        db.close()
+        raise HTTPException(400, "This reset link has expired. Request a new one.")
+
+    new_hash = _hash_pw(req.password)
+    db.execute("UPDATE users SET password_hash=? WHERE email=?", (new_hash, row["email"]))
+    db.execute("UPDATE password_reset_tokens SET used=1 WHERE token=?", (req.token,))
+    db.commit()
+    db.close()
+    return {"ok": True}
 
 @app.post("/api/v1/auth/register")
 def register(req: RegisterReq):
