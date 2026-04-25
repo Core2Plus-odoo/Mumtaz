@@ -455,6 +455,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .risk-card{border-top:2px solid var(--red)}
 .invest-card{border-top:2px solid var(--purple,#a855f7)}
 .market-card{border-top:2px solid var(--cyan,#06b6d4)}
+.insight-card{border-top:2px solid var(--blue)}
 .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
 .card-name{font-weight:600;font-size:.9rem;color:var(--text)}
 .card-body{font-size:.81rem;color:var(--text-3);line-height:1.6;margin-bottom:9px}
@@ -649,6 +650,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 
     <div class="nav-section">
       <div class="nav-label">Intelligence</div>
+      <div class="nav-item" onclick="showPanel('insights')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/><path d="M11 7v4l3 2"/></svg>
+        Business Insights
+      </div>
       <div class="nav-item" onclick="showPanel('invest')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Where to Invest
@@ -1063,6 +1068,23 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
       <div class="cards-grid" id="invest-grid">
         <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>
+      </div>
+    </div>
+
+    <!-- ── BUSINESS INSIGHTS (DB SKIM) ── -->
+    <div class="panel" id="panel-insights">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Business <em>Insights</em></div>
+            <div class="panel-desc">Patterns Zaki found in your transactions, customers, vendors, and trends</div>
+          </div>
+          <button class="btn-secondary" onclick="loadInsights(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="insights-summary" style="margin-bottom:14px"></div>
+      <div class="cards-grid" id="insights-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Skimming your books…</div>
       </div>
     </div>
 
@@ -1990,6 +2012,7 @@ function showPanel(id) {
   if (id === 'health' && !S._cache.health) loadHealth()
   if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
   if (id === 'risks' && !S._cache.risks) loadRisks()
+  if (id === 'insights' && !S._cache.insights) loadInsights()
   if (id === 'invest' && !S._cache.invest) loadInvest()
   if (id === 'market' && !S._cache.market) loadMarket()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
@@ -3104,6 +3127,132 @@ async function loadRisks(force) {
   } catch(e) {
     grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
   }
+}
+
+// ═══════════════════════════════════════════
+// BUSINESS INSIGHTS (DB SKIM)
+// ═══════════════════════════════════════════
+function summarizeTransactions() {
+  const txs = (S.transactions || []).slice()
+  if (!txs.length) return null
+  const now = new Date()
+  const monthKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+  const months = {}
+  const customers = {}, vendors = {}, categories = {}
+  let totalIn = 0, totalOut = 0
+  for (const t of txs) {
+    const d = new Date(t.date); if (isNaN(d)) continue
+    const k = monthKey(d)
+    months[k] = months[k] || { in:0, out:0 }
+    const amt = Number(t.amount) || 0
+    if (t.type === 'income') {
+      months[k].in += amt; totalIn += amt
+      if (t.reference) customers[t.reference] = (customers[t.reference] || 0) + amt
+    } else {
+      months[k].out += amt; totalOut += amt
+      if (t.reference) vendors[t.reference] = (vendors[t.reference] || 0) + amt
+      if (t.category) categories[t.category] = (categories[t.category] || 0) + amt
+    }
+  }
+  const sortedMonths = Object.keys(months).sort()
+  const last3 = sortedMonths.slice(-3).map(k => ({ m:k, ...months[k] }))
+  const prev3 = sortedMonths.slice(-6, -3).map(k => ({ m:k, ...months[k] }))
+  const sum = arr => arr.reduce((a,x)=>a+x.in,0)
+  const sumOut = arr => arr.reduce((a,x)=>a+x.out,0)
+  const lastRev = sum(last3), prevRev = sum(prev3)
+  const revGrowth = prevRev > 0 ? ((lastRev-prevRev)/prevRev*100).toFixed(1) : 'N/A'
+  const lastExp = sumOut(last3), prevExp = sumOut(prev3)
+  const expGrowth = prevExp > 0 ? ((lastExp-prevExp)/prevExp*100).toFixed(1) : 'N/A'
+  const top = (obj, n=5) => Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,v])=>({name:k,amount:v}))
+  const topCustomers = top(customers, 5)
+  const topVendors = top(vendors, 5)
+  const topCategories = top(categories, 5)
+  // Concentration: % of revenue from top customer
+  const customerConcentration = topCustomers.length && totalIn > 0
+    ? (topCustomers[0].amount / totalIn * 100).toFixed(1) : 0
+  return {
+    txCount: txs.length, months: sortedMonths.length,
+    totalIn, totalOut, revGrowth, expGrowth,
+    lastRev, prevRev, lastExp, prevExp,
+    topCustomers, topVendors, topCategories,
+    customerConcentration,
+    monthlyBreakdown: sortedMonths.slice(-6).map(k => ({ m:k, in:months[k].in, out:months[k].out }))
+  }
+}
+
+async function loadInsights(force) {
+  if (!force && S._cache.insights) {
+    renderInsights(S._cache.insights, S._cache.insightsDigest)
+    return
+  }
+  const summary = document.getElementById('insights-summary')
+  const grid = document.getElementById('insights-grid')
+  const digest = summarizeTransactions()
+  if (!digest) {
+    summary.innerHTML = ''
+    grid.innerHTML = `<div style="grid-column:1/-1;color:var(--text-3);font-size:.85rem">Add transactions or load demo data — Insights skims your ledger to surface patterns.</div>`
+    return
+  }
+  if (!aiReady()) {
+    summary.innerHTML = ''
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Insights uses AI to interpret patterns Zaki finds in your books.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Skimming your books…</div>'
+  try {
+    const prompt = `Analyze this business's transaction data and surface 5 specific insights a CEO would want to know. Focus on: customer concentration, vendor/cost concentration, growth/decline trends, anomalies, recurring patterns. Be concrete (cite the actual numbers from below).
+
+DATA DIGEST:
+- ${digest.txCount} transactions across ${digest.months} months
+- Total income: ${S.co.currency} ${fmt(digest.totalIn)} | Total expenses: ${S.co.currency} ${fmt(digest.totalOut)}
+- Revenue growth (last 3mo vs prior 3mo): ${digest.revGrowth}%
+- Expense growth (last 3mo vs prior 3mo): ${digest.expGrowth}%
+- Top customer concentration: ${digest.customerConcentration}% of revenue from #1 customer
+- Top customers: ${digest.topCustomers.map(c => c.name + ' ' + S.co.currency + ' ' + fmt(c.amount)).join(' | ')}
+- Top vendors: ${digest.topVendors.map(v => v.name + ' ' + S.co.currency + ' ' + fmt(v.amount)).join(' | ')}
+- Top expense categories: ${digest.topCategories.map(c => c.name + ' ' + S.co.currency + ' ' + fmt(c.amount)).join(' | ')}
+- Monthly: ${digest.monthlyBreakdown.map(m => m.m+' in='+fmt(m.in)+' out='+fmt(m.out)).join(' | ')}
+
+Respond ONLY with valid JSON array, no other text:
+[{"title":"<short headline>","finding":"<1-2 sentences citing specific numbers>","severity":"good|watch|risk","category":"Customers|Vendors|Growth|Margins|Cash|Patterns","action":"<specific thing to do this week>"}]`
+    const raw = await callClaude([{ role: 'user', content: prompt }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.insights = items
+    S._cache.insightsDigest = digest
+    save()
+    renderInsights(items, digest)
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+function renderInsights(items, digest) {
+  const summary = document.getElementById('insights-summary')
+  const grid = document.getElementById('insights-grid')
+  const sevTag = s => s==='risk'?'tag-red':s==='watch'?'tag-amber':'tag-green'
+  const sevLabel = s => s==='risk'?'⚠️ Risk':s==='watch'?'⚡ Watch':'✅ Good'
+  if (digest) {
+    summary.innerHTML = `
+      <div class="card" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 18px">
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Transactions</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${digest.txCount}</div></div>
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Rev Growth (3mo)</div><div style="font-size:1.1rem;font-weight:600;color:${parseFloat(digest.revGrowth)>=0?'var(--green)':'var(--red)'}">${digest.revGrowth}%</div></div>
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Top Customer</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${digest.customerConcentration}%</div></div>
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Period</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${digest.months} mo</div></div>
+      </div>`
+  }
+  grid.innerHTML = items.map(o => `
+    <div class="insight-card">
+      <div class="card-header">
+        <div class="card-name">${o.title}</div>
+        <span class="tag ${sevTag(o.severity)}">${sevLabel(o.severity)}</span>
+      </div>
+      <div class="card-body">${o.finding}</div>
+      <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Action:</strong> ${o.action}</div>
+      <div class="card-footer">
+        <div class="card-meta" style="color:var(--blue)">${o.category}</div>
+        <button class="btn-card-action" onclick="askFromBriefing('Tell me more: ${o.title}')">Discuss →</button>
+      </div>
+    </div>`).join('')
 }
 
 // ═══════════════════════════════════════════
