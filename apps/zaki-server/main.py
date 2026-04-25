@@ -111,6 +111,8 @@ def init_db():
             ("plan",      "TEXT DEFAULT 'trial'"),
             ("active",    "INTEGER DEFAULT 1"),
             ("created_at","INTEGER DEFAULT (strftime('%s','now'))"),
+            ("onboarding_json", "TEXT"),
+            ("role",      "TEXT"),
         ]:
             try:
                 conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -481,6 +483,49 @@ async def me(auth: dict = Depends(require_auth)):
         "odoo_uid":  row["odoo_uid"],
         "tenant_id": row["tenant_id"],
     }
+
+class OnboardingReq(BaseModel):
+    industry: str | None = None
+    products: list[str] = []
+    agents:   list[str] = []
+    modules:  list[str] = []
+    teamSize: str | None = None
+    role:     str | None = None
+    completedAt: str | None = None
+
+@app.post("/api/v1/onboarding")
+async def save_onboarding(req: OnboardingReq, auth: dict = Depends(require_auth)):
+    """Persist a user's onboarding preferences (industry, products, agents,
+    modules, team size). Idempotent — overwrites previous selection."""
+    import json as _json
+    db = get_db()
+    db.execute(
+        "UPDATE users SET onboarding_json = ?, role = COALESCE(?, role) WHERE email = ?",
+        (_json.dumps(req.model_dump()), req.role, auth["email"]),
+    )
+    db.commit()
+    db.close()
+    return {"ok": True}
+
+@app.get("/api/v1/onboarding")
+async def get_onboarding(auth: dict = Depends(require_auth)):
+    """Return the user's saved onboarding preferences (or null)."""
+    import json as _json
+    db  = get_db()
+    row = db.execute(
+        "SELECT onboarding_json, role FROM users WHERE email = ?",
+        (auth["email"],),
+    ).fetchone()
+    db.close()
+    if not row or not row["onboarding_json"]:
+        return {"onboarding": None, "role": row["role"] if row else None}
+    try:
+        return {
+            "onboarding": _json.loads(row["onboarding_json"]),
+            "role": row["role"],
+        }
+    except Exception:
+        return {"onboarding": None, "role": row["role"]}
 
 @app.get("/api/v1/tenant/me")
 async def tenant_me(auth: dict = Depends(require_auth)):
