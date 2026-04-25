@@ -511,6 +511,42 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .market-card{border-top:2px solid var(--cyan,#06b6d4)}
 .insight-card{border-top:2px solid var(--blue)}
 .investopt-card{border-top:2px solid var(--amber)}
+
+/* ── Board Pack PDF print mode ── */
+@media print {
+  @page { size: A4; margin: 18mm 16mm 22mm 16mm; }
+  body, body.dark {
+    background:#fff !important; color:#000 !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  body.printing-board > *:not(#app) { display:none !important; }
+  #app > #topbar, #sidebar, #setup,
+  .topbar-nav, #toast-container, #voice-status,
+  #goals-banner, #proactive-alerts, .panel:not(#panel-board),
+  .panel-header > div > div:last-child, /* hide buttons row in board header */
+  .nav-section, #app-body > nav { display:none !important; }
+  #app, #app-body, #main, .panel { background:#fff !important; height:auto !important; overflow:visible !important; display:block !important }
+  #panel-board { padding:0 !important; max-width:none !important }
+  #board-print-header { display:block !important; margin-bottom:18mm; border-bottom:2px solid #1a1f2e; padding-bottom:8mm }
+  #board-print-header .bp-letterhead { display:flex; align-items:center; gap:14px; margin-bottom:14mm }
+  #board-print-header .bp-mark { width:42px;height:42px;border-radius:6px;background:#b8893e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem }
+  #board-print-header .bp-co { flex:1 }
+  #board-print-header .bp-co-name { font-size:1.1rem;font-weight:700;color:#0a0a0a }
+  #board-print-header .bp-co-meta { font-size:.78rem;color:#475569;margin-top:2px }
+  #board-print-header .bp-meta { text-align:right;font-size:.74rem;color:#475569 }
+  #board-print-header .bp-title { font-size:1.6rem;font-weight:700;letter-spacing:-.02em;color:#1a1f2e;margin:0 }
+  #board-content { font-size:10.5pt;line-height:1.6;color:#0a0a0a }
+  #board-content h1 { font-size:14pt;margin-top:8mm;page-break-after:avoid }
+  #board-content h2 { font-size:12.5pt;margin-top:6mm;color:#1a1f2e;border-bottom:1px solid #d8d2c4;padding-bottom:2mm;page-break-after:avoid }
+  #board-content h3 { font-size:11pt;margin-top:5mm;color:#1a1f2e;page-break-after:avoid }
+  #board-content table { border-collapse:collapse;width:100%;margin:3mm 0;page-break-inside:avoid;font-size:9.5pt }
+  #board-content th, #board-content td { border:1px solid #d8d2c4;padding:3mm 4mm;text-align:left }
+  #board-content th { background:#f4f2ec;font-weight:600 }
+  #board-content p, #board-content ul, #board-content ol { page-break-inside:avoid }
+  .ceo-dash, .kpi-card { page-break-inside:avoid }
+  /* Page footer */
+  #board-print-footer { position:fixed; bottom:8mm; left:16mm; right:16mm; font-size:8pt; color:#8a8f9a; border-top:1px solid #d8d2c4; padding-top:3mm; display:flex; justify-content:space-between }
+}
 .seo-card{border-top:2px solid var(--green)}
 .kw-pill{display:inline-block;background:var(--card);border:1px solid var(--border-2);border-radius:14px;padding:4px 11px;font-size:.75rem;color:var(--text-2);margin:3px 4px 3px 0;font-family:var(--mono)}
 .kw-pill .vol{color:var(--text-3);margin-left:6px;font-size:.7rem}
@@ -1209,10 +1245,19 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
             <div class="panel-desc">Executive-ready financial report</div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn-outline" onclick="printBoard()">🖨 Print</button>
+            <button class="btn-outline" onclick="exportBoardPdf()">⇣ Export PDF</button>
             <button class="btn-secondary" onclick="loadBoard(true)">↻ Regenerate</button>
           </div>
         </div>
+      </div>
+      <!-- Print-only header (hidden on screen, visible in PDF) -->
+      <div id="board-print-header" style="display:none">
+        <div class="bp-letterhead">
+          <div class="bp-mark">M</div>
+          <div class="bp-co"><div class="bp-co-name" id="bp-co-name"></div><div class="bp-co-meta" id="bp-co-meta"></div></div>
+          <div class="bp-meta"><div id="bp-period"></div><div id="bp-prepared"></div></div>
+        </div>
+        <h1 class="bp-title">Board Pack</h1>
       </div>
       <div id="board-content">
         <div style="color:var(--text-3);font-size:.85rem"><span class="spinner"></span> Generating board pack…</div>
@@ -5340,7 +5385,35 @@ Write in professional board-ready language. Use specific numbers throughout.` }]
   }
 }
 
-function printBoard() { window.print() }
+function printBoard() { exportBoardPdf() }
+
+function exportBoardPdf() {
+  // Populate print-only header
+  const t = findTaxRules(S.co.country)
+  document.getElementById('bp-co-name').textContent = S.co.name || 'Company'
+  document.getElementById('bp-co-meta').textContent =
+    [S.co.industry, S.co.country, S.co.currency].filter(Boolean).join(' · ')
+  const today = new Date()
+  document.getElementById('bp-period').textContent = `Period ending ${today.toISOString().slice(0,10)}`
+  document.getElementById('bp-prepared').textContent = `Prepared by Zaki AI CFO · Mumtaz`
+  // Inject a fixed footer element (removed after print)
+  let footer = document.getElementById('board-print-footer')
+  if (!footer) {
+    footer = document.createElement('div')
+    footer.id = 'board-print-footer'
+    footer.innerHTML = `<span>${S.co.name || 'Company'} · ${t?.label || S.co.country || ''}</span><span>Generated ${today.toISOString().slice(0,10)} · Confidential</span>`
+    document.body.appendChild(footer)
+  }
+  document.body.classList.add('printing-board')
+  // Give layout a tick to settle, then print
+  setTimeout(() => {
+    window.print()
+    setTimeout(() => {
+      document.body.classList.remove('printing-board')
+      footer?.remove()
+    }, 500)
+  }, 50)
+}
 
 // ═══════════════════════════════════════════
 // PROACTIVE INTELLIGENCE ENGINE
