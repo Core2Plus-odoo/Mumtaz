@@ -1440,10 +1440,11 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
     <div class="panel" id="panel-tax">
       <div class="panel-header">
         <div style="display:flex;align-items:flex-start;justify-content:space-between">
-          <div><div class="panel-title"><em>Tax &amp; VAT Advisor</em></div><div class="panel-desc">UAE Corporate Tax, VAT compliance, ESR — AI-powered guidance</div></div>
+          <div><div class="panel-title">Tax &amp; <em>VAT Advisor</em></div><div class="panel-desc" id="tax-regime-desc">Country-specific tax intelligence — rates, deadlines, filings</div></div>
           <button class="btn-secondary" onclick="loadTax(true)">↻ Refresh</button>
         </div>
       </div>
+      <div id="tax-regime-summary" style="margin-bottom:14px"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
         <button class="btn-outline" style="font-size:.8rem" onclick="askTax('Calculate our estimated UAE Corporate Tax liability at 9% based on our net profit, and advise on qualifying deductions we should consider')">CT Liability Estimate</button>
         <button class="btn-outline" style="font-size:.8rem" onclick="askTax('Review our VAT position — estimated output VAT on revenue, input VAT recovery, and net VAT payable')">VAT Position Review</button>
@@ -2237,6 +2238,213 @@ const SECTOR_KB = [
     kpis:['Revenue per active user','Take rate %','Transactions / user','Fraud loss %','Compliance flag rate','Capital adequacy ratio'] },
 ]
 
+// ═══════════════════════════════════════════
+// TAX KNOWLEDGE BASE — country-specific rates, deadlines, filings
+// Injected into Zaki's prompt + Tax panel based on S.co.country
+// ═══════════════════════════════════════════
+const TAX_KB = [
+  { country:'UAE', label:'United Arab Emirates',
+    corporate_tax:{
+      rate:'9% on taxable income above AED 375,000 (0% below)', regime:'Federal Decree-Law No. 47 of 2022 — effective for fiscal years starting on/after 1 June 2023',
+      free_zone:'Qualifying Free Zone Persons (QFZP): 0% on Qualifying Income, 9% on non-qualifying income. Strict substance + de minimis tests.',
+      losses:'Tax losses carry forward indefinitely (max 75% utilisation per year)',
+      groups:'Tax grouping allowed for 95%-owned UAE entities',
+    },
+    vat:{ rate:'5% standard / 0% rate exports & specified / Exempt: bare land, residential lease (after first supply), local passenger transport, financial services',
+          threshold:'Mandatory: AED 375,000 / Voluntary: AED 187,500',
+          filing:'Quarterly (most) or monthly (large taxpayers). Return + payment due 28 days after period end.',
+          input_recovery:'Standard rule: input VAT on taxable supplies recoverable. Blocked: entertainment, employee personal use, certain motor vehicles.' },
+    other:[
+      'Excise Tax: 100% tobacco/e-cig, 50% sweetened beverages, 50% energy drinks',
+      'Economic Substance Regulations (ESR): annual notification + report for relevant activities',
+      'Country-by-Country Reporting: groups with consolidated revenue > AED 3.15bn',
+      'Transfer Pricing: OECD-aligned, master file + local file thresholds apply',
+      'Tourism Dirham (hotels), Dubai municipality fees on commercial leases (5%)',
+    ],
+    deadlines:[
+      'CT return: 9 months after fiscal year-end (e.g. FY ending 31 Dec → 30 Sep next year)',
+      'VAT return: 28 days after each tax period',
+      'ESR notification: 6 months after FY end · ESR report: 12 months after FY end',
+      'WPS (payroll): monthly within 14 days',
+    ],
+    penalties:'CT late filing: AED 500/month (capped). VAT late return: AED 1,000 first / AED 2,000 repeat. Tax evasion: up to 300% of tax due.',
+    advisor:'Authority: Federal Tax Authority (FTA) — register at eservices.tax.gov.ae. License-issuing authorities also play a role.' },
+
+  { country:'KSA', label:'Saudi Arabia',
+    corporate_tax:{
+      rate:'20% (foreign-owned share); Saudi/GCC-owned share is subject to Zakat at 2.5% on Zakat base, not CT',
+      regime:'Income Tax Law (Royal Decree M/1 of 1425H) + Zakat Implementing Regulations (ZATCA)',
+      free_zone:'Special Economic Zones (NEOM, KAEC, Riyadh ITZ, Jazan): 5% CT for 20 years on qualifying activities',
+      losses:'Tax losses carried forward indefinitely; capped at 25% of annual taxable income',
+      groups:'Tax consolidation not allowed; each entity files separately',
+    },
+    vat:{ rate:'15% standard (raised from 5% in July 2020). 0% exports + specified. Exempt: residential rentals, financial services without explicit fee.',
+          threshold:'Mandatory: SAR 375,000 / Voluntary: SAR 187,500',
+          filing:'Monthly if turnover > SAR 40m, quarterly otherwise. Due end of month following period.',
+          e_invoicing:'Phase 2 (FATOORA) integration mandatory in waves — all VAT-registered businesses now in scope. XML format, ZATCA portal integration.' },
+    other:[
+      'Zakat: 2.5% on Zakat base (broadly net worth excluding fixed assets, financed through equity)',
+      'Withholding Tax: 5% rent / 5% services / 15% royalties / 20% management fees on payments to non-residents',
+      'Real Estate Transaction Tax (RETT): 5% on sale of real estate (replaced VAT on real estate Oct 2020)',
+      'Excise Tax: 50% sweetened drinks / 100% tobacco + energy drinks',
+      'Customs duty: 5% standard on most imports; protective rates higher',
+    ],
+    deadlines:[
+      'CT/Zakat return: within 120 days of fiscal year end',
+      'VAT return: end of month following period',
+      'WHT return: monthly, by 10th of following month',
+      'GOSI (social insurance): monthly',
+    ],
+    penalties:'VAT: 5% per month late (capped 25%). E-invoicing non-compliance: SAR 1,000 - 50,000. CT/Zakat late filing: 1% per month, max 25%.',
+    advisor:'Authority: ZATCA (Zakat, Tax and Customs Authority) — zatca.gov.sa. E-invoicing through Fatoora portal.' },
+
+  { country:'Pakistan', label:'Pakistan',
+    corporate_tax:{
+      rate:'29% standard / 39% banking companies / 20% small companies (turnover < PKR 250m, paid-up capital < PKR 50m)',
+      regime:'Income Tax Ordinance 2001, as amended annually by Finance Act',
+      surcharge:'Super Tax 1-10% on income > PKR 150m (sliding scale, FY24)',
+      losses:'Business losses carried forward 6 years; depreciation losses indefinitely',
+      groups:'Group taxation allowed for 100%-owned subsidiaries with prior approval',
+    },
+    sales_tax:{ rate:'18% federal sales tax (services taxed by provincial: Sindh 13%, Punjab 16%, KP 15%, Balochistan 15%, Islamabad 16%)',
+          threshold:'Mandatory: PKR 10m turnover (manufacturers) / PKR 5m retailers',
+          filing:'Monthly, by 18th of following month. STRN registration with FBR.',
+          provincial:'Provincial revenue authorities (SRB, PRA, KPRA, BRA) — file separately for each province where services rendered.' },
+    other:[
+      'Withholding Tax: extensive regime — 4.5% services, 4% goods supplies, 15% dividends, varies by transaction type',
+      'Federal Excise Duty: tobacco, beverages, telecom, services',
+      'Capital Gains Tax: securities 15% (filer) / 30% (non-filer); property graduated by holding period',
+      'Workers Welfare Fund (WWF): 2% of taxable income',
+      'Workers Profit Participation Fund (WPPF): 5% of profit before tax (industrial undertakings)',
+    ],
+    deadlines:[
+      'Annual return (companies): by 31 December for tax year ending June; by 30 September for special tax year',
+      'Quarterly advance tax: 15th day of June/Sept/Dec/March',
+      'Sales tax return: 18th of following month',
+      'WHT statements: quarterly',
+    ],
+    penalties:'Late filing: PKR 40,000 minimum + 0.1% per day. Sales tax: 5% of tax + PKR 5,000. ATL (Active Taxpayer List) drop = double WHT rates.',
+    advisor:'Authority: Federal Board of Revenue (FBR) — fbr.gov.pk + IRIS portal. Provincial: SRB, PRA, KPRA, BRA.' },
+
+  { country:'Egypt', label:'Egypt',
+    corporate_tax:{
+      rate:'22.5% standard (oil & gas: 40.55%, special regime; SCZ: lower rates by activity)',
+      regime:'Income Tax Law 91 of 2005 as amended',
+      free_zone:'Public free zones: exempt from CT (10-year exemption common); special zones: reduced rates',
+      losses:'Carried forward 5 years',
+      groups:'No tax consolidation regime',
+    },
+    vat:{ rate:'14% standard (raised from 13% in 2017). 5% on machinery/equipment for production use. 0% exports.',
+          threshold:'Mandatory: EGP 500,000 turnover',
+          filing:'Monthly, due by end of month following.',
+          e_invoicing:'Mandatory for all VAT registrants since 2023; B2C e-receipts also mandatory.' },
+    other:[
+      'Withholding Tax: 1-5% on local payments / 20% royalties + services to non-residents',
+      'Stamp Duty: graduated, 0.4% on documents, contracts',
+      'Real Estate Tax: 10% on annual rental value > EGP 24,000 (non-commercial); commercial scaled',
+      'Capital Gains Tax: 22.5% on listed shares (suspended for residents until 2025)',
+      'Social Insurance: ~26% (employer 18.75% + employee 11%)',
+    ],
+    deadlines:[
+      'CT return: within 4 months of fiscal year end',
+      'VAT return: end of month following',
+      'WHT: 15th of month following',
+      'Quarterly advance payments for CT',
+    ],
+    penalties:'Late CT filing: EGP 3,000-50,000. Late VAT: 1.5% per month + delay penalty. Tax evasion: 50-200% of evaded amount + criminal liability.',
+    advisor:'Authority: Egyptian Tax Authority (ETA). E-invoicing through ETA portal. Commercial registry coordinates with tax.' },
+
+  { country:'Oman', label:'Oman',
+    corporate_tax:{
+      rate:'15% standard / 3% small enterprises (turnover < OMR 100k, capital < OMR 50k, ≤ 15 employees)',
+      regime:'Income Tax Law 28 of 2009',
+      free_zone:'Free zones (Sohar, Salalah, Duqm): up to 30 years exemption depending on zone',
+      losses:'Carried forward 5 years',
+    },
+    vat:{ rate:'5% standard (introduced April 2021). 0% exports. Exempt: financial services, healthcare, education.',
+          threshold:'Mandatory: OMR 38,500',
+          filing:'Quarterly, due 30 days after period end' },
+    other:[
+      'Withholding Tax: 10% on royalties, R&D, management fees, etc. paid to non-residents',
+      'Customs Duty: 5% standard',
+      'Tourism levy: 4% on hotel & restaurant bills (in addition to VAT)',
+      'Municipality tax: 5% on rents, 2% on hotel revenues',
+    ],
+    deadlines:['CT return: within 4 months of FY end','VAT return: 30 days after quarter','WHT: 14 days after payment'],
+    penalties:'CT late filing: OMR 100-2,000. VAT late: 5% of tax + OMR 50/day.',
+    advisor:'Authority: Oman Tax Authority (OTA) — taxoman.gov.om' },
+
+  { country:'Qatar', label:'Qatar',
+    corporate_tax:{
+      rate:'10% on foreign-owned share of profits; Qatari/GCC-owned share exempt',
+      regime:'Income Tax Law 24 of 2018',
+      free_zone:'QFC, QSTP: tax holidays of 20 years on qualifying activities',
+    },
+    vat:{ rate:'No VAT yet (planned but not implemented as of 2026)' },
+    other:[
+      'Withholding Tax: 5% on services, royalties, interest paid to non-residents',
+      'Customs Duty: 5% standard',
+      'Excise Tax: 100% tobacco/energy drinks, 50% carbonated drinks',
+    ],
+    deadlines:['CT return: within 4 months of FY end (extendable)'],
+    penalties:'Late filing: QAR 100/day capped at QAR 36,000. Underpayment: 1.5% per month.',
+    advisor:'Authority: General Tax Authority (GTA) Qatar' },
+
+  { country:'Kuwait', label:'Kuwait',
+    corporate_tax:{
+      rate:'15% on foreign-owned share; Kuwaiti/GCC-owned share exempt from CT',
+      regime:'Income Tax Decree 3 of 1955 as amended',
+      free_zone:'No general tax holiday regime',
+    },
+    vat:{ rate:'No VAT yet (planned but not implemented as of 2026)' },
+    other:[
+      'Zakat: 1% on profit of Kuwaiti shareholding companies',
+      'National Labor Support Tax (NLST): 2.5% on profits of Kuwaiti listed companies',
+      'KFAS (Kuwait Foundation for Advancement of Sciences): 1% of net profit',
+      'Withholding obligation: 5% retention from contracts to foreign entities',
+    ],
+    deadlines:['CT return: within 3.5 months of year-end (extendable to 9.5 months)'],
+    penalties:'1% per month delay penalty.',
+    advisor:'Authority: Ministry of Finance — Department of Income Tax' },
+
+  { country:'Bahrain', label:'Bahrain',
+    corporate_tax:{
+      rate:'No general CT (oil & gas: 46%). Domestic Minimum Top-up Tax (DMTT) 15% for in-scope MNEs from 2025.',
+      regime:'No general CT law for non-oil businesses',
+    },
+    vat:{ rate:'10% standard (raised from 5% in Jan 2022). 0% exports + specified. Exempt: residential lease, financial services without fee.',
+          threshold:'Mandatory: BHD 37,500 / Voluntary: BHD 18,750',
+          filing:'Monthly (large) or quarterly. Due last day of month after period.' },
+    other:['Customs Duty: 5% standard','Social Insurance: ~19% (employer 12% + employee 7%)','No personal income tax'],
+    deadlines:['VAT return: last day of month after period'],
+    penalties:'VAT late filing: BHD 100-5,000 + 5% of tax per month.',
+    advisor:'Authority: National Bureau for Revenue (NBR) — nbr.gov.bh' },
+]
+
+function findTaxRules(country) {
+  if (!country) return null
+  const q = country.toLowerCase()
+  return TAX_KB.find(t => t.country.toLowerCase() === q || t.label.toLowerCase().includes(q) ||
+    (q.includes('emirates') || q.includes('uae') || q.includes('dubai')) && t.country === 'UAE' ||
+    (q.includes('saudi') || q === 'ksa') && t.country === 'KSA' ||
+    q.includes(t.country.toLowerCase())
+  )
+}
+
+function taxContext(t) {
+  if (!t) return ''
+  return `\n\n## TAX REGIME — ${t.label}
+- **Corporate Tax:** ${t.corporate_tax.rate}
+- **CT regime:** ${t.corporate_tax.regime}${t.corporate_tax.free_zone ? '\n- **Free zone:** ' + t.corporate_tax.free_zone : ''}${t.corporate_tax.losses ? '\n- **Losses:** ' + t.corporate_tax.losses : ''}
+- **VAT/Sales Tax:** ${(t.vat || t.sales_tax)?.rate || 'N/A'}${(t.vat || t.sales_tax)?.threshold ? ' · Threshold: ' + (t.vat || t.sales_tax).threshold : ''}
+- **Other:** ${t.other.join(' · ')}
+- **Key deadlines:** ${t.deadlines.join(' · ')}
+- **Penalties:** ${t.penalties}
+- **Authority:** ${t.advisor}
+
+When the CEO asks tax questions, cite this regime by name + the specific rate/deadline. Do not give generic global advice.`
+}
+
 // Match S.co.industry to a sector profile via tag overlap
 function findSector(industryStr) {
   if (!industryStr) return null
@@ -2427,7 +2635,7 @@ You do NOT just report numbers. You interpret them, challenge them, and give the
 | DPO (Days Payable Outstanding) | ${dpo} days | — |
 
 **Burn Rate:** ${S.co.currency} ${fmt(Math.max(0, burnRate))} / month ${burnRate > 0 ? '🔴 BURNING CASH' : '🟢 CASH POSITIVE'}
-${sectorContext(findSector(S.co.industry))}
+${sectorContext(findSector(S.co.industry))}${taxContext(findTaxRules(S.co.country))}
 ---
 
 ## BUSINESS CONTEXT
@@ -5180,18 +5388,60 @@ async function askTax(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildZakiSystemPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
+      buildZakiSystemPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a tax advisor for ${(findTaxRules(S.co.country)?.label) || S.co.country || 'this market'}. Apply that country's actual tax law, citing the regime by name. Give specific rates, thresholds, deadlines, and filing requirements. Always end with concrete action items and deadlines.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
+function renderTaxRegimeSummary() {
+  const t = findTaxRules(S.co.country)
+  const desc = document.getElementById('tax-regime-desc')
+  const summary = document.getElementById('tax-regime-summary')
+  if (!t) {
+    if (desc) desc.textContent = 'Country-specific tax intelligence — set your country in Settings to load the regime.'
+    if (summary) summary.innerHTML = ''
+    return
+  }
+  if (desc) desc.textContent = `${t.label} regime — rates, deadlines, filings · live KB`
+  if (!summary) return
+  const v = t.vat || t.sales_tax || {}
+  summary.innerHTML = `
+    <div class="card" style="padding:16px 18px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+        <div>
+          <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Corporate Tax</div>
+          <div style="font-size:.88rem;color:var(--text);margin-top:4px;line-height:1.5">${t.corporate_tax.rate}</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">VAT / Sales Tax</div>
+          <div style="font-size:.88rem;color:var(--text);margin-top:4px;line-height:1.5">${v.rate || 'None'}${v.threshold ? '<br><span style="font-size:.78rem;color:var(--text-3)">Threshold: ' + v.threshold + '</span>' : ''}</div>
+        </div>
+        <div>
+          <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Authority</div>
+          <div style="font-size:.85rem;color:var(--text-2);margin-top:4px;line-height:1.5">${t.advisor}</div>
+        </div>
+      </div>
+      <details style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+        <summary style="cursor:pointer;font-size:.82rem;font-weight:500;color:var(--text-2)">Deadlines, penalties &amp; other taxes</summary>
+        <div style="margin-top:10px;font-size:.82rem;color:var(--text-2);line-height:1.7">
+          <div><strong>Deadlines:</strong> ${t.deadlines.join(' · ')}</div>
+          <div style="margin-top:6px"><strong>Other taxes:</strong> ${t.other.join(' · ')}</div>
+          <div style="margin-top:6px"><strong>Penalties:</strong> ${t.penalties}</div>
+        </div>
+      </details>
+    </div>`
+}
+
 function loadTax(force) {
+  renderTaxRegimeSummary()
   if (!force && document.getElementById('tax-content')?.textContent?.trim()) return
-  askTax(`Give us a complete UAE tax health check for ${S.co.name||'our company'}:
-1. UAE Corporate Tax: estimated liability at 9% on our net profit, and any exemptions/deductions we should apply
-2. UAE VAT: estimated output VAT, input VAT recovery, net VAT payable, and filing status
-3. ESR: whether our activities trigger ESR obligations
-4. Key deadlines and compliance actions needed in the next 90 days
-5. Top 3 tax planning opportunities we should act on now`)
+  const t = findTaxRules(S.co.country)
+  const country = t?.label || S.co.country || 'your country'
+  askTax(`Give us a complete tax health check for ${S.co.name||'our company'} based in ${country}:
+1. Corporate Tax / Zakat: estimated liability based on our net profit using ${country}'s actual rates and any exemptions
+2. VAT / Sales Tax: estimated output, input recovery, net payable, and filing cadence
+3. Other taxes triggered by our profile (WHT, ESR, RETT, NLST, Zakat, etc. as applicable)
+4. Key deadlines and compliance actions in the next 90 days
+5. Top 3 tax planning opportunities to act on this quarter`)
 }
 
 // ═══════════════════════════════════════════
