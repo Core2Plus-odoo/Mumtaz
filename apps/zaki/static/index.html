@@ -17,78 +17,99 @@ a{color:inherit;text-decoration:none}
 
 /* ══ MUMTAZ DESIGN TOKENS — Light (default) ══ */
 :root{
-  /* Backgrounds */
-  --bg:      #f8fafc;
-  --bg-1:    #f1f5f9;
-  --bg-2:    #e8eef6;
+  /* Backgrounds — warm neutrals, not cold gray */
+  --bg:      #faf9f6;
+  --bg-1:    #f4f2ec;
+  --bg-2:    #ece9e0;
   --surface: #ffffff;
   --card:    #ffffff;
-  --card-2:  #f8fafc;
+  --card-2:  #faf9f6;
 
-  /* Brand */
-  --blue:    #3b82f6;
-  --blue-d:  #2563eb;
-  --purple:  #8b5cf6;
-  --cyan:    #06b6d4;
-  --green:   #10b981;
-  --amber:   #f59e0b;
-  --red:     #ef4444;
-  --grad:    linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);
-  --grad-h:  linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);
+  /* Brand — Mumtaz gold + supporting accents */
+  --brand:   #b8893e;
+  --brand-d: #8e6624;
+  --brand-l: #d4ad6f;
+  --blue:    #b8893e;          /* legacy alias → brand for backward-compat */
+  --blue-d:  #8e6624;
+  --purple:  #6b5b95;          /* muted desaturated, secondary-only */
+  --cyan:    #2c7c7d;          /* deep teal, not neon */
+  --green:   #2f7f5e;          /* sage emerald — calmer than #10b981 */
+  --amber:   #c8954e;          /* warm muted, close to brand */
+  --red:     #b54848;          /* terra cotta, not neon */
+  --grad:    #b8893e;          /* gradients flattened to solid brand */
+  --grad-h:  #8e6624;
 
-  /* Text */
-  --text:    #0f172a;
-  --text-2:  #475569;
-  --text-3:  #94a3b8;
+  /* Text — deep ink, not pure black */
+  --text:    #1a1f2e;
+  --text-2:  #4a5160;
+  --text-3:  #8a8f9a;
 
-  /* Borders */
-  --border:  #e2e8f0;
-  --border-2:#cbd5e1;
+  /* Borders — warm */
+  --border:  #ece8df;
+  --border-2:#d8d2c4;
 
   /* Semantic */
-  --success-bg: rgba(16,185,129,.1);
-  --danger-bg:  rgba(239,68,68,.1);
-  --warn-bg:    rgba(245,158,11,.1);
-  --blue-bg:    rgba(59,130,246,.08);
-  --purple-bg:  rgba(139,92,246,.08);
+  --success-bg: rgba(47,127,94,.08);
+  --danger-bg:  rgba(181,72,72,.08);
+  --warn-bg:    rgba(200,149,78,.10);
+  --blue-bg:    rgba(184,137,62,.08);
+  --purple-bg:  rgba(107,91,149,.08);
 
   /* UI */
-  --font:    'Inter', system-ui, sans-serif;
-  --mono:    'JetBrains Mono', 'Courier New', monospace;
-  --radius:  10px;
-  --radius-lg: 14px;
-  --shadow:  0 4px 24px rgba(15,23,42,.1);
-  --shadow-blue: 0 4px 20px rgba(59,130,246,.3);
+  --font:    'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono:    'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+  --radius:  8px;
+  --radius-lg: 12px;
+  --shadow:  0 1px 3px rgba(26,31,46,.04), 0 8px 24px rgba(26,31,46,.06);
+  --shadow-blue: 0 2px 12px rgba(184,137,62,.18);
   --sidebar: 224px;
   --topbar:  52px;
-  --tr: .17s ease;
+  --tr: .15s ease;
 }
 
 /* ══ Dark theme ══ */
 body.dark{
-  --bg:      #07101e;
-  --bg-1:    #0b1829;
-  --bg-2:    #0f2040;
-  --surface: #111e33;
-  --card:    #162338;
-  --card-2:  #1a2a42;
-  --text:    #f0f6ff;
-  --text-2:  #94a3b8;
-  --text-3:  #64748b;
-  --border:  rgba(255,255,255,.07);
-  --border-2:rgba(255,255,255,.13);
-  --success-bg: rgba(16,185,129,.12);
-  --danger-bg:  rgba(239,68,68,.12);
-  --warn-bg:    rgba(245,158,11,.12);
-  --blue-bg:    rgba(59,130,246,.12);
-  --purple-bg:  rgba(139,92,246,.12);
-  --shadow:  0 4px 24px rgba(0,0,0,.4);
+  --bg:      #0c1320;
+  --bg-1:    #111a2a;
+  --bg-2:    #16223a;
+  --surface: #15202f;
+  --card:    #1a2739;
+  --card-2:  #1f2d42;
+  --brand:   #d4ad6f;
+  --brand-d: #b8893e;
+  --brand-l: #e0c08a;
+  --blue:    #d4ad6f;
+  --blue-d:  #b8893e;
+  --purple:  #8b7cb8;
+  --cyan:    #5fb0b1;
+  --green:   #4ea582;
+  --amber:   #d4ad6f;
+  --red:     #d46b6b;
+  --grad:    #d4ad6f;
+  --grad-h:  #b8893e;
+  --text:    #ecead8;
+  --text-2:  #a8b0c0;
+  --text-3:  #6b7585;
+  --border:  rgba(236,234,216,.07);
+  --border-2:rgba(236,234,216,.14);
+  --success-bg: rgba(78,165,130,.12);
+  --danger-bg:  rgba(212,107,107,.12);
+  --warn-bg:    rgba(212,173,111,.12);
+  --blue-bg:    rgba(212,173,111,.10);
+  --purple-bg:  rgba(139,124,184,.10);
+  --shadow:  0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  --shadow-blue: 0 2px 14px rgba(212,173,111,.22);
 }
 
 /* ── Base ── */
-body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-p{margin:0;color:var(--text-2)}
-h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  font-feature-settings:"cv11","ss01","ss03";  /* refined Inter glyphs */
+}
+p{margin:0;color:var(--text-2);line-height:1.55}
+h1,h2,h3,h4{color:var(--text);letter-spacing:-.018em;line-height:1.2;font-weight:600}
+.num,.kpi-value,.card-meta{font-variant-numeric:tabular-nums}
 
 /* ── Utility ── */
 .hide{display:none!important}
@@ -104,7 +125,7 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
 #setup{
   display:flex;align-items:center;justify-content:center;
   min-height:100vh;background:var(--bg);padding:24px;
-  background-image:radial-gradient(ellipse at 50% 0%,rgba(59,130,246,.15),transparent 60%);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(184,137,62,.15),transparent 60%);
 }
 .setup-card{
   background:var(--surface);border:1px solid var(--border-2);
@@ -116,7 +137,7 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
   width:38px;height:38px;border-radius:10px;background:var(--grad);
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-weight:800;font-size:1rem;
-  box-shadow:0 4px 14px rgba(59,130,246,.4);
+  box-shadow:0 4px 14px rgba(184,137,62,.4);
 }
 .setup-logo{font-size:1.1rem;font-weight:700;color:var(--text)}
 .setup-logo span{color:var(--text-2);font-weight:400}
@@ -130,7 +151,7 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
   border-radius:8px;padding:10px 13px;font-size:.88rem;
   transition:border-color var(--tr);
 }
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand);outline:none;box-shadow:0 0 0 3px rgba(184,137,62,.15)}
 .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
 .field textarea{resize:vertical;min-height:72px}
 .field input::placeholder,.field textarea::placeholder{color:var(--text-3)}
@@ -141,7 +162,7 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.02em;line-height:1.15}
   transition:opacity var(--tr),box-shadow var(--tr);
   box-shadow:var(--shadow-blue);
 }
-.btn-primary:hover{opacity:.92;box-shadow:0 6px 28px rgba(59,130,246,.45)}
+.btn-primary:hover{opacity:.92;box-shadow:0 6px 28px rgba(184,137,62,.45)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .btn-secondary{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -183,14 +204,14 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
   width:30px;height:30px;border-radius:8px;background:var(--grad);
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-weight:800;font-size:.85rem;
-  box-shadow:0 2px 10px rgba(59,130,246,.35);
+  box-shadow:0 2px 10px rgba(184,137,62,.35);
 }
 .topbar-name{font-size:.95rem;font-weight:700;color:var(--text);letter-spacing:-.01em}
 .topbar-sep{width:1px;height:20px;background:var(--border-2);flex-shrink:0}
 .topbar-product{
   font-size:.8rem;font-weight:600;color:var(--blue);
   background:var(--blue-bg);padding:3px 10px;border-radius:20px;
-  border:1px solid rgba(59,130,246,.25);
+  border:1px solid rgba(184,137,62,.25);
 }
 .topbar-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
 .topbar-link{
@@ -201,7 +222,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .topbar-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .topbar-link.cta{
   background:var(--grad);color:#fff;
-  box-shadow:0 2px 10px rgba(59,130,246,.3);
+  box-shadow:0 2px 10px rgba(184,137,62,.3);
 }
 .topbar-link.cta:hover{opacity:.9}
 #topbar-api-dot{
@@ -242,7 +263,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 }
 .nav-item:hover{color:var(--text-2);background:rgba(255,255,255,.04)}
 .nav-item.active{
-  color:var(--blue);background:rgba(59,130,246,.1);
+  color:var(--blue);background:rgba(184,137,62,.1);
   border-left-color:var(--blue);font-weight:500;
 }
 .nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.6}
@@ -269,8 +290,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .panel-header{margin-bottom:24px}
 .panel-title{font-size:1.6rem;font-weight:700;color:var(--text);letter-spacing:-.025em}
 .panel-title em{
-  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;font-style:normal;
+  color:var(--brand);font-style:normal;font-weight:600;
 }
 .panel-desc{color:var(--text-3);font-size:.84rem;margin-top:4px}
 
@@ -339,13 +359,13 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .briefing-player{
   background:var(--surface);border:1px solid var(--border-2);border-radius:12px;
   padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:18px;
-  background-image:linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.06));
+  background-image:linear-gradient(135deg,rgba(184,137,62,.06),rgba(107,91,149,.06));
 }
 .briefing-zaki{
   width:42px;height:42px;border-radius:50%;background:var(--grad);
   color:#fff;display:flex;align-items:center;justify-content:center;
   font-size:1rem;font-weight:700;flex-shrink:0;
-  box-shadow:0 4px 14px rgba(59,130,246,.35);
+  box-shadow:0 4px 14px rgba(184,137,62,.35);
 }
 .briefing-center{flex:1;min-width:0}
 .briefing-title{color:var(--text-2);font-size:.84rem;font-weight:500;margin-bottom:6px}
@@ -361,7 +381,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .btn-play{
   width:38px;height:38px;border-radius:50%;background:var(--grad);
   color:#fff;display:flex;align-items:center;justify-content:center;
-  transition:opacity var(--tr);flex-shrink:0;box-shadow:0 2px 10px rgba(59,130,246,.3);
+  transition:opacity var(--tr);flex-shrink:0;box-shadow:0 2px 10px rgba(184,137,62,.3);
 }
 .btn-play:hover{opacity:.88}
 .briefing-text{
@@ -390,7 +410,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
   background:var(--surface);border:1px solid var(--border);
   border-radius:10px;padding:12px 15px;flex:1;min-width:0;
 }
-.msg.user .msg-bubble{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2)}
+.msg.user .msg-bubble{background:rgba(184,137,62,.08);border-color:rgba(184,137,62,.2)}
 .msg-meta{font-size:.7rem;color:var(--text-3);margin-bottom:5px;display:flex;align-items:center;gap:7px}
 .msg-content{font-size:.86rem;line-height:1.72;color:var(--text-2)}
 .msg-content p{margin-bottom:.55em}.msg-content p:last-child{margin-bottom:0}
@@ -419,7 +439,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
   background:var(--surface);border:1px solid var(--border-2);
   border-radius:12px;padding:10px 12px;transition:border-color var(--tr);
 }
-.chat-input-row:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+.chat-input-row:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(184,137,62,.1)}
 #chat-input{flex:1;resize:none;font-size:.87rem;color:var(--text);line-height:1.5;max-height:130px;overflow-y:auto;min-height:22px;background:transparent}
 #chat-input::placeholder{color:var(--text-3)}
 .btn-voice{
@@ -430,24 +450,36 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .btn-voice:hover{border-color:var(--blue);color:var(--blue)}
 .btn-voice.recording{background:var(--danger-bg);border-color:var(--red);color:var(--red);animation:pulse 1s infinite}
 .btn-voice.processing{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
+.voice-status{display:none;align-items:center;gap:8px;font-size:.74rem;font-weight:500;padding:6px 12px;border-radius:6px;align-self:flex-start}
+.voice-status.show{display:inline-flex}
+.voice-status.recording{background:var(--danger-bg);color:var(--red)}
+.voice-status.processing{background:var(--blue-bg);color:var(--blue)}
+.voice-status .dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .btn-send{
   width:32px;height:32px;border-radius:50%;background:var(--grad);
   color:#fff;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:opacity var(--tr);box-shadow:0 2px 8px rgba(59,130,246,.35);
+  flex-shrink:0;transition:opacity var(--tr);box-shadow:0 2px 8px rgba(184,137,62,.35);
 }
 .btn-send:hover{opacity:.85}
 .btn-send:disabled{background:var(--card);color:var(--text-3);box-shadow:none}
 
 /* ── Opp / Risk cards ── */
 .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.opp-card,.risk-card{
+.opp-card,.risk-card,.invest-card,.market-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);padding:16px 18px;transition:border-color var(--tr),box-shadow var(--tr);
 }
-.opp-card:hover,.risk-card:hover{border-color:var(--border-2);box-shadow:var(--shadow)}
+.opp-card:hover,.risk-card:hover,.invest-card:hover,.market-card:hover{border-color:var(--border-2);box-shadow:var(--shadow)}
 .opp-card{border-top:2px solid var(--green)}
 .risk-card{border-top:2px solid var(--red)}
+.invest-card{border-top:2px solid var(--purple,#a855f7)}
+.market-card{border-top:2px solid var(--cyan,#06b6d4)}
+.insight-card{border-top:2px solid var(--blue)}
+.investopt-card{border-top:2px solid var(--amber)}
+.seo-card{border-top:2px solid var(--green)}
+.kw-pill{display:inline-block;background:var(--card);border:1px solid var(--border-2);border-radius:14px;padding:4px 11px;font-size:.75rem;color:var(--text-2);margin:3px 4px 3px 0;font-family:var(--mono)}
+.kw-pill .vol{color:var(--text-3);margin-left:6px;font-size:.7rem}
 .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
 .card-name{font-weight:600;font-size:.9rem;color:var(--text)}
 .card-body{font-size:.81rem;color:var(--text-3);line-height:1.6;margin-bottom:9px}
@@ -458,7 +490,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
   background:var(--card);color:var(--text-3);border:1px solid var(--border-2);
   transition:all var(--tr);
 }
-.btn-card-action:hover{background:var(--blue-bg);color:var(--blue);border-color:rgba(59,130,246,.3)}
+.btn-card-action:hover{background:var(--blue-bg);color:var(--blue);border-color:rgba(184,137,62,.3)}
 
 /* ── Scenarios ── */
 .scenario-templates{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}
@@ -606,6 +638,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
         Transaction Ledger
       </div>
+      <div class="nav-item" onclick="showPanel('books')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Bookkeeping
+      </div>
     </div>
 
     <div class="nav-section">
@@ -637,6 +673,34 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div class="nav-item" onclick="showPanel('board')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Board Pack
+      </div>
+      <div class="nav-item" onclick="showPanel('feasibility')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Feasibility Study
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Intelligence</div>
+      <div class="nav-item" onclick="showPanel('insights')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/><path d="M11 7v4l3 2"/></svg>
+        Business Insights
+      </div>
+      <div class="nav-item" onclick="showPanel('invest')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Where to Invest
+      </div>
+      <div class="nav-item" onclick="showPanel('investopts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg>
+        Investment Options
+      </div>
+      <div class="nav-item" onclick="showPanel('market')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Market Intelligence
+      </div>
+      <div class="nav-item" onclick="showPanel('seo')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        SEO &amp; Keywords
       </div>
     </div>
 
@@ -670,10 +734,14 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         Settings
       </div>
+      <a class="nav-item" href="/chat" style="text-decoration:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Classic Chat
+      </a>
     </div>
 
     <div class="sidebar-footer">
-      <div id="nav-api-banner" class="hide" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:8px;padding:9px 11px;margin-bottom:12px;cursor:pointer" onclick="showPanel('settings')">
+      <div id="nav-api-banner" class="hide" style="background:rgba(184,137,62,.1);border:1px solid rgba(184,137,62,.25);border-radius:8px;padding:9px 11px;margin-bottom:12px;cursor:pointer" onclick="showPanel('settings')">
         <div style="font-size:.72rem;color:var(--blue);font-weight:600">⚡ Connect AI</div>
         <div style="font-size:.68rem;color:var(--text-3);margin-top:2px">Add API key or Mumtaz login</div>
       </div>
@@ -760,6 +828,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
       <div id="chat-messages"></div>
       <div class="chat-input-area">
+        <div id="voice-status" class="voice-status"><span class="dot"></span><span id="voice-status-text">Listening…</span></div>
         <div class="chat-input-row">
           <textarea id="chat-input" rows="1" placeholder="Ask Zaki anything… e.g. 'Should I take this contract?' or 'Run a P&L analysis'"
             onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
@@ -1030,6 +1099,170 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
     </div>
 
+    <!-- ── WHERE TO INVEST ── -->
+    <div class="panel" id="panel-invest">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Where to <em>Invest</em></div>
+            <div class="panel-desc">Capital-allocation guidance — where each next dirham/riyal should go</div>
+          </div>
+          <button class="btn-secondary" onclick="loadInvest(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="invest-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>
+      </div>
+    </div>
+
+    <!-- ── FEASIBILITY STUDY ── -->
+    <div class="panel" id="panel-feasibility">
+      <div class="panel-header">
+        <div class="panel-title">Feasibility <em>Study</em></div>
+        <div class="panel-desc">Evaluate a new venture, expansion, or product line — get a structured GO / NO-GO with numbers</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Tell Zaki about the idea</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field" style="grid-column:1/-1"><label>Business idea / venture</label>
+            <textarea id="feas-idea" rows="2" placeholder="e.g. Open a bakery in JLT, Dubai · Launch a B2B SaaS for restaurants · Acquire a competitor"
+              style="width:100%;resize:none;background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);font-family:var(--font)"></textarea></div>
+          <div class="field"><label>Target market / customer</label>
+            <input id="feas-market" type="text" placeholder="e.g. SME restaurants in UAE"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
+          <div class="field"><label>Capital available (<span id="feas-currency">AED</span>)</label>
+            <input id="feas-capital" type="number" placeholder="500000"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
+          <div class="field"><label>Timeline to launch</label>
+            <select id="feas-timeline" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%">
+              <option value="3 months">3 months</option>
+              <option value="6 months" selected>6 months</option>
+              <option value="12 months">12 months</option>
+              <option value="24 months">24 months</option>
+            </select></div>
+          <div class="field"><label>Revenue model</label>
+            <input id="feas-model" type="text" placeholder="e.g. Subscription · Transaction fee · Retail · Service hours"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:14px;max-width:200px" onclick="runFeasibility()">Run Feasibility Study</button>
+      </div>
+      <div id="feas-verdict" style="margin-bottom:14px"></div>
+      <div class="card">
+        <div class="card-title">Study report</div>
+        <div id="feas-output" class="markdown-body" style="font-size:.87rem;line-height:1.7;color:var(--text-2);min-height:60px">
+          <span style="color:var(--text-3)">Fill in the form above and click "Run Feasibility Study" — Zaki will produce a full GO/NO-GO analysis with TAM, capital needs, breakeven, risks, and 90-day next steps.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOOKKEEPING ASSISTANT ── -->
+    <div class="panel" id="panel-books">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Bookkeeping <em>Assistant</em></div>
+            <div class="panel-desc">Catches uncategorized entries, likely duplicates, missing references, and reconciliation gaps</div>
+          </div>
+          <button class="btn-secondary" onclick="loadBooks(true)">↻ Re-scan</button>
+        </div>
+      </div>
+      <div id="books-summary" style="margin-bottom:14px"></div>
+      <div id="books-issues">
+        <div style="color:var(--text-3);font-size:.85rem"><span class="spinner"></span> Scanning your books…</div>
+      </div>
+    </div>
+
+    <!-- ── SEO & KEYWORDS ── -->
+    <div class="panel" id="panel-seo">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">SEO &amp; <em>Keywords</em></div>
+            <div class="panel-desc">Keyword opportunities, content topics, and on-page priorities tuned to your industry and market</div>
+          </div>
+          <button class="btn-secondary" onclick="loadSeo(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:.78rem;color:var(--text-3)">Website (optional):</label>
+        <input id="seo-website" type="text" placeholder="example.com"
+          style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text);min-width:220px">
+        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px">Audience:</label>
+        <select id="seo-audience" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)">
+          <option value="B2B">B2B</option>
+          <option value="B2C">B2C</option>
+          <option value="Both" selected>Both</option>
+        </select>
+      </div>
+      <div id="seo-keywords" class="card" style="margin-bottom:12px;display:none">
+        <div class="card-title">Keyword opportunities</div>
+        <div id="seo-kw-list"></div>
+      </div>
+      <div class="cards-grid" id="seo-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Building SEO plan…</div>
+      </div>
+    </div>
+
+    <!-- ── BUSINESS INSIGHTS (DB SKIM) ── -->
+    <div class="panel" id="panel-insights">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Business <em>Insights</em></div>
+            <div class="panel-desc">Patterns Zaki found in your transactions, customers, vendors, and trends</div>
+          </div>
+          <button class="btn-secondary" onclick="loadInsights(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="insights-summary" style="margin-bottom:14px"></div>
+      <div class="cards-grid" id="insights-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Skimming your books…</div>
+      </div>
+    </div>
+
+    <!-- ── INVESTMENT OPTIONS (PERSONAL / EXTERNAL) ── -->
+    <div class="panel" id="panel-investopts">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Investment <em>Options</em></div>
+            <div class="panel-desc">Where to park surplus cash <em>outside</em> the business — stocks, sukuk, real estate, funds — sized to your market</div>
+          </div>
+          <button class="btn-secondary" onclick="loadInvestOpts(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:.78rem;color:var(--text-3)">Risk profile:</label>
+        <select id="investopt-risk" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)" onchange="loadInvestOpts(true)">
+          <option value="conservative">Conservative</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="growth">Growth</option>
+        </select>
+        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px">Surplus to deploy:</label>
+        <input id="investopt-amount" type="number" placeholder="100000" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text);width:130px">
+        <span style="font-size:.78rem;color:var(--text-3)" id="investopt-currency">AED</span>
+      </div>
+      <div class="cards-grid" id="investopts-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Building investment menu…</div>
+      </div>
+    </div>
+
+    <!-- ── MARKET INTELLIGENCE ── -->
+    <div class="panel" id="panel-market">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Market <em>Intelligence</em></div>
+            <div class="panel-desc">Macro, regulatory, and competitive context for your industry &amp; market</div>
+          </div>
+          <button class="btn-secondary" onclick="loadMarket(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="market-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Scanning market signals…</div>
+      </div>
+    </div>
+
     <!-- ── IFRS ADVISOR ── -->
     <div class="panel" id="panel-ifrs">
       <div class="panel-header">
@@ -1164,6 +1397,19 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
             <button class="btn-primary" style="max-width:160px" onclick="loginZakiServer()">Connect Account</button>
             <button class="btn-outline" onclick="logoutZakiServer()" id="btn-zaki-logout" style="display:none">Disconnect</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Odoo Sync -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Odoo — Live Financial Sync <span style="font-size:.72rem;color:var(--text-3);font-weight:400;margin-left:6px">(once you've signed in above)</span></div>
+        <div style="font-size:.83rem;color:var(--text-3);margin-bottom:12px">
+          Pulls the last 12 months of posted invoices and bills from your Odoo company into Zaki's ledger. AR / AP outstanding update automatically.
+        </div>
+        <div id="odoo-sync-status" style="font-size:.82rem;color:var(--text-2);margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" id="btn-odoo-sync" style="max-width:200px" onclick="syncFromOdoo()">⇣ Sync from Odoo</button>
+          <button class="btn-outline" onclick="clearOdooTransactions()">Clear Odoo entries</button>
         </div>
       </div>
 
@@ -1421,14 +1667,14 @@ function kbContext(kbObjs) {
 
 // ═══════════════════════════════════════════
 const S = {
-  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: 'https://zaki.mumtaz.digital' },
+  keys: { anthropic: '', eleven: '', elevenVoice: 'pNInz6obpgDQGcFmaJgB', zakiJwt: '', zakiEmail: '', zakiUrl: '' },
   co: { name: '', industry: '', country: '', currency: 'AED' },
   me: { name: '', firstName: '' },
   fin: { rev:0, exp:0, cash:0, payroll:0, ar:0, arOverdue:0, ap:0, vat:0 },
   ctx: { pipeline:'', clients:'', worry:'' },
   chat: [],
   transactions: [],
-  prefs: { readAloud: false },
+  prefs: { readAloud: false, autoPlayBriefing: true },
   _cache: {}
 }
 
@@ -1463,7 +1709,12 @@ function load() {
       if (!S.transactions) S.transactions = []
       if (!S.keys.zakiJwt) S.keys.zakiJwt = ''
       if (!S.keys.zakiEmail) S.keys.zakiEmail = ''
-      if (!S.keys.zakiUrl) S.keys.zakiUrl = 'https://zaki.mumtaz.digital'
+      // Migrate stale defaults to current origin so /api/v1 calls hit our nginx
+      if (!S.keys.zakiUrl ||
+          S.keys.zakiUrl === 'https://zaki.mumtaz.digital' ||
+          S.keys.zakiUrl === 'https://app.mumtaz.digital') {
+        S.keys.zakiUrl = ''
+      }
     }
   } catch(e){}
   computeFin()
@@ -1493,7 +1744,9 @@ function buildTransactionContext() {
   return `\nTRANSACTION DATA (${txs.length} records in ledger)\nCurrent month: Income ${S.co.currency} ${fmt(ci)} | Expenses ${S.co.currency} ${fmt(ce)} | Net ${S.co.currency} ${fmt(ci-ce)}\nPrior month:   Income ${S.co.currency} ${fmt(pi)} | Expenses ${S.co.currency} ${fmt(pe)} | Net ${S.co.currency} ${fmt(pi-pe)}\nTop expense categories:\n${topCats||'  (none)'}\n6-month trend:\n${trend||'  (insufficient data)'}\nRecent transactions:\n${recent||'  (none)'}`
 }
 
-function buildPrompt() {
+function buildZakiSystemPrompt() {
+  // Builds the canonical Zaki system prompt: identity, live financial snapshot,
+  // company context, and personality rules. Pure function — reads from S, returns string.
   computeFin()
   const f = S.fin
   const net = f.rev - f.exp
@@ -1714,7 +1967,7 @@ function aiReady() { return !!(S.keys.zakiJwt || S.keys.anthropic) }
 
 async function streamClaude(messages, onChunk, systemOverride) {
   if (!S.keys.anthropic) { noKeyPrompt(); throw new Error('No API key') }
-  const sys = systemOverride || buildPrompt()
+  const sys = systemOverride || buildZakiSystemPrompt()
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -1849,9 +2102,17 @@ async function toggleVoice() {
 function setVoiceState(s) {
   voiceState = s
   const btn = document.getElementById('btn-voice')
-  if (!btn) return
-  btn.className = `btn-voice${s==='recording'?' recording':s==='processing'?' processing':''}`
-  btn.title = s === 'recording' ? 'Stop recording' : s === 'processing' ? 'Processing…' : 'Voice input'
+  if (btn) {
+    btn.className = `btn-voice${s==='recording'?' recording':s==='processing'?' processing':''}`
+    btn.title = s === 'recording' ? 'Stop recording' : s === 'processing' ? 'Processing…' : 'Voice input'
+  }
+  const status = document.getElementById('voice-status')
+  const text = document.getElementById('voice-status-text')
+  if (status && text) {
+    status.classList.remove('show', 'recording', 'processing')
+    if (s === 'recording') { status.classList.add('show', 'recording'); text.textContent = 'Listening…' }
+    else if (s === 'processing') { status.classList.add('show', 'processing'); text.textContent = 'Transcribing…' }
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1928,6 +2189,21 @@ function showPanel(id) {
   if (id === 'health' && !S._cache.health) loadHealth()
   if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
   if (id === 'risks' && !S._cache.risks) loadRisks()
+  if (id === 'insights' && !S._cache.insights) loadInsights()
+  if (id === 'seo' && !S._cache.seo) loadSeo()
+  else if (id === 'seo' && S._cache.seo) renderSeo(S._cache.seo)
+  if (id === 'books') loadBooks()
+  if (id === 'feasibility') {
+    document.getElementById('feas-currency').textContent = S.co.currency
+    if (S._cache.feasibility) restoreFeasibility()
+  }
+  if (id === 'invest' && !S._cache.invest) loadInvest()
+  if (id === 'investopts') {
+    document.getElementById('investopt-currency').textContent = S.co.currency
+    if (!S._cache.investopts) loadInvestOpts()
+    else renderInvestOpts(S._cache.investopts)
+  }
+  if (id === 'market' && !S._cache.market) loadMarket()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
   if (id === 'board' && !S._cache.board) loadBoard()
   if (id === 'settings') { populateSettings(); renderZakiServerStatus() }
@@ -2163,7 +2439,7 @@ function loadDemoData() {
 async function loginZakiServer() {
   const email = document.getElementById('cfg-zaki-email')?.value?.trim()
   const pass = document.getElementById('cfg-zaki-pass')?.value
-  const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
+  const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
   if (!email || !pass) { showToast('Enter email and password', 'error'); return }
   const btn = document.querySelector('[onclick="loginZakiServer()"]')
   if (btn) { btn.textContent = 'Connecting…'; btn.disabled = true }
@@ -2199,6 +2475,57 @@ function logoutZakiServer() {
   if (!aiReady()) document.getElementById('nav-api-banner')?.classList.remove('hide')
 }
 
+async function syncFromOdoo() {
+  const status = document.getElementById('odoo-sync-status')
+  const btn = document.getElementById('btn-odoo-sync')
+  if (!S.keys.zakiJwt) {
+    status.innerHTML = '<span style="color:var(--red)">Sign in to your Mumtaz account first (above).</span>'
+    return
+  }
+  const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
+  status.innerHTML = '<span class="spinner"></span> Pulling invoices and bills from Odoo…'
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…' }
+  try {
+    const r = await fetch(`${url}/api/v1/zaki/sync-odoo`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${S.keys.zakiJwt}` }
+    })
+    if (!r.ok) {
+      const err = await r.json().catch(()=>({detail:r.statusText}))
+      throw new Error(err.detail || `HTTP ${r.status}`)
+    }
+    const data = await r.json()
+    // Replace previous odoo-sourced txs, keep manual + demo entries
+    S.transactions = (S.transactions || []).filter(t => t.source !== 'odoo')
+    S.transactions.push(...data.transactions)
+    if (data.company?.currency) S.co.currency = data.company.currency
+    if (data.company?.name && !S.co.name) S.co.name = data.company.name
+    S.fin.ar = data.ar_outstanding
+    S.fin.ap = data.ap_outstanding
+    S._cache = {} // invalidate cached AI cards
+    save()
+    computeFin()
+    status.innerHTML = `<span style="color:var(--green)">✓ Synced ${data.synced_count} entries from ${data.company?.name || 'Odoo'}. AR ${S.co.currency} ${fmt(data.ar_outstanding)} · AP ${S.co.currency} ${fmt(data.ap_outstanding)}</span>`
+    showToast('Odoo sync complete — dashboard refreshed')
+    renderDashboard?.()
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--red)">Sync failed: ${e.message}</span>`
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⇣ Sync from Odoo' }
+  }
+}
+
+function clearOdooTransactions() {
+  if (!confirm('Remove all Odoo-sourced transactions from your local ledger? Manual entries and demo data are kept.')) return
+  S.transactions = (S.transactions || []).filter(t => t.source !== 'odoo')
+  S._cache = {}
+  save()
+  computeFin()
+  document.getElementById('odoo-sync-status').innerHTML = '<span style="color:var(--text-3)">Cleared Odoo entries.</span>'
+  showToast('Cleared Odoo entries')
+  renderDashboard?.()
+}
+
 function renderZakiServerStatus() {
   const el = document.getElementById('zaki-server-status')
   const logoutBtn = document.getElementById('btn-zaki-logout')
@@ -2227,8 +2554,8 @@ streamClaude = async function(messages, onChunk, systemOverride) {
 }
 
 async function streamZaki(messages, onChunk, systemOverride) {
-  const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
-  const sys = systemOverride || buildPrompt()
+  const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
+  const sys = systemOverride || buildZakiSystemPrompt()
   // Prepend system as first user message if backend doesn't support system param
   const msgs = [{ role: 'user', content: `[System context — follow these instructions for this conversation]\n\n${sys}\n\n---\n\n${messages[0]?.content || ''}` },
     ...messages.slice(1)]
@@ -2621,7 +2948,7 @@ function renderDashboard() {
   if (Number(payrollPct) > 60) actions.push({dot:'#f59e0b', text:`Payroll at ${payrollPct}% of revenue — above 60% threshold. Review headcount plan.`, panel:'health'})
   if (Number(currentRatio) !== '—' && Number(currentRatio) < 1) actions.push({dot:'#ef4444', text:`Current ratio below 1.0 — liquidity risk. AP may be unserviceable.`, panel:'health'})
   if (actions.length === 0) actions.push({dot:'#10b981', text:'No critical issues detected. Review next quarter forecast.', panel:'cashflow'})
-  if (actions.length < 3) actions.push({dot:'#3b82f6', text:'Book monthly board review. Prepare P&L and cash flow summary.', panel:'board'})
+  if (actions.length < 3) actions.push({dot:'#b8893e', text:'Book monthly board review. Prepare P&L and cash flow summary.', panel:'board'})
 
   // SVG donut for health score
   const r = 30, circ = 2 * Math.PI * r
@@ -2773,10 +3100,13 @@ Context: revenue ${S.co.currency} ${fmt(f.rev)}/mo, expenses ${S.co.currency} ${
       full = acc
       el.textContent = acc
       el.classList.remove('loading')
-    }, buildPrompt())
+    }, buildZakiSystemPrompt())
     S._cache.briefing = full
     title.textContent = 'Daily briefing ready'
     save()
+    if (S.prefs?.autoPlayBriefing !== false && !briefingPlaying) {
+      setTimeout(() => { if (!briefingPlaying) toggleBriefingAudio() }, 400)
+    }
   } catch(e) {
     el.textContent = `Could not generate briefing: ${e.message}`
     el.classList.remove('loading')
@@ -2870,7 +3200,7 @@ async function sendChat() {
   if (btn) btn.disabled = true
 
   const kbHits = retrieveKB(text)
-  const sysWithKB = buildPrompt() + kbContext(kbHits)
+  const sysWithKB = buildZakiSystemPrompt() + kbContext(kbHits)
 
   try {
     let full = ''
@@ -3032,6 +3362,573 @@ async function loadRisks(force) {
             <div style="font-size:.72rem;color:var(--text-3)">${r.probability} probability</div>
           </div>
           <button class="btn-card-action" onclick="askFromBriefing('How do I mitigate this risk: ${r.title}')">Mitigate →</button>
+        </div>
+      </div>`).join('')
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// SEO & KEYWORDS
+// ═══════════════════════════════════════════
+async function loadSeo(force) {
+  const grid = document.getElementById('seo-grid')
+  const kwBox = document.getElementById('seo-keywords')
+  if (!aiReady()) {
+    kwBox.style.display = 'none'
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('SEO &amp; Keywords uses AI to surface keyword opportunities and content topics for your business.')}</div>`
+    return
+  }
+  const website = document.getElementById('seo-website').value.trim()
+  const audience = document.getElementById('seo-audience').value
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Building SEO plan…</div>'
+  kwBox.style.display = 'none'
+  try {
+    const prompt = `You are an SEO strategist for a ${S.co.industry || 'business'} called ${S.co.name || 'this company'} in ${S.co.country || 'the local market'}, audience: ${audience}.${website ? ' Website: ' + website + '.' : ''}
+
+Produce two outputs as a single JSON object (no other text):
+
+{
+  "keywords": [ // 18-22 keywords mixing high-intent commercial, informational, and long-tail. Tag each.
+    {"term":"<keyword>","intent":"commercial|informational|local|navigational","difficulty":"low|medium|high","volumeBand":"<rough monthly searches in market, e.g. 200-500, 1k-5k>","why":"<why this matters in 1 sentence>"}
+  ],
+  "actions": [ // 5 concrete SEO/content actions ranked by impact
+    {"title":"<action>","type":"On-page|Content|Local|Technical|Backlinks","priority":"1|2|3|4|5","detail":"<2 sentences — what to do, expected payoff>","first_step":"<one sentence — what to do this week>"}
+  ]
+}
+
+Keywords must be specific to ${S.co.country || 'the market'} and the industry — avoid generic global terms unless they're high-value. For local intent, include city-level qualifiers where relevant. Mix at least 4 commercial-intent buying terms.`
+    const raw = await callClaude([{ role: 'user', content: prompt }])
+    const data = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.seo = data; save()
+    renderSeo(data)
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+function renderSeo(data) {
+  const grid = document.getElementById('seo-grid')
+  const kwBox = document.getElementById('seo-keywords')
+  const kwList = document.getElementById('seo-kw-list')
+  if (data.keywords && data.keywords.length) {
+    const intentColor = i => /commercial/i.test(i) ? 'var(--green)' : /local/i.test(i) ? 'var(--purple,#a855f7)' : /info/i.test(i) ? 'var(--blue)' : 'var(--text-3)'
+    const diffColor = d => /low/i.test(d) ? 'var(--green)' : /high/i.test(d) ? 'var(--red)' : 'var(--amber)'
+    kwList.innerHTML = data.keywords.map(k => `
+      <span class="kw-pill" title="${k.why || ''}" style="border-color:${intentColor(k.intent)}40">
+        ${k.term}
+        <span class="vol" style="color:${diffColor(k.difficulty)}">· ${k.difficulty}</span>
+        <span class="vol">${k.volumeBand || ''}</span>
+      </span>`).join('')
+    kwBox.style.display = ''
+  } else {
+    kwBox.style.display = 'none'
+  }
+  if (data.actions && data.actions.length) {
+    grid.innerHTML = data.actions.map(a => `
+      <div class="seo-card">
+        <div class="card-header">
+          <div class="card-name">${a.title}</div>
+          <span class="tag" style="background:rgba(34,197,94,.12);color:var(--green)">#${a.priority}</span>
+        </div>
+        <div class="card-body">${a.detail}</div>
+        <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">First step:</strong> ${a.first_step}</div>
+        <div class="card-footer">
+          <div class="card-meta" style="color:var(--green)">${a.type}</div>
+          <button class="btn-card-action" onclick="askFromBriefing('Walk me through how to do: ${a.title}')">Plan →</button>
+        </div>
+      </div>`).join('')
+  } else {
+    grid.innerHTML = '<div style="grid-column:1/-1;color:var(--text-3);font-size:.85rem">No actions returned.</div>'
+  }
+}
+
+// ═══════════════════════════════════════════
+// BUSINESS INSIGHTS (DB SKIM)
+// ═══════════════════════════════════════════
+function summarizeTransactions() {
+  const txs = (S.transactions || []).slice()
+  if (!txs.length) return null
+  const now = new Date()
+  const monthKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+  const months = {}
+  const customers = {}, vendors = {}, categories = {}
+  let totalIn = 0, totalOut = 0
+  for (const t of txs) {
+    const d = new Date(t.date); if (isNaN(d)) continue
+    const k = monthKey(d)
+    months[k] = months[k] || { in:0, out:0 }
+    const amt = Number(t.amount) || 0
+    if (t.type === 'income') {
+      months[k].in += amt; totalIn += amt
+      if (t.reference) customers[t.reference] = (customers[t.reference] || 0) + amt
+    } else {
+      months[k].out += amt; totalOut += amt
+      if (t.reference) vendors[t.reference] = (vendors[t.reference] || 0) + amt
+      if (t.category) categories[t.category] = (categories[t.category] || 0) + amt
+    }
+  }
+  const sortedMonths = Object.keys(months).sort()
+  const last3 = sortedMonths.slice(-3).map(k => ({ m:k, ...months[k] }))
+  const prev3 = sortedMonths.slice(-6, -3).map(k => ({ m:k, ...months[k] }))
+  const sum = arr => arr.reduce((a,x)=>a+x.in,0)
+  const sumOut = arr => arr.reduce((a,x)=>a+x.out,0)
+  const lastRev = sum(last3), prevRev = sum(prev3)
+  const revGrowth = prevRev > 0 ? ((lastRev-prevRev)/prevRev*100).toFixed(1) : 'N/A'
+  const lastExp = sumOut(last3), prevExp = sumOut(prev3)
+  const expGrowth = prevExp > 0 ? ((lastExp-prevExp)/prevExp*100).toFixed(1) : 'N/A'
+  const top = (obj, n=5) => Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([k,v])=>({name:k,amount:v}))
+  const topCustomers = top(customers, 5)
+  const topVendors = top(vendors, 5)
+  const topCategories = top(categories, 5)
+  // Concentration: % of revenue from top customer
+  const customerConcentration = topCustomers.length && totalIn > 0
+    ? (topCustomers[0].amount / totalIn * 100).toFixed(1) : 0
+  return {
+    txCount: txs.length, months: sortedMonths.length,
+    totalIn, totalOut, revGrowth, expGrowth,
+    lastRev, prevRev, lastExp, prevExp,
+    topCustomers, topVendors, topCategories,
+    customerConcentration,
+    monthlyBreakdown: sortedMonths.slice(-6).map(k => ({ m:k, in:months[k].in, out:months[k].out }))
+  }
+}
+
+async function loadInsights(force) {
+  if (!force && S._cache.insights) {
+    renderInsights(S._cache.insights, S._cache.insightsDigest)
+    return
+  }
+  const summary = document.getElementById('insights-summary')
+  const grid = document.getElementById('insights-grid')
+  const digest = summarizeTransactions()
+  if (!digest) {
+    summary.innerHTML = ''
+    grid.innerHTML = `<div style="grid-column:1/-1;color:var(--text-3);font-size:.85rem">Add transactions or load demo data — Insights skims your ledger to surface patterns.</div>`
+    return
+  }
+  if (!aiReady()) {
+    summary.innerHTML = ''
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Insights uses AI to interpret patterns Zaki finds in your books.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Skimming your books…</div>'
+  try {
+    const prompt = `Analyze this business's transaction data and surface 5 specific insights a CEO would want to know. Focus on: customer concentration, vendor/cost concentration, growth/decline trends, anomalies, recurring patterns. Be concrete (cite the actual numbers from below).
+
+DATA DIGEST:
+- ${digest.txCount} transactions across ${digest.months} months
+- Total income: ${S.co.currency} ${fmt(digest.totalIn)} | Total expenses: ${S.co.currency} ${fmt(digest.totalOut)}
+- Revenue growth (last 3mo vs prior 3mo): ${digest.revGrowth}%
+- Expense growth (last 3mo vs prior 3mo): ${digest.expGrowth}%
+- Top customer concentration: ${digest.customerConcentration}% of revenue from #1 customer
+- Top customers: ${digest.topCustomers.map(c => c.name + ' ' + S.co.currency + ' ' + fmt(c.amount)).join(' | ')}
+- Top vendors: ${digest.topVendors.map(v => v.name + ' ' + S.co.currency + ' ' + fmt(v.amount)).join(' | ')}
+- Top expense categories: ${digest.topCategories.map(c => c.name + ' ' + S.co.currency + ' ' + fmt(c.amount)).join(' | ')}
+- Monthly: ${digest.monthlyBreakdown.map(m => m.m+' in='+fmt(m.in)+' out='+fmt(m.out)).join(' | ')}
+
+Respond ONLY with valid JSON array, no other text:
+[{"title":"<short headline>","finding":"<1-2 sentences citing specific numbers>","severity":"good|watch|risk","category":"Customers|Vendors|Growth|Margins|Cash|Patterns","action":"<specific thing to do this week>"}]`
+    const raw = await callClaude([{ role: 'user', content: prompt }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.insights = items
+    S._cache.insightsDigest = digest
+    save()
+    renderInsights(items, digest)
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+function renderInsights(items, digest) {
+  const summary = document.getElementById('insights-summary')
+  const grid = document.getElementById('insights-grid')
+  const sevTag = s => s==='risk'?'tag-red':s==='watch'?'tag-amber':'tag-green'
+  const sevLabel = s => s==='risk'?'⚠️ Risk':s==='watch'?'⚡ Watch':'✅ Good'
+  if (digest) {
+    summary.innerHTML = `
+      <div class="card" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 18px">
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Transactions</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${digest.txCount}</div></div>
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Rev Growth (3mo)</div><div style="font-size:1.1rem;font-weight:600;color:${parseFloat(digest.revGrowth)>=0?'var(--green)':'var(--red)'}">${digest.revGrowth}%</div></div>
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Top Customer</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${digest.customerConcentration}%</div></div>
+        <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Period</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${digest.months} mo</div></div>
+      </div>`
+  }
+  grid.innerHTML = items.map(o => `
+    <div class="insight-card">
+      <div class="card-header">
+        <div class="card-name">${o.title}</div>
+        <span class="tag ${sevTag(o.severity)}">${sevLabel(o.severity)}</span>
+      </div>
+      <div class="card-body">${o.finding}</div>
+      <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Action:</strong> ${o.action}</div>
+      <div class="card-footer">
+        <div class="card-meta" style="color:var(--blue)">${o.category}</div>
+        <button class="btn-card-action" onclick="askFromBriefing('Tell me more: ${o.title}')">Discuss →</button>
+      </div>
+    </div>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// FEASIBILITY STUDY
+// ═══════════════════════════════════════════
+async function runFeasibility() {
+  const idea = document.getElementById('feas-idea').value.trim()
+  if (!idea) { showToast('Describe the idea first', 'error'); return }
+  if (!aiReady()) { showToast('Connect to Zaki Server (Settings) to run feasibility', 'error'); return }
+  const market = document.getElementById('feas-market').value.trim()
+  const capital = document.getElementById('feas-capital').value
+  const timeline = document.getElementById('feas-timeline').value
+  const model = document.getElementById('feas-model').value.trim()
+  const verdict = document.getElementById('feas-verdict')
+  const out = document.getElementById('feas-output')
+  verdict.innerHTML = ''
+  out.innerHTML = '<span class="spinner"></span> Running feasibility study…'
+  const prompt = `Run a rigorous feasibility study for this venture proposed by ${S.me.firstName || 'the CEO'} of ${S.co.name || 'a company'} (${S.co.industry || 'industry not specified'}, based in ${S.co.country || 'country not specified'}).
+
+VENTURE: ${idea}
+TARGET MARKET: ${market || 'not specified'}
+CAPITAL AVAILABLE: ${S.co.currency} ${capital || 'not specified'}
+TIMELINE TO LAUNCH: ${timeline}
+REVENUE MODEL: ${model || 'not specified'}
+
+Existing business context: monthly revenue ${S.co.currency} ${fmt(S.fin.rev)}, cash ${S.co.currency} ${fmt(S.fin.cash)}, runway ${S.fin.exp > 0 ? Math.round(S.fin.cash / (S.fin.exp/30)) : 'n/a'} days.
+
+Produce a structured study with these EXACT sections in markdown:
+
+## Verdict: GO | NO-GO | CONDITIONAL
+One-line summary with the headline number (e.g. "GO — payback in 14 months at break-even of ${S.co.currency} 80k/mo revenue")
+
+## Market Sizing
+TAM, SAM, SOM with concrete numbers grounded in ${S.co.country || 'the target market'}. Cite reasonable assumptions.
+
+## Capital Required
+Itemized one-time CapEx + first-12-month OpEx in ${S.co.currency}. Compare to the ${S.co.currency} ${capital || 'capital available'}.
+
+## Unit Economics & Break-Even
+Average ticket / contract value · gross margin · monthly fixed costs · monthly revenue needed to break even · expected month of break-even.
+
+## Top 3 Risks
+Numbered list, each with a one-line mitigation.
+
+## Top 3 Success Factors
+Numbered list — what MUST go right.
+
+## 90-Day Next Steps
+Numbered list of 5-7 concrete actions ${S.me.firstName || 'the CEO'} should take this quarter if proceeding.
+
+## Final Recommendation
+2-3 sentences, direct. Push back if the idea is weak — do not be a yes-man.
+
+Be specific to ${S.co.country || 'the market'}. Cite actual reasonable cost benchmarks (rent, salaries, regulatory fees) where relevant. Do not hedge — give a clear position.`
+  try {
+    let full = ''
+    await streamClaude([{ role: 'user', content: prompt }], (_, acc) => {
+      full = acc
+      out.innerHTML = md(acc)
+      // Pull verdict line and render as a banner
+      const vMatch = acc.match(/##\s*Verdict:\s*(GO|NO-GO|CONDITIONAL)([^\n]*)/i)
+      if (vMatch) {
+        const v = vMatch[1].toUpperCase()
+        const color = v.startsWith('GO') && !v.includes('NO') ? 'var(--green)' : v.includes('NO') ? 'var(--red)' : 'var(--amber)'
+        verdict.innerHTML = `<div class="card" style="border-left:4px solid ${color};padding:14px 18px">
+          <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Zaki's Verdict</div>
+          <div style="font-size:1.4rem;font-weight:700;color:${color};margin:4px 0">${v}</div>
+          <div style="font-size:.85rem;color:var(--text-2)">${vMatch[2].trim() || ''}</div>
+        </div>`
+      }
+    })
+    S._cache.feasibility = { idea, market, capital, timeline, model, report: full }
+    save()
+  } catch(e) {
+    out.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`
+  }
+}
+
+function restoreFeasibility() {
+  const c = S._cache.feasibility; if (!c) return
+  if (document.getElementById('feas-idea').value) return // user is editing
+  document.getElementById('feas-idea').value = c.idea || ''
+  document.getElementById('feas-market').value = c.market || ''
+  document.getElementById('feas-capital').value = c.capital || ''
+  document.getElementById('feas-timeline').value = c.timeline || '6 months'
+  document.getElementById('feas-model').value = c.model || ''
+  if (c.report) {
+    document.getElementById('feas-output').innerHTML = md(c.report)
+    const vMatch = c.report.match(/##\s*Verdict:\s*(GO|NO-GO|CONDITIONAL)([^\n]*)/i)
+    if (vMatch) {
+      const v = vMatch[1].toUpperCase()
+      const color = v.startsWith('GO') && !v.includes('NO') ? 'var(--green)' : v.includes('NO') ? 'var(--red)' : 'var(--amber)'
+      document.getElementById('feas-verdict').innerHTML = `<div class="card" style="border-left:4px solid ${color};padding:14px 18px">
+        <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Zaki's Verdict</div>
+        <div style="font-size:1.4rem;font-weight:700;color:${color};margin:4px 0">${v}</div>
+        <div style="font-size:.85rem;color:var(--text-2)">${vMatch[2].trim() || ''}</div>
+      </div>`
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+// BOOKKEEPING ASSISTANT
+// ═══════════════════════════════════════════
+function scanBooks() {
+  const txs = (S.transactions || [])
+  const issues = { uncategorized: [], duplicates: [], missingRef: [], roundLarge: [], futureDated: [] }
+  const total = txs.length
+  if (!total) return { total: 0, issues, categorizedPct: 100, refPct: 100 }
+  let categorized = 0, withRef = 0
+  for (const t of txs) {
+    if (t.category && t.category.trim()) categorized++; else issues.uncategorized.push(t)
+    if (t.reference && t.reference.trim()) withRef++; else issues.missingRef.push(t)
+    const amt = Number(t.amount) || 0
+    // Flag suspicious round-thousand amounts ≥ 5,000 (often placeholders)
+    if (amt >= 5000 && amt % 1000 === 0) issues.roundLarge.push(t)
+    if (new Date(t.date) > new Date()) issues.futureDated.push(t)
+  }
+  // Duplicate detection: same |amount|, type, reference within ±3 days
+  const sorted = txs.slice().sort((a,b)=>new Date(a.date)-new Date(b.date))
+  for (let i = 0; i < sorted.length; i++) {
+    for (let j = i + 1; j < sorted.length; j++) {
+      const a = sorted[i], b = sorted[j]
+      const dDays = (new Date(b.date) - new Date(a.date)) / 86400000
+      if (dDays > 3) break
+      if (a.type === b.type && Number(a.amount) === Number(b.amount) &&
+          (a.reference || '').toLowerCase() === (b.reference || '').toLowerCase()) {
+        issues.duplicates.push({ a, b })
+      }
+    }
+  }
+  return {
+    total, categorized,
+    categorizedPct: Math.round(categorized / total * 100),
+    refPct: Math.round(withRef / total * 100),
+    issues
+  }
+}
+
+async function loadBooks(force) {
+  const summary = document.getElementById('books-summary')
+  const list = document.getElementById('books-issues')
+  const r = scanBooks()
+  if (!r.total) {
+    summary.innerHTML = ''
+    list.innerHTML = `<div style="color:var(--text-3);font-size:.85rem">Add transactions or load demo data — Bookkeeping scans your ledger for issues.</div>`
+    return
+  }
+  const score = Math.round((r.categorizedPct * 0.5) + (r.refPct * 0.3) +
+    ((r.issues.duplicates.length === 0 ? 100 : Math.max(0, 100 - r.issues.duplicates.length * 10)) * 0.2))
+  const scoreColor = score >= 85 ? 'var(--green)' : score >= 60 ? 'var(--amber)' : 'var(--red)'
+  summary.innerHTML = `
+    <div class="card" style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:14px 18px">
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Hygiene Score</div><div style="font-size:1.3rem;font-weight:700;color:${scoreColor}">${score}/100</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Categorized</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${r.categorizedPct}%</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Has Reference</div><div style="font-size:1.1rem;font-weight:600;color:var(--text)">${r.refPct}%</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Likely Dupes</div><div style="font-size:1.1rem;font-weight:600;color:${r.issues.duplicates.length?'var(--amber)':'var(--text)'}">${r.issues.duplicates.length}</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em">Round Amounts</div><div style="font-size:1.1rem;font-weight:600;color:${r.issues.roundLarge.length>3?'var(--amber)':'var(--text)'}">${r.issues.roundLarge.length}</div></div>
+    </div>`
+  const sec = (title, items, render, actionLabel) => items.length ? `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${title} <span style="font-weight:400;color:var(--text-3);font-size:.8rem">(${items.length})</span></span>
+        ${actionLabel ? `<button class="btn-secondary" style="font-size:.74rem" onclick="${actionLabel}">AI Suggest</button>` : ''}
+      </div>
+      <div style="font-size:.83rem;color:var(--text-2);line-height:1.6">${items.slice(0,8).map(render).join('')}</div>
+      ${items.length > 8 ? `<div style="font-size:.78rem;color:var(--text-3);margin-top:8px">+ ${items.length - 8} more — open Ledger to fix</div>` : ''}
+    </div>` : ''
+  const txRow = t => `<div style="padding:5px 0;border-bottom:1px dashed var(--border)">${new Date(t.date).toISOString().slice(0,10)} · <strong>${S.co.currency} ${fmt(t.amount)}</strong> · ${t.description || '(no description)'} ${t.category ? '· '+t.category : ''}</div>`
+  const dupRow = d => `<div style="padding:5px 0;border-bottom:1px dashed var(--border)">${new Date(d.a.date).toISOString().slice(0,10)} ↔ ${new Date(d.b.date).toISOString().slice(0,10)} · <strong>${S.co.currency} ${fmt(d.a.amount)}</strong> · ${d.a.description || '(no desc)'} ↔ ${d.b.description || '(no desc)'}</div>`
+  list.innerHTML = `
+    ${sec('Uncategorized transactions', r.issues.uncategorized, txRow, "suggestCategories()")}
+    ${sec('Likely duplicates', r.issues.duplicates, dupRow, '')}
+    ${sec('Missing reference / payee', r.issues.missingRef, txRow, '')}
+    ${sec('Suspicious round-thousand amounts (review)', r.issues.roundLarge, txRow, '')}
+    ${sec('Future-dated entries', r.issues.futureDated, txRow, '')}
+    <div class="card" style="margin-top:8px">
+      <div class="card-title">AI reconciliation tips</div>
+      <div id="books-ai" style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <span style="color:var(--text-3)">Click "Get tips" to ask Zaki for prioritized cleanup steps.</span>
+      </div>
+      <button class="btn-secondary" style="margin-top:10px" onclick="bookkeepingTips()">Get tips</button>
+    </div>`
+}
+
+async function bookkeepingTips() {
+  const el = document.getElementById('books-ai')
+  if (!aiReady()) { el.innerHTML = noKeyState('Connect AI for reconciliation tips.'); return }
+  const r = scanBooks()
+  el.innerHTML = '<span class="spinner"></span> Drafting tips…'
+  try {
+    let full = ''
+    await streamClaude([{ role:'user', content:
+`You are reviewing the bookkeeping for a ${S.co.industry || 'business'} in ${S.co.country || 'this market'} (currency ${S.co.currency}).
+
+Stats:
+- Total transactions: ${r.total}
+- Categorized: ${r.categorizedPct}% | Has reference: ${r.refPct}%
+- Likely duplicates flagged: ${r.issues.duplicates.length}
+- Uncategorized: ${r.issues.uncategorized.length}
+- Suspicious round amounts: ${r.issues.roundLarge.length}
+- Future-dated: ${r.issues.futureDated.length}
+
+Give the CEO 5 prioritized, concrete reconciliation actions for THIS WEEK in plain prose. Format as a short numbered list with one sentence each. No markdown headers, no bold, no fluff.`
+    }], (_, acc) => { full = acc; el.textContent = acc })
+  } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+async function suggestCategories() {
+  if (!aiReady()) { showToast('Connect AI for category suggestions','error'); return }
+  const r = scanBooks()
+  const sample = r.issues.uncategorized.slice(0, 20).map((t,i) => `${i+1}. ${t.type} ${S.co.currency} ${t.amount} · ${t.description || ''} · ${t.reference || ''}`).join('\n')
+  if (!sample) { showToast('Nothing to categorize'); return }
+  showToast('Asking Zaki for category suggestions…')
+  try {
+    const raw = await callClaude([{ role:'user', content:
+`For each uncategorized transaction below, suggest a category. Use standard categories for a ${S.co.industry || 'business'}: Sales, Service Revenue, Salary/Payroll, Rent, Utilities, Software, Marketing, Travel, Professional Fees, Bank Fees, Tax, Office Supplies, Cost of Goods, Other Income, Other Expense.
+
+Respond ONLY with valid JSON array of {"index":1,"category":"..."}.
+
+${sample}` }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    const list = r.issues.uncategorized
+    let updated = 0
+    items.forEach(s => {
+      const t = list[s.index - 1]
+      if (t && !t.category) { t.category = s.category; updated++ }
+    })
+    save()
+    showToast(`Suggested categories for ${updated} transactions`)
+    loadBooks(true)
+  } catch(e) { showToast('Error: ' + e.message, 'error') }
+}
+
+// ═══════════════════════════════════════════
+// WHERE TO INVEST
+// ═══════════════════════════════════════════
+async function loadInvest(force) {
+  if (!force && S._cache.invest) return
+  const grid = document.getElementById('invest-grid')
+  if (!aiReady()) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Investment guidance ranks where each next dirham/riyal should go for the best risk-adjusted return.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>'
+  try {
+    const raw = await callClaude([{
+      role: 'user',
+      content: `Given this company's current cash, runway, margin, and stage, rank 4 capital-allocation priorities for the next ${S.co.currency} of free cash. For each, give a clear thesis and the expected payback. Respond ONLY with valid JSON array, no other text:
+[{"title":"<area, e.g. Sales hires, Marketing, Tech, Working capital, Reserves>","thesis":"why this is the right place to put money now (1-2 sentences)","amount":"${S.co.currency} X","payback":"e.g. 6 months / 12 months / strategic","priority":"1|2|3|4","action":"specific first step the CEO can take this week"}]`
+    }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.invest = items; save()
+    grid.innerHTML = items.map(o => `
+      <div class="invest-card">
+        <div class="card-header">
+          <div class="card-name">${o.title}</div>
+          <span class="tag" style="background:rgba(168,85,247,.12);color:var(--purple,#a855f7)">#${o.priority}</span>
+        </div>
+        <div class="card-body">${o.thesis}</div>
+        <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">First step:</strong> ${o.action}</div>
+        <div class="card-footer">
+          <div>
+            <div class="card-meta" style="color:var(--purple,#a855f7)">${o.amount}</div>
+            <div style="font-size:.72rem;color:var(--text-3)">Payback: ${o.payback}</div>
+          </div>
+          <button class="btn-card-action" onclick="askFromBriefing('Walk me through the case for investing in ${o.title}')">Discuss →</button>
+        </div>
+      </div>`).join('')
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// INVESTMENT OPTIONS (PERSONAL / EXTERNAL)
+// ═══════════════════════════════════════════
+async function loadInvestOpts(force) {
+  const grid = document.getElementById('investopts-grid')
+  const risk = document.getElementById('investopt-risk').value
+  const amountInput = document.getElementById('investopt-amount').value
+  const surplus = Number(amountInput) || Math.max(0, S.fin.cash - S.fin.exp * 3)
+  if (!aiReady()) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Investment Options uses AI to recommend external vehicles sized to your market and risk profile.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Building investment menu…</div>'
+  try {
+    const prompt = `Recommend 6 specific external investment vehicles for a CEO with ${S.co.currency} ${fmt(surplus)} of surplus cash to deploy from a ${S.co.industry || 'business'} based in ${S.co.country || 'their market'}. Risk profile: ${risk}.
+
+Cover a mix across asset classes appropriate to ${S.co.country || 'the local market'}: equities (local index ETFs, blue chips), fixed income (sukuk / government bonds / money market), real estate (REITs or direct), private/alternatives, and cash equivalents. Be specific to the market — name actual instrument categories that exist in ${S.co.country || 'this market'}.
+
+Respond ONLY with valid JSON array, no other text:
+[{"name":"<specific instrument or category>","class":"Equity|Fixed Income|Real Estate|Alternative|Cash","allocation":"<% of surplus>","expectedReturn":"<annual % or range>","liquidity":"High|Medium|Low","horizon":"<e.g. 1-3y / 3-5y / 5y+>","thesis":"<why this fits this CEO in 1-2 sentences>","risks":"<key risk to be aware of>"}]`
+    const raw = await callClaude([{ role: 'user', content: prompt }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.investopts = { items, risk, surplus }
+    save()
+    renderInvestOpts(S._cache.investopts)
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+function renderInvestOpts(cache) {
+  const grid = document.getElementById('investopts-grid')
+  if (!cache || !cache.items) return
+  const classColor = c => /equity/i.test(c) ? 'var(--blue)'
+    : /fixed/i.test(c) ? 'var(--green)'
+    : /real/i.test(c) ? 'var(--purple,#a855f7)'
+    : /alt/i.test(c) ? 'var(--amber)' : 'var(--text-3)'
+  const liqTag = l => /high/i.test(l) ? 'tag-green' : /low/i.test(l) ? 'tag-red' : 'tag-amber'
+  grid.innerHTML = cache.items.map(o => `
+    <div class="investopt-card">
+      <div class="card-header">
+        <div class="card-name">${o.name}</div>
+        <span class="tag ${liqTag(o.liquidity)}">${o.liquidity} liquidity</span>
+      </div>
+      <div class="card-body">${o.thesis}</div>
+      <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Risk:</strong> ${o.risks}</div>
+      <div class="card-footer">
+        <div>
+          <div class="card-meta" style="color:${classColor(o.class)}">${o.class} · ${o.allocation}</div>
+          <div style="font-size:.72rem;color:var(--text-3)">${o.expectedReturn} · ${o.horizon}</div>
+        </div>
+        <button class="btn-card-action" onclick="askFromBriefing('Walk me through investing in ${o.name} — entry points, brokers, tax treatment in ${S.co.country || 'my market'}')">Discuss →</button>
+      </div>
+    </div>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// MARKET INTELLIGENCE
+// ═══════════════════════════════════════════
+async function loadMarket(force) {
+  if (!force && S._cache.market) return
+  const grid = document.getElementById('market-grid')
+  if (!aiReady()) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Market Intelligence surfaces macro, regulatory, and competitive shifts relevant to your business.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Scanning market signals…</div>'
+  try {
+    const raw = await callClaude([{
+      role: 'user',
+      content: `Brief me on the current market context for a ${S.co.industry || 'business'} company in ${S.co.country || 'this market'}. Cover 4 areas: (1) Macro / economic, (2) Regulatory or tax change, (3) Competitive / industry trend, (4) FX / commodity / supply-chain signal. For each, say what it means for THIS company and a recommended posture. Respond ONLY with valid JSON array:
+[{"area":"Macro|Regulatory|Competitive|FX/Supply","headline":"<one-line signal>","implication":"what this means for ${S.co.name || 'us'} in 1-2 sentences","posture":"Lean in|Hold|Hedge|Watch","action":"specific thing to do or monitor"}]`
+    }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.market = items; save()
+    const postureColor = p => /lean in/i.test(p) ? 'tag-green' : /hedge/i.test(p) ? 'tag-amber' : /hold/i.test(p) ? 'tag-amber' : 'tag-green'
+    grid.innerHTML = items.map(m => `
+      <div class="market-card">
+        <div class="card-header">
+          <div class="card-name">${m.area} · ${m.headline}</div>
+          <span class="tag ${postureColor(m.posture)}">${m.posture}</span>
+        </div>
+        <div class="card-body">${m.implication}</div>
+        <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Action:</strong> ${m.action}</div>
+        <div class="card-footer">
+          <div class="card-meta" style="color:var(--cyan,#06b6d4)">${m.area}</div>
+          <button class="btn-card-action" onclick="askFromBriefing('Tell me more about: ${m.headline}')">Dig in →</button>
         </div>
       </div>`).join('')
   } catch(e) {
@@ -3387,7 +4284,7 @@ async function askIfrs(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
+      buildZakiSystemPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
@@ -3495,7 +4392,7 @@ async function askTax(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
+      buildZakiSystemPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 

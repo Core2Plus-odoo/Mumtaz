@@ -7,6 +7,7 @@ module.exports = {
     name:        'zaki-ai',
     script:      'server.js',
     cwd:         '/var/www/zaki.mumtaz.digital',
+    exec_mode:   'fork',
     instances:   1,
     autorestart: true,
     watch:       false,

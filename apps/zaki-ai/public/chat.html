@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZAKI — AI CFO · Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, textarea { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    :root {
+      --gold:   #B8862A;
+      --gold2:  #D4A84C;
+      --teal:   #0B7A64;
+      --ink:    #0C1118;
+      --ink2:   #3D4A5C;
+      --ink3:   #7A8799;
+      --bg:     #F5F3EF;
+      --white:  #FFFFFF;
+      --border: #E4E0D8;
+      --sidebar-bg: #0F1520;
+      --sidebar-border: rgba(255,255,255,.07);
+      --radius: 10px;
+    }
+
+    /* ── Login overlay ── */
+    #login-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .login-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.08);
+    }
+    .login-logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 28px;
+    }
+    .login-logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.1rem; color: #fff;
+    }
+    .login-logo-name {
+      font-weight: 600; font-size: 1.1rem; color: var(--ink);
+    }
+    .login-logo-product {
+      font-size: .8rem; color: var(--ink3); margin-left: 2px;
+    }
+    .login-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.625rem; font-weight: 400;
+      color: var(--ink); margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: .875rem; color: var(--ink3); margin-bottom: 28px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .field label { font-size: .8rem; font-weight: 600; color: var(--ink2); letter-spacing: .03em; }
+    .field input {
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .9375rem; color: var(--ink);
+      background: var(--white);
+      transition: border-color .15s;
+      outline: none;
+    }
+    .field input:focus { border-color: var(--gold); }
+    #login-error {
+      font-size: .85rem; color: #C0402A;
+      background: #FCECEA;
+      border: 1px solid rgba(192,64,42,.2);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 16px;
+    }
+    #login-btn {
+      width: 100%;
+      background: var(--gold);
+      color: #fff; font-weight: 600; font-size: .9375rem;
+      padding: 11px;
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity .15s;
+    }
+    #login-btn:hover { opacity: .88; }
+    #login-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .login-spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .login-footer {
+      margin-top: 20px; text-align: center;
+      font-size: .8rem; color: var(--ink3);
+    }
+    .login-footer a { color: var(--gold); font-weight: 500; }
+
+    /* ── App shell ── */
+    #app { display: flex; height: 100vh; overflow: hidden; background: var(--bg); }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 240px; flex-shrink: 0;
+      background: var(--sidebar-bg);
+      display: flex; flex-direction: column;
+      border-right: 1px solid var(--sidebar-border);
+      overflow: hidden;
+    }
+    .sb-top {
+      padding: 16px 14px 12px;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+    .sb-logo {
+      display: flex; align-items: center; gap: 9px;
+      margin-bottom: 14px;
+    }
+    .sb-logo-mark {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: .95rem; color: #fff;
+      flex-shrink: 0;
+    }
+    .sb-logo-text { font-size: .9rem; font-weight: 600; color: #fff; }
+    .sb-logo-sub  { font-size: .72rem; color: rgba(255,255,255,.35); }
+    #new-chat-btn {
+      width: 100%; padding: 8px 10px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: var(--radius);
+      color: rgba(255,255,255,.75); font-size: .85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 7px;
+      transition: background .15s;
+    }
+    #new-chat-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+    #new-chat-btn::before { content: '+'; font-size: 1rem; font-weight: 400; }
+
+    /* Chat history */
+    .sb-section-label {
+      padding: 14px 14px 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: .66rem; letter-spacing: .09em; text-transform: uppercase;
+      color: rgba(255,255,255,.25);
+    }
+    #history-list {
+      flex: 1; overflow-y: auto; padding: 4px 8px;
+    }
+    #history-list::-webkit-scrollbar { width: 3px; }
+    #history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+    .history-item {
+      padding: 8px 8px;
+      border-radius: 8px;
+      font-size: .83rem; color: rgba(255,255,255,.5);
+      cursor: pointer; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+      transition: background .12s, color .12s;
+    }
+    .history-item:hover  { background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); }
+    .history-item.active { background: rgba(184,134,42,.15); color: #D4A84C; }
+
+    /* Sidebar nav links */
+    .sb-nav { padding: 8px 8px; border-top: 1px solid var(--sidebar-border); }
+    .sb-nav-link {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 8px; border-radius: 8px;
+      font-size: .85rem; color: rgba(255,255,255,.5);
+      transition: background .12s, color .12s;
+      width: 100%; text-align: left;
+    }
+    .sb-nav-link:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); }
+    .sb-nav-link .icon { font-size: .9rem; width: 18px; text-align: center; }
+
+    /* Odoo status */
+    .sb-odoo-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 8px; border-radius: 8px;
+      font-size: .83rem; color: rgba(255,255,255,.4);
+    }
+    #odoo-status {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,.2); flex-shrink: 0;
+      transition: background .3s;
+    }
+    #odoo-status.odoo-connected    { background: #0EA882; }
+    #odoo-status.odoo-disconnected { background: #C0402A; }
+
+    /* Sidebar user footer */
+    .sb-user {
+      padding: 12px 10px;
+      border-top: 1px solid var(--sidebar-border);
+      display: flex; align-items: center; gap: 9px;
+    }
+    #user-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(184,134,42,.25);
+      color: var(--gold2); font-weight: 600; font-size: .85rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sb-user-info { flex: 1; min-width: 0; }
+    #user-name {
+      font-size: .83rem; font-weight: 500; color: rgba(255,255,255,.75);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: block;
+    }
+    #user-role {
+      font-size: .72rem; color: rgba(255,255,255,.3);
+      display: block;
+    }
+    #logout-btn {
+      font-size: .75rem; color: rgba(255,255,255,.25);
+      padding: 4px; border-radius: 6px;
+      transition: color .15s;
+    }
+    #logout-btn:hover { color: rgba(255,255,255,.6); }
+
+    /* ── Main area ── */
+    #main-area {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* Reconnect banner */
+    #reconnect-banner {
+      background: rgba(192,64,42,.1);
+      border-bottom: 1px solid rgba(192,64,42,.2);
+      padding: 10px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .85rem; color: #C0402A;
+    }
+    #reconnect-btn {
+      font-size: .8rem; font-weight: 600; color: #C0402A;
+      border: 1px solid rgba(192,64,42,.3);
+      border-radius: 6px; padding: 4px 10px;
+      transition: background .15s;
+    }
+    #reconnect-btn:hover { background: rgba(192,64,42,.08); }
+
+    /* Thread */
+    #thread {
+      flex: 1; overflow-y: auto; padding: 24px 0;
+    }
+    #thread::-webkit-scrollbar { width: 4px; }
+    #thread::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Welcome screen */
+    .welcome {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; padding: 40px 24px; text-align: center;
+    }
+    .welcome-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: 1.5rem; color: #fff;
+      margin-bottom: 16px;
+    }
+    .welcome h2 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.5rem; font-weight: 400; color: var(--ink);
+      margin-bottom: 8px;
+    }
+    .welcome p { font-size: .9rem; color: var(--ink3); margin-bottom: 28px; }
+    .quick-qs {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; max-width: 500px;
+    }
+    .quick-q {
+      padding: 8px 14px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 100px; font-size: .83rem; color: var(--ink2);
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .quick-q:hover { border-color: var(--gold); color: var(--ink); }
+
+    /* Messages */
+    .message { display: flex; flex-direction: column; padding: 4px 24px; margin-bottom: 4px; }
+    .message.user  { align-items: flex-end; }
+    .message.assistant { align-items: flex-start; }
+    .msg-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .agent-badge {
+      font-family: 'DM Mono', monospace; font-size: .68rem;
+      padding: 2px 8px; border-radius: 100px; font-weight: 500;
+    }
+    .badge-cfo, .badge-analyst { background: rgba(184,134,42,.12); color: var(--gold); }
+    .badge-ops { background: rgba(11,122,100,.1); color: var(--teal); }
+    .msg-bubble {
+      max-width: min(640px, 78%);
+      padding: 11px 15px;
+      border-radius: 12px;
+      font-size: .9rem; line-height: 1.65;
+    }
+    .message.user .msg-bubble {
+      background: var(--gold);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .message.assistant .msg-bubble {
+      background: var(--white);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+    .msg-bubble p { margin-bottom: .5em; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble strong { font-weight: 600; }
+    .msg-bubble code { font-family: 'DM Mono', monospace; font-size: .82em; background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; }
+    .msg-bubble pre { background: #1a2236; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: .82em; margin: .5em 0; }
+    .msg-bubble table { width: 100%; border-collapse: collapse; font-size: .85em; margin: .5em 0; }
+    .msg-bubble th, .msg-bubble td { padding: 6px 10px; border: 1px solid var(--border); text-align: left; }
+    .msg-bubble th { background: var(--bg); font-weight: 600; }
+    .typing-cursor { display: inline-block; width: 2px; height: 1em; background: var(--gold); margin-left: 2px; animation: blink .7s step-end infinite; vertical-align: text-bottom; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .tool-indicator { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--ink3); padding: 3px 0; }
+    .tool-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink3); flex-shrink: 0; }
+    .tool-indicator.loading .tool-dot { background: var(--gold); animation: blink .8s ease-in-out infinite; }
+    .tool-indicator.done .tool-dot { background: var(--teal); }
+    .tool-indicator.error .tool-dot { background: #C0402A; }
+
+    /* Chart */
+    .chart-container { margin: 12px 0; padding: 16px; background: var(--bg); border-radius: 10px; border: 1px solid var(--border); }
+    .chart-title { font-size: .8rem; font-weight: 600; color: var(--ink2); margin-bottom: 10px; }
+    .chart-canvas { max-height: 220px; }
+
+    /* Input area */
+    .input-area {
+      padding: 12px 20px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--white);
+    }
+    .input-wrap {
+      display: flex; align-items: flex-end; gap: 8px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 8px 8px 14px;
+      transition: border-color .15s;
+    }
+    .input-wrap:focus-within { border-color: var(--gold); }
+    #chat-input {
+      flex: 1; border: none; background: none; outline: none; resize: none;
+      font-size: .9rem; color: var(--ink); line-height: 1.5;
+      min-height: 24px; max-height: 160px;
+    }
+    #chat-input::placeholder { color: var(--ink3); }
+    #send-btn {
+      width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+      background: var(--gold); color: #fff; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .15s;
+    }
+    #send-btn:disabled { opacity: .35; cursor: not-allowed; }
+    #send-btn:not(:disabled):hover { opacity: .88; }
+    .input-hint {
+      font-size: .72rem; color: var(--ink3); text-align: center; margin-top: 6px;
+    }
+
+    /* Odoo connect form */
+    .odoo-form { display: flex; flex-direction: column; gap: 6px; padding: 6px 4px 8px; }
+    .odoo-input {
+      width: 100%; padding: 7px 10px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 7px; outline: none;
+      font-size: .8rem; color: rgba(255,255,255,.8);
+      transition: border-color .15s;
+    }
+    .odoo-input::placeholder { color: rgba(255,255,255,.25); }
+    .odoo-input:focus { border-color: rgba(184,134,42,.6); }
+    .odoo-error {
+      font-size: .75rem; color: #FCA5A5;
+      background: rgba(192,64,42,.15);
+      border-radius: 6px; padding: 6px 8px;
+    }
+    .odoo-actions { display: flex; gap: 6px; margin-top: 2px; }
+    .odoo-btn-connect {
+      flex: 1; padding: 7px;
+      background: var(--gold); color: #fff;
+      font-size: .8rem; font-weight: 600;
+      border-radius: 7px; transition: opacity .15s;
+    }
+    .odoo-btn-connect:hover { opacity: .88; }
+    .odoo-btn-connect:disabled { opacity: .45; cursor: not-allowed; }
+    .odoo-btn-disconnect {
+      flex: 1; padding: 7px;
+      background: rgba(192,64,42,.2); color: #FCA5A5;
+      font-size: .8rem; font-weight: 600;
+      border-radius: 7px; border: 1px solid rgba(192,64,42,.3);
+      transition: background .15s;
+    }
+    .odoo-btn-disconnect:hover { background: rgba(192,64,42,.3); }
+
+    /* Hidden utility elements */
+    #period-month, #period-year { display: none; }
+
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-mark">م</div>
+        <div>
+          <span class="login-logo-name">Mumtaz</span>
+          <span class="login-logo-product">/ ZAKI</span>
+        </div>
+      </div>
+      <h1 class="login-title">Welcome back</h1>
+      <p class="login-sub">Sign in to your ZAKI AI account</p>
+
+      <form id="login-form" autocomplete="on">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@company.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <div id="login-error" hidden></div>
+
+        <button id="login-btn" type="submit">
+          <span id="login-label">Sign in →</span>
+          <span id="login-spinner" class="login-spinner" hidden></span>
+        </button>
+      </form>
+
+      <p class="login-footer">
+        Don't have an account? <a href="mailto:hello@mumtaz.digital">Contact us to sign up</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- APP SHELL -->
+  <div id="app" hidden>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sb-top">
+        <div class="sb-logo">
+          <div class="sb-logo-mark">ذ</div>
+          <div>
+            <div class="sb-logo-text">ZAKI</div>
+            <div class="sb-logo-sub">by Mumtaz</div>
+          </div>
+        </div>
+        <button id="new-chat-btn">New conversation</button>
+      </div>
+
+      <div class="sb-section-label">Recent</div>
+      <div id="history-list"></div>
+
+      <div class="sb-nav">
+        <a href="/ceo" class="sb-nav-link">
+          <span class="icon">📊</span> CEO Dashboard
+        </a>
+        <div class="sb-odoo-row">
+          <div id="odoo-status"></div>
+          <span>Odoo</span>
+        </div>
+        <button id="conn-toggle" class="sb-nav-link" style="width:100%">
+          <span class="icon">🔗</span> Connect Odoo
+        </button>
+        <div id="conn-fields" style="display:none;">
+          <div class="odoo-form">
+            <input id="odoo-url"  class="odoo-input" type="url"  placeholder="https://yourcompany.odoo.com" />
+            <input id="odoo-db"   class="odoo-input" type="text" placeholder="Database name" />
+            <input id="odoo-user" class="odoo-input" type="email" placeholder="admin@company.com" />
+            <input id="odoo-pass" class="odoo-input" type="password" placeholder="Odoo password" />
+            <div id="odoo-error" class="odoo-error" hidden></div>
+            <div class="odoo-actions">
+              <button id="odoo-connect-btn" class="odoo-btn-connect">Connect</button>
+              <button id="odoo-disconnect-btn" class="odoo-btn-disconnect" hidden>Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-user">
+        <div id="user-avatar"></div>
+        <div class="sb-user-info">
+          <span id="user-name"></span>
+          <span id="user-role"></span>
+        </div>
+        <button id="logout-btn" title="Sign out">↩</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main id="main-area">
+
+      <!-- Reconnect banner -->
+      <div id="reconnect-banner" hidden>
+        Session expired.
+        <button id="reconnect-btn">Sign in again</button>
+      </div>
+
+      <!-- Thread -->
+      <div id="thread">
+        <!-- Welcome shown when no messages -->
+        <div id="welcome" class="welcome">
+          <div class="welcome-icon">ذ</div>
+          <h2>Ask ZAKI anything</h2>
+          <p>Your AI CFO — connected to your live business data.</p>
+          <div class="quick-qs">
+            <button class="quick-q" data-q="What's my cash position today?">Cash position today</button>
+            <button class="quick-q" data-q="Which invoices are overdue?">Overdue invoices</button>
+            <button class="quick-q" data-q="Show me revenue for this month">Revenue this month</button>
+            <button class="quick-q" data-q="Forecast next quarter revenue">Forecast next quarter</button>
+            <button class="quick-q" data-q="Who are my top customers by revenue?">Top customers</button>
+            <button class="quick-q" data-q="Summarise my P&L for this year">P&amp;L summary</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <div class="input-area">
+        <div class="input-wrap">
+          <textarea id="chat-input" rows="1" placeholder="Ask anything about your business…"></textarea>
+          <button id="send-btn" disabled title="Send">↑</button>
+        </div>
+        <p class="input-hint">Enter to send · Shift+Enter for new line</p>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Period selectors (used by app.js, kept hidden) -->
+  <select id="period-month"></select>
+  <select id="period-year"></select>
+
+  <script src="app.js"></script>
+  <script>
+    // Odoo connect / disconnect
+    (function () {
+      const connectBtn    = document.getElementById('odoo-connect-btn');
+      const disconnectBtn = document.getElementById('odoo-disconnect-btn');
+      const errorEl       = document.getElementById('odoo-error');
+      const statusDot     = document.getElementById('odoo-status');
+
+      function token() { return localStorage.getItem('mumtaz_token') || ''; }
+      function authHdr() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() }; }
+
+      function setConnected(name) {
+        statusDot.className = 'odoo-status odoo-connected';
+        statusDot.title = 'Odoo connected' + (name ? ': ' + name : '');
+        connectBtn.hidden    = true;
+        disconnectBtn.hidden = false;
+        document.querySelectorAll('.odoo-input').forEach(i => i.disabled = true);
+      }
+
+      function setDisconnected() {
+        statusDot.className = 'odoo-status odoo-disconnected';
+        statusDot.title = 'Odoo not connected';
+        connectBtn.hidden    = false;
+        disconnectBtn.hidden = true;
+        document.querySelectorAll('.odoo-input').forEach(i => i.disabled = false);
+      }
+
+      connectBtn.addEventListener('click', async () => {
+        const odooUrl = document.getElementById('odoo-url').value.trim();
+        const db      = document.getElementById('odoo-db').value.trim();
+        const email   = document.getElementById('odoo-user').value.trim();
+        const password = document.getElementById('odoo-pass').value;
+        errorEl.hidden = true;
+        if (!odooUrl || !db || !email || !password) {
+          errorEl.textContent = 'Please fill in all fields.';
+          errorEl.hidden = false;
+          return;
+        }
+        connectBtn.textContent = 'Connecting…';
+        connectBtn.disabled = true;
+        try {
+          const res  = await fetch('/erp/connect', { method: 'POST', headers: authHdr(), body: JSON.stringify({ odooUrl, db, email, password }) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Connection failed');
+          setConnected(data.name);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.hidden = false;
+        } finally {
+          connectBtn.textContent = 'Connect';
+          connectBtn.disabled = false;
+        }
+      });
+
+      disconnectBtn.addEventListener('click', async () => {
+        await fetch('/erp/disconnect', { method: 'POST', headers: authHdr() });
+        setDisconnected();
+        document.getElementById('odoo-pass').value = '';
+      });
+    })();
+  </script>
+</body>
+</html>
