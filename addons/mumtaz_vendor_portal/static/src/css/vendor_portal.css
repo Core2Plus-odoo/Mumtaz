@@ -810,3 +810,61 @@ body.mumtaz-vendor-portal {
   .mvp-form-row-half { flex-direction: column; }
 }
 
+/* ── RFQ respond form — per-line price grid ──────────────────────────── */
+.mvp-rfq-lines-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.mvp-rfq-line-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+
+.mvp-rfq-line-desc {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mvp-rfq-line-desc strong {
+  font-size: .88rem;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mvp-rfq-line-price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mvp-rfq-price-input {
+  width: 130px;
+  text-align: right;
+}
+
+.mvp-rfq-currency {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #64748B;
+  min-width: 36px;
+}
+
+@media (max-width: 540px) {
+  .mvp-rfq-line-row { flex-wrap: wrap; }
+  .mvp-rfq-price-input { width: 100px; }
+}
+

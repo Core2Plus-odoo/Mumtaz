@@ -145,6 +145,18 @@ class VendorPortalController(CustomerPortal):
             )
         return request.redirect(f'/vendor/purchase-orders/{order_id}')
 
+    def _get_vendor_rfq(self, rfq_id):
+        """Browse an open RFQ and verify it belongs to the current portal user."""
+        partner = request.env.user.partner_id.commercial_partner_id
+        rfq = request.env["purchase.order"].sudo().browse(int(rfq_id)).exists()
+        if not rfq:
+            raise MissingError(_("This RFQ doesn't exist."))
+        if rfq.partner_id.commercial_partner_id.id != partner.id:
+            raise AccessError(_("You don't have access to this RFQ."))
+        if rfq.state not in ('draft', 'sent'):
+            raise AccessError(_("This RFQ is no longer open for quotes."))
+        return rfq
+
     @http.route('/vendor/rfq', type='http', auth='user', website=True)
     def vendor_rfq(self, page=1, **kwargs):
         partner = request.env.user.partner_id.commercial_partner_id
@@ -165,6 +177,110 @@ class VendorPortalController(CustomerPortal):
         return request.render(
             'mumtaz_vendor_portal.portal_vendor_rfq',
             {'rfqs': rfqs, 'pager': pager},
+        )
+
+    @http.route('/vendor/rfq/<int:rfq_id>',
+                type='http', auth='user', website=True)
+    def vendor_rfq_detail(self, rfq_id, error=None, success=None, **kwargs):
+        try:
+            rfq = self._get_vendor_rfq(rfq_id)
+        except (AccessError, MissingError) as exc:
+            return request.render(
+                'http_routing.404',
+                {'message': str(exc)},
+                status=404,
+            )
+        return request.render(
+            'mumtaz_vendor_portal.portal_vendor_rfq_detail',
+            {'rfq': rfq, 'error': error, 'success': success},
+        )
+
+    @http.route('/vendor/rfq/<int:rfq_id>/respond',
+                type='http', auth='user', methods=['POST'],
+                website=True, csrf=True)
+    def vendor_rfq_respond(self, rfq_id, **post):
+        try:
+            rfq = self._get_vendor_rfq(rfq_id)
+        except (AccessError, MissingError):
+            return request.redirect('/vendor/rfq')
+
+        notes         = (post.get('notes') or '').strip()
+        valid_until   = (post.get('valid_until') or '').strip()
+        delivery_days = (post.get('delivery_days') or '').strip()
+
+        # Collect per-line quoted prices keyed by line id
+        updated_lines = []
+        for line in rfq.order_line:
+            raw = (post.get(f'price_{line.id}') or '').strip()
+            if raw:
+                try:
+                    quoted = float(raw)
+                except ValueError:
+                    return request.redirect(
+                        f'/vendor/rfq/{rfq_id}?error=Invalid+price+on+line+"{line.name[:40]}"'
+                    )
+                if quoted < 0:
+                    return request.redirect(
+                        f'/vendor/rfq/{rfq_id}?error=Prices+cannot+be+negative.'
+                    )
+                updated_lines.append((line, quoted))
+
+        if not updated_lines and not notes:
+            return request.redirect(
+                f'/vendor/rfq/{rfq_id}?error=Please+provide+at+least+one+quoted+price+or+a+note.'
+            )
+
+        # Build rich HTML chatter body
+        rows = ['<p><strong>Vendor quote submitted by '
+                f'{request.env.user.name}</strong></p>']
+        if updated_lines:
+            rows.append(
+                '<table style="border-collapse:collapse;font-size:13px;">'
+                '<tr>'
+                '<th style="border:1px solid #cbd5e1;padding:5px 10px;text-align:left;">Product</th>'
+                '<th style="border:1px solid #cbd5e1;padding:5px 10px;text-align:right;">Qty</th>'
+                '<th style="border:1px solid #cbd5e1;padding:5px 10px;text-align:right;">Quoted Unit Price</th>'
+                '</tr>'
+            )
+            for line, price in updated_lines:
+                rows.append(
+                    f'<tr>'
+                    f'<td style="border:1px solid #e2e8f0;padding:5px 10px;">{line.name}</td>'
+                    f'<td style="border:1px solid #e2e8f0;padding:5px 10px;text-align:right;">'
+                    f'{line.product_qty:.2f} {line.product_uom.name}</td>'
+                    f'<td style="border:1px solid #e2e8f0;padding:5px 10px;text-align:right;">'
+                    f'{price:,.2f} {rfq.currency_id.name}</td>'
+                    f'</tr>'
+                )
+            rows.append('</table>')
+        if valid_until:
+            rows.append(f'<p>Quote valid until: <strong>{valid_until}</strong></p>')
+        if delivery_days:
+            rows.append(f'<p>Estimated lead time: <strong>{delivery_days} day(s)</strong></p>')
+        if notes:
+            rows.append(f'<p>Notes: {notes}</p>')
+
+        try:
+            for line, price in updated_lines:
+                line.sudo().write({'price_unit': price})
+            rfq.sudo().message_post(
+                body=''.join(rows),
+                author_id=request.env.user.partner_id.id,
+                message_type='comment',
+                subtype_xmlid='mail.mt_note',
+            )
+            _logger.info(
+                'Vendor portal: quote submitted on RFQ %s by user %s',
+                rfq.name, request.env.user.id,
+            )
+        except Exception:
+            _logger.exception('Vendor RFQ respond failed for RFQ %s', rfq_id)
+            return request.redirect(
+                f'/vendor/rfq/{rfq_id}?error=Failed+to+submit+quote.+Please+try+again.'
+            )
+
+        return request.redirect(
+            f'/vendor/rfq/{rfq_id}?success=Your+quote+has+been+submitted+successfully.'
         )
 
     @http.route('/vendor/invoices', type='http', auth='user', website=True)

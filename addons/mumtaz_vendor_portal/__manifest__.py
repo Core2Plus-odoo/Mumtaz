@@ -15,6 +15,7 @@
         'views/portal_vendor_invoices.xml',
         'views/portal_vendor_invoice_upload.xml',
         'views/portal_vendor_rfq.xml',
+        'views/portal_vendor_rfq_detail.xml',
         'views/portal_vendor_payments.xml',
     ],
     'assets': {
