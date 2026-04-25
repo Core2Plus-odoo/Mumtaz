@@ -447,7 +447,49 @@
           </div>
         </div>
 
-        <!-- Steps 5-6 added in next patches -->
+        <!-- ── Step 5: Team Size ── -->
+        <div class="step" data-step="5">
+          <div class="ob-eyebrow">Your team</div>
+          <h1 class="ob-title">How many people will use Mumtaz?</h1>
+          <p class="ob-sub">This helps us pick the right plan for you. You can always change later.</p>
+
+          <div class="ob-grid-1" id="team-grid">
+            <button class="ob-card-wide" data-value="1-5">
+              <div class="ob-card-wide-icon">👤</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">Just me / 1–5 users</div>
+                <div class="ob-card-wide-desc">Solo founders and small teams. Starter plan recommended.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="6-25">
+              <div class="ob-card-wide-icon">👥</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">6–25 users</div>
+                <div class="ob-card-wide-desc">Growing SMEs with multiple departments. Growth plan recommended.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="26-100">
+              <div class="ob-card-wide-icon">🏢</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">26–100 users</div>
+                <div class="ob-card-wide-desc">Mid-market businesses across multiple branches.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="100+">
+              <div class="ob-card-wide-icon">🏛️</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">100+ users</div>
+                <div class="ob-card-wide-desc">Enterprise — let's talk about a custom setup.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 6 added in next patch -->
 
       </div>
     </div>
@@ -543,6 +585,16 @@
       });
     });
 
+    /* ── Step 5: Team size (single-select) ── */
+    document.querySelectorAll('#team-grid .ob-card-wide').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('#team-grid .ob-card-wide').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.teamSize = card.dataset.value;
+        validateStep();
+      });
+    });
+
     /* ── Navigation ── */
     function updateProgress() {
       $('step-current').textContent = state.currentStep;
@@ -573,7 +625,8 @@
       if (s === 2) ok = state.products.length > 0;
       if (s === 3) ok = state.agents.length > 0;
       if (s === 4) ok = state.modules.length > 0;
-      // steps 5-6 added in next patches
+      if (s === 5) ok = !!state.teamSize;
+      // step 6 added in next patch
       $('btn-next').disabled = !ok;
     }
 
