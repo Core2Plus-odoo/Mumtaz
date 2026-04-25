@@ -5,6 +5,56 @@ from odoo.exceptions import AccessDenied
 
 _logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Subdomain → company middleware
+# ---------------------------------------------------------------------------
+
+class MumtazSlugMiddleware:
+    """WSGI middleware that reads X-Mumtaz-Slug (set by nginx) and stores it
+    on the WSGI environ so downstream Odoo code can pick up the org context.
+
+    nginx sets:  proxy_set_header X-Mumtaz-Slug $slug;
+    This middleware surfaces it as environ['mumtaz.slug'] and also sets
+    HTTP_X_MUMTAZ_SLUG in the standard WSGI form so it's readable anywhere.
+    """
+
+    def __init__(self, application):
+        self.application = application
+
+    def __call__(self, environ, start_response):
+        slug = (
+            environ.get("HTTP_X_MUMTAZ_SLUG", "").strip().lower() or
+            _slug_from_host(environ.get("HTTP_HOST", ""))
+        )
+        if slug:
+            environ["mumtaz.slug"] = slug
+        return self.application(environ, start_response)
+
+
+def _slug_from_host(host: str) -> str:
+    """Extract the first hostname component if it looks like a Mumtaz tenant.
+
+    'acme.mumtaz.digital' → 'acme'
+    'mumtaz.digital'      → ''   (marketing site)
+    'admin.mumtaz.digital'→ 'admin'
+    """
+    if not host:
+        return ""
+    hostname = host.split(":")[0]  # strip port
+    parts = hostname.split(".")
+    if len(parts) >= 3 and parts[-2] == "mumtaz" and parts[-1] == "digital":
+        return parts[0]
+    return ""
+
+
+def get_current_slug() -> str:
+    """Return the slug for the current HTTP request, or empty string."""
+    try:
+        return (request.httprequest.environ.get("mumtaz.slug") or "").strip()
+    except RuntimeError:
+        return ""
+
 # ---------------------------------------------------------------------------
 # Login redirect override
 # ---------------------------------------------------------------------------
@@ -74,6 +124,49 @@ class MumtazPortalRouting(http.Controller):
             'portal_label': user.get_mumtaz_portal_label(),
             'accessible_portals': user.get_accessible_portals(),
             'company': request.env.company,
+        }
+
+    def _resolve_slug_company(self):
+        """Return the res.company matching the current request slug, or None.
+
+        Looks up mumtaz.tenant by subdomain field, then falls back to
+        res.company.name / res.company.website substring match.
+        """
+        slug = get_current_slug()
+        if not slug:
+            return None
+        env = request.env.sudo()
+        tenant = env["mumtaz.tenant"].search([("subdomain", "=", slug)], limit=1)
+        if tenant and tenant.company_id:
+            return tenant.company_id
+        company = env["res.company"].search([("name", "ilike", slug)], limit=1)
+        return company or None
+
+    # ── Slug → company JSON endpoint ─────────────────────────────────── #
+
+    @http.route(
+        "/mumtaz/api/org",
+        type="json",
+        auth="public",
+        methods=["GET"],
+        csrf=False,
+    )
+    def get_org_info(self):
+        """Return org info for the current subdomain — used by the frontend
+        to show the correct brand/logo before login."""
+        slug = get_current_slug()
+        if not slug:
+            return {"slug": None, "company": None}
+        company = self._resolve_slug_company()
+        if not company:
+            return {"slug": slug, "company": None}
+        return {
+            "slug": slug,
+            "company": {
+                "id":   company.id,
+                "name": company.name,
+                "logo": f"/web/image/res.company/{company.id}/logo" if company.logo else None,
+            },
         }
 
     # ------------------------------------------------------------------ #

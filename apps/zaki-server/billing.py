@@ -15,6 +15,8 @@ so the front-end can fall back to the current direct-plan-change flow.
 import os, sqlite3
 from typing import Optional
 
+import settings_store as store
+
 try:
     import stripe  # type: ignore
 except ImportError:  # pragma: no cover — package optional during dev
@@ -22,7 +24,7 @@ except ImportError:  # pragma: no cover — package optional during dev
 
 
 def _key() -> Optional[str]:
-    k = os.environ.get("STRIPE_SECRET_KEY", "").strip()
+    k = (store.get("STRIPE_SECRET_KEY", "") or "").strip()
     return k or None
 
 
@@ -47,7 +49,7 @@ def price_id_for(plan_key: str) -> Optional[str]:
     env = PLAN_TO_PRICE_ENV.get(plan_key)
     if not env:
         return None
-    pid = os.environ.get(env, "").strip()
+    pid = (store.get(env, "") or "").strip()
     return pid or None
 
 
@@ -110,7 +112,7 @@ def parse_webhook(payload: bytes, signature_header: str | None):
     if not is_configured():
         raise RuntimeError("Stripe not configured.")
     _init()
-    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "").strip()
+    secret = (store.get("STRIPE_WEBHOOK_SECRET", "") or "").strip()
     if not secret:
         raise RuntimeError("STRIPE_WEBHOOK_SECRET missing.")
     return stripe.Webhook.construct_event(payload, signature_header or "", secret)
@@ -130,7 +132,7 @@ def plan_from_event(event_obj: dict) -> Optional[str]:
         if not price_id:
             continue
         for plan_key, env in PLAN_TO_PRICE_ENV.items():
-            if price_id == os.environ.get(env, "").strip():
+            if price_id == (store.get(env, "") or "").strip():
                 return plan_key
     return None
 

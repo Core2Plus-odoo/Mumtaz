@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 import mail as mailer
 import billing as billing_svc
 import zatca as zatca_svc
+import settings_store as settings
 
 load_dotenv()
 
@@ -375,6 +376,7 @@ class ChatReq(BaseModel):
 @app.on_event("startup")
 def startup():
     init_db()
+    settings.init_db()
 
 @app.get("/health")
 def health():
@@ -442,17 +444,24 @@ class ResetReq(BaseModel):
     token: str
     password: str
 
-PORTAL_BASE_URL = os.environ.get("PORTAL_BASE_URL", "https://app.mumtaz.digital")
 RESET_TOKEN_TTL_SECS = 3600  # 1 hour
 
-# Comma-separated list of admin emails. Admins see /admin.html and the
-# /api/v1/admin/* endpoints. Default: empty — set MUMTAZ_ADMINS in env.
-ADMIN_EMAILS = {
-    e.strip().lower() for e in os.environ.get("MUMTAZ_ADMINS", "").split(",") if e.strip()
-}
+def portal_base_url() -> str:
+    return settings.get("PORTAL_BASE_URL", "https://app.mumtaz.digital") or "https://app.mumtaz.digital"
+
+# Backwards-compat shim — anything that did `f"{PORTAL_BASE_URL}/..."` keeps working.
+PORTAL_BASE_URL = portal_base_url()
+
+def admin_emails() -> set[str]:
+    """Live read so admins added through the UI take effect immediately."""
+    raw = settings.get("MUMTAZ_ADMINS", "") or ""
+    return {e.strip().lower() for e in raw.split(",") if e.strip()}
+
+# Backwards-compat shim — modules importing ADMIN_EMAILS still see the env list.
+ADMIN_EMAILS = admin_emails()
 
 def require_admin(auth: dict = Depends(require_auth)) -> dict:
-    if (auth.get("email") or "").lower() not in ADMIN_EMAILS:
+    if (auth.get("email") or "").lower() not in admin_emails():
         raise HTTPException(403, "Admin access required.")
     return auth
 
@@ -728,15 +737,33 @@ def zatca_generate_qr(req: ZatcaQRReq, auth: dict = Depends(require_auth)):
 
 class ZatcaOnboardReq(BaseModel):
     otp: str
+    csr_base64: str | None = None
 
 @app.post("/api/v1/zatca/onboard")
 def zatca_onboard(req: ZatcaOnboardReq, auth: dict = Depends(require_admin)):
-    """Admin-only: kick off ZATCA onboarding with the OTP issued by Fatoora portal."""
+    """Admin-only: submit CSR + OTP to ZATCA, persist returned CSID + secret.
+
+    If csr_base64 is omitted, the caller must already have run
+    /admin/settings/zatca/csr to generate one — we'll regenerate from the
+    saved private key in that case (TODO: store the CSR alongside the key)."""
+    if not req.csr_base64:
+        raise HTTPException(400, "Provide csr_base64 from /admin/settings/zatca/csr.")
     try:
-        result = zatca_svc.onboard(req.otp.strip())
-    except (RuntimeError, ValueError) as e:
+        result = zatca_svc.submit_csr_for_csid(
+            csr_base64=req.csr_base64.strip(),
+            otp=req.otp.strip(),
+        )
+    except RuntimeError as e:
         raise HTTPException(400, str(e))
-    return result
+
+    # Persist the returned token + secret so subsequent invoice submissions can authenticate.
+    if result.get("binarySecurityToken"):
+        settings.set_value("ZATCA_CSID", result["binarySecurityToken"], updated_by=auth.get("email"))
+    return {
+        "ok": True,
+        "raw": result,
+        "stored": {"ZATCA_CSID": bool(result.get("binarySecurityToken"))},
+    }
 
 class ZatcaSubmitReq(BaseModel):
     invoice_xml: str
@@ -751,6 +778,91 @@ def zatca_submit(req: ZatcaSubmitReq, auth: dict = Depends(require_auth)):
     except (RuntimeError, ValueError) as e:
         raise HTTPException(400, str(e))
     return result
+
+
+# ── Admin: runtime settings ──────────────────────────────────────────
+@app.get("/api/v1/admin/settings")
+def admin_get_settings(auth: dict = Depends(require_admin)):
+    """Return all manageable settings with their current value + source.
+    Sensitive fields are masked. Admins can override via POST below."""
+    return {
+        "settings":      settings.list_all(masked=True),
+        "allowed_keys":  list(settings.ALLOWED_KEYS),
+        "sensitive_keys": list(settings.SENSITIVE_KEYS),
+    }
+
+class SettingsUpdateReq(BaseModel):
+    values: dict   # {KEY: "value"}; empty string clears the override
+
+@app.post("/api/v1/admin/settings")
+def admin_update_settings(req: SettingsUpdateReq, auth: dict = Depends(require_admin)):
+    """Bulk-update settings. Empty strings remove DB overrides (env wins again)."""
+    accepted = settings.set_many(req.values, updated_by=auth.get("email"))
+    rejected = sorted(set(req.values.keys()) - set(accepted))
+    # Refresh module-level globals that some code reads at import time.
+    global ADMIN_EMAILS, PORTAL_BASE_URL
+    ADMIN_EMAILS    = admin_emails()
+    PORTAL_BASE_URL = portal_base_url()
+    return {"ok": True, "accepted": accepted, "rejected": rejected,
+            "settings": settings.list_all(masked=True)}
+
+
+class SmtpTestReq(BaseModel):
+    to: str
+
+@app.post("/api/v1/admin/settings/test/smtp")
+def admin_test_smtp(req: SmtpTestReq, auth: dict = Depends(require_admin)):
+    """Send a test email using whatever SMTP config is currently active."""
+    if not (mailer._config().get("host") or "").strip():
+        raise HTTPException(400, "SMTP_HOST is not configured.")
+    ok = mailer.send_email(
+        req.to.strip(),
+        "Mumtaz SMTP test",
+        "<p>This is a test message from your Mumtaz admin panel. "
+        "If you can read it, SMTP is working.</p>",
+        "Mumtaz SMTP test — if you can read this, SMTP is working.",
+    )
+    if not ok:
+        raise HTTPException(502, "SMTP send failed. Check zaki-server logs.")
+    return {"ok": True}
+
+
+@app.post("/api/v1/admin/settings/test/stripe")
+def admin_test_stripe(auth: dict = Depends(require_admin)):
+    """Verify the configured Stripe secret key by making a tiny API call."""
+    if not billing_svc.is_configured():
+        raise HTTPException(400, "Stripe is not configured.")
+    try:
+        billing_svc._init()
+        import stripe as _stripe  # noqa
+        # Cheapest GET on the Stripe API: list a single price
+        _stripe.Price.list(limit=1)
+    except Exception as e:
+        raise HTTPException(502, f"Stripe key rejected: {e}")
+    return {"ok": True}
+
+
+@app.post("/api/v1/admin/settings/zatca/csr")
+def admin_zatca_csr(auth: dict = Depends(require_admin)):
+    """Generate a fresh ZATCA EC keypair + CSR. The private key is saved
+    automatically into ZATCA_PRIVATE_KEY; the CSR is returned for OTP submission."""
+    vat    = (settings.get("ZATCA_VAT_NUMBER") or "").strip()
+    seller = (settings.get("ZATCA_SELLER_NAME") or "").strip()
+    if not vat or not seller:
+        raise HTTPException(400, "Set ZATCA_VAT_NUMBER and ZATCA_SELLER_NAME first.")
+    import secrets as _sec
+    serial = "1-mumtaz|2-zaki|3-" + _sec.token_hex(8)
+    pair = zatca_svc.generate_keypair_and_csr(
+        common_name=seller, vat_number=vat,
+        serial_number=serial, organization=seller,
+    )
+    settings.set_value("ZATCA_PRIVATE_KEY", pair["private_key_pem"], updated_by=auth.get("email"))
+    return {
+        "ok": True,
+        "csr_pem":    pair["csr_pem"],
+        "csr_base64": pair["csr_base64"],
+        "next_step":  "Submit the CSR + your OTP to /api/v1/zatca/onboard.",
+    }
 
 
 # ── Partner / White-label ────────────────────────────────────────────

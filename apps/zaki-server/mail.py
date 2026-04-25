@@ -17,15 +17,17 @@ import os, smtplib, ssl, traceback
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import settings_store as store
+
 
 def _config():
     return {
-        "host":    os.environ.get("SMTP_HOST", "").strip(),
-        "port":    int(os.environ.get("SMTP_PORT", "587") or "587"),
-        "user":    os.environ.get("SMTP_USER", "").strip(),
-        "password":os.environ.get("SMTP_PASS", ""),
-        "from":    os.environ.get("SMTP_FROM", "Mumtaz <hello@mumtaz.digital>").strip(),
-        "use_tls": os.environ.get("SMTP_USE_TLS", "1") != "0",
+        "host":    (store.get("SMTP_HOST", "") or "").strip(),
+        "port":    store.get_int("SMTP_PORT", 587),
+        "user":    (store.get("SMTP_USER", "") or "").strip(),
+        "password": store.get("SMTP_PASS", "") or "",
+        "from":    (store.get("SMTP_FROM", "Mumtaz <hello@mumtaz.digital>") or "").strip(),
+        "use_tls": store.get_bool("SMTP_USE_TLS", True),
     }
 
 

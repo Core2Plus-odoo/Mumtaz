@@ -1,22 +1,23 @@
 /* =============================================================
    Mumtaz Platform — Odoo Backend Theme
-   Matches: app.mumtaz.digital portal + mumtaz.digital brand
+   White & Teal brand — aligned with brand/tokens.css v2
 ============================================================= */
 
 /* ── Brand tokens ──────────────────────────────────────────── */
 :root {
-    --mumtaz-blue:    #1a73e8;
-    --mumtaz-blue-dk: #0d5bc5;
-    --mumtaz-green:   #10b981;
-    --mumtaz-dark:    #0f172a;
-    --mumtaz-surface: #1e293b;
+    --mumtaz-teal:    #0891B2;
+    --mumtaz-teal-dk: #0E7490;
+    --mumtaz-teal-lt: #06B6D4;
+    --mumtaz-green:   #059669;
+    --mumtaz-dark:    #0F172A;
+    --mumtaz-surface: #1E293B;
     --mumtaz-border:  rgba(255,255,255,0.07);
-    --mumtaz-text:    #f8fafc;
-    --mumtaz-muted:   #94a3b8;
+    --mumtaz-text:    #F8FAFC;
+    --mumtaz-muted:   #94A3B8;
 
     /* Override Odoo primary */
-    --o-brand-primary:   #1a73e8;
-    --o-brand-secondary: #0d5bc5;
+    --o-brand-primary:   #0891B2;
+    --o-brand-secondary: #0E7490;
 }
 
 /* ── Top Navigation Bar ────────────────────────────────────── */
@@ -48,11 +49,11 @@
     letter-spacing: .02em;
 }
 
-/* Active app section underline */
+/* Active section underline */
 .o_main_navbar .o_menu_sections .o_nav_entry.o_focused,
 .o_main_navbar .o_menu_sections > .o_dropdown.show > .o_dropdown_button {
     color: #fff !important;
-    border-bottom: 2px solid var(--mumtaz-blue) !important;
+    border-bottom: 2px solid var(--mumtaz-teal-lt) !important;
 }
 
 /* Debug mode badge */
@@ -63,12 +64,12 @@
 
 /* ── Home / App Menu (grid) ────────────────────────────────── */
 .o_home_menu {
-    background: linear-gradient(160deg, #0f172a 0%, #1a2744 60%, #0f2040 100%) !important;
+    background: linear-gradient(160deg, #0F172A 0%, #0E2D3D 60%, #082030 100%) !important;
 }
 
 .o_home_menu .o_app:hover .o_app_icon,
 .o_home_menu .o_app.o_focused .o_app_icon {
-    box-shadow: 0 0 0 3px var(--mumtaz-blue) !important;
+    box-shadow: 0 0 0 3px var(--mumtaz-teal) !important;
 }
 
 .o_home_menu .o_app .o_caption {
@@ -84,103 +85,103 @@
 
 /* ── Primary Buttons ───────────────────────────────────────── */
 .btn-primary {
-    background-color: var(--mumtaz-blue) !important;
-    border-color:     var(--mumtaz-blue) !important;
+    background-color: var(--mumtaz-teal) !important;
+    border-color:     var(--mumtaz-teal) !important;
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {
-    background-color: var(--mumtaz-blue-dk) !important;
-    border-color:     var(--mumtaz-blue-dk) !important;
+    background-color: var(--mumtaz-teal-dk) !important;
+    border-color:     var(--mumtaz-teal-dk) !important;
 }
 
 /* ── Links ─────────────────────────────────────────────────── */
-a { color: var(--mumtaz-blue); }
-a:hover { color: var(--mumtaz-blue-dk); }
+a { color: var(--mumtaz-teal); }
+a:hover { color: var(--mumtaz-teal-dk); }
 
 /* ── Form / List focus states ──────────────────────────────── */
 .o_field_widget input:focus,
 .o_field_widget textarea:focus,
 .form-control:focus,
 .o_input:focus {
-    border-color: var(--mumtaz-blue) !important;
-    box-shadow: 0 0 0 3px rgba(26,115,232,.14) !important;
+    border-color: var(--mumtaz-teal) !important;
+    box-shadow: 0 0 0 3px rgba(8,145,178,.14) !important;
 }
 
 /* ── Status bar buttons ────────────────────────────────────── */
 .o_statusbar_buttons .btn-primary,
 .o_form_buttons_view .btn-primary {
-    background: var(--mumtaz-blue) !important;
-    border-color: var(--mumtaz-blue) !important;
+    background: var(--mumtaz-teal) !important;
+    border-color: var(--mumtaz-teal) !important;
 }
 
 /* ── Stat buttons ──────────────────────────────────────────── */
 .oe_stat_button:hover {
-    color: var(--mumtaz-blue) !important;
+    color: var(--mumtaz-teal) !important;
 }
 
 /* ── Kanban header ─────────────────────────────────────────── */
 .o_kanban_header .o_kanban_add_column {
-    color: var(--mumtaz-blue) !important;
+    color: var(--mumtaz-teal) !important;
 }
 
 /* ── Search bar ────────────────────────────────────────────── */
 .o_searchview_facet {
-    background: rgba(26,115,232,.1) !important;
-    border-color: rgba(26,115,232,.3) !important;
-    color: var(--mumtaz-blue) !important;
+    background: rgba(8,145,178,.1) !important;
+    border-color: rgba(8,145,178,.3) !important;
+    color: var(--mumtaz-teal) !important;
 }
 
 .o_searchview_facet .o_facet_remove:hover {
-    color: var(--mumtaz-blue-dk) !important;
+    color: var(--mumtaz-teal-dk) !important;
 }
 
 /* ── Badges ────────────────────────────────────────────────── */
 .badge.bg-primary,
 .o_tag.o_tag_color_0,
 span.badge[style*="background-color"] {
-    background-color: var(--mumtaz-blue) !important;
+    background-color: var(--mumtaz-teal) !important;
 }
 
 /* ── Progress bars ─────────────────────────────────────────── */
 .progress-bar {
-    background-color: var(--mumtaz-blue) !important;
+    background-color: var(--mumtaz-teal) !important;
 }
 
 /* ── Chatter / Activity ────────────────────────────────────── */
 .o_mail_activity_action .btn-primary {
-    background: var(--mumtaz-blue) !important;
-    border-color: var(--mumtaz-blue) !important;
+    background: var(--mumtaz-teal) !important;
+    border-color: var(--mumtaz-teal) !important;
 }
 
 /* ── Dropdown items active ─────────────────────────────────── */
 .dropdown-item:hover,
 .dropdown-item:focus,
 .dropdown-item.active {
-    background-color: rgba(26,115,232,.08) !important;
-    color: var(--mumtaz-blue) !important;
+    background-color: rgba(8,145,178,.08) !important;
+    color: var(--mumtaz-teal) !important;
 }
 
 /* ── Checkbox / toggle ─────────────────────────────────────── */
 .form-check-input:checked {
-    background-color: var(--mumtaz-blue) !important;
-    border-color:     var(--mumtaz-blue) !important;
+    background-color: var(--mumtaz-teal) !important;
+    border-color:     var(--mumtaz-teal) !important;
 }
 
 /* ── Pivot / graph accent ──────────────────────────────────── */
 .o_graph_renderer .o_graph_with_search {
-    border-top: 3px solid var(--mumtaz-blue);
+    border-top: 3px solid var(--mumtaz-teal);
 }
 
 /* ── Page background ───────────────────────────────────────── */
 .o_form_view .o_form_sheet_bg {
-    background: #f8fafc;
+    background: #F8FAFC;
 }
 
 /* ── Sidebar (Settings, Configuration menus) ───────────────── */
 .o_setting_box .o_settings_container .col {
-    border-left: 3px solid var(--mumtaz-blue) !important;
+    border-left: 3px solid var(--mumtaz-teal) !important;
 }
 
 /* ── Remove raw Odoo.com links from backend notifications ──── */
@@ -190,6 +191,6 @@ span.badge[style*="background-color"] {
 
 /* ── Scrollbar ─────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--mumtaz-blue); }
+::-webkit-scrollbar-track { background: #F1F5F9; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--mumtaz-teal); }

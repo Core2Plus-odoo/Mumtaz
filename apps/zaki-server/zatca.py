@@ -23,27 +23,29 @@ import base64
 import os
 from datetime import datetime, timezone
 
+import settings_store as store
+
 
 # ── Configuration ──────────────────────────────────────────────────
 
 def zatca_env() -> str:
-    return (os.environ.get("ZATCA_ENV") or "").strip().lower()
+    return (store.get("ZATCA_ENV") or "").strip().lower()
 
 
 def is_configured() -> bool:
     """True if at minimum the VAT number + seller name are set.
     Cryptographic operations require ZATCA_CSID + ZATCA_PRIVATE_KEY too."""
     return bool(
-        (os.environ.get("ZATCA_VAT_NUMBER") or "").strip() and
-        (os.environ.get("ZATCA_SELLER_NAME") or "").strip()
+        (store.get("ZATCA_VAT_NUMBER") or "").strip() and
+        (store.get("ZATCA_SELLER_NAME") or "").strip()
     )
 
 
 def has_credentials() -> bool:
     """True when CSID + private key are loaded — required for signing."""
     return bool(
-        (os.environ.get("ZATCA_CSID") or "").strip() and
-        (os.environ.get("ZATCA_PRIVATE_KEY") or "").strip()
+        (store.get("ZATCA_CSID") or "").strip() and
+        (store.get("ZATCA_PRIVATE_KEY") or "").strip()
     )
 
 
@@ -52,8 +54,8 @@ def status() -> dict:
         "configured":     is_configured(),
         "has_credentials": has_credentials(),
         "env":            zatca_env() or "not-set",
-        "vat_number":     os.environ.get("ZATCA_VAT_NUMBER", "") if is_configured() else None,
-        "seller_name":    os.environ.get("ZATCA_SELLER_NAME", "") if is_configured() else None,
+        "vat_number":     store.get("ZATCA_VAT_NUMBER", "") if is_configured() else None,
+        "seller_name":    store.get("ZATCA_SELLER_NAME", "") if is_configured() else None,
     }
 
 
@@ -133,8 +135,120 @@ def sample_qr() -> str:
     """A self-contained example QR string for UI testing."""
     return build_qr(
         seller_name="Mumtaz Demo Co",
-        vat_number=os.environ.get("ZATCA_VAT_NUMBER", "300000000000003"),
+        vat_number=store.get("ZATCA_VAT_NUMBER", "300000000000003"),
         timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         total_with_vat="1150.00",
         vat_amount="150.00",
     )
+
+
+# ── Real CSR generation (production-ready) ─────────────────────────
+
+def generate_keypair_and_csr(*, common_name: str, vat_number: str,
+                             serial_number: str, organization: str,
+                             organizational_unit: str = "ZATCA",
+                             country: str = "SA",
+                             email: str | None = None) -> dict:
+    """Generate a fresh EC private key + CSR ready to submit to ZATCA's
+    Compliance API. Returns base64-encoded PEM key + base64-encoded CSR.
+
+    The caller is responsible for storing the private key securely
+    (settings 'ZATCA_PRIVATE_KEY') — once submitted with an OTP, ZATCA
+    returns a CSID that pairs with this exact key."""
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    key = ec.generate_private_key(ec.SECP256K1())
+
+    subject = x509.Name([
+        x509.NameAttribute(NameOID.COMMON_NAME,             common_name),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME,       organization),
+        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit),
+        x509.NameAttribute(NameOID.COUNTRY_NAME,            country),
+    ])
+
+    # ZATCA-specific subject alternative names
+    san_pairs = [
+        ("SN",       serial_number),
+        ("UID",      vat_number),
+        ("title",    "1100"),  # invoice type: 1=standard, 1=simplified, 0=third-party, 0=nominal
+        ("registeredAddress", "Saudi Arabia"),
+        ("businessCategory",  organization),
+    ]
+
+    builder = (
+        x509.CertificateSigningRequestBuilder()
+        .subject_name(subject)
+        .add_extension(
+            x509.SubjectAlternativeName([
+                x509.DirectoryName(x509.Name([
+                    x509.NameAttribute(x509.ObjectIdentifier("2.5.4.4"),  san_pairs[0][1]),  # SN
+                    x509.NameAttribute(x509.ObjectIdentifier("0.9.2342.19200300.100.1.1"), san_pairs[1][1]),  # UID
+                    x509.NameAttribute(x509.ObjectIdentifier("2.5.4.12"), san_pairs[2][1]),  # title
+                    x509.NameAttribute(x509.ObjectIdentifier("2.5.4.26"), san_pairs[3][1]),  # registered address
+                    x509.NameAttribute(x509.ObjectIdentifier("2.5.4.15"), san_pairs[4][1]),  # business category
+                ]))
+            ]),
+            critical=False,
+        )
+    )
+    csr = builder.sign(key, hashes.SHA256())
+
+    pem_key = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    pem_csr = csr.public_bytes(serialization.Encoding.PEM)
+
+    return {
+        "private_key_pem": pem_key.decode("ascii"),
+        "csr_pem":         pem_csr.decode("ascii"),
+        # ZATCA wants the CSR base64'd (without PEM headers) for the API call
+        "csr_base64":      base64.b64encode(pem_csr).decode("ascii"),
+    }
+
+
+def submit_csr_for_csid(*, csr_base64: str, otp: str, env: str | None = None) -> dict:
+    """Exchange a CSR + OTP for a Compliance CSID via ZATCA's onboarding API.
+
+    Endpoints:
+      sandbox    https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal/compliance
+      simulation https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation/compliance
+      production https://gw-fatoora.zatca.gov.sa/e-invoicing/core/compliance
+    """
+    import requests
+    env = (env or zatca_env() or "sandbox").lower()
+    base = {
+        "sandbox":    "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal",
+        "simulation": "https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation",
+        "production": "https://gw-fatoora.zatca.gov.sa/e-invoicing/core",
+    }.get(env, "https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal")
+
+    r = requests.post(
+        f"{base}/compliance",
+        headers={
+            "Accept":         "application/json",
+            "Accept-Version": "V2",
+            "OTP":            otp,
+            "Content-Type":   "application/json",
+        },
+        json={"csr": csr_base64},
+        timeout=30,
+    )
+    if r.status_code >= 400:
+        raise RuntimeError(f"ZATCA onboarding failed: HTTP {r.status_code} — {r.text[:300]}")
+    data = r.json()
+    # Returns: dispositionMessage, binarySecurityToken (CSID), secret, requestID
+    return data
+
+
+def hash_invoice_xml(xml_str: str) -> str:
+    """Compute the canonical SHA-256 hash of an UBL invoice XML, base64'd —
+    required for ZATCA invoice headers and previous-invoice chaining."""
+    import hashlib
+    return base64.b64encode(
+        hashlib.sha256(xml_str.encode("utf-8")).digest()
+    ).decode("ascii")

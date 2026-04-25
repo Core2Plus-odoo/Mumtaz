@@ -10,4 +10,31 @@
         </xpath>
     </template>
 
+    <!-- ── Inter font ────────────────────────────────────────────── -->
+    <template id="mumtaz_inter_font" inherit_id="web.layout" name="Mumtaz Inter Font">
+        <xpath expr="//head" position="inside">
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"
+                  rel="stylesheet"/>
+            <style>
+                body, .o_web_client { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important; }
+            </style>
+        </xpath>
+    </template>
+
+    <!-- ── Login page: inject split-screen CSS ───────────────────── -->
+    <!--
+        The split-screen HTML is rendered by mumtaz_login.css together with
+        Odoo's own login form markup. We only inject the stylesheet here;
+        the structural div wrapping is done in mumtaz_login.css using
+        body.o_login_page rules so we don't need to XPath-replace the
+        entire login layout (which differs between Odoo versions).
+    -->
+    <template id="mumtaz_login_css" inherit_id="web.login_layout" name="Mumtaz Login CSS">
+        <xpath expr="//head" position="inside">
+            <link rel="stylesheet" href="/mumtaz_theme/static/src/css/mumtaz_login.css"/>
+        </xpath>
+    </template>
+
 </odoo>

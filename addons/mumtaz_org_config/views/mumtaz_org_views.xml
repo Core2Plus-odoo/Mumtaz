@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List view ────────────────────────────────────────────────── -->
+    <record id="mumtaz_org_list_view" model="ir.ui.view">
+        <field name="name">mumtaz.org.list</field>
+        <field name="model">mumtaz.org</field>
+        <field name="arch" type="xml">
+            <list string="Organisations" decoration-success="state == 'active'"
+                  decoration-warning="state == 'pending'"
+                  decoration-muted="state in ('suspended','cancelled')">
+                <field name="name"/>
+                <field name="slug"/>
+                <field name="admin_email"/>
+                <field name="plan"/>
+                <field name="state"/>
+                <field name="country_id"/>
+                <field name="trial_expiry"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form view ────────────────────────────────────────────────── -->
+    <record id="mumtaz_org_form_view" model="ir.ui.view">
+        <field name="name">mumtaz.org.form</field>
+        <field name="model">mumtaz.org</field>
+        <field name="arch" type="xml">
+            <form string="Organisation">
+                <header>
+                    <button name="action_activate"  type="object" string="Activate"
+                            class="btn-primary"
+                            invisible="state == 'active'"/>
+                    <button name="action_suspend"   type="object" string="Suspend"
+                            invisible="state != 'active'"/>
+                    <button name="action_cancel"    type="object" string="Cancel"
+                            invisible="state == 'cancelled'"/>
+                    <button name="action_open_portal" type="object"
+                            string="Open Portal ↗" class="btn-secondary"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,active,suspended,cancelled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Organisation Name"/></h1>
+                        <div>
+                            <span class="text-muted">https://</span>
+                            <field name="slug" style="display:inline-block;width:auto;"/>
+                            <span class="text-muted">.mumtaz.digital</span>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Contact">
+                            <field name="admin_name"/>
+                            <field name="admin_email"/>
+                            <field name="phone"/>
+                            <field name="country_id"/>
+                        </group>
+                        <group string="Plan &amp; Billing">
+                            <field name="plan"/>
+                            <field name="trial_expiry"/>
+                            <field name="company_id"/>
+                            <field name="brand_id"/>
+                        </group>
+                    </group>
+
+                    <group string="Routing">
+                        <field name="subdomain_url" readonly="1"/>
+                        <field name="custom_domain"/>
+                    </group>
+
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Search view ──────────────────────────────────────────────── -->
+    <record id="mumtaz_org_search_view" model="ir.ui.view">
+        <field name="name">mumtaz.org.search</field>
+        <field name="model">mumtaz.org</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="slug"/>
+                <field name="admin_email"/>
+                <filter string="Active"    name="active"    domain="[('state','=','active')]"/>
+                <filter string="Pending"   name="pending"   domain="[('state','=','pending')]"/>
+                <filter string="Suspended" name="suspended" domain="[('state','=','suspended')]"/>
+                <filter string="Trial"     name="trial"     domain="[('plan','=','trial')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Plan"    name="group_plan"    context="{'group_by':'plan'}"/>
+                    <filter string="Country" name="group_country" context="{'group_by':'country_id'}"/>
+                    <filter string="State"   name="group_state"   context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Window action ────────────────────────────────────────────── -->
+    <record id="mumtaz_org_action" model="ir.actions.act_window">
+        <field name="name">Organisations</field>
+        <field name="res_model">mumtaz.org</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="mumtaz_org_search_view"/>
+        <field name="context">{"search_default_active": 1}</field>
+    </record>
+
+</odoo>
