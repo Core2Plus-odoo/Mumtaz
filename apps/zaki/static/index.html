@@ -430,6 +430,11 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .btn-voice:hover{border-color:var(--blue);color:var(--blue)}
 .btn-voice.recording{background:var(--danger-bg);border-color:var(--red);color:var(--red);animation:pulse 1s infinite}
 .btn-voice.processing{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
+.voice-status{display:none;align-items:center;gap:8px;font-size:.74rem;font-weight:500;padding:6px 12px;border-radius:6px;align-self:flex-start}
+.voice-status.show{display:inline-flex}
+.voice-status.recording{background:var(--danger-bg);color:var(--red)}
+.voice-status.processing{background:var(--blue-bg);color:var(--blue)}
+.voice-status .dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .btn-send{
   width:32px;height:32px;border-radius:50%;background:var(--grad);
@@ -441,13 +446,15 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 
 /* ── Opp / Risk cards ── */
 .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.opp-card,.risk-card{
+.opp-card,.risk-card,.invest-card,.market-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius);padding:16px 18px;transition:border-color var(--tr),box-shadow var(--tr);
 }
-.opp-card:hover,.risk-card:hover{border-color:var(--border-2);box-shadow:var(--shadow)}
+.opp-card:hover,.risk-card:hover,.invest-card:hover,.market-card:hover{border-color:var(--border-2);box-shadow:var(--shadow)}
 .opp-card{border-top:2px solid var(--green)}
 .risk-card{border-top:2px solid var(--red)}
+.invest-card{border-top:2px solid var(--purple,#a855f7)}
+.market-card{border-top:2px solid var(--cyan,#06b6d4)}
 .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px}
 .card-name{font-weight:600;font-size:.9rem;color:var(--text)}
 .card-body{font-size:.81rem;color:var(--text-3);line-height:1.6;margin-bottom:9px}
@@ -641,6 +648,18 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
     </div>
 
     <div class="nav-section">
+      <div class="nav-label">Intelligence</div>
+      <div class="nav-item" onclick="showPanel('invest')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Where to Invest
+      </div>
+      <div class="nav-item" onclick="showPanel('market')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Market Intelligence
+      </div>
+    </div>
+
+    <div class="nav-section">
       <div class="nav-label">IFRS &amp; Compliance</div>
       <div class="nav-item" onclick="showPanel('ifrs')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -760,6 +779,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
       <div id="chat-messages"></div>
       <div class="chat-input-area">
+        <div id="voice-status" class="voice-status"><span class="dot"></span><span id="voice-status-text">Listening…</span></div>
         <div class="chat-input-row">
           <textarea id="chat-input" rows="1" placeholder="Ask Zaki anything… e.g. 'Should I take this contract?' or 'Run a P&L analysis'"
             onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
@@ -1027,6 +1047,38 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
       <div id="board-content">
         <div style="color:var(--text-3);font-size:.85rem"><span class="spinner"></span> Generating board pack…</div>
+      </div>
+    </div>
+
+    <!-- ── WHERE TO INVEST ── -->
+    <div class="panel" id="panel-invest">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Where to <em>Invest</em></div>
+            <div class="panel-desc">Capital-allocation guidance — where each next dirham/riyal should go</div>
+          </div>
+          <button class="btn-secondary" onclick="loadInvest(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="invest-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>
+      </div>
+    </div>
+
+    <!-- ── MARKET INTELLIGENCE ── -->
+    <div class="panel" id="panel-market">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Market <em>Intelligence</em></div>
+            <div class="panel-desc">Macro, regulatory, and competitive context for your industry &amp; market</div>
+          </div>
+          <button class="btn-secondary" onclick="loadMarket(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="market-grid">
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Scanning market signals…</div>
       </div>
     </div>
 
@@ -1428,7 +1480,7 @@ const S = {
   ctx: { pipeline:'', clients:'', worry:'' },
   chat: [],
   transactions: [],
-  prefs: { readAloud: false },
+  prefs: { readAloud: false, autoPlayBriefing: true },
   _cache: {}
 }
 
@@ -1493,7 +1545,9 @@ function buildTransactionContext() {
   return `\nTRANSACTION DATA (${txs.length} records in ledger)\nCurrent month: Income ${S.co.currency} ${fmt(ci)} | Expenses ${S.co.currency} ${fmt(ce)} | Net ${S.co.currency} ${fmt(ci-ce)}\nPrior month:   Income ${S.co.currency} ${fmt(pi)} | Expenses ${S.co.currency} ${fmt(pe)} | Net ${S.co.currency} ${fmt(pi-pe)}\nTop expense categories:\n${topCats||'  (none)'}\n6-month trend:\n${trend||'  (insufficient data)'}\nRecent transactions:\n${recent||'  (none)'}`
 }
 
-function buildPrompt() {
+function buildZakiSystemPrompt() {
+  // Builds the canonical Zaki system prompt: identity, live financial snapshot,
+  // company context, and personality rules. Pure function — reads from S, returns string.
   computeFin()
   const f = S.fin
   const net = f.rev - f.exp
@@ -1714,7 +1768,7 @@ function aiReady() { return !!(S.keys.zakiJwt || S.keys.anthropic) }
 
 async function streamClaude(messages, onChunk, systemOverride) {
   if (!S.keys.anthropic) { noKeyPrompt(); throw new Error('No API key') }
-  const sys = systemOverride || buildPrompt()
+  const sys = systemOverride || buildZakiSystemPrompt()
   const resp = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -1849,9 +1903,17 @@ async function toggleVoice() {
 function setVoiceState(s) {
   voiceState = s
   const btn = document.getElementById('btn-voice')
-  if (!btn) return
-  btn.className = `btn-voice${s==='recording'?' recording':s==='processing'?' processing':''}`
-  btn.title = s === 'recording' ? 'Stop recording' : s === 'processing' ? 'Processing…' : 'Voice input'
+  if (btn) {
+    btn.className = `btn-voice${s==='recording'?' recording':s==='processing'?' processing':''}`
+    btn.title = s === 'recording' ? 'Stop recording' : s === 'processing' ? 'Processing…' : 'Voice input'
+  }
+  const status = document.getElementById('voice-status')
+  const text = document.getElementById('voice-status-text')
+  if (status && text) {
+    status.classList.remove('show', 'recording', 'processing')
+    if (s === 'recording') { status.classList.add('show', 'recording'); text.textContent = 'Listening…' }
+    else if (s === 'processing') { status.classList.add('show', 'processing'); text.textContent = 'Transcribing…' }
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1928,6 +1990,8 @@ function showPanel(id) {
   if (id === 'health' && !S._cache.health) loadHealth()
   if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
   if (id === 'risks' && !S._cache.risks) loadRisks()
+  if (id === 'invest' && !S._cache.invest) loadInvest()
+  if (id === 'market' && !S._cache.market) loadMarket()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
   if (id === 'board' && !S._cache.board) loadBoard()
   if (id === 'settings') { populateSettings(); renderZakiServerStatus() }
@@ -2228,7 +2292,7 @@ streamClaude = async function(messages, onChunk, systemOverride) {
 
 async function streamZaki(messages, onChunk, systemOverride) {
   const url = (S.keys.zakiUrl || 'https://app.mumtaz.digital').replace(/\/$/, '')
-  const sys = systemOverride || buildPrompt()
+  const sys = systemOverride || buildZakiSystemPrompt()
   // Prepend system as first user message if backend doesn't support system param
   const msgs = [{ role: 'user', content: `[System context — follow these instructions for this conversation]\n\n${sys}\n\n---\n\n${messages[0]?.content || ''}` },
     ...messages.slice(1)]
@@ -2773,10 +2837,13 @@ Context: revenue ${S.co.currency} ${fmt(f.rev)}/mo, expenses ${S.co.currency} ${
       full = acc
       el.textContent = acc
       el.classList.remove('loading')
-    }, buildPrompt())
+    }, buildZakiSystemPrompt())
     S._cache.briefing = full
     title.textContent = 'Daily briefing ready'
     save()
+    if (S.prefs?.autoPlayBriefing !== false && !briefingPlaying) {
+      setTimeout(() => { if (!briefingPlaying) toggleBriefingAudio() }, 400)
+    }
   } catch(e) {
     el.textContent = `Could not generate briefing: ${e.message}`
     el.classList.remove('loading')
@@ -2870,7 +2937,7 @@ async function sendChat() {
   if (btn) btn.disabled = true
 
   const kbHits = retrieveKB(text)
-  const sysWithKB = buildPrompt() + kbContext(kbHits)
+  const sysWithKB = buildZakiSystemPrompt() + kbContext(kbHits)
 
   try {
     let full = ''
@@ -3032,6 +3099,84 @@ async function loadRisks(force) {
             <div style="font-size:.72rem;color:var(--text-3)">${r.probability} probability</div>
           </div>
           <button class="btn-card-action" onclick="askFromBriefing('How do I mitigate this risk: ${r.title}')">Mitigate →</button>
+        </div>
+      </div>`).join('')
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// WHERE TO INVEST
+// ═══════════════════════════════════════════
+async function loadInvest(force) {
+  if (!force && S._cache.invest) return
+  const grid = document.getElementById('invest-grid')
+  if (!aiReady()) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Investment guidance ranks where each next dirham/riyal should go for the best risk-adjusted return.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>'
+  try {
+    const raw = await callClaude([{
+      role: 'user',
+      content: `Given this company's current cash, runway, margin, and stage, rank 4 capital-allocation priorities for the next ${S.co.currency} of free cash. For each, give a clear thesis and the expected payback. Respond ONLY with valid JSON array, no other text:
+[{"title":"<area, e.g. Sales hires, Marketing, Tech, Working capital, Reserves>","thesis":"why this is the right place to put money now (1-2 sentences)","amount":"${S.co.currency} X","payback":"e.g. 6 months / 12 months / strategic","priority":"1|2|3|4","action":"specific first step the CEO can take this week"}]`
+    }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.invest = items; save()
+    grid.innerHTML = items.map(o => `
+      <div class="invest-card">
+        <div class="card-header">
+          <div class="card-name">${o.title}</div>
+          <span class="tag" style="background:rgba(168,85,247,.12);color:var(--purple,#a855f7)">#${o.priority}</span>
+        </div>
+        <div class="card-body">${o.thesis}</div>
+        <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">First step:</strong> ${o.action}</div>
+        <div class="card-footer">
+          <div>
+            <div class="card-meta" style="color:var(--purple,#a855f7)">${o.amount}</div>
+            <div style="font-size:.72rem;color:var(--text-3)">Payback: ${o.payback}</div>
+          </div>
+          <button class="btn-card-action" onclick="askFromBriefing('Walk me through the case for investing in ${o.title}')">Discuss →</button>
+        </div>
+      </div>`).join('')
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
+  }
+}
+
+// ═══════════════════════════════════════════
+// MARKET INTELLIGENCE
+// ═══════════════════════════════════════════
+async function loadMarket(force) {
+  if (!force && S._cache.market) return
+  const grid = document.getElementById('market-grid')
+  if (!aiReady()) {
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Market Intelligence surfaces macro, regulatory, and competitive shifts relevant to your business.')}</div>`
+    return
+  }
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Scanning market signals…</div>'
+  try {
+    const raw = await callClaude([{
+      role: 'user',
+      content: `Brief me on the current market context for a ${S.co.industry || 'business'} company in ${S.co.country || 'this market'}. Cover 4 areas: (1) Macro / economic, (2) Regulatory or tax change, (3) Competitive / industry trend, (4) FX / commodity / supply-chain signal. For each, say what it means for THIS company and a recommended posture. Respond ONLY with valid JSON array:
+[{"area":"Macro|Regulatory|Competitive|FX/Supply","headline":"<one-line signal>","implication":"what this means for ${S.co.name || 'us'} in 1-2 sentences","posture":"Lean in|Hold|Hedge|Watch","action":"specific thing to do or monitor"}]`
+    }])
+    const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
+    S._cache.market = items; save()
+    const postureColor = p => /lean in/i.test(p) ? 'tag-green' : /hedge/i.test(p) ? 'tag-amber' : /hold/i.test(p) ? 'tag-amber' : 'tag-green'
+    grid.innerHTML = items.map(m => `
+      <div class="market-card">
+        <div class="card-header">
+          <div class="card-name">${m.area} · ${m.headline}</div>
+          <span class="tag ${postureColor(m.posture)}">${m.posture}</span>
+        </div>
+        <div class="card-body">${m.implication}</div>
+        <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Action:</strong> ${m.action}</div>
+        <div class="card-footer">
+          <div class="card-meta" style="color:var(--cyan,#06b6d4)">${m.area}</div>
+          <button class="btn-card-action" onclick="askFromBriefing('Tell me more about: ${m.headline}')">Dig in →</button>
         </div>
       </div>`).join('')
   } catch(e) {
@@ -3387,7 +3532,7 @@ async function askIfrs(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
+      buildZakiSystemPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are acting as an IFRS technical advisor. Cite the exact standard (e.g. "Under IFRS 15.31..."), give the accounting treatment, journal entries where relevant, and practical action steps. Be precise and authoritative.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
@@ -3495,7 +3640,7 @@ async function askTax(question) {
     let full = ''
     await streamClaude([{ role:'user', content: question }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc },
-      buildPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
+      buildZakiSystemPrompt() + kbContext(retrieveKB(question)) + `\n\nSPECIAL INSTRUCTION: You are a UAE tax advisor. Apply UAE Corporate Tax Law (Federal Decree-Law No. 47 of 2022), UAE VAT Law (Federal Decree-Law No. 8 of 2017), and ESR regulations precisely. Give specific rates, thresholds, deadlines, and filing requirements. Always end with action items and deadlines.`)
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
