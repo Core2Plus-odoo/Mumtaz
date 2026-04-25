@@ -10,7 +10,7 @@ import os, json, re, time, sqlite3
 import xmlrpc.client
 from datetime import datetime, timezone, timedelta
 
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -18,6 +18,8 @@ from jose import jwt, JWTError
 import bcrypt as _bcrypt
 from anthropic import Anthropic
 from dotenv import load_dotenv
+
+import mail as mailer
 
 load_dotenv()
 
@@ -355,7 +357,7 @@ def health():
     }
 
 @app.post("/api/v1/auth/signup")
-def signup(req: SignupReq):
+def signup(req: SignupReq, background_tasks: BackgroundTasks = None):
     email = req.email.strip().lower()
     db    = get_db()
 
@@ -379,6 +381,11 @@ def signup(req: SignupReq):
     db.commit()
     row = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     db.close()
+
+    # 4. Welcome email (background — never blocks signup)
+    if background_tasks is not None:
+        subject, html, text = mailer.welcome_email(req.name, email)
+        background_tasks.add_task(mailer.send_email, email, subject, html, text)
 
     token = make_token(row["id"], email, {
         "name": req.name, "company": req.company,
