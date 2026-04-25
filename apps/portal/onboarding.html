@@ -85,10 +85,71 @@
       margin-bottom: 36px; line-height: 1.6;
     }
 
-    /* ── Card grid (industry options) ── */
+    /* ── Card grids ── */
     .ob-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .ob-grid-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
     @media (max-width: 720px) { .ob-grid-3 { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 480px) { .ob-grid-3 { grid-template-columns: 1fr; } }
+
+    /* ── Wide product card (multi-select) ── */
+    .ob-card-wide {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      display: flex; align-items: flex-start; gap: 16px;
+      text-align: left; width: 100%;
+      position: relative;
+    }
+    .ob-card-wide:hover { border-color: var(--ink3); }
+    .ob-card-wide.selected {
+      border-color: var(--gold);
+      background: var(--gold-bg);
+    }
+    .ob-card-wide-icon {
+      width: 44px; height: 44px;
+      background: var(--bg);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .ob-card-wide.selected .ob-card-wide-icon { background: rgba(184,134,42,.15); }
+    .ob-card-wide-body { flex: 1; }
+    .ob-card-wide-name {
+      font-size: 1rem; font-weight: 600; color: var(--ink);
+      margin-bottom: 4px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ob-card-wide-tag {
+      font-family: 'DM Mono', monospace; font-size: .65rem;
+      padding: 2px 7px; border-radius: 4px;
+      letter-spacing: .05em;
+      background: rgba(11,122,100,.12); color: var(--teal);
+      font-weight: 500;
+    }
+    .ob-card-wide-desc {
+      font-size: .875rem; color: var(--ink2);
+      line-height: 1.55;
+    }
+    .ob-check {
+      width: 22px; height: 22px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--white);
+      flex-shrink: 0; margin-top: 2px;
+      transition: background .15s, border-color .15s;
+    }
+    .ob-card-wide.selected .ob-check {
+      background: var(--gold); border-color: var(--gold);
+    }
+    .ob-check::after {
+      content: '✓'; color: #fff; font-size: .85rem; font-weight: 700;
+      opacity: 0; transition: opacity .15s;
+    }
+    .ob-card-wide.selected .ob-check::after { opacity: 1; }
 
     .ob-card {
       background: var(--white);
@@ -222,7 +283,57 @@
           </div>
         </div>
 
-        <!-- Step 2-6 added in next patches -->
+        <!-- ── Step 2: Products ── -->
+        <div class="step" data-step="2">
+          <div class="ob-eyebrow">What you'll use</div>
+          <h1 class="ob-title">Which products do you need?</h1>
+          <p class="ob-sub">Pick one or more — you can always add more later.</p>
+
+          <div class="ob-grid-1" id="products-grid">
+            <button class="ob-card-wide" data-value="erp">
+              <div class="ob-card-wide-icon">⬡</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">
+                  Mumtaz ERP
+                  <span class="ob-card-wide-tag">RECOMMENDED</span>
+                </div>
+                <div class="ob-card-wide-desc">
+                  Full business management — accounting, sales, inventory, HR, payroll.
+                  Pre-configured for GCC compliance.
+                </div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+
+            <button class="ob-card-wide" data-value="zaki">
+              <div class="ob-card-wide-icon">ذ</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">
+                  ZAKI AI Agents
+                </div>
+                <div class="ob-card-wide-desc">
+                  Your AI workforce — CFO, marketing, HR, and more. Ask questions in
+                  Arabic or English, get instant answers from your live data.
+                </div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+
+            <button class="ob-card-wide" data-value="marketplace">
+              <div class="ob-card-wide-icon">⟁</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">B2B Marketplace</div>
+                <div class="ob-card-wide-desc">
+                  Buy and sell with verified GCC businesses. Purchase orders and
+                  invoices flow automatically into your ERP.
+                </div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Steps 3-6 added in next patches -->
 
       </div>
     </div>
@@ -252,13 +363,24 @@
 
     const $ = id => document.getElementById(id);
 
-    /* ── Step 1: Industry selection ── */
+    /* ── Step 1: Industry (single-select) ── */
     document.querySelectorAll('#industry-grid .ob-card').forEach(card => {
       card.addEventListener('click', () => {
         document.querySelectorAll('#industry-grid .ob-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         state.industry = card.dataset.value;
-        $('btn-next').disabled = false;
+        validateStep();
+      });
+    });
+
+    /* ── Step 2: Products (multi-select) ── */
+    document.querySelectorAll('#products-grid .ob-card-wide').forEach(card => {
+      card.addEventListener('click', () => {
+        const v = card.dataset.value;
+        const i = state.products.indexOf(v);
+        if (i === -1) { state.products.push(v); card.classList.add('selected'); }
+        else          { state.products.splice(i, 1); card.classList.remove('selected'); }
+        validateStep();
       });
     });
 
@@ -284,7 +406,8 @@
       const s = state.currentStep;
       let ok = false;
       if (s === 1) ok = !!state.industry;
-      // steps 2-6 added in next patches
+      if (s === 2) ok = state.products.length > 0;
+      // steps 3-6 added in next patches
       $('btn-next').disabled = !ok;
     }
 
