@@ -1264,7 +1264,13 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
             <input id="feas-model" type="text" placeholder="e.g. Subscription · Transaction fee · Retail · Service hours"
               style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
         </div>
-        <button class="btn-primary" style="margin-top:14px;max-width:200px" onclick="runFeasibility()">Run Feasibility Study</button>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap">
+          <button class="btn-primary" style="max-width:200px" onclick="runFeasibility()">Run Feasibility Study</button>
+          <select id="feas-history-select" onchange="loadFeasibilityFromHistory(this.value)" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.83rem;color:var(--text)">
+            <option value="">— Past studies —</option>
+          </select>
+          <button class="btn-outline" id="feas-clear-history" onclick="clearFeasibilityHistory()" style="font-size:.78rem">Clear history</button>
+        </div>
       </div>
       <div id="feas-verdict" style="margin-bottom:14px"></div>
       <div class="card">
@@ -1521,6 +1527,12 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <div style="display:flex;gap:8px">
           <input id="scenario-input" type="text" placeholder='e.g. "What if we take a loan of AED 500,000?"' style="flex:1;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;padding:10px 13px;font-size:.85rem;color:var(--text);font-family:var(--font)" onkeydown="if(event.key==='Enter')runCustomScenario()">
           <button class="btn-primary" onclick="runCustomScenario()">Simulate</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">
+          <select id="scenario-history-select" onchange="loadScenarioFromHistory(this.value)" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 11px;font-size:.82rem;color:var(--text)">
+            <option value="">— Past scenarios —</option>
+          </select>
+          <button class="btn-outline" onclick="clearScenarioHistory()" style="font-size:.78rem">Clear history</button>
         </div>
       </div>
 
@@ -2531,6 +2543,7 @@ const S = {
   transactions: [],
   prefs: { readAloud: false, autoPlayBriefing: true },
   goals: [],  // [{id,label,metric,direction,target,unit,enabled}]
+  history: { feasibility:[], scenario:[] },  // saved runs
   _cache: {}
 }
 
@@ -2572,6 +2585,9 @@ function load() {
         S.keys.zakiUrl = ''
       }
       if (!S.goals) S.goals = []
+      if (!S.history) S.history = { feasibility:[], scenario:[] }
+      if (!S.history.feasibility) S.history.feasibility = []
+      if (!S.history.scenario) S.history.scenario = []
     }
   } catch(e){}
   computeFin()
@@ -3106,6 +3122,7 @@ function showPanel(id) {
   if (id === 'books') loadBooks()
   if (id === 'feasibility') {
     document.getElementById('feas-currency').textContent = S.co.currency
+    renderFeasibilityHistory()
     if (S._cache.feasibility) restoreFeasibility()
   }
   if (id === 'invest' && !S._cache.invest) loadInvest()
@@ -3126,7 +3143,7 @@ function showPanel(id) {
   if (id === 'ratios') renderRatiosGrid()
   if (id === 'tax') loadTax()
   if (id === 'valuation') loadValuation()
-  if (id === 'scenario') {}
+  if (id === 'scenario') renderScenarioHistory()
 }
 
 function autoResize(el) {
@@ -4791,16 +4808,51 @@ Be specific to ${S.co.country || 'the market'}. Cite actual reasonable cost benc
         </div>`
       }
     })
-    S._cache.feasibility = { idea, market, capital, timeline, model, report: full }
+    const entry = { id:'f_'+Date.now(), at: Date.now(), idea, market, capital, timeline, model, report: full }
+    S._cache.feasibility = entry
+    S.history = S.history || { feasibility:[], scenario:[] }
+    S.history.feasibility = S.history.feasibility || []
+    S.history.feasibility.unshift(entry)
+    if (S.history.feasibility.length > 30) S.history.feasibility.length = 30
     save()
+    renderFeasibilityHistory()
   } catch(e) {
     out.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`
   }
 }
 
-function restoreFeasibility() {
+function renderFeasibilityHistory() {
+  const sel = document.getElementById('feas-history-select')
+  if (!sel) return
+  const hist = (S.history && S.history.feasibility) || []
+  sel.innerHTML = '<option value="">— Past studies —</option>' + hist.map(h => {
+    const when = new Date(h.at).toISOString().slice(0,10)
+    const label = (h.idea || '').slice(0, 50) || 'untitled'
+    return `<option value="${h.id}">${when} · ${label}</option>`
+  }).join('')
+}
+
+function loadFeasibilityFromHistory(id) {
+  if (!id) return
+  const hist = (S.history && S.history.feasibility) || []
+  const entry = hist.find(h => h.id === id)
+  if (!entry) return
+  S._cache.feasibility = entry
+  save()
+  restoreFeasibility(true)
+}
+
+function clearFeasibilityHistory() {
+  if (!confirm('Clear all saved feasibility studies?')) return
+  if (!S.history) S.history = { feasibility:[], scenario:[] }
+  S.history.feasibility = []
+  save()
+  renderFeasibilityHistory()
+}
+
+function restoreFeasibility(force) {
   const c = S._cache.feasibility; if (!c) return
-  if (document.getElementById('feas-idea').value) return // user is editing
+  if (!force && document.getElementById('feas-idea').value) return // user is editing
   document.getElementById('feas-idea').value = c.idea || ''
   document.getElementById('feas-market').value = c.market || ''
   document.getElementById('feas-capital').value = c.capital || ''
@@ -5457,7 +5509,46 @@ async function runScenario(key) {
     let full = ''
     await streamClaude([{ role:'user', content: sc.prompt(S.fin, S.co.currency) }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+    saveScenarioRun({ kind:'preset', key, label: sc.label, prompt:sc.prompt(S.fin, S.co.currency), result: full })
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
+}
+
+function saveScenarioRun(entry) {
+  S.history = S.history || { feasibility:[], scenario:[] }
+  S.history.scenario = S.history.scenario || []
+  S.history.scenario.unshift({ id:'s_'+Date.now(), at:Date.now(), ...entry })
+  if (S.history.scenario.length > 30) S.history.scenario.length = 30
+  save()
+  renderScenarioHistory()
+}
+
+function renderScenarioHistory() {
+  const sel = document.getElementById('scenario-history-select')
+  if (!sel) return
+  const hist = (S.history && S.history.scenario) || []
+  sel.innerHTML = '<option value="">— Past scenarios —</option>' + hist.map(h => {
+    const when = new Date(h.at).toISOString().slice(0,10)
+    const label = (h.label || h.kind || '').slice(0, 60)
+    return `<option value="${h.id}">${when} · ${label}</option>`
+  }).join('')
+}
+
+function loadScenarioFromHistory(id) {
+  if (!id) return
+  const hist = (S.history && S.history.scenario) || []
+  const entry = hist.find(h => h.id === id)
+  if (!entry) return
+  const el = document.getElementById('scenario-result')
+  el.innerHTML = `<div style="color:var(--text-3);font-size:.78rem;margin-bottom:10px">Showing past scenario from ${new Date(entry.at).toISOString().slice(0,16).replace('T',' ')} · ${entry.label || entry.kind}</div>` +
+    `<div class="msg-content">${md(entry.result || '')}</div>`
+}
+
+function clearScenarioHistory() {
+  if (!confirm('Clear all saved scenarios?')) return
+  if (!S.history) S.history = { feasibility:[], scenario:[] }
+  S.history.scenario = []
+  save()
+  renderScenarioHistory()
 }
 
 async function runCustomScenario() {
@@ -5481,6 +5572,7 @@ Our current financials:
 
 Apply the CFO response format. Give a clear YES/NO/CONDITIONAL answer with specific numbers.` }],
       (_, acc) => { el.innerHTML = `<div class="msg-content">${md(acc)}</div>`; full = acc })
+    saveScenarioRun({ kind:'custom', label: q.slice(0, 80), prompt: q, result: full })
   } catch(e) { el.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>` }
 }
 
