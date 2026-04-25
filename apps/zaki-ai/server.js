@@ -116,6 +116,53 @@ app.post('/api/chat', requireAuth, async (req, res) => {
   }
 });
 
+/* ── Dashboard Data ─────────────────────────────────────────────── */
+app.get('/api/dashboard', requireAuth, async (req, res) => {
+  const conn = req.session.odooConn;
+  const { searchRead } = require('./odoo/client');
+  try {
+    const [invoices, bills] = await Promise.all([
+      searchRead(conn, 'account.move',
+        [['move_type', '=', 'out_invoice'], ['state', '=', 'posted']],
+        ['name', 'invoice_date', 'amount_total', 'currency_id', 'partner_id'],
+        { limit: 200, order: 'invoice_date desc' }
+      ),
+      searchRead(conn, 'account.move',
+        [['move_type', '=', 'in_invoice'], ['state', '=', 'posted']],
+        ['name', 'invoice_date', 'amount_total', 'currency_id', 'partner_id'],
+        { limit: 200, order: 'invoice_date desc' }
+      ),
+    ]);
+
+    let id = 1;
+    const transactions = [
+      ...invoices.map(inv => ({
+        id: id++,
+        date:        (inv.invoice_date || '').slice(0, 10),
+        type:        'income',
+        amount:      inv.amount_total || 0,
+        category:    'Invoice',
+        description: (inv.partner_id ? inv.partner_id[1] + ' — ' : '') + inv.name,
+        currency:    inv.currency_id ? inv.currency_id[1] : 'AED',
+      })),
+      ...bills.map(bill => ({
+        id: id++,
+        date:        (bill.invoice_date || '').slice(0, 10),
+        type:        'expense',
+        amount:      bill.amount_total || 0,
+        category:    'Bill',
+        description: (bill.partner_id ? bill.partner_id[1] + ' — ' : '') + bill.name,
+        currency:    bill.currency_id ? bill.currency_id[1] : 'AED',
+      })),
+    ].sort((a, b) => b.date.localeCompare(a.date));
+
+    res.json({ transactions });
+  } catch (err) {
+    console.error('[Dashboard]', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
 /* ── Health Check ───────────────────────────────────────────────── */
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'zaki-ai' }));
 
