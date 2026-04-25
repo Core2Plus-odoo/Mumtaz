@@ -56,8 +56,6 @@ ANTHROPIC_API_KEY=$ANTHROPIC_KEY
 SESSION_SECRET=$(openssl rand -hex 32)
 PORT=3000
 NODE_ENV=production
-ODOO_BASE_URL=https://aj-arabia.odoo.com
-ODOO_DB=aj-arabia
 EOF
   echo "✓ .env created"
 fi
@@ -80,7 +78,6 @@ certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email admin@mumtaz.
 echo "✓ SSL certificate installed"
 
 # 10. Start with PM2
-cp "$APP_DIR/ecosystem.config.js" "$APP_DIR/ecosystem.config.js"
 sed -i "s|/var/www/zaki.mumtaz.digital|$APP_DIR|g" "$APP_DIR/ecosystem.config.js"
 pm2 delete zaki-ai 2>/dev/null || true
 pm2 start "$APP_DIR/ecosystem.config.js"
