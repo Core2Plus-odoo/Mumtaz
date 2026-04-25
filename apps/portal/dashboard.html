@@ -740,7 +740,10 @@
       cfo: () => `
         <div class="widgets-grid">
           <div class="widget">
-            <div class="widget-head"><span class="widget-title">Cash Flow</span><span class="widget-meta">Last 6 months</span></div>
+            <div class="widget-head">
+              <span class="widget-title">Cash Flow</span>
+              <a href="/zatca.html" class="widget-meta" style="color:var(--gold);text-decoration:none">ZATCA e-invoicing →</a>
+            </div>
             ${barChart({
               labels: MONTHS,
               series: [

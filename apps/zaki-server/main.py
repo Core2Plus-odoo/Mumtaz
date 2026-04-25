@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 
 import mail as mailer
 import billing as billing_svc
+import zatca as zatca_svc
 
 load_dotenv()
 
@@ -691,6 +692,66 @@ async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
     db.commit()
     db.close()
     return {"ok": True, "plan": PLANS[req.plan]}
+
+# ── ZATCA / e-invoicing ──────────────────────────────────────────────
+@app.get("/api/v1/zatca/status")
+def zatca_status(auth: dict = Depends(require_auth)):
+    """Return the current ZATCA configuration state for the UI."""
+    return zatca_svc.status()
+
+class ZatcaQRReq(BaseModel):
+    seller_name: str | None = None
+    vat_number:  str | None = None
+    timestamp:   str | None = None  # ISO 8601 UTC
+    total_with_vat: str
+    vat_amount:  str
+
+@app.post("/api/v1/zatca/qr")
+def zatca_generate_qr(req: ZatcaQRReq, auth: dict = Depends(require_auth)):
+    """Generate a ZATCA-compliant base64 QR string for a simplified invoice.
+    Falls back to env defaults when seller_name/vat_number aren't supplied."""
+    from datetime import datetime, timezone
+    if not zatca_svc.is_configured() and not (req.seller_name and req.vat_number):
+        raise HTTPException(400, "ZATCA not configured. Provide seller_name + vat_number, "
+                                  "or set ZATCA_SELLER_NAME + ZATCA_VAT_NUMBER on the server.")
+    seller = req.seller_name or os.environ.get("ZATCA_SELLER_NAME", "")
+    vat    = req.vat_number  or os.environ.get("ZATCA_VAT_NUMBER", "")
+    ts     = req.timestamp   or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        qr = zatca_svc.build_qr(
+            seller_name=seller, vat_number=vat, timestamp=ts,
+            total_with_vat=req.total_with_vat, vat_amount=req.vat_amount,
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"qr": qr, "timestamp": ts, "seller_name": seller, "vat_number": vat}
+
+class ZatcaOnboardReq(BaseModel):
+    otp: str
+
+@app.post("/api/v1/zatca/onboard")
+def zatca_onboard(req: ZatcaOnboardReq, auth: dict = Depends(require_admin)):
+    """Admin-only: kick off ZATCA onboarding with the OTP issued by Fatoora portal."""
+    try:
+        result = zatca_svc.onboard(req.otp.strip())
+    except (RuntimeError, ValueError) as e:
+        raise HTTPException(400, str(e))
+    return result
+
+class ZatcaSubmitReq(BaseModel):
+    invoice_xml: str
+    kind: str = "standard"  # standard | simplified
+
+@app.post("/api/v1/zatca/submit")
+def zatca_submit(req: ZatcaSubmitReq, auth: dict = Depends(require_auth)):
+    """Submit a UBL 2.1 invoice for clearance (B2B) or reporting (B2C).
+    Currently a stub — wire up real ZATCA API once credentials are loaded."""
+    try:
+        result = zatca_svc.submit_invoice(invoice_xml=req.invoice_xml, kind=req.kind)
+    except (RuntimeError, ValueError) as e:
+        raise HTTPException(400, str(e))
+    return result
+
 
 # ── Partner / White-label ────────────────────────────────────────────
 class PartnerSignupReq(BaseModel):
