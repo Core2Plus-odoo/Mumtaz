@@ -512,6 +512,24 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 .insight-card{border-top:2px solid var(--blue)}
 .investopt-card{border-top:2px solid var(--amber)}
 
+/* ── Onboarding tour ── */
+.tour-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:300;backdrop-filter:blur(2px)}
+.tour-spotlight{position:fixed;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,23,42,.55);z-index:301;pointer-events:none;transition:all .25s ease}
+.tour-popover{
+  position:fixed;z-index:302;background:var(--surface);border:1px solid var(--border-2);
+  border-radius:10px;padding:16px 18px;box-shadow:0 12px 40px rgba(15,23,42,.25);
+  max-width:340px;font-size:.86rem;line-height:1.55;color:var(--text);
+}
+.tour-popover h4{font-size:.95rem;font-weight:600;margin-bottom:6px;color:var(--text)}
+.tour-popover p{font-size:.84rem;color:var(--text-2);margin:0 0 12px}
+.tour-popover .tour-actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tour-popover .tour-step{font-size:.72rem;color:var(--text-3)}
+.tour-popover button{font-size:.82rem;padding:6px 14px;border-radius:6px;font-weight:500;border:1px solid transparent;cursor:pointer;transition:all var(--tr)}
+.tour-popover .btn-skip{background:none;color:var(--text-3)}
+.tour-popover .btn-skip:hover{color:var(--text-2)}
+.tour-popover .btn-next{background:var(--brand);color:#fff;border-color:var(--brand)}
+.tour-popover .btn-next:hover{background:var(--brand-d);border-color:var(--brand-d)}
+
 /* ── Board Pack PDF print mode ── */
 @media print {
   @page { size: A4; margin: 18mm 16mm 22mm 16mm; }
@@ -1688,6 +1706,7 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <button class="btn-primary" style="max-width:180px" onclick="saveSettings()">Save Changes</button>
         <button class="btn-outline" onclick="resetAll()">Reset everything</button>
         <button class="btn-outline" style="color:var(--blue);border-color:var(--blue)" onclick="loadDemoData()">⚡ Load Demo Data</button>
+        <button class="btn-outline" onclick="replayTour()">↻ Replay tour</button>
       </div>
     </div>
 
@@ -3354,6 +3373,118 @@ function launchApp() {
   renderGoalsBanner()
   runProactiveAlerts()
   showPanel('briefing')
+  // First-run tour: auto-launch once, after wizard completion
+  if (!S.prefs?.tourSeen) setTimeout(startTour, 600)
+}
+
+// ═══════════════════════════════════════════
+// ONBOARDING TOUR
+// ═══════════════════════════════════════════
+const TOUR_STEPS = [
+  { selector: '#panel-briefing .panel-title', side: 'bottom',
+    title: 'Morning Briefing',
+    body: 'Your daily CFO summary. Zaki reviews your numbers, surfaces breaches, and suggests one action for today.' },
+  { selector: '[onclick*="\'goals\'"]', side: 'right',
+    title: 'Goals & Alerts',
+    body: 'KPI targets like cash runway, AR days, payroll %. Breaches surface in the briefing automatically.' },
+  { selector: '[onclick*="\'books\'"]', side: 'right',
+    title: 'Bookkeeping',
+    body: 'Hygiene score, duplicate detection, missing references. Ask Zaki to bulk-categorize uncategorized rows.' },
+  { selector: '[onclick*="\'investopts\'"]', side: 'right',
+    title: 'Investment Options',
+    body: '35 curated instruments across 9 markets. Filter by market / class / risk / Shariah, or click "AI portfolio mix" for a sized allocation.' },
+  { selector: '[onclick*="\'feasibility\'"]', side: 'right',
+    title: 'Feasibility Study',
+    body: 'Evaluate any new venture — Zaki produces a GO/NO-GO with TAM, breakeven, risks, and a 90-day plan.' },
+  { selector: '[onclick*="\'settings\'"]', side: 'right',
+    title: 'Settings & Odoo Sync',
+    body: 'Sign in with your Mumtaz account, then sync 12 months of invoices + bills directly from Odoo.' },
+]
+
+let TOUR_IDX = 0, TOUR_DOM = null
+
+function startTour() {
+  if (window.innerWidth < 700) return // skip on mobile, too noisy
+  TOUR_IDX = 0
+  if (!TOUR_DOM) {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = `
+      <div class="tour-backdrop" id="tour-backdrop"></div>
+      <div class="tour-spotlight" id="tour-spotlight"></div>
+      <div class="tour-popover" id="tour-popover">
+        <div class="tour-step" id="tour-step-num"></div>
+        <h4 id="tour-title"></h4>
+        <p id="tour-body"></p>
+        <div class="tour-actions">
+          <button class="btn-skip" onclick="endTour(true)">Skip</button>
+          <button class="btn-next" id="tour-next" onclick="nextTourStep()">Next →</button>
+        </div>
+      </div>`
+    document.body.appendChild(wrap)
+    TOUR_DOM = wrap
+    document.getElementById('tour-backdrop').addEventListener('click', () => endTour(true))
+  }
+  showTourStep()
+}
+
+function showTourStep() {
+  const step = TOUR_STEPS[TOUR_IDX]
+  const el = step ? document.querySelector(step.selector) : null
+  if (!el) { nextTourStep(); return }
+  // Spotlight
+  const r = el.getBoundingClientRect()
+  const pad = 6
+  const spot = document.getElementById('tour-spotlight')
+  spot.style.left = (r.left - pad) + 'px'
+  spot.style.top = (r.top - pad) + 'px'
+  spot.style.width = (r.width + pad * 2) + 'px'
+  spot.style.height = (r.height + pad * 2) + 'px'
+  // Popover
+  const pop = document.getElementById('tour-popover')
+  document.getElementById('tour-step-num').textContent = `Step ${TOUR_IDX + 1} of ${TOUR_STEPS.length}`
+  document.getElementById('tour-title').textContent = step.title
+  document.getElementById('tour-body').textContent = step.body
+  document.getElementById('tour-next').textContent = TOUR_IDX === TOUR_STEPS.length - 1 ? 'Got it ✓' : 'Next →'
+  // Position popover next to spotlight
+  pop.style.visibility = 'hidden'
+  requestAnimationFrame(() => {
+    const pw = pop.offsetWidth, ph = pop.offsetHeight
+    let left, top
+    if (step.side === 'right') { left = r.right + 14; top = r.top }
+    else if (step.side === 'bottom') { left = r.left; top = r.bottom + 14 }
+    else { left = r.left + 14; top = r.bottom + 14 }
+    // Keep on screen
+    if (left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12
+    if (top + ph > window.innerHeight - 12) top = window.innerHeight - ph - 12
+    if (left < 12) left = 12
+    if (top < 12) top = 12
+    pop.style.left = left + 'px'
+    pop.style.top = top + 'px'
+    pop.style.visibility = 'visible'
+  })
+}
+
+function nextTourStep() {
+  TOUR_IDX++
+  if (TOUR_IDX >= TOUR_STEPS.length) { endTour(false); return }
+  showTourStep()
+}
+
+function endTour(skipped) {
+  S.prefs = S.prefs || {}
+  S.prefs.tourSeen = true
+  save()
+  TOUR_DOM?.remove()
+  TOUR_DOM = null
+  if (!skipped) showToast('You\'re all set — Zaki is ready')
+}
+
+// Allow re-launching the tour from Settings
+function replayTour() {
+  S.prefs = S.prefs || {}
+  S.prefs.tourSeen = false
+  save()
+  startTour()
 }
 
 // ═══════════════════════════════════════════
