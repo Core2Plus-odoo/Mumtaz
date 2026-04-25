@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mumtaz — Admin Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, textarea, select { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    :root {
+      --gold:#B8862A; --gold2:#D4A84C; --gold-bg:#FDF6E4;
+      --teal:#0B7A64; --red:#C0402A; --warn:#B45309;
+      --ink:#0C1118; --ink2:#3D4A5C; --ink3:#7A8799;
+      --bg:#F5F3EF; --white:#FFFFFF; --border:#E4E0D8; --radius:10px;
+    }
+    body { background: var(--bg); color: var(--ink); }
+
+    .topbar {
+      background: var(--ink); color: #fff;
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .tb-left { display: flex; align-items: center; gap: 18px; }
+    .tb-logo { display: flex; align-items: center; gap: 9px; }
+    .tb-logo-mark {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: .9rem; color: #fff;
+    }
+    .tb-logo-name { font-weight: 600; font-size: .95rem; }
+    .tb-pill {
+      background: rgba(184,134,42,.18); color: var(--gold2);
+      font-family: 'DM Mono', monospace; font-size: .65rem;
+      padding: 3px 9px; border-radius: 100px;
+      letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
+    }
+    .tb-back {
+      font-size: .82rem; color: rgba(255,255,255,.65);
+      transition: color .15s;
+    }
+    .tb-back:hover { color: #fff; }
+
+    .main { max-width: 880px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    .hd { margin-bottom: 22px; }
+    .hd-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: .72rem;
+      color: var(--ink3); letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .hd-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.8rem; font-weight: 400;
+      letter-spacing: -.015em;
+    }
+    .hd-sub { color: var(--ink2); font-size: .9rem; margin-top: 6px; max-width: 640px; line-height: 1.55; }
+
+    /* Section card */
+    .section {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-bottom: 16px;
+    }
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 4px; gap: 12px; flex-wrap: wrap;
+    }
+    .section-title {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400; font-size: 1.2rem;
+    }
+    .section-sub {
+      color: var(--ink3); font-size: .82rem; margin-bottom: 18px; line-height: 1.55;
+    }
+    .source-pill {
+      font-family: 'DM Mono', monospace; font-size: .62rem;
+      letter-spacing: .07em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 100px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .source-pill.db    { background: var(--gold-bg);             color: var(--gold); }
+    .source-pill.env   { background: rgba(11,122,100,.12);       color: var(--teal); }
+    .source-pill.unset { background: var(--bg);                  color: var(--ink3); }
+
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .field-row {
+      display: grid; grid-template-columns: 220px 1fr auto; gap: 12px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-name {
+      font-family: 'DM Mono', monospace;
+      font-size: .76rem; color: var(--ink2);
+      font-weight: 600;
+    }
+    .field-input {
+      padding: 8px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .85rem; color: var(--ink);
+      background: var(--white);
+      outline: none;
+      width: 100%;
+    }
+    .field-input:focus { border-color: var(--gold); }
+    .field-input.locked { background: var(--bg); color: var(--ink3); }
+
+    .btn {
+      background: var(--gold); color: #fff;
+      font-weight: 600; font-size: .85rem;
+      padding: 9px 18px; border-radius: 100px;
+      transition: opacity .15s;
+    }
+    .btn:hover:not(:disabled) { opacity: .88; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn.outline {
+      background: transparent; color: var(--ink2);
+      border: 1.5px solid var(--border);
+    }
+    .btn.outline:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+    .btn.danger { background: var(--red); }
+    .btn.small  { padding: 5px 12px; font-size: .76rem; }
+
+    .actions {
+      display: flex; gap: 8px; align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .save-bar {
+      position: sticky; bottom: 16px;
+      background: var(--white);
+      border: 1.5px solid var(--gold);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: 0 8px 24px rgba(184, 134, 42, .14);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .save-bar.hidden { display: none; }
+    .save-bar-msg {
+      font-size: .85rem; color: var(--ink2);
+    }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: #fff;
+      padding: 10px 18px; border-radius: 100px;
+      font-size: .85rem; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    .toast.error { background: var(--red); }
+
+    .deny {
+      max-width: 480px; margin: 80px auto;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+    }
+    .deny h2 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 1.3rem; margin-bottom: 8px; }
+    .deny p { color: var(--ink3); font-size: .9rem; line-height: 1.55; }
+
+    .hint {
+      background: var(--bg);
+      border-left: 3px solid var(--gold);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: .8rem; color: var(--ink2);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .hint code {
+      background: var(--white); padding: 1px 5px; border-radius: 4px;
+      font-family: 'DM Mono', monospace; font-size: .76rem;
+    }
+
+    .csr-output {
+      margin-top: 12px;
+      background: #0C1118; color: #C7CCD3;
+      padding: 14px; border-radius: 8px;
+      font-family: 'DM Mono', monospace; font-size: .72rem;
+      white-space: pre-wrap; word-break: break-all;
+      max-height: 240px; overflow-y: auto;
+    }
+
+    @media (max-width: 720px) {
+      .field-row { grid-template-columns: 1fr; gap: 4px; padding: 12px 0; }
+      .field-name { font-size: .72rem; }
+      .topbar { padding: 10px 16px; }
+      .tb-logo-name { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo">
+        <div class="tb-logo-mark">م</div>
+        <span class="tb-logo-name">Mumtaz</span>
+      </div>
+      <span class="tb-pill">Admin · Settings</span>
+    </div>
+    <a href="/admin.html" class="tb-back">← Back to admin</a>
+  </header>
+
+  <main class="main">
+
+    <div id="content" hidden>
+      <div class="hd">
+        <div class="hd-eyebrow">Configuration</div>
+        <h1 class="hd-title">Settings</h1>
+        <p class="hd-sub">Configure SMTP, Stripe, ZATCA, and admin access without SSH'ing into the server. Database-stored values override env vars; clear a value to fall back to env.</p>
+      </div>
+
+      <!-- ── General ── -->
+      <div class="section">
+        <div class="section-head">
+          <div class="section-title">General</div>
+        </div>
+        <div id="g-general"></div>
+      </div>
+
+      <!-- ── SMTP ── -->
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Email (SMTP)</div>
+            <div class="section-sub">Used for welcome emails, password resets, and partner notifications.</div>
+          </div>
+        </div>
+        <div id="g-smtp"></div>
+        <div class="actions" style="margin-top:14px">
+          <input type="email" id="smtp-test-to" class="field-input" placeholder="Send test email to…" style="max-width:280px"/>
+          <button class="btn outline small" id="smtp-test-btn">Send test email</button>
+        </div>
+      </div>
+
+      <!-- ── Stripe ── -->
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Stripe</div>
+            <div class="section-sub">When configured, the billing page redirects to Stripe Checkout instead of changing plans directly. Webhook URL: <code>/api/billing/webhook</code></div>
+          </div>
+        </div>
+        <div id="g-stripe"></div>
+        <div class="actions" style="margin-top:14px">
+          <button class="btn outline small" id="stripe-test-btn">Verify Stripe key</button>
+        </div>
+      </div>
+
+      <!-- ── ZATCA ── -->
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">ZATCA (Saudi e-invoicing)</div>
+            <div class="section-sub">Set VAT number and seller name first, then click "Generate CSR" to create the keypair you'll submit to the Fatoora portal.</div>
+          </div>
+        </div>
+        <div id="g-zatca"></div>
+
+        <div class="hint" style="margin-top:14px">
+          <strong>Onboarding flow:</strong>
+          1. Set <code>ZATCA_VAT_NUMBER</code> + <code>ZATCA_SELLER_NAME</code> + <code>ZATCA_ENV</code> above and Save.
+          2. Click <strong>Generate CSR</strong> below — saves the private key into the DB.
+          3. Get an OTP from Fatoora portal.
+          4. POST the CSR + OTP to <code>/api/zatca/onboard</code> — returns a CSID we save automatically.
+        </div>
+        <div class="actions">
+          <button class="btn outline small" id="zatca-csr-btn">Generate CSR + private key</button>
+        </div>
+        <div class="csr-output" id="csr-output" hidden></div>
+      </div>
+
+      <!-- Save bar -->
+      <div class="save-bar hidden" id="save-bar">
+        <span class="save-bar-msg" id="save-bar-msg">You have unsaved changes.</span>
+        <div class="actions">
+          <button class="btn outline" id="discard-btn">Discard</button>
+          <button class="btn"          id="save-btn">Save changes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="deny" id="deny" hidden>
+      <h2>Admin access required</h2>
+      <p>Only users listed in <code>MUMTAZ_ADMINS</code> can change settings. Update that list (via env or this page once you have access) and reload.</p>
+      <p style="margin-top:14px"><a href="/dashboard.html" style="color:var(--gold);font-weight:600">← Back to dashboard</a></p>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $  = id => document.getElementById(id);
+    const token = () => localStorage.getItem('mumtaz_token');
+    if (!token()) { window.location.href = '/'; }
+
+    const SECTION_KEYS = {
+      'g-general': ['PORTAL_BASE_URL', 'MUMTAZ_ADMINS'],
+      'g-smtp':    ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'SMTP_USE_TLS'],
+      'g-stripe':  ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET',
+                    'STRIPE_PRICE_STARTER', 'STRIPE_PRICE_GROWTH', 'STRIPE_PRICE_SCALE'],
+      'g-zatca':   ['ZATCA_ENV', 'ZATCA_VAT_NUMBER', 'ZATCA_SELLER_NAME',
+                    'ZATCA_CSID', 'ZATCA_PRIVATE_KEY'],
+    };
+
+    let state = {};   // server-known
+    let dirty = {};   // pending {key: value}
+
+    (async function init() {
+      try {
+        const ping = await fetch('/api/admin/ping', { headers: { Authorization: 'Bearer ' + token() } });
+        if (ping.status === 401) { localStorage.removeItem('mumtaz_token'); window.location.href = '/'; return; }
+        if (ping.status === 403) { $('deny').hidden = false; return; }
+        if (!ping.ok) throw new Error('Could not reach admin API');
+        await loadSettings();
+        $('content').hidden = false;
+      } catch (err) {
+        toast(err.message, true);
+      }
+    })();
+
+    async function loadSettings() {
+      const r = await fetch('/api/admin/settings', { headers: { Authorization: 'Bearer ' + token() } });
+      if (!r.ok) throw new Error('Failed to load settings');
+      const data = await r.json();
+      state = data.settings || {};
+      render();
+      dirty = {};
+      updateSaveBar();
+    }
+
+    function render() {
+      Object.entries(SECTION_KEYS).forEach(([containerId, keys]) => {
+        $(containerId).innerHTML = keys.map(k => fieldRow(k, state[k] || {})).join('');
+      });
+      // Wire up inputs
+      document.querySelectorAll('input.field-input[data-key], select.field-input[data-key]').forEach(el => {
+        el.addEventListener('input', () => onFieldInput(el));
+      });
+      // Wire up clear buttons
+      document.querySelectorAll('button[data-clear]').forEach(b => {
+        b.addEventListener('click', () => clearField(b.dataset.clear));
+      });
+    }
+
+    function fieldRow(key, info) {
+      const isSecret = info.is_secret;
+      const source   = info.source || 'unset';
+      const value    = (source === 'db') ? '' : (info.value || '');
+      const placeholder =
+        source === 'db'    ? '(set, masked: ' + (info.value || '?') + ')' :
+        source === 'env'   ? '(from env, masked: ' + (info.value || '?') + ')' :
+                             'not set';
+
+      let inputHtml;
+      if (key === 'SMTP_USE_TLS') {
+        inputHtml = `
+          <select class="field-input" data-key="${key}">
+            <option value=""  ${source === 'unset' ? 'selected' : ''}>Default (on)</option>
+            <option value="1" ${info.value === '1' || info.value === 'true' ? 'selected' : ''}>On</option>
+            <option value="0" ${info.value === '0' || info.value === 'false' ? 'selected' : ''}>Off</option>
+          </select>`;
+      } else if (key === 'ZATCA_ENV') {
+        inputHtml = `
+          <select class="field-input" data-key="${key}">
+            <option value=""  ${!info.value ? 'selected' : ''}>Default</option>
+            <option value="sandbox"    ${info.value === 'sandbox'    ? 'selected' : ''}>Sandbox</option>
+            <option value="simulation" ${info.value === 'simulation' ? 'selected' : ''}>Simulation</option>
+            <option value="production" ${info.value === 'production' ? 'selected' : ''}>Production</option>
+          </select>`;
+      } else if (key === 'ZATCA_PRIVATE_KEY') {
+        inputHtml = `<textarea class="field-input" data-key="${key}" rows="3" placeholder="${placeholder}">${value}</textarea>`;
+      } else {
+        const inputType = isSecret ? 'password' : 'text';
+        inputHtml = `<input class="field-input" type="${inputType}" data-key="${key}"
+                      placeholder="${placeholder}" value="${escapeAttr(value)}" />`;
+      }
+
+      return `
+        <div class="field-row">
+          <div class="field-name">${key}</div>
+          <div>${inputHtml}</div>
+          <div class="actions">
+            <span class="source-pill ${source}">${source}</span>
+            ${source === 'db' ? `<button class="btn outline small" data-clear="${key}">Clear</button>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function escapeAttr(s) { return String(s).replace(/"/g, '&quot;'); }
+
+    function onFieldInput(el) {
+      const key = el.dataset.key;
+      const v   = el.value;
+      const original = state[key] && state[key].source === 'db' ? '' : (state[key]?.value || '');
+      if (v !== original) dirty[key] = v;
+      else delete dirty[key];
+      updateSaveBar();
+    }
+
+    function clearField(key) {
+      dirty[key] = '';
+      // Visually mark field as pending clear
+      const el = document.querySelector(`[data-key="${key}"]`);
+      if (el) el.value = '';
+      updateSaveBar();
+    }
+
+    function updateSaveBar() {
+      const n = Object.keys(dirty).length;
+      const bar = $('save-bar');
+      if (n === 0) { bar.classList.add('hidden'); return; }
+      bar.classList.remove('hidden');
+      $('save-bar-msg').textContent = `${n} change${n === 1 ? '' : 's'} pending.`;
+    }
+
+    $('save-btn').addEventListener('click', async () => {
+      const btn = $('save-btn');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const r = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
+          body: JSON.stringify({ values: dirty }),
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || 'Save failed');
+        }
+        await loadSettings();
+        toast('Saved.');
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Save changes';
+      }
+    });
+
+    $('discard-btn').addEventListener('click', () => {
+      dirty = {};
+      render();
+      updateSaveBar();
+    });
+
+    /* ── SMTP test ── */
+    $('smtp-test-btn').addEventListener('click', async () => {
+      const to = $('smtp-test-to').value.trim();
+      if (!to) { toast('Enter a recipient email first.', true); return; }
+      const btn = $('smtp-test-btn');
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        const r = await fetch('/api/admin/settings/test/smtp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
+          body: JSON.stringify({ to }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || 'SMTP send failed');
+        toast('Test email sent. Check the inbox.');
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Send test email';
+      }
+    });
+
+    /* ── Stripe test ── */
+    $('stripe-test-btn').addEventListener('click', async () => {
+      const btn = $('stripe-test-btn');
+      btn.disabled = true; btn.textContent = 'Checking…';
+      try {
+        const r = await fetch('/api/admin/settings/test/stripe', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token() },
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || 'Stripe verification failed');
+        toast('Stripe key works.');
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Verify Stripe key';
+      }
+    });
+
+    /* ── ZATCA: generate CSR ── */
+    $('zatca-csr-btn').addEventListener('click', async () => {
+      const btn = $('zatca-csr-btn');
+      btn.disabled = true; btn.textContent = 'Generating…';
+      try {
+        const r = await fetch('/api/admin/settings/zatca/csr', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token() },
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data.detail || 'CSR generation failed');
+        const out = $('csr-output');
+        out.hidden = false;
+        out.textContent =
+          'PRIVATE KEY saved to ZATCA_PRIVATE_KEY (settings).\n\n' +
+          '── CSR (PEM) ──\n' + data.csr_pem + '\n\n' +
+          '── CSR (base64, ready for /api/zatca/onboard) ──\n' + data.csr_base64;
+        toast('CSR generated. Submit it with your OTP to /api/zatca/onboard.');
+        await loadSettings();
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = 'Generate CSR + private key';
+      }
+    });
+
+    let toastTimer;
+    function toast(msg, isError = false) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.toggle('error', isError);
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+    }
+  </script>
+
+</body>
+</html>
