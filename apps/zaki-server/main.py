@@ -1379,6 +1379,120 @@ async def get_dashboard(auth: dict = Depends(require_auth)):
         "plan":            plan,
     }
 
+@app.post("/api/v1/zaki/sync-odoo")
+async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
+    """Pull the authenticated user's posted invoices and bills from Odoo and
+    return them in Zaki's transaction format. Frontend writes them into
+    S.transactions; computeFin() then derives KPIs."""
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid:
+        raise HTTPException(503, "Odoo unreachable.")
+
+    obj = _odoo_object()
+    user_odoo_uid = auth.get("odoo_uid")
+    company_id = None
+    company_name = None
+    currency = "AED"
+
+    # Find the user's company. If not linked to Odoo (rare — local-only login),
+    # fall back to admin's default company.
+    try:
+        target_uid = int(user_odoo_uid) if user_odoo_uid else admin_uid
+        rows = obj.execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, "res.users", "read",
+            [[target_uid]],
+            {"fields": ["company_id", "name"]},
+        )
+        if rows and isinstance(rows[0].get("company_id"), list):
+            company_id = rows[0]["company_id"][0]
+            company_name = rows[0]["company_id"][1]
+    except Exception as e:
+        _record_odoo_error("sync_odoo:user_company", e)
+        raise HTTPException(502, f"Could not resolve Odoo company: {e}")
+
+    if not company_id:
+        raise HTTPException(404, "User has no Odoo company assigned.")
+
+    # Last 12 months of posted invoices + bills for this company
+    cutoff = (datetime.utcnow() - timedelta(days=365)).date().isoformat()
+    domain_inv = [
+        ["company_id", "=", company_id],
+        ["move_type", "in", ["out_invoice", "out_refund"]],
+        ["state", "=", "posted"],
+        ["invoice_date", ">=", cutoff],
+    ]
+    domain_bill = [
+        ["company_id", "=", company_id],
+        ["move_type", "in", ["in_invoice", "in_refund"]],
+        ["state", "=", "posted"],
+        ["invoice_date", ">=", cutoff],
+    ]
+    fields = ["name", "invoice_date", "amount_total", "amount_residual",
+              "currency_id", "partner_id", "payment_state", "ref", "move_type"]
+
+    transactions: list[dict] = []
+    ar_outstanding = 0.0
+    ap_outstanding = 0.0
+
+    try:
+        invoices = obj.execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, "account.move", "search_read",
+            [domain_inv],
+            {"fields": fields, "order": "invoice_date desc", "limit": 1000},
+        )
+        for r in invoices:
+            sign = -1 if r["move_type"] == "out_refund" else 1
+            amt = float(r.get("amount_total", 0)) * sign
+            transactions.append({
+                "id": f"odoo_inv_{r['id']}",
+                "date": str(r.get("invoice_date") or "")[:10],
+                "amount": abs(amt),
+                "type": "income" if amt >= 0 else "expense",
+                "category": "Sales" if amt >= 0 else "Sales Refund",
+                "description": r.get("name") or "Invoice",
+                "reference": (r["partner_id"][1] if isinstance(r.get("partner_id"), list) else "") or r.get("ref") or "",
+                "source": "odoo",
+            })
+            ar_outstanding += float(r.get("amount_residual", 0))
+            if isinstance(r.get("currency_id"), list):
+                currency = r["currency_id"][1]
+    except Exception as e:
+        _record_odoo_error("sync_odoo:invoices", e)
+        raise HTTPException(502, f"Invoice fetch failed: {e}")
+
+    try:
+        bills = obj.execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, "account.move", "search_read",
+            [domain_bill],
+            {"fields": fields, "order": "invoice_date desc", "limit": 1000},
+        )
+        for r in bills:
+            sign = -1 if r["move_type"] == "in_refund" else 1
+            amt = float(r.get("amount_total", 0)) * sign
+            transactions.append({
+                "id": f"odoo_bill_{r['id']}",
+                "date": str(r.get("invoice_date") or "")[:10],
+                "amount": abs(amt),
+                "type": "expense" if amt >= 0 else "income",
+                "category": "Bill" if amt >= 0 else "Bill Refund",
+                "description": r.get("name") or "Bill",
+                "reference": (r["partner_id"][1] if isinstance(r.get("partner_id"), list) else "") or r.get("ref") or "",
+                "source": "odoo",
+            })
+            ap_outstanding += float(r.get("amount_residual", 0))
+    except Exception as e:
+        _record_odoo_error("sync_odoo:bills", e)
+        raise HTTPException(502, f"Bill fetch failed: {e}")
+
+    return {
+        "company": {"id": company_id, "name": company_name, "currency": currency},
+        "transactions": transactions,
+        "ar_outstanding": round(ar_outstanding, 2),
+        "ap_outstanding": round(ap_outstanding, 2),
+        "synced_count": len(transactions),
+    }
+
+
 @app.post("/api/v1/ai/chat/stream")
 async def chat_stream(req: ChatReq, auth: dict = Depends(require_auth)):
     if not ANT_KEY:

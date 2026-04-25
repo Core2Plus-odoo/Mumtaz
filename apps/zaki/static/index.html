@@ -1376,6 +1376,19 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         </div>
       </div>
 
+      <!-- Odoo Sync -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Odoo — Live Financial Sync <span style="font-size:.72rem;color:var(--text-3);font-weight:400;margin-left:6px">(once you've signed in above)</span></div>
+        <div style="font-size:.83rem;color:var(--text-3);margin-bottom:12px">
+          Pulls the last 12 months of posted invoices and bills from your Odoo company into Zaki's ledger. AR / AP outstanding update automatically.
+        </div>
+        <div id="odoo-sync-status" style="font-size:.82rem;color:var(--text-2);margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-primary" id="btn-odoo-sync" style="max-width:200px" onclick="syncFromOdoo()">⇣ Sync from Odoo</button>
+          <button class="btn-outline" onclick="clearOdooTransactions()">Clear Odoo entries</button>
+        </div>
+      </div>
+
       <!-- Profile -->
       <div class="card" style="margin-bottom:14px">
         <div class="card-title">Profile</div>
@@ -2431,6 +2444,57 @@ function logoutZakiServer() {
   renderZakiServerStatus()
   showToast('Disconnected from Zaki Server')
   if (!aiReady()) document.getElementById('nav-api-banner')?.classList.remove('hide')
+}
+
+async function syncFromOdoo() {
+  const status = document.getElementById('odoo-sync-status')
+  const btn = document.getElementById('btn-odoo-sync')
+  if (!S.keys.zakiJwt) {
+    status.innerHTML = '<span style="color:var(--red)">Sign in to your Mumtaz account first (above).</span>'
+    return
+  }
+  const url = (S.keys.zakiUrl || 'https://zaki.mumtaz.digital').replace(/\/$/, '')
+  status.innerHTML = '<span class="spinner"></span> Pulling invoices and bills from Odoo…'
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…' }
+  try {
+    const r = await fetch(`${url}/api/v1/zaki/sync-odoo`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${S.keys.zakiJwt}` }
+    })
+    if (!r.ok) {
+      const err = await r.json().catch(()=>({detail:r.statusText}))
+      throw new Error(err.detail || `HTTP ${r.status}`)
+    }
+    const data = await r.json()
+    // Replace previous odoo-sourced txs, keep manual + demo entries
+    S.transactions = (S.transactions || []).filter(t => t.source !== 'odoo')
+    S.transactions.push(...data.transactions)
+    if (data.company?.currency) S.co.currency = data.company.currency
+    if (data.company?.name && !S.co.name) S.co.name = data.company.name
+    S.fin.ar = data.ar_outstanding
+    S.fin.ap = data.ap_outstanding
+    S._cache = {} // invalidate cached AI cards
+    save()
+    computeFin()
+    status.innerHTML = `<span style="color:var(--green)">✓ Synced ${data.synced_count} entries from ${data.company?.name || 'Odoo'}. AR ${S.co.currency} ${fmt(data.ar_outstanding)} · AP ${S.co.currency} ${fmt(data.ap_outstanding)}</span>`
+    showToast('Odoo sync complete — dashboard refreshed')
+    renderDashboard?.()
+  } catch(e) {
+    status.innerHTML = `<span style="color:var(--red)">Sync failed: ${e.message}</span>`
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⇣ Sync from Odoo' }
+  }
+}
+
+function clearOdooTransactions() {
+  if (!confirm('Remove all Odoo-sourced transactions from your local ledger? Manual entries and demo data are kept.')) return
+  S.transactions = (S.transactions || []).filter(t => t.source !== 'odoo')
+  S._cache = {}
+  save()
+  computeFin()
+  document.getElementById('odoo-sync-status').innerHTML = '<span style="color:var(--text-3)">Cleared Odoo entries.</span>'
+  showToast('Cleared Odoo entries')
+  renderDashboard?.()
 }
 
 function renderZakiServerStatus() {
