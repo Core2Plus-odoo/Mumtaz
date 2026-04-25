@@ -377,6 +377,41 @@
       font-size: .72rem; color: var(--ink3); text-align: center; margin-top: 6px;
     }
 
+    /* Odoo connect form */
+    .odoo-form { display: flex; flex-direction: column; gap: 6px; padding: 6px 4px 8px; }
+    .odoo-input {
+      width: 100%; padding: 7px 10px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 7px; outline: none;
+      font-size: .8rem; color: rgba(255,255,255,.8);
+      transition: border-color .15s;
+    }
+    .odoo-input::placeholder { color: rgba(255,255,255,.25); }
+    .odoo-input:focus { border-color: rgba(184,134,42,.6); }
+    .odoo-error {
+      font-size: .75rem; color: #FCA5A5;
+      background: rgba(192,64,42,.15);
+      border-radius: 6px; padding: 6px 8px;
+    }
+    .odoo-actions { display: flex; gap: 6px; margin-top: 2px; }
+    .odoo-btn-connect {
+      flex: 1; padding: 7px;
+      background: var(--gold); color: #fff;
+      font-size: .8rem; font-weight: 600;
+      border-radius: 7px; transition: opacity .15s;
+    }
+    .odoo-btn-connect:hover { opacity: .88; }
+    .odoo-btn-connect:disabled { opacity: .45; cursor: not-allowed; }
+    .odoo-btn-disconnect {
+      flex: 1; padding: 7px;
+      background: rgba(192,64,42,.2); color: #FCA5A5;
+      font-size: .8rem; font-weight: 600;
+      border-radius: 7px; border: 1px solid rgba(192,64,42,.3);
+      transition: background .15s;
+    }
+    .odoo-btn-disconnect:hover { background: rgba(192,64,42,.3); }
+
     /* Hidden utility elements */
     #period-month, #period-year { display: none; }
 
@@ -451,8 +486,18 @@
         <button id="conn-toggle" class="sb-nav-link" style="width:100%">
           <span class="icon">🔗</span> Connect Odoo
         </button>
-        <div id="conn-fields" style="display:none; padding: 8px 4px;">
-          <!-- Piece 3: Odoo connect form -->
+        <div id="conn-fields" style="display:none;">
+          <div class="odoo-form">
+            <input id="odoo-url"  class="odoo-input" type="url"  placeholder="https://yourcompany.odoo.com" />
+            <input id="odoo-db"   class="odoo-input" type="text" placeholder="Database name" />
+            <input id="odoo-user" class="odoo-input" type="email" placeholder="admin@company.com" />
+            <input id="odoo-pass" class="odoo-input" type="password" placeholder="Odoo password" />
+            <div id="odoo-error" class="odoo-error" hidden></div>
+            <div class="odoo-actions">
+              <button id="odoo-connect-btn" class="odoo-btn-connect">Connect</button>
+              <button id="odoo-disconnect-btn" class="odoo-btn-disconnect" hidden>Disconnect</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -511,5 +556,66 @@
   <select id="period-year"></select>
 
   <script src="app.js"></script>
+  <script>
+    // Odoo connect / disconnect
+    (function () {
+      const connectBtn    = document.getElementById('odoo-connect-btn');
+      const disconnectBtn = document.getElementById('odoo-disconnect-btn');
+      const errorEl       = document.getElementById('odoo-error');
+      const statusDot     = document.getElementById('odoo-status');
+
+      function token() { return localStorage.getItem('mumtaz_token') || ''; }
+      function authHdr() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token() }; }
+
+      function setConnected(name) {
+        statusDot.className = 'odoo-status odoo-connected';
+        statusDot.title = 'Odoo connected' + (name ? ': ' + name : '');
+        connectBtn.hidden    = true;
+        disconnectBtn.hidden = false;
+        document.querySelectorAll('.odoo-input').forEach(i => i.disabled = true);
+      }
+
+      function setDisconnected() {
+        statusDot.className = 'odoo-status odoo-disconnected';
+        statusDot.title = 'Odoo not connected';
+        connectBtn.hidden    = false;
+        disconnectBtn.hidden = true;
+        document.querySelectorAll('.odoo-input').forEach(i => i.disabled = false);
+      }
+
+      connectBtn.addEventListener('click', async () => {
+        const odooUrl = document.getElementById('odoo-url').value.trim();
+        const db      = document.getElementById('odoo-db').value.trim();
+        const email   = document.getElementById('odoo-user').value.trim();
+        const password = document.getElementById('odoo-pass').value;
+        errorEl.hidden = true;
+        if (!odooUrl || !db || !email || !password) {
+          errorEl.textContent = 'Please fill in all fields.';
+          errorEl.hidden = false;
+          return;
+        }
+        connectBtn.textContent = 'Connecting…';
+        connectBtn.disabled = true;
+        try {
+          const res  = await fetch('/erp/connect', { method: 'POST', headers: authHdr(), body: JSON.stringify({ odooUrl, db, email, password }) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Connection failed');
+          setConnected(data.name);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.hidden = false;
+        } finally {
+          connectBtn.textContent = 'Connect';
+          connectBtn.disabled = false;
+        }
+      });
+
+      disconnectBtn.addEventListener('click', async () => {
+        await fetch('/erp/disconnect', { method: 'POST', headers: authHdr() });
+        setDisconnected();
+        document.getElementById('odoo-pass').value = '';
+      });
+    })();
+  </script>
 </body>
 </html>
