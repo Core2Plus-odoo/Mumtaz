@@ -368,10 +368,40 @@ app.get('/ceo', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'ceo.html'));
 });
 
+/* ── Chat (legacy chat-first UI) ────────────────────────────────── */
+app.get('/chat', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
+
 /* ── Health Check ───────────────────────────────────────────────── */
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'zaki-ai' }));
 
-/* ── Catch-all → serve index.html ──────────────────────────────── */
+/* ── Proxy /api/v1/* to zaki-server (FastAPI on 8001) ───────────── */
+app.use('/api/v1', async (req, res) => {
+  const target = `${ZAKI_SERVER}/api/v1${req.url}`;
+  try {
+    const headers = { ...req.headers };
+    delete headers.host;
+    delete headers['content-length'];
+    const init = { method: req.method, headers };
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      init.body = JSON.stringify(req.body);
+      init.headers['content-type'] = 'application/json';
+    }
+    const upstream = await fetch(target, init);
+    res.status(upstream.status);
+    upstream.headers.forEach((v, k) => {
+      if (k !== 'transfer-encoding' && k !== 'connection') res.setHeader(k, v);
+    });
+    if (upstream.body && upstream.body.pipe) upstream.body.pipe(res);
+    else res.send(await upstream.text());
+  } catch (err) {
+    console.error('[proxy /api/v1]', err.message);
+    res.status(502).json({ detail: `zaki-server unreachable: ${err.message}` });
+  }
+});
+
+/* ── Catch-all → serve dashboard (index.html) ───────────────────── */
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
