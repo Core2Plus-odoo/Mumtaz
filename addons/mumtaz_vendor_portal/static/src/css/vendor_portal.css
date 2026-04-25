@@ -689,3 +689,67 @@ body.mumtaz-vendor-portal {
   background: rgba(255,255,255,.15);
   border-radius: 2px;
 }
+
+/* ── PO detail page additions ─────────────────────────────────────── */
+.mvp-back-link {
+  display: inline-block;
+  font-size: .8rem;
+  color: #475569;
+  text-decoration: none;
+  margin-right: 12px;
+}
+.mvp-back-link:hover { color: #0891B2; }
+
+.mvp-tr-link { cursor: pointer; }
+.mvp-tr-link:hover { background: #ECFEFF; }
+.mvp-ref-link { color: inherit; text-decoration: none; }
+
+.mvp-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+}
+.mvp-detail-block { display: flex; flex-direction: column; gap: 4px; }
+.mvp-detail-label { font-size: .72rem; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.mvp-detail-value { font-size: .92rem; color: #0F172A; font-weight: 500; }
+
+.mvp-totals-label, .mvp-totals-value { font-weight: 500; color: #475569; padding: 6px 12px; }
+.mvp-totals-grand-label, .mvp-totals-grand-value {
+  font-weight: 700; color: #0F172A; padding: 8px 12px;
+  border-top: 2px solid #0891B2;
+}
+
+.mvp-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.mvp-acknowledge-form { display: inline; }
+
+.mvp-btn-primary, .mvp-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: .85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 150ms, color 150ms, border-color 150ms;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.mvp-btn-primary {
+  background: #0891B2;
+  color: #fff;
+  border-color: #0891B2;
+}
+.mvp-btn-primary:hover { background: #0E7490; border-color: #0E7490; color: #fff; }
+
+.mvp-btn-secondary {
+  background: #fff;
+  color: #475569;
+  border-color: #E2E8F0;
+}
+.mvp-btn-secondary:hover { border-color: #0891B2; color: #0891B2; }
+

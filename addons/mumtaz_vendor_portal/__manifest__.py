@@ -11,6 +11,7 @@
         'views/portal_vendor_layout.xml',
         'views/portal_vendor_dashboard.xml',
         'views/portal_vendor_po.xml',
+        'views/portal_vendor_po_detail.xml',
         'views/portal_vendor_invoices.xml',
         'views/portal_vendor_rfq.xml',
         'views/portal_vendor_payments.xml',

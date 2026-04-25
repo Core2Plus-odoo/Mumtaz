@@ -27,11 +27,14 @@
                     </thead>
                     <tbody>
                         <t t-foreach="orders" t-as="order">
-                            <tr class="mvp-tr-hover">
+                            <tr class="mvp-tr-hover mvp-tr-link"
+                                t-attf-onclick="window.location.href='/vendor/purchase-orders/#{order.id}'">
                                 <td>
-                                    <strong class="mvp-ref">
-                                        <t t-esc="order.name"/>
-                                    </strong>
+                                    <a t-attf-href="/vendor/purchase-orders/#{order.id}" class="mvp-ref-link">
+                                        <strong class="mvp-ref">
+                                            <t t-esc="order.name"/>
+                                        </strong>
+                                    </a>
                                 </td>
                                 <td class="mvp-col-date">
                                     <t t-esc="order.date_order" t-options="{'widget': 'date'}"/>

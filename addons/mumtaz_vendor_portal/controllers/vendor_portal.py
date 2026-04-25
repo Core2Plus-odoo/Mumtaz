@@ -1,9 +1,30 @@
-from odoo import http
+import logging
+
+from odoo import http, _
+from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
 from odoo.addons.portal.controllers.portal import CustomerPortal, pager as portal_pager
 
+_logger = logging.getLogger(__name__)
+
 
 class VendorPortalController(CustomerPortal):
+
+    # ── Helpers ──────────────────────────────────────────────────────────
+
+    def _get_vendor_po(self, order_id):
+        """Browse a PO and verify it belongs to the current portal user.
+
+        Raises AccessError or MissingError consistent with Odoo portal patterns.
+        """
+        partner = request.env.user.partner_id.commercial_partner_id
+        order = request.env["purchase.order"].sudo().browse(int(order_id)).exists()
+        if not order:
+            raise MissingError(_("This purchase order doesn't exist."))
+        if order.partner_id.commercial_partner_id.id != partner.id:
+            raise AccessError(_("You don't have access to this purchase order."))
+        return order
+
 
     def _prepare_home_portal_values(self, counters):
         values = super()._prepare_home_portal_values(counters)
@@ -79,6 +100,50 @@ class VendorPortalController(CustomerPortal):
             'mumtaz_vendor_portal.portal_vendor_po',
             {'orders': orders, 'pager': pager},
         )
+
+    @http.route('/vendor/purchase-orders/<int:order_id>',
+                type='http', auth='user', website=True)
+    def vendor_purchase_order_detail(self, order_id, **kwargs):
+        try:
+            order = self._get_vendor_po(order_id)
+        except (AccessError, MissingError) as exc:
+            return request.render(
+                'http_routing.404',
+                {'message': str(exc)},
+                status=404,
+            )
+        return request.render(
+            'mumtaz_vendor_portal.portal_vendor_po_detail',
+            {'order': order},
+        )
+
+    @http.route('/vendor/purchase-orders/<int:order_id>/acknowledge',
+                type='http', auth='user', methods=['POST'], website=True, csrf=True)
+    def vendor_acknowledge_po(self, order_id, **kwargs):
+        """Vendor confirms receipt of the PO. Posts a chatter message."""
+        try:
+            order = self._get_vendor_po(order_id)
+        except (AccessError, MissingError):
+            return request.redirect('/vendor/purchase-orders')
+
+        # Idempotent: only post once per vendor user
+        already = request.env['mail.message'].sudo().search_count([
+            ('model',     '=', 'purchase.order'),
+            ('res_id',    '=', order.id),
+            ('author_id', '=', request.env.user.partner_id.id),
+            ('subtype_id.internal', '=', False),
+            ('body',      'ilike', 'acknowledged'),
+        ])
+        if not already:
+            order.sudo().message_post(
+                body=_(
+                    "Vendor %s acknowledged this purchase order via the vendor portal.",
+                    request.env.user.name,
+                ),
+                author_id=request.env.user.partner_id.id,
+                message_type='comment',
+            )
+        return request.redirect(f'/vendor/purchase-orders/{order_id}')
 
     @http.route('/vendor/rfq', type='http', auth='user', website=True)
     def vendor_rfq(self, page=1, **kwargs):
