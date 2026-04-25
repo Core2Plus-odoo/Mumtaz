@@ -306,7 +306,7 @@ app.get('/api/seo', requireAuth, async (req, res) => {
 });
 
 /* ── CEO Dashboard page ─────────────────────────────────────────── */
-app.get('/ceo', requireAuth, (req, res) => {
+app.get('/ceo', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'ceo.html'));
 });
 

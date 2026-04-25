@@ -212,6 +212,8 @@ function renderCharts(d) {
 }
 
 async function init() {
+  const auth = await fetch('/auth/me');
+  if (!auth.ok) { window.location.href = '/'; return; }
   await loadCompany();
   await loadFinancials();
 }
