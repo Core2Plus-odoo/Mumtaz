@@ -333,7 +333,47 @@
           </div>
         </div>
 
-        <!-- Steps 3-6 added in next patches -->
+        <!-- ── Step 3: AI Agents ── -->
+        <div class="step" data-step="3">
+          <div class="ob-eyebrow">Your AI workforce</div>
+          <h1 class="ob-title">Which AI agents do you want?</h1>
+          <p class="ob-sub">Each agent specialises in one role and learns from your live business data.</p>
+
+          <div class="ob-grid-3" id="agents-grid">
+            <button class="ob-card" data-value="cfo">
+              <div class="ob-card-icon">💰</div>
+              <div class="ob-card-name">CFO Agent</div>
+              <div class="ob-card-desc">Cash flow, forecasts, P&amp;L analysis, board-ready reports</div>
+            </button>
+            <button class="ob-card" data-value="marketing">
+              <div class="ob-card-icon">📣</div>
+              <div class="ob-card-name">Marketing Agent</div>
+              <div class="ob-card-desc">Campaigns, content, social posts, performance analytics</div>
+            </button>
+            <button class="ob-card" data-value="sales">
+              <div class="ob-card-icon">🎯</div>
+              <div class="ob-card-name">Sales Agent</div>
+              <div class="ob-card-desc">Lead qualification, follow-ups, pipeline coaching</div>
+            </button>
+            <button class="ob-card" data-value="hr">
+              <div class="ob-card-icon">👥</div>
+              <div class="ob-card-name">HR Agent</div>
+              <div class="ob-card-desc">Recruiting, onboarding, leaves, performance reviews</div>
+            </button>
+            <button class="ob-card" data-value="ops">
+              <div class="ob-card-icon">⚙️</div>
+              <div class="ob-card-name">Operations Agent</div>
+              <div class="ob-card-desc">Inventory alerts, supply chain, process optimisation</div>
+            </button>
+            <button class="ob-card" data-value="support">
+              <div class="ob-card-icon">💬</div>
+              <div class="ob-card-name">Customer Support</div>
+              <div class="ob-card-desc">Ticket triage, instant replies, escalation routing</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Steps 4-6 added in next patches -->
 
       </div>
     </div>
@@ -384,6 +424,17 @@
       });
     });
 
+    /* ── Step 3: Agents (multi-select) ── */
+    document.querySelectorAll('#agents-grid .ob-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const v = card.dataset.value;
+        const i = state.agents.indexOf(v);
+        if (i === -1) { state.agents.push(v); card.classList.add('selected'); }
+        else          { state.agents.splice(i, 1); card.classList.remove('selected'); }
+        validateStep();
+      });
+    });
+
     /* ── Navigation ── */
     function updateProgress() {
       $('step-current').textContent = state.currentStep;
@@ -407,15 +458,36 @@
       let ok = false;
       if (s === 1) ok = !!state.industry;
       if (s === 2) ok = state.products.length > 0;
-      // steps 3-6 added in next patches
+      if (s === 3) ok = state.agents.length > 0;
+      // steps 4-6 added in next patches
       $('btn-next').disabled = !ok;
     }
 
+    /* Skip steps that don't apply based on product selection */
+    function shouldSkipStep(n) {
+      if (n === 3 && !state.products.includes('zaki')) return true;
+      // step 4 (modules) skip if no ERP — added in patch 4
+      return false;
+    }
+
+    function nextStep(from) {
+      let n = from + 1;
+      while (n <= state.totalSteps && shouldSkipStep(n)) n++;
+      return n;
+    }
+    function prevStep(from) {
+      let n = from - 1;
+      while (n >= 1 && shouldSkipStep(n)) n--;
+      return n;
+    }
+
     $('btn-next').addEventListener('click', () => {
-      if (state.currentStep < state.totalSteps) gotoStep(state.currentStep + 1);
+      const n = nextStep(state.currentStep);
+      if (n <= state.totalSteps) gotoStep(n);
     });
     $('btn-back').addEventListener('click', () => {
-      if (state.currentStep > 1) gotoStep(state.currentStep - 1);
+      const n = prevStep(state.currentStep);
+      if (n >= 1) gotoStep(n);
     });
     $('btn-skip').addEventListener('click', () => {
       if (confirm('Skip setup? You can configure these later from Settings.')) {
