@@ -414,6 +414,7 @@
       </div>
     </div>
     <div class="tb-right">
+      <a href="/admin.html" class="tb-signout" id="admin-link" style="display:none;color:var(--gold);font-weight:600">Admin</a>
       <a href="/billing.html" class="tb-signout">Plan & Billing</a>
       <div class="tb-user">
         <div class="tb-avatar" id="user-avatar">U</div>
@@ -880,6 +881,16 @@
 
     renderProducts();
     renderRoleContent(savedRole);
+
+    /* ── Show Admin link if user is admin (best-effort, silent on failure) ── */
+    (async function checkAdmin() {
+      const t = localStorage.getItem('mumtaz_token');
+      if (!t) return;
+      try {
+        const r = await fetch('/api/admin/ping', { headers: { Authorization: 'Bearer ' + t } });
+        if (r.ok) $('admin-link').style.display = '';
+      } catch { /* not admin or no admin api — ignore */ }
+    })();
 
     /* ── Live Odoo data overlay ── */
     // Fetch /api/dashboard once on load. If Odoo is connected, override demo

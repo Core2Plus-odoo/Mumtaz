@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mumtaz — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    a { color: inherit; text-decoration: none; }
+    select, input { font: inherit; }
+
+    :root {
+      --gold:#B8862A; --gold2:#D4A84C; --gold-bg:#FDF6E4;
+      --teal:#0B7A64; --red:#C0402A;
+      --ink:#0C1118; --ink2:#3D4A5C; --ink3:#7A8799;
+      --bg:#F5F3EF; --white:#FFFFFF; --border:#E4E0D8; --radius:10px;
+    }
+    body { background: var(--bg); color: var(--ink); }
+
+    .topbar {
+      background: var(--ink); color: #fff;
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .tb-left { display: flex; align-items: center; gap: 18px; }
+    .tb-logo { display: flex; align-items: center; gap: 9px; }
+    .tb-logo-mark {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: .9rem; color: #fff;
+    }
+    .tb-logo-name { font-weight: 600; font-size: .95rem; }
+    .tb-admin-pill {
+      background: rgba(184,134,42,.18); color: var(--gold2);
+      font-family: 'DM Mono', monospace; font-size: .65rem;
+      padding: 3px 9px; border-radius: 100px;
+      letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
+    }
+    .tb-back {
+      font-size: .82rem; color: rgba(255,255,255,.65);
+      transition: color .15s;
+    }
+    .tb-back:hover { color: #fff; }
+
+    .main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    .hd { margin-bottom: 22px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+    .hd-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: .72rem;
+      color: var(--ink3); letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .hd-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.7rem; font-weight: 400; color: var(--ink);
+      letter-spacing: -.015em;
+    }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .stat-label {
+      font-family: 'DM Mono', monospace; font-size: .66rem;
+      color: var(--ink3); letter-spacing: .07em; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 1.5rem; font-weight: 700; color: var(--ink); line-height: 1.1;
+    }
+
+    .filter-bar {
+      display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--white);
+      font-size: .85rem; color: var(--ink);
+      outline: none;
+    }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--gold); }
+    .filter-bar input { min-width: 240px; flex: 1; }
+    .meta { color: var(--ink3); font-size: .8rem; }
+
+    .table-wrap {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: .87rem;
+    }
+    th, td {
+      padding: 11px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    th {
+      background: var(--bg);
+      font-family: 'DM Mono', monospace; font-size: .66rem;
+      color: var(--ink3); letter-spacing: .08em; text-transform: uppercase;
+      font-weight: 600;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(184,134,42,.04); }
+
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #fff; font-weight: 600; font-size: .82rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .user-name { font-weight: 600; color: var(--ink); }
+    .user-email { color: var(--ink3); font-size: .78rem; }
+
+    .pill {
+      display: inline-block; padding: 2px 9px;
+      font-size: .7rem; font-weight: 600;
+      border-radius: 100px;
+      background: var(--bg); color: var(--ink2);
+    }
+    .pill.gold { background: var(--gold-bg); color: var(--gold); }
+    .pill.teal { background: rgba(11,122,100,.12); color: var(--teal); }
+    .pill.red  { background: #FCECEA; color: var(--red); }
+    .pill.gray { background: var(--bg); color: var(--ink3); }
+
+    .plan-select {
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--white);
+      font-size: .8rem;
+      cursor: pointer;
+    }
+
+    .toggle-btn {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: .76rem; font-weight: 600;
+      transition: opacity .15s;
+    }
+    .toggle-btn.activate    { background: var(--teal); color: #fff; }
+    .toggle-btn.deactivate  { background: var(--red); color: #fff; }
+    .toggle-btn.disabled    { background: var(--bg); color: var(--ink3); cursor: not-allowed; }
+    .toggle-btn:not(.disabled):hover { opacity: .85; }
+
+    .empty, .loading {
+      padding: 48px;
+      text-align: center;
+      color: var(--ink3);
+      font-size: .9rem;
+    }
+    .deny {
+      max-width: 480px; margin: 80px auto;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+    }
+    .deny h2 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 1.3rem; margin-bottom: 8px; }
+    .deny p { color: var(--ink3); font-size: .9rem; line-height: 1.55; }
+    .deny code {
+      display: inline-block; margin-top: 14px;
+      background: var(--bg); padding: 6px 10px; border-radius: 6px;
+      font-family: 'DM Mono', monospace; font-size: .78rem;
+    }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: #fff;
+      padding: 10px 18px; border-radius: 100px;
+      font-size: .85rem; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    .toast.error { background: var(--red); }
+
+    .inactive td { opacity: .55; }
+    .product-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo">
+        <div class="tb-logo-mark">م</div>
+        <span class="tb-logo-name">Mumtaz</span>
+      </div>
+      <span class="tb-admin-pill">Admin</span>
+    </div>
+    <a href="/dashboard.html" class="tb-back">← Back to dashboard</a>
+  </header>
+
+  <main class="main">
+
+    <div id="content" hidden>
+      <div class="hd">
+        <div>
+          <div class="hd-eyebrow">User management</div>
+          <h1 class="hd-title">Customers</h1>
+        </div>
+        <div class="meta" id="who">—</div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="filter-bar">
+        <input id="search" placeholder="Search name, email, company…" />
+        <select id="filter-plan">
+          <option value="">All plans</option>
+          <option value="trial">Trial</option>
+          <option value="starter">Starter</option>
+          <option value="growth">Growth</option>
+          <option value="scale">Scale</option>
+        </select>
+        <select id="filter-status">
+          <option value="">All status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <span class="meta" id="count"></span>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Company</th>
+                <th>Plan</th>
+                <th>Products</th>
+                <th>Industry</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="rows">
+              <tr><td colspan="8" class="loading">Loading users…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="deny" id="deny" hidden>
+      <h2>Admin access required</h2>
+      <p>Your account isn't authorized for the admin panel. To grant access, set the <code>MUMTAZ_ADMINS</code> env var on zaki-server to a comma-separated list of admin emails and restart the service.</p>
+      <p style="margin-top:14px"><a href="/dashboard.html" style="color:var(--gold);font-weight:600">← Back to dashboard</a></p>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const token = () => localStorage.getItem('mumtaz_token');
+    if (!token()) { window.location.href = '/'; }
+
+    let users = [];
+    const PLAN_TONES = { trial: 'gray', starter: 'gold', growth: 'teal', scale: 'gold' };
+    const PLAN_NAMES = { trial: 'Trial', starter: 'Starter', growth: 'Growth', scale: 'Scale' };
+
+    (async function init() {
+      try {
+        const ping = await fetch('/api/admin/ping', { headers: { Authorization: 'Bearer ' + token() } });
+        if (ping.status === 401) { localStorage.removeItem('mumtaz_token'); window.location.href = '/'; return; }
+        if (ping.status === 403) { $('deny').hidden = false; return; }
+        if (!ping.ok) throw new Error('Could not reach admin API');
+        const me = await ping.json();
+        $('who').textContent = `Signed in as ${me.email} · ${me.admin_count} admin${me.admin_count === 1 ? '' : 's'} configured`;
+        $('content').hidden = false;
+        await loadUsers();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    })();
+
+    async function loadUsers() {
+      try {
+        const r = await fetch('/api/admin/users', { headers: { Authorization: 'Bearer ' + token() } });
+        if (!r.ok) throw new Error('Failed to load users');
+        const data = await r.json();
+        users = data.users;
+        renderStats();
+        renderRows();
+      } catch (err) {
+        $('rows').innerHTML = `<tr><td colspan="8" class="loading">${err.message}</td></tr>`;
+      }
+    }
+
+    function renderStats() {
+      const total    = users.length;
+      const active   = users.filter(u => u.active).length;
+      const trial    = users.filter(u => u.plan === 'trial').length;
+      const paying   = users.filter(u => u.plan !== 'trial' && u.active).length;
+      const cards = [
+        { label: 'Total users',     val: total },
+        { label: 'Active',          val: active },
+        { label: 'On trial',        val: trial },
+        { label: 'Paying customers',val: paying },
+      ];
+      $('stats').innerHTML = cards.map(c =>
+        `<div class="stat"><div class="stat-label">${c.label}</div><div class="stat-val">${c.val}</div></div>`
+      ).join('');
+    }
+
+    function renderRows() {
+      const q     = $('search').value.trim().toLowerCase();
+      const plan  = $('filter-plan').value;
+      const status= $('filter-status').value;
+      const filtered = users.filter(u => {
+        if (plan   && u.plan !== plan) return false;
+        if (status === 'active'   && !u.active) return false;
+        if (status === 'inactive' &&  u.active) return false;
+        if (q) {
+          const hay = [u.name, u.email, u.company].filter(Boolean).join(' ').toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+      $('count').textContent = `${filtered.length} of ${users.length} shown`;
+
+      if (!filtered.length) {
+        $('rows').innerHTML = '<tr><td colspan="8" class="empty">No users match the current filter.</td></tr>';
+        return;
+      }
+
+      $('rows').innerHTML = filtered.map(u => {
+        const initial = ((u.name || u.email || '?')[0] || '?').toUpperCase();
+        const joined  = u.created_at ? new Date(u.created_at * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+        const productPills = (u.products || []).map(p => `<span class="pill gold">${p}</span>`).join('') || '<span class="meta">—</span>';
+        const planSel = ['trial','starter','growth','scale'].map(p =>
+          `<option value="${p}" ${p === u.plan ? 'selected' : ''}>${PLAN_NAMES[p]}</option>`
+        ).join('');
+        const toggleClass = u.is_admin ? 'disabled'
+                           : (u.active ? 'deactivate' : 'activate');
+        const toggleText  = u.is_admin ? 'Admin'
+                           : (u.active ? 'Deactivate' : 'Reactivate');
+        const adminBadge  = u.is_admin ? '<span class="pill gold" title="Admin">⚡ Admin</span>' : '';
+
+        return `
+          <tr class="${u.active ? '' : 'inactive'}">
+            <td>
+              <div class="user-cell">
+                <div class="avatar">${initial}</div>
+                <div>
+                  <div class="user-name">${u.name || '—'} ${adminBadge}</div>
+                  <div class="user-email">${u.email}</div>
+                </div>
+              </div>
+            </td>
+            <td>${u.company || '—'}</td>
+            <td>
+              <select class="plan-select" data-id="${u.id}" data-plan="${u.plan}">
+                ${planSel}
+              </select>
+            </td>
+            <td><div class="product-tags">${productPills}</div></td>
+            <td>${u.industry ? `<span class="pill">${u.industry}</span>` : '<span class="meta">—</span>'}</td>
+            <td>${joined}</td>
+            <td>${u.active ? '<span class="pill teal">Active</span>' : '<span class="pill red">Inactive</span>'}</td>
+            <td>
+              <button class="toggle-btn ${toggleClass}" data-id="${u.id}" data-active="${!u.active}" ${u.is_admin ? 'disabled' : ''}>
+                ${toggleText}
+              </button>
+            </td>
+          </tr>`;
+      }).join('');
+
+      $('rows').querySelectorAll('.plan-select').forEach(sel => {
+        sel.addEventListener('change', () => changePlan(parseInt(sel.dataset.id, 10), sel.value, sel));
+      });
+      $('rows').querySelectorAll('.toggle-btn').forEach(btn => {
+        if (btn.classList.contains('disabled')) return;
+        btn.addEventListener('click', () => toggleUser(parseInt(btn.dataset.id, 10), btn.dataset.active === 'true', btn));
+      });
+    }
+
+    async function changePlan(id, plan, sel) {
+      const previous = sel.dataset.plan;
+      sel.disabled = true;
+      try {
+        const r = await fetch(`/api/admin/users/${id}/plan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
+          body: JSON.stringify({ plan }),
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || 'Plan update failed');
+        }
+        const u = users.find(x => x.id === id);
+        if (u) u.plan = plan;
+        sel.dataset.plan = plan;
+        renderStats();
+        toast(`Plan updated to ${PLAN_NAMES[plan] || plan}.`);
+      } catch (err) {
+        sel.value = previous;
+        toast(err.message, true);
+      } finally {
+        sel.disabled = false;
+      }
+    }
+
+    async function toggleUser(id, makeActive, btn) {
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const r = await fetch(`/api/admin/users/${id}/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
+          body: JSON.stringify({ active: makeActive }),
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.detail || 'Toggle failed');
+        }
+        const u = users.find(x => x.id === id);
+        if (u) u.active = makeActive;
+        renderStats();
+        renderRows();
+        toast(makeActive ? 'User reactivated.' : 'User deactivated.');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = original;
+        toast(err.message, true);
+      }
+    }
+
+    let toastTimer;
+    function toast(msg, isError = false) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.classList.toggle('error', isError);
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+    }
+
+    $('search').addEventListener('input', renderRows);
+    $('filter-plan').addEventListener('change', renderRows);
+    $('filter-status').addEventListener('change', renderRows);
+  </script>
+
+</body>
+</html>

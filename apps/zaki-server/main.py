@@ -425,6 +425,17 @@ class ResetReq(BaseModel):
 PORTAL_BASE_URL = os.environ.get("PORTAL_BASE_URL", "https://app.mumtaz.digital")
 RESET_TOKEN_TTL_SECS = 3600  # 1 hour
 
+# Comma-separated list of admin emails. Admins see /admin.html and the
+# /api/v1/admin/* endpoints. Default: empty — set MUMTAZ_ADMINS in env.
+ADMIN_EMAILS = {
+    e.strip().lower() for e in os.environ.get("MUMTAZ_ADMINS", "").split(",") if e.strip()
+}
+
+def require_admin(auth: dict = Depends(require_auth)) -> dict:
+    if (auth.get("email") or "").lower() not in ADMIN_EMAILS:
+        raise HTTPException(403, "Admin access required.")
+    return auth
+
 @app.post("/api/v1/auth/forgot")
 def forgot_password(req: ForgotReq, background_tasks: BackgroundTasks = None):
     """Initiate password reset. Always returns 200 to prevent email enumeration."""
@@ -660,6 +671,76 @@ async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
     db.execute("UPDATE users SET plan=? WHERE email=?", (req.plan, auth["email"]))
     db.commit()
     db.close()
+    return {"ok": True, "plan": PLANS[req.plan]}
+
+# ── Admin ────────────────────────────────────────────────────────────
+@app.get("/api/v1/admin/ping")
+def admin_ping(auth: dict = Depends(require_admin)):
+    """Lightweight check used by /admin.html to confirm admin access."""
+    return {"ok": True, "email": auth.get("email"), "admin_count": len(ADMIN_EMAILS)}
+
+@app.get("/api/v1/admin/users")
+def admin_list_users(auth: dict = Depends(require_admin)):
+    db   = get_db()
+    rows = db.execute("""
+        SELECT id, email, name, company, plan, active, odoo_uid, tenant_id,
+               created_at, onboarding_json, role
+        FROM users
+        ORDER BY created_at DESC
+    """).fetchall()
+    db.close()
+    import json as _json
+    users = []
+    for r in rows:
+        try:
+            ob = _json.loads(r["onboarding_json"]) if r["onboarding_json"] else None
+        except Exception:
+            ob = None
+        users.append({
+            "id":         r["id"],
+            "email":      r["email"],
+            "name":       r["name"],
+            "company":    r["company"],
+            "plan":       r["plan"] or "trial",
+            "active":     bool(r["active"]),
+            "odoo_uid":   r["odoo_uid"],
+            "tenant_id":  r["tenant_id"],
+            "created_at": r["created_at"],
+            "role":       r["role"],
+            "products":   (ob or {}).get("products", []),
+            "industry":   (ob or {}).get("industry"),
+            "team_size":  (ob or {}).get("teamSize"),
+            "is_admin":   (r["email"] or "").lower() in ADMIN_EMAILS,
+        })
+    return {"users": users, "total": len(users)}
+
+class AdminToggleReq(BaseModel):
+    active: bool
+
+@app.post("/api/v1/admin/users/{user_id}/toggle")
+def admin_toggle_user(user_id: int, req: AdminToggleReq, auth: dict = Depends(require_admin)):
+    db = get_db()
+    row = db.execute("SELECT email FROM users WHERE id=?", (user_id,)).fetchone()
+    if not row:
+        db.close(); raise HTTPException(404, "User not found.")
+    if (row["email"] or "").lower() in ADMIN_EMAILS:
+        db.close(); raise HTTPException(400, "Cannot deactivate an admin.")
+    db.execute("UPDATE users SET active=? WHERE id=?", (1 if req.active else 0, user_id))
+    db.commit(); db.close()
+    return {"ok": True, "active": req.active}
+
+class AdminPlanReq(BaseModel):
+    plan: str
+
+@app.post("/api/v1/admin/users/{user_id}/plan")
+def admin_change_user_plan(user_id: int, req: AdminPlanReq, auth: dict = Depends(require_admin)):
+    if req.plan not in PLANS:
+        raise HTTPException(400, f"Unknown plan '{req.plan}'.")
+    db = get_db()
+    if not db.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone():
+        db.close(); raise HTTPException(404, "User not found.")
+    db.execute("UPDATE users SET plan=? WHERE id=?", (req.plan, user_id))
+    db.commit(); db.close()
     return {"ok": True, "plan": PLANS[req.plan]}
 
 @app.get("/api/v1/tenant/me")
