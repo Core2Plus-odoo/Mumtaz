@@ -36,8 +36,9 @@
       padding: 14px 28px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 50;
+      gap: 12px; flex-wrap: wrap;
     }
-    .tb-left { display: flex; align-items: center; gap: 24px; }
+    .tb-left { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
     .tb-logo { display: flex; align-items: center; gap: 10px; }
     .tb-logo-mark {
       width: 32px; height: 32px;
@@ -388,6 +389,28 @@
     .funnel-name {
       font-size: .82rem; color: var(--ink2); width: 88px;
       flex-shrink: 0;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      .topbar { padding: 10px 16px; }
+      .tb-left { gap: 12px; }
+      .tb-logo-name { display: none; }
+      .role-select { padding: 5px 10px; font-size: .78rem; }
+      .role-select-label { display: none; }
+      .tb-user-name { display: none; }
+      .tb-user { padding: 3px 4px; }
+      .tb-signout { padding: 5px 8px; font-size: .76rem; }
+      #admin-link { padding: 5px 8px; }
+      .main { padding: 24px 16px 48px; }
+      .hello-title { font-size: 1.5rem; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .kpi-val { font-size: 1.3rem; }
+      .widget { padding: 16px 14px; }
+      .widget-head { flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 12px; }
+      .funnel-name { width: 72px; font-size: .76rem; }
+      .bar-chart { height: 150px; }
+      .sec-head { flex-wrap: wrap; gap: 6px; }
     }
   </style>
 </head>

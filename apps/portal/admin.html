@@ -205,6 +205,28 @@
 
     .inactive td { opacity: .55; }
     .product-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    /* ── Mobile ── */
+    @media (max-width: 720px) {
+      .topbar { padding: 10px 16px; }
+      .tb-logo-name { display: none; }
+      .main { padding: 20px 14px 40px; }
+      .hd-title { font-size: 1.35rem; }
+      .filter-bar input { min-width: 0; width: 100%; flex-basis: 100%; }
+      .filter-bar select { flex: 1; }
+      table { font-size: .8rem; }
+      th, td { padding: 9px 10px; }
+      th:nth-child(2), td:nth-child(2),  /* Company */
+      th:nth-child(4), td:nth-child(4),  /* Products */
+      th:nth-child(5), td:nth-child(5),  /* Industry */
+      th:nth-child(6), td:nth-child(6) { /* Joined */
+        display: none;
+      }
+      .user-email { font-size: .72rem; }
+      .avatar { width: 28px; height: 28px; font-size: .76rem; }
+      .toggle-btn { padding: 4px 8px; font-size: .7rem; }
+      .plan-select { font-size: .76rem; padding: 4px 6px; }
+    }
   </style>
 </head>
 <body>
