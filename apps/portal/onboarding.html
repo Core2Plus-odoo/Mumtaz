@@ -373,7 +373,81 @@
           </div>
         </div>
 
-        <!-- Steps 4-6 added in next patches -->
+        <!-- ── Step 4: ERP Modules ── -->
+        <div class="step" data-step="4">
+          <div class="ob-eyebrow">Your ERP setup</div>
+          <h1 class="ob-title">Pick the modules you'll use</h1>
+          <p class="ob-sub">We've pre-selected the ones most businesses in your industry use. You can change anytime.</p>
+
+          <div class="ob-grid-1" id="modules-grid">
+            <button class="ob-card-wide" data-value="einvoicing" data-locked="1">
+              <div class="ob-card-wide-icon">🧾</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">E-Invoicing &amp; VAT <span class="ob-card-wide-tag">FREE · ALWAYS</span></div>
+                <div class="ob-card-wide-desc">UAE FTA · KSA ZATCA · Pakistan FBR — included with every account.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="accounting">
+              <div class="ob-card-wide-icon">📒</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">Accounting <span class="ob-card-wide-tag">FREE</span></div>
+                <div class="ob-card-wide-desc">Journals, reconciliation, P&amp;L, balance sheet, VAT returns.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="crm">
+              <div class="ob-card-wide-icon">📊</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">CRM &amp; Sales</div>
+                <div class="ob-card-wide-desc">Pipeline, leads, quotations, sales orders.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="inventory">
+              <div class="ob-card-wide-icon">📦</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">Inventory &amp; Purchasing</div>
+                <div class="ob-card-wide-desc">Stock, purchase orders, receipts, multi-warehouse.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="hr">
+              <div class="ob-card-wide-icon">👥</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">HR &amp; Payroll</div>
+                <div class="ob-card-wide-desc">Employees, leaves, payslips, gratuity, attendance.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="manufacturing">
+              <div class="ob-card-wide-icon">🏭</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">Manufacturing</div>
+                <div class="ob-card-wide-desc">Bills of materials, work orders, production planning.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="project">
+              <div class="ob-card-wide-icon">📐</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">Project Management</div>
+                <div class="ob-card-wide-desc">Tasks, timesheets, milestones, project P&amp;L.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+            <button class="ob-card-wide" data-value="pos">
+              <div class="ob-card-wide-icon">🛍️</div>
+              <div class="ob-card-wide-body">
+                <div class="ob-card-wide-name">Point of Sale</div>
+                <div class="ob-card-wide-desc">Front-of-house POS, loyalty, multi-branch.</div>
+              </div>
+              <div class="ob-check"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Steps 5-6 added in next patches -->
 
       </div>
     </div>
@@ -435,6 +509,40 @@
       });
     });
 
+    /* ── Step 4: Modules (multi-select with smart defaults) ── */
+    const MODULE_DEFAULTS = {
+      trading:       ['einvoicing', 'accounting', 'crm', 'inventory'],
+      retail:        ['einvoicing', 'accounting', 'pos', 'inventory', 'crm'],
+      services:      ['einvoicing', 'accounting', 'crm', 'project'],
+      construction:  ['einvoicing', 'accounting', 'project', 'hr'],
+      manufacturing: ['einvoicing', 'accounting', 'manufacturing', 'inventory'],
+      realestate:    ['einvoicing', 'accounting', 'crm'],
+      hospitality:   ['einvoicing', 'accounting', 'pos', 'hr', 'inventory'],
+      finance:       ['einvoicing', 'accounting', 'crm'],
+      other:         ['einvoicing', 'accounting', 'crm'],
+    };
+
+    let modulesInitialized = false;
+
+    function applyModuleDefaults() {
+      const defaults = MODULE_DEFAULTS[state.industry] || ['einvoicing', 'accounting'];
+      state.modules = [...defaults];
+      document.querySelectorAll('#modules-grid .ob-card-wide').forEach(card => {
+        card.classList.toggle('selected', defaults.includes(card.dataset.value));
+      });
+    }
+
+    document.querySelectorAll('#modules-grid .ob-card-wide').forEach(card => {
+      card.addEventListener('click', () => {
+        if (card.dataset.locked === '1') return; // einvoicing always selected
+        const v = card.dataset.value;
+        const i = state.modules.indexOf(v);
+        if (i === -1) { state.modules.push(v); card.classList.add('selected'); }
+        else          { state.modules.splice(i, 1); card.classList.remove('selected'); }
+        validateStep();
+      });
+    });
+
     /* ── Navigation ── */
     function updateProgress() {
       $('step-current').textContent = state.currentStep;
@@ -443,6 +551,11 @@
     }
 
     function gotoStep(n) {
+      // Apply smart defaults the first time entering step 4
+      if (n === 4 && !modulesInitialized) {
+        applyModuleDefaults();
+        modulesInitialized = true;
+      }
       document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
       const next = document.querySelector(`.step[data-step="${n}"]`);
       if (next) {
@@ -459,14 +572,15 @@
       if (s === 1) ok = !!state.industry;
       if (s === 2) ok = state.products.length > 0;
       if (s === 3) ok = state.agents.length > 0;
-      // steps 4-6 added in next patches
+      if (s === 4) ok = state.modules.length > 0;
+      // steps 5-6 added in next patches
       $('btn-next').disabled = !ok;
     }
 
     /* Skip steps that don't apply based on product selection */
     function shouldSkipStep(n) {
       if (n === 3 && !state.products.includes('zaki')) return true;
-      // step 4 (modules) skip if no ERP — added in patch 4
+      if (n === 4 && !state.products.includes('erp'))  return true;
       return false;
     }
 
