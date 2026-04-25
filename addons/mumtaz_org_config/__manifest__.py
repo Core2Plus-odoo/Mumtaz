@@ -1,0 +1,25 @@
+{
+    "name": "Mumtaz Org Config",
+    "summary": "SME organisation signup, subdomain binding, and multi-company branding middleware",
+    "version": "19.0.1.0.0",
+    "category": "Mumtaz Platform",
+    "author": "Mumtaz",
+    "license": "LGPL-3",
+    "depends": [
+        "base",
+        "mail",
+        "mumtaz_core",
+        "mumtaz_branding",
+        "mumtaz_portal_routing",
+    ],
+    "data": [
+        "security/ir.model.access.csv",
+        "security/mumtaz_org_config_security.xml",
+        "data/mumtaz_org_config_data.xml",
+        "views/mumtaz_org_views.xml",
+        "views/mumtaz_org_menus.xml",
+    ],
+    "installable": True,
+    "auto_install": False,
+    "application": False,
+}

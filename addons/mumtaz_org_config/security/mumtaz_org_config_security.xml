@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Only platform superadmins can manage org records -->
+    <record id="mumtaz_org_rule_admin" model="ir.rule">
+        <field name="name">Mumtaz Org: admin sees all</field>
+        <field name="model_id" ref="model_mumtaz_org"/>
+        <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>

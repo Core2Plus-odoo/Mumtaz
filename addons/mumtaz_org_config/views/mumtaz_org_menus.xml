@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root menu — only visible to Odoo Administrators -->
+    <menuitem id="mumtaz_org_root_menu"
+              name="Mumtaz Orgs"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <menuitem id="mumtaz_org_list_menu"
+              name="Organisations"
+              parent="mumtaz_org_root_menu"
+              action="mumtaz_org_action"
+              sequence="10"/>
+
+</odoo>
