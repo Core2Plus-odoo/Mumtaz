@@ -141,7 +141,41 @@ h1,h2,h3,h4{color:var(--text);letter-spacing:-.018em;line-height:1.2;font-weight
 }
 .setup-logo{font-size:1.1rem;font-weight:700;color:var(--text)}
 .setup-logo span{color:var(--text-2);font-weight:400}
-.setup-headline{font-size:1.5rem;font-weight:700;color:var(--text);margin:20px 0 4px;letter-spacing:-.02em}
+.setup-headline{font-size:1.5rem;font-weight:600;color:var(--text);margin:20px 0 4px;letter-spacing:-.022em}
+.setup-card.wide{max-width:680px}
+.wiz-progress{display:flex;gap:6px;margin:20px 0 24px}
+.wiz-dot{flex:1;height:3px;border-radius:99px;background:var(--border);transition:background var(--tr)}
+.wiz-dot.done{background:var(--brand)}
+.wiz-dot.active{background:var(--brand)}
+.wiz-step{display:none}
+.wiz-step.active{display:block}
+.wiz-actions{display:flex;gap:10px;margin-top:24px;align-items:center}
+.wiz-actions .spacer{flex:1}
+.wiz-back{background:none;border:none;color:var(--text-3);font-size:.85rem;cursor:pointer;padding:8px 4px;transition:color var(--tr)}
+.wiz-back:hover{color:var(--text-2)}
+.wiz-skip{background:none;border:none;color:var(--text-3);font-size:.78rem;cursor:pointer;padding:8px 4px;transition:color var(--tr)}
+.wiz-skip:hover{color:var(--text-2)}
+.sector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.sector-card{
+  background:var(--card-2);border:1px solid var(--border-2);
+  border-radius:8px;padding:12px 14px;cursor:pointer;transition:all var(--tr);
+  text-align:left;
+}
+.sector-card:hover{border-color:var(--brand);transform:translateY(-1px)}
+.sector-card.selected{border-color:var(--brand);background:var(--blue-bg);box-shadow:0 0 0 1px var(--brand)}
+.sector-name{font-size:.83rem;font-weight:600;color:var(--text);line-height:1.3}
+.sector-meta{font-size:.7rem;color:var(--text-3);margin-top:3px}
+.chip-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{
+  background:var(--card-2);border:1px solid var(--border-2);
+  border-radius:99px;padding:8px 16px;cursor:pointer;
+  font-size:.85rem;color:var(--text-2);transition:all var(--tr);
+}
+.chip:hover{border-color:var(--brand);color:var(--text)}
+.chip.selected{background:var(--brand);border-color:var(--brand);color:#fff}
+@media (max-width:600px){
+  .sector-grid{grid-template-columns:1fr 1fr}
+}
 .setup-sub{color:var(--text-2);font-size:.85rem;margin-bottom:28px}
 .setup-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
@@ -541,49 +575,128 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 
 <!-- ══ SETUP SCREEN ══ -->
 <div id="setup">
-  <div class="setup-card">
+  <div class="setup-card wide">
     <div class="setup-brand">
       <div class="setup-mark">M</div>
       <div class="setup-logo">Mumtaz <span>· ZAKI CFO</span></div>
     </div>
-    <div class="setup-headline">Your AI Chief Financial Officer</div>
-    <div class="setup-sub">Personalise in 30 seconds — or jump straight to the dashboard. AI features work with your Mumtaz account or your own API key.</div>
-
-    <div class="setup-row">
-      <div class="field">
-        <label>Your Name</label>
-        <input id="s-fname" type="text" placeholder="e.g. Umer">
-      </div>
-      <div class="field">
-        <label>Company Name</label>
-        <input id="s-company" type="text" placeholder="e.g. Mumtaz Digital">
-      </div>
+    <div class="wiz-progress">
+      <div class="wiz-dot active" data-step="1"></div>
+      <div class="wiz-dot" data-step="2"></div>
+      <div class="wiz-dot" data-step="3"></div>
+      <div class="wiz-dot" data-step="4"></div>
+      <div class="wiz-dot" data-step="5"></div>
+      <div class="wiz-dot" data-step="6"></div>
     </div>
-    <div class="setup-row">
-      <div class="field">
-        <label>Country</label>
-        <input id="s-country" type="text" placeholder="UAE">
-      </div>
-      <div class="field">
-        <label>Reporting Currency</label>
-        <select id="s-currency">
-          <option value="AED">AED — UAE Dirham</option>
-          <option value="USD">USD — US Dollar</option>
-          <option value="GBP">GBP — British Pound</option>
-          <option value="EUR">EUR — Euro</option>
-          <option value="SAR">SAR — Saudi Riyal</option>
-          <option value="OMR">OMR — Omani Rial</option>
-          <option value="PKR">PKR — Pakistani Rupee</option>
-          <option value="INR">INR — Indian Rupee</option>
-        </select>
+
+    <!-- Step 1: Identity -->
+    <div class="wiz-step active" data-step="1">
+      <div class="setup-headline">Welcome — let's get Zaki set up</div>
+      <div class="setup-sub">Six quick questions. Zaki uses your answers to tailor every briefing, alert, and recommendation.</div>
+      <div class="setup-row">
+        <div class="field"><label>Your First Name</label><input id="s-fname" type="text" placeholder="e.g. Umer"></div>
+        <div class="field"><label>Company Name</label><input id="s-company" type="text" placeholder="e.g. Mumtaz Digital"></div>
       </div>
     </div>
 
-    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="completeSetup()">Open Dashboard →</button>
-    <button onclick="skipSetup()" style="width:100%;margin-top:10px;padding:9px;color:var(--text-3);font-size:.82rem;background:none;border:none;cursor:pointer;transition:color var(--tr)" onmouseover="this.style.color='var(--text-2)'" onmouseout="this.style.color='var(--text-3)'">
-      Skip — explore without personalising
-    </button>
-    <p style="margin-top:14px;color:var(--text-3);font-size:.74rem;text-align:center;line-height:1.5">AI is powered by Mumtaz Server (connect in Settings) or your own Anthropic key</p>
+    <!-- Step 2: Market -->
+    <div class="wiz-step" data-step="2">
+      <div class="setup-headline">Where does your business operate?</div>
+      <div class="setup-sub">Drives the regulatory rules, tax framework, and investment menu Zaki uses.</div>
+      <div class="setup-row">
+        <div class="field"><label>Country</label>
+          <select id="s-country" onchange="autoCurrency()">
+            <option value="">— Select —</option>
+            <option value="UAE">United Arab Emirates</option>
+            <option value="KSA">Saudi Arabia</option>
+            <option value="Pakistan">Pakistan</option>
+            <option value="Egypt">Egypt</option>
+            <option value="Oman">Oman</option>
+            <option value="Qatar">Qatar</option>
+            <option value="Kuwait">Kuwait</option>
+            <option value="Bahrain">Bahrain</option>
+            <option value="India">India</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Reporting Currency</label>
+          <select id="s-currency">
+            <option value="AED">AED — UAE Dirham</option>
+            <option value="SAR">SAR — Saudi Riyal</option>
+            <option value="OMR">OMR — Omani Rial</option>
+            <option value="QAR">QAR — Qatari Riyal</option>
+            <option value="KWD">KWD — Kuwaiti Dinar</option>
+            <option value="BHD">BHD — Bahraini Dinar</option>
+            <option value="EGP">EGP — Egyptian Pound</option>
+            <option value="PKR">PKR — Pakistani Rupee</option>
+            <option value="INR">INR — Indian Rupee</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="EUR">EUR — Euro</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Sector -->
+    <div class="wiz-step" data-step="3">
+      <div class="setup-headline">What sector are you in?</div>
+      <div class="setup-sub">Loads industry benchmarks, regulatory hotspots, and the playbook for your sector.</div>
+      <div class="sector-grid" id="sector-grid"></div>
+      <input type="hidden" id="s-sector" value="">
+      <input type="hidden" id="s-industry" value="">
+    </div>
+
+    <!-- Step 4: Stage -->
+    <div class="wiz-step" data-step="4">
+      <div class="setup-headline">What stage is the business at?</div>
+      <div class="setup-sub">Tunes Zaki's recommendations — early-stage advice differs from mature optimization.</div>
+      <div class="chip-grid" id="stage-chips">
+        <div class="chip" data-stage="early">Early — &lt; 2 years / pre-profit</div>
+        <div class="chip" data-stage="scaling">Scaling — 2-5 years / growing</div>
+        <div class="chip" data-stage="mature">Mature — 5+ years / profitable</div>
+      </div>
+      <input type="hidden" id="s-stage" value="">
+    </div>
+
+    <!-- Step 5: Risk profile -->
+    <div class="wiz-step" data-step="5">
+      <div class="setup-headline">Your investing posture</div>
+      <div class="setup-sub">Affects the Where-to-Invest panel and how Zaki frames cash decisions.</div>
+      <div class="chip-grid" id="risk-chips">
+        <div class="chip" data-risk="Conservative">Conservative — capital preservation</div>
+        <div class="chip" data-risk="Balanced">Balanced — moderate risk for moderate growth</div>
+        <div class="chip" data-risk="Growth">Growth — accept volatility for higher returns</div>
+      </div>
+      <input type="hidden" id="s-risk" value="Balanced">
+    </div>
+
+    <!-- Step 6: Worries -->
+    <div class="wiz-step" data-step="6">
+      <div class="setup-headline">What's on your mind right now?</div>
+      <div class="setup-sub">Pick up to three. Zaki will lead with these in your morning briefings.</div>
+      <div class="chip-grid" id="worry-chips">
+        <div class="chip" data-worry="Cash runway">Cash runway</div>
+        <div class="chip" data-worry="Customer concentration">Customer concentration</div>
+        <div class="chip" data-worry="Hiring decisions">Hiring decisions</div>
+        <div class="chip" data-worry="Margin pressure">Margin pressure</div>
+        <div class="chip" data-worry="AR overdue">AR overdue</div>
+        <div class="chip" data-worry="Fundraising">Fundraising</div>
+        <div class="chip" data-worry="Tax / compliance">Tax / compliance</div>
+        <div class="chip" data-worry="New market entry">New market entry</div>
+        <div class="chip" data-worry="Competition">Competition</div>
+      </div>
+      <div class="field" style="margin-top:14px"><label>Anything else? (optional)</label>
+        <textarea id="s-worry-extra" rows="2" placeholder="e.g. supply chain delays, key-person risk…"></textarea></div>
+    </div>
+
+    <div class="wiz-actions">
+      <button class="wiz-back" id="wiz-back" onclick="wizPrev()" style="visibility:hidden">← Back</button>
+      <div class="spacer"></div>
+      <button class="wiz-skip" onclick="skipSetup()">Skip wizard</button>
+      <button class="btn-primary" id="wiz-next" onclick="wizNext()">Continue →</button>
+    </div>
+    <p style="margin-top:14px;color:var(--text-3);font-size:.72rem;text-align:center;line-height:1.5">AI runs on Mumtaz Server (connect in Settings) or your own Anthropic key.</p>
   </div>
 </div>
 
@@ -2318,9 +2431,11 @@ ${sectorContext(findSector(S.co.industry))}
 ---
 
 ## BUSINESS CONTEXT
+- **Stage:** ${S.co.stage || 'Not specified'}
+- **Investing Posture:** ${S.prefs?.riskProfile || 'Balanced'}
 - **Sales Pipeline:** ${S.ctx.pipeline || 'Not provided'}
 - **Top Clients:** ${S.ctx.clients || 'Not provided'}
-- **Current Concern:** ${S.ctx.worry || 'Not provided'}
+- **Top Concerns:** ${S.ctx.worry || 'Not provided'}
 
 ---
 
@@ -2745,6 +2860,92 @@ function updateSendBtn() {
 // ═══════════════════════════════════════════
 // SETUP
 // ═══════════════════════════════════════════
+// ── Setup Wizard ─────────────────────────────────────────────
+let WIZ_STEP = 1
+const WIZ_TOTAL = 6
+const COUNTRY_CURRENCY = {
+  UAE:'AED', KSA:'SAR', Pakistan:'PKR', Egypt:'EGP', Oman:'OMR',
+  Qatar:'QAR', Kuwait:'KWD', Bahrain:'BHD', India:'INR'
+}
+function autoCurrency() {
+  const c = document.getElementById('s-country').value
+  const cur = COUNTRY_CURRENCY[c]
+  if (cur) document.getElementById('s-currency').value = cur
+}
+function wizGoTo(n) {
+  WIZ_STEP = Math.max(1, Math.min(WIZ_TOTAL, n))
+  document.querySelectorAll('.wiz-step').forEach(el => {
+    el.classList.toggle('active', Number(el.dataset.step) === WIZ_STEP)
+  })
+  document.querySelectorAll('.wiz-dot').forEach(el => {
+    const s = Number(el.dataset.step)
+    el.classList.toggle('done', s < WIZ_STEP)
+    el.classList.toggle('active', s === WIZ_STEP)
+  })
+  document.getElementById('wiz-back').style.visibility = WIZ_STEP > 1 ? 'visible' : 'hidden'
+  document.getElementById('wiz-next').textContent = WIZ_STEP === WIZ_TOTAL ? 'Open Dashboard →' : 'Continue →'
+  if (WIZ_STEP === 3) renderSectorGrid()
+}
+function wizPrev() { wizGoTo(WIZ_STEP - 1) }
+function wizNext() {
+  const err = wizValidate(WIZ_STEP)
+  if (err) { showToast(err, 'error'); return }
+  if (WIZ_STEP === WIZ_TOTAL) { completeSetup(); return }
+  wizGoTo(WIZ_STEP + 1)
+}
+function wizValidate(step) {
+  if (step === 1) {
+    if (!document.getElementById('s-fname').value.trim()) return 'Tell Zaki your name'
+    if (!document.getElementById('s-company').value.trim()) return 'Tell Zaki the company name'
+  }
+  if (step === 2 && !document.getElementById('s-country').value) return 'Pick your country'
+  if (step === 3 && !document.getElementById('s-sector').value) return 'Pick a sector — or skip wizard if you\'re unsure'
+  if (step === 4 && !document.getElementById('s-stage').value) return 'Pick your stage'
+  return null
+}
+function renderSectorGrid() {
+  const grid = document.getElementById('sector-grid')
+  if (!grid || grid.children.length) return // render once
+  grid.innerHTML = SECTOR_KB.map(s => `
+    <div class="sector-card" data-sector-id="${s.id}" onclick="pickSector('${s.id}','${s.label.replace(/'/g,"\\'")}')">
+      <div class="sector-name">${s.label}</div>
+      <div class="sector-meta">Margin ${s.gross_margin.split(' ')[0]} · Payroll ${s.payroll_pct.split(' ')[0]}</div>
+    </div>`).join('')
+}
+function pickSector(id, label) {
+  document.querySelectorAll('.sector-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.sectorId === id)
+  })
+  document.getElementById('s-sector').value = id
+  document.getElementById('s-industry').value = label
+}
+// Single-select chips for stage / risk
+document.addEventListener('click', e => {
+  const chip = e.target.closest('#stage-chips .chip')
+  if (chip) {
+    document.querySelectorAll('#stage-chips .chip').forEach(c => c.classList.remove('selected'))
+    chip.classList.add('selected')
+    document.getElementById('s-stage').value = chip.dataset.stage
+  }
+  const rChip = e.target.closest('#risk-chips .chip')
+  if (rChip) {
+    document.querySelectorAll('#risk-chips .chip').forEach(c => c.classList.remove('selected'))
+    rChip.classList.add('selected')
+    document.getElementById('s-risk').value = rChip.dataset.risk
+  }
+  // Worries — multi-select, max 3
+  const wChip = e.target.closest('#worry-chips .chip')
+  if (wChip) {
+    if (wChip.classList.contains('selected')) {
+      wChip.classList.remove('selected')
+    } else {
+      const sel = document.querySelectorAll('#worry-chips .chip.selected')
+      if (sel.length < 3) wChip.classList.add('selected')
+      else showToast('Pick up to 3', 'error')
+    }
+  }
+})
+
 function completeSetup() {
   const get = id => document.getElementById(id)?.value?.trim() || ''
   S.me.firstName = get('s-fname') || 'CEO'
@@ -2752,6 +2953,15 @@ function completeSetup() {
   S.co.name = get('s-company') || 'My Company'
   S.co.country = get('s-country') || ''
   S.co.currency = get('s-currency') || 'AED'
+  S.co.industry = get('s-industry') || ''
+  S.co.sectorId = get('s-sector') || ''
+  S.co.stage = get('s-stage') || ''
+  S.prefs = S.prefs || {}
+  S.prefs.riskProfile = get('s-risk') || 'Balanced'
+  // Worries: collect from selected chips + free-text
+  const picked = Array.from(document.querySelectorAll('#worry-chips .chip.selected')).map(c => c.dataset.worry)
+  const extra = get('s-worry-extra')
+  S.ctx.worry = [picked.join(', '), extra].filter(Boolean).join(' · ')
   save()
   launchApp()
 }
