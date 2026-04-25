@@ -4,7 +4,7 @@ import { api } from '@/lib/api'
 
 export default function LoginPage() {
   const [tab, setTab] = useState<'login' | 'register' | 'sso'>('login')
-  const [form, setForm] = useState({ email: '', password: '', name: '', company: '', odoo_url: '', api_key: '' })
+  const [form, setForm] = useState({ email: '', password: '', name: '', company: '', odoo_url: '', odoo_db: '', odoo_email: '', odoo_password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -18,7 +18,7 @@ export default function LoginPage() {
       let res: any
       if (tab === 'login') res = await api.login(form.email, form.password)
       else if (tab === 'register') res = await api.register({ email: form.email, password: form.password, name: form.name, company: form.company })
-      else res = await api.ssoOdoo(form.odoo_url, form.api_key)
+      else res = await api.ssoOdoo(form.odoo_url, form.odoo_db, form.odoo_email, form.odoo_password)
 
       localStorage.setItem('zaki_token', res.access_token)
       localStorage.setItem('zaki_user', JSON.stringify(res.user))
@@ -51,7 +51,7 @@ export default function LoginPage() {
                 className={`flex-1 py-1.5 text-sm rounded-md font-medium transition-all ${
                   tab === t ? 'bg-purple-600 text-white' : 'text-zaki-muted hover:text-zaki-text'
                 }`}>
-                {t === 'sso' ? 'ERP Login' : t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === 'sso' ? 'Odoo' : t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
@@ -66,9 +66,10 @@ export default function LoginPage() {
 
             {tab === 'sso' ? (
               <>
-                <Input label="Mumtaz ERP URL" value={form.odoo_url} onChange={v => set('odoo_url', v)} placeholder="https://app.mumtaz.digital" required />
-                <Input label="API Key" value={form.api_key} onChange={v => set('api_key', v)} placeholder="Your Mumtaz API key" type="password" required />
-                <p className="text-xs text-zaki-muted">Get your API key from Mumtaz ERP → Settings → API Keys</p>
+                <Input label="Odoo URL" value={form.odoo_url} onChange={v => set('odoo_url', v)} placeholder="https://yourcompany.odoo.com" required />
+                <Input label="Database" value={form.odoo_db} onChange={v => set('odoo_db', v)} placeholder="your-database" required />
+                <Input label="Email" value={form.odoo_email} onChange={v => set('odoo_email', v)} placeholder="you@company.com" type="email" required />
+                <Input label="Password" value={form.odoo_password} onChange={v => set('odoo_password', v)} placeholder="••••••••" type="password" required />
               </>
             ) : (
               <>
@@ -81,7 +82,7 @@ export default function LoginPage() {
 
             <button type="submit" disabled={loading}
               className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors">
-              {loading ? 'Loading…' : tab === 'login' ? 'Sign in' : tab === 'register' ? 'Create account' : 'Connect via ERP'}
+              {loading ? 'Loading…' : tab === 'login' ? 'Sign in' : tab === 'register' ? 'Create account' : 'Sign in with Odoo'}
             </button>
           </form>
         </div>

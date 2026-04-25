@@ -41,10 +41,10 @@ export const api = {
 
   me: () => request<any>('/auth/me'),
 
-  ssoOdoo: (odoo_url: string, api_key: string) =>
+  ssoOdoo: (odoo_url: string, db: string, email: string, password: string) =>
     request<{ access_token: string; user: any }>('/auth/sso/odoo', {
       method: 'POST',
-      body: JSON.stringify({ odoo_url, api_key }),
+      body: JSON.stringify({ odoo_url, db, email, password }),
     }),
 
   // Transactions
@@ -97,8 +97,8 @@ export const api = {
   },
 
   // ERP
-  connectERP: (odoo_url: string, api_key: string) =>
-    request<any>('/erp/connect', { method: 'POST', body: JSON.stringify({ odoo_url, api_key }) }),
+  connectERP: (odoo_url: string, db: string, email: string, password: string) =>
+    request<any>('/erp/connect', { method: 'POST', body: JSON.stringify({ odoo_url, db, email, password }) }),
 
   disconnectERP: () => request<any>('/erp/disconnect', { method: 'DELETE' }),
 

@@ -5,7 +5,7 @@ import { Link2, Link2Off, RefreshCw, CheckCircle, AlertCircle } from 'lucide-rea
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null)
-  const [erp, setErp] = useState({ url: '', key: '' })
+  const [erp, setErp] = useState({ url: '', db: '', email: '', password: '' })
   const [erpStatus, setErpStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle')
   const [erpMsg, setErpMsg] = useState('')
   const [syncing, setSyncing] = useState(false)
@@ -15,7 +15,7 @@ export default function SettingsPage() {
     api.me().then(u => {
       setUser(u)
       if (u.has_erp) setErpStatus('connected')
-      if (u.erp_url) setErp(e => ({ ...e, url: u.erp_url }))
+      if (u.erp_url) setErp(e => ({ ...e, url: u.erp_url, db: u.erp_db || '' }))
     }).catch(() => {})
   }, [])
 
@@ -24,7 +24,7 @@ export default function SettingsPage() {
     setErpStatus('connecting')
     setErpMsg('')
     try {
-      await api.connectERP(erp.url, erp.key)
+      await api.connectERP(erp.url, erp.db, erp.email, erp.password)
       setErpStatus('connected')
       setErpMsg('Connected successfully!')
       api.me().then(setUser)
@@ -35,7 +35,7 @@ export default function SettingsPage() {
   }
 
   async function disconnectERP() {
-    if (!confirm('Disconnect from Mumtaz ERP?')) return
+    if (!confirm('Disconnect from Odoo?')) return
     await api.disconnectERP()
     setErpStatus('idle')
     setErpMsg('')
@@ -69,11 +69,11 @@ export default function SettingsPage() {
       </Section>
 
       {/* ERP Integration */}
-      <Section title="Mumtaz ERP Integration" subtitle="Connect your ERP to sync invoices, bills and contacts">
+      <Section title="Odoo Connection" subtitle="Connect your Odoo instance to sync invoices and bills">
         {erpStatus === 'connected' ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-green-400 text-sm">
-              <CheckCircle size={16} /> Connected to {user?.erp_url || 'Mumtaz ERP'}
+              <CheckCircle size={16} /> Connected to {user?.erp_url || 'Odoo'}{user?.erp_db ? ` · ${user.erp_db}` : ''}
             </div>
             <div className="flex gap-2">
               <button onClick={syncERP} disabled={syncing}
@@ -95,17 +95,28 @@ export default function SettingsPage() {
         ) : (
           <form onSubmit={connectERP} className="space-y-3">
             <div>
-              <label className="block text-xs text-zaki-muted mb-1">Mumtaz ERP URL</label>
+              <label className="block text-xs text-zaki-muted mb-1">Odoo URL</label>
               <input type="url" value={erp.url} onChange={e => setErp(v => ({ ...v, url: e.target.value }))}
-                placeholder="https://app.mumtaz.digital" required
+                placeholder="https://yourcompany.odoo.com" required
                 className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
             </div>
             <div>
-              <label className="block text-xs text-zaki-muted mb-1">API Key</label>
-              <input type="password" value={erp.key} onChange={e => setErp(v => ({ ...v, key: e.target.value }))}
-                placeholder="Your Mumtaz API key" required
+              <label className="block text-xs text-zaki-muted mb-1">Database</label>
+              <input type="text" value={erp.db} onChange={e => setErp(v => ({ ...v, db: e.target.value }))}
+                placeholder="your-database" required
                 className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
-              <p className="text-xs text-zaki-muted mt-1">Find your API key in Mumtaz ERP → Settings → Technical → API Keys</p>
+            </div>
+            <div>
+              <label className="block text-xs text-zaki-muted mb-1">Odoo Email</label>
+              <input type="email" value={erp.email} onChange={e => setErp(v => ({ ...v, email: e.target.value }))}
+                placeholder="you@company.com" required
+                className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
+            </div>
+            <div>
+              <label className="block text-xs text-zaki-muted mb-1">Password</label>
+              <input type="password" value={erp.password} onChange={e => setErp(v => ({ ...v, password: e.target.value }))}
+                placeholder="••••••••" required
+                className="w-full bg-zaki-surface border border-zaki-border rounded-lg px-3 py-2 text-zaki-text text-sm focus:outline-none focus:border-purple-500" />
             </div>
             {erpMsg && (
               <div className={`flex items-center gap-2 text-sm ${erpStatus === 'error' ? 'text-red-400' : 'text-green-400'}`}>
