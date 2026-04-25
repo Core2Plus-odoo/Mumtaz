@@ -651,6 +651,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Board Pack
       </div>
+      <div class="nav-item" onclick="showPanel('feasibility')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Feasibility Study
+      </div>
     </div>
 
     <div class="nav-section">
@@ -1077,6 +1081,46 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
       <div class="cards-grid" id="invest-grid">
         <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Ranking investment priorities…</div>
+      </div>
+    </div>
+
+    <!-- ── FEASIBILITY STUDY ── -->
+    <div class="panel" id="panel-feasibility">
+      <div class="panel-header">
+        <div class="panel-title">Feasibility <em>Study</em></div>
+        <div class="panel-desc">Evaluate a new venture, expansion, or product line — get a structured GO / NO-GO with numbers</div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Tell Zaki about the idea</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field" style="grid-column:1/-1"><label>Business idea / venture</label>
+            <textarea id="feas-idea" rows="2" placeholder="e.g. Open a bakery in JLT, Dubai · Launch a B2B SaaS for restaurants · Acquire a competitor"
+              style="width:100%;resize:none;background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);font-family:var(--font)"></textarea></div>
+          <div class="field"><label>Target market / customer</label>
+            <input id="feas-market" type="text" placeholder="e.g. SME restaurants in UAE"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
+          <div class="field"><label>Capital available (<span id="feas-currency">AED</span>)</label>
+            <input id="feas-capital" type="number" placeholder="500000"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
+          <div class="field"><label>Timeline to launch</label>
+            <select id="feas-timeline" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%">
+              <option value="3 months">3 months</option>
+              <option value="6 months" selected>6 months</option>
+              <option value="12 months">12 months</option>
+              <option value="24 months">24 months</option>
+            </select></div>
+          <div class="field"><label>Revenue model</label>
+            <input id="feas-model" type="text" placeholder="e.g. Subscription · Transaction fee · Retail · Service hours"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:9px 11px;font-size:.85rem;color:var(--text);width:100%"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:14px;max-width:200px" onclick="runFeasibility()">Run Feasibility Study</button>
+      </div>
+      <div id="feas-verdict" style="margin-bottom:14px"></div>
+      <div class="card">
+        <div class="card-title">Study report</div>
+        <div id="feas-output" class="markdown-body" style="font-size:.87rem;line-height:1.7;color:var(--text-2);min-height:60px">
+          <span style="color:var(--text-3)">Fill in the form above and click "Run Feasibility Study" — Zaki will produce a full GO/NO-GO analysis with TAM, capital needs, breakeven, risks, and 90-day next steps.</span>
+        </div>
       </div>
     </div>
 
@@ -2067,6 +2111,10 @@ function showPanel(id) {
   if (id === 'risks' && !S._cache.risks) loadRisks()
   if (id === 'insights' && !S._cache.insights) loadInsights()
   if (id === 'books') loadBooks()
+  if (id === 'feasibility') {
+    document.getElementById('feas-currency').textContent = S.co.currency
+    if (S._cache.feasibility) restoreFeasibility()
+  }
   if (id === 'invest' && !S._cache.invest) loadInvest()
   if (id === 'investopts') {
     document.getElementById('investopt-currency').textContent = S.co.currency
@@ -3312,6 +3360,105 @@ function renderInsights(items, digest) {
         <button class="btn-card-action" onclick="askFromBriefing('Tell me more: ${o.title}')">Discuss →</button>
       </div>
     </div>`).join('')
+}
+
+// ═══════════════════════════════════════════
+// FEASIBILITY STUDY
+// ═══════════════════════════════════════════
+async function runFeasibility() {
+  const idea = document.getElementById('feas-idea').value.trim()
+  if (!idea) { showToast('Describe the idea first', 'error'); return }
+  if (!aiReady()) { showToast('Connect to Zaki Server (Settings) to run feasibility', 'error'); return }
+  const market = document.getElementById('feas-market').value.trim()
+  const capital = document.getElementById('feas-capital').value
+  const timeline = document.getElementById('feas-timeline').value
+  const model = document.getElementById('feas-model').value.trim()
+  const verdict = document.getElementById('feas-verdict')
+  const out = document.getElementById('feas-output')
+  verdict.innerHTML = ''
+  out.innerHTML = '<span class="spinner"></span> Running feasibility study…'
+  const prompt = `Run a rigorous feasibility study for this venture proposed by ${S.me.firstName || 'the CEO'} of ${S.co.name || 'a company'} (${S.co.industry || 'industry not specified'}, based in ${S.co.country || 'country not specified'}).
+
+VENTURE: ${idea}
+TARGET MARKET: ${market || 'not specified'}
+CAPITAL AVAILABLE: ${S.co.currency} ${capital || 'not specified'}
+TIMELINE TO LAUNCH: ${timeline}
+REVENUE MODEL: ${model || 'not specified'}
+
+Existing business context: monthly revenue ${S.co.currency} ${fmt(S.fin.rev)}, cash ${S.co.currency} ${fmt(S.fin.cash)}, runway ${S.fin.exp > 0 ? Math.round(S.fin.cash / (S.fin.exp/30)) : 'n/a'} days.
+
+Produce a structured study with these EXACT sections in markdown:
+
+## Verdict: GO | NO-GO | CONDITIONAL
+One-line summary with the headline number (e.g. "GO — payback in 14 months at break-even of ${S.co.currency} 80k/mo revenue")
+
+## Market Sizing
+TAM, SAM, SOM with concrete numbers grounded in ${S.co.country || 'the target market'}. Cite reasonable assumptions.
+
+## Capital Required
+Itemized one-time CapEx + first-12-month OpEx in ${S.co.currency}. Compare to the ${S.co.currency} ${capital || 'capital available'}.
+
+## Unit Economics & Break-Even
+Average ticket / contract value · gross margin · monthly fixed costs · monthly revenue needed to break even · expected month of break-even.
+
+## Top 3 Risks
+Numbered list, each with a one-line mitigation.
+
+## Top 3 Success Factors
+Numbered list — what MUST go right.
+
+## 90-Day Next Steps
+Numbered list of 5-7 concrete actions ${S.me.firstName || 'the CEO'} should take this quarter if proceeding.
+
+## Final Recommendation
+2-3 sentences, direct. Push back if the idea is weak — do not be a yes-man.
+
+Be specific to ${S.co.country || 'the market'}. Cite actual reasonable cost benchmarks (rent, salaries, regulatory fees) where relevant. Do not hedge — give a clear position.`
+  try {
+    let full = ''
+    await streamClaude([{ role: 'user', content: prompt }], (_, acc) => {
+      full = acc
+      out.innerHTML = md(acc)
+      // Pull verdict line and render as a banner
+      const vMatch = acc.match(/##\s*Verdict:\s*(GO|NO-GO|CONDITIONAL)([^\n]*)/i)
+      if (vMatch) {
+        const v = vMatch[1].toUpperCase()
+        const color = v.startsWith('GO') && !v.includes('NO') ? 'var(--green)' : v.includes('NO') ? 'var(--red)' : 'var(--amber)'
+        verdict.innerHTML = `<div class="card" style="border-left:4px solid ${color};padding:14px 18px">
+          <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Zaki's Verdict</div>
+          <div style="font-size:1.4rem;font-weight:700;color:${color};margin:4px 0">${v}</div>
+          <div style="font-size:.85rem;color:var(--text-2)">${vMatch[2].trim() || ''}</div>
+        </div>`
+      }
+    })
+    S._cache.feasibility = { idea, market, capital, timeline, model, report: full }
+    save()
+  } catch(e) {
+    out.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`
+  }
+}
+
+function restoreFeasibility() {
+  const c = S._cache.feasibility; if (!c) return
+  if (document.getElementById('feas-idea').value) return // user is editing
+  document.getElementById('feas-idea').value = c.idea || ''
+  document.getElementById('feas-market').value = c.market || ''
+  document.getElementById('feas-capital').value = c.capital || ''
+  document.getElementById('feas-timeline').value = c.timeline || '6 months'
+  document.getElementById('feas-model').value = c.model || ''
+  if (c.report) {
+    document.getElementById('feas-output').innerHTML = md(c.report)
+    const vMatch = c.report.match(/##\s*Verdict:\s*(GO|NO-GO|CONDITIONAL)([^\n]*)/i)
+    if (vMatch) {
+      const v = vMatch[1].toUpperCase()
+      const color = v.startsWith('GO') && !v.includes('NO') ? 'var(--green)' : v.includes('NO') ? 'var(--red)' : 'var(--amber)'
+      document.getElementById('feas-verdict').innerHTML = `<div class="card" style="border-left:4px solid ${color};padding:14px 18px">
+        <div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;font-weight:600">Zaki's Verdict</div>
+        <div style="font-size:1.4rem;font-weight:700;color:${color};margin:4px 0">${v}</div>
+        <div style="font-size:.85rem;color:var(--text-2)">${vMatch[2].trim() || ''}</div>
+      </div>`
+    }
+  }
 }
 
 // ═══════════════════════════════════════════
