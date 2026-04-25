@@ -1232,18 +1232,42 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <label style="font-size:.78rem;color:var(--text-3)">Risk profile:</label>
-        <select id="investopt-risk" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)" onchange="loadInvestOpts(true)">
-          <option value="conservative">Conservative</option>
-          <option value="balanced" selected>Balanced</option>
-          <option value="growth">Growth</option>
+        <label style="font-size:.78rem;color:var(--text-3)">Market:</label>
+        <select id="investopt-market" onchange="renderInvestKB()" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)">
+          <option value="ANY">Any</option>
+          <option value="UAE">UAE</option><option value="KSA">KSA</option><option value="PAK">Pakistan</option>
+          <option value="EGY">Egypt</option><option value="OMN">Oman</option><option value="QAT">Qatar</option>
+          <option value="KWT">Kuwait</option><option value="BHR">Bahrain</option>
+          <option value="GLOBAL">Global / USD</option>
         </select>
-        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px">Surplus to deploy:</label>
-        <input id="investopt-amount" type="number" placeholder="100000" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text);width:130px">
+        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px">Class:</label>
+        <select id="investopt-class" onchange="renderInvestKB()" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)">
+          <option value="ANY">All</option>
+          <option value="Equity">Equity</option><option value="Sukuk">Sukuk</option><option value="Bond">Bond</option>
+          <option value="Real Estate">Real Estate</option><option value="Money Market">Money Market</option>
+          <option value="Mutual Fund">Mutual Fund</option><option value="Alternative">Alternative</option>
+        </select>
+        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px">Risk:</label>
+        <select id="investopt-risk" onchange="renderInvestKB()" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text)">
+          <option value="ANY">All</option>
+          <option value="Conservative">Conservative</option>
+          <option value="Balanced" selected>Balanced</option>
+          <option value="Growth">Growth</option>
+        </select>
+        <label style="font-size:.78rem;color:var(--text-3);margin-left:6px;display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input id="investopt-shariah" type="checkbox" onchange="renderInvestKB()" style="margin:0">
+          Shariah only
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:.78rem;color:var(--text-3)">Surplus to deploy:</label>
+        <input id="investopt-amount" type="number" placeholder="100000" oninput="renderInvestKB()" style="background:var(--card);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:.82rem;color:var(--text);width:130px">
         <span style="font-size:.78rem;color:var(--text-3)" id="investopt-currency">AED</span>
+        <span id="investopt-count" style="font-size:.74rem;color:var(--text-3);margin-left:auto"></span>
+        <button class="btn-secondary" onclick="loadInvestOpts(true)" style="font-size:.78rem">✦ AI portfolio mix</button>
       </div>
       <div class="cards-grid" id="investopts-grid">
-        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Building investment menu…</div>
+        <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1">Loading curated options…</div>
       </div>
     </div>
 
@@ -1640,6 +1664,276 @@ const ZAKI_KB = [
     key_rules:['Prepare cash flow forecast for at least 12 months','Consider all available mitigating actions (asset sales, new finance, cost cuts)','Disclose material uncertainty prominently in notes','If not going concern: liquidation basis — assets at realisable values'],
     erp:'Odoo: run 12-month cash flow projection. Compare to committed facilities. Document assumptions.' }
 ]
+
+// ═══════════════════════════════════════════
+// INVESTMENT OPTIONS KNOWLEDGE BASE
+// Curated instruments by market × asset class. Filterable client-side.
+// risk: Conservative | Balanced | Growth | Speculative
+// class: Equity | Sukuk | Bond | Real Estate | Money Market | Mutual Fund | Alternative
+// liquidity: High (T+0/T+2) | Medium (weekly/monthly) | Low (months/years)
+// ═══════════════════════════════════════════
+const INVESTMENT_KB = [
+  // ── UAE ────────────────────────────────────────────────────
+  { id:'uae_dfm_etf', market:'UAE', currency:'AED', name:'DFM General Index ETF',
+    class:'Equity', type:'Index ETF', ticker:'DFM:DFMGI',
+    ticket_min:1000, expected_return:'6-10%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'EFG Hermes UAE, ADCB Securities, ENBD Securities, FAB Securities',
+    thesis:'Diversified exposure to UAE large-caps. Tracks DFM General Index — Emaar, ENBD, Du, DAMAC, Mashreq, etc.',
+    notes:'Reinvest dividends. Lower MER than active funds.' },
+  { id:'uae_adx_etf', market:'UAE', currency:'AED', name:'ADX Index Tracker',
+    class:'Equity', type:'Index ETF', ticker:'ADX:Index',
+    ticket_min:1000, expected_return:'7-11%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'EFG Hermes, ADCB Securities, FAB Securities',
+    thesis:'Captures Abu Dhabi heavyweights — IHC, ADQ, ADNOC subsidiaries, FAB, Aldar.',
+    notes:'Tilted to energy + real estate; complements DFM index.' },
+  { id:'uae_emaar', market:'UAE', currency:'AED', name:'Emaar Properties',
+    class:'Equity', type:'Single Stock', ticker:'EMAAR.DU',
+    ticket_min:500, expected_return:'8-14%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'Any UAE broker',
+    thesis:'Largest UAE developer. Recurring rental income (Mall, Hotels) cushions cyclical sales.',
+    notes:'Dividend yield ~5-7%. Watch off-plan exposure.' },
+  { id:'uae_fab_sukuk', market:'UAE', currency:'AED', name:'FAB Sukuk Income Fund',
+    class:'Sukuk', type:'Sukuk Fund', ticker:'FAB-SIF',
+    ticket_min:5000, expected_return:'4-5.5%', liquidity:'Medium', risk:'Conservative',
+    horizon:'1-3y', shariah:true,
+    access:'FAB private banking, FAB direct',
+    thesis:'Diversified GCC sukuk — government + investment-grade corporate. Distributes income quarterly.',
+    notes:'Lower volatility than equities. Compliant with AAOIFI.' },
+  { id:'uae_emirates_reit', market:'UAE', currency:'AED', name:'Emirates REIT',
+    class:'Real Estate', type:'REIT', ticker:'REIT.DU',
+    ticket_min:2000, expected_return:'5-8% yield + capital', liquidity:'High', risk:'Balanced',
+    horizon:'5y+', shariah:true,
+    access:'Nasdaq Dubai brokers',
+    thesis:'Sharia-compliant commercial portfolio (offices, schools). Income-focused.',
+    notes:'Trades at discount to NAV historically — entry timing matters.' },
+  { id:'uae_freehold', market:'UAE', currency:'AED', name:'Direct Freehold (Dubai/AD)',
+    class:'Real Estate', type:'Direct Property', ticker:null,
+    ticket_min:500000, expected_return:'5-7% rental + 4-8% capital', liquidity:'Low', risk:'Balanced',
+    horizon:'7y+', shariah:true,
+    access:'DLD-licensed brokers (Dubai), TAMM (Abu Dhabi)',
+    thesis:'Tangible asset, USD-pegged income, Golden Visa eligibility above AED 2M.',
+    notes:'Service charges + maintenance reduce gross by 1-2%. DLD fee 4%.' },
+  { id:'uae_mashreq_neo', market:'UAE', currency:'AED', name:'Mashreq Neo Savings',
+    class:'Money Market', type:'High-Yield Savings', ticker:null,
+    ticket_min:0, expected_return:'4-5%', liquidity:'High', risk:'Conservative',
+    horizon:'<1y', shariah:false,
+    access:'Mashreq Neo app',
+    thesis:'No-lockup digital savings. Use as cash reserve / emergency fund.',
+    notes:'Rate variable. FDIC-equivalent up to AED 1M (DIF).' },
+  { id:'uae_adib_wakala', market:'UAE', currency:'AED', name:'ADIB Wakala Deposit',
+    class:'Money Market', type:'Islamic Term Deposit', ticker:null,
+    ticket_min:25000, expected_return:'4-5.5%', liquidity:'Low', risk:'Conservative',
+    horizon:'3-12m', shariah:true,
+    access:'ADIB branch / direct',
+    thesis:'Sharia-compliant fixed-tenor placement. Profit declared at maturity.',
+    notes:'Early break = profit forfeit. Roll quarterly for liquidity ladder.' },
+  { id:'uae_gold_dgcx', market:'UAE', currency:'AED', name:'Gold (DGCX / physical)',
+    class:'Alternative', type:'Commodity', ticker:'DGCX:GOLD',
+    ticket_min:5000, expected_return:'Inflation hedge', liquidity:'High', risk:'Balanced',
+    horizon:'5y+', shariah:true,
+    access:'DGCX brokers, DMCC retailers, Emirates Gold',
+    thesis:'Inflation/currency hedge. Pegged AED makes gold a USD-real-asset proxy.',
+    notes:'Storage + insurance for physical. Futures need active mgmt.' },
+
+  // ── KSA ────────────────────────────────────────────────────
+  { id:'ksa_tasi_etf', market:'KSA', currency:'SAR', name:'Saudi Tadawul Index ETF (KSA-30)',
+    class:'Equity', type:'Index ETF', ticker:'TASI',
+    ticket_min:1000, expected_return:'8-12%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'Al Rajhi Capital, NCB Capital, Riyad Capital',
+    thesis:'Aramco + Al Rajhi + STC + SABIC = ~50% of index. Vision 2030 tailwind.',
+    notes:'High weight in oil + banking. USD-pegged riyal removes FX risk.' },
+  { id:'ksa_aramco', market:'KSA', currency:'SAR', name:'Saudi Aramco',
+    class:'Equity', type:'Single Stock', ticker:'2222.SR',
+    ticket_min:1000, expected_return:'6-10% + dividends', liquidity:'High', risk:'Balanced',
+    horizon:'5y+', shariah:true,
+    access:'Any Tadawul broker',
+    thesis:'World\'s largest IOC by reserves. Government-backed dividend policy.',
+    notes:'Dividend yield ~5%. Oil price exposure. Ramped capex 2024+.' },
+  { id:'ksa_alrajhi', market:'KSA', currency:'SAR', name:'Al Rajhi Bank',
+    class:'Equity', type:'Single Stock', ticker:'1120.SR',
+    ticket_min:1000, expected_return:'8-13%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:true,
+    access:'Any Tadawul broker',
+    thesis:'Largest Islamic bank globally. Mortgage + retail lending engine.',
+    notes:'High dividend payout. Sensitive to SAMA rates.' },
+  { id:'ksa_sukuk_gov', market:'KSA', currency:'SAR', name:'Saudi Government Sukuk',
+    class:'Sukuk', type:'Sovereign', ticker:'SAGSUKUK',
+    ticket_min:50000, expected_return:'5-6%', liquidity:'Medium', risk:'Conservative',
+    horizon:'1-7y', shariah:true,
+    access:'Primary auction via SAMA, secondary via brokers',
+    thesis:'AAA-rated sovereign profit. Monthly auctions. SAR-denominated, USD-pegged.',
+    notes:'Use laddered maturities for predictable income.' },
+  { id:'ksa_riyad_reit', market:'KSA', currency:'SAR', name:'Riyad REIT',
+    class:'Real Estate', type:'REIT', ticker:'4330.SR',
+    ticket_min:1000, expected_return:'6-9% yield', liquidity:'High', risk:'Balanced',
+    horizon:'5y+', shariah:true,
+    access:'Tadawul brokers',
+    thesis:'Diversified office + retail + warehouse. Riyad Capital managed.',
+    notes:'Distributes 90%+ of FFO. Watch occupancy.' },
+  { id:'ksa_jadwa_reit', market:'KSA', currency:'SAR', name:'Jadwa REIT Saudi',
+    class:'Real Estate', type:'REIT', ticker:'4342.SR',
+    ticket_min:1000, expected_return:'6-8%', liquidity:'High', risk:'Balanced',
+    horizon:'5y+', shariah:true,
+    access:'Tadawul brokers',
+    thesis:'Quality income properties — schools, hotels, retail.',
+    notes:'Lower leverage than peers.' },
+  { id:'ksa_alrajhi_mudarabah', market:'KSA', currency:'SAR', name:'Al Rajhi Mudarabah Deposit',
+    class:'Money Market', type:'Islamic Term Deposit', ticker:null,
+    ticket_min:10000, expected_return:'4.5-5.5%', liquidity:'Low', risk:'Conservative',
+    horizon:'3-12m', shariah:true,
+    access:'Al Rajhi branches / app',
+    thesis:'Profit-sharing on bank investments. Higher yield than current account.',
+    notes:'Profit not guaranteed (Mudarabah). Historically stable.' },
+
+  // ── Pakistan ───────────────────────────────────────────────
+  { id:'pak_kse100_etf', market:'PAK', currency:'PKR', name:'KSE-100 Index Fund',
+    class:'Mutual Fund', type:'Index Fund', ticker:'KSE100-IF',
+    ticket_min:5000, expected_return:'15-25% PKR / 5-10% USD', liquidity:'Medium', risk:'Growth',
+    horizon:'3-5y', shariah:false,
+    access:'NIT, MCB Arif Habib, UBL Funds, AlMeezan',
+    thesis:'Tracks PSX top 100. Banking + cement + energy heavyweight.',
+    notes:'High PKR returns can erode in USD terms. Hedge or reinvest.' },
+  { id:'pak_almeezan_islamic', market:'PAK', currency:'PKR', name:'Al Meezan Islamic Fund',
+    class:'Mutual Fund', type:'Sharia Equity Fund', ticker:'MZNIF',
+    ticket_min:5000, expected_return:'14-22% PKR', liquidity:'Medium', risk:'Growth',
+    horizon:'3-5y', shariah:true,
+    access:'Al Meezan, Meezan Bank app',
+    thesis:'Largest Islamic fund. Filters out conventional banks + interest income.',
+    notes:'Strong long-term track record.' },
+  { id:'pak_pibs', market:'PAK', currency:'PKR', name:'Pakistan Investment Bonds (PIBs)',
+    class:'Bond', type:'Sovereign', ticker:'PIB',
+    ticket_min:100000, expected_return:'14-20% PKR', liquidity:'Medium', risk:'Conservative',
+    horizon:'3-10y', shariah:false,
+    access:'SBP auctions, IPS account at scheduled banks',
+    thesis:'High nominal yield reflects PKR inflation. Government-backed.',
+    notes:'PKR depreciation risk. Real return often single-digit USD.' },
+  { id:'pak_nss_dsc', market:'PAK', currency:'PKR', name:'Defence Savings Certificates (NSS)',
+    class:'Bond', type:'National Savings', ticker:'DSC',
+    ticket_min:100, expected_return:'12-15% PKR', liquidity:'Low', risk:'Conservative',
+    horizon:'10y', shariah:false,
+    access:'CDNS branches',
+    thesis:'10-year sovereign-guaranteed. Tax-efficient at maturity.',
+    notes:'Early encashment penalty in early years. Filer rate higher.' },
+  { id:'pak_dha_plot', market:'PAK', currency:'PKR', name:'DHA Plot (Lahore/Karachi/Islamabad)',
+    class:'Real Estate', type:'Direct Property', ticker:null,
+    ticket_min:5000000, expected_return:'10-20% PKR', liquidity:'Low', risk:'Balanced',
+    horizon:'5y+', shariah:true,
+    access:'DHA-authorized dealers',
+    thesis:'Inflation hedge. Demand from overseas Pakistanis.',
+    notes:'Possession vs file matters. CGT on sale. Watch FBR valuation.' },
+
+  // ── Egypt ──────────────────────────────────────────────────
+  { id:'egy_egx30_etf', market:'EGY', currency:'EGP', name:'EGX 30 Index Fund',
+    class:'Mutual Fund', type:'Index Fund', ticker:'EGX30',
+    ticket_min:5000, expected_return:'20-30% EGP', liquidity:'Medium', risk:'Growth',
+    horizon:'3-5y', shariah:false,
+    access:'CIB, EFG Hermes, Beltone',
+    thesis:'CIB + Talaat Moustafa + EFG Hermes dominate index.',
+    notes:'EGP devaluation risk significant. USD return often <half EGP.' },
+  { id:'egy_tbill', market:'EGY', currency:'EGP', name:'Egyptian Treasury Bills',
+    class:'Bond', type:'Sovereign Short-Term', ticker:'EGY-TB',
+    ticket_min:10000, expected_return:'24-30% EGP', liquidity:'Medium', risk:'Conservative',
+    horizon:'3-12m', shariah:false,
+    access:'Primary banks (CIB, NBE, Misr)',
+    thesis:'Highest sovereign yields globally currently. Backstop for EGP holdings.',
+    notes:'EGP devaluation can wipe USD return. Hedge if foreign liabilities.' },
+  { id:'egy_cib', market:'EGY', currency:'EGP', name:'Commercial International Bank',
+    class:'Equity', type:'Single Stock', ticker:'COMI.CA',
+    ticket_min:5000, expected_return:'18-25% EGP', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'EGX brokers',
+    thesis:'Best-managed Egyptian bank. ROE 25%+. EGP recovery play.',
+    notes:'Dual-listed GDR (London) for USD exposure.' },
+
+  // ── Oman ───────────────────────────────────────────────────
+  { id:'omn_msx30', market:'OMN', currency:'OMR', name:'MSX 30 Index',
+    class:'Equity', type:'Index Fund', ticker:'MSX30',
+    ticket_min:1000, expected_return:'5-9%', liquidity:'Medium', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'Bank Muscat, Vision Capital, Ubhar Capital',
+    thesis:'Bank Muscat, Omantel, Ooredoo dominate. OMR USD-pegged.',
+    notes:'Lower volume than UAE/KSA — patient entry/exit.' },
+  { id:'omn_gov_sukuk', market:'OMN', currency:'OMR', name:'Oman Government Sukuk',
+    class:'Sukuk', type:'Sovereign', ticker:'OMN-SUK',
+    ticket_min:25000, expected_return:'5-6.5%', liquidity:'Medium', risk:'Conservative',
+    horizon:'3-7y', shariah:true,
+    access:'CMA-licensed banks',
+    thesis:'BB-rated sovereign yield premium over GCC peers. USD-pegged.',
+    notes:'Watch oil revenue / fiscal balance signals.' },
+
+  // ── Qatar ──────────────────────────────────────────────────
+  { id:'qat_qse_etf', market:'QAT', currency:'QAR', name:'Qatar Stock Exchange Index',
+    class:'Equity', type:'Index Fund', ticker:'QSE',
+    ticket_min:1000, expected_return:'6-10%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'QNB Capital, CBQ, The Group',
+    thesis:'QNB + Industries Qatar + Ooredoo. LNG-export tailwind.',
+    notes:'Lower beta than UAE/KSA. Strong dividend culture.' },
+
+  // ── Kuwait ─────────────────────────────────────────────────
+  { id:'kwt_premier', market:'KWT', currency:'KWD', name:'Boursa Kuwait Premier Market',
+    class:'Equity', type:'Index Fund', ticker:'BK-PRMR',
+    ticket_min:1000, expected_return:'7-11%', liquidity:'High', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'NBK Capital, KFH Capital, Kamco',
+    thesis:'NBK + KFH + Zain. MSCI EM upgrade improved liquidity.',
+    notes:'KWD strongest GCC currency.' },
+
+  // ── Bahrain ────────────────────────────────────────────────
+  { id:'bhr_bhb_index', market:'BHR', currency:'BHD', name:'Bahrain All Share Index',
+    class:'Equity', type:'Index Fund', ticker:'BHB:ALL',
+    ticket_min:1000, expected_return:'5-9% + dividends', liquidity:'Medium', risk:'Balanced',
+    horizon:'3-5y', shariah:false,
+    access:'Bahrain Bourse brokers',
+    thesis:'AUB + Batelco + Investcorp. High dividend yield 6%+.',
+    notes:'Smaller market — sensitivity to single names.' },
+
+  // ── Cross-Border / USD ─────────────────────────────────────
+  { id:'us_treasuries', market:'GLOBAL', currency:'USD', name:'US Treasury Bills',
+    class:'Bond', type:'Sovereign Short-Term', ticker:'T-BILL',
+    ticket_min:1000, expected_return:'4-5%', liquidity:'High', risk:'Conservative',
+    horizon:'<1y', shariah:false,
+    access:'Saxo, Interactive Brokers, ADCB Securities (USD account)',
+    thesis:'Risk-free USD yield. Park surplus when local rates uncertain.',
+    notes:'Reinvestment risk if rates fall. Tax depends on residence.' },
+  { id:'global_sp500', market:'GLOBAL', currency:'USD', name:'S&P 500 ETF (SPY/VOO)',
+    class:'Equity', type:'Index ETF', ticker:'SPY',
+    ticket_min:500, expected_return:'8-11%', liquidity:'High', risk:'Balanced',
+    horizon:'5y+', shariah:false,
+    access:'Saxo, IBKR, ADCB Securities, Sarwa',
+    thesis:'500-largest US companies. Long-term real returns ~7%.',
+    notes:'USD exposure protects against MENA currency events.' },
+  { id:'global_msci_em', market:'GLOBAL', currency:'USD', name:'MSCI Emerging Markets ETF',
+    class:'Equity', type:'Index ETF', ticker:'EEM',
+    ticket_min:500, expected_return:'7-12%', liquidity:'High', risk:'Growth',
+    horizon:'5y+', shariah:false,
+    access:'IBKR, Saxo, Sarwa, EFG Hermes',
+    thesis:'Diversified EM — China, India, Korea, Taiwan, Brazil, KSA, UAE.',
+    notes:'Higher vol than DM. Pairs well with S&P 500.' },
+  { id:'global_world_sukuk', market:'GLOBAL', currency:'USD', name:'Global Sukuk ETF (SP-Funds SPSK)',
+    class:'Sukuk', type:'Sukuk ETF', ticker:'SPSK',
+    ticket_min:500, expected_return:'4-5.5%', liquidity:'High', risk:'Conservative',
+    horizon:'1-3y', shariah:true,
+    access:'IBKR, Saxo (US-listed)',
+    thesis:'Diversified investment-grade sovereign + corporate sukuk in USD.',
+    notes:'Liquidity better than direct sukuk. AAOIFI compliant.' },
+]
+
+function filterInvestments(opts) {
+  // opts: { market, risk, class, ticketMax, shariah }
+  return INVESTMENT_KB.filter(i => {
+    if (opts.market && opts.market !== 'ANY' && i.market !== opts.market && i.market !== 'GLOBAL') return false
+    if (opts.risk && opts.risk !== 'ANY' && i.risk !== opts.risk) return false
+    if (opts.class && opts.class !== 'ANY' && i.class !== opts.class) return false
+    if (opts.ticketMax && i.ticket_min > opts.ticketMax) return false
+    if (opts.shariah && !i.shariah) return false
+    return true
+  })
+}
 
 // KB retrieval — match by keywords in question
 function retrieveKB(question) {
@@ -2200,8 +2494,11 @@ function showPanel(id) {
   if (id === 'invest' && !S._cache.invest) loadInvest()
   if (id === 'investopts') {
     document.getElementById('investopt-currency').textContent = S.co.currency
-    if (!S._cache.investopts) loadInvestOpts()
-    else renderInvestOpts(S._cache.investopts)
+    const mkt = _ctryToMarket(S.co.country)
+    const sel = document.getElementById('investopt-market')
+    if (sel && sel.value === 'ANY' && mkt !== 'ANY') sel.value = mkt
+    if (S._cache.investopts) renderInvestOpts(S._cache.investopts)
+    else renderInvestKB()
   }
   if (id === 'market' && !S._cache.market) loadMarket()
   if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
@@ -3845,27 +4142,94 @@ async function loadInvest(force) {
 // ═══════════════════════════════════════════
 // INVESTMENT OPTIONS (PERSONAL / EXTERNAL)
 // ═══════════════════════════════════════════
+// Map S.co.country → KB market code
+function _ctryToMarket(ctry) {
+  if (!ctry) return 'ANY'
+  const c = ctry.toLowerCase()
+  if (/uae|emirates|dubai|abu dhabi|sharjah/.test(c)) return 'UAE'
+  if (/saudi|ksa/.test(c)) return 'KSA'
+  if (/pakistan/.test(c)) return 'PAK'
+  if (/egypt/.test(c)) return 'EGY'
+  if (/oman/.test(c)) return 'OMN'
+  if (/qatar/.test(c)) return 'QAT'
+  if (/kuwait/.test(c)) return 'KWT'
+  if (/bahrain/.test(c)) return 'BHR'
+  return 'ANY'
+}
+
+function renderInvestKB() {
+  const market = document.getElementById('investopt-market').value
+  const cls = document.getElementById('investopt-class').value
+  const risk = document.getElementById('investopt-risk').value
+  const shariah = document.getElementById('investopt-shariah').checked
+  const amount = Number(document.getElementById('investopt-amount').value) || null
+  const items = filterInvestments({
+    market, class: cls, risk, shariah,
+    ticketMax: amount && amount > 0 ? amount : null,
+  })
+  const count = document.getElementById('investopt-count')
+  if (count) count.textContent = `${items.length} option${items.length===1?'':'s'} match`
+  const grid = document.getElementById('investopts-grid')
+  if (!items.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;color:var(--text-3);font-size:.85rem;padding:20px;text-align:center">
+      No instruments match these filters. Loosen one (try "All" markets/classes) or click <strong>✦ AI portfolio mix</strong> for a tailored recommendation.</div>`
+    return
+  }
+  const liqTag = l => /high/i.test(l) ? 'tag-green' : /low/i.test(l) ? 'tag-red' : 'tag-amber'
+  const riskColor = r => r === 'Conservative' ? 'var(--green)' : r === 'Growth' ? 'var(--amber)' : r === 'Speculative' ? 'var(--red)' : 'var(--brand)'
+  grid.innerHTML = items.map(i => `
+    <div class="investopt-card">
+      <div class="card-header">
+        <div class="card-name">${i.name}${i.shariah ? ' <span style="font-size:.65rem;color:var(--green);font-weight:500;margin-left:4px">◯ Shariah</span>' : ''}</div>
+        <span class="tag ${liqTag(i.liquidity)}">${i.liquidity}</span>
+      </div>
+      <div class="card-body">${i.thesis}</div>
+      <div style="display:flex;gap:14px;font-size:.74rem;color:var(--text-3);margin-bottom:10px;flex-wrap:wrap">
+        <span><strong style="color:var(--text-2)">Return:</strong> ${i.expected_return}</span>
+        <span><strong style="color:var(--text-2)">Horizon:</strong> ${i.horizon}</span>
+        <span><strong style="color:var(--text-2)">Min:</strong> ${i.currency} ${fmt(i.ticket_min)}</span>
+      </div>
+      <div style="font-size:.74rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text-2)">How:</strong> ${i.access}</div>
+      ${i.notes ? `<div style="font-size:.72rem;color:var(--text-3);margin-bottom:10px;font-style:italic">${i.notes}</div>` : ''}
+      <div class="card-footer">
+        <div>
+          <div class="card-meta" style="color:${riskColor(i.risk)}">${i.class} · ${i.market}</div>
+          <div style="font-size:.7rem;color:var(--text-3)">${i.type}${i.ticker ? ' · ' + i.ticker : ''}</div>
+        </div>
+        <button class="btn-card-action" onclick="askFromBriefing('Walk me through investing in ${i.name} (${i.market}) — entry points, fees, tax treatment, risks for my situation')">Ask Zaki →</button>
+      </div>
+    </div>`).join('')
+}
+
 async function loadInvestOpts(force) {
   const grid = document.getElementById('investopts-grid')
   const risk = document.getElementById('investopt-risk').value
   const amountInput = document.getElementById('investopt-amount').value
   const surplus = Number(amountInput) || Math.max(0, S.fin.cash - S.fin.exp * 3)
   if (!aiReady()) {
-    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('Investment Options uses AI to recommend external vehicles sized to your market and risk profile.')}</div>`
+    grid.innerHTML = `<div style="grid-column:1/-1">${noKeyState('AI portfolio mix uses Zaki to size a tailored allocation across the curated instruments.')}</div>`
     return
   }
-  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Building investment menu…</div>'
+  // Build a curated list of KB instruments to give Claude as the menu
+  const market = document.getElementById('investopt-market').value
+  const cls = document.getElementById('investopt-class').value
+  const shariah = document.getElementById('investopt-shariah').checked
+  const candidates = filterInvestments({ market, class: cls, risk, shariah }).slice(0, 25)
+  const menu = candidates.map(i => `- ${i.name} (${i.market} · ${i.class} · ${i.risk} · ${i.expected_return} · liquidity ${i.liquidity})`).join('\n')
+  grid.innerHTML = '<div style="color:var(--text-3);grid-column:1/-1"><span class="spinner"></span> Sizing tailored allocation…</div>'
   try {
-    const prompt = `Recommend 6 specific external investment vehicles for a CEO with ${S.co.currency} ${fmt(surplus)} of surplus cash to deploy from a ${S.co.industry || 'business'} based in ${S.co.country || 'their market'}. Risk profile: ${risk}.
+    const prompt = `Build a tailored allocation for a CEO of ${S.co.name || 'a business'} (${S.co.industry || 'industry'}, ${S.co.country || 'market'}) deploying ${S.co.currency} ${fmt(surplus)} of surplus cash. Risk profile: ${risk}.
 
-Cover a mix across asset classes appropriate to ${S.co.country || 'the local market'}: equities (local index ETFs, blue chips), fixed income (sukuk / government bonds / money market), real estate (REITs or direct), private/alternatives, and cash equivalents. Be specific to the market — name actual instrument categories that exist in ${S.co.country || 'this market'}.
+CURATED INSTRUMENT MENU (pick 5-7 from this list — do NOT invent others):
+${menu}
+
+Pick 5-7 from the menu and assign a percentage allocation (must sum to 100%). Justify each choice in 1-2 sentences referencing this CEO's situation.
 
 Respond ONLY with valid JSON array, no other text:
-[{"name":"<specific instrument or category>","class":"Equity|Fixed Income|Real Estate|Alternative|Cash","allocation":"<% of surplus>","expectedReturn":"<annual % or range>","liquidity":"High|Medium|Low","horizon":"<e.g. 1-3y / 3-5y / 5y+>","thesis":"<why this fits this CEO in 1-2 sentences>","risks":"<key risk to be aware of>"}]`
+[{"name":"<exact name from menu>","allocation":"<%>","amount":"${S.co.currency} <X>","thesis":"<why for this CEO>","risks":"<key risk>"}]`
     const raw = await callClaude([{ role: 'user', content: prompt }])
     const items = JSON.parse(raw.replace(/```json?/g,'').replace(/```/g,'').trim())
-    S._cache.investopts = { items, risk, surplus }
-    save()
+    S._cache.investopts = { items, risk, surplus }; save()
     renderInvestOpts(S._cache.investopts)
   } catch(e) {
     grid.innerHTML = `<div style="color:var(--red);grid-column:1/-1">Error: ${e.message}</div>`
@@ -3875,25 +4239,20 @@ Respond ONLY with valid JSON array, no other text:
 function renderInvestOpts(cache) {
   const grid = document.getElementById('investopts-grid')
   if (!cache || !cache.items) return
-  const classColor = c => /equity/i.test(c) ? 'var(--blue)'
-    : /fixed/i.test(c) ? 'var(--green)'
-    : /real/i.test(c) ? 'var(--purple,#a855f7)'
-    : /alt/i.test(c) ? 'var(--amber)' : 'var(--text-3)'
-  const liqTag = l => /high/i.test(l) ? 'tag-green' : /low/i.test(l) ? 'tag-red' : 'tag-amber'
-  grid.innerHTML = cache.items.map(o => `
+  grid.innerHTML = `<div style="grid-column:1/-1;font-size:.78rem;color:var(--text-3);margin-bottom:6px">
+    ✦ AI-tailored allocation · ${S.co.currency} ${fmt(cache.surplus)} · ${cache.risk} risk
+    <button class="btn-card-action" style="margin-left:10px" onclick="renderInvestKB()">← Back to catalog</button>
+  </div>` + cache.items.map(o => `
     <div class="investopt-card">
       <div class="card-header">
         <div class="card-name">${o.name}</div>
-        <span class="tag ${liqTag(o.liquidity)}">${o.liquidity} liquidity</span>
+        <span class="tag tag-amber">${o.allocation}</span>
       </div>
       <div class="card-body">${o.thesis}</div>
       <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px"><strong style="color:var(--text)">Risk:</strong> ${o.risks}</div>
       <div class="card-footer">
-        <div>
-          <div class="card-meta" style="color:${classColor(o.class)}">${o.class} · ${o.allocation}</div>
-          <div style="font-size:.72rem;color:var(--text-3)">${o.expectedReturn} · ${o.horizon}</div>
-        </div>
-        <button class="btn-card-action" onclick="askFromBriefing('Walk me through investing in ${o.name} — entry points, brokers, tax treatment in ${S.co.country || 'my market'}')">Discuss →</button>
+        <div class="card-meta" style="color:var(--brand)">${o.amount}</div>
+        <button class="btn-card-action" onclick="askFromBriefing('Walk me through investing in ${o.name}')">Discuss →</button>
       </div>
     </div>`).join('')
 }
