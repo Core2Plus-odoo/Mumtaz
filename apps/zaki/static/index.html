@@ -795,6 +795,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
 
     <div class="nav-section">
       <div class="nav-label">Intelligence</div>
+      <div class="nav-item" onclick="showPanel('goals')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Goals &amp; Alerts
+      </div>
       <div class="nav-item" onclick="showPanel('insights')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 21l-4.35-4.35"/><circle cx="11" cy="11" r="8"/><path d="M11 7v4l3 2"/></svg>
         Business Insights
@@ -886,6 +890,9 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
           <button class="btn-secondary" onclick="renderDashboard()" style="font-size:.78rem">↻ Refresh</button>
         </div>
       </div>
+
+      <!-- Goal breach banner -->
+      <div id="goals-banner" style="margin-bottom:14px"></div>
 
       <!-- Proactive alerts -->
       <div id="proactive-alerts" style="margin-bottom:18px"></div>
@@ -1314,6 +1321,20 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div class="cards-grid" id="seo-grid">
         <div style="color:var(--text-3);font-size:.85rem;grid-column:1/-1"><span class="spinner"></span> Building SEO plan…</div>
       </div>
+    </div>
+
+    <!-- ── GOALS & ALERTS ── -->
+    <div class="panel" id="panel-goals">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="panel-title">Goals &amp; <em>Alerts</em></div>
+            <div class="panel-desc">KPI targets — Zaki tracks status and surfaces breaches in your morning briefing</div>
+          </div>
+          <button class="btn-secondary" onclick="addGoal()">+ Add goal</button>
+        </div>
+      </div>
+      <div id="goals-list"></div>
     </div>
 
     <!-- ── BUSINESS INSIGHTS (DB SKIM) ── -->
@@ -2509,6 +2530,7 @@ const S = {
   chat: [],
   transactions: [],
   prefs: { readAloud: false, autoPlayBriefing: true },
+  goals: [],  // [{id,label,metric,direction,target,unit,enabled}]
   _cache: {}
 }
 
@@ -2549,9 +2571,61 @@ function load() {
           S.keys.zakiUrl === 'https://app.mumtaz.digital') {
         S.keys.zakiUrl = ''
       }
+      if (!S.goals) S.goals = []
     }
   } catch(e){}
   computeFin()
+  if (!S.goals || !S.goals.length) seedDefaultGoals()
+}
+
+// Seed sensible default goals from sector profile when none exist yet
+function seedDefaultGoals() {
+  const sec = findSector(S.co.industry)
+  S.goals = [
+    { id:'runway', label:'Cash runway', metric:'runway_days', direction:'gte', target:90, unit:'days', enabled:true },
+    { id:'ar_days', label:'AR collection days', metric:'ar_days', direction:'lte', target:60, unit:'days', enabled:true },
+    { id:'margin', label:'Net margin', metric:'net_margin_pct', direction:'gte', target:10, unit:'%', enabled:true },
+    { id:'concentration', label:'Top-customer concentration', metric:'top_customer_pct', direction:'lte', target:30, unit:'%', enabled:true },
+  ]
+  if (sec) {
+    // Tighter payroll target if sector profile suggests a band
+    const m = sec.payroll_pct.match(/(\d+)-(\d+)%/)
+    if (m) S.goals.push({ id:'payroll', label:'Payroll % of revenue', metric:'payroll_pct', direction:'lte', target:Number(m[2]), unit:'%', enabled:true })
+  }
+  save()
+}
+
+// Compute current value of each goal metric from S.fin / S.transactions
+function evaluateGoals() {
+  computeFin()
+  const f = S.fin
+  const monthlyExp = f.exp || 1
+  const runway_days = monthlyExp > 0 ? Math.round(f.cash / (monthlyExp / 30)) : 999
+  const net = f.rev - f.exp
+  const net_margin_pct = f.rev > 0 ? +(net / f.rev * 100).toFixed(1) : 0
+  const ar_days_calc = f.rev > 0 ? Math.round(f.ar / (f.rev / 30)) : 0
+  const payroll_pct = f.rev > 0 ? +(f.payroll / f.rev * 100).toFixed(1) : 0
+  // Top-customer concentration from transactions
+  let top_customer_pct = 0
+  if (S.transactions && S.transactions.length) {
+    const cust = {}
+    let totalIn = 0
+    S.transactions.forEach(t => {
+      if (t.type === 'income' && t.reference) {
+        cust[t.reference] = (cust[t.reference] || 0) + Number(t.amount)
+        totalIn += Number(t.amount)
+      }
+    })
+    const max = Math.max(0, ...Object.values(cust))
+    top_customer_pct = totalIn > 0 ? +(max / totalIn * 100).toFixed(1) : 0
+  }
+  const values = { runway_days, net_margin_pct, ar_days: ar_days_calc, payroll_pct, top_customer_pct }
+  return (S.goals || []).filter(g => g.enabled).map(g => {
+    const value = values[g.metric] ?? 0
+    const ok = g.direction === 'gte' ? value >= g.target : value <= g.target
+    const variance = g.target ? +((value - g.target) / g.target * 100).toFixed(1) : 0
+    return { ...g, value, ok, variance }
+  })
 }
 
 // ═══════════════════════════════════════════
@@ -2635,7 +2709,7 @@ You do NOT just report numbers. You interpret them, challenge them, and give the
 | DPO (Days Payable Outstanding) | ${dpo} days | — |
 
 **Burn Rate:** ${S.co.currency} ${fmt(Math.max(0, burnRate))} / month ${burnRate > 0 ? '🔴 BURNING CASH' : '🟢 CASH POSITIVE'}
-${sectorContext(findSector(S.co.industry))}${taxContext(findTaxRules(S.co.country))}
+${sectorContext(findSector(S.co.industry))}${taxContext(findTaxRules(S.co.country))}${goalsContext()}
 ---
 
 ## BUSINESS CONTEXT
@@ -3025,6 +3099,7 @@ function showPanel(id) {
   if (id === 'health' && !S._cache.health) loadHealth()
   if (id === 'opportunities' && !S._cache.opp) loadOpportunities()
   if (id === 'risks' && !S._cache.risks) loadRisks()
+  if (id === 'goals') renderGoals()
   if (id === 'insights' && !S._cache.insights) loadInsights()
   if (id === 'seo' && !S._cache.seo) loadSeo()
   else if (id === 'seo' && S._cache.seo) renderSeo(S._cache.seo)
@@ -3214,6 +3289,7 @@ function launchApp() {
   if (!connected) document.getElementById('nav-api-banner')?.classList.remove('hide')
   renderBriefingKPIs()
   renderDashboard()
+  renderGoalsBanner()
   runProactiveAlerts()
   showPanel('briefing')
 }
@@ -4376,6 +4452,148 @@ function renderSeo(data) {
   } else {
     grid.innerHTML = '<div style="grid-column:1/-1;color:var(--text-3);font-size:.85rem">No actions returned.</div>'
   }
+}
+
+// ═══════════════════════════════════════════
+// GOALS & ALERTS
+// ═══════════════════════════════════════════
+const GOAL_METRICS = [
+  { id:'runway_days',     label:'Cash runway (days)',          unit:'days', defaultDir:'gte', defaultTarget:90 },
+  { id:'net_margin_pct',  label:'Net margin (%)',              unit:'%',    defaultDir:'gte', defaultTarget:10 },
+  { id:'ar_days',         label:'AR collection days',          unit:'days', defaultDir:'lte', defaultTarget:60 },
+  { id:'payroll_pct',     label:'Payroll % of revenue',        unit:'%',    defaultDir:'lte', defaultTarget:35 },
+  { id:'top_customer_pct',label:'Top customer concentration',  unit:'%',    defaultDir:'lte', defaultTarget:30 },
+]
+
+function renderGoals() {
+  const wrap = document.getElementById('goals-list')
+  if (!wrap) return
+  if (!S.goals || !S.goals.length) {
+    wrap.innerHTML = `<div class="card" style="padding:20px;color:var(--text-3);font-size:.85rem">
+      No goals yet. <button class="btn-secondary" style="margin-left:8px" onclick="seedDefaultGoals();renderGoals()">Load defaults</button> or click <strong>+ Add goal</strong>.
+    </div>`
+    return
+  }
+  const evals = evaluateGoals()
+  const breached = evals.filter(g => !g.ok).length
+  const okCount = evals.filter(g => g.ok).length
+  wrap.innerHTML = `
+    <div class="card" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:16px 18px;margin-bottom:14px">
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">On track</div><div style="font-size:1.5rem;font-weight:700;color:var(--green)">${okCount}</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Breached</div><div style="font-size:1.5rem;font-weight:700;color:${breached?'var(--red)':'var(--text-2)'}">${breached}</div></div>
+      <div><div style="font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:600">Total goals</div><div style="font-size:1.5rem;font-weight:700;color:var(--text)">${evals.length}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+    ${S.goals.map((g, idx) => {
+      const e = evals.find(x => x.id === g.id) || {}
+      const colorVar = g.enabled ? (e.ok ? 'var(--green)' : 'var(--red)') : 'var(--text-3)'
+      const arrow = g.direction === 'gte' ? '≥' : '≤'
+      return `
+      <div class="card" style="padding:14px 18px;border-left:3px solid ${colorVar}">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:.92rem;font-weight:600;color:var(--text)">${g.label}</div>
+            <div style="font-size:.78rem;color:var(--text-3);margin-top:2px">Target: ${arrow} ${g.target}${g.unit ? ' ' + g.unit : ''}</div>
+          </div>
+          ${g.enabled ? `
+            <div style="text-align:right">
+              <div style="font-size:1.2rem;font-weight:700;color:${colorVar};font-variant-numeric:tabular-nums">${e.value ?? '—'}${g.unit ? ' ' + g.unit : ''}</div>
+              <div style="font-size:.74rem;color:var(--text-3)">${e.ok ? '✓ on track' : '⚠ breached'}${e.variance != null ? ' · ' + (e.variance >= 0 ? '+' : '') + e.variance + '%' : ''}</div>
+            </div>` : '<div style="font-size:.78rem;color:var(--text-3)">disabled</div>'}
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn-card-action" onclick="toggleGoal(${idx})">${g.enabled ? 'Pause' : 'Enable'}</button>
+            <button class="btn-card-action" onclick="editGoal(${idx})">Edit</button>
+            <button class="btn-card-action" onclick="removeGoal(${idx})" style="color:var(--red)">×</button>
+          </div>
+        </div>
+      </div>`
+    }).join('')}
+    </div>`
+}
+
+function addGoal() {
+  const m = GOAL_METRICS[0]
+  S.goals = S.goals || []
+  S.goals.push({ id:'g_'+Date.now(), label:m.label, metric:m.id, direction:m.defaultDir, target:m.defaultTarget, unit:m.unit, enabled:true })
+  save(); renderGoals()
+  editGoal(S.goals.length - 1)
+}
+
+function editGoal(idx) {
+  const g = S.goals[idx]; if (!g) return
+  const opts = GOAL_METRICS.map(m => `<option value="${m.id}" ${m.id===g.metric?'selected':''}>${m.label}</option>`).join('')
+  const dlg = document.createElement('div')
+  dlg.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px'
+  dlg.innerHTML = `
+    <div class="card" style="background:var(--surface);max-width:420px;width:100%;padding:22px 24px;border-radius:12px">
+      <div style="font-size:1.05rem;font-weight:600;color:var(--text);margin-bottom:14px">Edit goal</div>
+      <div class="field"><label>Metric</label><select id="g-metric">${opts}</select></div>
+      <div class="field"><label>Direction</label>
+        <select id="g-dir">
+          <option value="gte" ${g.direction==='gte'?'selected':''}>At or above (≥)</option>
+          <option value="lte" ${g.direction==='lte'?'selected':''}>At or below (≤)</option>
+        </select></div>
+      <div class="field"><label>Target value</label><input id="g-target" type="number" value="${g.target}"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+        <button class="btn-outline" onclick="this.closest('.zaki-dlg').remove()">Cancel</button>
+        <button class="btn-primary" onclick="saveGoalEdit(${idx})">Save</button>
+      </div>
+    </div>`
+  dlg.className = 'zaki-dlg'
+  document.body.appendChild(dlg)
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.remove() })
+}
+
+function saveGoalEdit(idx) {
+  const g = S.goals[idx]; if (!g) return
+  const metric = document.getElementById('g-metric').value
+  const dir = document.getElementById('g-dir').value
+  const target = Number(document.getElementById('g-target').value)
+  const meta = GOAL_METRICS.find(m => m.id === metric)
+  g.metric = metric; g.direction = dir; g.target = target
+  if (meta) { g.label = meta.label; g.unit = meta.unit }
+  save()
+  document.querySelector('.zaki-dlg')?.remove()
+  renderGoals()
+}
+
+function toggleGoal(idx) {
+  if (!S.goals[idx]) return
+  S.goals[idx].enabled = !S.goals[idx].enabled
+  save(); renderGoals()
+}
+
+function removeGoal(idx) {
+  if (!S.goals[idx]) return
+  if (!confirm(`Remove "${S.goals[idx].label}"?`)) return
+  S.goals.splice(idx, 1); save(); renderGoals()
+}
+
+function renderGoalsBanner() {
+  const el = document.getElementById('goals-banner')
+  if (!el) return
+  const evals = evaluateGoals()
+  const breached = evals.filter(g => !g.ok)
+  if (!breached.length) { el.innerHTML = ''; return }
+  el.innerHTML = `
+    <div class="card" style="border-left:3px solid var(--red);padding:12px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:.78rem;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.05em">⚠ ${breached.length} goal${breached.length>1?'s':''} breached</div>
+        <div style="font-size:.85rem;color:var(--text-2);margin-top:4px">${breached.slice(0,3).map(g => `<strong>${g.label}</strong>: ${g.value}${g.unit||''} (target ${g.direction==='gte'?'≥':'≤'} ${g.target}${g.unit||''})`).join(' · ')}</div>
+      </div>
+      <button class="btn-secondary" style="font-size:.78rem" onclick="showPanel('goals')">Review →</button>
+    </div>`
+}
+
+// Returns a short string for system-prompt injection so Zaki knows breaches
+function goalsContext() {
+  const evals = evaluateGoals()
+  if (!evals.length) return ''
+  const breached = evals.filter(g => !g.ok)
+  if (!breached.length) return `\n\n## CEO GOALS\nAll ${evals.length} goals on track.`
+  return `\n\n## CEO GOALS — ${breached.length} BREACHED\n` +
+    breached.map(g => `- ${g.label}: target ${g.direction === 'gte' ? '≥' : '≤'} ${g.target}${g.unit||''} · current ${g.value}${g.unit||''} (${g.variance>=0?'+':''}${g.variance}%)`).join('\n') +
+    `\n\nLead the briefing with the most material breach. Give a concrete action to address each.`
 }
 
 // ═══════════════════════════════════════════
