@@ -196,7 +196,66 @@
       padding: 9px 20px; border-radius: 100px;
     }
 
-    /* Placeholder for role-specific content (added in patch 2) */
+    /* ── Role-specific KPI cards ── */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 860px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .kpi-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      position: relative; overflow: hidden;
+      transition: border-color .15s;
+    }
+    .kpi-card:hover { border-color: rgba(184,134,42,.4); }
+    .kpi-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px; background: var(--accent, var(--gold));
+      opacity: .55;
+    }
+    .kpi-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; margin-bottom: 12px;
+      background: var(--gold-bg); color: var(--gold);
+    }
+    .kpi-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem; color: var(--ink3);
+      letter-spacing: .07em; text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .kpi-val {
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--ink); letter-spacing: -.025em;
+      margin-bottom: 4px; line-height: 1.1;
+    }
+    .kpi-sub {
+      font-size: .78rem; color: var(--ink3);
+    }
+    .kpi-trend-up   { color: var(--teal); }
+    .kpi-trend-down { color: #C0402A; }
+    .kpi-trend-warn { color: #B45309; }
+
+    /* Role hint banner */
+    .role-hint {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: .82rem; color: var(--ink2);
+      margin-bottom: 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .role-hint strong { color: var(--ink); }
+
     #role-content { margin-top: 8px; }
   </style>
 </head>
@@ -359,9 +418,100 @@
         }).join('') + '</div>';
     }
 
-    /* Role-specific content — implemented in patch 2 */
+    /* ── Role-specific KPIs ── */
+    const ROLE_KPIS = {
+      overview: {
+        title: 'Overview', accent: '#B8862A',
+        hint: 'A quick look at the whole business.',
+        kpis: [
+          { icon: '💰', label: 'Revenue MTD',     val: 'AED 177K', sub: '↑ 12% vs last month',  trend: 'up' },
+          { icon: '🏦', label: 'Cash Position',   val: 'AED 448K', sub: '146 days runway',      trend: 'up' },
+          { icon: '👥', label: 'Active Customers', val: '32',       sub: '4 new this month',     trend: 'up' },
+          { icon: '⚠️', label: 'Open Alerts',     val: '3',         sub: '1 overdue invoice',    trend: 'warn' },
+        ],
+      },
+      ceo: {
+        title: 'CEO View', accent: '#B8862A',
+        hint: 'Top-level metrics for executive decisions.',
+        kpis: [
+          { icon: '📈', label: 'Revenue YTD',  val: 'AED 1.2M',  sub: '↑ 24% vs last year',     trend: 'up'   },
+          { icon: '💼', label: 'Net Income',   val: 'AED 340K',  sub: '28% net margin',         trend: 'up'   },
+          { icon: '🏦', label: 'Cash Runway',  val: '146 days',  sub: 'AED 448K on hand',        trend: 'up'   },
+          { icon: '🚨', label: 'Top Alert',    val: 'ZATCA',     sub: 'Submission due in 3d',   trend: 'warn' },
+        ],
+      },
+      cfo: {
+        title: 'CFO View', accent: '#0B7A64',
+        hint: 'Cash, receivables, payables — your finance dashboard.',
+        kpis: [
+          { icon: '🏦', label: 'Cash On Hand',         val: 'AED 448K', sub: 'Across 3 accounts',    trend: 'up'   },
+          { icon: '⏳', label: 'Accounts Receivable',  val: 'AED 86K',  sub: '12 invoices',           trend: 'warn' },
+          { icon: '📤', label: 'Accounts Payable',     val: 'AED 41K',  sub: 'Due in 14 days',        trend: 'up'   },
+          { icon: '📊', label: 'Net Margin YTD',       val: '28.3%',    sub: '↑ 2.1pp vs LY',         trend: 'up'   },
+        ],
+      },
+      coo: {
+        title: 'Operations View', accent: '#1E4FA0',
+        hint: 'Orders, inventory, fulfilment.',
+        kpis: [
+          { icon: '📋', label: 'Active Orders',       val: '47',       sub: '12 in production',       trend: 'up'   },
+          { icon: '📦', label: 'Inventory Value',     val: 'AED 320K', sub: '4 SKUs low stock',       trend: 'warn' },
+          { icon: '🚚', label: 'On-Time Delivery',    val: '94%',      sub: 'Last 30 days',           trend: 'up'   },
+          { icon: '✅', label: 'Tasks Due Today',     val: '8',        sub: '2 overdue',              trend: 'warn' },
+        ],
+      },
+      cmo: {
+        title: 'Marketing View', accent: '#A21CAF',
+        hint: 'Campaigns, leads, conversion.',
+        kpis: [
+          { icon: '📣', label: 'Active Campaigns', val: '4',        sub: '2 ending this week',  trend: 'up'   },
+          { icon: '🎯', label: 'New Leads MTD',    val: '128',      sub: '↑ 18% vs last month',  trend: 'up'   },
+          { icon: '🔁', label: 'Conversion Rate',  val: '4.2%',     sub: 'Lead → Customer',      trend: 'up'   },
+          { icon: '💸', label: 'Marketing Spend',  val: 'AED 24K',  sub: '64% of monthly budget', trend: 'up'  },
+        ],
+      },
+      sales: {
+        title: 'Sales View', accent: '#B45309',
+        hint: 'Pipeline, deals, quota.',
+        kpis: [
+          { icon: '💼', label: 'Pipeline Value',  val: 'AED 580K', sub: '24 open deals',          trend: 'up'   },
+          { icon: '🤝', label: 'Closing This Mo', val: '6 deals',  sub: 'AED 120K weighted',      trend: 'up'   },
+          { icon: '🏁', label: 'Quota Progress',  val: '72%',      sub: 'AED 144K of 200K',        trend: 'up'   },
+          { icon: '✨', label: 'New Customers',   val: '4',        sub: 'This month',              trend: 'up'   },
+        ],
+      },
+      hr: {
+        title: 'HR View', accent: '#0EA5E9',
+        hint: 'Headcount, leaves, recruitment.',
+        kpis: [
+          { icon: '👥', label: 'Total Employees',     val: '24',  sub: '+2 this quarter',         trend: 'up'   },
+          { icon: '📨', label: 'Open Positions',      val: '3',   sub: '12 candidates in review', trend: 'up'   },
+          { icon: '🏖️', label: 'Leave Requests',     val: '5',    sub: 'Pending approval',        trend: 'warn' },
+          { icon: '⏱️', label: 'Avg Tenure',         val: '2.4y', sub: 'Across the team',         trend: 'up'   },
+        ],
+      },
+    };
+
     function renderRoleContent(role) {
-      // placeholder — filled in next patch
+      const view = ROLE_KPIS[role] || ROLE_KPIS.overview;
+      const html = `
+        <div class="sec-head" style="margin-top:36px">
+          <span class="sec-label">${view.title} — Key Metrics</span>
+          <span class="sec-link" style="color:var(--ink3);cursor:default">Demo data</span>
+        </div>
+        <div class="role-hint">
+          <span><strong>${view.title}.</strong> ${view.hint}</span>
+        </div>
+        <div class="kpi-grid">
+          ${view.kpis.map(k => `
+            <div class="kpi-card" style="--accent:${view.accent}">
+              <div class="kpi-icon">${k.icon}</div>
+              <div class="kpi-label">${k.label}</div>
+              <div class="kpi-val">${k.val}</div>
+              <div class="kpi-sub kpi-trend-${k.trend}">${k.sub}</div>
+            </div>`).join('')}
+        </div>`;
+      $('role-content').innerHTML = html;
     }
 
     renderProducts();
