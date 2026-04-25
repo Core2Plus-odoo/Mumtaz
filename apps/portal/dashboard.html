@@ -242,6 +242,23 @@
     .kpi-trend-down { color: #C0402A; }
     .kpi-trend-warn { color: #B45309; }
 
+    .live-pill {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: .62rem; letter-spacing: .07em; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 100px;
+      background: rgba(11,122,100,.12); color: var(--teal);
+      margin-left: 8px; vertical-align: middle;
+    }
+    .live-pill::before {
+      content: '●'; margin-right: 4px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: .35; }
+    }
+
     /* Role hint banner */
     .role-hint {
       background: var(--white);
@@ -862,6 +879,84 @@
 
     renderProducts();
     renderRoleContent(savedRole);
+
+    /* ── Live Odoo data overlay ── */
+    // Fetch /api/dashboard once on load. If Odoo is connected, override demo
+    // KPI values with real numbers. If not, demo data stays.
+    function fmtCurrency(amount, currency = 'AED') {
+      const abs = Math.abs(amount);
+      if (abs >= 1_000_000) return `${currency} ${(amount/1_000_000).toFixed(2)}M`;
+      if (abs >= 1_000)     return `${currency} ${Math.round(amount/1_000)}K`;
+      return `${currency} ${Math.round(amount)}`;
+    }
+
+    let liveData = null;
+
+    (async function loadLive() {
+      const token = localStorage.getItem('mumtaz_token');
+      if (!token) return;
+      try {
+        const r = await fetch('/api/dashboard', { headers: { Authorization: 'Bearer ' + token } });
+        if (!r.ok) return;
+        const data = await r.json();
+        // Only treat as live if any invoice exists
+        if (!data.kpis || data.kpis.invoice_count === 0) return;
+        liveData = data;
+        applyLiveOverlay();
+      } catch { /* offline / no Odoo — keep demo */ }
+    })();
+
+    function applyLiveOverlay() {
+      if (!liveData) return;
+      const k = liveData.kpis;
+      const cur = k.currency || 'AED';
+
+      // Patch KPI definitions in-place — affects ALL roles consistently.
+      const setKpi = (role, label, val, sub) => {
+        const view = ROLE_KPIS[role];
+        if (!view) return;
+        const kpi = view.kpis.find(x => x.label === label);
+        if (!kpi) return;
+        kpi.val = val;
+        if (sub) kpi.sub = sub;
+        kpi.live = true;
+      };
+
+      // Overview / CEO
+      setKpi('overview', 'Revenue MTD',     fmtCurrency(k.invoiced, cur),    `${k.invoice_count} invoices YTD`);
+      setKpi('ceo',      'Revenue YTD',     fmtCurrency(k.invoiced, cur),    `${k.invoice_count} invoices`);
+
+      // CFO
+      setKpi('cfo', 'Accounts Receivable', fmtCurrency(k.outstanding, cur), `${k.invoice_count} invoices outstanding`);
+
+      // Re-render the current role with live data + add live pill
+      patchRender();
+    }
+
+    function patchRender() {
+      const role = $('role-selector').value;
+      renderRoleContent(role);
+      // Decorate live KPI cards
+      const view = ROLE_KPIS[role] || ROLE_KPIS.overview;
+      const cards = document.querySelectorAll('.kpi-card');
+      view.kpis.forEach((kpi, i) => {
+        if (kpi.live && cards[i]) {
+          const label = cards[i].querySelector('.kpi-label');
+          if (label && !label.querySelector('.live-pill')) {
+            label.innerHTML += '<span class="live-pill">live</span>';
+          }
+        }
+      });
+      // Update the "Demo data" tag → "Live · Odoo"
+      const tag = document.querySelector('#role-content .sec-link');
+      if (tag && view.kpis.some(k => k.live)) {
+        tag.textContent = 'Live · Odoo';
+        tag.style.color = 'var(--teal)';
+      }
+    }
+
+    // Re-apply overlay when user switches roles
+    $('role-selector').addEventListener('change', () => { if (liveData) patchRender(); });
   </script>
 
 </body>
