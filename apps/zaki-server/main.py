@@ -37,6 +37,7 @@ ODOO_URL    = os.environ.get("ODOO_URL",            "http://127.0.0.1:8069")
 ODOO_DB     = os.environ.get("ODOO_DB",             "mumtaz")
 ODOO_ADMIN  = os.environ.get("ODOO_ADMIN_USER",     "admin")
 ODOO_PASS   = os.environ.get("ODOO_ADMIN_PASS",     "admin")
+ODOO_TIMEOUT = int(os.environ.get("ODOO_TIMEOUT",   "15"))
 
 def _hash_pw(password: str) -> str:
     return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
@@ -176,26 +177,78 @@ async def require_auth(authorization: str = Header(None)) -> dict:
         raise HTTPException(401, f"Token invalid: {e}")
 
 # ── Odoo XML-RPC ──────────────────────────────────────────────────────
+class _TimeoutTransport(xmlrpc.client.Transport):
+    """HTTP transport that enforces a socket timeout — without it,
+    XML-RPC calls hang forever if Odoo becomes unreachable."""
+    def __init__(self, timeout: int = 15):
+        super().__init__()
+        self._timeout = timeout
+    def make_connection(self, host):
+        conn = super().make_connection(host)
+        conn.timeout = self._timeout
+        return conn
+
+class _SafeTimeoutTransport(xmlrpc.client.SafeTransport):
+    def __init__(self, timeout: int = 15):
+        super().__init__()
+        self._timeout = timeout
+    def make_connection(self, host):
+        conn = super().make_connection(host)
+        conn.timeout = self._timeout
+        return conn
+
+# Last connectivity error — surfaced via /health and /admin/odoo/status
+_odoo_last_error: dict = {"at": None, "message": None, "ts": None}
+
+def _record_odoo_error(where: str, exc: Exception) -> None:
+    _odoo_last_error["at"]      = where
+    _odoo_last_error["message"] = f"{type(exc).__name__}: {exc}"
+    _odoo_last_error["ts"]      = int(time.time())
+    print(f"[Odoo] {where} error: {exc}")
+
+def _odoo_transport():
+    return (_SafeTimeoutTransport(ODOO_TIMEOUT)
+            if ODOO_URL.lower().startswith("https")
+            else _TimeoutTransport(ODOO_TIMEOUT))
+
 def _odoo_common():
-    return xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/common", allow_none=True)
+    return xmlrpc.client.ServerProxy(
+        f"{ODOO_URL}/xmlrpc/2/common", allow_none=True, transport=_odoo_transport(),
+    )
 
 def _odoo_object():
-    return xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/object", allow_none=True)
+    return xmlrpc.client.ServerProxy(
+        f"{ODOO_URL}/xmlrpc/2/object", allow_none=True, transport=_odoo_transport(),
+    )
+
+def odoo_server_info() -> dict:
+    """Returns Odoo version metadata. Doesn't require auth."""
+    try:
+        info = _odoo_common().version()
+        return {
+            "server_version":   info.get("server_version"),
+            "server_serie":     info.get("server_serie"),
+            "protocol_version": info.get("protocol_version"),
+        }
+    except Exception as e:
+        _record_odoo_error("version", e)
+        return {}
 
 def odoo_get_admin_uid() -> int | None:
     try:
         uid = _odoo_common().authenticate(ODOO_DB, ODOO_ADMIN, ODOO_PASS, {})
         return uid if uid else None
     except Exception as e:
-        print(f"[Odoo] admin auth error: {e}")
+        _record_odoo_error("admin_auth", e)
         return None
 
 def odoo_authenticate(email: str, password: str) -> int | None:
-    """Returns Odoo UID on success, None on failure."""
+    """Returns Odoo UID on success, None on failure (wrong creds OR network down)."""
     try:
         uid = _odoo_common().authenticate(ODOO_DB, email, password, {})
         return uid if uid else None
-    except Exception:
+    except Exception as e:
+        _record_odoo_error("user_auth", e)
         return None
 
 def odoo_create_user(name: str, email: str, password: str) -> int | None:
@@ -216,8 +269,24 @@ def odoo_create_user(name: str, email: str, password: str) -> int | None:
         )
         return user_id
     except Exception as e:
-        print(f"[Odoo] create user error: {e}")
+        _record_odoo_error("create_user", e)
         return None
+
+def odoo_set_password(odoo_uid: int, new_password: str) -> bool:
+    """Update an Odoo user's password. Used by the password-reset flow so
+    users can actually log in after resetting (Odoo is the auth source of truth)."""
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid or not odoo_uid:
+        return False
+    try:
+        _odoo_object().execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, "res.users", "write",
+            [[int(odoo_uid)], {"password": new_password}],
+        )
+        return True
+    except Exception as e:
+        _record_odoo_error("set_password", e)
+        return False
 
 def odoo_read_user(odoo_uid: int) -> dict:
     admin_uid = odoo_get_admin_uid()
@@ -229,7 +298,8 @@ def odoo_read_user(odoo_uid: int) -> dict:
             [[odoo_uid]], {"fields": ["name", "email", "login"]}
         )
         return rows[0] if rows else {}
-    except Exception:
+    except Exception as e:
+        _record_odoo_error("read_user", e)
         return {}
 
 def _make_tenant_code(company: str) -> str:
@@ -379,14 +449,21 @@ def startup():
     settings.init_db()
 
 @app.get("/health")
+@app.get("/api/v1/health")
 def health():
-    admin_uid = odoo_get_admin_uid()
+    """Liveness + Odoo connectivity probe. Mounted at both /health and
+    /api/v1/health (the deploy script smoke-checks the latter)."""
+    info      = odoo_server_info()
+    admin_uid = odoo_get_admin_uid() if info else None
     return {
-        "status": "ok",
-        "ai_ready":   bool(ANT_KEY),
-        "odoo_live":  bool(admin_uid),
-        "odoo_url":   ODOO_URL,
-        "odoo_db":    ODOO_DB,
+        "status":         "ok",
+        "ai_ready":       bool(ANT_KEY),
+        "odoo_live":      bool(admin_uid),
+        "odoo_url":       ODOO_URL,
+        "odoo_db":        ODOO_DB,
+        "odoo_version":   info.get("server_version"),
+        "odoo_serie":     info.get("server_serie"),
+        "odoo_last_error": _odoo_last_error.get("message") if not admin_uid else None,
     }
 
 @app.post("/api/v1/auth/signup")
@@ -490,7 +567,11 @@ def forgot_password(req: ForgotReq, background_tasks: BackgroundTasks = None):
 
 @app.post("/api/v1/auth/reset")
 def reset_password(req: ResetReq):
-    """Consume a reset token and update the user's password."""
+    """Consume a reset token and update the user's password.
+
+    Updates BOTH the SQLite cache and the Odoo res.users record. Odoo is the
+    source of truth for /auth/login, so skipping the Odoo write would leave
+    users unable to log in with their new password."""
     if len(req.password) < 8:
         raise HTTPException(400, "Password must be at least 8 characters.")
     db  = get_db()
@@ -508,12 +589,24 @@ def reset_password(req: ResetReq):
         db.close()
         raise HTTPException(400, "This reset link has expired. Request a new one.")
 
+    user_row = db.execute(
+        "SELECT id, odoo_uid FROM users WHERE email=?", (row["email"],)
+    ).fetchone()
+
     new_hash = _hash_pw(req.password)
     db.execute("UPDATE users SET password_hash=? WHERE email=?", (new_hash, row["email"]))
     db.execute("UPDATE password_reset_tokens SET used=1 WHERE token=?", (req.token,))
     db.commit()
     db.close()
-    return {"ok": True}
+
+    # Push to Odoo so the user can actually log in. If Odoo is unreachable
+    # we still return ok=True (the SQLite fallback path will let them in),
+    # but report odoo_synced so the UI can surface a "try again later" hint.
+    odoo_synced = False
+    if user_row and user_row["odoo_uid"]:
+        odoo_synced = odoo_set_password(int(user_row["odoo_uid"]), req.password)
+
+    return {"ok": True, "odoo_synced": odoo_synced}
 
 @app.post("/api/v1/auth/register")
 def register(req: RegisterReq):
@@ -840,6 +933,69 @@ def admin_test_stripe(auth: dict = Depends(require_admin)):
     except Exception as e:
         raise HTTPException(502, f"Stripe key rejected: {e}")
     return {"ok": True}
+
+
+@app.get("/api/v1/admin/odoo/status")
+def admin_odoo_status(auth: dict = Depends(require_admin)):
+    """Detailed Odoo connectivity diagnostics. Exposes which DB / user / version
+    is connected, how many internal users exist, and the last connectivity
+    error (if any) — surfaced in the admin UI to diagnose connection issues
+    without SSHing into the box."""
+    info       = odoo_server_info()
+    admin_uid  = odoo_get_admin_uid() if info else None
+    user_count = None
+    db_list    = None
+    if admin_uid:
+        try:
+            uids = _odoo_object().execute_kw(
+                ODOO_DB, admin_uid, ODOO_PASS, "res.users", "search",
+                [[["share", "=", False]]],
+            )
+            user_count = len(uids)
+        except Exception as e:
+            _record_odoo_error("user_count", e)
+        try:
+            db_list = _odoo_common().db.list()
+        except Exception:
+            # `db.list` is often disabled by `list_db = False` in odoo.conf — non-fatal
+            pass
+    return {
+        "url":           ODOO_URL,
+        "db":            ODOO_DB,
+        "admin_user":    ODOO_ADMIN,
+        "timeout_secs":  ODOO_TIMEOUT,
+        "connected":     bool(admin_uid),
+        "admin_uid":     admin_uid,
+        "server_info":   info,
+        "internal_users": user_count,
+        "available_dbs": db_list,
+        "last_error":    _odoo_last_error,
+    }
+
+
+class OdooSearchReq(BaseModel):
+    model: str
+    domain: list = []
+    fields: list[str] = []
+    limit: int = 50
+
+@app.post("/api/v1/admin/odoo/search")
+def admin_odoo_search(req: OdooSearchReq, auth: dict = Depends(require_admin)):
+    """Run an arbitrary search_read against any Odoo model. Admin-only,
+    used by the admin UI for quick lookups (e.g. mumtaz.tenant, res.partner)."""
+    admin_uid = odoo_get_admin_uid()
+    if not admin_uid:
+        raise HTTPException(503, "Odoo unreachable.")
+    try:
+        rows = _odoo_object().execute_kw(
+            ODOO_DB, admin_uid, ODOO_PASS, req.model, "search_read",
+            [req.domain],
+            {"fields": req.fields or [], "limit": max(1, min(req.limit, 500))},
+        )
+    except Exception as e:
+        _record_odoo_error(f"search_read({req.model})", e)
+        raise HTTPException(400, f"Odoo error: {e}")
+    return {"model": req.model, "count": len(rows), "rows": rows}
 
 
 @app.post("/api/v1/admin/settings/zatca/csr")
