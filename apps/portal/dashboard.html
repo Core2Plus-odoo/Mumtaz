@@ -257,6 +257,121 @@
     .role-hint strong { color: var(--ink); }
 
     #role-content { margin-top: 8px; }
+
+    /* ── Role-specific widgets ── */
+    .widgets-grid {
+      display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px;
+      margin-top: 8px;
+    }
+    @media (max-width: 860px) { .widgets-grid { grid-template-columns: 1fr; } }
+
+    .widget {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+    .widget-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .widget-title {
+      font-size: 1rem; font-weight: 600; color: var(--ink);
+    }
+    .widget-meta {
+      font-family: 'DM Mono', monospace; font-size: .68rem;
+      color: var(--ink3); letter-spacing: .07em; text-transform: uppercase;
+    }
+
+    /* Bar chart (SVG) */
+    .bar-chart { width: 100%; height: 180px; display: block; }
+    .bar-chart .bar { transition: opacity .15s; }
+    .bar-chart .bar:hover { opacity: .8; }
+    .bar-chart .axis-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px; fill: var(--ink3); letter-spacing: .05em;
+    }
+    .bar-legend {
+      display: flex; gap: 16px; margin-top: 10px;
+      font-size: .78rem; color: var(--ink2);
+    }
+    .bar-legend-dot {
+      display: inline-block; width: 10px; height: 10px;
+      border-radius: 2px; margin-right: 6px; vertical-align: middle;
+    }
+
+    /* List rows */
+    .list-rows { display: flex; flex-direction: column; }
+    .list-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .list-row:last-child { border-bottom: none; }
+    .list-row-main {
+      flex: 1; min-width: 0;
+    }
+    .list-row-name {
+      font-size: .9rem; font-weight: 500; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .list-row-sub {
+      font-size: .78rem; color: var(--ink3); margin-top: 2px;
+    }
+    .list-row-val {
+      font-size: .9rem; font-weight: 600; color: var(--ink);
+      flex-shrink: 0; text-align: right;
+    }
+    .list-row-val small {
+      display: block; font-size: .7rem; font-weight: 400;
+      color: var(--ink3); margin-top: 2px;
+    }
+    .pill {
+      display: inline-block; padding: 2px 9px;
+      font-size: .7rem; font-weight: 600;
+      border-radius: 100px;
+      background: var(--gold-bg); color: var(--gold);
+    }
+    .pill.teal  { background: rgba(11,122,100,.12);  color: var(--teal); }
+    .pill.warn  { background: #FEF3C7;               color: #92400E; }
+    .pill.red   { background: #FEE2E2;               color: #991B1B; }
+    .pill.gray  { background: var(--bg);             color: var(--ink3); }
+
+    /* Progress bar */
+    .progress-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .progress-row:last-child { border-bottom: none; }
+    .progress-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 6px;
+    }
+    .progress-name { font-size: .85rem; font-weight: 500; color: var(--ink); }
+    .progress-val  { font-size: .8rem; color: var(--ink3); }
+    .progress-bar {
+      height: 6px; background: var(--bg); border-radius: 100px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2));
+      border-radius: 100px;
+    }
+    .progress-bar-fill.teal { background: var(--teal); }
+    .progress-bar-fill.red  { background: linear-gradient(90deg, #DC2626, #F87171); }
+
+    /* Funnel (vertical) */
+    .funnel { display: flex; flex-direction: column; gap: 8px; }
+    .funnel-stage {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .funnel-bar {
+      height: 32px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+      display: flex; align-items: center; padding: 0 12px;
+      color: #fff; font-weight: 600; font-size: .82rem;
+      min-width: 60px;
+    }
+    .funnel-name {
+      font-size: .82rem; color: var(--ink2); width: 88px;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -492,8 +607,238 @@
       },
     };
 
+    /* ── Role-specific widgets (charts + lists) ── */
+    const MONTHS = ['Nov','Dec','Jan','Feb','Mar','Apr'];
+
+    function barChart({ labels, series, height = 180, formatter = v => v }) {
+      const w = 460, h = height, pad = 28, gap = 6;
+      const all = series.flatMap(s => s.data);
+      const max = Math.max(...all, 1) * 1.1;
+      const groupW = (w - pad*2) / labels.length;
+      const barW   = (groupW - gap) / series.length;
+      let bars = '';
+      labels.forEach((lbl, i) => {
+        series.forEach((s, j) => {
+          const v = s.data[i];
+          const bh = (v / max) * (h - pad - 24);
+          const x = pad + i*groupW + j*barW + gap/2;
+          const y = h - pad - bh;
+          bars += `<rect class="bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(barW-2).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${s.color}"><title>${lbl}: ${formatter(v)}</title></rect>`;
+        });
+        bars += `<text class="axis-label" x="${(pad + i*groupW + groupW/2).toFixed(1)}" y="${h - 8}" text-anchor="middle">${lbl}</text>`;
+      });
+      // y-axis ticks
+      let ticks = '';
+      for (let t = 0; t <= 3; t++) {
+        const y = h - pad - (t/3) * (h - pad - 24);
+        const v = (max * t/3);
+        ticks += `<line x1="${pad}" x2="${w-4}" y1="${y}" y2="${y}" stroke="#E4E0D8" stroke-dasharray="3 3"/>`;
+        ticks += `<text class="axis-label" x="${pad-6}" y="${y+3}" text-anchor="end">${formatter(Math.round(v))}</text>`;
+      }
+      const legend = series.map(s => `<span><span class="bar-legend-dot" style="background:${s.color}"></span>${s.name}</span>`).join('');
+      return `<svg class="bar-chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${ticks}${bars}</svg><div class="bar-legend">${legend}</div>`;
+    }
+
+    function listWidget(rows) {
+      return `<div class="list-rows">${rows.map(r => `
+        <div class="list-row">
+          <div class="list-row-main">
+            <div class="list-row-name">${r.name}</div>
+            ${r.sub ? `<div class="list-row-sub">${r.sub}</div>` : ''}
+          </div>
+          <div class="list-row-val">${r.val}${r.valSub ? `<small>${r.valSub}</small>` : ''}${r.pill ? `<span class="pill ${r.pillTone||''}">${r.pill}</span>` : ''}</div>
+        </div>`).join('')}</div>`;
+    }
+
+    function progressWidget(rows) {
+      return rows.map(r => `
+        <div class="progress-row">
+          <div class="progress-head">
+            <span class="progress-name">${r.name}</span>
+            <span class="progress-val">${r.val}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill ${r.tone||''}" style="width:${r.pct}%"></div></div>
+        </div>`).join('');
+    }
+
+    function funnelWidget(stages) {
+      const max = Math.max(...stages.map(s => s.count));
+      return `<div class="funnel">${stages.map(s => `
+        <div class="funnel-stage">
+          <span class="funnel-name">${s.name}</span>
+          <div class="funnel-bar" style="width:${(s.count/max*100).toFixed(0)}%">${s.count}</div>
+        </div>`).join('')}</div>`;
+    }
+
+    const ROLE_WIDGETS = {
+      overview: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Recent Activity</span><span class="widget-meta">Last 24h</span></div>
+            ${listWidget([
+              { name: 'Invoice INV-2041 paid',    sub: 'Al Mansour Trading',  val: 'AED 18,500', pill: 'Paid', pillTone: 'teal' },
+              { name: 'New customer signed up',   sub: 'Gulf Logistics LLC',  val: '2h ago' },
+              { name: 'Stock low: SKU-A102',      sub: 'Inventory alert',     val: '4 left',     pill: 'Low', pillTone: 'warn' },
+              { name: 'ZAKI report generated',    sub: 'Q1 financial review', val: '6h ago' },
+            ])}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">This Week</span><span class="widget-meta">Tasks</span></div>
+            ${progressWidget([
+              { name: 'Submit ZATCA filing',       val: '3 days left',  pct: 70 },
+              { name: 'Pay supplier invoices',     val: '8 of 14 done', pct: 57 },
+              { name: 'Review Q1 P&L',             val: 'Due Friday',   pct: 30 },
+              { name: 'Approve leave requests',    val: '5 pending',    pct: 0  },
+            ])}
+          </div>
+        </div>`,
+
+      ceo: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Revenue vs Expenses</span><span class="widget-meta">Last 6 months</span></div>
+            ${barChart({
+              labels: MONTHS,
+              series: [
+                { name: 'Revenue',  color: '#B8862A', data: [148, 162, 155, 178, 192, 177] },
+                { name: 'Expenses', color: '#7A8799', data: [108, 118, 112, 125, 131, 128] },
+              ],
+              formatter: v => 'AED ' + v + 'K',
+            })}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Top Customers</span><span class="widget-meta">YTD</span></div>
+            ${listWidget([
+              { name: 'Al Mansour Trading',  sub: '32 orders',  val: 'AED 248K' },
+              { name: 'Gulf Construction',   sub: '18 orders',  val: 'AED 187K' },
+              { name: 'Emirates Retail Co',  sub: '24 orders',  val: 'AED 142K' },
+              { name: 'Riyadh Logistics',    sub: '11 orders',  val: 'AED 96K'  },
+              { name: 'Doha Hospitality',    sub: '8 orders',   val: 'AED 64K'  },
+            ])}
+          </div>
+        </div>`,
+
+      cfo: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Cash Flow</span><span class="widget-meta">Last 6 months</span></div>
+            ${barChart({
+              labels: MONTHS,
+              series: [
+                { name: 'Inflow',  color: '#0B7A64', data: [142, 158, 161, 175, 188, 172] },
+                { name: 'Outflow', color: '#C0402A', data: [118, 124, 119, 131, 142, 138] },
+              ],
+              formatter: v => 'AED ' + v + 'K',
+            })}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Outstanding Invoices</span><span class="widget-meta">Top 5</span></div>
+            ${listWidget([
+              { name: 'INV-2098 — Gulf Construction',  sub: 'Due 12 May',     val: 'AED 28K', pill: '15d', pillTone: 'warn' },
+              { name: 'INV-2089 — Al Mansour Trading', sub: 'Due 28 Apr',     val: 'AED 18K', pill: '2d',  pillTone: 'warn' },
+              { name: 'INV-2076 — Emirates Retail',    sub: 'Overdue 5 Apr',  val: 'AED 14K', pill: '20d', pillTone: 'red' },
+              { name: 'INV-2071 — Doha Hospitality',   sub: 'Due 18 May',     val: 'AED 12K' },
+              { name: 'INV-2065 — Riyadh Logistics',   sub: 'Due 22 May',     val: 'AED 8K'  },
+            ])}
+          </div>
+        </div>`,
+
+      coo: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Order Throughput</span><span class="widget-meta">Last 6 months</span></div>
+            ${barChart({
+              labels: MONTHS,
+              series: [
+                { name: 'Completed', color: '#1E4FA0', data: [42, 51, 48, 58, 64, 47] },
+                { name: 'Cancelled', color: '#C0402A', data: [3, 2, 4, 2, 3, 2] },
+              ],
+            })}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Low Stock Alerts</span><span class="widget-meta">Below reorder point</span></div>
+            ${listWidget([
+              { name: 'SKU-A102 — Premium Steel Plate', sub: 'Reorder at 50',   val: '4 units',  pill: 'Critical', pillTone: 'red'  },
+              { name: 'SKU-B045 — Industrial Bearings', sub: 'Reorder at 100',  val: '38 units', pill: 'Low',      pillTone: 'warn' },
+              { name: 'SKU-C218 — Hydraulic Hose',      sub: 'Reorder at 30',   val: '12 units', pill: 'Low',      pillTone: 'warn' },
+              { name: 'SKU-D091 — Safety Helmets',      sub: 'Reorder at 75',   val: '52 units', pill: 'Low',      pillTone: 'warn' },
+            ])}
+          </div>
+        </div>`,
+
+      cmo: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Active Campaigns</span><span class="widget-meta">Budget used</span></div>
+            ${progressWidget([
+              { name: 'Ramadan Push — Google Ads',   val: 'AED 8.4K / 12K',  pct: 70 },
+              { name: 'GCC Trade Show — LinkedIn',   val: 'AED 6.2K / 8K',   pct: 78 },
+              { name: 'Email Nurture Q2',            val: 'AED 1.8K / 4K',   pct: 45 },
+              { name: 'Brand Awareness — IG/TikTok', val: 'AED 7.6K / 10K',  pct: 76 },
+            ])}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Lead Sources</span><span class="widget-meta">MTD</span></div>
+            ${listWidget([
+              { name: 'Google Ads',      sub: 'CPA AED 86',  val: '48 leads' },
+              { name: 'LinkedIn',        sub: 'CPA AED 142', val: '32 leads' },
+              { name: 'Organic search',  sub: 'CPA AED 0',   val: '24 leads', pill: 'Free', pillTone: 'teal' },
+              { name: 'Referral',        sub: 'CPA AED 0',   val: '16 leads', pill: 'Free', pillTone: 'teal' },
+              { name: 'Direct',          sub: 'CPA AED 0',   val: '8 leads' },
+            ])}
+          </div>
+        </div>`,
+
+      sales: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Pipeline by Stage</span><span class="widget-meta">Open deals</span></div>
+            ${funnelWidget([
+              { name: 'Lead',        count: 48 },
+              { name: 'Qualified',   count: 32 },
+              { name: 'Proposal',    count: 18 },
+              { name: 'Negotiation', count: 12 },
+              { name: 'Won',         count: 6  },
+            ])}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Closing This Month</span><span class="widget-meta">Weighted</span></div>
+            ${listWidget([
+              { name: 'Al Hamra Steel — bulk order',   sub: 'Negotiation • 80%',  val: 'AED 42K', pill: 'Hot',  pillTone: 'red'  },
+              { name: 'Saudi Construction Co',         sub: 'Proposal • 60%',     val: 'AED 28K', pill: 'Warm', pillTone: 'warn' },
+              { name: 'Emirates Industrial',           sub: 'Negotiation • 75%',  val: 'AED 22K', pill: 'Hot',  pillTone: 'red'  },
+              { name: 'Qatar Foods Ltd',               sub: 'Proposal • 55%',     val: 'AED 18K', pill: 'Warm', pillTone: 'warn' },
+              { name: 'Bahrain Logistics',             sub: 'Qualified • 30%',    val: 'AED 10K', pill: 'Cold', pillTone: 'gray' },
+            ])}
+          </div>
+        </div>`,
+
+      hr: () => `
+        <div class="widgets-grid">
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Headcount by Department</span><span class="widget-meta">Total: 24</span></div>
+            ${progressWidget([
+              { name: 'Operations',   val: '8 people',  pct: 33, tone: 'teal' },
+              { name: 'Sales',        val: '6 people',  pct: 25, tone: 'teal' },
+              { name: 'Finance',      val: '4 people',  pct: 17, tone: 'teal' },
+              { name: 'Engineering',  val: '3 people',  pct: 12, tone: 'teal' },
+              { name: 'HR & Admin',   val: '3 people',  pct: 12, tone: 'teal' },
+            ])}
+          </div>
+          <div class="widget">
+            <div class="widget-head"><span class="widget-title">Open Positions</span><span class="widget-meta">Active reqs</span></div>
+            ${listWidget([
+              { name: 'Senior Accountant',  sub: 'Finance • Dubai',    val: '6 candidates', pill: 'Final round', pillTone: 'teal' },
+              { name: 'Sales Manager',      sub: 'Sales • Riyadh',     val: '4 candidates', pill: 'Interviews',  pillTone: 'warn' },
+              { name: 'Junior Developer',   sub: 'Engineering • Dubai', val: '2 candidates', pill: 'Sourcing',    pillTone: 'gray' },
+            ])}
+          </div>
+        </div>`,
+    };
+
     function renderRoleContent(role) {
       const view = ROLE_KPIS[role] || ROLE_KPIS.overview;
+      const widgets = (ROLE_WIDGETS[role] || ROLE_WIDGETS.overview)();
       const html = `
         <div class="sec-head" style="margin-top:36px">
           <span class="sec-label">${view.title} — Key Metrics</span>
@@ -510,7 +855,8 @@
               <div class="kpi-val">${k.val}</div>
               <div class="kpi-sub kpi-trend-${k.trend}">${k.sub}</div>
             </div>`).join('')}
-        </div>`;
+        </div>
+        ${widgets}`;
       $('role-content').innerHTML = html;
     }
 
