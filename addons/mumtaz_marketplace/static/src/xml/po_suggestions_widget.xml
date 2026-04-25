@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="mumtaz_marketplace.POSuggestionsWidget">
+    <div class="mum-po-suggestions">
+
+        <div class="mum-po-suggestions__header">
+            <span class="mum-po-suggestions__title">
+                <i class="fa fa-shopping-bag"/> Marketplace Vendors
+            </span>
+            <button class="btn btn-sm btn-secondary mum-po-suggestions__rfq"
+                    t-on-click="sendRfq"
+                    t-att-disabled="state.loading or !state.suggestions.length">
+                <i class="fa fa-paper-plane"/> Send RFQ
+            </button>
+        </div>
+
+        <!-- Loading state -->
+        <t t-if="state.loading">
+            <div class="mum-po-suggestions__loading">
+                <i class="fa fa-spinner fa-spin"/> Searching marketplace…
+            </div>
+        </t>
+
+        <!-- Error state -->
+        <t t-elif="state.error">
+            <div class="mum-po-suggestions__error">
+                <i class="fa fa-exclamation-triangle"/>
+                <span t-esc="state.error"/>
+            </div>
+        </t>
+
+        <!-- Empty state -->
+        <t t-elif="!state.suggestions.length">
+            <div class="mum-po-suggestions__empty">
+                <i class="fa fa-search"/>
+                No alternative marketplace vendors for these items.
+            </div>
+        </t>
+
+        <!-- Cards -->
+        <t t-else="">
+            <div class="mum-po-suggestions__cards">
+                <t t-foreach="state.suggestions" t-as="s" t-key="s.id">
+                    <div class="mum-po-suggestion-card"
+                         t-att-class="{ 'mum-matched': s.matched_line }"
+                         t-on-click="() => this.openListing(s)">
+                        <div class="mum-po-suggestion-card__head">
+                            <span class="mum-po-suggestion-card__name" t-esc="s.name"/>
+                            <span class="mum-po-suggestion-card__price" t-esc="formatPrice(s)"/>
+                        </div>
+                        <div class="mum-po-suggestion-card__meta">
+                            <span class="mum-po-suggestion-card__company" t-esc="s.company"/>
+                            <t t-if="s.category">
+                                <span class="mum-po-suggestion-card__sep">·</span>
+                                <span class="mum-po-suggestion-card__category" t-esc="s.category"/>
+                            </t>
+                        </div>
+                        <t t-if="s.matched_line">
+                            <div class="mum-po-suggestion-card__matched">
+                                <i class="fa fa-check-circle"/> Matches an item on this PO
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </div>
+</t>
+
+</templates>

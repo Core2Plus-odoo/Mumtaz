@@ -38,6 +38,43 @@ class PurchaseOrder(models.Model):
         categs = self.env["product.category"].browse(categ_ids)
         return [c.name.split("/")[-1].strip() for c in categs] or ["General"]
 
+    def get_marketplace_suggestions(self, limit=3):
+        """Return top N marketplace alternatives as plain dicts for the OWL widget.
+
+        Each suggestion contains identification, the supplier name, an
+        average unit price, and any matching product tmpl IDs so the UI can
+        highlight which lines benefit from this alternative.
+        """
+        self.ensure_one()
+        Listing = self.env["mumtaz.marketplace.listing"].sudo()
+        listings = Listing.search(
+            self._marketplace_alternatives_domain(),
+            limit=int(limit) or 3,
+            order="create_date desc",
+        )
+
+        po_product_tmpl_ids = set(
+            self.order_line.mapped("product_id.product_tmpl_id").ids
+        )
+
+        suggestions = []
+        for lst in listings:
+            matched = bool(
+                lst.product_tmpl_id
+                and lst.product_tmpl_id.id in po_product_tmpl_ids
+            )
+            suggestions.append({
+                "id":           lst.id,
+                "name":         lst.name,
+                "company":      lst.company_id.display_name or "",
+                "category":     lst.category_id.name if lst.category_id else "",
+                "price":        float(lst.price or 0.0),
+                "currency":     lst.currency_id.name if lst.currency_id else "USD",
+                "matched_line": matched,
+                "url":          f"/web#id={lst.id}&model=mumtaz.marketplace.listing&view_type=form",
+            })
+        return suggestions
+
     def action_view_marketplace_alternatives(self):
         self.ensure_one()
         domain = self._marketplace_alternatives_domain()
