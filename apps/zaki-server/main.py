@@ -527,6 +527,63 @@ async def get_onboarding(auth: dict = Depends(require_auth)):
     except Exception:
         return {"onboarding": None, "role": row["role"]}
 
+# ── Plans / Billing ──────────────────────────────────────────────────
+PLANS = {
+    "trial": {
+        "key": "trial", "name": "Trial", "price": 0, "currency": "AED",
+        "interval": "14-day trial",
+        "features": ["All ERP modules", "1 ZAKI agent", "Up to 3 users", "Email support"],
+        "limits": {"users": 3, "agents": 1, "modules": -1},
+    },
+    "starter": {
+        "key": "starter", "name": "Starter", "price": 199, "currency": "AED",
+        "interval": "month",
+        "features": ["Core ERP modules", "1 ZAKI agent", "Up to 5 users", "Email support"],
+        "limits": {"users": 5, "agents": 1, "modules": 4},
+    },
+    "growth": {
+        "key": "growth", "name": "Growth", "price": 499, "currency": "AED",
+        "interval": "month",
+        "features": ["All ERP modules", "3 ZAKI agents", "B2B marketplace", "Up to 25 users", "Priority email support"],
+        "limits": {"users": 25, "agents": 3, "modules": -1},
+    },
+    "scale": {
+        "key": "scale", "name": "Scale", "price": 1499, "currency": "AED",
+        "interval": "month",
+        "features": ["Everything in Growth", "All ZAKI agents", "Up to 100 users", "Phone + Slack support", "Dedicated account manager"],
+        "limits": {"users": 100, "agents": -1, "modules": -1},
+    },
+}
+
+@app.get("/api/v1/plans")
+async def list_plans():
+    """Public — returns the plan catalog."""
+    return {"plans": list(PLANS.values())}
+
+@app.get("/api/v1/plan")
+async def get_current_plan(auth: dict = Depends(require_auth)):
+    db  = get_db()
+    row = db.execute("SELECT plan FROM users WHERE email=?", (auth["email"],)).fetchone()
+    db.close()
+    current = (row["plan"] if row else "trial") or "trial"
+    return {"current": current, "plan": PLANS.get(current, PLANS["trial"])}
+
+class ChangePlanReq(BaseModel):
+    plan: str
+
+@app.post("/api/v1/plan")
+async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
+    """Change the user's plan. No payment integration yet — this just
+    updates the SQLite record so the rest of the platform reflects it.
+    A real implementation would create a Stripe/Tap subscription here."""
+    if req.plan not in PLANS:
+        raise HTTPException(400, f"Unknown plan '{req.plan}'. Valid: {list(PLANS.keys())}")
+    db = get_db()
+    db.execute("UPDATE users SET plan=? WHERE email=?", (req.plan, auth["email"]))
+    db.commit()
+    db.close()
+    return {"ok": True, "plan": PLANS[req.plan]}
+
 @app.get("/api/v1/tenant/me")
 async def tenant_me(auth: dict = Depends(require_auth)):
     tenant_id = auth.get("tenant_id")
