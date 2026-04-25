@@ -41,17 +41,23 @@ const odooStatus     = $('odoo-status');
   populatePeriodSelectors();
 
   // Connection settings toggle
-  connToggle.addEventListener('click', () => {
-    const open = connFields.classList.toggle('open');
-    connToggle.classList.toggle('open', open);
-  });
+  if (connToggle && connFields) {
+    connToggle.addEventListener('click', () => {
+      const open = connFields.classList.toggle('open');
+      connToggle.classList.toggle('open', open);
+    });
+  }
 
+  const token = localStorage.getItem('mumtaz_token');
   try {
-    const res  = await fetch('/auth/me');
+    const res = await fetch('/auth/me', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    });
     if (res.ok) {
       const user = await res.json();
       showApp(user);
     } else {
+      localStorage.removeItem('mumtaz_token');
       showLogin();
     }
   } catch {
@@ -93,20 +99,19 @@ loginForm.addEventListener('submit', async e => {
   loginLabel.hidden = true;
   loginSpinner.hidden = false;
 
-  const email    = $('email').value.trim();
-  const password = $('password').value;
-  const odooUrl  = $('odoo-url').value.trim();
-  const db       = $('odoo-db').value.trim();
+  const email    = $('email')?.value?.trim() || '';
+  const password = $('password')?.value || '';
 
   try {
     const res  = await fetch('/auth/login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ email, password, odooUrl, db }),
+      body:    JSON.stringify({ email, password }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-    showApp(data);
+    if (!res.ok) throw new Error(data.detail || data.error || 'Login failed');
+    localStorage.setItem('mumtaz_token', data.access_token);
+    showApp(data.user || data);
   } catch (err) {
     loginError.textContent = err.message;
     loginError.hidden = false;
@@ -296,7 +301,10 @@ async function streamResponse(message, chat) {
   try {
     const res = await fetch('/api/chat', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('mumtaz_token') || ''}`,
+      },
       body:    JSON.stringify({ message, history }),
     });
 

@@ -514,32 +514,21 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div class="setup-mark">Z</div>
       <div class="setup-logo">ZAKI <span>· AI CFO</span></div>
     </div>
-    <div class="setup-headline">Sign in with Odoo</div>
-    <div class="setup-sub">Connect your Odoo instance to see live financial data on your dashboard.</div>
+    <div class="setup-headline">Sign in to ZAKI</div>
+    <div class="setup-sub">Your AI-powered CFO dashboard. Sign in with your Mumtaz account.</div>
 
-    <div class="setup-row">
-      <div class="field">
-        <label>Odoo URL</label>
-        <input id="s-odoo-url" type="url" placeholder="https://yourcompany.odoo.com">
-      </div>
-      <div class="field">
-        <label>Database</label>
-        <input id="s-odoo-db" type="text" placeholder="your-database">
-      </div>
+    <div class="field">
+      <label>Email</label>
+      <input id="s-email" type="email" placeholder="you@company.com" autocomplete="email">
     </div>
-    <div class="setup-row">
-      <div class="field">
-        <label>Email</label>
-        <input id="s-odoo-email" type="email" placeholder="you@company.com" autocomplete="email">
-      </div>
-      <div class="field">
-        <label>Password</label>
-        <input id="s-odoo-pass" type="password" placeholder="••••••••" autocomplete="current-password">
-      </div>
+    <div class="field">
+      <label>Password</label>
+      <input id="s-pass" type="password" placeholder="••••••••" autocomplete="current-password">
     </div>
 
     <div id="setup-error" style="display:none;color:#ef4444;font-size:.82rem;margin-bottom:8px;background:rgba(239,68,68,.1);padding:10px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.3)"></div>
-    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="connectOdoo()" id="setup-btn">Connect to Odoo →</button>
+    <button class="btn-primary" style="width:100%;margin-top:8px" onclick="loginUser()" id="setup-btn">Sign in →</button>
+    <p style="text-align:center;font-size:.78rem;color:var(--text-3);margin-top:14px">No account? <a href="https://app.mumtaz.digital" target="_blank" style="color:var(--blue)">Register at app.mumtaz.digital</a></p>
   </div>
 </div>
 
@@ -1941,51 +1930,57 @@ function updateSendBtn() {
 // ═══════════════════════════════════════════
 // SETUP
 // ═══════════════════════════════════════════
-async function connectOdoo() {
-  const url   = document.getElementById('s-odoo-url')?.value?.trim()
-  const db    = document.getElementById('s-odoo-db')?.value?.trim()
-  const email = document.getElementById('s-odoo-email')?.value?.trim()
-  const pass  = document.getElementById('s-odoo-pass')?.value
+function getToken() { return localStorage.getItem('mumtaz_token') || '' }
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` }
+}
+
+async function loginUser() {
+  const email = document.getElementById('s-email')?.value?.trim()
+  const pass  = document.getElementById('s-pass')?.value
   const errEl = document.getElementById('setup-error')
   const btn   = document.getElementById('setup-btn')
-  if (!url || !db || !email || !pass) {
-    errEl.textContent = 'Please fill in all fields.'
+  if (!email || !pass) {
+    errEl.textContent = 'Please enter your email and password.'
     errEl.style.display = 'block'
     return
   }
-  btn.textContent = 'Connecting…'
+  btn.textContent = 'Signing in…'
   btn.disabled = true
   errEl.style.display = 'none'
   try {
     const res  = await fetch('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ odooUrl: url, db, email, password: pass }),
-      credentials: 'same-origin',
+      body: JSON.stringify({ email, password: pass }),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Login failed')
+    if (!res.ok) throw new Error(data.detail || data.error || 'Login failed')
+    localStorage.setItem('mumtaz_token', data.access_token)
+    const user = data.user || {}
     S.keys = S.keys || {}
-    S.keys.zakiJwt = 'odoo-connected'  // marks as connected, hides demo banner
-    S.me.firstName = (data.name || 'CEO').split(' ')[0]
-    S.me.name      = data.name || 'CEO'
-    S.co.name      = data.name || 'My Company'
+    S.keys.zakiJwt = data.access_token
+    S.me.firstName = (user.name || 'User').split(' ')[0]
+    S.me.name      = user.name || 'User'
+    S.co.name      = user.company || 'My Company'
     S.co.currency  = 'AED'
     await loadOdooData()
     save()
     launchApp()
-    showToast('Connected to Odoo — live data loaded!')
+    showToast('Welcome back, ' + S.me.firstName + '!')
   } catch (err) {
-    errEl.textContent = err.message || 'Connection failed. Check credentials.'
+    errEl.textContent = err.message || 'Login failed. Check your credentials.'
     errEl.style.display = 'block'
-    btn.textContent = 'Connect to Odoo →'
+    btn.textContent = 'Sign in →'
     btn.disabled = false
   }
 }
 
+async function connectOdoo() { loginUser() }
+
 async function loadOdooData() {
   try {
-    const res = await fetch('/api/dashboard', { credentials: 'same-origin' })
+    const res = await fetch('/api/dashboard', { headers: authHeaders() })
     if (!res.ok) return
     const data = await res.json()
     if (Array.isArray(data.transactions) && data.transactions.length) {
@@ -1996,7 +1991,7 @@ async function loadOdooData() {
   } catch (e) { /* silent — demo data remains */ }
 }
 
-function completeSetup() { connectOdoo() }
+function completeSetup() { loginUser() }
 
 function skipSetup() {
   S.me.firstName = 'CEO'

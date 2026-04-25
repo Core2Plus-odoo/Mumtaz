@@ -3,101 +3,162 @@
 require('dotenv').config();
 
 const express = require('express');
-const session = require('express-session');
 const cors    = require('cors');
 const path    = require('path');
+const fetch   = require('node-fetch');
 const { authenticate } = require('./odoo/client');
 const zaki            = require('./agents/zaki');
 
-const app  = express();
-const PORT = process.env.PORT || 3000;
+const app         = express();
+const PORT        = process.env.PORT || 3000;
+const ZAKI_SERVER = process.env.ZAKI_SERVER_URL || 'http://localhost:8001';
 
 /* ── Middleware ─────────────────────────────────────────────────── */
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({
-  secret:            process.env.SESSION_SECRET || 'zaki-dev-secret',
-  resave:            false,
-  saveUninitialized: false,
-  cookie: {
-    secure:   process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge:   24 * 60 * 60 * 1000, // 24 hours
-  },
-}));
+/* ── Odoo connection store (in-memory, keyed by user email) ─────── */
+const odooStore = new Map(); // email → { baseUrl, db, sessionId, uid }
+
+/* ── Auth token cache (5-min TTL) ──────────────────────────────── */
+const authCache = new Map(); // token → { user, exp }
 
 /* ── Auth Middleware ────────────────────────────────────────────── */
-function requireAuth(req, res, next) {
-  if (req.session && req.session.odooConn) return next();
-  res.status(401).json({ error: 'Not authenticated', code: 'NOT_AUTHENTICATED' });
+async function requireAuth(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Not authenticated', code: 'NOT_AUTHENTICATED' });
+  }
+  const token = header.split(' ')[1];
+
+  const cached = authCache.get(token);
+  if (cached && cached.exp > Date.now()) {
+    req.user   = cached.user;
+    req.userId = cached.user.email;
+    return next();
+  }
+
+  try {
+    const r = await fetch(`${ZAKI_SERVER}/api/v1/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!r.ok) {
+      authCache.delete(token);
+      return res.status(401).json({ error: 'Not authenticated', code: 'NOT_AUTHENTICATED' });
+    }
+    const user = await r.json();
+    authCache.set(token, { user, exp: Date.now() + 5 * 60 * 1000 });
+    req.user   = user;
+    req.userId = user.email;
+    next();
+  } catch (err) {
+    console.error('[Auth]', err.message);
+    res.status(503).json({ error: 'Auth service unavailable' });
+  }
 }
 
 /* ── Auth Routes ────────────────────────────────────────────────── */
 app.post('/auth/login', async (req, res) => {
-  const { email, password, odooUrl, db } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required.' });
-  }
-  if (!odooUrl || !db) {
-    return res.status(400).json({ error: 'Odoo URL and database name required.' });
-  }
-
-  // Normalise URL — strip trailing slash
-  const baseUrl = odooUrl.replace(/\/+$/, '');
-
   try {
-    const { uid, name, sessionId } = await authenticate(baseUrl, db, email, password);
-    req.session.odooConn  = { baseUrl, db, sessionId };
-    req.session.odooUid   = uid;
-    req.session.userName  = name;
-    res.json({ ok: true, name, uid, baseUrl, db });
+    const r = await fetch(`${ZAKI_SERVER}/api/v1/auth/login`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(req.body),
+    });
+    const data = await r.json();
+    res.status(r.status).json(data);
   } catch (err) {
-    res.status(401).json({ error: err.message || 'Login failed.' });
+    res.status(503).json({ error: 'Auth service unavailable' });
+  }
+});
+
+app.post('/auth/register', async (req, res) => {
+  try {
+    const r = await fetch(`${ZAKI_SERVER}/api/v1/auth/signup`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(req.body),
+    });
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'Auth service unavailable' });
   }
 });
 
 app.get('/auth/me', requireAuth, (req, res) => {
-  const { baseUrl, db } = req.session.odooConn;
+  const odoo = odooStore.get(req.userId);
   res.json({
-    name:    req.session.userName,
-    uid:     req.session.odooUid,
-    baseUrl,
-    db,
+    ...req.user,
+    has_odoo: !!odoo,
+    odoo_url: odoo?.baseUrl || null,
+    odoo_db:  odoo?.db      || null,
   });
 });
 
 app.post('/auth/logout', (req, res) => {
-  req.session.destroy(() => res.json({ ok: true }));
+  const header = req.headers.authorization || '';
+  const token  = header.split(' ')[1];
+  if (token) authCache.delete(token);
+  res.json({ ok: true });
 });
+
+/* ── ERP Connect / Disconnect ───────────────────────────────────── */
+app.post('/erp/connect', requireAuth, async (req, res) => {
+  const { odooUrl, db, email, password } = req.body;
+  if (!odooUrl || !db || !email || !password) {
+    return res.status(400).json({ error: 'odooUrl, db, email, password required' });
+  }
+  const baseUrl = odooUrl.replace(/\/+$/, '');
+  try {
+    const { uid, name, sessionId } = await authenticate(baseUrl, db, email, password);
+    odooStore.set(req.userId, { baseUrl, db, sessionId, uid });
+    res.json({ ok: true, name, uid, baseUrl, db });
+  } catch (err) {
+    res.status(401).json({ error: err.message || 'Odoo connection failed' });
+  }
+});
+
+app.post('/erp/disconnect', requireAuth, (req, res) => {
+  odooStore.delete(req.userId);
+  res.json({ ok: true });
+});
+
+/* ── Helper: require Odoo connection ────────────────────────────── */
+function getOdooConn(req, res) {
+  const conn = odooStore.get(req.userId);
+  if (!conn) {
+    res.status(400).json({
+      error: 'Odoo not connected. Go to Settings → Connect Odoo.',
+      code:  'ODOO_NOT_CONNECTED',
+    });
+    return null;
+  }
+  return conn;
+}
 
 /* ── Chat Route (SSE streaming) ─────────────────────────────────── */
 app.post('/api/chat', requireAuth, async (req, res) => {
   const { message, history = [] } = req.body;
-
   if (!message || !message.trim()) {
     return res.status(400).json({ error: 'Message is required.' });
   }
 
-  // Sanitise history: keep last 20 turns, ensure correct role alternation
   const sanitisedHistory = sanitiseHistory(history);
+  const conn = odooStore.get(req.userId); // may be null — AI still works without Odoo
 
-  // Set up SSE
-  res.setHeader('Content-Type',  'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection',    'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // for nginx
+  res.setHeader('Content-Type',      'text/event-stream');
+  res.setHeader('Cache-Control',     'no-cache');
+  res.setHeader('Connection',        'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
-
-  const conn = req.session.odooConn;
 
   function writeSSE(data) {
     if (res.writableEnded) return;
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   }
 
-  // Heartbeat to prevent proxy timeouts
   const heartbeat = setInterval(() => {
     if (!res.writableEnded) res.write(': heartbeat\n\n');
   }, 15000);
@@ -118,7 +179,8 @@ app.post('/api/chat', requireAuth, async (req, res) => {
 
 /* ── Dashboard Data ─────────────────────────────────────────────── */
 app.get('/api/dashboard', requireAuth, async (req, res) => {
-  const conn = req.session.odooConn;
+  const conn = getOdooConn(req, res);
+  if (!conn) return;
   const { searchRead } = require('./odoo/client');
   try {
     const [invoices, bills] = await Promise.all([
@@ -137,22 +199,16 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
     let id = 1;
     const transactions = [
       ...invoices.map(inv => ({
-        id: id++,
-        date:        (inv.invoice_date || '').slice(0, 10),
-        type:        'income',
-        amount:      inv.amount_total || 0,
-        category:    'Invoice',
+        id: id++, date: (inv.invoice_date || '').slice(0, 10), type: 'income',
+        amount: inv.amount_total || 0, category: 'Invoice',
         description: (inv.partner_id ? inv.partner_id[1] + ' — ' : '') + inv.name,
-        currency:    inv.currency_id ? inv.currency_id[1] : 'AED',
+        currency: inv.currency_id ? inv.currency_id[1] : 'AED',
       })),
       ...bills.map(bill => ({
-        id: id++,
-        date:        (bill.invoice_date || '').slice(0, 10),
-        type:        'expense',
-        amount:      bill.amount_total || 0,
-        category:    'Bill',
+        id: id++, date: (bill.invoice_date || '').slice(0, 10), type: 'expense',
+        amount: bill.amount_total || 0, category: 'Bill',
         description: (bill.partner_id ? bill.partner_id[1] + ' — ' : '') + bill.name,
-        currency:    bill.currency_id ? bill.currency_id[1] : 'AED',
+        currency: bill.currency_id ? bill.currency_id[1] : 'AED',
       })),
     ].sort((a, b) => b.date.localeCompare(a.date));
 
@@ -165,7 +221,8 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
 
 /* ── Company Info ───────────────────────────────────────────────── */
 app.get('/api/company', requireAuth, async (req, res) => {
-  const conn = req.session.odooConn;
+  const conn = getOdooConn(req, res);
+  if (!conn) return;
   const { searchRead } = require('./odoo/client');
   try {
     const rows = await searchRead(conn, 'res.company', [],
@@ -181,7 +238,8 @@ app.get('/api/company', requireAuth, async (req, res) => {
 
 /* ── Financial KPIs ─────────────────────────────────────────────── */
 app.get('/api/financials', requireAuth, async (req, res) => {
-  const conn = req.session.odooConn;
+  const conn = getOdooConn(req, res);
+  if (!conn) return;
   const { searchRead } = require('./odoo/client');
   const year = new Date().getFullYear();
   const startOfYear = `${year}-01-01`;
@@ -209,7 +267,7 @@ app.get('/api/financials', requireAuth, async (req, res) => {
     for (const inv of invoices) {
       const m = new Date(inv.invoice_date || Date.now()).getMonth() + 1;
       monthly[m].revenue += inv.amount_total || 0;
-      totalRevenue += inv.amount_total || 0;
+      totalRevenue       += inv.amount_total || 0;
       if (inv.payment_state === 'not_paid' || inv.payment_state === 'partial') {
         unpaidCount++;
         unpaidAmount += inv.amount_total || 0;
@@ -221,7 +279,7 @@ app.get('/api/financials', requireAuth, async (req, res) => {
     for (const bill of bills) {
       const m = new Date(bill.invoice_date || Date.now()).getMonth() + 1;
       monthly[m].expenses += bill.amount_total || 0;
-      totalExpenses += bill.amount_total || 0;
+      totalExpenses       += bill.amount_total || 0;
     }
 
     const topCustomers = Object.entries(customerMap)
@@ -321,32 +379,23 @@ app.get('*', (req, res) => {
 /* ── Helpers ────────────────────────────────────────────────────── */
 function sanitiseHistory(raw) {
   if (!Array.isArray(raw)) return [];
-
   const cleaned = raw
     .filter(m => m && (m.role === 'user' || m.role === 'assistant') && m.content)
-    .map(m => ({
-      role:    m.role,
-      content: typeof m.content === 'string' ? m.content : String(m.content),
-    }));
+    .map(m => ({ role: m.role, content: typeof m.content === 'string' ? m.content : String(m.content) }));
 
-  // Claude requires alternating roles; deduplicate consecutive same-role messages
   const result = [];
   for (const msg of cleaned) {
     if (result.length && result[result.length - 1].role === msg.role) continue;
     result.push(msg);
   }
-
-  // Must start with user turn
   while (result.length && result[0].role !== 'user') result.shift();
-
-  // Keep last 20 turns (10 exchanges)
   return result.slice(-20);
 }
 
 /* ── Start ──────────────────────────────────────────────────────── */
 app.listen(PORT, () => {
-  console.log(`\n🟡 ZAKI AI — AJ Arabia\n   http://localhost:${PORT}\n`);
-  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_anthropic_api_key_here') {
+  console.log(`\n🟡 ZAKI AI — Mumtaz\n   http://localhost:${PORT}\n`);
+  if (!process.env.ANTHROPIC_API_KEY) {
     console.warn('   ⚠️  ANTHROPIC_API_KEY not set in .env');
   }
 });
