@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="portal_vendor_invoice_upload" name="Vendor Invoice Upload">
+    <t t-call="mumtaz_vendor_portal.portal_vendor_layout">
+        <t t-set="title">Upload Invoice</t>
+
+        <div class="mvp-card">
+            <div class="mvp-card-header">
+                <a href="/vendor/invoices" class="mvp-back-link">
+                    &#8592; All Invoices
+                </a>
+                <h3 class="mvp-card-title">Upload an Invoice</h3>
+            </div>
+
+            <!-- Status messages -->
+            <t t-if="error">
+                <div class="mvp-alert mvp-alert-error">
+                    <i class="fa fa-exclamation-triangle"/>
+                    <span t-esc="error"/>
+                </div>
+            </t>
+            <t t-if="success">
+                <div class="mvp-alert mvp-alert-success">
+                    <i class="fa fa-check-circle"/>
+                    <span t-esc="success"/>
+                </div>
+            </t>
+
+            <t t-if="not eligible_pos">
+                <div class="mvp-empty">
+                    No confirmed purchase orders are awaiting an invoice.
+                </div>
+            </t>
+            <t t-else="">
+                <form action="/vendor/invoices/upload"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="mvp-form">
+                    <input type="hidden" name="csrf_token"
+                           t-att-value="request.csrf_token()"/>
+
+                    <div class="mvp-form-row">
+                        <label for="po_id" class="mvp-form-label">
+                            Purchase Order <span class="mvp-required">*</span>
+                        </label>
+                        <select id="po_id" name="po_id" class="mvp-form-input" required="required">
+                            <option value="">— Select a PO —</option>
+                            <t t-foreach="eligible_pos" t-as="po">
+                                <option t-att-value="po.id">
+                                    <t t-esc="po.name"/> — <t t-esc="'%.2f %s' % (po.amount_total, po.currency_id.name)"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="mvp-form-row">
+                        <label for="invoice_ref" class="mvp-form-label">
+                            Invoice Reference <span class="mvp-required">*</span>
+                        </label>
+                        <input type="text" id="invoice_ref" name="invoice_ref"
+                               class="mvp-form-input" required="required"
+                               placeholder="INV-2026-001"/>
+                    </div>
+
+                    <div class="mvp-form-row mvp-form-row-half">
+                        <div>
+                            <label for="invoice_date" class="mvp-form-label">Invoice Date</label>
+                            <input type="date" id="invoice_date" name="invoice_date"
+                                   class="mvp-form-input"/>
+                        </div>
+                        <div>
+                            <label for="amount" class="mvp-form-label">Total Amount</label>
+                            <input type="number" id="amount" name="amount" step="0.01"
+                                   class="mvp-form-input"
+                                   placeholder="Defaults to PO total"/>
+                        </div>
+                    </div>
+
+                    <div class="mvp-form-row">
+                        <label for="attachment" class="mvp-form-label">
+                            Invoice File (PDF/XML) <span class="mvp-required">*</span>
+                        </label>
+                        <input type="file" id="attachment" name="attachment"
+                               class="mvp-form-input"
+                               accept=".pdf,.xml,.png,.jpg,.jpeg"
+                               required="required"/>
+                        <small class="mvp-form-hint">Max 10 MB. PDF preferred.</small>
+                    </div>
+
+                    <div class="mvp-actions" style="margin-top:24px;">
+                        <button type="submit" class="mvp-btn-primary">
+                            <i class="fa fa-upload"/> Submit Invoice
+                        </button>
+                        <a href="/vendor/invoices" class="mvp-btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </t>
+        </div>
+
+    </t>
+</template>
+
+</odoo>

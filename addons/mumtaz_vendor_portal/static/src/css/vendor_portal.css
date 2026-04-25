@@ -753,3 +753,60 @@ body.mumtaz-vendor-portal {
 }
 .mvp-btn-secondary:hover { border-color: #0891B2; color: #0891B2; }
 
+/* ── Forms ────────────────────────────────────────────────────────── */
+.mvp-form { display: flex; flex-direction: column; gap: 18px; padding: 8px 0; }
+.mvp-form-row { display: flex; flex-direction: column; gap: 6px; }
+.mvp-form-row-half {
+  flex-direction: row;
+  gap: 16px;
+}
+.mvp-form-row-half > div { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.mvp-form-label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #475569;
+}
+.mvp-form-input {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: .88rem;
+  background: #F8FAFC;
+  color: #0F172A;
+  transition: border-color 150ms, box-shadow 150ms;
+  font-family: inherit;
+}
+.mvp-form-input:focus {
+  outline: none;
+  border-color: #0891B2;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(8,145,178,.12);
+}
+.mvp-form-hint { font-size: .72rem; color: #94A3B8; margin-top: 2px; }
+.mvp-required { color: #DC2626; }
+
+.mvp-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.mvp-alert i { font-size: 1.1rem; }
+.mvp-alert-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+}
+.mvp-alert-success {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+@media (max-width: 600px) {
+  .mvp-form-row-half { flex-direction: column; }
+}
+

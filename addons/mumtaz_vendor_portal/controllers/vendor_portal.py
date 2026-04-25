@@ -190,6 +190,133 @@ class VendorPortalController(CustomerPortal):
             {'invoices': invoices, 'pager': pager},
         )
 
+    # ── Invoice upload ──────────────────────────────────────────────────
+
+    _MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+    _ALLOWED_EXT      = ('.pdf', '.xml', '.png', '.jpg', '.jpeg')
+
+    @http.route('/vendor/invoices/upload',
+                type='http', auth='user', website=True)
+    def vendor_invoice_upload_form(self, error=None, success=None, **kwargs):
+        partner = request.env.user.partner_id.commercial_partner_id
+        # Confirmed POs without an invoice yet — the natural targets for upload
+        po_domain = [
+            ('partner_id', 'child_of', partner.id),
+            ('state', 'in', ['purchase', 'done']),
+            ('invoice_status', '!=', 'invoiced'),
+        ]
+        eligible_pos = request.env['purchase.order'].sudo().search(
+            po_domain, limit=50, order='date_order desc',
+        )
+        return request.render(
+            'mumtaz_vendor_portal.portal_vendor_invoice_upload',
+            {
+                'eligible_pos': eligible_pos,
+                'error':        error,
+                'success':      success,
+            },
+        )
+
+    @http.route('/vendor/invoices/upload',
+                type='http', auth='user', methods=['POST'],
+                website=True, csrf=True)
+    def vendor_invoice_upload_submit(self, **post):
+        import base64
+
+        partner = request.env.user.partner_id.commercial_partner_id
+
+        po_id          = (post.get('po_id') or '').strip()
+        invoice_ref    = (post.get('invoice_ref') or '').strip()
+        invoice_date   = (post.get('invoice_date') or '').strip()
+        amount         = (post.get('amount') or '').strip()
+        attachment     = post.get('attachment')
+
+        # ── Validate ─────────────────────────────────────────────────────
+        if not po_id or not po_id.isdigit():
+            return self.vendor_invoice_upload_form(error='Please select a purchase order.')
+        if not invoice_ref:
+            return self.vendor_invoice_upload_form(error='Invoice reference is required.')
+        if not attachment or not attachment.filename:
+            return self.vendor_invoice_upload_form(error='Please attach a PDF or XML invoice.')
+
+        ext = '.' + (attachment.filename.rsplit('.', 1)[-1] or '').lower()
+        if ext not in self._ALLOWED_EXT:
+            return self.vendor_invoice_upload_form(
+                error=f'Unsupported file type. Allowed: {", ".join(self._ALLOWED_EXT)}.'
+            )
+
+        file_bytes = attachment.read()
+        if len(file_bytes) > self._MAX_UPLOAD_BYTES:
+            return self.vendor_invoice_upload_form(
+                error='File too large (max 10 MB).'
+            )
+        if not file_bytes:
+            return self.vendor_invoice_upload_form(error='Empty file.')
+
+        # ── Verify PO ownership ──────────────────────────────────────────
+        try:
+            po = self._get_vendor_po(int(po_id))
+        except (AccessError, MissingError):
+            return self.vendor_invoice_upload_form(
+                error='Selected purchase order is not accessible.'
+            )
+
+        # Parse amount (optional — fall back to PO total if not provided)
+        try:
+            amount_val = float(amount) if amount else po.amount_total
+        except ValueError:
+            return self.vendor_invoice_upload_form(error='Invalid amount.')
+
+        # ── Create draft vendor bill ─────────────────────────────────────
+        try:
+            bill = request.env['account.move'].sudo().create({
+                'move_type':       'in_invoice',
+                'partner_id':      partner.id,
+                'invoice_date':    invoice_date or False,
+                'ref':             invoice_ref,
+                'company_id':      po.company_id.id,
+                'currency_id':     po.currency_id.id,
+                'invoice_origin':  po.name,
+                'narration':       f'Uploaded by {request.env.user.name} via vendor portal.',
+                'invoice_line_ids': [(0, 0, {
+                    'name':       f'{po.name} — {invoice_ref}',
+                    'quantity':   1.0,
+                    'price_unit': amount_val,
+                })],
+            })
+
+            # Attach the file
+            request.env['ir.attachment'].sudo().create({
+                'name':      attachment.filename,
+                'datas':     base64.b64encode(file_bytes),
+                'res_model': 'account.move',
+                'res_id':    bill.id,
+                'mimetype':  attachment.content_type or 'application/octet-stream',
+            })
+
+            bill.message_post(
+                body=_(
+                    'Vendor invoice <strong>%s</strong> uploaded by %s via the '
+                    'vendor portal against PO <strong>%s</strong>.',
+                    invoice_ref, request.env.user.name, po.name,
+                ),
+                author_id=request.env.user.partner_id.id,
+                message_type='comment',
+            )
+            _logger.info(
+                'Vendor portal: invoice %s uploaded for PO %s by user %s',
+                invoice_ref, po.name, request.env.user.id,
+            )
+        except Exception as exc:
+            _logger.exception('Vendor invoice upload failed')
+            return self.vendor_invoice_upload_form(
+                error=f'Failed to create draft bill: {exc}'
+            )
+
+        return self.vendor_invoice_upload_form(
+            success=f'Invoice {invoice_ref} uploaded — your buyer has been notified.'
+        )
+
     @http.route('/vendor/payments', type='http', auth='user', website=True)
     def vendor_payments(self, **kwargs):
         partner = request.env.user.partner_id.commercial_partner_id
