@@ -90,6 +90,23 @@ _RESET_TOKENS_DDL = """
     )
 """
 
+_PARTNERS_DDL = """
+    CREATE TABLE IF NOT EXISTS partners (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        company       TEXT    NOT NULL,
+        contact_name  TEXT    NOT NULL,
+        email         TEXT    NOT NULL,
+        phone         TEXT,
+        country       TEXT,
+        kind          TEXT,            -- bank, freezone, chamber, agency, enterprise, other
+        clients       TEXT,            -- estimated client count: 1-50, 51-500, 500+
+        domain        TEXT,            -- desired white-label domain
+        notes         TEXT,
+        status        TEXT    DEFAULT 'pending',  -- pending, approved, rejected
+        created_at    INTEGER DEFAULT (strftime('%s','now'))
+    )
+"""
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_db()
@@ -133,6 +150,7 @@ def init_db():
                 pass
 
     conn.execute(_RESET_TOKENS_DDL)
+    conn.execute(_PARTNERS_DDL)
     conn.commit()
     conn.close()
 
@@ -673,6 +691,84 @@ async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
     db.commit()
     db.close()
     return {"ok": True, "plan": PLANS[req.plan]}
+
+# ── Partner / White-label ────────────────────────────────────────────
+class PartnerSignupReq(BaseModel):
+    company: str
+    contact_name: str
+    email: str
+    phone: str | None = None
+    country: str | None = None
+    kind: str | None = None     # bank, freezone, chamber, agency, enterprise, other
+    clients: str | None = None  # 1-50, 51-500, 500+
+    domain: str | None = None   # e.g. "erp.mybank.ae"
+    notes: str | None = None
+
+@app.post("/api/v1/partner/signup")
+def partner_signup(req: PartnerSignupReq, background_tasks: BackgroundTasks = None):
+    """Receive a white-label partner application. Public — no auth required."""
+    if not req.email.strip() or "@" not in req.email:
+        raise HTTPException(400, "Valid email required.")
+    if not req.company.strip():
+        raise HTTPException(400, "Company name required.")
+    if not req.contact_name.strip():
+        raise HTTPException(400, "Contact name required.")
+
+    db = get_db()
+    db.execute(
+        """INSERT INTO partners
+           (company, contact_name, email, phone, country, kind, clients, domain, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (req.company.strip(), req.contact_name.strip(), req.email.strip().lower(),
+         req.phone, req.country, req.kind, req.clients, req.domain, req.notes),
+    )
+    db.commit(); db.close()
+
+    # Notify admins (best-effort)
+    if background_tasks is not None and ADMIN_EMAILS:
+        subject = f"[Mumtaz] New partner application: {req.company}"
+        html = (
+            f"<h2>New partner application</h2>"
+            f"<p><strong>{req.company}</strong> ({req.kind or 'unspecified'}) — "
+            f"{req.clients or 'unknown'} clients · {req.country or 'unknown country'}</p>"
+            f"<p>Contact: {req.contact_name} &lt;{req.email}&gt; · {req.phone or 'no phone'}</p>"
+            f"<p>Desired domain: <code>{req.domain or 'not specified'}</code></p>"
+            f"<p>Notes:<br><em>{(req.notes or '').replace(chr(10), '<br>')}</em></p>"
+        )
+        for admin in ADMIN_EMAILS:
+            background_tasks.add_task(mailer.send_email, admin, subject, html)
+
+    return {"ok": True, "message": "Application received. Our team will be in touch within 2 business days."}
+
+
+@app.get("/api/v1/admin/partners")
+def admin_list_partners(auth: dict = Depends(require_admin)):
+    db = get_db()
+    rows = db.execute("""
+        SELECT id, company, contact_name, email, phone, country, kind, clients,
+               domain, notes, status, created_at
+        FROM partners
+        ORDER BY created_at DESC
+    """).fetchall()
+    db.close()
+    return {"partners": [dict(r) for r in rows]}
+
+
+class PartnerStatusReq(BaseModel):
+    status: str  # pending | approved | rejected
+
+@app.post("/api/v1/admin/partners/{partner_id}/status")
+def admin_partner_status(partner_id: int, req: PartnerStatusReq,
+                         auth: dict = Depends(require_admin)):
+    if req.status not in ("pending", "approved", "rejected"):
+        raise HTTPException(400, "Invalid status.")
+    db = get_db()
+    if not db.execute("SELECT id FROM partners WHERE id=?", (partner_id,)).fetchone():
+        db.close(); raise HTTPException(404, "Partner not found.")
+    db.execute("UPDATE partners SET status=? WHERE id=?", (req.status, partner_id))
+    db.commit(); db.close()
+    return {"ok": True, "status": req.status}
+
 
 # ── Stripe billing ───────────────────────────────────────────────────
 class CheckoutReq(BaseModel):
