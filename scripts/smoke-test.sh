@@ -95,7 +95,7 @@ signup=$(curl -sk -X POST https://app.mumtaz.digital/api/auth/signup \
     -H 'Content-Type: application/json' \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS_PW\",\"name\":\"Smoke Test\"}" \
     --max-time 15 || echo '{}')
-TOKEN=$(echo "$signup" | grep -oE '"token"\s*:\s*"[^"]+"' | head -1 | cut -d'"' -f4)
+TOKEN=$(echo "$signup" | grep -oE '"access_token"\s*:\s*"[^"]+"' | head -1 | cut -d'"' -f4)
 
 if [ -n "$TOKEN" ]; then
     pass "signup returned a token"
