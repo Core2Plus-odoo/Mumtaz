@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEO Dashboard — ZAKI</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#07070f;--surface:#0e0e1c;--card:#13131f;--border:#1f1f35;
+      --text:#e4e4f0;--muted:#6a6a8a;
+      --purple:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#60a5fa;
+    }
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+
+    /* NAV */
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;
+      border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+    .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .nav-logo .z{width:34px;height:34px;background:linear-gradient(135deg,#8b5cf6,#3b82f6);
+      border-radius:9px;display:flex;align-items:center;justify-content:center;
+      font-weight:800;font-size:17px;color:#fff}
+    .nav-logo span{font-weight:700;font-size:17px;color:var(--text)}
+    .nav-right{display:flex;align-items:center;gap:10px}
+    .badge{display:flex;align-items:center;gap:7px;padding:5px 12px;
+      background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:13px}
+    .dot{width:7px;height:7px;background:var(--green);border-radius:50%;
+      animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .back-btn{color:var(--muted);text-decoration:none;font-size:13px;
+      padding:5px 11px;border:1px solid var(--border);border-radius:8px;
+      display:flex;align-items:center;gap:5px;transition:.2s}
+    .back-btn:hover{color:var(--text);border-color:var(--purple)}
+
+    /* MAIN */
+    .main{padding:24px;max-width:1300px;margin:0 auto}
+
+    /* COMPANY BANNER */
+    .company-banner{
+      background:linear-gradient(135deg,#1a0a2e 0%,#0a1628 60%,#0a1a28 100%);
+      border:1px solid #2a1a4a;border-radius:16px;padding:22px 28px;
+      margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;
+      position:relative;overflow:hidden}
+    .company-banner::before{content:'';position:absolute;top:-60px;right:-60px;
+      width:220px;height:220px;
+      background:radial-gradient(circle,rgba(139,92,246,.12) 0%,transparent 70%)}
+    .co-name{font-size:22px;font-weight:700;margin-bottom:3px}
+    .co-sub{font-size:13px;color:var(--muted)}
+    .co-website{color:var(--purple);text-decoration:none;font-size:13px;margin-top:5px;display:inline-block}
+    .co-meta{display:flex;gap:28px;text-align:right;font-size:13px}
+    .co-meta label{display:block;font-size:10px;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+
+    /* SECTION LABEL */
+    .sec-label{font-size:11px;font-weight:600;text-transform:uppercase;
+      letter-spacing:.09em;color:var(--muted);margin-bottom:14px;
+      display:flex;align-items:center;gap:8px}
+    .sec-label::before{content:'';width:3px;height:13px;background:var(--purple);
+      border-radius:2px;display:inline-block}
+
+    /* KPI GRID */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:13px;
+      padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+    .kpi:hover{border-color:var(--purple)}
+    .kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+      background:var(--accent,var(--purple));opacity:.55}
+    .kpi-icon{font-size:20px;margin-bottom:10px}
+    .kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+      color:var(--muted);margin-bottom:8px}
+    .kpi-val{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
+    .kpi-sub{font-size:11px;color:var(--muted)}
+
+    /* SKELETON */
+    .sk{background:linear-gradient(90deg,var(--surface) 25%,var(--card) 50%,var(--surface) 75%);
+      background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    /* OVERDUE ALERT */
+    .alert{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);
+      border-radius:13px;padding:14px 18px;margin-bottom:22px;
+      display:flex;align-items:center;gap:14px}
+    .alert-icon{width:34px;height:34px;background:rgba(239,68,68,.15);
+      border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .alert h4{font-size:13px;font-weight:600;color:#fca5a5;margin-bottom:1px}
+    .alert p{font-size:11px;color:var(--muted)}
+    .alert-amt{margin-left:auto;font-size:19px;font-weight:700;color:var(--red)}
+
+    @media(max-width:860px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.co-meta{display:none}}
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-logo" href="/"><div class="z">Z</div><span>ZAKI</span></a>
+  <div class="nav-right">
+    <div class="badge"><div class="dot"></div><span id="nav-co">Loading…</span></div>
+    <a href="/" class="back-btn">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- Company Banner -->
+  <div class="company-banner">
+    <div>
+      <div id="co-name-sk" class="sk" style="width:180px;height:26px;margin-bottom:8px"></div>
+      <div class="co-name" id="co-name" style="display:none"></div>
+      <div class="co-sub" id="co-email"></div>
+      <a class="co-website" id="co-website" target="_blank"></a>
+    </div>
+    <div class="co-meta">
+      <div><label>Year</label><span id="meta-year"></span></div>
+      <div><label>Currency</label><span id="meta-cur">—</span></div>
+      <div><label>Updated</label><span id="meta-ts"></span></div>
+    </div>
+  </div>
+
+  <!-- Financial KPIs -->
+  <div class="sec-label">Financial Overview — <span id="fin-year"></span></div>
+  <div class="kpi-grid" id="kpi-grid">
+    <!-- skeleton -->
+    <div class="kpi"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin-bottom:10px"></div><div class="sk" style="height:11px;width:80px;margin-bottom:8px"></div><div class="sk" style="height:28px;width:120px;margin-bottom:6px"></div><div class="sk" style="height:11px;width:70px"></div></div>
+    <div class="kpi"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin-bottom:10px"></div><div class="sk" style="height:11px;width:80px;margin-bottom:8px"></div><div class="sk" style="height:28px;width:120px;margin-bottom:6px"></div><div class="sk" style="height:11px;width:70px"></div></div>
+    <div class="kpi"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin-bottom:10px"></div><div class="sk" style="height:11px;width:80px;margin-bottom:8px"></div><div class="sk" style="height:28px;width:120px;margin-bottom:6px"></div><div class="sk" style="height:11px;width:70px"></div></div>
+    <div class="kpi"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin-bottom:10px"></div><div class="sk" style="height:11px;width:80px;margin-bottom:8px"></div><div class="sk" style="height:28px;width:120px;margin-bottom:6px"></div><div class="sk" style="height:11px;width:70px"></div></div>
+  </div>
+
+  <!-- Overdue alert (hidden until data loads) -->
+  <div class="alert" id="overdue-alert" style="display:none">
+    <div class="alert-icon">⚠️</div>
+    <div><h4 id="overdue-title"></h4><p>Unpaid invoices require attention</p></div>
+    <div class="alert-amt" id="overdue-amt"></div>
+  </div>
+
+  <!-- Placeholder for next segments -->
+  <div id="charts-section"></div>
+  <div id="seo-section"></div>
+
+</div>
+
+<script>
+const year = new Date().getFullYear();
+document.getElementById('meta-year').textContent = year;
+document.getElementById('fin-year').textContent = year;
+document.getElementById('meta-ts').textContent = new Date().toLocaleTimeString();
+
+function fmt(n, cur = 'AED') {
+  if (n >= 1e6) return `${cur} ${(n/1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${cur} ${(n/1e3).toFixed(0)}K`;
+  return `${cur} ${Math.round(n).toLocaleString()}`;
+}
+
+/* Company */
+async function loadCompany() {
+  try {
+    const r = await fetch('/api/company');
+    if (!r.ok) return;
+    const co = await r.json();
+    document.getElementById('co-name-sk').style.display = 'none';
+    const el = document.getElementById('co-name');
+    el.style.display = 'block';
+    el.textContent = co.name || 'Your Company';
+    document.getElementById('nav-co').textContent = co.name || 'Company';
+    if (co.email) document.getElementById('co-email').textContent = co.email;
+    if (co.website) {
+      const ws = co.website.startsWith('http') ? co.website : 'https://' + co.website;
+      window._companyWebsite = ws;
+      const a = document.getElementById('co-website');
+      a.textContent = co.website;
+      a.href = ws;
+    }
+  } catch(e) {}
+}
+
+/* KPIs */
+async function loadFinancials() {
+  try {
+    const r = await fetch('/api/financials');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    document.getElementById('meta-cur').textContent = d.currency;
+    window._finData = d;
+    const margin = d.totalRevenue > 0 ? ((d.netIncome / d.totalRevenue)*100).toFixed(1) : 0;
+    const kpis = [
+      { icon:'💰', label:'Revenue YTD',     val:fmt(d.totalRevenue,d.currency),  sub:`${d.invoiceCount} invoices`,                          accent:'#10b981' },
+      { icon:'📤', label:'Expenses YTD',    val:fmt(d.totalExpenses,d.currency), sub:`${d.billCount} bills`,                                accent:'#ef4444' },
+      { icon:d.netIncome>=0?'📈':'📉', label:'Net Income', val:fmt(d.netIncome,d.currency), sub:`${margin}% net margin`,                   accent:d.netIncome>=0?'#8b5cf6':'#ef4444' },
+      { icon:'⏳', label:'Unpaid Invoices', val:fmt(d.unpaidAmount,d.currency),  sub:`${d.unpaidCount} outstanding`,                       accent:d.unpaidCount>0?'#f59e0b':'#10b981' },
+    ];
+    document.getElementById('kpi-grid').innerHTML = kpis.map(k=>`
+      <div class="kpi" style="--accent:${k.accent}">
+        <div class="kpi-icon">${k.icon}</div>
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-val">${k.val}</div>
+        <div class="kpi-sub">${k.sub}</div>
+      </div>`).join('');
+    if (d.unpaidCount > 0) {
+      document.getElementById('overdue-alert').style.display = 'flex';
+      document.getElementById('overdue-title').textContent = `${d.unpaidCount} Unpaid Invoice${d.unpaidCount>1?'s':''}`;
+      document.getElementById('overdue-amt').textContent = fmt(d.unpaidAmount, d.currency);
+    }
+    renderCharts(d);
+  } catch(e) {
+    document.getElementById('kpi-grid').innerHTML = `<div style="grid-column:1/-1;color:var(--red);font-size:13px;padding:10px">Failed to load financial data.</div>`;
+  }
+}
+
+/* Charts placeholder — will be expanded in next segment */
+function renderCharts(d) {
+  document.getElementById('charts-section').innerHTML = `<p style="color:var(--muted);font-size:12px;margin-bottom:24px">Charts loading… (next segment)</p>`;
+}
+
+async function init() {
+  await loadCompany();
+  await loadFinancials();
+}
+init();
+</script>
+</body>
+</html>

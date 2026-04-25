@@ -163,6 +163,153 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
   }
 });
 
+/* ── Company Info ───────────────────────────────────────────────── */
+app.get('/api/company', requireAuth, async (req, res) => {
+  const conn = req.session.odooConn;
+  const { searchRead } = require('./odoo/client');
+  try {
+    const rows = await searchRead(conn, 'res.company', [],
+      ['name', 'website', 'email', 'phone', 'street', 'city', 'country_id'],
+      { limit: 1 }
+    );
+    res.json(rows[0] || {});
+  } catch (err) {
+    console.error('[Company]', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+/* ── Financial KPIs ─────────────────────────────────────────────── */
+app.get('/api/financials', requireAuth, async (req, res) => {
+  const conn = req.session.odooConn;
+  const { searchRead } = require('./odoo/client');
+  const year = new Date().getFullYear();
+  const startOfYear = `${year}-01-01`;
+
+  try {
+    const [invoices, bills] = await Promise.all([
+      searchRead(conn, 'account.move',
+        [['move_type', '=', 'out_invoice'], ['state', '=', 'posted'], ['invoice_date', '>=', startOfYear]],
+        ['name', 'invoice_date', 'amount_total', 'currency_id', 'partner_id', 'payment_state'],
+        { limit: 1000, order: 'invoice_date desc' }
+      ),
+      searchRead(conn, 'account.move',
+        [['move_type', '=', 'in_invoice'], ['state', '=', 'posted'], ['invoice_date', '>=', startOfYear]],
+        ['name', 'invoice_date', 'amount_total', 'currency_id', 'partner_id'],
+        { limit: 1000, order: 'invoice_date desc' }
+      ),
+    ]);
+
+    const monthly = {};
+    for (let m = 1; m <= 12; m++) monthly[m] = { revenue: 0, expenses: 0 };
+
+    let totalRevenue = 0, totalExpenses = 0, unpaidCount = 0, unpaidAmount = 0;
+    const customerMap = {};
+
+    for (const inv of invoices) {
+      const m = new Date(inv.invoice_date || Date.now()).getMonth() + 1;
+      monthly[m].revenue += inv.amount_total || 0;
+      totalRevenue += inv.amount_total || 0;
+      if (inv.payment_state === 'not_paid' || inv.payment_state === 'partial') {
+        unpaidCount++;
+        unpaidAmount += inv.amount_total || 0;
+      }
+      const cust = inv.partner_id ? inv.partner_id[1] : 'Unknown';
+      customerMap[cust] = (customerMap[cust] || 0) + (inv.amount_total || 0);
+    }
+
+    for (const bill of bills) {
+      const m = new Date(bill.invoice_date || Date.now()).getMonth() + 1;
+      monthly[m].expenses += bill.amount_total || 0;
+      totalExpenses += bill.amount_total || 0;
+    }
+
+    const topCustomers = Object.entries(customerMap)
+      .sort((a, b) => b[1] - a[1]).slice(0, 5)
+      .map(([name, amount]) => ({ name, amount }));
+
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const chartData = months.map((month, i) => ({
+      month,
+      revenue:  Math.round(monthly[i + 1].revenue),
+      expenses: Math.round(monthly[i + 1].expenses),
+    }));
+
+    const currency = invoices[0]?.currency_id?.[1] || bills[0]?.currency_id?.[1] || 'AED';
+
+    res.json({
+      totalRevenue:  Math.round(totalRevenue),
+      totalExpenses: Math.round(totalExpenses),
+      netIncome:     Math.round(totalRevenue - totalExpenses),
+      invoiceCount:  invoices.length,
+      billCount:     bills.length,
+      unpaidCount,
+      unpaidAmount:  Math.round(unpaidAmount),
+      topCustomers,
+      chartData,
+      currency,
+      year,
+    });
+  } catch (err) {
+    console.error('[Financials]', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+/* ── SEO / PageSpeed Analysis ───────────────────────────────────── */
+app.get('/api/seo', requireAuth, async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'URL required' });
+
+  const https = require('https');
+
+  function fetchPS(strategy) {
+    return new Promise((resolve, reject) => {
+      const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed` +
+        `?url=${encodeURIComponent(url)}&strategy=${strategy}` +
+        `&category=performance&category=seo&category=accessibility&category=best-practices`;
+      https.get(endpoint, (r) => {
+        let raw = '';
+        r.on('data', d => raw += d);
+        r.on('end', () => {
+          try { resolve(JSON.parse(raw)); }
+          catch { reject(new Error('Invalid response from PageSpeed')); }
+        });
+      }).on('error', reject);
+    });
+  }
+
+  function extract(result) {
+    const cats   = result.lighthouseResult?.categories || {};
+    const audits = result.lighthouseResult?.audits || {};
+    return {
+      performance:   Math.round((cats.performance?.score   || 0) * 100),
+      seo:           Math.round((cats.seo?.score           || 0) * 100),
+      accessibility: Math.round((cats.accessibility?.score || 0) * 100),
+      bestPractices: Math.round((cats['best-practices']?.score || 0) * 100),
+      lcp:  audits['largest-contentful-paint']?.displayValue || 'N/A',
+      cls:  audits['cumulative-layout-shift']?.displayValue  || 'N/A',
+      tbt:  audits['total-blocking-time']?.displayValue      || 'N/A',
+      fcp:  audits['first-contentful-paint']?.displayValue   || 'N/A',
+      ttfb: audits['server-response-time']?.displayValue     || 'N/A',
+      si:   audits['speed-index']?.displayValue              || 'N/A',
+    };
+  }
+
+  try {
+    const [mobile, desktop] = await Promise.all([fetchPS('mobile'), fetchPS('desktop')]);
+    res.json({ url, mobile: extract(mobile), desktop: extract(desktop) });
+  } catch (err) {
+    console.error('[SEO]', err.message);
+    res.status(502).json({ error: err.message });
+  }
+});
+
+/* ── CEO Dashboard page ─────────────────────────────────────────── */
+app.get('/ceo', requireAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ceo.html'));
+});
+
 /* ── Health Check ───────────────────────────────────────────────── */
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'zaki-ai' }));
 
