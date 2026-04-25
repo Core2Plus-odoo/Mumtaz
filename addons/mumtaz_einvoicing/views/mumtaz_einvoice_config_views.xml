@@ -93,8 +93,10 @@
                         </div>
                         <group name="ksa_left">
                             <field name="zatca_environment" widget="radio"/>
+                            <field name="zatca_vat_number"
+                                   placeholder="300XXXXXXXXX003"/>
                             <field name="tax_registration_number"
-                                   string="VAT Registration Number"
+                                   string="Tax Registration Number"
                                    placeholder="300XXXXXXXXX003"/>
                         </group>
                         <group name="ksa_right">

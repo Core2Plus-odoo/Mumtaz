@@ -299,12 +299,11 @@ class AccountMove(models.Model):
             raise UserError(_('ZATCA submission failed: %s') % str(exc))
 
         if result.get('success'):
-            # Also generate the QR for printing
-            from ..services.uae_vat_service import UAEVATService
-            qr_svc = UAEVATService(config)
+            # Generate the ZATCA QR (TLV-encoded base64) for printing
             try:
-                qr_string = qr_svc.generate_qr_tlv(self)
+                qr_string = svc.build_qr(self)
             except Exception:
+                _logger.exception('ZATCA QR generation failed for %s', self.name)
                 qr_string = False
 
             self.write({

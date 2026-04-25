@@ -62,12 +62,20 @@ class MumtazEInvoiceConfig(models.Model):
     # -------------------------------------------------------------------------
     zatca_environment = fields.Selection(
         selection=[
-            ('sandbox', 'Sandbox'),
-            ('production', 'Production'),
+            ('sandbox',    'Sandbox (developer-portal)'),
+            ('simulation', 'Simulation (mid-stage testing)'),
+            ('production', 'Production (core)'),
         ],
         string='ZATCA Environment',
         default='sandbox',
-        help='Use Sandbox for testing; switch to Production for live submissions.',
+        help='Sandbox for early dev, Simulation for end-to-end tests with '
+             'ZATCA Phase 2 cleared invoices, Production for live submissions.',
+    )
+
+    zatca_vat_number = fields.Char(
+        string='ZATCA VAT Number',
+        help='15-digit Saudi VAT registration number (overrides company VAT '
+             'for ZATCA submissions if both are set).',
     )
 
     zatca_certificate = fields.Text(

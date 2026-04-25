@@ -19,8 +19,10 @@ _logger = logging.getLogger(__name__)
 class ZATCAService:
     """Service class for KSA ZATCA Phase 2 e-invoicing operations."""
 
-    SANDBOX_URL = 'https://gw-fatoorah.zatca.gov.sa/e-invoicing/developer-portal'
-    PROD_URL = 'https://gw-fatoorah.zatca.gov.sa/e-invoicing/core'
+    # Correct ZATCA gateway is gw-fatoora (singular, no 'h').
+    SANDBOX_URL    = 'https://gw-fatoora.zatca.gov.sa/e-invoicing/developer-portal'
+    SIMULATION_URL = 'https://gw-fatoora.zatca.gov.sa/e-invoicing/simulation'
+    PROD_URL       = 'https://gw-fatoora.zatca.gov.sa/e-invoicing/core'
 
     def __init__(self, config):
         """
@@ -28,11 +30,12 @@ class ZATCAService:
             config: ``mumtaz.einvoice.config`` Odoo recordset for the company.
         """
         self.config = config
-        self.base_url = (
-            self.SANDBOX_URL
-            if config.zatca_environment == 'sandbox'
-            else self.PROD_URL
-        )
+        env = (config.zatca_environment or 'sandbox').lower()
+        self.base_url = {
+            'sandbox':    self.SANDBOX_URL,
+            'simulation': self.SIMULATION_URL,
+            'production': self.PROD_URL,
+        }.get(env, self.SANDBOX_URL)
 
     # -------------------------------------------------------------------------
     # XML generation
@@ -89,6 +92,12 @@ class ZATCAService:
             <cbc:EmbeddedDocumentBinaryObject mimeCode="text/plain">
                 {self._get_pih_hash(invoice)}
             </cbc:EmbeddedDocumentBinaryObject>
+        </cac:Attachment>
+    </cac:AdditionalDocumentReference>
+    <cac:AdditionalDocumentReference>
+        <cbc:ID>QR</cbc:ID>
+        <cac:Attachment>
+            <cbc:EmbeddedDocumentBinaryObject mimeCode="text/plain">{self.build_qr(invoice)}</cbc:EmbeddedDocumentBinaryObject>
         </cac:Attachment>
     </cac:AdditionalDocumentReference>
     <cac:AccountingSupplierParty>
@@ -274,6 +283,51 @@ class ZATCAService:
             .replace('"', '&quot;')
             .replace("'", '&apos;')
         )
+
+    # -------------------------------------------------------------------------
+    # QR code (TLV-encoded base64) — ZATCA Phase 1 spec
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _tlv(tag: int, value) -> bytes:
+        """Encode a single Tag-Length-Value tuple per ZATCA QR spec."""
+        if isinstance(value, str):
+            value = value.encode('utf-8')
+        if len(value) > 255:
+            raise ValueError(f"TLV value too long for tag {tag}: {len(value)} bytes")
+        return bytes([tag, len(value)]) + value
+
+    def build_qr(self, invoice) -> str:
+        """Return a base64 TLV string suitable for a ZATCA QR code.
+
+        Tags (per ZATCA Phase 1 spec):
+          1 = seller name
+          2 = VAT registration number
+          3 = invoice timestamp (ISO 8601 UTC)
+          4 = invoice total (with VAT)
+          5 = VAT amount
+        Phase 2 adds 6 (XML hash), 7 (digital signature), 8 (public key).
+        """
+        seller_name = self.config.company_id.name or ''
+        vat_number  = self.config.zatca_vat_number or self.config.company_id.vat or ''
+
+        ts = invoice.invoice_date or datetime.now().date()
+        # Compose ISO 8601 UTC timestamp; ZATCA accepts either date+time or full ISO.
+        if hasattr(ts, 'isoformat'):
+            timestamp = f"{ts.isoformat()}T00:00:00Z"
+        else:
+            timestamp = str(ts)
+
+        total = f"{invoice.amount_total:.2f}" if invoice.amount_total is not None else '0.00'
+        vat   = f"{invoice.amount_tax:.2f}"   if invoice.amount_tax   is not None else '0.00'
+
+        payload = (
+            self._tlv(1, seller_name) +
+            self._tlv(2, vat_number)  +
+            self._tlv(3, timestamp)   +
+            self._tlv(4, total)       +
+            self._tlv(5, vat)
+        )
+        return base64.b64encode(payload).decode('ascii')
 
     # -------------------------------------------------------------------------
     # Hash / signing helpers
