@@ -1307,19 +1307,39 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
     <!-- ── CASH FLOW ── -->
     <div class="panel" id="panel-cashflow">
       <div class="panel-header">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
           <div>
             <div class="panel-title">Cash <em>Flow</em></div>
-            <div class="panel-desc">90-day projection and liquidity analysis</div>
+            <div class="panel-desc">13-week rolling forecast + liquidity analysis</div>
           </div>
-          <button class="btn-secondary" onclick="loadCashflow(true)">↻ Refresh</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-secondary" style="font-size:.78rem" onclick="renderCashflowForecast()">↻ Update Forecast</button>
+            <button class="btn-primary" style="font-size:.78rem" onclick="loadCashflow(true)">✦ AI Analysis</button>
+          </div>
         </div>
       </div>
-      <div id="cashflow-kpis" class="kpi-grid" style="margin-bottom:20px"></div>
-      <div class="card" id="cashflow-content" style="min-height:200px">
-        <div class="card-title">90-Day Projection</div>
+      <div id="cashflow-kpis" class="kpi-grid" style="margin-bottom:18px"></div>
+      <!-- 13-week data-driven forecast -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">13-Week Rolling Forecast <span style="font-size:.72rem;font-weight:400;color:var(--text-3)">based on historical averages</span></div>
+        <div id="cashflow-chart" style="margin-bottom:12px"></div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse" id="cashflow-table">
+            <thead><tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:7px 10px;font-size:.72rem;color:var(--text-3);font-weight:600">WEEK</th>
+              <th style="text-align:right;padding:7px 10px;font-size:.72rem;color:var(--text-3);font-weight:600">INFLOWS</th>
+              <th style="text-align:right;padding:7px 10px;font-size:.72rem;color:var(--text-3);font-weight:600">OUTFLOWS</th>
+              <th style="text-align:right;padding:7px 10px;font-size:.72rem;color:var(--text-3);font-weight:600">NET</th>
+              <th style="text-align:right;padding:7px 10px;font-size:.72rem;color:var(--text-3);font-weight:600">CUMULATIVE CASH</th>
+            </tr></thead>
+            <tbody id="cashflow-rows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" id="cashflow-content" style="display:none">
+        <div class="card-title">AI Analysis</div>
         <div id="cashflow-text" style="color:var(--text-3);font-size:.85rem">
-          <span class="spinner"></span> Building cash flow projection…
+          <span class="spinner"></span> Building AI cash flow analysis…
         </div>
       </div>
     </div>
@@ -1428,6 +1448,30 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div id="books-summary" style="margin-bottom:14px"></div>
       <div id="books-issues">
         <div style="color:var(--text-3);font-size:.85rem"><span class="spinner"></span> Scanning your books…</div>
+      </div>
+
+      <!-- AR Aging Tracker -->
+      <div class="card" style="margin-top:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin:0">AR Aging Tracker</div>
+          <button class="btn-primary" style="font-size:.78rem" onclick="openArForm()">+ Add Invoice</button>
+        </div>
+        <div id="ar-aging-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px"></div>
+        <div id="ar-aging-list" style="font-size:.85rem;color:var(--text-3)">No outstanding invoices tracked. Click + Add Invoice to start.</div>
+        <div id="ar-form" class="hide" style="background:var(--bg-1);border:1px solid var(--border-2);border-radius:10px;padding:16px;margin-top:14px">
+          <div style="font-weight:600;margin-bottom:12px;font-size:.88rem">New Invoice</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Customer / Client</label><input id="ar-customer" type="text" placeholder="Acme Corp" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%"></div>
+            <div class="field"><label>Invoice Amount</label><input id="ar-amount" type="number" placeholder="5000" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%"></div>
+            <div class="field"><label>Invoice Date</label><input id="ar-invoice-date" type="date" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%"></div>
+            <div class="field"><label>Due Date</label><input id="ar-due-date" type="date" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%"></div>
+            <div class="field" style="grid-column:1/-1"><label>Reference / Notes</label><input id="ar-ref" type="text" placeholder="INV-001" style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-primary" style="font-size:.82rem" onclick="saveArEntry()">Save Invoice</button>
+            <button class="btn-outline" style="font-size:.82rem" onclick="document.getElementById('ar-form').classList.add('hide')">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2785,7 +2829,8 @@ const S = {
   transactions: [],
   prefs: { readAloud: false, autoPlayBriefing: true },
   goals: [],  // [{id,label,metric,direction,target,unit,enabled}]
-  budgets: {},  // { [category]: monthlyAmount }
+  budgets: {},     // { [category]: monthlyAmount }
+  ar_entries: [],  // [{id,customer,amount,invoiceDate,dueDate,ref,collected}]
   history: { feasibility:[], scenario:[] },  // saved runs
   // FX table: 1 unit of KEY = N units of AED (reporting baseline). Edit in Settings.
   fx: { AED:1, USD:3.6725, SAR:0.9793, OMR:9.5429, QAR:1.0086, KWD:11.97, BHD:9.7415,
@@ -2848,6 +2893,7 @@ function load() {
       if (!S.history.feasibility) S.history.feasibility = []
       if (!S.history.scenario) S.history.scenario = []
       if (!S.budgets) S.budgets = {}
+      if (!S.ar_entries) S.ar_entries = []
       if (!S.fx || typeof S.fx !== 'object') {
         S.fx = { AED:1, USD:3.6725, SAR:0.9793, OMR:9.5429, QAR:1.0086, KWD:11.97, BHD:9.7415,
                  EGP:0.0747, PKR:0.0132, INR:0.0440, EUR:3.99, GBP:4.65 }
@@ -3393,7 +3439,7 @@ function showPanel(id) {
   if (id === 'insights' && !S._cache.insights) loadInsights()
   if (id === 'seo' && !S._cache.seo) loadSeo()
   else if (id === 'seo' && S._cache.seo) renderSeo(S._cache.seo)
-  if (id === 'books') loadBooks()
+  if (id === 'books') { loadBooks(); renderArAging() }
   if (id === 'feasibility') {
     document.getElementById('feas-currency').textContent = S.co.currency
     renderFeasibilityHistory()
@@ -3409,7 +3455,7 @@ function showPanel(id) {
     else renderInvestKB()
   }
   if (id === 'market' && !S._cache.market) loadMarket()
-  if (id === 'cashflow' && !S._cache.cashflow) loadCashflow()
+  if (id === 'cashflow') { renderCashflowForecast(); if (!S._cache.cashflow) loadCashflow() }
   if (id === 'board' && !S._cache.board) loadBoard()
   if (id === 'settings') { populateSettings(); renderZakiServerStatus() }
   if (id === 'ledger') renderLedger()
@@ -4616,6 +4662,116 @@ function renderVendors() {
   const cEl = document.getElementById('customer-table')
   if (cEl) cEl.innerHTML = renderTable(customers, 'income')
   renderRecurring()
+}
+
+// ═══════════════════════════════════════════
+// AR AGING TRACKER
+// ═══════════════════════════════════════════
+function openArForm() {
+  const f = document.getElementById('ar-form')
+  if (!f) return
+  f.classList.remove('hide')
+  const today = new Date().toISOString().split('T')[0]
+  const due = new Date(Date.now() + 30*86400000).toISOString().split('T')[0]
+  document.getElementById('ar-customer').value = ''
+  document.getElementById('ar-amount').value = ''
+  document.getElementById('ar-invoice-date').value = today
+  document.getElementById('ar-due-date').value = due
+  document.getElementById('ar-ref').value = ''
+  document.getElementById('ar-customer').focus()
+}
+
+function saveArEntry() {
+  const customer = document.getElementById('ar-customer').value.trim()
+  const amount = parseFloat(document.getElementById('ar-amount').value) || 0
+  const invoiceDate = document.getElementById('ar-invoice-date').value
+  const dueDate = document.getElementById('ar-due-date').value
+  const ref = document.getElementById('ar-ref').value.trim()
+  if (!customer || !amount) { showToast('Enter customer name and amount', 'error'); return }
+  if (!S.ar_entries) S.ar_entries = []
+  S.ar_entries.push({ id: Date.now().toString(36), customer, amount, currency: S.co.currency||'AED', invoiceDate, dueDate, ref, collected: false })
+  save()
+  document.getElementById('ar-form').classList.add('hide')
+  renderArAging()
+  showToast('Invoice added')
+}
+
+function collectArEntry(id) {
+  const entry = (S.ar_entries||[]).find(e => e.id === id)
+  if (entry) { entry.collected = true; save(); renderArAging() }
+}
+
+function deleteArEntry(id) {
+  S.ar_entries = (S.ar_entries||[]).filter(e => e.id !== id)
+  save(); renderArAging()
+}
+
+function computeArAging() {
+  const today = new Date()
+  const open = (S.ar_entries||[]).filter(e => !e.collected)
+  return open.map(e => {
+    const dueDate = new Date(e.dueDate)
+    const daysOverdue = Math.floor((today - dueDate) / 86400000)
+    let bucket = '0–30d'
+    if (daysOverdue > 90) bucket = '90+ days'
+    else if (daysOverdue > 60) bucket = '61–90d'
+    else if (daysOverdue > 30) bucket = '31–60d'
+    else if (daysOverdue > 0) bucket = '0–30d overdue'
+    else bucket = 'Current'
+    return { ...e, daysOverdue, bucket }
+  })
+}
+
+function renderArAging() {
+  const cur = S.co.currency || 'AED'
+  const entries = computeArAging()
+  const all = S.ar_entries || []
+  const totalOutstanding = entries.reduce((s,e) => s + fxConvert(Number(e.amount), e.currency||cur, cur), 0)
+  const overdue = entries.filter(e => e.daysOverdue > 0).reduce((s,e) => s + fxConvert(Number(e.amount), e.currency||cur, cur), 0)
+  const collected = all.filter(e => e.collected).reduce((s,e) => s + fxConvert(Number(e.amount), e.currency||cur, cur), 0)
+  const bucketMap = {}
+  entries.forEach(e => { bucketMap[e.bucket] = (bucketMap[e.bucket]||0) + fxConvert(Number(e.amount), e.currency||cur, cur) })
+
+  const sumEl = document.getElementById('ar-aging-summary')
+  if (sumEl) sumEl.innerHTML =
+    kpiCard('Outstanding', `${cur} ${fmt(totalOutstanding)}`, `${entries.length} invoices`, '') +
+    kpiCard('Overdue', `${cur} ${fmt(overdue)}`, 'Past due date', overdue > 0 ? 'red' : 'green') +
+    kpiCard('Collected', `${cur} ${fmt(collected)}`, `${all.filter(e=>e.collected).length} invoices`, 'green') +
+    kpiCard('Current', `${cur} ${fmt(totalOutstanding - overdue)}`, 'Not yet due', 'green')
+
+  const listEl = document.getElementById('ar-aging-list')
+  if (!listEl) return
+  if (entries.length === 0) {
+    listEl.innerHTML = `<div style="color:var(--text-3);font-size:.85rem">No outstanding invoices. ${all.length > 0 ? all.length + ' invoice(s) already collected.' : 'Click + Add Invoice to track receivables.'}</div>`
+    return
+  }
+  const bucketOrder = ['Current','0–30d overdue','31–60d','61–90d','90+ days']
+  const grouped = {}
+  entries.forEach(e => { if (!grouped[e.bucket]) grouped[e.bucket] = []; grouped[e.bucket].push(e) })
+  listEl.innerHTML = bucketOrder.filter(b => grouped[b]).map(bucket => {
+    const items = grouped[bucket]
+    const bucketTotal = items.reduce((s,e) => s + fxConvert(Number(e.amount), e.currency||cur, cur), 0)
+    const isOverdue = bucket !== 'Current'
+    const color = bucket === '90+ days' ? 'var(--red)' : bucket === '61–90d' ? 'var(--amber)' : isOverdue ? 'var(--amber)' : 'var(--green)'
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:2px solid var(--border);margin-bottom:6px">
+        <span style="font-size:.78rem;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.04em">${bucket}</span>
+        <span style="font-weight:700;font-variant-numeric:tabular-nums;color:${color}">${cur} ${fmt(bucketTotal)}</span>
+      </div>
+      ${items.map(e => `
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+          <div style="flex:1;min-width:120px">
+            <div style="font-size:.84rem;font-weight:600">${e.customer}</div>
+            <div style="font-size:.73rem;color:var(--text-3)">${e.ref||'—'} · Due ${e.dueDate}${e.daysOverdue>0?' · '+e.daysOverdue+'d overdue':''}</div>
+          </div>
+          <div style="font-weight:600;font-variant-numeric:tabular-nums;color:${isOverdue?'var(--red)':'var(--text)'}">${e.currency||cur} ${fmt(e.amount)}</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-card-action" onclick="collectArEntry('${e.id}')" style="color:var(--green)">✓ Collected</button>
+            <button class="btn-card-action" onclick="deleteArEntry('${e.id}')" style="color:var(--red)">×</button>
+          </div>
+        </div>`).join('')}
+    </div>`
+  }).join('')
 }
 
 // ═══════════════════════════════════════════
@@ -6204,8 +6360,83 @@ async function runCustomScenario() {
 }
 
 // ═══════════════════════════════════════════
-// CASH FLOW
+// CASH FLOW — 13-WEEK DATA-DRIVEN FORECAST
 // ═══════════════════════════════════════════
+function renderCashflowForecast() {
+  const txs = S.transactions || []
+  const reporting = S.co.currency || 'AED'
+  computeFin()
+  const f = S.fin
+
+  // Build weekly averages from last 12 weeks of historical data
+  const now = new Date()
+  const twelveWeeksAgo = new Date(now - 84 * 86400000)
+  const recentTxs = txs.filter(t => new Date(t.date) >= twelveWeeksAgo)
+  const weeklyIn = recentTxs.filter(t => t.type === 'income').reduce((s,t) => s + fxConvert(Number(t.amount), t.currency||reporting, reporting), 0) / 12
+  const weeklyOut = recentTxs.filter(t => t.type === 'expense').reduce((s,t) => s + fxConvert(Number(t.amount), t.currency||reporting, reporting), 0) / 12
+
+  // Fallback to monthly fin data / 4 if no recent transactions
+  const avgWeekIn = weeklyIn || f.rev / 4
+  const avgWeekOut = weeklyOut || f.exp / 4
+  let cumCash = f.cash
+
+  // KPIs
+  const net13 = (avgWeekIn - avgWeekOut) * 13
+  const endCash = cumCash + net13
+  const kpiEl = document.getElementById('cashflow-kpis')
+  if (kpiEl) kpiEl.innerHTML =
+    kpiCard('Current Cash', curr(f.cash), 'Starting balance', '') +
+    kpiCard('Weekly Inflow (avg)', curr(avgWeekIn), 'From transaction history', 'green') +
+    kpiCard('Weekly Outflow (avg)', curr(avgWeekOut), 'From transaction history', '') +
+    kpiCard('Projected Cash (13w)', curr(endCash), net13 >= 0 ? '▲ Cash positive' : '▼ Cash burn', endCash > 0 ? 'green' : 'red')
+
+  // Chart: 13 bars
+  const chartEl = document.getElementById('cashflow-chart')
+  if (chartEl && (avgWeekIn > 0 || avgWeekOut > 0)) {
+    const weeks = Array.from({length:13}, (_,i) => {
+      const net = avgWeekIn - avgWeekOut
+      return { w: i+1, in: avgWeekIn, out: avgWeekOut, net, cum: f.cash + net * (i+1) }
+    })
+    const maxVal = Math.max(avgWeekIn, avgWeekOut, 1)
+    const bw = 16, gap = 4, groupW = bw*2+gap+10, svgW = 13*groupW + 20, svgH = 100
+    const bars = weeks.map((wk, i) => {
+      const x = 10 + i * groupW
+      const iH = Math.min(svgH-22, (wk.in / maxVal * (svgH-22))).toFixed(0)
+      const oH = Math.min(svgH-22, (wk.out / maxVal * (svgH-22))).toFixed(0)
+      return `<rect x="${x}" y="${svgH-20-iH}" width="${bw}" height="${iH}" fill="var(--green)" opacity=".7" rx="2"/>
+        <rect x="${x+bw+gap}" y="${svgH-20-oH}" width="${bw}" height="${oH}" fill="var(--red)" opacity=".7" rx="2"/>
+        <text x="${x+bw}" y="${svgH-4}" text-anchor="middle" font-size="8" fill="var(--text-3)">W${wk.w}</text>`
+    }).join('')
+    chartEl.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;max-height:110px">
+      ${bars}
+      <text x="10" y="12" font-size="9" fill="var(--green)">■ In</text>
+      <text x="38" y="12" font-size="9" fill="var(--red)">■ Out</text>
+    </svg>`
+  }
+
+  // Table rows
+  const tbody = document.getElementById('cashflow-rows')
+  if (!tbody) return
+  let runCash = f.cash
+  const rows = []
+  for (let w = 1; w <= 13; w++) {
+    const wkStart = new Date(now.getTime() + (w-1) * 7 * 86400000)
+    const wkEnd = new Date(now.getTime() + w * 7 * 86400000)
+    const label = `${wkStart.toLocaleDateString('en-GB',{month:'short',day:'numeric'})} – ${wkEnd.toLocaleDateString('en-GB',{month:'short',day:'numeric'})}`
+    const net = avgWeekIn - avgWeekOut
+    runCash += net
+    const warn = runCash < f.exp * 0.5
+    rows.push(`<tr style="border-bottom:1px solid var(--border);${w===1?'font-weight:600':''};${warn?'background:var(--danger-bg)':''}">
+      <td style="padding:7px 10px;font-size:.8rem">W${w} · ${label}</td>
+      <td style="padding:7px 10px;text-align:right;font-size:.8rem;color:var(--green);font-variant-numeric:tabular-nums">${curr(avgWeekIn)}</td>
+      <td style="padding:7px 10px;text-align:right;font-size:.8rem;color:var(--red);font-variant-numeric:tabular-nums">${curr(avgWeekOut)}</td>
+      <td style="padding:7px 10px;text-align:right;font-size:.8rem;font-weight:600;color:${net>=0?'var(--green)':'var(--red)'};font-variant-numeric:tabular-nums">${curr(net)}</td>
+      <td style="padding:7px 10px;text-align:right;font-size:.8rem;font-weight:600;color:${runCash>=0?'var(--text)':'var(--red)'};font-variant-numeric:tabular-nums">${curr(runCash)} ${warn ? '⚠' : ''}</td>
+    </tr>`)
+  }
+  tbody.innerHTML = rows.join('')
+}
+
 async function loadCashflow(force) {
   if (!force && S._cache.cashflow) return
   if (!aiReady()) {
@@ -6222,6 +6453,8 @@ async function loadCashflow(force) {
     kpiCard('Cash Runway', runway>999?'∞':runway+' days', curr(f.cash)+' available', runway>90?'green':runway>45?'amber':'red') +
     kpiCard('AR to Collect', curr(f.ar), `${curr(f.arOverdue)} overdue`, f.arOverdue>0?'amber':'')
 
+  const aiCard = document.getElementById('cashflow-content')
+  if (aiCard) aiCard.style.display = ''
   const el = document.getElementById('cashflow-text')
   el.innerHTML = '<span class="spinner"></span> Building projection…'
   try {
