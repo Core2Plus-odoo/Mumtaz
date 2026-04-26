@@ -1864,6 +1864,31 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <div id="pnl-statement"></div>
       </div>
       <div id="pnl-ai-out" class="card hide" style="font-size:.88rem;line-height:1.7"></div>
+      <!-- Break-even calculator -->
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="card-title" style="margin:0">Break-Even Calculator</div>
+          <button class="btn-secondary" style="font-size:.78rem" onclick="calcBreakeven()">↻ Calculate</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+          <div class="field">
+            <label style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em">Fixed Costs / mo</label>
+            <input id="be-fixed" type="number" placeholder="auto from ledger"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%">
+          </div>
+          <div class="field">
+            <label style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em">Variable Cost %</label>
+            <input id="be-var" type="number" placeholder="auto from ledger" min="0" max="100"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%">
+          </div>
+          <div class="field">
+            <label style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em">Avg Price / Unit (optional)</label>
+            <input id="be-price" type="number" placeholder="e.g. 1000"
+              style="background:var(--card);border:1px solid var(--border-2);border-radius:7px;padding:8px 10px;font-size:.83rem;color:var(--text);width:100%">
+          </div>
+        </div>
+        <div id="be-result" style="font-size:.85rem;color:var(--text-3)">Click Calculate — or the calculator auto-fills from your ledger.</div>
+      </div>
     </div>
 
     <!-- ── BUDGET VS ACTUAL ── -->
@@ -3035,7 +3060,7 @@ You do NOT just report numbers. You interpret them, challenge them, and give the
 | DPO (Days Payable Outstanding) | ${dpo} days | — |
 
 **Burn Rate:** ${S.co.currency} ${fmt(Math.max(0, burnRate))} / month ${burnRate > 0 ? '🔴 BURNING CASH' : '🟢 CASH POSITIVE'}
-${sectorContext(findSector(S.co.industry))}${taxContext(findTaxRules(S.co.country))}${goalsContext()}
+${sectorContext(findSector(S.co.industry))}${taxContext(findTaxRules(S.co.country))}${goalsContext()}${budgetContext()}${arContext()}
 ---
 
 ## BUSINESS CONTEXT
@@ -3461,7 +3486,7 @@ function showPanel(id) {
   if (id === 'ledger') renderLedger()
   if (id === 'budgets') renderBudgets()
   if (id === 'vendors') renderVendors()
-  if (id === 'pnl') renderPnL()
+  if (id === 'pnl') { renderPnL(); setTimeout(calcBreakeven, 50) }
   if (id === 'ifrs') loadIfrs()
   if (id === 'ratios') renderRatiosGrid()
   if (id === 'tax') loadTax()
@@ -4938,6 +4963,64 @@ In 3-4 short paragraphs: (1) headline performance, (2) what's driving margins, (
     chunk => { if (out) out.innerHTML = md(chunk) })
 }
 
+function calcBreakeven() {
+  const cur = S.co.currency || 'AED'
+  const d = buildPnLData(document.getElementById('pnl-period')?.value || '')
+  const FIXED_CATS = ['payroll','salary','salaries','wages','rent','utilities','software','subscription','insurance','lease','depreciation','amortization','accounting','legal']
+  const isFixed = cat => FIXED_CATS.some(k => (cat||'').toLowerCase().includes(k))
+
+  let autoFixed = 0, autoVar = 0
+  Object.entries({...d.cogs, ...d.opex}).forEach(([cat, amt]) => {
+    if (isFixed(cat)) autoFixed += amt
+    else autoVar += amt
+  })
+
+  const fixedInput = document.getElementById('be-fixed')
+  const varInput = document.getElementById('be-var')
+  const priceInput = document.getElementById('be-price')
+  const fixed = parseFloat(fixedInput?.value) || autoFixed
+  const varPct = parseFloat(varInput?.value) / 100 || (d.totalRev > 0 ? autoVar / d.totalRev : 0.3)
+  const price = parseFloat(priceInput?.value) || 0
+
+  // Auto-fill inputs if empty
+  if (fixedInput && !fixedInput.value) fixedInput.placeholder = `Auto: ${cur} ${fmt(autoFixed)}`
+  if (varInput && !varInput.value) varInput.placeholder = `Auto: ${(varPct*100).toFixed(0)}%`
+
+  if (1 - varPct <= 0) {
+    document.getElementById('be-result').innerHTML = `<span style="color:var(--red)">Variable cost ratio ≥ 100% — not viable. Reduce variable costs below revenue per unit.</span>`
+    return
+  }
+
+  const breakEvenRev = fixed / (1 - varPct)
+  const contributionMargin = 1 - varPct
+  const currentMarginOfSafety = d.totalRev > 0 ? ((d.totalRev - breakEvenRev) / d.totalRev * 100) : 0
+  const beUnits = price > 0 ? Math.ceil(breakEvenRev / price) : 0
+  const gapToBreakEven = breakEvenRev - d.totalRev
+  const isAbove = d.totalRev >= breakEvenRev
+
+  document.getElementById('be-result').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
+      <div class="kpi-card ${isAbove?'green':'red'}">
+        <div class="kpi-label">Break-even Revenue</div>
+        <div class="kpi-value" style="font-size:1.2rem">${cur} ${fmt(breakEvenRev)}/mo</div>
+        <div class="kpi-sub">${isAbove ? `✓ You're ${cur} ${fmt(Math.abs(gapToBreakEven))} above` : `⚠ ${cur} ${fmt(Math.abs(gapToBreakEven))} short`}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Contribution Margin</div>
+        <div class="kpi-value" style="font-size:1.2rem">${(contributionMargin*100).toFixed(1)}%</div>
+        <div class="kpi-sub">Per ${cur} of revenue</div>
+      </div>
+      <div class="kpi-card ${currentMarginOfSafety >= 20 ? 'green' : currentMarginOfSafety >= 0 ? 'amber' : 'red'}">
+        <div class="kpi-label">Margin of Safety</div>
+        <div class="kpi-value" style="font-size:1.2rem">${currentMarginOfSafety.toFixed(1)}%</div>
+        <div class="kpi-sub">${currentMarginOfSafety >= 20 ? 'Healthy buffer' : currentMarginOfSafety >= 0 ? 'Low buffer — monitor' : 'Operating at a loss'}</div>
+      </div>
+    </div>
+    ${beUnits > 0 ? `<div style="font-size:.83rem;color:var(--text-2);padding:10px;background:var(--bg-1);border-radius:8px">
+      Break-even requires <strong>${beUnits.toLocaleString()} units</strong> at ${cur} ${fmt(price)}/unit · Fixed costs: ${cur} ${fmt(fixed)}/mo · Variable ratio: ${(varPct*100).toFixed(0)}%
+    </div>` : `<div style="font-size:.82rem;color:var(--text-3);padding:8px;background:var(--bg-1);border-radius:8px">Fixed: ${cur} ${fmt(fixed)}/mo · Variable ratio: ${(varPct*100).toFixed(0)}% · Add avg price/unit to calculate unit break-even</div>`}`
+}
+
 function exportPnLCSV() {
   const sel = document.getElementById('pnl-period')
   const period = sel?.value || ''
@@ -5718,6 +5801,31 @@ function goalsContext() {
   return `\n\n## CEO GOALS — ${breached.length} BREACHED\n` +
     breached.map(g => `- ${g.label}: target ${g.direction === 'gte' ? '≥' : '≤'} ${g.target}${g.unit||''} · current ${g.value}${g.unit||''} (${g.variance>=0?'+':''}${g.variance}%)`).join('\n') +
     `\n\nLead the briefing with the most material breach. Give a concrete action to address each.`
+}
+
+function budgetContext() {
+  const budgets = S.budgets || {}
+  if (Object.keys(budgets).length === 0) return ''
+  const items = computeBudgetActual()
+  const over = items.filter(i => i.over)
+  if (!over.length) return ''
+  const cur = S.co.currency || 'AED'
+  return `\n\n## BUDGET ALERTS — ${over.length} CATEGORIES OVER BUDGET\n` +
+    over.map(i => `- ${i.cat}: budget ${cur} ${fmt(i.budget)}/mo, actual ${cur} ${fmt(i.actual)} (+${i.variance.toFixed(0)}% over)`).join('\n') +
+    `\nMention the biggest overage when relevant and suggest a corrective action.`
+}
+
+function arContext() {
+  const open = (S.ar_entries||[]).filter(e => !e.collected)
+  if (!open.length) return ''
+  const cur = S.co.currency || 'AED'
+  const today = new Date()
+  const overdue = open.filter(e => new Date(e.dueDate) < today)
+  const totalOverdue = overdue.reduce((s,e) => s + fxConvert(Number(e.amount), e.currency||cur, cur), 0)
+  if (!overdue.length) return ''
+  const oldest = overdue.sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate))[0]
+  const days = Math.floor((today - new Date(oldest.dueDate)) / 86400000)
+  return `\n\n## AR COLLECTION ALERT\n- ${overdue.length} invoice(s) overdue, total ${cur} ${fmt(totalOverdue)}\n- Oldest overdue: ${oldest.customer} — ${days} days past due (${cur} ${fmt(oldest.amount)})\nIf the CEO asks about cash, proactively mention this collection opportunity.`
 }
 
 // ═══════════════════════════════════════════
