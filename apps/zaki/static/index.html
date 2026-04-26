@@ -850,6 +850,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         Bookkeeping
       </div>
+      <div class="nav-item" onclick="showPanel('budgets')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        Budget vs Actual
+      </div>
     </div>
 
     <div class="nav-section">
@@ -865,6 +869,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       <div class="nav-item" onclick="showPanel('risks')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Risk Radar
+      </div>
+      <div class="nav-item" onclick="showPanel('vendors')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Vendors &amp; Clients
       </div>
     </div>
 
@@ -1775,6 +1783,72 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
       </div>
     </div>
 
+    <!-- ── BUDGET VS ACTUAL ── -->
+    <div class="panel" id="panel-budgets">
+      <div class="panel-header">
+        <div class="panel-title">Budget vs Actual</div>
+        <div class="panel-desc">Set monthly spending targets per category — Zaki tracks variance in real time</div>
+      </div>
+      <div id="budget-totals" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div class="card-title" style="margin:0">This Month's Expenses vs Budget</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-secondary" style="font-size:.78rem" onclick="renderBudgets()">↻ Refresh</button>
+            <button class="btn-primary" style="font-size:.78rem" onclick="budgetAIComment()">✦ AI Commentary</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:8px 12px;font-size:.72rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em">Category</th>
+              <th style="text-align:right;padding:8px 12px;font-size:.72rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em">Actual</th>
+              <th style="padding:8px 12px;font-size:.72rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em">Progress</th>
+              <th style="text-align:right;padding:8px 12px;font-size:.72rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em">Monthly Budget</th>
+              <th style="text-align:right;padding:8px 12px;font-size:.72rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em">Variance</th>
+            </tr></thead>
+            <tbody id="budget-body"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:.75rem;color:var(--text-3)">
+          💡 Type a monthly budget next to any category and press Enter — Zaki saves it instantly. 🔴 &gt;10% over · 🟡 on track · 🟢 under budget
+        </div>
+      </div>
+      <div id="budget-ai-out" class="card hide" style="font-size:.88rem;line-height:1.7;color:var(--text)"></div>
+    </div>
+
+    <!-- ── VENDORS & CLIENTS ── -->
+    <div class="panel" id="panel-vendors">
+      <div class="panel-header">
+        <div class="panel-title">Vendors &amp; Clients</div>
+        <div class="panel-desc">Concentration risk, top spenders, and revenue sources from your transaction ledger</div>
+      </div>
+      <div id="vendor-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-wrap:wrap">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="card-title" style="margin:0">Top Vendors / Payees</div>
+            <span class="tag tag-amber" id="vendor-risk-tag" style="display:none">⚠ Concentration risk</span>
+          </div>
+          <div id="vendor-table"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div class="card-title" style="margin:0">Top Revenue Sources</div>
+            <span class="tag tag-amber" id="customer-risk-tag" style="display:none">⚠ Concentration risk</span>
+          </div>
+          <div id="customer-table"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="card-title" style="margin:0">Recurring Charges Detected</div>
+          <button class="btn-secondary" style="font-size:.78rem" onclick="renderRecurring()">↻ Scan</button>
+        </div>
+        <div id="recurring-list" style="font-size:.85rem;color:var(--text-3)">Click Scan to detect subscriptions and recurring payments.</div>
+      </div>
+    </div>
+
   </main>
   </div><!-- /app-body -->
 </div><!-- /app -->
@@ -2672,6 +2746,7 @@ const S = {
   transactions: [],
   prefs: { readAloud: false, autoPlayBriefing: true },
   goals: [],  // [{id,label,metric,direction,target,unit,enabled}]
+  budgets: {},  // { [category]: monthlyAmount }
   history: { feasibility:[], scenario:[] },  // saved runs
   // FX table: 1 unit of KEY = N units of AED (reporting baseline). Edit in Settings.
   fx: { AED:1, USD:3.6725, SAR:0.9793, OMR:9.5429, QAR:1.0086, KWD:11.97, BHD:9.7415,
@@ -2733,6 +2808,7 @@ function load() {
       if (!S.history) S.history = { feasibility:[], scenario:[] }
       if (!S.history.feasibility) S.history.feasibility = []
       if (!S.history.scenario) S.history.scenario = []
+      if (!S.budgets) S.budgets = {}
       if (!S.fx || typeof S.fx !== 'object') {
         S.fx = { AED:1, USD:3.6725, SAR:0.9793, OMR:9.5429, QAR:1.0086, KWD:11.97, BHD:9.7415,
                  EGP:0.0747, PKR:0.0132, INR:0.0440, EUR:3.99, GBP:4.65 }
@@ -3298,6 +3374,8 @@ function showPanel(id) {
   if (id === 'board' && !S._cache.board) loadBoard()
   if (id === 'settings') { populateSettings(); renderZakiServerStatus() }
   if (id === 'ledger') renderLedger()
+  if (id === 'budgets') renderBudgets()
+  if (id === 'vendors') renderVendors()
   if (id === 'ifrs') loadIfrs()
   if (id === 'ratios') renderRatiosGrid()
   if (id === 'tax') loadTax()
@@ -4058,6 +4136,45 @@ function renderLedger() {
 // ═══════════════════════════════════════════
 // CSV IMPORT
 // ═══════════════════════════════════════════
+// UAE bank statement format detection
+const BANK_FORMATS = {
+  Mashreq:  { debit:['debit','withdrawal','dr amount'], credit:['credit','deposit','cr amount'], date:['value date','transaction date','date'], desc:['description','narration','details','transaction details'] },
+  FAB:      { debit:['debit amount','dr','withdrawal'], credit:['credit amount','cr','deposit'], date:['value date','date'], desc:['transaction details','description','narration'] },
+  ENBD:     { debit:['debit','dr','withdrawal amount'], credit:['credit','cr','deposit amount'], date:['value date','trans. date','date'], desc:['description','details','narration','particulars'] },
+  ADCB:     { debit:['debit','withdrawal amount','dr'], credit:['credit','deposit amount','cr'], date:['date','transaction date','value date'], desc:['description','particulars','narration'] },
+  DIB:      { debit:['debit','dr','amount dr'], credit:['credit','cr','amount cr'], date:['date','value date'], desc:['narration','description','transaction description'] },
+}
+
+function detectBankFormat(headers) {
+  const h = headers.map(x => x.toLowerCase().trim())
+  for (const [bank, fmt] of Object.entries(BANK_FORMATS)) {
+    const dateMatch = fmt.date.some(d => h.some(hh => hh.includes(d.toLowerCase())))
+    const debitMatch = fmt.debit.some(d => h.some(hh => hh.includes(d.toLowerCase())))
+    const creditMatch = fmt.credit.some(c => h.some(hh => hh.includes(c.toLowerCase())))
+    if (dateMatch && (debitMatch || creditMatch)) return bank
+  }
+  return null
+}
+
+function autoMapBankColumns(headers, bankName) {
+  const h = headers.map(x => x.toLowerCase().trim())
+  const find = (...keys) => {
+    for (const k of keys) {
+      const i = h.findIndex(hh => hh.includes(k.toLowerCase()))
+      if (i >= 0) return i
+    }
+    return -1
+  }
+  const fmt = BANK_FORMATS[bankName]
+  if (!fmt) return null
+  return {
+    date:   find(...fmt.date),
+    debit:  find(...fmt.debit),
+    credit: find(...fmt.credit),
+    desc:   find(...fmt.desc)
+  }
+}
+
 function importCSV(input) {
   const file = input.files[0]
   if (!file) return
@@ -4068,6 +4185,43 @@ function importCSV(input) {
       const rows = parseCSVText(text)
       if (rows.length < 2) { showToast('File appears empty or unreadable', 'error'); return }
       const headers = rows[0].map(h => h.toLowerCase().trim())
+
+      // Try UAE bank format detection first
+      const bankName = detectBankFormat(rows[0].map(h => h.trim()))
+      const bankCols = bankName ? autoMapBankColumns(rows[0].map(h => h.trim()), bankName) : null
+      if (bankName) showToast(`Detected: ${bankName} format`, 'success')
+
+      if (bankName && bankCols && bankCols.date >= 0 && (bankCols.debit >= 0 || bankCols.credit >= 0)) {
+        // Bank format: separate debit/credit columns
+        let imported = 0, skipped = 0
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i]
+          if (row.every(c => !c.trim())) continue
+          const rawDate = row[bankCols.date]?.trim() || ''
+          const rawDebit = bankCols.debit >= 0 ? row[bankCols.debit]?.trim() || '' : ''
+          const rawCredit = bankCols.credit >= 0 ? row[bankCols.credit]?.trim() || '' : ''
+          const rawDesc = bankCols.desc >= 0 ? row[bankCols.desc]?.trim() || '' : ''
+          const date = parseDate(rawDate)
+          const debitAmt = Math.abs(parseFloat(rawDebit.replace(/[^0-9.]/g, '')) || 0)
+          const creditAmt = Math.abs(parseFloat(rawCredit.replace(/[^0-9.]/g, '')) || 0)
+          if (!date || (!debitAmt && !creditAmt)) { skipped++; continue }
+          const isIncome = creditAmt > 0 && !debitAmt
+          S.transactions.push({
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2,6) + imported,
+            date,
+            type: isIncome ? 'income' : 'expense',
+            amount: isIncome ? creditAmt : debitAmt,
+            category: mapCategory(rawDesc),
+            description: rawDesc
+          })
+          imported++
+        }
+        computeFin(); S._cache = {}; save(); renderLedger()
+        showToast(`Imported ${imported} transactions from ${bankName}${skipped ? ` (${skipped} skipped)` : ''}`)
+        input.value = ''
+        return
+      }
+
       const colIdx = autoMapColumns(headers)
       let imported = 0, skipped = 0
       for (let i = 1; i < rows.length; i++) {
@@ -4199,6 +4353,228 @@ function exportLedgerCSV() {
   a.href = URL.createObjectURL(blob)
   a.download = `zaki-ledger-${new Date().toISOString().slice(0,10)}.csv`
   a.click()
+}
+
+// ═══════════════════════════════════════════
+// BUDGET VS ACTUAL
+// ═══════════════════════════════════════════
+function computeBudgetActual() {
+  const txs = S.transactions || []
+  const reporting = S.co.currency || 'AED'
+  const now = new Date()
+  const cm = now.getMonth(), cy = now.getFullYear()
+  const catMap = {}
+  txs.filter(t => {
+    const d = new Date(t.date)
+    return t.type === 'expense' && d.getFullYear() === cy && d.getMonth() === cm
+  }).forEach(t => {
+    const k = t.category || 'Uncategorized'
+    catMap[k] = (catMap[k] || 0) + fxConvert(Number(t.amount), t.currency || reporting, reporting)
+  })
+  const budgets = S.budgets || {}
+  const cats = new Set([...Object.keys(catMap), ...Object.keys(budgets)])
+  return [...cats].map(cat => {
+    const actual = catMap[cat] || 0
+    const budget = budgets[cat] || 0
+    const variance = budget > 0 ? ((actual - budget) / budget * 100) : null
+    return { cat, actual, budget, variance, over: variance !== null && variance > 10, under: variance !== null && variance < -10 }
+  }).sort((a,b) => b.actual - a.actual)
+}
+
+function renderBudgets() {
+  const items = computeBudgetActual()
+  const cur = S.co.currency || 'AED'
+  const totalActual = items.reduce((s,i) => s + i.actual, 0)
+  const totalBudget = items.reduce((s,i) => s + i.budget, 0)
+  const now = new Date()
+  const overCount = items.filter(i => i.over).length
+
+  const totalsEl = document.getElementById('budget-totals')
+  if (totalsEl) totalsEl.innerHTML =
+    kpiCard('Total Expenses', `${cur} ${fmt(totalActual)}`, now.toLocaleString('default',{month:'long'}), '') +
+    kpiCard('Total Budgeted', `${cur} ${fmt(totalBudget)}`, totalBudget > 0 ? 'Monthly budget set' : 'No budgets set yet', '') +
+    kpiCard('Budget Status', totalBudget > 0 ? (totalActual > totalBudget ? `${cur} ${fmt(totalActual-totalBudget)} over` : `${cur} ${fmt(totalBudget-totalActual)} under`) : '—', overCount > 0 ? `${overCount} categor${overCount===1?'y':'ies'} over budget` : totalBudget > 0 ? 'All on track' : 'Add budgets below', totalBudget > 0 ? (totalActual > totalBudget ? 'red' : 'green') : '')
+
+  const tbody = document.getElementById('budget-body')
+  if (!tbody) return
+  if (items.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-3)">No expense transactions this month. Add transactions in Ledger first.</td></tr>`
+    return
+  }
+  tbody.innerHTML = items.map(it => {
+    const pct = it.budget > 0 ? Math.min(120, (it.actual / it.budget * 100)).toFixed(0) : (it.actual > 0 ? 100 : 0)
+    const barColor = it.over ? 'var(--red)' : it.budget > 0 ? 'var(--green)' : 'var(--brand)'
+    const varStr = it.variance !== null ? (it.variance > 0 ? '+' : '') + it.variance.toFixed(0) + '%' : '—'
+    const varColor = it.over ? 'var(--red)' : it.under ? 'var(--green)' : 'var(--text-2)'
+    const dot = it.over ? '🔴' : it.under ? '🟢' : it.variance !== null ? '🟡' : '⚪'
+    const safeCat = it.cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'")
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:9px 12px;font-size:.85rem">${dot} ${it.cat}</td>
+      <td style="padding:9px 12px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">${cur} ${fmt(it.actual)}</td>
+      <td style="padding:9px 12px;min-width:100px">
+        ${it.budget > 0 ? `<div style="height:6px;background:var(--border-2);border-radius:3px"><div style="width:${pct}%;height:6px;background:${barColor};border-radius:3px;transition:width .4s"></div></div>` : '<span style="color:var(--text-3);font-size:.75rem">No budget set</span>'}
+      </td>
+      <td style="padding:9px 12px;text-align:right">
+        <input type="number" min="0" value="${it.budget || ''}" placeholder="Set…"
+          style="width:90px;padding:4px 8px;border:1px solid var(--border-2);border-radius:6px;background:var(--bg-1);font-size:.82rem;text-align:right;color:var(--text)"
+          onchange="saveBudget('${safeCat}',this.value)">
+      </td>
+      <td style="padding:9px 12px;text-align:right;font-weight:600;color:${varColor};font-variant-numeric:tabular-nums">${varStr}</td>
+    </tr>`
+  }).join('')
+}
+
+function saveBudget(cat, val) {
+  if (!S.budgets) S.budgets = {}
+  const n = parseFloat(val) || 0
+  if (n > 0) S.budgets[cat] = n
+  else delete S.budgets[cat]
+  save()
+  renderBudgets()
+}
+
+async function budgetAIComment() {
+  if (!aiReady()) { showToast('Connect AI first (Settings)', 'error'); return }
+  const items = computeBudgetActual()
+  if (items.length === 0) { showToast('No expense data to analyze', 'error'); return }
+  const cur = S.co.currency || 'AED'
+  const summary = items.map(i => `  ${i.cat}: actual ${cur} ${fmt(i.actual)}, budget ${i.budget > 0 ? cur + ' ' + fmt(i.budget) : 'not set'}, variance ${i.variance !== null ? (i.variance > 0 ? '+' : '') + i.variance.toFixed(0) + '%' : 'N/A'}`).join('\n')
+  const out = document.getElementById('budget-ai-out')
+  if (out) { out.innerHTML = '<em style="color:var(--text-3)">Analyzing budget variance…</em>'; out.classList.remove('hide') }
+  let full = ''
+  await streamZaki([{role:'user', content:`Analyze this month's budget vs actual for ${S.co.name||'our company'}:\n\n${summary}\n\nGive:\n1. Which categories are most over-budget and why it matters\n2. Where we're under-spending (good or a signal?)\n3. Top 2 specific actions to take this month\n\nBe concise — 3 short paragraphs max. Use ${cur} amounts.`}],
+    chunk => { full = chunk; if (out) out.innerHTML = md(chunk) })
+}
+
+// ═══════════════════════════════════════════
+// VENDOR & CUSTOMER ANALYTICS
+// ═══════════════════════════════════════════
+function analyzeVendors() {
+  const txs = S.transactions || []
+  const reporting = S.co.currency || 'AED'
+  const allMap = {}
+  txs.filter(t => t.type === 'expense').forEach(t => {
+    const key = ((t.description || t.category || 'Unknown').trim()).slice(0, 40)
+    allMap[key] = (allMap[key] || 0) + fxConvert(Number(t.amount), t.currency || reporting, reporting)
+  })
+  const total = Object.values(allMap).reduce((s,v) => s + v, 0)
+  return Object.entries(allMap).sort((a,b) => b[1] - a[1]).slice(0, 10)
+    .map(([name, amount]) => ({ name, amount, pct: total > 0 ? +(amount/total*100).toFixed(1) : 0 }))
+}
+
+function analyzeCustomers() {
+  const txs = S.transactions || []
+  const reporting = S.co.currency || 'AED'
+  const allMap = {}
+  txs.filter(t => t.type === 'income').forEach(t => {
+    const key = ((t.description || t.category || 'Unknown').trim()).slice(0, 40)
+    allMap[key] = (allMap[key] || 0) + fxConvert(Number(t.amount), t.currency || reporting, reporting)
+  })
+  const total = Object.values(allMap).reduce((s,v) => s + v, 0)
+  return Object.entries(allMap).sort((a,b) => b[1] - a[1]).slice(0, 10)
+    .map(([name, amount]) => ({ name, amount, pct: total > 0 ? +(amount/total*100).toFixed(1) : 0 }))
+}
+
+function detectRecurring() {
+  const txs = S.transactions || []
+  const groups = {}
+  txs.forEach(t => {
+    const key = (t.description || t.category || '').toLowerCase()
+      .replace(/\d{6,}/g, '#').replace(/\s+/g, ' ').trim().slice(0, 30)
+    if (!key) return
+    if (!groups[key]) groups[key] = []
+    groups[key].push(t)
+  })
+  const recurring = []
+  for (const [, items] of Object.entries(groups)) {
+    if (items.length < 2) continue
+    const months = [...new Set(items.map(t => t.date?.slice(0,7)))]
+    if (months.length < 2) continue
+    const amounts = items.map(t => Number(t.amount))
+    const avg = amounts.reduce((s,a) => s + a, 0) / amounts.length
+    const maxDev = Math.max(...amounts.map(a => avg > 0 ? Math.abs(a - avg) / avg : 0))
+    if (maxDev > 0.35) continue
+    recurring.push({
+      name: items[0].description || items[0].category || '—',
+      type: items[0].type,
+      monthlyAvg: avg,
+      occurrences: months.length
+    })
+  }
+  return recurring.sort((a,b) => b.monthlyAvg - a.monthlyAvg).slice(0, 12)
+}
+
+function renderRecurring() {
+  const cur = S.co.currency || 'AED'
+  const items = detectRecurring()
+  const el = document.getElementById('recurring-list')
+  if (!el) return
+  if (items.length === 0) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:.85rem">No recurring transactions detected yet. Add more months of data for pattern detection.</div>`
+    return
+  }
+  const totalMonthly = items.filter(i => i.type === 'expense').reduce((s,i) => s + i.monthlyAvg, 0)
+  el.innerHTML = `<div style="margin-bottom:10px;font-size:.82rem;color:var(--text-2)">
+    Found <strong>${items.length}</strong> recurring patterns · Total recurring cost: <strong>${cur} ${fmt(totalMonthly)}/mo</strong>
+  </div>` +
+  items.map(it => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="tag ${it.type==='expense'?'tag-red':'tag-green'}">${it.type==='income'?'↑ Income':'↓ Expense'}</span>
+        <span style="font-size:.85rem">${it.name}</span>
+        <span style="font-size:.75rem;color:var(--text-3)">${it.occurrences} month${it.occurrences>1?'s':''}</span>
+      </div>
+      <span style="font-weight:600;font-variant-numeric:tabular-nums;color:${it.type==='income'?'var(--green)':'var(--red)'}">
+        ${it.type==='income'?'+':'−'} ${cur} ${fmt(it.monthlyAvg)}/mo
+      </span>
+    </div>`).join('')
+}
+
+function renderVendors() {
+  const cur = S.co.currency || 'AED'
+  const vendors = analyzeVendors()
+  const customers = analyzeCustomers()
+  const totalSpend = vendors.reduce((s,v) => s + v.amount, 0)
+  const totalRev = customers.reduce((s,c) => s + c.amount, 0)
+  const topV = vendors[0], topC = customers[0]
+
+  const kpis = document.getElementById('vendor-kpis')
+  if (kpis) kpis.innerHTML =
+    kpiCard('Total Vendor Spend', `${cur} ${fmt(totalSpend)}`, 'All time', '') +
+    kpiCard('Top Vendor', topV ? topV.name.slice(0,22) : '—', topV ? `${topV.pct}% of spend` : 'No data', topV && topV.pct > 50 ? 'red' : topV && topV.pct > 30 ? 'amber' : 'green') +
+    kpiCard('Total Revenue', `${cur} ${fmt(totalRev)}`, 'All sources', '') +
+    kpiCard('Top Client', topC ? topC.name.slice(0,22) : '—', topC ? `${topC.pct}% of revenue` : 'No data', topC && topC.pct > 50 ? 'red' : topC && topC.pct > 30 ? 'amber' : 'green')
+
+  const vTag = document.getElementById('vendor-risk-tag')
+  const cTag = document.getElementById('customer-risk-tag')
+  if (vTag) vTag.style.display = topV && topV.pct > 40 ? '' : 'none'
+  if (cTag) cTag.style.display = topC && topC.pct > 40 ? '' : 'none'
+
+  const renderTable = (items, label) => {
+    if (items.length === 0) return `<div style="padding:20px;text-align:center;color:var(--text-3)">No ${label} transactions yet.</div>`
+    const maxAmt = items[0].amount
+    return items.map((it, i) => {
+      const bar = maxAmt > 0 ? (it.amount / maxAmt * 100).toFixed(0) : 0
+      const isRisk = it.pct > 30
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <div style="width:20px;text-align:center;font-size:.72rem;font-weight:700;color:var(--text-3)">${i+1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.name}${isRisk ? ' <span class="tag tag-amber" style="font-size:.65rem">⚠</span>' : ''}</div>
+          <div style="height:3px;background:var(--border);border-radius:2px;margin-top:4px"><div style="width:${bar}%;height:3px;background:var(--brand);border-radius:2px"></div></div>
+        </div>
+        <div style="text-align:right;white-space:nowrap">
+          <div style="font-weight:600;font-size:.83rem;font-variant-numeric:tabular-nums">${cur} ${fmt(it.amount)}</div>
+          <div style="font-size:.72rem;color:var(--text-3)">${it.pct}%</div>
+        </div>
+      </div>`
+    }).join('')
+  }
+
+  const vEl = document.getElementById('vendor-table')
+  if (vEl) vEl.innerHTML = renderTable(vendors, 'expense')
+  const cEl = document.getElementById('customer-table')
+  if (cEl) cEl.innerHTML = renderTable(customers, 'income')
+  renderRecurring()
 }
 </script>
 <script>
@@ -4379,7 +4755,56 @@ function renderDashboard() {
         <div class="action-dot" style="background:${a.dot}"></div>
         <div class="action-text">${a.text}</div>
       </div>`).join('')}
-  </div>`
+  </div>
+
+  <!-- Row 5: Month-over-Month Trend -->
+  ${(() => {
+    const reporting = S.co.currency || 'AED'
+    const mMap = {}
+    ;(S.transactions||[]).forEach(t => {
+      const k = t.date?.slice(0,7); if (!k) return
+      if (!mMap[k]) mMap[k] = {i:0, e:0}
+      const a = fxConvert(Number(t.amount), t.currency||reporting, reporting)
+      mMap[k][t.type==='income'?'i':'e'] += a
+    })
+    const months = Object.entries(mMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-5)
+    if (months.length < 2) return ''
+    const netColor = (n) => n >= 0 ? 'var(--green)' : 'var(--red)'
+    const trendArrow = (curr, prev) => {
+      if (!prev) return ''
+      const pct = ((curr - prev) / Math.abs(prev) * 100).toFixed(0)
+      return curr > prev ? `<span style="color:var(--green);font-size:.72rem">▲${pct}%</span>` : `<span style="color:var(--red);font-size:.72rem">▼${Math.abs(pct)}%</span>`
+    }
+    return `<div class="dash-card">
+      <div class="dash-card-title">Month-over-Month Trend <span style="font-size:.72rem;font-weight:400;color:var(--text-3)">Last ${months.length} months</span></div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="border-bottom:2px solid var(--border)">
+            <th style="padding:7px 10px;text-align:left;font-size:.72rem;color:var(--text-3);font-weight:600">Month</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.72rem;color:var(--text-3);font-weight:600">Revenue</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.72rem;color:var(--text-3);font-weight:600">Expenses</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.72rem;color:var(--text-3);font-weight:600">Net</th>
+            <th style="padding:7px 10px;text-align:right;font-size:.72rem;color:var(--text-3);font-weight:600">Margin</th>
+          </tr></thead>
+          <tbody>
+            ${months.map(([mo, v], idx) => {
+              const net = v.i - v.e
+              const margin = v.i > 0 ? (net/v.i*100).toFixed(0) : '—'
+              const prev = idx > 0 ? months[idx-1][1] : null
+              const isCurrentMonth = idx === months.length - 1
+              return `<tr style="border-bottom:1px solid var(--border);${isCurrentMonth?'background:var(--bg-1);font-weight:600':''}">
+                <td style="padding:8px 10px;font-size:.83rem">${mo}</td>
+                <td style="padding:8px 10px;text-align:right;font-size:.83rem;font-variant-numeric:tabular-nums;color:var(--green)">${curr(v.i)} ${prev ? trendArrow(v.i, prev.i) : ''}</td>
+                <td style="padding:8px 10px;text-align:right;font-size:.83rem;font-variant-numeric:tabular-nums">${curr(v.e)} ${prev ? trendArrow(-v.e, -prev.e) : ''}</td>
+                <td style="padding:8px 10px;text-align:right;font-size:.83rem;font-variant-numeric:tabular-nums;color:${netColor(net)}">${curr(net)}</td>
+                <td style="padding:8px 10px;text-align:right;font-size:.83rem;color:${Number(margin)>=10?'var(--green)':Number(margin)>=0?'var(--text-2)':'var(--red)'}">${margin !== '—' ? margin + '%' : '—'}</td>
+              </tr>`
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`
+  })()}`
 }
 
 let briefingAudio = null, briefingPlaying = false
