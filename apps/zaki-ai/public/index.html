@@ -862,6 +862,10 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         Financial Health
       </div>
+      <div class="nav-item" onclick="showPanel('pnl')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+        P&amp;L Statement
+      </div>
       <div class="nav-item" onclick="showPanel('opportunities')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         Opportunities
@@ -992,6 +996,14 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
           <button class="btn-secondary" onclick="showPanel('scenario')" style="font-size:.78rem">⚡ Simulate</button>
           <button class="btn-secondary" onclick="renderDashboard()" style="font-size:.78rem">↻ Refresh</button>
         </div>
+      </div>
+      <!-- Quick action dock -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button onclick="openAddTx('income')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--success-bg);border:1px solid rgba(47,127,94,.2);border-radius:10px;color:var(--green);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s">+ Add Income</button>
+        <button onclick="openAddTx('expense')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--danger-bg);border:1px solid rgba(181,72,72,.2);border-radius:10px;color:var(--red);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s">− Add Expense</button>
+        <button onclick="showPanel('budgets')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--blue-bg);border:1px solid rgba(184,137,62,.2);border-radius:10px;color:var(--brand);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s">📊 Budget Track</button>
+        <button onclick="showPanel('pnl')" style="flex:1;min-width:120px;padding:10px 14px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:10px;color:var(--text-2);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s">📋 P&amp;L Report</button>
+        <button onclick="exportBoardPdf()" style="flex:1;min-width:120px;padding:10px 14px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:10px;color:var(--text-2);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s">⬇ Board Pack</button>
       </div>
 
       <!-- Goal breach banner -->
@@ -1781,6 +1793,33 @@ body.dark #topbar{background:rgba(7,16,30,.92)}
         <button class="btn-outline" style="color:var(--blue);border-color:var(--blue)" onclick="loadDemoData()">⚡ Load Demo Data</button>
         <button class="btn-outline" onclick="replayTour()">↻ Replay tour</button>
       </div>
+    </div>
+
+    <!-- ── P&L STATEMENT ── -->
+    <div class="panel" id="panel-pnl">
+      <div class="panel-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <div class="panel-title">P&amp;L Statement</div>
+            <div class="panel-desc">Income statement built from your transaction ledger</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="pnl-period" onchange="renderPnL()" style="padding:6px 10px;border:1px solid var(--border-2);border-radius:7px;background:var(--card);color:var(--text);font-size:.82rem"></select>
+            <button class="btn-primary" style="font-size:.78rem" onclick="pnlAIComment()">✦ AI Narrative</button>
+            <button class="btn-secondary" style="font-size:.78rem" onclick="exportPnLCSV()">↓ Export CSV</button>
+          </div>
+        </div>
+      </div>
+      <!-- Revenue chart -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Revenue vs Expenses — Last 6 Months</div>
+        <div id="pnl-chart" style="padding:8px 0"></div>
+      </div>
+      <!-- Income statement -->
+      <div class="card" style="margin-bottom:14px">
+        <div id="pnl-statement"></div>
+      </div>
+      <div id="pnl-ai-out" class="card hide" style="font-size:.88rem;line-height:1.7"></div>
     </div>
 
     <!-- ── BUDGET VS ACTUAL ── -->
@@ -3376,6 +3415,7 @@ function showPanel(id) {
   if (id === 'ledger') renderLedger()
   if (id === 'budgets') renderBudgets()
   if (id === 'vendors') renderVendors()
+  if (id === 'pnl') renderPnL()
   if (id === 'ifrs') loadIfrs()
   if (id === 'ratios') renderRatiosGrid()
   if (id === 'tax') loadTax()
@@ -4005,11 +4045,12 @@ async function streamZaki(messages, onChunk, systemOverride) {
 // ═══════════════════════════════════════════
 const TX_CATS = ['Sales','Service Revenue','Retainer','Commission','Other Income','Salary','Rent','Marketing','Technology','Travel','Utilities','Legal','Insurance','Bank Charges','VAT','Cost of Goods','Other Expense']
 
-function openAddTx() {
+function openAddTx(preType) {
   document.getElementById('tx-form-title').textContent = 'Add Transaction'
   document.getElementById('tx-edit-id').value = ''
   document.getElementById('tx-date').value = new Date().toISOString().split('T')[0]
-  document.getElementById('tx-type').value = 'income'
+  document.getElementById('tx-type').value = preType || 'income'
+  if (preType) showPanel('ledger')
   document.getElementById('tx-amount').value = ''
   document.getElementById('tx-currency').value = S.co.currency || 'AED'
   document.getElementById('tx-category').value = ''
@@ -4575,6 +4616,187 @@ function renderVendors() {
   const cEl = document.getElementById('customer-table')
   if (cEl) cEl.innerHTML = renderTable(customers, 'income')
   renderRecurring()
+}
+
+// ═══════════════════════════════════════════
+// P&L STATEMENT
+// ═══════════════════════════════════════════
+const COGS_CATS = ['cogs','cost of goods','cost of sales','direct cost','raw material','materials','freight','shipping','packaging','wholesale','procurement']
+const OPEX_CATS = ['payroll','salary','salaries','wages','rent','utilities','software','subscriptions','marketing','advertising','insurance','legal','accounting','admin','office','travel','equipment','maintenance','depreciation','amortization']
+
+function categorizeLine(cat) {
+  const c = (cat || '').toLowerCase()
+  if (COGS_CATS.some(k => c.includes(k))) return 'cogs'
+  if (OPEX_CATS.some(k => c.includes(k))) return 'opex'
+  return 'opex' // default all expenses to opex
+}
+
+function buildPnLData(monthKey) {
+  const txs = S.transactions || []
+  const reporting = S.co.currency || 'AED'
+  const filtered = monthKey ? txs.filter(t => t.date?.startsWith(monthKey)) : txs.filter(t => {
+    const d = new Date(t.date), n = new Date()
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth()
+  })
+  const revenue = {}, cogs = {}, opex = {}
+  filtered.forEach(t => {
+    const cat = t.category || 'Other'
+    const amt = fxConvert(Number(t.amount), t.currency || reporting, reporting)
+    if (t.type === 'income') revenue[cat] = (revenue[cat] || 0) + amt
+    else {
+      const bucket = categorizeLine(cat)
+      if (bucket === 'cogs') cogs[cat] = (cogs[cat] || 0) + amt
+      else opex[cat] = (opex[cat] || 0) + amt
+    }
+  })
+  const totalRev = Object.values(revenue).reduce((s,v)=>s+v,0)
+  const totalCogs = Object.values(cogs).reduce((s,v)=>s+v,0)
+  const grossProfit = totalRev - totalCogs
+  const totalOpex = Object.values(opex).reduce((s,v)=>s+v,0)
+  const ebit = grossProfit - totalOpex
+  return { revenue, cogs, opex, totalRev, totalCogs, grossProfit, totalOpex, ebit }
+}
+
+function renderPnL() {
+  const cur = S.co.currency || 'AED'
+  const txs = S.transactions || []
+
+  // Populate period selector
+  const sel = document.getElementById('pnl-period')
+  if (sel) {
+    const months = [...new Set(txs.map(t => t.date?.slice(0,7)).filter(Boolean))].sort().reverse()
+    const now = new Date()
+    const curMo = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
+    if (!months.includes(curMo)) months.unshift(curMo)
+    const curVal = sel.value || curMo
+    sel.innerHTML = months.map(m => `<option value="${m}" ${m===curVal?'selected':''}>${m}</option>`).join('')
+    if (!sel.value) sel.value = curVal
+  }
+
+  const period = sel?.value || ''
+  const d = buildPnLData(period)
+  const grossMarginPct = d.totalRev > 0 ? (d.grossProfit / d.totalRev * 100).toFixed(1) : '—'
+  const netMarginPct = d.totalRev > 0 ? (d.ebit / d.totalRev * 100).toFixed(1) : '—'
+
+  // ── Revenue/Expense SVG chart (last 6 months) ──────────────────
+  const chartEl = document.getElementById('pnl-chart')
+  if (chartEl) {
+    const mMap = {}
+    txs.forEach(t => {
+      const k = t.date?.slice(0,7); if (!k) return
+      if (!mMap[k]) mMap[k] = {i:0,e:0}
+      const a = fxConvert(Number(t.amount), t.currency||(cur), cur)
+      mMap[k][t.type==='income'?'i':'e'] += a
+    })
+    const months6 = Object.entries(mMap).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6)
+    if (months6.length > 0) {
+      const maxVal = Math.max(...months6.flatMap(([,v])=>[v.i,v.e])) || 1
+      const bw = 28, gap = 6, groupW = bw*2+gap+14, svgW = months6.length * groupW + 20
+      const svgH = 120
+      const bars = months6.map(([mo, v], idx) => {
+        const x = 10 + idx * groupW
+        const hiH = (v.i / maxVal * (svgH - 30)).toFixed(0)
+        const exH = (v.e / maxVal * (svgH - 30)).toFixed(0)
+        const hiY = svgH - 20 - hiH, exY = svgH - 20 - exH
+        const label = mo.slice(5)
+        return `<rect x="${x}" y="${hiY}" width="${bw}" height="${hiH}" fill="var(--green)" opacity=".7" rx="2"/>
+          <rect x="${x+bw+gap}" y="${exY}" width="${bw}" height="${exH}" fill="var(--red)" opacity=".7" rx="2"/>
+          <text x="${x+bw}" y="${svgH-4}" text-anchor="middle" font-size="9" fill="var(--text-3)">${label}</text>`
+      }).join('')
+      chartEl.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;max-height:140px">
+        ${bars}
+        <text x="10" y="12" font-size="9" fill="var(--green)">■ Revenue</text>
+        <text x="70" y="12" font-size="9" fill="var(--red)">■ Expenses</text>
+      </svg>`
+    } else {
+      chartEl.innerHTML = `<div style="color:var(--text-3);font-size:.82rem;text-align:center;padding:20px">Add transactions to see the trend chart</div>`
+    }
+  }
+
+  // ── Income Statement ───────────────────────────────────────────
+  const stEl = document.getElementById('pnl-statement')
+  if (!stEl) return
+
+  const line = (label, val, cls='', indent=false, bold=false) => `
+    <div style="display:flex;justify-content:space-between;padding:5px ${indent?'24px 5px 12px':'8px 5px 0'};${bold?'font-weight:700;border-top:2px solid var(--border);margin-top:4px':''}">
+      <span style="font-size:.85rem;color:${cls==='green'?'var(--green)':cls==='red'?'var(--red)':'var(--text)'}">${label}</span>
+      <span style="font-size:.85rem;font-variant-numeric:tabular-nums;font-weight:${bold?700:500};color:${val<0?'var(--red)':cls==='green'?'var(--green)':'var(--text)'}">${cur} ${fmt(val)}</span>
+    </div>`
+
+  const section = (title, items) => {
+    if (Object.keys(items).length === 0) return ''
+    return `<div style="margin-bottom:8px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;padding:8px 8px 4px">${title}</div>
+      ${Object.entries(items).sort((a,b)=>b[1]-a[1]).map(([k,v])=>line(k,v,'',true)).join('')}
+    </div>`
+  }
+
+  stEl.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-weight:700;font-size:1rem">${S.co.name || 'Company'}</div>
+        <div style="font-size:.78rem;color:var(--text-3)">Income Statement · ${period}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.72rem;color:var(--text-3)">Prepared by ZAKI CFO · ${new Date().toLocaleDateString()}</div>
+      </div>
+    </div>
+    <div style="border-top:3px solid var(--brand);padding-top:10px">
+      ${section('Revenue', d.revenue)}
+      ${line('TOTAL REVENUE', d.totalRev, 'green', false, true)}
+
+      ${Object.keys(d.cogs).length > 0 ? section('Cost of Goods Sold', d.cogs) : ''}
+      ${Object.keys(d.cogs).length > 0 ? line('TOTAL COGS', -d.totalCogs, 'red', false, false) : ''}
+      ${Object.keys(d.cogs).length > 0 ? line(`GROSS PROFIT (${grossMarginPct}% margin)`, d.grossProfit, d.grossProfit>=0?'green':'red', false, true) : ''}
+
+      ${section('Operating Expenses', d.opex)}
+      ${line('TOTAL OPERATING EXPENSES', -d.totalOpex, 'red', false, false)}
+
+      <div style="border-top:3px double var(--border);margin-top:6px"></div>
+      ${line(`NET PROFIT / (LOSS) — ${netMarginPct}% margin`, d.ebit, d.ebit>=0?'green':'red', false, true)}
+    </div>`
+}
+
+async function pnlAIComment() {
+  if (!aiReady()) { showToast('Connect AI first', 'error'); return }
+  const sel = document.getElementById('pnl-period')
+  const period = sel?.value || ''
+  const d = buildPnLData(period)
+  const cur = S.co.currency || 'AED'
+  const out = document.getElementById('pnl-ai-out')
+  if (out) { out.innerHTML = '<em style="color:var(--text-3)">Writing narrative…</em>'; out.classList.remove('hide') }
+  const grossMargin = d.totalRev > 0 ? (d.grossProfit/d.totalRev*100).toFixed(1) : '—'
+  const netMargin = d.totalRev > 0 ? (d.ebit/d.totalRev*100).toFixed(1) : '—'
+  await streamZaki([{role:'user', content:`Write a concise CFO narrative for this P&L (period: ${period}):
+
+Revenue: ${cur} ${fmt(d.totalRev)}
+COGS: ${cur} ${fmt(d.totalCogs)}
+Gross Profit: ${cur} ${fmt(d.grossProfit)} (${grossMargin}% margin)
+OPEX: ${cur} ${fmt(d.totalOpex)}
+Net Profit: ${cur} ${fmt(d.ebit)} (${netMargin}% margin)
+
+Top revenue: ${Object.entries(d.revenue).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+': '+cur+' '+fmt(v)).join(', ')||'N/A'}
+Top costs: ${Object.entries({...d.cogs,...d.opex}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+': '+cur+' '+fmt(v)).join(', ')||'N/A'}
+
+In 3-4 short paragraphs: (1) headline performance, (2) what's driving margins, (3) main cost concern, (4) one specific action to improve profitability. Be direct.`}],
+    chunk => { if (out) out.innerHTML = md(chunk) })
+}
+
+function exportPnLCSV() {
+  const sel = document.getElementById('pnl-period')
+  const period = sel?.value || ''
+  const d = buildPnLData(period)
+  const cur = S.co.currency || 'AED'
+  const rows = [['Category', 'Type', `Amount (${cur})`]]
+  Object.entries(d.revenue).forEach(([k,v]) => rows.push([k, 'Revenue', v.toFixed(2)]))
+  rows.push(['TOTAL REVENUE', '', d.totalRev.toFixed(2)])
+  Object.entries(d.cogs).forEach(([k,v]) => rows.push([k, 'COGS', (-v).toFixed(2)]))
+  if (Object.keys(d.cogs).length) rows.push(['GROSS PROFIT', '', d.grossProfit.toFixed(2)])
+  Object.entries(d.opex).forEach(([k,v]) => rows.push([k, 'Operating Expense', (-v).toFixed(2)]))
+  rows.push(['NET PROFIT', '', d.ebit.toFixed(2)])
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: `pnl-${period}.csv` })
+  a.click()
 }
 </script>
 <script>
