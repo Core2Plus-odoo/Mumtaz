@@ -740,23 +740,26 @@
     }
 
     function gotoStep(n) {
-      // Apply smart defaults the first time entering step 4
       if (n === 4 && !modulesInitialized) {
         applyModuleDefaults();
         modulesInitialized = true;
       }
-      // Render the summary every time we land on step 6 (in case user edited)
       if (n === 6) renderSummary();
 
-      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      // Hide all steps — use both class and inline style for reliability
+      document.querySelectorAll('.step').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = 'none';
+      });
       const next = document.querySelector(`.step[data-step="${n}"]`);
       if (next) {
+        next.style.display = 'block';
         next.classList.add('active');
         state.currentStep = n;
         updateProgress();
         validateStep();
-        // Update Next button label on the last step
         $('btn-next').textContent = (n === state.totalSteps) ? 'Launch your dashboard →' : 'Continue →';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
 
