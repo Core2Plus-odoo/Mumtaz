@@ -245,8 +245,7 @@
 
     /* ── Steps ── */
     .step { display: none; }
-    .step.active { display: block; animation: fadeIn .25s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .step.active { display: block; }
   </style>
 </head>
 <body>
@@ -573,39 +572,7 @@
 
     const $ = id => document.getElementById(id);
 
-    /* ── Step 1: Industry (single-select) ── */
-    document.querySelectorAll('#industry-grid .ob-card').forEach(card => {
-      card.addEventListener('click', () => {
-        document.querySelectorAll('#industry-grid .ob-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        state.industry = card.dataset.value;
-        validateStep();
-      });
-    });
-
-    /* ── Step 2: Products (multi-select) ── */
-    document.querySelectorAll('#products-grid .ob-card-wide').forEach(card => {
-      card.addEventListener('click', () => {
-        const v = card.dataset.value;
-        const i = state.products.indexOf(v);
-        if (i === -1) { state.products.push(v); card.classList.add('selected'); }
-        else          { state.products.splice(i, 1); card.classList.remove('selected'); }
-        validateStep();
-      });
-    });
-
-    /* ── Step 3: Agents (multi-select) ── */
-    document.querySelectorAll('#agents-grid .ob-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const v = card.dataset.value;
-        const i = state.agents.indexOf(v);
-        if (i === -1) { state.agents.push(v); card.classList.add('selected'); }
-        else          { state.agents.splice(i, 1); card.classList.remove('selected'); }
-        validateStep();
-      });
-    });
-
-    /* ── Step 4: Modules (multi-select with smart defaults) ── */
+    /* ── Module defaults per industry ── */
     const MODULE_DEFAULTS = {
       trading:       ['einvoicing', 'accounting', 'crm', 'inventory'],
       retail:        ['einvoicing', 'accounting', 'pos', 'inventory', 'crm'],
@@ -628,28 +595,129 @@
       });
     }
 
+    /* ── Show a step by number ── */
+    function showStep(n) {
+      document.querySelectorAll('.step').forEach(el => {
+        el.style.display = 'none';
+        el.classList.remove('active');
+      });
+      const el = document.querySelector('[data-step="' + n + '"]');
+      if (!el) return;
+      el.style.display = 'block';
+      el.classList.add('active');
+      state.currentStep = n;
+    }
+
+    /* ── Which steps to skip based on product selection ── */
+    function shouldSkip(n) {
+      if (n === 3 && !state.products.includes('zaki')) return true;
+      if (n === 4 && !state.products.includes('erp'))  return true;
+      return false;
+    }
+
+    function nextNonSkipped(from) {
+      let n = from + 1;
+      while (n <= state.totalSteps && shouldSkip(n)) n++;
+      return n;
+    }
+
+    function prevNonSkipped(from) {
+      let n = from - 1;
+      while (n >= 1 && shouldSkip(n)) n--;
+      return n;
+    }
+
+    /* ── Is current step completable? ── */
+    function isStepValid(step) {
+      switch (step) {
+        case 1: return !!state.industry;
+        case 2: return state.products.length > 0;
+        case 3: return state.agents.length > 0;
+        case 4: return state.modules.length > 0;
+        case 5: return !!state.teamSize;
+        case 6: return true;
+        default: return false;
+      }
+    }
+
+    /* ── Sync all UI elements to current state ── */
+    function updateUI() {
+      const s = state.currentStep;
+      $('step-current').textContent = s;
+      $('progress-fill').style.width = (s / state.totalSteps * 100) + '%';
+      $('btn-back').disabled = s === 1;
+      $('btn-next').textContent = (s === state.totalSteps) ? 'Launch your dashboard →' : 'Continue →';
+      $('btn-next').disabled = !isStepValid(s);
+    }
+
+    /* ── Navigate to step n ── */
+    function gotoStep(n) {
+      if (n === 4 && !modulesInitialized) {
+        applyModuleDefaults();
+        modulesInitialized = true;
+      }
+      if (n === 6) renderSummary();
+      showStep(n);
+      updateUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ── Card event listeners ── */
+    // Step 1: Industry (single-select)
+    document.querySelectorAll('#industry-grid .ob-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('#industry-grid .ob-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.industry = card.dataset.value;
+        updateUI();
+      });
+    });
+
+    // Step 2: Products (multi-select)
+    document.querySelectorAll('#products-grid .ob-card-wide').forEach(card => {
+      card.addEventListener('click', () => {
+        const v = card.dataset.value;
+        const i = state.products.indexOf(v);
+        if (i === -1) { state.products.push(v); card.classList.add('selected'); }
+        else          { state.products.splice(i, 1); card.classList.remove('selected'); }
+        updateUI();
+      });
+    });
+
+    // Step 3: Agents (multi-select)
+    document.querySelectorAll('#agents-grid .ob-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const v = card.dataset.value;
+        const i = state.agents.indexOf(v);
+        if (i === -1) { state.agents.push(v); card.classList.add('selected'); }
+        else          { state.agents.splice(i, 1); card.classList.remove('selected'); }
+        updateUI();
+      });
+    });
+
+    // Step 4: Modules (multi-select, einvoicing locked)
     document.querySelectorAll('#modules-grid .ob-card-wide').forEach(card => {
       card.addEventListener('click', () => {
-        if (card.dataset.locked === '1') return; // einvoicing always selected
+        if (card.dataset.locked === '1') return;
         const v = card.dataset.value;
         const i = state.modules.indexOf(v);
         if (i === -1) { state.modules.push(v); card.classList.add('selected'); }
         else          { state.modules.splice(i, 1); card.classList.remove('selected'); }
-        validateStep();
+        updateUI();
       });
     });
 
-    /* ── Step 5: Team size (single-select) ── */
+    // Step 5: Team size (single-select)
     document.querySelectorAll('#team-grid .ob-card-wide').forEach(card => {
       card.addEventListener('click', () => {
         document.querySelectorAll('#team-grid .ob-card-wide').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         state.teamSize = card.dataset.value;
-        validateStep();
+        updateUI();
       });
     });
 
-    /* ── Step 6: Review summary ── */
+    /* ── Labels for step 6 review ── */
     const LABELS = {
       industry: {
         trading: 'Trading & Distribution', retail: 'Retail',
@@ -694,7 +762,6 @@
           <button class="ob-summary-edit" onclick="gotoStep(${r.step})">Edit</button>
         </div>`).join('');
 
-      // Friendly name in the title
       const token = localStorage.getItem('mumtaz_token');
       if (token) {
         try {
@@ -704,10 +771,10 @@
         } catch {}
       }
     }
-    // expose for inline edit links
-    window.gotoStep = (n) => gotoStep(n);
 
-    /* ── Save preferences and finish ── */
+    window.gotoStep = gotoStep;
+
+    /* ── Save preferences and redirect ── */
     async function savePreferences() {
       const payload = {
         industry: state.industry,
@@ -718,8 +785,6 @@
         completedAt: new Date().toISOString(),
       };
       localStorage.setItem('mumtaz_onboarding', JSON.stringify(payload));
-
-      // Best-effort: tell the server (if endpoint exists). Ignore failure.
       const token = localStorage.getItem('mumtaz_token');
       if (token) {
         try {
@@ -732,66 +797,8 @@
       }
     }
 
-    /* ── Navigation ── */
-    function updateProgress() {
-      $('step-current').textContent = state.currentStep;
-      $('progress-fill').style.width = (state.currentStep / state.totalSteps * 100) + '%';
-      $('btn-back').disabled = state.currentStep === 1;
-    }
-
-    function gotoStep(n) {
-      // Apply smart defaults the first time entering step 4
-      if (n === 4 && !modulesInitialized) {
-        applyModuleDefaults();
-        modulesInitialized = true;
-      }
-      // Render the summary every time we land on step 6 (in case user edited)
-      if (n === 6) renderSummary();
-
-      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-      const next = document.querySelector(`.step[data-step="${n}"]`);
-      if (next) {
-        next.classList.add('active');
-        state.currentStep = n;
-        updateProgress();
-        validateStep();
-        // Update Next button label on the last step
-        $('btn-next').textContent = (n === state.totalSteps) ? 'Launch your dashboard →' : 'Continue →';
-      }
-    }
-
-    function validateStep() {
-      const s = state.currentStep;
-      let ok = false;
-      if (s === 1) ok = !!state.industry;
-      if (s === 2) ok = state.products.length > 0;
-      if (s === 3) ok = state.agents.length > 0;
-      if (s === 4) ok = state.modules.length > 0;
-      if (s === 5) ok = !!state.teamSize;
-      if (s === 6) ok = true;
-      $('btn-next').disabled = !ok;
-    }
-
-    /* Skip steps that don't apply based on product selection */
-    function shouldSkipStep(n) {
-      if (n === 3 && !state.products.includes('zaki')) return true;
-      if (n === 4 && !state.products.includes('erp'))  return true;
-      return false;
-    }
-
-    function nextStep(from) {
-      let n = from + 1;
-      while (n <= state.totalSteps && shouldSkipStep(n)) n++;
-      return n;
-    }
-    function prevStep(from) {
-      let n = from - 1;
-      while (n >= 1 && shouldSkipStep(n)) n--;
-      return n;
-    }
-
+    /* ── Button handlers ── */
     $('btn-next').addEventListener('click', async () => {
-      // Final step: save and redirect
       if (state.currentStep === state.totalSteps) {
         $('btn-next').disabled = true;
         $('btn-next').textContent = 'Setting up…';
@@ -799,18 +806,22 @@
         window.location.href = '/dashboard.html';
         return;
       }
-      const n = nextStep(state.currentStep);
-      if (n <= state.totalSteps) gotoStep(n);
+      gotoStep(nextNonSkipped(state.currentStep));
     });
+
     $('btn-back').addEventListener('click', () => {
-      const n = prevStep(state.currentStep);
-      if (n >= 1) gotoStep(n);
+      gotoStep(prevNonSkipped(state.currentStep));
     });
+
     $('btn-skip').addEventListener('click', () => {
       if (confirm('Skip setup? You can configure these later from Settings.')) {
         window.location.href = '/dashboard.html';
       }
     });
+
+    /* ── Init ── */
+    showStep(1);
+    updateUI();
   </script>
 
 </body>

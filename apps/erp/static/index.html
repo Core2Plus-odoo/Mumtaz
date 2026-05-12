@@ -1,0 +1,2962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mumtaz ERP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, select, textarea { font: inherit; }
+    :root {
+      --gold:    #B8862A; --gold2: #D4A84C; --gold-bg: #FDF6EA;
+      --teal:    #0B7A64; --teal2: #0E9A80;
+      --ink:     #0C1118; --ink2: #3D4A5C; --ink3: #7A8799;
+      --bg:      #F5F3EF; --white: #FFFFFF; --border: #E4E0D8;
+      --sidebar: #111827; --sidebar2: #1F2937;
+      --red:     #C0402A; --red-bg: #FCECEA;
+      --green:   #0B7A64; --green-bg: #E6F4F1;
+      --r: 8px;
+    }
+
+    /* ── Layout ── */
+    #app { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: 220px; flex-shrink: 0;
+      background: var(--sidebar);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 16px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff;
+    }
+    .logo-name { font-weight: 600; color: #fff; font-size: .9rem; }
+    .logo-sub  { font-size: .65rem; color: rgba(255,255,255,.4); font-weight: 400; }
+
+    .nav-section { padding: 12px 0 4px; }
+    .nav-label {
+      padding: 2px 16px 6px;
+      font-size: .65rem; font-weight: 600; letter-spacing: .08em;
+      color: rgba(255,255,255,.3); text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px; margin: 1px 8px;
+      border-radius: 6px;
+      font-size: .82rem; font-weight: 500;
+      color: rgba(255,255,255,.6);
+      cursor: pointer; transition: all .15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+    .nav-item.active { background: rgba(184,134,42,.2); color: var(--gold2); }
+    .nav-item svg { flex-shrink: 0; opacity: .7; }
+    .nav-item.active svg { opacity: 1; }
+
+    .sidebar-footer {
+      margin-top: auto; padding: 12px 8px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px; border-radius: 6px;
+      color: rgba(255,255,255,.7); font-size: .8rem;
+    }
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--gold); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 700; flex-shrink: 0;
+    }
+    .logout-btn {
+      color: rgba(255,255,255,.4); font-size: .75rem;
+      cursor: pointer; margin-top: 4px;
+      padding: 4px 8px; display: block;
+    }
+    .logout-btn:hover { color: var(--red); }
+
+    /* ── Main ── */
+    #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar {
+      height: 52px; flex-shrink: 0;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 16px;
+    }
+    .topbar h1 { font-size: 1rem; font-weight: 600; color: var(--ink); flex: 1; }
+    .btn {
+      padding: 7px 14px; border-radius: var(--r);
+      font-size: .8rem; font-weight: 600;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--gold); color: #fff; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--ink2); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-danger  { background: var(--red); color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: .75rem; }
+    .btn-ghost { color: var(--ink3); padding: 5px 10px; border-radius: var(--r); }
+    .btn-ghost:hover { background: var(--bg); }
+
+    #content { flex: 1; overflow-y: auto; padding: 24px; background: var(--bg); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 20px;
+    }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px;
+    }
+    .kpi-label { font-size: .72rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+    .kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--ink); }
+    .kpi-sub   { font-size: .72rem; color: var(--ink3); margin-top: 4px; }
+    .kpi-value.danger { color: var(--red); }
+    .kpi-value.success { color: var(--teal); }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    th { text-align: left; padding: 9px 12px; font-size: .7rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1.5px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: middle; }
+    tr:hover td { background: var(--bg); }
+    tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 99px;
+      font-size: .68rem; font-weight: 600;
+    }
+    .badge-draft    { background: #F3F4F6; color: var(--ink3); }
+    .badge-posted   { background: #DCFCE7; color: #166534; }
+    .badge-cancelled { background: var(--red-bg); color: var(--red); }
+    .badge-paid     { background: var(--green-bg); color: var(--teal); }
+    .badge-partial  { background: #FEF3C7; color: #92400E; }
+    .badge-not_paid { background: #FEE2E2; color: var(--red); }
+
+    /* ── Forms / Modal ── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: var(--white); border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      width: 100%; max-width: 680px;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-lg { max-width: 900px; }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--white); z-index: 1;
+    }
+    .modal-title { font-size: 1rem; font-weight: 600; color: var(--ink); }
+    .modal-close { color: var(--ink3); font-size: 1.2rem; cursor: pointer; padding: 4px; }
+    .modal-close:hover { color: var(--ink); }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      padding: 14px 20px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-full { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: .72rem; font-weight: 600; color: var(--ink2); letter-spacing: .03em; }
+    .field input, .field select, .field textarea {
+      padding: 8px 10px; border: 1.5px solid var(--border);
+      border-radius: var(--r); font-size: .85rem; color: var(--ink);
+      background: var(--white); outline: none; transition: border-color .15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--gold); }
+    .field textarea { resize: vertical; min-height: 72px; }
+
+    /* ── Invoice Lines ── */
+    .lines-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .lines-table th { font-size: .68rem; color: var(--ink3); font-weight: 600; text-transform: uppercase; padding: 6px 8px; text-align: left; background: var(--bg); }
+    .lines-table td { padding: 4px 4px; border-top: 1px solid var(--border); }
+    .lines-table input, .lines-table select {
+      width: 100%; padding: 5px 6px; border: 1px solid var(--border);
+      border-radius: 4px; font-size: .8rem; background: var(--white);
+    }
+    .lines-table input:focus, .lines-table select:focus { border-color: var(--gold); outline: none; }
+    .line-del { color: var(--red); opacity: .5; cursor: pointer; padding: 4px 6px; }
+    .line-del:hover { opacity: 1; }
+    .add-line-btn { margin-top: 8px; font-size: .78rem; color: var(--gold); cursor: pointer; }
+    .add-line-btn:hover { text-decoration: underline; }
+
+    .totals-box {
+      display: flex; justify-content: flex-end; margin-top: 12px;
+    }
+    .totals-inner { min-width: 240px; }
+    .totals-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: .82rem; color: var(--ink2); }
+    .totals-row.total { font-weight: 700; color: var(--ink); border-top: 1.5px solid var(--border); padding-top: 8px; margin-top: 4px; font-size: .9rem; }
+
+    /* ── Search bar ── */
+    .search-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0 16px;
+    }
+    .search-input {
+      padding: 7px 12px; border: 1.5px solid var(--border);
+      border-radius: var(--r); font-size: .82rem; color: var(--ink);
+      background: var(--white); outline: none; flex: 1; max-width: 320px;
+      transition: border-color .15s;
+    }
+    .search-input:focus { border-color: var(--gold); }
+
+    /* ── Section ── */
+    .section-title { font-size: .9rem; font-weight: 600; color: var(--ink); margin-bottom: 16px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 18px; border-radius: var(--r);
+      font-size: .82rem; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,.15);
+      transform: translateY(80px); opacity: 0;
+      transition: all .3s; z-index: 2000;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.ok   { background: var(--teal); color: #fff; }
+    #toast.err  { background: var(--red);  color: #fff; }
+
+    /* ── Invoice detail print area ── */
+    .invoice-view { max-width: 700px; }
+    .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+    .inv-meta-row { display: flex; gap: 32px; margin-bottom: 20px; flex-wrap: wrap; }
+    .inv-meta { }
+    .inv-meta dt { font-size: .7rem; color: var(--ink3); font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+    .inv-meta dd { font-size: .88rem; color: var(--ink); font-weight: 500; }
+    .inv-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .inv-table th { background: var(--bg); padding: 8px 12px; font-size: .72rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; text-align: left; }
+    .inv-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: .85rem; color: var(--ink2); }
+    .inv-totals { display: flex; justify-content: flex-end; }
+    .inv-totals table { min-width: 220px; }
+    .inv-totals td { padding: 5px 12px; font-size: .85rem; }
+    .inv-total-row td { font-weight: 700; border-top: 1.5px solid var(--border); font-size: .95rem; }
+
+    /* ── Setup page ── */
+    #setup-page {
+      display: none; position: fixed; inset: 0;
+      background: var(--bg); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    #setup-page.show { display: flex; }
+    .setup-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 16px; padding: 36px; width: 100%; max-width: 480px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+    }
+
+    /* ── Login ── */
+    #login-page {
+      display: none; position: fixed; inset: 0;
+      background: var(--bg); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    #login-page.show { display: flex; }
+
+    /* ── Extra badge states ── */
+    .badge-ok   { background: var(--green-bg); color: var(--teal); }
+    .badge-err  { background: var(--red-bg);   color: var(--red);  }
+    .badge-warn { background: #FEF3C7;          color: #92400E;     }
+
+    /* ── Card header / title ── */
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-title { font-size: .9rem; font-weight: 600; color: var(--ink); }
+
+    /* ── Data table (alias) ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .data-table th { text-align: left; padding: 9px 12px; font-size: .7rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1.5px solid var(--border); }
+    .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: middle; }
+    .data-table tr:hover td { background: var(--bg); }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* ── Inline link-style button ── */
+    .btn-link {
+      background: none; border: none; cursor: pointer;
+      color: var(--gold); font-size: .78rem; font-weight: 600;
+      padding: 2px 4px; border-radius: 4px; transition: opacity .15s;
+    }
+    .btn-link:hover { opacity: .7; text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      #sidebar { width: 56px; }
+      .nav-label, .nav-item span, .logo-name, .logo-sub, .user-chip .name { display: none; }
+      .nav-item { justify-content: center; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login page -->
+<div id="login-page">
+  <div class="setup-card">
+    <div class="sidebar-logo" style="padding:0 0 20px; border:none;">
+      <div class="logo-mark">م</div>
+      <div><div class="logo-name" style="color:var(--ink)">Mumtaz ERP</div></div>
+    </div>
+    <h2 style="font-size:1.3rem;color:var(--ink);margin-bottom:20px;font-family:'Instrument Serif',serif;font-weight:400">Sign in</h2>
+    <div class="field" style="margin-bottom:14px">
+      <label>Email</label>
+      <input id="l-email" type="email" placeholder="admin@company.com"/>
+    </div>
+    <div class="field" style="margin-bottom:20px">
+      <label>Password</label>
+      <input id="l-pass" type="password" placeholder="••••••••"/>
+    </div>
+    <div id="l-err" style="color:var(--red);font-size:.8rem;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign in →</button>
+    <p style="margin-top:14px;text-align:center;font-size:.78rem;color:var(--ink3)">
+      Platform admin? <span style="color:var(--gold);cursor:pointer" onclick="showSuperSetup()">Set up super admin →</span>
+    </p>
+  </div>
+</div>
+
+<!-- Super admin first-time setup -->
+<div id="super-setup-page" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:500;align-items:center;justify-content:center">
+  <div class="setup-card">
+    <div class="sidebar-logo" style="padding:0 0 20px;border:none;">
+      <div class="logo-mark">م</div>
+      <div><div class="logo-name" style="color:var(--ink)">Mumtaz ERP</div><div class="logo-sub" style="color:var(--ink3)">Platform Setup</div></div>
+    </div>
+    <h2 style="font-size:1.3rem;color:var(--ink);margin-bottom:6px;font-family:'Instrument Serif',serif;font-weight:400">Create Super Admin</h2>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:20px">The super admin manages all tenants and their module access. This runs once.</p>
+    <div class="field" style="margin-bottom:12px"><label>Your Name</label><input id="sa-name" value="Super Admin"/></div>
+    <div class="field" style="margin-bottom:12px"><label>Email</label><input id="sa-email" type="email" placeholder="platform@mumtaz.ae"/></div>
+    <div class="field" style="margin-bottom:20px"><label>Password</label><input id="sa-pass" type="password" placeholder="Min 8 characters"/></div>
+    <div id="sa-err" style="color:var(--red);font-size:.8rem;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doSuperSetup()">Create Super Admin →</button>
+    <p style="margin-top:12px;text-align:center;font-size:.78rem;color:var(--ink3)"><span style="cursor:pointer;color:var(--gold)" onclick="hideSuperSetup()">← Back to sign in</span></p>
+  </div>
+</div>
+
+<!-- Setup page -->
+<div id="setup-page">
+  <div class="setup-card">
+    <div class="sidebar-logo" style="padding:0 0 20px; border:none;">
+      <div class="logo-mark">م</div>
+      <div><div class="logo-name" style="color:var(--ink)">Mumtaz ERP</div><div class="logo-sub" style="color:var(--ink3)">Initial Setup</div></div>
+    </div>
+    <h2 style="font-size:1.3rem;color:var(--ink);margin-bottom:6px;font-family:'Instrument Serif',serif;font-weight:400">Set up your company</h2>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:20px">This runs once to create your company, chart of accounts, and admin account.</p>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="field form-full">
+        <label>Company Name</label>
+        <input id="s-company" placeholder="My Company LLC"/>
+      </div>
+      <div class="field">
+        <label>VAT Number</label>
+        <input id="s-vat" placeholder="100123456700003"/>
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input id="s-phone" placeholder="+971 4 xxx xxxx"/>
+      </div>
+      <div class="field">
+        <label>Admin Email</label>
+        <input id="s-email" type="email" placeholder="admin@company.com"/>
+      </div>
+      <div class="field">
+        <label>Admin Password</label>
+        <input id="s-pass" type="password" placeholder="Min 8 characters"/>
+      </div>
+    </div>
+    <div id="s-err" style="color:var(--red);font-size:.8rem;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doSetup()">Initialize →</button>
+  </div>
+</div>
+
+<!-- Main ERP layout -->
+<div id="app" style="display:none">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">م</div>
+      <div>
+        <div class="logo-name">Mumtaz</div>
+        <div class="logo-sub">ERP</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="nav('dashboard')" data-page="dashboard">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Sales</div>
+      <div class="nav-item" onclick="nav('customers')" data-page="customers">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Customers</span>
+      </div>
+      <div class="nav-item" onclick="nav('invoices')" data-page="invoices">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        <span>Invoices</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Purchases</div>
+      <div class="nav-item" onclick="nav('vendors')" data-page="vendors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <span>Vendors</span>
+      </div>
+      <div class="nav-item" onclick="nav('bills')" data-page="bills">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span>Bills</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Accounting</div>
+      <div class="nav-item" onclick="nav('payments')" data-page="payments">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Payments</span>
+      </div>
+      <div class="nav-item" onclick="nav('journal-entries')" data-page="journal-entries">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <span>Journal Entries</span>
+      </div>
+      <div class="nav-item" onclick="nav('accounts')" data-page="accounts">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Chart of Accounts</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Products</div>
+      <div class="nav-item" onclick="nav('products')" data-page="products">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span>Products</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Business</div>
+      <div class="nav-item" data-page="crm" onclick="nav('crm')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>CRM</span>
+      </div>
+      <div class="nav-item" data-page="hr" onclick="nav('hr')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>HR</span>
+      </div>
+      <div class="nav-item" data-page="projects" onclick="nav('projects')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Projects</span>
+      </div>
+      <div class="nav-item" data-page="assets" onclick="nav('assets')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        <span>Assets</span>
+      </div>
+      <div class="nav-item" data-page="expenses" onclick="nav('expenses')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Expenses</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Reports</div>
+      <div class="nav-item" onclick="nav('reports')" data-page="reports">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Reports</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Admin</div>
+      <div class="nav-item" onclick="nav('settings')" data-page="settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M20 12h2M2 12h2M12 20v2M12 2v2"/></svg>
+        <span>Settings</span>
+      </div>
+    </div>
+
+    <!-- Super admin only -->
+    <div class="nav-section" id="super-nav" style="display:none">
+      <div class="nav-label">Platform</div>
+      <div class="nav-item" onclick="nav('tenants')" data-page="tenants">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span>Tenants</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="user-avatar">A</div>
+        <div class="name" id="user-name" style="font-size:.78rem;color:rgba(255,255,255,.7)">Admin</div>
+      </div>
+      <span class="logout-btn" onclick="logout()">Sign out</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="topbar">
+      <h1 id="page-title">Dashboard</h1>
+      <div id="topbar-actions"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Modal overlay -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">—</span>
+      <span class="modal-close" onclick="closeModalForce()">✕</span>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const API = '/api';
+let token = localStorage.getItem('erp_token');
+let currentUser = null;
+let currentPage = 'dashboard';
+let enabledModules = [];
+
+// ── Utils ──────────────────────────────────────────────────────
+const fmt = (n, dec=2) => Number(n||0).toLocaleString('en-AE', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+const fmtDate = d => d ? String(d).slice(0,10) : '—';
+const today = () => new Date().toISOString().slice(0,10);
+const qs = id => document.getElementById(id);
+
+function toast(msg, type='ok') {
+  const t = qs('toast');
+  t.textContent = msg;
+  t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3000);
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body)  opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || data.error || `HTTP ${r.status}`);
+  return data;
+}
+
+// ── Auth ───────────────────────────────────────────────────────
+async function boot() {
+  const status = await api('GET', '/setup/status').catch(() => null);
+  if (!status) { showLogin(); return; }
+
+  // No super admin and no company yet → show first-time setup choice
+  if (!status.initialized && !status.has_super) {
+    qs('setup-page').classList.add('show');
+    return;
+  }
+
+  if (!token) { showLogin(); return; }
+  try {
+    currentUser = await api('GET', '/auth/me');
+    enabledModules = await api('GET', '/me/modules').catch(() => []);
+    showApp();
+  } catch {
+    showLogin();
+  }
+}
+
+function showLogin() {
+  qs('login-page').classList.add('show');
+  qs('setup-page').classList.remove('show');
+  qs('app').style.display = 'none';
+}
+
+function showApp() {
+  qs('login-page').classList.remove('show');
+  qs('setup-page').classList.remove('show');
+  qs('app').style.display = 'flex';
+  if (currentUser) {
+    qs('user-name').textContent = currentUser.name;
+    qs('user-avatar').textContent = (currentUser.name || 'A')[0].toUpperCase();
+  }
+
+  // Show/hide module-gated nav items based on enabled modules
+  const moduleNav = {
+    invoicing:     ['customers', 'invoices'],
+    purchasing:    ['vendors', 'bills'],
+    accounting:    ['journal-entries', 'accounts'],
+    payments:      ['payments'],
+    inventory:     ['products'],
+    crm:           ['crm'],
+    hr:            ['hr'],
+    project:       ['projects'],
+    manufacturing: ['manufacturing'],
+    assets:        ['assets'],
+    expenses:      ['expenses'],
+    pos:           ['pos'],
+  };
+  document.querySelectorAll('[data-page]').forEach(el => {
+    const page = el.dataset.page;
+    const gated = Object.entries(moduleNav).find(([, pages]) => pages.includes(page));
+    if (gated) {
+      const [mod] = gated;
+      el.style.display = (currentUser?.is_super || enabledModules.includes(mod)) ? '' : 'none';
+    }
+  });
+
+  // Super admin nav
+  if (currentUser?.is_super) {
+    qs('super-nav').style.display = '';
+  }
+
+  nav(currentUser?.is_super ? 'tenants' : 'dashboard');
+}
+
+async function doLogin() {
+  const email = qs('l-email').value.trim();
+  const pass  = qs('l-pass').value;
+  qs('l-err').style.display = 'none';
+  try {
+    const r = await api('POST', '/auth/login', { email, password: pass });
+    token = r.access_token;
+    currentUser = r.user;
+    localStorage.setItem('erp_token', token);
+    enabledModules = await api('GET', '/me/modules').catch(() => []);
+    showApp();
+  } catch(e) {
+    qs('l-err').textContent = e.message;
+    qs('l-err').style.display = 'block';
+  }
+}
+
+async function doSetup() {
+  const company = qs('s-company').value.trim();
+  const email   = qs('s-email').value.trim();
+  const pass    = qs('s-pass').value;
+  const vat     = qs('s-vat').value.trim();
+  const phone   = qs('s-phone').value.trim();
+  qs('s-err').style.display = 'none';
+  if (!company || !email || !pass) {
+    qs('s-err').textContent = 'Company name, email and password are required';
+    qs('s-err').style.display = 'block';
+    return;
+  }
+  try {
+    const r = await api('POST', '/setup/init', { company_name:company, admin_email:email, admin_password:pass, vat_number:vat, phone });
+    token = r.access_token;
+    localStorage.setItem('erp_token', token);
+    currentUser = await api('GET', '/auth/me');
+    enabledModules = await api('GET', '/me/modules').catch(() => []);
+    showApp();
+    toast('Company set up successfully!');
+  } catch(e) {
+    qs('s-err').textContent = e.message;
+    qs('s-err').style.display = 'block';
+  }
+}
+
+function logout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('erp_token');
+  showLogin();
+}
+
+// ── Navigation ─────────────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', customers: 'Customers', vendors: 'Vendors',
+  invoices: 'Invoices', bills: 'Vendor Bills', payments: 'Payments',
+  'journal-entries': 'Journal Entries', accounts: 'Chart of Accounts',
+  products: 'Products', reports: 'Reports', settings: 'Settings',
+  tenants: 'Tenant Management',
+  crm: 'CRM', hr: 'HR & Employees', projects: 'Projects',
+  assets: 'Fixed Assets', expenses: 'Expenses',
+};
+
+function nav(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  qs('page-title').textContent = PAGE_TITLES[page] || page;
+  qs('topbar-actions').innerHTML = '';
+  const c = qs('content');
+  c.innerHTML = '<div style="color:var(--ink3);padding:40px;text-align:center">Loading…</div>';
+
+  const renders = {
+    dashboard:        renderDashboard,
+    customers:        () => renderPartners(true, false),
+    vendors:          () => renderPartners(false, true),
+    invoices:         () => renderInvoiceList('invoices'),
+    bills:            () => renderInvoiceList('bills'),
+    payments:         renderPayments,
+    'journal-entries': renderJournalEntries,
+    accounts:         renderAccounts,
+    products:         renderProducts,
+    reports:          renderReports,
+    settings:         renderSettings,
+    tenants:          renderTenants,
+    crm:              renderCRM,
+    hr:               renderHR,
+    projects:         renderProjects,
+    assets:           renderAssets,
+    expenses:         renderExpenses,
+  };
+  if (renders[page]) renders[page]();
+}
+
+// ── Modal helpers ──────────────────────────────────────────────
+function openModal(title, bodyHTML, footerHTML, large=false) {
+  qs('modal-title').textContent = title;
+  qs('modal-body').innerHTML = bodyHTML;
+  qs('modal-footer').innerHTML = footerHTML;
+  qs('modal').className = large ? 'modal modal-lg' : 'modal';
+  qs('overlay').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === qs('overlay')) closeModalForce();
+}
+function closeModalForce() { qs('overlay').classList.remove('open'); }
+
+// showModal — renders arbitrary HTML directly into modal-body, no header title, no footer
+function showModal(bodyHTML) {
+  qs('modal-title').textContent = '';
+  qs('modal-body').innerHTML = bodyHTML;
+  qs('modal-footer').innerHTML = '';
+  qs('modal').className = 'modal';
+  qs('overlay').classList.add('open');
+}
+
+// fmtMoney — formats a number as AED currency
+function fmtMoney(n) {
+  return 'AED ' + Number(n||0).toLocaleString('en-AE', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// statCard — renders a simple KPI stat card
+function statCard(label, value) {
+  return `<div class="card" style="padding:16px">
+    <div style="font-size:.72rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">${label}</div>
+    <div style="font-size:1.4rem;font-weight:700;color:var(--ink)">${value}</div>
+  </div>`;
+}
+
+// ── Dashboard ──────────────────────────────────────────────────
+async function renderDashboard() {
+  const c = qs('content');
+  try {
+    const d = await api('GET', '/dashboard');
+    c.innerHTML = `
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Revenue (This Month)</div>
+          <div class="kpi-value success">AED ${fmt(d.revenue_mtd)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Expenses (This Month)</div>
+          <div class="kpi-value">AED ${fmt(d.expenses_mtd)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Outstanding Invoices</div>
+          <div class="kpi-value">AED ${fmt(d.outstanding_invoices)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Overdue Invoices</div>
+          <div class="kpi-value ${d.overdue_invoices > 0 ? 'danger' : ''}">AED ${fmt(d.overdue_invoices)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Outstanding Bills</div>
+          <div class="kpi-value">AED ${fmt(d.outstanding_bills)}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total Partners</div>
+          <div class="kpi-value">${d.partner_count}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">Recent Invoices</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Number</th><th>Partner</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              ${d.recent_invoices.map(inv => `
+                <tr style="cursor:pointer" onclick="viewInvoice(${inv.id})">
+                  <td><span style="font-family:'DM Mono',monospace;font-size:.78rem">${inv.name||'Draft'}</span></td>
+                  <td>${inv.partner_name||'—'}</td>
+                  <td>${fmtDate(inv.date)}</td>
+                  <td style="font-weight:600">AED ${fmt(inv.amount_total)}</td>
+                  <td>${badge(inv.state)}</td>
+                </tr>
+              `).join('')}
+              ${d.recent_invoices.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:24px">No invoices yet</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+function badge(state) {
+  const map = {
+    draft: 'badge-draft', posted: 'badge-posted', cancelled: 'badge-cancelled',
+    paid: 'badge-paid', partial: 'badge-partial', not_paid: 'badge-not_paid',
+  };
+  return `<span class="badge ${map[state]||'badge-draft'}">${state}</span>`;
+}
+
+// ── Partners ───────────────────────────────────────────────────
+let partnerType = { is_customer: false, is_vendor: false };
+
+async function renderPartners(isCust, isVend) {
+  partnerType = { is_customer: isCust, is_vendor: isVend };
+  const label = isCust ? 'Customer' : 'Vendor';
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openPartnerForm()">+ New ${label}</button>`;
+  await loadPartners();
+}
+
+async function loadPartners(search='') {
+  const c = qs('content');
+  try {
+    let url = `/partners?is_customer=${partnerType.is_customer}&is_vendor=${partnerType.is_vendor}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    const partners = await api('GET', url);
+    const label = partnerType.is_customer ? 'Customer' : 'Vendor';
+    c.innerHTML = `
+      <div class="search-bar">
+        <input class="search-input" placeholder="Search ${label.toLowerCase()}s…" oninput="loadPartners(this.value)" value="${search}"/>
+        <span style="font-size:.78rem;color:var(--ink3)">${partners.length} ${label.toLowerCase()}${partners.length!==1?'s':''}</span>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>VAT Number</th><th>Email</th><th>Phone</th><th>Country</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${partners.map(p => `
+                <tr>
+                  <td><strong>${p.name}</strong>${p.name_ar ? `<br><span style="color:var(--ink3);font-size:.75rem;direction:rtl">${p.name_ar}</span>`:''}</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">${p.vat_number||'—'}</td>
+                  <td>${p.email||'—'}</td>
+                  <td>${p.phone||'—'}</td>
+                  <td>${p.country||'UAE'}</td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm" onclick="openPartnerForm(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deletePartner(${p.id})">Delete</button>
+                  </td>
+                </tr>
+              `).join('')}
+              ${partners.length === 0 ? `<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px">No ${label.toLowerCase()}s found</td></tr>` : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+function openPartnerForm(p=null) {
+  const label = partnerType.is_customer ? 'Customer' : 'Vendor';
+  const isEdit = !!p;
+  openModal((isEdit ? 'Edit ' : 'New ') + label, `
+    <div class="form-grid">
+      <div class="field form-full"><label>Name (English)</label><input id="pf-name" value="${p?.name||''}"/></div>
+      <div class="field form-full"><label>Name (Arabic)</label><input id="pf-name-ar" value="${p?.name_ar||''}" dir="rtl"/></div>
+      <div class="field"><label>Email</label><input id="pf-email" type="email" value="${p?.email||''}"/></div>
+      <div class="field"><label>Phone</label><input id="pf-phone" value="${p?.phone||''}"/></div>
+      <div class="field"><label>VAT Number</label><input id="pf-vat" value="${p?.vat_number||''}"/></div>
+      <div class="field"><label>Payment Terms (days)</label><input id="pf-terms" type="number" value="${p?.payment_terms||30}"/></div>
+      <div class="field form-full"><label>Address</label><textarea id="pf-addr">${p?.address||''}</textarea></div>
+      <div class="field"><label>City</label><input id="pf-city" value="${p?.city||''}"/></div>
+      <div class="field"><label>Country</label><input id="pf-country" value="${p?.country||'UAE'}"/></div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="savePartner(${p?.id||null})">Save</button>`
+  );
+}
+
+async function savePartner(id) {
+  const body = {
+    name: qs('pf-name').value.trim(),
+    name_ar: qs('pf-name-ar').value.trim() || null,
+    email: qs('pf-email').value.trim() || null,
+    phone: qs('pf-phone').value.trim() || null,
+    vat_number: qs('pf-vat').value.trim() || null,
+    payment_terms: parseInt(qs('pf-terms').value) || 30,
+    address: qs('pf-addr').value.trim() || null,
+    city: qs('pf-city').value.trim() || null,
+    country: qs('pf-country').value.trim() || 'UAE',
+    is_customer: partnerType.is_customer,
+    is_vendor: partnerType.is_vendor,
+  };
+  if (!body.name) { toast('Name is required', 'err'); return; }
+  try {
+    if (id) { await api('PUT', `/partners/${id}`, body); toast('Partner updated'); }
+    else     { await api('POST', '/partners', body);    toast('Partner created'); }
+    closeModalForce();
+    await loadPartners();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function deletePartner(id) {
+  if (!confirm('Delete this partner?')) return;
+  try {
+    await api('DELETE', `/partners/${id}`);
+    toast('Partner deleted');
+    await loadPartners();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Products ───────────────────────────────────────────────────
+async function renderProducts() {
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openProductForm()">+ New Product</button>`;
+  await loadProducts();
+}
+
+async function loadProducts(search='') {
+  const c = qs('content');
+  try {
+    let url = '/products';
+    if (search) url += `?search=${encodeURIComponent(search)}`;
+    const items = await api('GET', url);
+    c.innerHTML = `
+      <div class="search-bar">
+        <input class="search-input" placeholder="Search products…" oninput="loadProducts(this.value)" value="${search}"/>
+        <span style="font-size:.78rem;color:var(--ink3)">${items.length} product${items.length!==1?'s':''}</span>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Code</th><th>Type</th><th>Sale Price</th><th>Cost</th><th>Unit</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${items.map(p => `
+                <tr>
+                  <td><strong>${p.name}</strong></td>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">${p.code||'—'}</td>
+                  <td>${p.type}</td>
+                  <td>AED ${fmt(p.sale_price)}</td>
+                  <td>AED ${fmt(p.cost_price)}</td>
+                  <td>${p.unit}</td>
+                  <td>
+                    <button class="btn btn-ghost btn-sm" onclick="openProductForm(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteProduct(${p.id})">Delete</button>
+                  </td>
+                </tr>
+              `).join('')}
+              ${items.length === 0 ? '<tr><td colspan="7" style="text-align:center;color:var(--ink3);padding:24px">No products found</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+let _accounts = [], _prodAccounts = [];
+async function openProductForm(p=null) {
+  _accounts = await api('GET', '/accounts').catch(()=>[]);
+  const incomeAccts  = _accounts.filter(a => a.type === 'revenue');
+  const expenseAccts = _accounts.filter(a => a.type === 'expense');
+  const acctOpts = (list, sel) => list.map(a => `<option value="${a.id}" ${a.id==sel?'selected':''}>${a.code} — ${a.name}</option>`).join('');
+  openModal(p ? 'Edit Product' : 'New Product', `
+    <div class="form-grid">
+      <div class="field form-full"><label>Product Name</label><input id="prod-name" value="${p?.name||''}"/></div>
+      <div class="field"><label>Code / SKU</label><input id="prod-code" value="${p?.code||''}"/></div>
+      <div class="field"><label>Type</label>
+        <select id="prod-type">
+          <option value="service" ${p?.type==='service'?'selected':''}>Service</option>
+          <option value="product" ${p?.type==='product'?'selected':''}>Physical Product</option>
+        </select>
+      </div>
+      <div class="field"><label>Sale Price (AED)</label><input id="prod-sale" type="number" step="0.01" value="${p?.sale_price||0}"/></div>
+      <div class="field"><label>Cost Price (AED)</label><input id="prod-cost" type="number" step="0.01" value="${p?.cost_price||0}"/></div>
+      <div class="field"><label>Unit of Measure</label><input id="prod-unit" value="${p?.unit||'unit'}"/></div>
+      <div class="field form-full"><label>Income Account</label>
+        <select id="prod-income"><option value="">— select —</option>${acctOpts(incomeAccts, p?.income_account_id)}</select>
+      </div>
+      <div class="field form-full"><label>Expense Account</label>
+        <select id="prod-expense"><option value="">— select —</option>${acctOpts(expenseAccts, p?.expense_account_id)}</select>
+      </div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveProduct(${p?.id||null})">Save</button>`
+  );
+}
+
+async function saveProduct(id) {
+  const body = {
+    name: qs('prod-name').value.trim(),
+    code: qs('prod-code').value.trim() || null,
+    type: qs('prod-type').value,
+    sale_price: parseFloat(qs('prod-sale').value) || 0,
+    cost_price: parseFloat(qs('prod-cost').value) || 0,
+    unit: qs('prod-unit').value.trim() || 'unit',
+    income_account_id:  parseInt(qs('prod-income').value)  || null,
+    expense_account_id: parseInt(qs('prod-expense').value) || null,
+  };
+  if (!body.name) { toast('Name is required', 'err'); return; }
+  try {
+    if (id) { await api('PUT', `/products/${id}`, body); toast('Product updated'); }
+    else     { await api('POST', '/products', body);    toast('Product created'); }
+    closeModalForce();
+    await loadProducts();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  try {
+    await api('DELETE', `/products/${id}`);
+    toast('Product deleted');
+    await loadProducts();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Invoices / Bills ───────────────────────────────────────────
+async function renderInvoiceList(type) {
+  const isInvoice = type === 'invoices';
+  const label = isInvoice ? 'Invoice' : 'Bill';
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openInvoiceForm('${type}')">+ New ${label}</button>`;
+  await loadInvoiceList(type);
+}
+
+async function loadInvoiceList(type, search='') {
+  const c = qs('content');
+  try {
+    const items = await api('GET', `/${type}`);
+    const isInvoice = type === 'invoices';
+    c.innerHTML = `
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Number</th><th>${isInvoice ? 'Customer' : 'Vendor'}</th><th>Date</th><th>Due Date</th><th>Untaxed</th><th>Tax</th><th>Total</th><th>State</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${items.map(inv => `
+                <tr>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem;cursor:pointer;color:var(--gold);font-weight:600" onclick="viewInvoice(${inv.id},'${type}')">${inv.name||'Draft'}</td>
+                  <td>${inv.partner_name||'—'}</td>
+                  <td>${fmtDate(inv.date)}</td>
+                  <td>${fmtDate(inv.due_date)}</td>
+                  <td>AED ${fmt(inv.amount_untaxed)}</td>
+                  <td>AED ${fmt(inv.amount_tax)}</td>
+                  <td style="font-weight:600">AED ${fmt(inv.amount_total)}</td>
+                  <td>${badge(inv.state)}</td>
+                  <td>
+                    ${inv.state === 'draft' ? `
+                      <button class="btn btn-ghost btn-sm" onclick="openInvoiceForm('${type}', ${inv.id})">Edit</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--teal)" onclick="confirmMove('${type}',${inv.id})">Confirm</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteMove('${type}',${inv.id})">Delete</button>
+                    ` : inv.state === 'posted' ? `
+                      <button class="btn btn-ghost btn-sm" onclick="viewInvoice(${inv.id},'${type}')">View</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="cancelMove('${type}',${inv.id})">Cancel</button>
+                    ` : `<button class="btn btn-ghost btn-sm" onclick="viewInvoice(${inv.id},'${type}')">View</button>`}
+                  </td>
+                </tr>
+              `).join('')}
+              ${items.length === 0 ? `<tr><td colspan="9" style="text-align:center;color:var(--ink3);padding:24px">No ${type} yet</td></tr>` : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+// Invoice/Bill form state
+let invLines = [];
+
+async function openInvoiceForm(type, editId=null) {
+  const isInvoice = type === 'invoices';
+  const label = isInvoice ? 'Invoice' : 'Bill';
+
+  let existingMove = null;
+  if (editId) {
+    existingMove = await api('GET', `/${type}/${editId}`).catch(()=>null);
+  }
+
+  const [partners, taxes, accounts, journals] = await Promise.all([
+    api('GET', isInvoice ? '/partners?is_customer=true' : '/partners?is_vendor=true'),
+    api('GET', isInvoice ? '/taxes?type=sale' : '/taxes?type=purchase'),
+    api('GET', '/accounts'),
+    api('GET', isInvoice ? '/journals?type=sale' : '/journals?type=purchase'),
+  ]);
+
+  const revenueAccts = accounts.filter(a => isInvoice ? a.type==='revenue' : a.type==='expense');
+
+  const partnerOpts = partners.map(p => `<option value="${p.id}" ${existingMove?.partner_id==p.id?'selected':''}>${p.name}</option>`).join('');
+  const taxOpts = `<option value="">No Tax</option>` + taxes.map(t => `<option value="${t.id}">${t.name} (${t.rate}%)</option>`).join('');
+  const acctOpts = revenueAccts.map(a => `<option value="${a.id}">${a.code} — ${a.name}</option>`).join('');
+  const journalOpts = journals.map(j => `<option value="${j.id}" ${existingMove?.journal_id==j.id?'selected':''}>${j.name}</option>`).join('');
+
+  invLines = existingMove?.lines || [{product_id:'',name:'',quantity:1,unit_price:0,discount:0,tax_id:'',account_id:''}];
+
+  const renderLines = () => `
+    <table class="lines-table">
+      <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Disc%</th><th>Tax</th><th>Account</th><th>Amount</th><th></th></tr></thead>
+      <tbody id="inv-lines-body">
+        ${invLines.map((l,i) => `
+          <tr>
+            <td><input value="${l.name||''}" onchange="invLines[${i}].name=this.value"/></td>
+            <td style="width:60px"><input type="number" step="0.001" value="${l.quantity||1}" onchange="invLines[${i}].quantity=parseFloat(this.value)||1; updateInvTotals()"/></td>
+            <td style="width:100px"><input type="number" step="0.01" value="${l.unit_price||0}" onchange="invLines[${i}].unit_price=parseFloat(this.value)||0; updateInvTotals()"/></td>
+            <td style="width:60px"><input type="number" step="0.01" value="${l.discount||0}" onchange="invLines[${i}].discount=parseFloat(this.value)||0; updateInvTotals()"/></td>
+            <td style="width:140px">
+              <select onchange="invLines[${i}].tax_id=parseInt(this.value)||null; updateInvTotals()">
+                ${taxOpts.replace(`value="${l.tax_id||''}"`, `value="${l.tax_id||''}" selected`)}
+              </select>
+            </td>
+            <td style="width:160px">
+              <select onchange="invLines[${i}].account_id=parseInt(this.value)||null">
+                <option value="">—</option>
+                ${acctOpts.replace(`value="${l.account_id||''}"`, `value="${l.account_id||''}" selected`)}
+              </select>
+            </td>
+            <td style="width:90px;font-size:.78rem;font-weight:600" id="line-amt-${i}">AED ${fmt(lineAmt(l))}</td>
+            <td><button class="line-del" onclick="removeLine(${i})">✕</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="add-line-btn" onclick="addLine()">+ Add line</div>
+    <div class="totals-box"><div class="totals-inner" id="inv-totals"></div></div>`;
+
+  openModal(editId ? `Edit ${label}` : `New ${label}`, `
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="field"><label>Partner</label><select id="inv-partner"><option value="">— select —</option>${partnerOpts}</select></div>
+      <div class="field"><label>Date</label><input id="inv-date" type="date" value="${existingMove?.date ? fmtDate(existingMove.date) : today()}"/></div>
+      <div class="field"><label>Journal</label><select id="inv-journal">${journalOpts}</select></div>
+      <div class="field"><label>Reference</label><input id="inv-ref" value="${existingMove?.ref||''}"/></div>
+      <div class="field form-full"><label>Notes</label><textarea id="inv-narration">${existingMove?.narration||''}</textarea></div>
+    </div>
+    <div id="inv-lines-wrap">${renderLines()}</div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveInvoice('${type}',${editId||null})">Save Draft</button>`,
+    true
+  );
+
+  window._taxOpts = taxOpts; window._acctOpts = acctOpts;
+  updateInvTotals();
+}
+
+function lineAmt(l, taxRate=null) {
+  const qty = parseFloat(l.quantity)||1;
+  const price = parseFloat(l.unit_price)||0;
+  const disc = parseFloat(l.discount)||0;
+  const untaxed = qty * price * (1 - disc/100);
+  return untaxed; // Show pre-tax for simplicity in inline table
+}
+
+function updateInvTotals() {
+  let untaxed = 0, tax = 0;
+  invLines.forEach(l => {
+    const qty = parseFloat(l.quantity)||1;
+    const price = parseFloat(l.unit_price)||0;
+    const disc = parseFloat(l.discount)||0;
+    const sub = qty * price * (1 - disc/100);
+    untaxed += sub;
+    // We don't know the tax rate here without fetching, estimate from tax_id
+    // Frontend just shows approximate — server computes final
+  });
+  const totEl = qs('inv-totals');
+  if (totEl) {
+    totEl.innerHTML = `
+      <div class="totals-row"><span>Subtotal</span><span>AED ${fmt(untaxed)}</span></div>
+      <div class="totals-row total"><span>Total (est.)</span><span>AED ${fmt(untaxed)}</span></div>`;
+  }
+}
+
+function addLine() {
+  invLines.push({product_id:'',name:'',quantity:1,unit_price:0,discount:0,tax_id:'',account_id:''});
+  qs('inv-lines-wrap').innerHTML = renderInvLines();
+  updateInvTotals();
+}
+
+function removeLine(i) {
+  invLines.splice(i, 1);
+  qs('inv-lines-wrap').innerHTML = renderInvLines();
+  updateInvTotals();
+}
+
+function renderInvLines() {
+  const taxOpts = window._taxOpts || '';
+  const acctOpts = window._acctOpts || '';
+  return `
+    <table class="lines-table">
+      <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Disc%</th><th>Tax</th><th>Account</th><th>Amount</th><th></th></tr></thead>
+      <tbody>
+        ${invLines.map((l,i) => `
+          <tr>
+            <td><input value="${l.name||''}" onchange="invLines[${i}].name=this.value"/></td>
+            <td style="width:60px"><input type="number" step="0.001" value="${l.quantity||1}" onchange="invLines[${i}].quantity=parseFloat(this.value)||1; updateInvTotals()"/></td>
+            <td style="width:100px"><input type="number" step="0.01" value="${l.unit_price||0}" onchange="invLines[${i}].unit_price=parseFloat(this.value)||0; updateInvTotals()"/></td>
+            <td style="width:60px"><input type="number" step="0.01" value="${l.discount||0}" onchange="invLines[${i}].discount=parseFloat(this.value)||0; updateInvTotals()"/></td>
+            <td style="width:140px">
+              <select onchange="invLines[${i}].tax_id=parseInt(this.value)||null; updateInvTotals()">
+                ${taxOpts}
+              </select>
+            </td>
+            <td style="width:160px">
+              <select onchange="invLines[${i}].account_id=parseInt(this.value)||null">
+                <option value="">—</option>${acctOpts}
+              </select>
+            </td>
+            <td style="width:90px;font-size:.78rem;font-weight:600">AED ${fmt(lineAmt(l))}</td>
+            <td><button class="line-del" onclick="removeLine(${i})">✕</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="add-line-btn" onclick="addLine()">+ Add line</div>
+    <div class="totals-box"><div class="totals-inner" id="inv-totals"></div></div>`;
+}
+
+async function saveInvoice(type, editId) {
+  const partner_id = parseInt(qs('inv-partner').value);
+  const date       = qs('inv-date').value;
+  const journal_id = parseInt(qs('inv-journal').value) || null;
+  const ref        = qs('inv-ref').value.trim() || null;
+  const narration  = qs('inv-narration').value.trim() || null;
+  if (!partner_id) { toast('Select a partner', 'err'); return; }
+  if (!date)       { toast('Select a date', 'err'); return; }
+  const lines = invLines.filter(l => l.name);
+  if (!lines.length) { toast('Add at least one line', 'err'); return; }
+  const body = { partner_id, date, journal_id, ref, narration, lines };
+  try {
+    if (editId) { await api('PUT', `/${type}/${editId}`, body); toast('Saved'); }
+    else         { await api('POST', `/${type}`, body);        toast('Created'); }
+    closeModalForce();
+    await loadInvoiceList(type);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function confirmMove(type, id) {
+  if (!confirm('Confirm and post this document? This cannot be undone.')) return;
+  try {
+    await api('POST', `/${type}/${id}/confirm`);
+    toast('Posted successfully');
+    await loadInvoiceList(type);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function cancelMove(type, id) {
+  if (!confirm('Cancel this document?')) return;
+  try {
+    await api('POST', `/${type}/${id}/cancel`);
+    toast('Cancelled');
+    await loadInvoiceList(type);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function deleteMove(type, id) {
+  if (!confirm('Delete this draft?')) return;
+  try {
+    await api('DELETE', `/${type}/${id}`);
+    toast('Deleted');
+    await loadInvoiceList(type);
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function viewInvoice(id, type='invoices') {
+  try {
+    const inv = await api('GET', `/${type}/${id}`);
+    const isInvoice = type === 'invoices';
+    const label = isInvoice ? 'Invoice' : 'Bill';
+    const qrId = 'zatca-qr-' + id;
+
+    openModal(`${label}: ${inv.name||'Draft'}`, `
+      <div class="invoice-view">
+        <div class="inv-header">
+          <div>
+            <div style="font-family:'Instrument Serif',serif;font-size:1.6rem;color:var(--ink)">${label}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:.9rem;color:var(--gold);font-weight:600;margin-top:4px">${inv.name||'DRAFT'}</div>
+          </div>
+          <div style="text-align:right">
+            ${badge(inv.state)}
+            ${inv.zatca_qr ? `<div style="margin-top:8px"><canvas id="${qrId}" width="80" height="80"></canvas></div>` : ''}
+          </div>
+        </div>
+        <div class="inv-meta-row">
+          <dl class="inv-meta"><dt>${isInvoice?'Customer':'Vendor'}</dt><dd>${inv.partner_name||'—'}</dd></dl>
+          <dl class="inv-meta"><dt>Date</dt><dd>${fmtDate(inv.date)}</dd></dl>
+          <dl class="inv-meta"><dt>Due Date</dt><dd>${fmtDate(inv.due_date)}</dd></dl>
+          ${inv.ref ? `<dl class="inv-meta"><dt>Reference</dt><dd>${inv.ref}</dd></dl>` : ''}
+        </div>
+        <table class="inv-table">
+          <thead><tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Disc%</th><th style="text-align:right">Subtotal</th><th style="text-align:right">Tax</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            ${(inv.lines||[]).map(l => `
+              <tr>
+                <td>${l.name}</td>
+                <td style="text-align:right">${l.quantity}</td>
+                <td style="text-align:right">AED ${fmt(l.unit_price)}</td>
+                <td style="text-align:right">${l.discount||0}%</td>
+                <td style="text-align:right">AED ${fmt(l.amount_untaxed)}</td>
+                <td style="text-align:right">AED ${fmt(l.amount_tax)}</td>
+                <td style="text-align:right;font-weight:600">AED ${fmt(l.amount_total)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="inv-totals">
+          <table>
+            <tr><td>Subtotal</td><td style="text-align:right">AED ${fmt(inv.amount_untaxed)}</td></tr>
+            <tr><td>VAT</td><td style="text-align:right">AED ${fmt(inv.amount_tax)}</td></tr>
+            <tr class="inv-total-row"><td>Total</td><td style="text-align:right">AED ${fmt(inv.amount_total)}</td></tr>
+            ${inv.amount_residual != inv.amount_total ? `<tr><td style="color:var(--ink3)">Amount Due</td><td style="text-align:right;color:var(--red)">AED ${fmt(inv.amount_residual)}</td></tr>` : ''}
+          </table>
+        </div>
+        ${inv.narration ? `<div style="margin-top:16px;color:var(--ink3);font-size:.82rem;border-top:1px solid var(--border);padding-top:12px">${inv.narration}</div>` : ''}
+      </div>`,
+      `<button class="btn btn-outline" onclick="closeModalForce()">Close</button>
+       ${inv.state === 'draft' ? `
+         <button class="btn btn-primary" onclick="closeModalForce();openInvoiceForm('${type}',${id})">Edit</button>
+         <button class="btn btn-primary" style="background:var(--teal)" onclick="closeModalForce();confirmMove('${type}',${id})">Confirm</button>
+       ` : ''}
+       <button class="btn btn-primary" onclick="window.print()">Print</button>`,
+      true
+    );
+
+    if (inv.zatca_qr) {
+      setTimeout(() => {
+        const canvas = qs(qrId);
+        if (canvas && window.QRCode) {
+          QRCode.toCanvas(canvas, inv.zatca_qr, { width: 80, margin: 0 });
+        }
+      }, 100);
+    }
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Payments ───────────────────────────────────────────────────
+async function renderPayments() {
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openPaymentForm()">+ New Payment</button>`;
+  await loadPayments();
+}
+
+async function loadPayments() {
+  const c = qs('content');
+  try {
+    const items = await api('GET', '/payments');
+    c.innerHTML = `
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Partner</th><th>Type</th><th>Amount</th><th>Date</th><th>Journal</th><th>Reference</th><th>State</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${items.map(p => `
+                <tr>
+                  <td>${p.partner_name||'—'}</td>
+                  <td>${p.payment_type === 'inbound' ? '↓ Received' : '↑ Sent'}</td>
+                  <td style="font-weight:600">AED ${fmt(p.amount)}</td>
+                  <td>${fmtDate(p.date)}</td>
+                  <td>${p.journal_name||'—'}</td>
+                  <td>${p.ref||'—'}</td>
+                  <td>${badge(p.state)}</td>
+                  <td>
+                    ${p.state === 'draft' ? `<button class="btn btn-ghost btn-sm" style="color:var(--teal)" onclick="postPayment(${p.id})">Post</button>` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+              ${items.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:var(--ink3);padding:24px">No payments yet</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+async function openPaymentForm() {
+  const [partners, journals] = await Promise.all([
+    api('GET', '/partners'),
+    api('GET', '/journals'),
+  ]);
+  const bankJournals = journals.filter(j => ['bank','cash'].includes(j.type));
+  openModal('New Payment', `
+    <div class="form-grid">
+      <div class="field"><label>Partner</label>
+        <select id="pay-partner"><option value="">— select —</option>
+          ${partners.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Type</label>
+        <select id="pay-type">
+          <option value="inbound">Received (Customer Payment)</option>
+          <option value="outbound">Sent (Vendor Payment)</option>
+        </select>
+      </div>
+      <div class="field"><label>Amount (AED)</label><input id="pay-amount" type="number" step="0.01" value="0"/></div>
+      <div class="field"><label>Date</label><input id="pay-date" type="date" value="${today()}"/></div>
+      <div class="field form-full"><label>Journal</label>
+        <select id="pay-journal"><option value="">— select —</option>
+          ${bankJournals.map(j => `<option value="${j.id}">${j.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Reference</label><input id="pay-ref"/></div>
+      <div class="field"><label>Memo</label><input id="pay-memo"/></div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="savePayment()">Save</button>`
+  );
+}
+
+async function savePayment() {
+  const body = {
+    partner_id:   parseInt(qs('pay-partner').value),
+    payment_type: qs('pay-type').value,
+    amount:       parseFloat(qs('pay-amount').value) || 0,
+    date:         qs('pay-date').value,
+    journal_id:   parseInt(qs('pay-journal').value),
+    ref:          qs('pay-ref').value.trim() || null,
+    memo:         qs('pay-memo').value.trim() || null,
+  };
+  if (!body.partner_id) { toast('Select a partner', 'err'); return; }
+  if (!body.amount)     { toast('Enter an amount', 'err'); return; }
+  try {
+    await api('POST', '/payments', body);
+    toast('Payment created');
+    closeModalForce();
+    await loadPayments();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function postPayment(id) {
+  if (!confirm('Post this payment? This will create a journal entry.')) return;
+  try {
+    await api('POST', `/payments/${id}/post`, {});
+    toast('Payment posted');
+    await loadPayments();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Journal Entries ────────────────────────────────────────────
+async function renderJournalEntries() {
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openJEForm()">+ New Entry</button>`;
+  await loadJEs();
+}
+
+async function loadJEs() {
+  const c = qs('content');
+  try {
+    const items = await api('GET', '/journal-entries');
+    c.innerHTML = `
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Journal</th><th>Date</th><th>Reference</th><th>State</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${items.map(e => `
+                <tr>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">${e.name||'Draft'}</td>
+                  <td>${e.journal_name||'—'}</td>
+                  <td>${fmtDate(e.date)}</td>
+                  <td>${e.ref||'—'}</td>
+                  <td>${badge(e.state)}</td>
+                  <td>${e.state==='draft' ? `<button class="btn btn-ghost btn-sm" style="color:var(--teal)" onclick="postJE(${e.id})">Post</button>` : ''}</td>
+                </tr>
+              `).join('')}
+              ${items.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px">No journal entries yet</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+let jeLines = [{account_id:'',name:'',debit:0,credit:0,partner_id:''}];
+
+async function openJEForm() {
+  const [accounts, journals, partners] = await Promise.all([
+    api('GET', '/accounts'),
+    api('GET', '/journals'),
+    api('GET', '/partners'),
+  ]);
+  jeLines = [{account_id:'',name:'',debit:0,credit:0,partner_id:''}];
+  window._jeAccounts = accounts; window._jeJournals = journals; window._jePartners = partners;
+
+  const journalOpts = journals.map(j => `<option value="${j.id}">${j.name}</option>`).join('');
+
+  openModal('New Journal Entry', `
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="field"><label>Journal</label><select id="je-journal">${journalOpts}</select></div>
+      <div class="field"><label>Date</label><input id="je-date" type="date" value="${today()}"/></div>
+      <div class="field"><label>Reference</label><input id="je-ref"/></div>
+      <div class="field form-full"><label>Notes</label><textarea id="je-narration"></textarea></div>
+    </div>
+    <div id="je-lines-wrap">${renderJELines()}</div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveJE()">Save Draft</button>`,
+    true
+  );
+}
+
+function renderJELines() {
+  const accts = (window._jeAccounts||[]);
+  const partners = (window._jePartners||[]);
+  const acctOpts = accts.map(a => `<option value="${a.id}">${a.code} — ${a.name}</option>`).join('');
+  const partOpts = `<option value="">—</option>` + partners.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  return `
+    <table class="lines-table">
+      <thead><tr><th>Account</th><th>Label</th><th>Partner</th><th>Debit</th><th>Credit</th><th></th></tr></thead>
+      <tbody>
+        ${jeLines.map((l,i) => `
+          <tr>
+            <td style="width:180px"><select onchange="jeLines[${i}].account_id=parseInt(this.value)||null"><option value="">—</option>${acctOpts}</select></td>
+            <td><input value="${l.name||''}" onchange="jeLines[${i}].name=this.value"/></td>
+            <td style="width:140px"><select onchange="jeLines[${i}].partner_id=parseInt(this.value)||null">${partOpts}</select></td>
+            <td style="width:100px"><input type="number" step="0.01" value="${l.debit||0}" onchange="jeLines[${i}].debit=parseFloat(this.value)||0; updateJETotals()"/></td>
+            <td style="width:100px"><input type="number" step="0.01" value="${l.credit||0}" onchange="jeLines[${i}].credit=parseFloat(this.value)||0; updateJETotals()"/></td>
+            <td><button class="line-del" onclick="removeJELine(${i})">✕</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="add-line-btn" onclick="addJELine()">+ Add line</div>
+    <div id="je-totals" style="text-align:right;margin-top:8px;font-size:.82rem;color:var(--ink3)"></div>`;
+}
+
+function addJELine()    { jeLines.push({account_id:'',name:'',debit:0,credit:0}); qs('je-lines-wrap').innerHTML = renderJELines(); updateJETotals(); }
+function removeJELine(i){ jeLines.splice(i,1); qs('je-lines-wrap').innerHTML = renderJELines(); updateJETotals(); }
+function updateJETotals() {
+  const d = jeLines.reduce((s,l) => s + (parseFloat(l.debit)||0), 0);
+  const c = jeLines.reduce((s,l) => s + (parseFloat(l.credit)||0), 0);
+  const diff = Math.abs(d - c);
+  const el = qs('je-totals');
+  if (el) el.innerHTML = `Total Debit: <strong>AED ${fmt(d)}</strong> &nbsp; Total Credit: <strong>AED ${fmt(c)}</strong> &nbsp; ${diff < 0.01 ? '<span style="color:var(--teal)">✓ Balanced</span>' : `<span style="color:var(--red)">Difference: AED ${fmt(diff)}</span>`}`;
+}
+
+async function saveJE() {
+  const body = {
+    journal_id: parseInt(qs('je-journal').value),
+    date:       qs('je-date').value,
+    ref:        qs('je-ref').value.trim() || null,
+    narration:  qs('je-narration').value.trim() || null,
+    lines:      jeLines.filter(l => l.account_id),
+  };
+  if (!body.lines.length) { toast('Add at least one line', 'err'); return; }
+  const d = body.lines.reduce((s,l) => s + (l.debit||0), 0);
+  const c = body.lines.reduce((s,l) => s + (l.credit||0), 0);
+  if (Math.abs(d-c) > 0.01) { toast('Entry is not balanced', 'err'); return; }
+  try {
+    await api('POST', '/journal-entries', body);
+    toast('Entry created');
+    closeModalForce();
+    await loadJEs();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function postJE(id) {
+  if (!confirm('Post this journal entry?')) return;
+  try {
+    await api('POST', `/journal-entries/${id}/post`);
+    toast('Entry posted');
+    await loadJEs();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Chart of Accounts ──────────────────────────────────────────
+async function renderAccounts() {
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openAccountForm()">+ New Account</button>`;
+  await loadAccounts();
+}
+
+async function loadAccounts() {
+  const c = qs('content');
+  try {
+    const items = await api('GET', '/accounts');
+    const byType = {};
+    items.forEach(a => { (byType[a.type] = byType[a.type]||[]).push(a); });
+    const TYPE_LABELS = {asset:'Assets', liability:'Liabilities', equity:'Equity', revenue:'Revenue', expense:'Expenses'};
+    const ORDER = ['asset','liability','equity','revenue','expense'];
+    c.innerHTML = `
+      ${ORDER.map(type => byType[type] ? `
+        <div class="card" style="margin-bottom:16px">
+          <div class="section-title">${TYPE_LABELS[type]||type}</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Code</th><th>Account Name</th><th>Type</th><th>Actions</th></tr></thead>
+              <tbody>
+                ${byType[type].map(a => `
+                  <tr>
+                    <td style="font-family:'DM Mono',monospace;font-size:.78rem;font-weight:600">${a.code}</td>
+                    <td>${a.parent_id ? '&nbsp;&nbsp;&nbsp;' : ''}<strong>${a.name}</strong></td>
+                    <td style="color:var(--ink3)">${a.type}</td>
+                    <td>
+                      <button class="btn btn-ghost btn-sm" onclick="openAccountForm(${JSON.stringify(a).replace(/"/g,'&quot;')})">Edit</button>
+                      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteAccount(${a.id})">Delete</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : '').join('')}`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+async function openAccountForm(a=null) {
+  const allAccts = await api('GET', '/accounts').catch(()=>[]);
+  const parentOpts = `<option value="">— No parent —</option>` +
+    allAccts.filter(x => !a || x.id !== a.id).map(x => `<option value="${x.id}" ${a?.parent_id==x.id?'selected':''}>${x.code} — ${x.name}</option>`).join('');
+
+  openModal(a ? 'Edit Account' : 'New Account', `
+    <div class="form-grid">
+      <div class="field"><label>Account Code</label><input id="ac-code" value="${a?.code||''}"/></div>
+      <div class="field"><label>Account Name</label><input id="ac-name" value="${a?.name||''}"/></div>
+      <div class="field"><label>Type</label>
+        <select id="ac-type">
+          ${['asset','liability','equity','revenue','expense'].map(t => `<option value="${t}" ${a?.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Parent Account</label><select id="ac-parent">${parentOpts}</select></div>
+      <div class="field"><label>Allow Reconciliation</label>
+        <select id="ac-reconcile"><option value="false" ${!a?.reconcile?'selected':''}>No</option><option value="true" ${a?.reconcile?'selected':''}>Yes</option></select>
+      </div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveAccount(${a?.id||null})">Save</button>`
+  );
+}
+
+async function saveAccount(id) {
+  const body = {
+    code:      qs('ac-code').value.trim(),
+    name:      qs('ac-name').value.trim(),
+    type:      qs('ac-type').value,
+    parent_id: parseInt(qs('ac-parent').value) || null,
+    reconcile: qs('ac-reconcile').value === 'true',
+  };
+  if (!body.code || !body.name) { toast('Code and name are required', 'err'); return; }
+  try {
+    if (id) { await api('PUT', `/accounts/${id}`, body); toast('Account updated'); }
+    else     { await api('POST', '/accounts', body);    toast('Account created'); }
+    closeModalForce();
+    await loadAccounts();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function deleteAccount(id) {
+  if (!confirm('Delete this account?')) return;
+  try {
+    await api('DELETE', `/accounts/${id}`);
+    toast('Account deactivated');
+    await loadAccounts();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Reports ────────────────────────────────────────────────────
+function renderReports() {
+  const thisMonth = new Date();
+  const y = thisMonth.getFullYear();
+  const m = String(thisMonth.getMonth()+1).padStart(2,'0');
+  const dateFrom = `${y}-${m}-01`;
+  const dateTo   = today();
+
+  qs('content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="field"><label>From</label><input id="rep-from" type="date" value="${dateFrom}"/></div>
+      <div class="field"><label>To</label><input id="rep-to" type="date" value="${dateTo}"/></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="btn btn-outline" onclick="loadReport('trial-balance')">Trial Balance</button>
+      <button class="btn btn-outline" onclick="loadReport('profit-loss')">Profit & Loss</button>
+      <button class="btn btn-outline" onclick="loadReport('balance-sheet')">Balance Sheet</button>
+      <button class="btn btn-outline" onclick="loadReport('vat-return')">VAT Return</button>
+    </div>
+    <div id="report-output"></div>`;
+}
+
+async function loadReport(type) {
+  const from = qs('rep-from').value;
+  const to   = qs('rep-to').value;
+  const out  = qs('report-output');
+  out.innerHTML = '<div style="color:var(--ink3)">Loading…</div>';
+
+  try {
+    let url, data;
+    if (type === 'trial-balance') {
+      url = `/reports/trial-balance?date_from=${from}&date_to=${to}`;
+      data = await api('GET', url);
+      out.innerHTML = `
+        <div class="card">
+          <div class="section-title">Trial Balance &mdash; ${from} to ${to}</div>
+          <div style="font-size:.78rem;margin-bottom:12px;color:${data.balanced?'var(--teal)':'var(--red)'}">
+            ${data.balanced ? '✓ Balanced' : '✗ Not balanced'}
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Code</th><th>Account</th><th>Type</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th><th style="text-align:right">Balance</th></tr></thead>
+            <tbody>
+              ${data.lines.filter(l => parseFloat(l.total_debit)||parseFloat(l.total_credit)).map(l => `
+                <tr>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">${l.code}</td>
+                  <td>${l.name}</td>
+                  <td style="color:var(--ink3)">${l.type}</td>
+                  <td style="text-align:right">${fmt(l.total_debit)}</td>
+                  <td style="text-align:right">${fmt(l.total_credit)}</td>
+                  <td style="text-align:right;font-weight:600">${fmt(l.balance)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr style="font-weight:700;background:var(--bg)">
+                <td colspan="3">Total</td>
+                <td style="text-align:right">AED ${fmt(data.total_debit)}</td>
+                <td style="text-align:right">AED ${fmt(data.total_credit)}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table></div>
+        </div>`;
+
+    } else if (type === 'profit-loss') {
+      url = `/reports/profit-loss?date_from=${from}&date_to=${to}`;
+      data = await api('GET', url);
+      const rev  = data.lines.filter(l => l.type === 'revenue');
+      const exp  = data.lines.filter(l => l.type === 'expense');
+      out.innerHTML = `
+        <div class="card">
+          <div class="section-title">Profit & Loss &mdash; ${from} to ${to}</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Code</th><th>Account</th><th style="text-align:right">Amount (AED)</th></tr></thead>
+            <tbody>
+              <tr><td colspan="3" style="font-weight:700;color:var(--teal);padding-top:12px">Revenue</td></tr>
+              ${rev.map(l => `<tr><td style="font-family:'DM Mono',monospace;font-size:.78rem">${l.code}</td><td>${l.name}</td><td style="text-align:right">${fmt(l.amount)}</td></tr>`).join('')}
+              <tr style="font-weight:700;background:var(--bg)"><td colspan="2">Total Revenue</td><td style="text-align:right">AED ${fmt(data.total_revenue)}</td></tr>
+              <tr><td colspan="3" style="font-weight:700;color:var(--red);padding-top:12px">Expenses</td></tr>
+              ${exp.map(l => `<tr><td style="font-family:'DM Mono',monospace;font-size:.78rem">${l.code}</td><td>${l.name}</td><td style="text-align:right">${fmt(Math.abs(l.amount))}</td></tr>`).join('')}
+              <tr style="font-weight:700;background:var(--bg)"><td colspan="2">Total Expenses</td><td style="text-align:right">AED ${fmt(Math.abs(data.total_expense))}</td></tr>
+            </tbody>
+            <tfoot>
+              <tr style="font-weight:700;font-size:1rem;${data.net_profit>=0?'color:var(--teal)':'color:var(--red)'}">
+                <td colspan="2">Net Profit / (Loss)</td>
+                <td style="text-align:right">AED ${fmt(data.net_profit)}</td>
+              </tr>
+            </tfoot>
+          </table></div>
+        </div>`;
+
+    } else if (type === 'balance-sheet') {
+      url = `/reports/balance-sheet?as_of=${to}`;
+      data = await api('GET', url);
+      const assets = data.lines.filter(l => l.type === 'asset');
+      const liabs  = data.lines.filter(l => l.type === 'liability');
+      const equity = data.lines.filter(l => l.type === 'equity');
+      out.innerHTML = `
+        <div class="card">
+          <div class="section-title">Balance Sheet &mdash; as of ${to}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div>
+              <div style="font-weight:700;color:var(--teal);margin-bottom:8px">Assets</div>
+              <table style="width:100%;font-size:.82rem">
+                ${assets.map(l => `<tr><td>${l.code} — ${l.name}</td><td style="text-align:right">AED ${fmt(l.balance)}</td></tr>`).join('')}
+                <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total Assets</td><td style="text-align:right">AED ${fmt(data.total_assets)}</td></tr>
+              </table>
+            </div>
+            <div>
+              <div style="font-weight:700;color:var(--red);margin-bottom:8px">Liabilities</div>
+              <table style="width:100%;font-size:.82rem">
+                ${liabs.map(l => `<tr><td>${l.code} — ${l.name}</td><td style="text-align:right">AED ${fmt(l.balance)}</td></tr>`).join('')}
+                <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total Liabilities</td><td style="text-align:right">AED ${fmt(data.total_liabilities)}</td></tr>
+              </table>
+              <div style="font-weight:700;color:var(--ink);margin:16px 0 8px">Equity</div>
+              <table style="width:100%;font-size:.82rem">
+                ${equity.map(l => `<tr><td>${l.code} — ${l.name}</td><td style="text-align:right">AED ${fmt(Math.abs(l.balance))}</td></tr>`).join('')}
+                <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total Equity</td><td style="text-align:right">AED ${fmt(Math.abs(data.total_equity))}</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>`;
+
+    } else if (type === 'vat-return') {
+      url = `/reports/vat-return?date_from=${from}&date_to=${to}`;
+      data = await api('GET', url);
+      out.innerHTML = `
+        <div class="card">
+          <div class="section-title">VAT Return &mdash; ${from} to ${to}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div class="card" style="background:var(--green-bg);border-color:rgba(11,122,100,.2)">
+              <div style="font-weight:700;color:var(--teal);margin-bottom:12px">Output VAT (Sales)</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Taxable Sales</span><strong>AED ${fmt(data.output_taxable)}</strong></div>
+              <div style="display:flex;justify-content:space-between"><span>VAT Collected</span><strong>AED ${fmt(data.output_vat)}</strong></div>
+            </div>
+            <div class="card" style="background:var(--red-bg);border-color:rgba(192,64,42,.2)">
+              <div style="font-weight:700;color:var(--red);margin-bottom:12px">Input VAT (Purchases)</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Taxable Purchases</span><strong>AED ${fmt(data.input_taxable)}</strong></div>
+              <div style="display:flex;justify-content:space-between"><span>VAT Paid</span><strong>AED ${fmt(data.input_vat)}</strong></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:1rem;font-weight:600">Net VAT Payable to FTA</span>
+            <span style="font-size:1.3rem;font-weight:700;color:${data.net_vat_payable>=0?'var(--red)':'var(--teal)'}">
+              AED ${fmt(data.net_vat_payable)}
+            </span>
+          </div>
+        </div>`;
+    }
+  } catch(e) {
+    out.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+// ── Settings ───────────────────────────────────────────────────
+async function renderSettings() {
+  const c = qs('content');
+  try {
+    const company = await api('GET', '/company');
+    c.innerHTML = `
+      <div class="card" style="max-width:600px">
+        <div class="section-title">Company Settings</div>
+        <div class="form-grid">
+          <div class="field form-full"><label>Company Name (English)</label><input id="set-name" value="${company.name||''}"/></div>
+          <div class="field form-full"><label>Company Name (Arabic)</label><input id="set-name-ar" value="${company.name_ar||''}" dir="rtl"/></div>
+          <div class="field"><label>VAT Number (TRN)</label><input id="set-vat" value="${company.vat_number||''}"/></div>
+          <div class="field"><label>CR Number</label><input id="set-cr" value="${company.cr_number||''}"/></div>
+          <div class="field"><label>Email</label><input id="set-email" type="email" value="${company.email||''}"/></div>
+          <div class="field"><label>Phone</label><input id="set-phone" value="${company.phone||''}"/></div>
+          <div class="field form-full"><label>Address</label><textarea id="set-addr">${company.address||''}</textarea></div>
+          <div class="field"><label>City</label><input id="set-city" value="${company.city||''}"/></div>
+          <div class="field"><label>Country</label><input id="set-country" value="${company.country||'UAE'}"/></div>
+          <div class="field"><label>Currency</label>
+            <select id="set-currency">
+              <option value="AED" ${company.currency==='AED'?'selected':''}>AED — UAE Dirham</option>
+              <option value="USD" ${company.currency==='USD'?'selected':''}>USD — US Dollar</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:20px;display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+async function saveSettings() {
+  const body = {
+    name:       qs('set-name').value.trim(),
+    name_ar:    qs('set-name-ar').value.trim() || null,
+    vat_number: qs('set-vat').value.trim() || null,
+    cr_number:  qs('set-cr').value.trim() || null,
+    email:      qs('set-email').value.trim() || null,
+    phone:      qs('set-phone').value.trim() || null,
+    address:    qs('set-addr').value.trim() || null,
+    city:       qs('set-city').value.trim() || null,
+    country:    qs('set-country').value.trim() || 'UAE',
+    currency:   qs('set-currency').value,
+  };
+  try {
+    await api('PUT', '/company', body);
+    toast('Settings saved');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Super Admin Setup Helpers ──────────────────────────────────
+function showSuperSetup() {
+  qs('login-page').classList.remove('show');
+  qs('super-setup-page').style.display = 'flex';
+}
+function hideSuperSetup() {
+  qs('super-setup-page').style.display = 'none';
+  qs('login-page').classList.add('show');
+}
+
+async function doSuperSetup() {
+  const name = qs('sa-name').value.trim();
+  const email = qs('sa-email').value.trim();
+  const pass  = qs('sa-pass').value;
+  qs('sa-err').style.display = 'none';
+  if (!email || !pass) { qs('sa-err').textContent = 'Email and password required'; qs('sa-err').style.display = 'block'; return; }
+  try {
+    const r = await api('POST', '/setup/super', { name, email, password: pass });
+    token = r.access_token;
+    currentUser = r.user;
+    localStorage.setItem('erp_token', token);
+    enabledModules = [];
+    qs('super-setup-page').style.display = 'none';
+    showApp();
+    toast('Super admin created. Create your first tenant below.');
+  } catch(e) {
+    qs('sa-err').textContent = e.message;
+    qs('sa-err').style.display = 'block';
+  }
+}
+
+// ── Tenant Management (super admin) ───────────────────────────
+const MODULE_LABELS = {
+  invoicing:     'Sales & Invoicing',
+  purchasing:    'Purchasing',
+  accounting:    'Full Accounting',
+  payments:      'Payments',
+  inventory:     'Products & Inventory',
+  crm:           'CRM',
+  hr:            'HR & Employees',
+  project:       'Projects',
+  manufacturing: 'Manufacturing',
+  assets:        'Fixed Assets',
+  expenses:      'Expenses',
+  pos:           'Point of Sale',
+};
+
+async function renderTenants() {
+  const [tenants, stats] = await Promise.all([
+    api('GET', '/super/tenants'),
+    api('GET', '/super/stats'),
+  ]);
+
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openCreateTenant()">+ New Tenant</button>`;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Tenants', stats.total_tenants)}
+        ${statCard('Active', stats.active_tenants)}
+        ${statCard('Total Users', stats.total_users)}
+        ${statCard('Posted Invoices', stats.total_invoices)}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Tenants</span></div>
+        <table class="data-table">
+          <thead><tr><th>Company</th><th>Plan</th><th>Modules</th><th>Users</th><th>Invoices</th><th>Revenue</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${tenants.map(t => `
+              <tr>
+                <td>
+                  <div style="font-weight:600">${t.name}</div>
+                  ${t.vat_number ? `<div style="font-size:.75rem;color:var(--ink3)">VAT: ${t.vat_number}</div>` : ''}
+                </td>
+                <td><span class="badge">${t.plan||'standard'}</span></td>
+                <td style="font-size:.75rem">${(t.enabled_modules||[]).slice(0,3).join(', ')}${(t.enabled_modules||[]).length > 3 ? ` +${(t.enabled_modules||[]).length-3}` : ''}</td>
+                <td>${t.user_count||0}</td>
+                <td>${t.posted_moves||0}</td>
+                <td>${fmtMoney(t.total_invoiced||0)}</td>
+                <td><span class="badge ${t.status==='active'?'badge-ok':t.status==='deleted'?'badge-err':'badge-warn'}">${t.status||'active'}</span></td>
+                <td style="white-space:nowrap">
+                  <button class="btn-link" onclick="openTenantDetail(${t.id})">Manage</button>
+                  <button class="btn-link" onclick="openModules(${t.id},'${t.name}')">Modules</button>
+                  ${t.status==='active'
+                    ? `<button class="btn-link" style="color:var(--red)" onclick="toggleTenantStatus(${t.id},'suspended')">Suspend</button>`
+                    : `<button class="btn-link" style="color:var(--teal)" onclick="toggleTenantStatus(${t.id},'active')">Activate</button>`}
+                </td>
+              </tr>
+            `).join('')}
+            ${tenants.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:var(--ink3);padding:32px">No tenants yet — create your first one</td></tr>' : ''}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function openTenantDetail(id) {
+  const tenant = await api('GET', `/super/tenants/${id}`);
+  const mods = tenant.modules || {};
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">${tenant.name}</h3>
+    <div class="form-grid" style="margin-bottom:20px">
+      <div class="field"><label>Company Name</label><input id="m-tname" value="${tenant.name||''}"/></div>
+      <div class="field"><label>VAT Number</label><input id="m-tvat" value="${tenant.vat_number||''}"/></div>
+      <div class="field"><label>Phone</label><input id="m-tphone" value="${tenant.phone||''}"/></div>
+      <div class="field"><label>Email</label><input id="m-temail" value="${tenant.email||''}"/></div>
+      <div class="field"><label>Plan</label>
+        <select id="m-tplan"><option value="starter"${tenant.plan==='starter'?' selected':''}>Starter</option><option value="standard"${tenant.plan==='standard'?' selected':''}>Standard</option><option value="growth"${tenant.plan==='growth'?' selected':''}>Growth</option><option value="enterprise"${tenant.plan==='enterprise'?' selected':''}>Enterprise</option></select></div>
+    </div>
+
+    <div style="font-size:.8rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Users (${tenant.users?.length||0})</div>
+    <div style="max-height:180px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:8px">
+      <table class="data-table" style="font-size:.8rem">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+          ${(tenant.users||[]).map(u => `
+            <tr>
+              <td>${u.name}</td><td>${u.email}</td><td>${u.role}</td>
+              <td><span class="badge ${u.active?'badge-ok':'badge-err'}">${u.active?'Yes':'No'}</span></td>
+              <td><button class="btn-link" style="color:var(--red)" onclick="removeTenantUser(${id},${u.id})">Remove</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <details style="margin-bottom:16px">
+      <summary style="font-size:.82rem;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Add User to Tenant</summary>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
+        <div class="field"><label>Name</label><input id="m-uname-${id}"/></div>
+        <div class="field"><label>Email</label><input id="m-uemail-${id}" type="email"/></div>
+        <div class="field"><label>Password</label><input id="m-upass-${id}" type="password"/></div>
+        <div class="field"><label>Role</label><select id="m-urole-${id}"><option value="admin">Admin</option><option value="staff" selected>Staff</option><option value="viewer">Viewer</option></select></div>
+      </div>
+      <button class="btn" onclick="addTenantUser(${id})" style="font-size:.78rem;padding:6px 14px">Add User</button>
+    </details>
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="saveTenantInfo(${id})">Save</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" style="margin-left:auto;color:var(--red)" onclick="deleteTenantConfirm(${id},'${tenant.name}')">Delete Tenant</button>
+    </div>
+  `);
+}
+
+async function saveTenantInfo(id) {
+  await api('PUT', `/super/tenants/${id}`, {
+    company_name: qs('m-tname').value,
+    vat_number: qs('m-tvat').value || null,
+    phone: qs('m-tphone').value || null,
+    email: qs('m-temail').value || null,
+    plan: qs('m-tplan').value,
+  });
+  closeModal(); toast('Tenant updated'); nav('tenants');
+}
+
+async function addTenantUser(tid) {
+  const name  = qs(`m-uname-${tid}`).value.trim();
+  const email = qs(`m-uemail-${tid}`).value.trim();
+  const pass  = qs(`m-upass-${tid}`).value;
+  const role  = qs(`m-urole-${tid}`).value;
+  if (!name || !email || !pass) { toast('Name, email and password required', 'err'); return; }
+  await api('POST', `/super/tenants/${tid}/users`, {name, email, password: pass, role});
+  closeModal(); toast('User added'); openTenantDetail(tid);
+}
+
+async function removeTenantUser(tid, uid) {
+  if (!confirm('Remove this user?')) return;
+  await api('DELETE', `/super/tenants/${tid}/users/${uid}`);
+  closeModal(); toast('User removed'); openTenantDetail(tid);
+}
+
+async function deleteTenantConfirm(id, name) {
+  if (!confirm(`Delete tenant "${name}"? All users will be deactivated.`)) return;
+  await api('DELETE', `/super/tenants/${id}`);
+  closeModal(); toast('Tenant deleted'); nav('tenants');
+}
+
+async function openCreateTenant() {
+  openModal('Create New Tenant', `
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:16px">Each tenant gets their own company data, chart of accounts, and admin login.</p>
+    <div class="form-grid">
+      <div class="field form-full"><label>Company Name</label><input id="nt-company" placeholder="Acme Trading LLC"/></div>
+      <div class="field"><label>VAT Number (TRN)</label><input id="nt-vat" placeholder="100123456700003"/></div>
+      <div class="field"><label>Phone</label><input id="nt-phone" placeholder="+971 4 xxx xxxx"/></div>
+      <div class="field"><label>Admin Email</label><input id="nt-email" type="email" placeholder="admin@acme.ae"/></div>
+      <div class="field"><label>Admin Password</label><input id="nt-pass" type="password" placeholder="Temporary password"/></div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-size:.78rem;font-weight:600;color:var(--ink2);margin-bottom:10px">ENABLED MODULES</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="nt-modules">
+        ${Object.entries(MODULE_LABELS).map(([key, label]) => `
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px;border:1.5px solid var(--border);border-radius:var(--r)">
+            <input type="checkbox" value="${key}" checked style="accent-color:var(--gold)"/>
+            <div><div style="font-size:.82rem;font-weight:600">${label}</div></div>
+          </label>
+        `).join('')}
+      </div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveNewTenant()">Create Tenant</button>`,
+    true
+  );
+}
+
+async function saveNewTenant() {
+  const company = qs('nt-company').value.trim();
+  const email   = qs('nt-email').value.trim();
+  const pass    = qs('nt-pass').value;
+  const vat     = qs('nt-vat').value.trim() || null;
+  const phone   = qs('nt-phone').value.trim() || null;
+  const modules = [...document.querySelectorAll('#nt-modules input:checked')].map(el => el.value);
+  if (!company || !email || !pass) { toast('Company name, email and password required', 'err'); return; }
+  try {
+    const r = await api('POST', '/super/tenants', { company_name:company, admin_email:email, admin_password:pass, vat_number:vat, phone, modules });
+    toast(`Tenant "${company}" created`);
+    closeModalForce();
+    await loadTenants();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function openModules(tenantId, tenantName) {
+  const current = await api('GET', `/super/tenants/${tenantId}/modules`).catch(()=>({}));
+  openModal(`Modules — ${tenantName}`, `
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:16px">Toggle which ERP modules this tenant can access. Changes take effect on next login.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="mod-grid">
+      ${Object.entries(MODULE_LABELS).map(([key, label]) => `
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;border:1.5px solid ${current[key]?'var(--gold)':'var(--border)'};border-radius:var(--r);transition:.15s" id="mod-row-${key}" onclick="this.style.borderColor=document.getElementById('mod-${key}').checked?'var(--border)':'var(--gold)'">
+          <input type="checkbox" id="mod-${key}" value="${key}" ${current[key]?'checked':''} style="accent-color:var(--gold)"/>
+          <div>
+            <div style="font-size:.85rem;font-weight:600">${label}</div>
+            <div style="font-size:.72rem;color:var(--ink3)">${getModuleDesc(key)}</div>
+          </div>
+        </label>
+      `).join('')}
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveModules(${tenantId})">Save Modules</button>`
+  );
+}
+
+function getModuleDesc(key) {
+  const descs = {
+    invoicing:     'Customers, sales invoices, ZATCA QR',
+    purchasing:    'Vendors, vendor bills',
+    accounting:    'Chart of accounts, journal entries, reports',
+    payments:      'Payment tracking',
+    inventory:     'Product catalog',
+    crm:           'Leads, pipeline, opportunities',
+    hr:            'Employees, payroll, leave management',
+    project:       'Projects, tasks, time tracking',
+    manufacturing: 'Production orders, BOM',
+    assets:        'Fixed assets, depreciation',
+    expenses:      'Expense claims, approvals',
+    pos:           'Point of sale terminal',
+  };
+  return descs[key] || '';
+}
+
+async function saveModules(tenantId) {
+  const modules = [...document.querySelectorAll('#mod-grid input:checked')].map(el => el.value);
+  try {
+    await api('PUT', `/super/tenants/${tenantId}/modules`, { modules });
+    toast('Modules updated');
+    closeModalForce();
+    await loadTenants();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function loadTenants() { nav('tenants'); }
+
+async function toggleTenantStatus(tenantId, newStatus) {
+  if (!confirm(`${newStatus === 'suspended' ? 'Suspend' : 'Activate'} this tenant?`)) return;
+  try {
+    await api('PUT', `/super/tenants/${tenantId}/status`, { status: newStatus });
+    toast(`Tenant ${newStatus}`);
+    nav('tenants');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── CRM ────────────────────────────────────────────────────────
+async function renderCRM() {
+  const [leads] = await Promise.all([api('GET', '/crm/leads')]);
+  const stages = ['new','qualified','proposition','won','lost'];
+  const stageLabels = {new:'New',qualified:'Qualified',proposition:'Proposal',won:'Won',lost:'Lost'};
+  const stageColors = {new:'var(--ink3)',qualified:'var(--teal)',proposition:'var(--gold)',won:'var(--green)',lost:'var(--red)'};
+
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewLead()">+ New Lead</button>`;
+
+  // Kanban board
+  const board = document.createElement('div');
+  board.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:24px;min-height:400px;align-items:start';
+
+  stages.forEach(stage => {
+    const col = document.createElement('div');
+    col.style.cssText = 'background:var(--bg);border-radius:8px;padding:12px;';
+    const stageLeads = leads.filter(l => l.stage === stage);
+    const total = stageLeads.reduce((s,l) => s + parseFloat(l.expected_revenue||0), 0);
+    col.innerHTML = `
+      <div style="font-size:.72rem;font-weight:700;color:${stageColors[stage]};text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">
+        ${stageLabels[stage]} <span style="color:var(--ink3);font-weight:400">(${stageLeads.length})</span>
+      </div>
+      ${total > 0 ? `<div style="font-size:.75rem;color:var(--ink3);margin-bottom:8px">${fmtMoney(total)}</div>` : ''}
+      ${stageLeads.map(l => `
+        <div onclick="openLead(${l.id})" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:4px">${l.name}</div>
+          ${l.contact_name ? `<div style="font-size:.78rem;color:var(--ink3)">${l.contact_name}</div>` : ''}
+          ${l.expected_revenue > 0 ? `<div style="font-size:.8rem;color:var(--gold);font-weight:600;margin-top:6px">${fmtMoney(l.expected_revenue)}</div>` : ''}
+          ${l.probability > 0 ? `<div style="height:3px;background:var(--border);border-radius:2px;margin-top:6px"><div style="height:100%;background:var(--teal);border-radius:2px;width:${l.probability}%"></div></div>` : ''}
+        </div>
+      `).join('')}
+    `;
+    board.appendChild(col);
+  });
+
+  qs('content').innerHTML = '';
+  qs('content').appendChild(board);
+}
+
+async function openLead(id) {
+  const lead = await api('GET', `/crm/leads/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">${lead.name}</h3>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="field"><label>Stage</label>
+        <select id="m-stage">${['new','qualified','proposition','won','lost'].map(s=>`<option value="${s}"${lead.stage===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select></div>
+      <div class="field"><label>Probability (%)</label><input id="m-prob" type="number" value="${lead.probability||0}" min="0" max="100"/></div>
+      <div class="field"><label>Contact</label><input id="m-contact" value="${lead.contact_name||''}"/></div>
+      <div class="field"><label>Email</label><input id="m-email" type="email" value="${lead.email||''}"/></div>
+      <div class="field"><label>Phone</label><input id="m-phone" value="${lead.phone||''}"/></div>
+      <div class="field"><label>Expected Revenue</label><input id="m-rev" type="number" value="${lead.expected_revenue||0}"/></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-desc" rows="3">${lead.description||''}</textarea></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveLead(${id})">Save</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" style="margin-left:auto;color:var(--red)" onclick="deleteLead(${id})">Delete</button>
+    </div>
+  `);
+}
+
+async function saveLead(id) {
+  const body = {
+    name: document.querySelector('#modal-body input') ? document.querySelector('#modal-body h3').textContent : '',
+    stage: qs('m-stage').value,
+    probability: parseFloat(qs('m-prob').value)||0,
+    contact_name: qs('m-contact').value,
+    email: qs('m-email').value,
+    phone: qs('m-phone').value,
+    expected_revenue: parseFloat(qs('m-rev').value)||0,
+    description: qs('m-desc').value,
+  };
+  // Get name from a hidden element or from the lead
+  const lead = await api('GET', `/crm/leads/${id}`);
+  body.name = lead.name;
+  await api('PUT', `/crm/leads/${id}`, body);
+  closeModal(); toast('Lead updated'); nav('crm');
+}
+
+async function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  await api('DELETE', `/crm/leads/${id}`);
+  closeModal(); nav('crm');
+}
+
+async function openNewLead() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Lead</h3>
+    <div class="field"><label>Lead Name *</label><input id="m-lname" placeholder="e.g. ABC Corp - ERP Project"/></div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="field"><label>Contact Name</label><input id="m-contact"/></div>
+      <div class="field"><label>Email</label><input id="m-email" type="email"/></div>
+      <div class="field"><label>Phone</label><input id="m-phone"/></div>
+      <div class="field"><label>Expected Revenue</label><input id="m-rev" type="number" value="0"/></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewLead()">Create Lead</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewLead() {
+  const name = qs('m-lname').value.trim();
+  if (!name) { qs('m-err').textContent='Lead name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/crm/leads', {
+    name,
+    contact_name: qs('m-contact').value,
+    email: qs('m-email').value,
+    phone: qs('m-phone').value,
+    expected_revenue: parseFloat(qs('m-rev').value)||0,
+  });
+  closeModal(); toast('Lead created'); nav('crm');
+}
+
+// ── HR ─────────────────────────────────────────────────────────
+async function renderHR() {
+  const [employees, leaves] = await Promise.all([
+    api('GET', '/hr/employees'),
+    api('GET', '/hr/leaves'),
+  ]);
+
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewEmployee()">+ New Employee</button>`;
+
+  const depts = [...new Set(employees.map(e => e.department).filter(Boolean))];
+  const totalSalary = employees.reduce((s,e) => s + parseFloat(e.basic_salary||0), 0);
+  const pendingLeaves = leaves.filter(l => l.state === 'draft').length;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Employees', employees.length)}
+        ${statCard('Total Monthly Salary', fmtMoney(totalSalary))}
+        ${statCard('Departments', depts.length)}
+        ${statCard('Pending Leaves', pendingLeaves)}
+      </div>
+
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header"><span class="card-title">Employees</span></div>
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Job Title</th><th>Department</th><th>Email</th><th>Basic Salary</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${employees.map(e => `
+              <tr>
+                <td><strong>${e.name}</strong> ${e.employee_number ? `<span style="color:var(--ink3);font-size:.75rem">#${e.employee_number}</span>` : ''}</td>
+                <td>${e.job_title||'—'}</td>
+                <td>${e.department||'—'}</td>
+                <td>${e.email||'—'}</td>
+                <td>${fmtMoney(e.basic_salary)}</td>
+                <td><span class="badge ${e.active?'badge-ok':'badge-err'}">${e.active?'Active':'Inactive'}</span></td>
+                <td><button class="btn-link" onclick="openEmployee(${e.id})">Edit</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Leave Requests</span>
+          <button class="btn" onclick="openNewLeave()" style="font-size:.78rem;padding:6px 12px">+ New Leave</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${leaves.map(l => `
+              <tr>
+                <td>${l.employee_name}</td>
+                <td>${l.leave_type}</td>
+                <td>${fmtDate(l.date_from)}</td>
+                <td>${fmtDate(l.date_to)}</td>
+                <td>${l.days}</td>
+                <td><span class="badge ${l.state==='approved'?'badge-ok':l.state==='refused'?'badge-err':'badge-warn'}">${l.state}</span></td>
+                <td>
+                  ${l.state==='draft'?`
+                    <button class="btn-link" style="color:var(--teal)" onclick="approveLeave(${l.id})">Approve</button>
+                    <button class="btn-link" style="color:var(--red)" onclick="refuseLeave(${l.id})">Refuse</button>
+                  `:'—'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function openEmployee(id) {
+  const e = await api('GET', `/hr/employees/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">Edit Employee</h3>
+    <div class="form-grid">
+      <div class="field"><label>Name *</label><input id="m-ename" value="${e.name}"/></div>
+      <div class="field"><label>Employee #</label><input id="m-enum" value="${e.employee_number||''}"/></div>
+      <div class="field"><label>Job Title</label><input id="m-etitle" value="${e.job_title||''}"/></div>
+      <div class="field"><label>Department</label><input id="m-edept" value="${e.department||''}"/></div>
+      <div class="field"><label>Email</label><input id="m-eemail" value="${e.email||''}"/></div>
+      <div class="field"><label>Phone</label><input id="m-ephone" value="${e.phone||''}"/></div>
+      <div class="field"><label>Hire Date</label><input id="m-ehire" type="date" value="${e.hire_date?String(e.hire_date).slice(0,10):''}"/></div>
+      <div class="field"><label>Basic Salary</label><input id="m-esal" type="number" value="${e.basic_salary||0}"/></div>
+      <div class="field"><label>Housing Allowance</label><input id="m-ehousing" type="number" value="${e.housing_allowance||0}"/></div>
+      <div class="field"><label>Transport Allowance</label><input id="m-etrans" type="number" value="${e.transport_allowance||0}"/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveEmployee(${id})">Save</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveEmployee(id) {
+  await api('PUT', `/hr/employees/${id}`, {
+    name: qs('m-ename').value,
+    employee_number: qs('m-enum').value,
+    job_title: qs('m-etitle').value,
+    department: qs('m-edept').value,
+    email: qs('m-eemail').value,
+    phone: qs('m-ephone').value,
+    hire_date: qs('m-ehire').value || null,
+    basic_salary: parseFloat(qs('m-esal').value)||0,
+    housing_allowance: parseFloat(qs('m-ehousing').value)||0,
+    transport_allowance: parseFloat(qs('m-etrans').value)||0,
+    contract_type: 'full_time',
+  });
+  closeModal(); toast('Employee saved'); nav('hr');
+}
+
+async function openNewEmployee() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Employee</h3>
+    <div class="form-grid">
+      <div class="field"><label>Full Name *</label><input id="m-ename"/></div>
+      <div class="field"><label>Job Title</label><input id="m-etitle"/></div>
+      <div class="field"><label>Department</label><input id="m-edept"/></div>
+      <div class="field"><label>Email</label><input id="m-eemail" type="email"/></div>
+      <div class="field"><label>Phone</label><input id="m-ephone"/></div>
+      <div class="field"><label>Hire Date</label><input id="m-ehire" type="date" value="${today()}"/></div>
+      <div class="field"><label>Basic Salary</label><input id="m-esal" type="number" value="0"/></div>
+      <div class="field"><label>Housing Allowance</label><input id="m-ehousing" type="number" value="0"/></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewEmployee()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewEmployee() {
+  const name = qs('m-ename').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/hr/employees', {
+    name, job_title: qs('m-etitle').value, department: qs('m-edept').value,
+    email: qs('m-eemail').value, phone: qs('m-ephone').value,
+    hire_date: qs('m-ehire').value || null,
+    basic_salary: parseFloat(qs('m-esal').value)||0,
+    housing_allowance: parseFloat(qs('m-ehousing').value)||0,
+    contract_type: 'full_time',
+  });
+  closeModal(); toast('Employee created'); nav('hr');
+}
+
+async function openNewLeave() {
+  const employees = await api('GET', '/hr/employees');
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Leave Request</h3>
+    <div class="form-grid">
+      <div class="field"><label>Employee *</label>
+        <select id="m-lemp"><option value="">— select —</option>${employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Leave Type</label>
+        <select id="m-ltype"><option value="annual">Annual</option><option value="sick">Sick</option><option value="unpaid">Unpaid</option><option value="emergency">Emergency</option></select></div>
+      <div class="field"><label>From *</label><input id="m-ldf" type="date" value="${today()}"/></div>
+      <div class="field"><label>To *</label><input id="m-ldt" type="date" value="${today()}"/></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="m-lnotes" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewLeave()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewLeave() {
+  if (!qs('m-lemp').value) { qs('m-err').textContent='Employee required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/hr/leaves', {
+    employee_id: parseInt(qs('m-lemp').value),
+    leave_type: qs('m-ltype').value,
+    date_from: qs('m-ldf').value,
+    date_to: qs('m-ldt').value,
+    notes: qs('m-lnotes').value,
+  });
+  closeModal(); toast('Leave request created'); nav('hr');
+}
+
+async function approveLeave(id) {
+  await api('PUT', `/hr/leaves/${id}/approve`);
+  toast('Leave approved'); nav('hr');
+}
+
+async function refuseLeave(id) {
+  await api('PUT', `/hr/leaves/${id}/refuse`);
+  toast('Leave refused'); nav('hr');
+}
+
+// ── Projects ───────────────────────────────────────────────────
+async function renderProjects() {
+  const projects = await api('GET', '/projects');
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>`;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+        ${projects.map(p => `
+          <div class="card" style="cursor:pointer" onclick="openProject(${p.id})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">${p.name}</div>
+                ${p.client_name ? `<div style="font-size:.8rem;color:var(--ink3)">Client: ${p.client_name}</div>` : ''}
+                ${p.manager_name ? `<div style="font-size:.8rem;color:var(--ink3)">Manager: ${p.manager_name}</div>` : ''}
+              </div>
+              <span class="badge ${p.state==='open'?'badge-ok':p.state==='done'?'':'badge-warn'}">${p.state}</span>
+            </div>
+            <div style="display:flex;gap:16px;margin-top:12px;font-size:.8rem;color:var(--ink3)">
+              <span>📋 ${p.task_count} tasks</span>
+              ${p.date_end ? `<span>📅 Due ${fmtDate(p.date_end)}</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+        ${projects.length === 0 ? '<div style="color:var(--ink3);padding:40px;text-align:center;grid-column:1/-1">No projects yet. Create your first project.</div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+async function openProject(id) {
+  const project = await api('GET', `/projects/${id}`);
+  const taskStages = {todo:'To Do',in_progress:'In Progress',review:'In Review',done:'Done'};
+  const tasksByStage = {};
+  ['todo','in_progress','review','done'].forEach(s => { tasksByStage[s] = project.tasks.filter(t => t.stage===s); });
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <button class="btn" onclick="nav('projects')">← Projects</button>
+        <h2 style="font-family:'Instrument Serif',serif;font-weight:400">${project.name}</h2>
+        <span class="badge ${project.state==='open'?'badge-ok':''}">${project.state}</span>
+        <button class="btn btn-primary" style="margin-left:auto" onclick="openNewTask(${id})">+ Add Task</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        ${['todo','in_progress','review','done'].map(stage => `
+          <div style="background:var(--bg);border-radius:8px;padding:12px">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px">${taskStages[stage]} (${tasksByStage[stage].length})</div>
+            ${tasksByStage[stage].map(t => `
+              <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px">
+                <div style="font-size:.85rem;font-weight:600;color:var(--ink)">${t.name}</div>
+                ${t.assigned_to ? `<div style="font-size:.75rem;color:var(--ink3);margin-top:4px">👤 ${t.assigned_to}</div>` : ''}
+                ${t.deadline ? `<div style="font-size:.75rem;color:var(--ink3)">📅 ${fmtDate(t.deadline)}</div>` : ''}
+                ${t.planned_hours > 0 ? `<div style="font-size:.75rem;color:var(--gold)">⏱ ${t.planned_hours}h</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+async function openNewProject() {
+  const partners = await api('GET', '/partners');
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Project</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Project Name *</label><input id="m-pname"/></div>
+      <div class="field"><label>Client</label>
+        <select id="m-pclient"><option value="">— none —</option>${partners.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Start Date</label><input id="m-pstart" type="date" value="${today()}"/></div>
+      <div class="field"><label>End Date</label><input id="m-pend" type="date"/></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-pdesc" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewProject()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewProject() {
+  const name = qs('m-pname').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  const p = await api('POST', '/projects', {
+    name, partner_id: qs('m-pclient').value ? parseInt(qs('m-pclient').value) : null,
+    date_start: qs('m-pstart').value || null, date_end: qs('m-pend').value || null,
+    description: qs('m-pdesc').value,
+  });
+  closeModal(); toast('Project created'); openProject(p.id);
+}
+
+async function openNewTask(projectId) {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Task</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Task Name *</label><input id="m-tname"/></div>
+      <div class="field"><label>Stage</label>
+        <select id="m-tstage"><option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select></div>
+      <div class="field"><label>Deadline</label><input id="m-tdeadline" type="date"/></div>
+      <div class="field"><label>Planned Hours</label><input id="m-thours" type="number" value="0"/></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-tdesc" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewTask(${projectId})">Create Task</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewTask(projectId) {
+  const name = qs('m-tname').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/tasks', {
+    project_id: projectId, name, stage: qs('m-tstage').value,
+    deadline: qs('m-tdeadline').value || null,
+    planned_hours: parseFloat(qs('m-thours').value)||0,
+    description: qs('m-tdesc').value,
+  });
+  closeModal(); toast('Task created'); openProject(projectId);
+}
+
+// ── Fixed Assets ───────────────────────────────────────────────
+async function renderAssets() {
+  const [assets, categories] = await Promise.all([
+    api('GET', '/assets'),
+    api('GET', '/asset-categories'),
+  ]);
+
+  qs('topbar-actions').innerHTML = `
+    <button class="btn" onclick="openNewAssetCategory()">+ Category</button>
+    <button class="btn btn-primary" onclick="openNewAsset()">+ New Asset</button>
+  `;
+
+  const totalValue = assets.reduce((s,a) => s + parseFloat(a.purchase_value||0), 0);
+  const bookValue  = assets.reduce((s,a) => s + parseFloat(a.book_value||0), 0);
+  const activeCount = assets.filter(a => a.state==='active').length;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Assets', assets.length)}
+        ${statCard('Active Assets', activeCount)}
+        ${statCard('Purchase Value', fmtMoney(totalValue))}
+        ${statCard('Net Book Value', fmtMoney(bookValue))}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Fixed Assets</span>
+          <div style="display:flex;gap:8px">
+            ${['','draft','active','disposed'].map(s=>`<button class="btn${currentAssetFilter===s?' btn-primary':''}" onclick="filterAssets('${s}')" style="font-size:.75rem;padding:4px 10px">${s||'All'}</button>`).join('')}
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Asset</th><th>Category</th><th>Purchase Date</th><th>Purchase Value</th><th>Accumulated Dep.</th><th>Net Book Value</th><th>State</th><th></th></tr></thead>
+          <tbody>
+            ${assets.map(a => `
+              <tr>
+                <td><strong>${a.name}</strong>${a.asset_number?` <span style="color:var(--ink3);font-size:.75rem">#${a.asset_number}</span>`:''}</td>
+                <td>${a.category_name||'—'}</td>
+                <td>${fmtDate(a.purchase_date)}</td>
+                <td>${fmtMoney(a.purchase_value)}</td>
+                <td>${fmtMoney(a.accumulated_depreciation)}</td>
+                <td><strong>${fmtMoney(a.book_value)}</strong></td>
+                <td><span class="badge ${a.state==='active'?'badge-ok':a.state==='disposed'?'badge-err':'badge-warn'}">${a.state}</span></td>
+                <td style="white-space:nowrap">
+                  <button class="btn-link" onclick="openAsset(${a.id})">View</button>
+                  ${a.state==='draft'?`<button class="btn-link" style="color:var(--teal)" onclick="confirmAsset(${a.id})">Activate</button>`:''}
+                  ${a.state==='active'?`<button class="btn-link" style="color:var(--red)" onclick="disposeAsset(${a.id})">Dispose</button>`:''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+let currentAssetFilter = '';
+async function filterAssets(state) {
+  currentAssetFilter = state;
+  nav('assets');
+}
+
+async function openAsset(id) {
+  const asset = await api('GET', `/assets/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:8px;font-family:'Instrument Serif',serif;font-weight:400">${asset.name}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      ${[
+        ['State', `<span class="badge ${asset.state==='active'?'badge-ok':''}">${asset.state}</span>`],
+        ['Purchase Value', fmtMoney(asset.purchase_value)],
+        ['Salvage Value', fmtMoney(asset.salvage_value)],
+        ['Useful Life', `${asset.useful_life} years`],
+        ['Accumulated Dep.', fmtMoney(asset.accumulated_depreciation)],
+        ['Net Book Value', `<strong>${fmtMoney(asset.book_value)}</strong>`],
+        ['Method', asset.depreciation_method],
+        ['Location', asset.location||'—'],
+      ].map(([l,v]) => `<div><span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em">${l}</span><div style="margin-top:2px">${v}</div></div>`).join('')}
+    </div>
+    ${asset.depreciation_lines && asset.depreciation_lines.length > 0 ? `
+      <div style="font-size:.8rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Depreciation Schedule</div>
+      <div style="max-height:200px;overflow-y:auto">
+        <table class="data-table" style="font-size:.8rem">
+          <thead><tr><th>Date</th><th>Amount</th><th>Book Value After</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${asset.depreciation_lines.map(dl => `
+              <tr>
+                <td>${fmtDate(dl.date)}</td>
+                <td>${fmtMoney(dl.amount)}</td>
+                <td>${fmtMoney(dl.book_value_after)}</td>
+                <td><span class="badge ${dl.state==='posted'?'badge-ok':'badge-warn'}">${dl.state}</span></td>
+                <td>${dl.state==='draft' && asset.state==='active' ? `<button class="btn-link" onclick="postDepLine(${asset.id},${dl.id})">Post</button>` : ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : ''}
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn" onclick="closeModal()">Close</button>
+      ${asset.state==='draft' ? `<button class="btn btn-primary" onclick="confirmAsset(${asset.id});closeModal()">Activate Asset</button>` : ''}
+      ${asset.state==='active' ? `<button class="btn" style="color:var(--red)" onclick="disposeAsset(${asset.id});closeModal()">Dispose</button>` : ''}
+    </div>
+  `);
+}
+
+async function confirmAsset(id) {
+  await api('POST', `/assets/${id}/confirm`);
+  toast('Asset activated — depreciation schedule computed'); nav('assets');
+}
+
+async function disposeAsset(id) {
+  if (!confirm('Dispose this asset? This cannot be undone.')) return;
+  await api('POST', `/assets/${id}/dispose`, {});
+  toast('Asset disposed'); nav('assets');
+}
+
+async function postDepLine(assetId, lineId) {
+  await api('POST', `/assets/${assetId}/depreciate/${lineId}`, {});
+  toast('Depreciation posted'); closeModal(); nav('assets');
+}
+
+async function openNewAsset() {
+  const [categories, partners, accounts] = await Promise.all([
+    api('GET', '/asset-categories'),
+    api('GET', '/partners?is_vendor=true'),
+    api('GET', '/accounts?type=asset'),
+  ]);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Fixed Asset</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Asset Name *</label><input id="m-aname"/></div>
+      <div class="field"><label>Asset Number</label><input id="m-anum"/></div>
+      <div class="field"><label>Category</label>
+        <select id="m-acat"><option value="">— none —</option>${categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Purchase Date</label><input id="m-apdate" type="date" value="${today()}"/></div>
+      <div class="field"><label>In Service Date</label><input id="m-asdate" type="date" value="${today()}"/></div>
+      <div class="field"><label>Purchase Value *</label><input id="m-avalue" type="number" value="0"/></div>
+      <div class="field"><label>Salvage Value</label><input id="m-asalvage" type="number" value="0"/></div>
+      <div class="field"><label>Useful Life (years)</label><input id="m-alife" type="number" value="5"/></div>
+      <div class="field"><label>Depreciation Method</label>
+        <select id="m-amethod"><option value="straight_line">Straight Line</option><option value="declining_balance">Declining Balance</option></select></div>
+      <div class="field"><label>Location</label><input id="m-aloc"/></div>
+      <div class="field"><label>Serial Number</label><input id="m-aserial"/></div>
+      <div class="field"><label>Vendor</label>
+        <select id="m-avendor"><option value="">— none —</option>${partners.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewAsset()">Create Asset</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewAsset() {
+  const name = qs('m-aname').value.trim();
+  if (!name) { qs('m-err').textContent='Asset name required'; qs('m-err').style.display=''; return; }
+  if (parseFloat(qs('m-avalue').value) <= 0) { qs('m-err').textContent='Purchase value must be > 0'; qs('m-err').style.display=''; return; }
+  await api('POST', '/assets', {
+    name, asset_number: qs('m-anum').value || null,
+    category_id: qs('m-acat').value ? parseInt(qs('m-acat').value) : null,
+    purchase_date: qs('m-apdate').value || null,
+    in_service_date: qs('m-asdate').value || null,
+    purchase_value: parseFloat(qs('m-avalue').value),
+    salvage_value: parseFloat(qs('m-asalvage').value)||0,
+    useful_life: parseInt(qs('m-alife').value)||5,
+    depreciation_method: qs('m-amethod').value,
+    location: qs('m-aloc').value || null,
+    serial_number: qs('m-aserial').value || null,
+    partner_id: qs('m-avendor').value ? parseInt(qs('m-avendor').value) : null,
+  });
+  closeModal(); toast('Asset created'); nav('assets');
+}
+
+async function openNewAssetCategory() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Asset Category</h3>
+    <div class="form-grid">
+      <div class="field"><label>Category Name *</label><input id="m-cname"/></div>
+      <div class="field"><label>Useful Life (years)</label><input id="m-clife" type="number" value="5"/></div>
+      <div class="field"><label>Method</label>
+        <select id="m-cmethod"><option value="straight_line">Straight Line</option><option value="declining_balance">Declining Balance</option></select></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewAssetCategory()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewAssetCategory() {
+  const name = qs('m-cname').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/asset-categories', {
+    name, useful_life: parseInt(qs('m-clife').value)||5, depreciation_method: qs('m-cmethod').value
+  });
+  closeModal(); toast('Category created'); nav('assets');
+}
+
+// ── Expenses ───────────────────────────────────────────────────
+async function renderExpenses() {
+  const expenses = await api('GET', '/expenses');
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewExpense()">+ New Expense</button>`;
+
+  const total = expenses.reduce((s,e) => s + parseFloat(e.amount||0), 0);
+  const pending = expenses.filter(e => e.state==='draft').length;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Expenses', expenses.length)}
+        ${statCard('Pending Approval', pending)}
+        ${statCard('Total Amount', fmtMoney(total))}
+        ${statCard('Approved', expenses.filter(e=>e.state==='approved').length)}
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Expense Claims</span></div>
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Employee</th><th>Description</th><th>Category</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${expenses.map(e => `
+              <tr>
+                <td>${fmtDate(e.date)}</td>
+                <td>${e.employee_name||'—'}</td>
+                <td>${e.name}</td>
+                <td>${e.category_name||'—'}</td>
+                <td>${fmtMoney(e.amount)}</td>
+                <td><span class="badge ${e.state==='approved'?'badge-ok':e.state==='refused'?'badge-err':'badge-warn'}">${e.state}</span></td>
+                <td>
+                  ${e.state==='draft'?`
+                    <button class="btn-link" style="color:var(--teal)" onclick="approveExpense(${e.id})">Approve</button>
+                    <button class="btn-link" style="color:var(--red)" onclick="refuseExpense(${e.id})">Refuse</button>
+                  `:''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function openNewExpense() {
+  const employees = await api('GET', '/hr/employees');
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Expense</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Description *</label><input id="m-expname"/></div>
+      <div class="field"><label>Employee</label>
+        <select id="m-expemp"><option value="">— none —</option>${employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Date</label><input id="m-expdate" type="date" value="${today()}"/></div>
+      <div class="field"><label>Amount</label><input id="m-expamt" type="number" value="0"/></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="m-expnotes" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewExpense()">Submit</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewExpense() {
+  const name = qs('m-expname').value.trim();
+  if (!name) { qs('m-err').textContent='Description required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/expenses', {
+    name, date: qs('m-expdate').value,
+    amount: parseFloat(qs('m-expamt').value)||0,
+    employee_id: qs('m-expemp').value ? parseInt(qs('m-expemp').value) : null,
+    notes: qs('m-expnotes').value,
+  });
+  closeModal(); toast('Expense submitted'); nav('expenses');
+}
+
+async function approveExpense(id) {
+  await api('PUT', `/expenses/${id}/approve`);
+  toast('Expense approved'); nav('expenses');
+}
+
+async function refuseExpense(id) {
+  await api('PUT', `/expenses/${id}/refuse`);
+  toast('Expense refused'); nav('expenses');
+}
+
+// ── Settings Users ─────────────────────────────────────────────
+async function renderSettingsUsers() {
+  const users = await api('GET', '/users');
+  qs('settings-users-body').innerHTML = `
+    <div style="margin-bottom:12px;text-align:right">
+      <button class="btn btn-primary" onclick="openNewUser()" style="font-size:.82rem">+ Add User</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        ${users.map(u => `
+          <tr>
+            <td>${u.name}</td><td>${u.email}</td>
+            <td><span class="badge">${u.role}</span></td>
+            <td><span class="badge ${u.active?'badge-ok':'badge-err'}">${u.active?'Active':'Inactive'}</span></td>
+            <td><button class="btn-link" style="color:var(--red)" onclick="deactivateUser(${u.id})">Deactivate</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function openNewUser() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">Add User</h3>
+    <div class="form-grid">
+      <div class="field"><label>Full Name *</label><input id="m-uname"/></div>
+      <div class="field"><label>Email *</label><input id="m-uemail" type="email"/></div>
+      <div class="field"><label>Password *</label><input id="m-upass" type="password"/></div>
+      <div class="field"><label>Role</label>
+        <select id="m-urole"><option value="admin">Admin</option><option value="staff" selected>Staff</option><option value="viewer">Viewer</option></select></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewUser()">Create User</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewUser() {
+  const name = qs('m-uname').value.trim();
+  const email = qs('m-uemail').value.trim();
+  const pass = qs('m-upass').value;
+  if (!name || !email || !pass) { qs('m-err').textContent='All fields required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/users', {name, email, password: pass, role: qs('m-urole').value});
+  closeModal(); toast('User created');
+}
+
+async function deactivateUser(id) {
+  if (!confirm('Deactivate this user?')) return;
+  await api('DELETE', `/users/${id}`);
+  toast('User deactivated');
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModalForce();
+});
+qs('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── Init ───────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
