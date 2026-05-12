@@ -160,7 +160,8 @@ def init_db():
             ("active",    "INTEGER DEFAULT 1"),
             ("created_at","INTEGER DEFAULT (strftime('%s','now'))"),
             ("onboarding_json", "TEXT"),
-            ("role",      "TEXT"),
+            ("role",           "TEXT"),
+            ("erp_company_id", "INTEGER"),
         ]:
             try:
                 conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -1223,7 +1224,7 @@ def admin_list_users(auth: dict = Depends(require_admin)):
     db   = get_db()
     rows = db.execute("""
         SELECT id, email, name, company, plan, active, odoo_uid, tenant_id,
-               created_at, onboarding_json, role
+               created_at, onboarding_json, role, erp_company_id
         FROM users
         ORDER BY created_at DESC
     """).fetchall()
@@ -1236,22 +1237,84 @@ def admin_list_users(auth: dict = Depends(require_admin)):
         except Exception:
             ob = None
         users.append({
-            "id":         r["id"],
-            "email":      r["email"],
-            "name":       r["name"],
-            "company":    r["company"],
-            "plan":       r["plan"] or "trial",
-            "active":     bool(r["active"]),
-            "odoo_uid":   r["odoo_uid"],
-            "tenant_id":  r["tenant_id"],
-            "created_at": r["created_at"],
-            "role":       r["role"],
-            "products":   (ob or {}).get("products", []),
-            "industry":   (ob or {}).get("industry"),
-            "team_size":  (ob or {}).get("teamSize"),
-            "is_admin":   (r["email"] or "").lower() in ADMIN_EMAILS,
+            "id":             r["id"],
+            "email":          r["email"],
+            "name":           r["name"],
+            "company":        r["company"],
+            "plan":           r["plan"] or "trial",
+            "active":         bool(r["active"]),
+            "odoo_uid":       r["odoo_uid"],
+            "tenant_id":      r["tenant_id"],
+            "erp_company_id": r["erp_company_id"],
+            "created_at":     r["created_at"],
+            "role":           r["role"],
+            "products":       (ob or {}).get("products", []),
+            "industry":       (ob or {}).get("industry"),
+            "team_size":      (ob or {}).get("teamSize"),
+            "is_admin":       (r["email"] or "").lower() in ADMIN_EMAILS,
         })
     return {"users": users, "total": len(users)}
+
+
+@app.post("/api/v1/admin/sync-erp")
+def admin_sync_erp(auth: dict = Depends(require_admin)):
+    """Provision all active portal users (who have a company) into the ERP as tenants."""
+    import secrets as _secrets
+    import urllib.request as _url
+    import json as _json
+
+    erp_url     = settings.get("ERP_API_URL",    "https://erp.mumtaz.digital")
+    portal_key  = settings.get("PORTAL_API_KEY", "mumtaz-portal-key-change-me")
+
+    db   = get_db()
+    rows = db.execute(
+        "SELECT id, email, name, company, erp_company_id FROM users WHERE active=1"
+    ).fetchall()
+    db.close()
+
+    synced, skipped, failed = [], [], []
+
+    for row in rows:
+        if not row["company"]:
+            continue
+        if row["erp_company_id"]:
+            skipped.append({"email": row["email"], "erp_company_id": row["erp_company_id"]})
+            continue
+        temp_pass = _secrets.token_urlsafe(10)
+        payload   = _json.dumps({
+            "portal_api_key": portal_key,
+            "company_name":   row["company"],
+            "admin_email":    row["email"],
+            "admin_password": temp_pass,
+        }).encode()
+        try:
+            req = _url.Request(
+                f"{erp_url}/api/portal/provision",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with _url.urlopen(req, timeout=20) as resp:
+                data = _json.loads(resp.read())
+            cid = data.get("company_id")
+            db2 = get_db()
+            db2.execute("UPDATE users SET erp_company_id=? WHERE id=?", (cid, row["id"]))
+            db2.commit(); db2.close()
+            synced.append({
+                "email":        row["email"],
+                "company":      row["company"],
+                "erp_company_id": cid,
+                "temp_password":  temp_pass if not data.get("already_existed") else "(existing account)",
+            })
+        except Exception as e:
+            failed.append({"email": row["email"], "error": str(e)})
+
+    return {
+        "synced":  synced,
+        "skipped": skipped,
+        "failed":  failed,
+        "summary": f"{len(synced)} synced, {len(skipped)} already synced, {len(failed)} failed",
+    }
 
 class AdminToggleReq(BaseModel):
     active: bool
@@ -1267,6 +1330,24 @@ def admin_toggle_user(user_id: int, req: AdminToggleReq, auth: dict = Depends(re
     db.execute("UPDATE users SET active=? WHERE id=?", (1 if req.active else 0, user_id))
     db.commit(); db.close()
     return {"ok": True, "active": req.active}
+
+@app.post("/api/v1/admin/users/{user_id}/make-admin")
+def admin_make_admin(user_id: int, auth: dict = Depends(require_admin)):
+    """Promote a portal user to platform admin (adds to MUMTAZ_ADMINS)."""
+    db = get_db()
+    row = db.execute("SELECT email, name FROM users WHERE id=?", (user_id,)).fetchone()
+    db.close()
+    if not row:
+        raise HTTPException(404, "User not found.")
+    email = (row["email"] or "").lower()
+    current = settings.get("MUMTAZ_ADMINS", "") or ""
+    existing = {e.strip().lower() for e in current.split(",") if e.strip()}
+    if email not in existing:
+        existing.add(email)
+        settings.set_value("MUMTAZ_ADMINS", ",".join(sorted(existing)), updated_by=auth.get("email"))
+    global ADMIN_EMAILS
+    ADMIN_EMAILS = admin_emails()
+    return {"ok": True, "email": email, "is_admin": True}
 
 class AdminPlanReq(BaseModel):
     plan: str

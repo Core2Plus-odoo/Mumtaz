@@ -37,6 +37,8 @@ ALLOWED_KEYS: tuple[str, ...] = (
     # General
     "PORTAL_BASE_URL",
     "MUMTAZ_ADMINS",
+    "ERP_API_URL",
+    "PORTAL_API_KEY",
 
     # SMTP
     "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM", "SMTP_USE_TLS",

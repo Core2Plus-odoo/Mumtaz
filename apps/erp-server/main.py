@@ -2252,14 +2252,21 @@ PORTAL_API_KEY = os.getenv("PORTAL_API_KEY", "mumtaz-portal-key-change-me")
 
 @app.post("/api/portal/provision")
 def portal_provision(data: PortalProvisionIn):
-    """Called by app.mumtaz.digital after onboarding to create a tenant."""
+    """Called by app.mumtaz.digital after onboarding to create a tenant. Idempotent."""
     if data.portal_api_key != PORTAL_API_KEY:
         raise HTTPException(403, "Invalid portal API key")
     enabled = data.modules if data.modules else ALL_MODULES
     with get_db() as conn:
-        existing = fetchone(conn, "SELECT id FROM users WHERE email=%s", (data.admin_email,))
-        if existing:
-            raise HTTPException(400, "Email already in use")
+        existing_user = fetchone(conn, "SELECT id, company_id FROM users WHERE email=%s", (data.admin_email,))
+        if existing_user:
+            # Already provisioned — return existing company info
+            company_id = existing_user["company_id"]
+            return {
+                "company_id": company_id,
+                "erp_url": "https://erp.mumtaz.digital",
+                "message": f"Tenant already provisioned",
+                "already_existed": True,
+            }
         c = dictcur(conn)
         c.execute(
             "INSERT INTO companies (name, vat_number) VALUES (%s, NULL) RETURNING id",
@@ -2277,6 +2284,7 @@ def portal_provision(data: PortalProvisionIn):
             "access_token": token,
             "erp_url": "https://erp.mumtaz.digital",
             "message": f"Tenant '{data.company_name}' provisioned",
+            "already_existed": False,
         }
 
 

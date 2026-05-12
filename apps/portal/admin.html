@@ -44,169 +44,102 @@
       padding: 3px 9px; border-radius: 100px;
       letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
     }
-    .tb-back {
-      font-size: .82rem; color: rgba(255,255,255,.65);
-      transition: color .15s;
-    }
+    .tb-back { font-size: .82rem; color: rgba(255,255,255,.65); transition: color .15s; }
     .tb-back:hover { color: #fff; }
 
-    .main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 60px; }
+    .main { max-width: 1400px; margin: 0 auto; padding: 28px 24px 60px; }
 
     .hd { margin-bottom: 22px; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
-    .hd-eyebrow {
-      font-family: 'DM Mono', monospace; font-size: .72rem;
-      color: var(--ink3); letter-spacing: .08em; text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .hd-title {
-      font-family: 'Instrument Serif', serif;
-      font-size: 1.7rem; font-weight: 400; color: var(--ink);
-      letter-spacing: -.015em;
-    }
+    .hd-eyebrow { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--ink3); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+    .hd-title { font-family: 'Instrument Serif', serif; font-size: 1.7rem; font-weight: 400; color: var(--ink); letter-spacing: -.015em; }
 
-    .stats {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-      margin-bottom: 24px;
+    .hd-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--gold); color: #fff;
+      padding: 8px 16px; border-radius: 8px;
+      font-size: .82rem; font-weight: 600;
+      transition: opacity .15s;
     }
-    @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-    .stat {
-      background: var(--white);
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-outline {
       border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
+      background: var(--white);
+      color: var(--ink2);
+      padding: 7px 14px; border-radius: 8px;
+      font-size: .82rem; font-weight: 500;
     }
-    .stat-label {
-      font-family: 'DM Mono', monospace; font-size: .66rem;
-      color: var(--ink3); letter-spacing: .07em; text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .stat-val {
-      font-size: 1.5rem; font-weight: 700; color: var(--ink); line-height: 1.1;
-    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
 
-    .filter-bar {
-      display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
-      align-items: center;
-    }
-    .filter-bar input, .filter-bar select {
-      padding: 8px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      background: var(--white);
-      font-size: .85rem; color: var(--ink);
-      outline: none;
-    }
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .stat-label { font-family: 'DM Mono', monospace; font-size: .66rem; color: var(--ink3); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-val { font-size: 1.5rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+
+    .filter-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+    .filter-bar input, .filter-bar select { padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--white); font-size: .85rem; color: var(--ink); outline: none; }
     .filter-bar input:focus, .filter-bar select:focus { border-color: var(--gold); }
     .filter-bar input { min-width: 240px; flex: 1; }
     .meta { color: var(--ink3); font-size: .8rem; }
 
-    .table-wrap {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
+    .table-wrap { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     .table-scroll { overflow-x: auto; }
-    table {
-      width: 100%; border-collapse: collapse;
-      font-size: .87rem;
-    }
-    th, td {
-      padding: 11px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    th {
-      background: var(--bg);
-      font-family: 'DM Mono', monospace; font-size: .66rem;
-      color: var(--ink3); letter-spacing: .08em; text-transform: uppercase;
-      font-weight: 600;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+    th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    th { background: var(--bg); font-family: 'DM Mono', monospace; font-size: .66rem; color: var(--ink3); letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: rgba(184,134,42,.04); }
 
     .user-cell { display: flex; align-items: center; gap: 10px; }
-    .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), var(--gold2));
-      color: #fff; font-weight: 600; font-size: .82rem;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .82rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .user-name { font-weight: 600; color: var(--ink); }
     .user-email { color: var(--ink3); font-size: .78rem; }
 
-    .pill {
-      display: inline-block; padding: 2px 9px;
-      font-size: .7rem; font-weight: 600;
-      border-radius: 100px;
-      background: var(--bg); color: var(--ink2);
-    }
+    .pill { display: inline-block; padding: 2px 9px; font-size: .7rem; font-weight: 600; border-radius: 100px; background: var(--bg); color: var(--ink2); }
     .pill.gold { background: var(--gold-bg); color: var(--gold); }
     .pill.teal { background: rgba(11,122,100,.12); color: var(--teal); }
     .pill.red  { background: #FCECEA; color: var(--red); }
     .pill.gray { background: var(--bg); color: var(--ink3); }
 
-    .plan-select {
-      padding: 5px 8px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--white);
-      font-size: .8rem;
-      cursor: pointer;
-    }
+    .plan-select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); font-size: .8rem; cursor: pointer; }
 
-    .toggle-btn {
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: .76rem; font-weight: 600;
-      transition: opacity .15s;
-    }
+    .action-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .toggle-btn { padding: 5px 10px; border-radius: 6px; font-size: .76rem; font-weight: 600; transition: opacity .15s; }
     .toggle-btn.activate    { background: var(--teal); color: #fff; }
     .toggle-btn.deactivate  { background: var(--red); color: #fff; }
     .toggle-btn.disabled    { background: var(--bg); color: var(--ink3); cursor: not-allowed; }
     .toggle-btn:not(.disabled):hover { opacity: .85; }
+    .sync-btn { padding: 5px 9px; border-radius: 6px; font-size: .74rem; font-weight: 600; background: rgba(11,122,100,.1); color: var(--teal); transition: opacity .15s; }
+    .sync-btn:hover { opacity: .75; }
+    .admin-btn { padding: 5px 9px; border-radius: 6px; font-size: .74rem; font-weight: 600; background: var(--gold-bg); color: var(--gold); transition: opacity .15s; }
+    .admin-btn:hover { opacity: .75; }
 
-    .empty, .loading {
-      padding: 48px;
-      text-align: center;
-      color: var(--ink3);
-      font-size: .9rem;
-    }
-    .deny {
-      max-width: 480px; margin: 80px auto;
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      text-align: center;
-    }
+    .empty, .loading { padding: 48px; text-align: center; color: var(--ink3); font-size: .9rem; }
+    .deny { max-width: 480px; margin: 80px auto; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: center; }
     .deny h2 { font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 1.3rem; margin-bottom: 8px; }
     .deny p { color: var(--ink3); font-size: .9rem; line-height: 1.55; }
-    .deny code {
-      display: inline-block; margin-top: 14px;
-      background: var(--bg); padding: 6px 10px; border-radius: 6px;
-      font-family: 'DM Mono', monospace; font-size: .78rem;
-    }
+    .deny code { display: inline-block; margin-top: 14px; background: var(--bg); padding: 6px 10px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: .78rem; }
 
-    .toast {
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-      background: var(--ink); color: #fff;
-      padding: 10px 18px; border-radius: 100px;
-      font-size: .85rem; font-weight: 500;
-      box-shadow: 0 8px 24px rgba(0,0,0,.18);
-      opacity: 0; pointer-events: none;
-      transition: opacity .25s, transform .25s;
-      z-index: 100;
-    }
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 100px; font-size: .85rem; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,.18); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 100; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
     .toast.error { background: var(--red); }
 
     .inactive td { opacity: .55; }
     .product-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 
-    /* ── Mobile ── */
+    /* Sync result panel */
+    .sync-panel { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; display: none; }
+    .sync-panel.open { display: block; }
+    .sync-panel h3 { font-size: .9rem; font-weight: 600; margin-bottom: 10px; }
+    .sync-result-row { font-size: .8rem; padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; gap: 8px; }
+    .sync-result-row:last-child { border-bottom: none; }
+    .sync-ok  { color: var(--teal); }
+    .sync-skip { color: var(--ink3); }
+    .sync-fail { color: var(--red); }
+    .pass-mono { font-family: 'DM Mono', monospace; font-size: .75rem; background: var(--bg); padding: 2px 6px; border-radius: 4px; user-select: all; }
+
     @media (max-width: 720px) {
       .topbar { padding: 10px 16px; }
       .tb-logo-name { display: none; }
@@ -216,16 +149,11 @@
       .filter-bar select { flex: 1; }
       table { font-size: .8rem; }
       th, td { padding: 9px 10px; }
-      th:nth-child(2), td:nth-child(2),  /* Company */
-      th:nth-child(4), td:nth-child(4),  /* Products */
-      th:nth-child(5), td:nth-child(5),  /* Industry */
-      th:nth-child(6), td:nth-child(6) { /* Joined */
-        display: none;
-      }
+      th:nth-child(4), td:nth-child(4),
+      th:nth-child(5), td:nth-child(5),
+      th:nth-child(6), td:nth-child(6) { display: none; }
       .user-email { font-size: .72rem; }
       .avatar { width: 28px; height: 28px; font-size: .76rem; }
-      .toggle-btn { padding: 4px 8px; font-size: .7rem; }
-      .plan-select { font-size: .76rem; padding: 4px 6px; }
     }
   </style>
 </head>
@@ -252,8 +180,21 @@
         <div>
           <div class="hd-eyebrow">User management</div>
           <h1 class="hd-title">Customers</h1>
+          <div class="meta" id="who" style="margin-top:4px">—</div>
         </div>
-        <div class="meta" id="who">—</div>
+        <div class="hd-actions">
+          <button class="btn-outline" id="sync-all-btn" onclick="syncAllToERP()">⚡ Sync All → ERP</button>
+          <a href="/admin-settings.html" class="btn-primary">Settings</a>
+        </div>
+      </div>
+
+      <!-- Sync result panel -->
+      <div class="sync-panel" id="sync-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 id="sync-summary">ERP Sync Results</h3>
+          <button onclick="$('sync-panel').classList.remove('open')" style="color:var(--ink3);font-size:.8rem">Close ✕</button>
+        </div>
+        <div id="sync-results"></div>
       </div>
 
       <div class="stats" id="stats"></div>
@@ -272,6 +213,11 @@
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
+        <select id="filter-erp">
+          <option value="">All ERP status</option>
+          <option value="synced">ERP synced</option>
+          <option value="unsynced">Not in ERP</option>
+        </select>
         <span class="meta" id="count"></span>
       </div>
 
@@ -284,10 +230,10 @@
                 <th>Company</th>
                 <th>Plan</th>
                 <th>Products</th>
-                <th>Industry</th>
                 <th>Joined</th>
+                <th>ERP</th>
                 <th>Status</th>
-                <th></th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="rows">
@@ -300,7 +246,7 @@
 
     <div class="deny" id="deny" hidden>
       <h2>Admin access required</h2>
-      <p>Your account isn't authorized for the admin panel. To grant access, set the <code>MUMTAZ_ADMINS</code> env var on zaki-server to a comma-separated list of admin emails and restart the service.</p>
+      <p>Your account isn't authorized for the admin panel. To grant access, set the <code>MUMTAZ_ADMINS</code> setting via admin-settings or run the platform setup script.</p>
       <p style="margin-top:14px"><a href="/dashboard.html" style="color:var(--gold);font-weight:600">← Back to dashboard</a></p>
     </div>
 
@@ -346,15 +292,17 @@
     }
 
     function renderStats() {
-      const total    = users.length;
-      const active   = users.filter(u => u.active).length;
-      const trial    = users.filter(u => u.plan === 'trial').length;
-      const paying   = users.filter(u => u.plan !== 'trial' && u.active).length;
+      const total   = users.length;
+      const active  = users.filter(u => u.active).length;
+      const trial   = users.filter(u => u.plan === 'trial').length;
+      const paying  = users.filter(u => u.plan !== 'trial' && u.active).length;
+      const erpSync = users.filter(u => u.erp_company_id).length;
       const cards = [
-        { label: 'Total users',     val: total },
-        { label: 'Active',          val: active },
-        { label: 'On trial',        val: trial },
-        { label: 'Paying customers',val: paying },
+        { label: 'Total users',      val: total },
+        { label: 'Active',           val: active },
+        { label: 'On trial',         val: trial },
+        { label: 'Paying',           val: paying },
+        { label: 'ERP synced',       val: erpSync },
       ];
       $('stats').innerHTML = cards.map(c =>
         `<div class="stat"><div class="stat-label">${c.label}</div><div class="stat-val">${c.val}</div></div>`
@@ -362,13 +310,16 @@
     }
 
     function renderRows() {
-      const q     = $('search').value.trim().toLowerCase();
-      const plan  = $('filter-plan').value;
-      const status= $('filter-status').value;
+      const q      = $('search').value.trim().toLowerCase();
+      const plan   = $('filter-plan').value;
+      const status = $('filter-status').value;
+      const erp    = $('filter-erp').value;
       const filtered = users.filter(u => {
         if (plan   && u.plan !== plan) return false;
         if (status === 'active'   && !u.active) return false;
         if (status === 'inactive' &&  u.active) return false;
+        if (erp === 'synced'   && !u.erp_company_id) return false;
+        if (erp === 'unsynced' &&  u.erp_company_id) return false;
         if (q) {
           const hay = [u.name, u.email, u.company].filter(Boolean).join(' ').toLowerCase();
           if (!hay.includes(q)) return false;
@@ -378,25 +329,26 @@
       $('count').textContent = `${filtered.length} of ${users.length} shown`;
 
       if (!filtered.length) {
-        $('rows').innerHTML = '<tr><td colspan="8" class="empty">No users match the current filter.</td></tr>';
+        $('rows').innerHTML = '<tr><td colspan="8" class="empty">No users match.</td></tr>';
         return;
       }
 
       $('rows').innerHTML = filtered.map(u => {
-        const initial = ((u.name || u.email || '?')[0] || '?').toUpperCase();
-        const joined  = u.created_at ? new Date(u.created_at * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
+        const initial     = ((u.name || u.email || '?')[0] || '?').toUpperCase();
+        const joined      = u.created_at ? new Date(u.created_at * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
         const productPills = (u.products || []).map(p => `<span class="pill gold">${p}</span>`).join('') || '<span class="meta">—</span>';
-        const planSel = ['trial','starter','growth','scale'].map(p =>
+        const planSel     = ['trial','starter','growth','scale'].map(p =>
           `<option value="${p}" ${p === u.plan ? 'selected' : ''}>${PLAN_NAMES[p]}</option>`
         ).join('');
-        const toggleClass = u.is_admin ? 'disabled'
-                           : (u.active ? 'deactivate' : 'activate');
-        const toggleText  = u.is_admin ? 'Admin'
-                           : (u.active ? 'Deactivate' : 'Reactivate');
-        const adminBadge  = u.is_admin ? '<span class="pill gold" title="Admin">⚡ Admin</span>' : '';
+        const toggleClass = u.is_admin ? 'disabled' : (u.active ? 'deactivate' : 'activate');
+        const toggleText  = u.is_admin ? 'Admin'    : (u.active ? 'Deactivate' : 'Reactivate');
+        const adminBadge  = u.is_admin ? '<span class="pill gold" title="Platform admin">⚡</span>' : '';
+        const erpBadge    = u.erp_company_id
+          ? `<span class="pill teal" title="ERP tenant #${u.erp_company_id}">✓ #${u.erp_company_id}</span>`
+          : `<span class="pill gray">—</span>`;
 
         return `
-          <tr class="${u.active ? '' : 'inactive'}">
+          <tr class="${u.active ? '' : 'inactive'}" data-id="${u.id}">
             <td>
               <div class="user-cell">
                 <div class="avatar">${initial}</div>
@@ -406,20 +358,22 @@
                 </div>
               </div>
             </td>
-            <td>${u.company || '—'}</td>
+            <td>${u.company || '<span class="meta">—</span>'}</td>
             <td>
               <select class="plan-select" data-id="${u.id}" data-plan="${u.plan}">
                 ${planSel}
               </select>
             </td>
             <td><div class="product-tags">${productPills}</div></td>
-            <td>${u.industry ? `<span class="pill">${u.industry}</span>` : '<span class="meta">—</span>'}</td>
             <td>${joined}</td>
+            <td>${erpBadge}</td>
             <td>${u.active ? '<span class="pill teal">Active</span>' : '<span class="pill red">Inactive</span>'}</td>
             <td>
-              <button class="toggle-btn ${toggleClass}" data-id="${u.id}" data-active="${!u.active}" ${u.is_admin ? 'disabled' : ''}>
-                ${toggleText}
-              </button>
+              <div class="action-btns">
+                <button class="toggle-btn ${toggleClass}" data-id="${u.id}" data-active="${!u.active}" ${u.is_admin ? 'disabled' : ''}>${toggleText}</button>
+                ${!u.erp_company_id && u.company ? `<button class="sync-btn" data-id="${u.id}" onclick="syncOneToERP(${u.id}, this)">→ ERP</button>` : ''}
+                ${!u.is_admin ? `<button class="admin-btn" data-id="${u.id}" onclick="makeAdmin(${u.id}, this)">Make Admin</button>` : ''}
+              </div>
             </td>
           </tr>`;
       }).join('');
@@ -427,8 +381,7 @@
       $('rows').querySelectorAll('.plan-select').forEach(sel => {
         sel.addEventListener('change', () => changePlan(parseInt(sel.dataset.id, 10), sel.value, sel));
       });
-      $('rows').querySelectorAll('.toggle-btn').forEach(btn => {
-        if (btn.classList.contains('disabled')) return;
+      $('rows').querySelectorAll('.toggle-btn:not(.disabled)').forEach(btn => {
         btn.addEventListener('click', () => toggleUser(parseInt(btn.dataset.id, 10), btn.dataset.active === 'true', btn));
       });
     }
@@ -442,10 +395,7 @@
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
           body: JSON.stringify({ plan }),
         });
-        if (!r.ok) {
-          const err = await r.json().catch(() => ({}));
-          throw new Error(err.detail || 'Plan update failed');
-        }
+        if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.detail || 'Plan update failed'); }
         const u = users.find(x => x.id === id);
         if (u) u.plan = plan;
         sel.dataset.plan = plan;
@@ -468,18 +418,99 @@
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
           body: JSON.stringify({ active: makeActive }),
         });
-        if (!r.ok) {
-          const err = await r.json().catch(() => ({}));
-          throw new Error(err.detail || 'Toggle failed');
-        }
+        if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.detail || 'Toggle failed'); }
         const u = users.find(x => x.id === id);
         if (u) u.active = makeActive;
-        renderStats();
-        renderRows();
+        renderStats(); renderRows();
         toast(makeActive ? 'User reactivated.' : 'User deactivated.');
       } catch (err) {
         btn.disabled = false; btn.textContent = original;
         toast(err.message, true);
+      }
+    }
+
+    async function makeAdmin(id, btn) {
+      if (!confirm('Promote this user to platform admin? They will have full access to billing and user management.')) return;
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const r = await fetch(`/api/admin/users/${id}/make-admin`, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token() },
+        });
+        if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.detail || 'Failed'); }
+        const u = users.find(x => x.id === id);
+        if (u) u.is_admin = true;
+        renderRows();
+        toast('User promoted to platform admin.');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Make Admin';
+        toast(err.message, true);
+      }
+    }
+
+    async function syncOneToERP(id, btn) {
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const r = await fetch('/api/admin/sync-erp', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token() },
+        });
+        if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.detail || 'Sync failed'); }
+        const data = await r.json();
+        const hit  = data.synced?.find(s => s.email === users.find(u => u.id === id)?.email);
+        if (hit) {
+          const u = users.find(x => x.id === id);
+          if (u) u.erp_company_id = hit.erp_company_id;
+          renderStats(); renderRows();
+          toast(`Synced to ERP tenant #${hit.erp_company_id}.`);
+        } else {
+          toast('Already synced or no company set.', true);
+        }
+      } catch (err) {
+        btn.disabled = false; btn.textContent = '→ ERP';
+        toast(err.message, true);
+      }
+    }
+
+    async function syncAllToERP() {
+      const btn = $('sync-all-btn');
+      btn.disabled = true; btn.textContent = 'Syncing…';
+      try {
+        const r = await fetch('/api/admin/sync-erp', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token() },
+        });
+        if (!r.ok) { const err = await r.json().catch(() => ({})); throw new Error(err.detail || 'Sync failed'); }
+        const data = await r.json();
+
+        // Update local user records
+        for (const s of (data.synced || [])) {
+          const u = users.find(x => x.email === s.email);
+          if (u) u.erp_company_id = s.erp_company_id;
+        }
+        renderStats(); renderRows();
+
+        // Show results panel
+        $('sync-summary').textContent = data.summary;
+        let html = '';
+        for (const s of (data.synced || [])) {
+          html += `<div class="sync-result-row sync-ok">✓ <strong>${s.email}</strong> — Tenant #${s.erp_company_id}
+            ${s.temp_password && s.temp_password !== '(existing account)' ? `· Temp password: <span class="pass-mono">${s.temp_password}</span>` : ''}
+          </div>`;
+        }
+        for (const s of (data.skipped || [])) {
+          html += `<div class="sync-result-row sync-skip">⟳ <strong>${s.email}</strong> — Already in ERP</div>`;
+        }
+        for (const s of (data.failed || [])) {
+          html += `<div class="sync-result-row sync-fail">✗ <strong>${s.email}</strong> — ${s.error}</div>`;
+        }
+        $('sync-results').innerHTML = html || '<div class="meta">Nothing to sync.</div>';
+        $('sync-panel').classList.add('open');
+        toast(data.summary);
+      } catch (err) {
+        toast(err.message, true);
+      } finally {
+        btn.disabled = false; btn.textContent = '⚡ Sync All → ERP';
       }
     }
 
@@ -490,12 +521,13 @@
       el.classList.toggle('error', isError);
       el.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3800);
     }
 
     $('search').addEventListener('input', renderRows);
     $('filter-plan').addEventListener('change', renderRows);
     $('filter-status').addEventListener('change', renderRows);
+    $('filter-erp').addEventListener('change', renderRows);
   </script>
 
 </body>
