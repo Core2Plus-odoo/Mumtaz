@@ -61,18 +61,23 @@ def execute(conn, sql, params=()):
 
 
 # ── Auth ──────────────────────────────────────────────────────
-def make_token(user_id: int, company_id: int) -> str:
+def make_token(user_id: int, company_id: Optional[int], is_super: bool = False) -> str:
     exp = datetime.utcnow() + timedelta(days=30)
-    return jwt.encode({"sub": str(user_id), "cid": company_id, "exp": exp}, SECRET, algorithm=ALGO)
+    return jwt.encode({"sub": str(user_id), "cid": company_id, "sup": is_super, "exp": exp}, SECRET, algorithm=ALGO)
 
 def get_user(authorization: str = Header(...)):
     try:
         scheme, token = authorization.split()
         assert scheme.lower() == "bearer"
         p = jwt.decode(token, SECRET, algorithms=[ALGO])
-        return {"user_id": int(p["sub"]), "company_id": p["cid"]}
+        return {"user_id": int(p["sub"]), "company_id": p.get("cid"), "is_super": bool(p.get("sup", False))}
     except Exception:
         raise HTTPException(401, "Not authenticated")
+
+def require_super(ctx=Depends(get_user)):
+    if not ctx.get("is_super"):
+        raise HTTPException(403, "Super admin access required")
+    return ctx
 
 
 # ── ZATCA QR (Phase 1 TLV) ────────────────────────────────────
@@ -254,6 +259,18 @@ CREATE TABLE IF NOT EXISTS payment_reconcile (
   move_id     INTEGER REFERENCES moves(id),
   amount      NUMERIC(15,2) NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS tenant_modules (
+  id          SERIAL PRIMARY KEY,
+  company_id  INTEGER REFERENCES companies(id),
+  module      VARCHAR(50) NOT NULL,
+  enabled     BOOLEAN DEFAULT TRUE,
+  UNIQUE(company_id, module)
+);
+
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS status   VARCHAR(20) DEFAULT 'active';
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS plan     VARCHAR(50) DEFAULT 'standard';
+ALTER TABLE users     ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN DEFAULT FALSE;
 """
 
 DEFAULT_COA = [
@@ -300,8 +317,17 @@ DEFAULT_COA = [
     ("6009", "Miscellaneous Expenses",    "expense",   "6000"),
 ]
 
+MODULES = {
+    "invoicing":  {"name": "Sales & Invoicing",    "desc": "Customers, sales invoices, ZATCA QR"},
+    "purchasing": {"name": "Purchasing",            "desc": "Vendors, vendor bills, purchase tracking"},
+    "accounting": {"name": "Full Accounting",       "desc": "Chart of accounts, journal entries, reports"},
+    "payments":   {"name": "Payments",              "desc": "Payment tracking and reconciliation"},
+    "inventory":  {"name": "Products & Inventory",  "desc": "Product catalog and stock management"},
+}
+ALL_MODULES = list(MODULES.keys())
 
-def seed_company(conn, company_id: int):
+
+def seed_company(conn, company_id: int, enabled_modules: Optional[List[str]] = None):
     """Seed chart of accounts, taxes, journals for a new company."""
     c = dictcur(conn)
 
@@ -351,6 +377,15 @@ def seed_company(conn, company_id: int):
             "INSERT INTO journals (company_id,name,type,sequence_prefix,default_account_id) "
             "VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
             (company_id, jname, jtype, prefix, dft_acct)
+        )
+
+    # Seed tenant modules (all enabled by default, or restrict to provided list)
+    active = set(enabled_modules) if enabled_modules is not None else set(ALL_MODULES)
+    for module in ALL_MODULES:
+        c.execute(
+            "INSERT INTO tenant_modules (company_id, module, enabled) VALUES (%s, %s, %s) "
+            "ON CONFLICT (company_id, module) DO NOTHING",
+            (company_id, module, module in active)
         )
 
 
@@ -486,12 +521,28 @@ class LoginIn(BaseModel):
     email: str
     password: str
 
+class SuperAdminIn(BaseModel):
+    name: str = "Super Admin"
+    email: str
+    password: str
+
 class SetupIn(BaseModel):
     company_name: str
     admin_email: str
     admin_password: str
     vat_number: Optional[str] = None
     phone: Optional[str] = None
+
+class TenantIn(BaseModel):
+    company_name: str
+    admin_email: str
+    admin_password: str
+    vat_number: Optional[str] = None
+    phone: Optional[str] = None
+    modules: List[str] = ALL_MODULES
+
+class ModuleToggle(BaseModel):
+    modules: List[str]
 
 class CompanyUpdate(BaseModel):
     name: Optional[str] = None
@@ -581,15 +632,20 @@ class JournalEntryIn(BaseModel):
 @app.get("/api/setup/status")
 def setup_status():
     with get_db() as conn:
-        row = fetchone(conn, "SELECT COUNT(*) AS n FROM companies")
-        return {"initialized": row and int(row["n"]) > 0}
+        companies = fetchone(conn, "SELECT COUNT(*) AS n FROM companies")
+        super_row = fetchone(conn, "SELECT COUNT(*) AS n FROM users WHERE is_super_admin=TRUE")
+        return {
+            "initialized":  companies and int(companies["n"]) > 0,
+            "has_super":    super_row  and int(super_row["n"]) > 0,
+        }
 
 @app.post("/api/setup/init")
 def setup_init(data: SetupIn):
     with get_db() as conn:
-        existing = fetchone(conn, "SELECT id FROM companies LIMIT 1")
-        if existing:
-            raise HTTPException(400, "Already initialized")
+        # Block only if a super admin already created tenants (has_super flow)
+        super_exists = fetchone(conn, "SELECT id FROM users WHERE is_super_admin=TRUE LIMIT 1")
+        if super_exists:
+            raise HTTPException(400, "Use super admin panel to create tenants")
         c = dictcur(conn)
         c.execute(
             "INSERT INTO companies (name,vat_number,phone) VALUES (%s,%s,%s) RETURNING id",
@@ -614,9 +670,14 @@ def login(data: LoginIn):
         user = fetchone(conn, "SELECT * FROM users WHERE email=%s AND active=TRUE", (data.email,))
         if not user or not pwd_ctx.verify(data.password, user["password_hash"]):
             raise HTTPException(401, "Invalid credentials")
-        token = make_token(user["id"], user["company_id"])
-        return {"access_token": token, "user": {"id": user["id"], "name": user["name"],
-                                                  "email": user["email"], "role": user["role"]}}
+        is_super = bool(user.get("is_super_admin"))
+        token = make_token(user["id"], user.get("company_id"), is_super=is_super)
+        return {"access_token": token, "user": {
+            "id": user["id"], "name": user["name"],
+            "email": user["email"], "role": user["role"],
+            "is_super": is_super,
+            "company_id": user.get("company_id"),
+        }}
 
 @app.get("/api/auth/me")
 def me(ctx=Depends(get_user)):
@@ -1350,3 +1411,115 @@ def dashboard(ctx=Depends(get_user)):
 @app.get("/api/health")
 def health():
     return {"status": "ok", "service": "mumtaz-erp"}
+
+
+# ── Super Admin Setup ─────────────────────────────────────────
+@app.get("/api/setup/super-status")
+def super_status():
+    with get_db() as conn:
+        row = fetchone(conn, "SELECT COUNT(*) AS n FROM users WHERE is_super_admin=TRUE")
+        return {"has_super": row is not None and int(row["n"]) > 0}
+
+@app.post("/api/setup/super")
+def create_super_admin(data: SuperAdminIn):
+    with get_db() as conn:
+        existing = fetchone(conn, "SELECT id FROM users WHERE is_super_admin=TRUE LIMIT 1")
+        if existing:
+            raise HTTPException(400, "Super admin already exists")
+        phash = pwd_ctx.hash(data.password)
+        c = dictcur(conn)
+        c.execute(
+            "INSERT INTO users (name, email, password_hash, role, is_super_admin, company_id) "
+            "VALUES (%s, %s, %s, 'admin', TRUE, NULL) RETURNING id",
+            (data.name, data.email, phash)
+        )
+        user_id = c.fetchone()["id"]
+        token = make_token(user_id, None, is_super=True)
+        return {"access_token": token, "user": {"id": user_id, "name": data.name,
+                                                  "email": data.email, "is_super": True}}
+
+
+# ── Tenant Module Access ──────────────────────────────────────
+@app.get("/api/me/modules")
+def get_my_modules(ctx=Depends(get_user)):
+    if ctx.get("is_super"):
+        return ALL_MODULES
+    with get_db() as conn:
+        rows = fetchall(conn,
+            "SELECT module FROM tenant_modules WHERE company_id=%s AND enabled=TRUE",
+            (ctx["company_id"],))
+        return [r["module"] for r in rows]
+
+@app.get("/api/modules")
+def get_module_catalog(ctx=Depends(get_user)):
+    return MODULES
+
+
+# ── Super Admin: Tenant Management ───────────────────────────
+@app.get("/api/super/tenants")
+def list_tenants(ctx=Depends(require_super)):
+    with get_db() as conn:
+        tenants = fetchall(conn,
+            """SELECT c.*,
+               (SELECT COUNT(*) FROM users u WHERE u.company_id=c.id AND NOT COALESCE(u.is_super_admin,FALSE)) AS user_count,
+               (SELECT COUNT(*) FROM moves m WHERE m.company_id=c.id AND m.state='posted') AS posted_moves,
+               (SELECT COALESCE(SUM(amount_total),0) FROM moves m WHERE m.company_id=c.id AND m.move_type='out_invoice' AND m.state='posted') AS total_invoiced
+               FROM companies c ORDER BY c.id""")
+        # Attach enabled modules per tenant
+        for t in tenants:
+            rows = fetchall(conn,
+                "SELECT module FROM tenant_modules WHERE company_id=%s AND enabled=TRUE", (t["id"],))
+            t["enabled_modules"] = [r["module"] for r in rows]
+        return tenants
+
+@app.post("/api/super/tenants")
+def create_tenant(data: TenantIn, ctx=Depends(require_super)):
+    with get_db() as conn:
+        # Check email not taken
+        existing = fetchone(conn, "SELECT id FROM users WHERE email=%s", (data.admin_email,))
+        if existing:
+            raise HTTPException(400, f"Email {data.admin_email} already in use")
+        c = dictcur(conn)
+        c.execute(
+            "INSERT INTO companies (name, vat_number, phone) VALUES (%s, %s, %s) RETURNING id",
+            (data.company_name, data.vat_number, data.phone)
+        )
+        company_id = c.fetchone()["id"]
+        seed_company(conn, company_id, enabled_modules=data.modules)
+        phash = pwd_ctx.hash(data.admin_password)
+        c.execute(
+            "INSERT INTO users (name, email, password_hash, role, company_id) "
+            "VALUES ('Admin', %s, %s, 'admin', %s) RETURNING id",
+            (data.admin_email, phash, company_id)
+        )
+        return {"company_id": company_id, "message": f"Tenant '{data.company_name}' created"}
+
+@app.put("/api/super/tenants/{tid}/status")
+def update_tenant_status(tid: int, body: dict, ctx=Depends(require_super)):
+    status = body.get("status", "active")
+    with get_db() as conn:
+        execute(conn, "UPDATE companies SET status=%s WHERE id=%s", (status, tid))
+        return {"ok": True, "status": status}
+
+@app.get("/api/super/tenants/{tid}/modules")
+def get_tenant_modules(tid: int, ctx=Depends(require_super)):
+    with get_db() as conn:
+        rows = fetchall(conn,
+            "SELECT module, enabled FROM tenant_modules WHERE company_id=%s", (tid,))
+        result = {m: False for m in ALL_MODULES}
+        for r in rows:
+            result[r["module"]] = bool(r["enabled"])
+        return result
+
+@app.put("/api/super/tenants/{tid}/modules")
+def update_tenant_modules(tid: int, data: ModuleToggle, ctx=Depends(require_super)):
+    with get_db() as conn:
+        c = dictcur(conn)
+        for module in ALL_MODULES:
+            enabled = module in data.modules
+            c.execute(
+                "INSERT INTO tenant_modules (company_id, module, enabled) VALUES (%s, %s, %s) "
+                "ON CONFLICT (company_id, module) DO UPDATE SET enabled=%s",
+                (tid, module, enabled, enabled)
+            )
+        return {"ok": True, "enabled": data.modules}

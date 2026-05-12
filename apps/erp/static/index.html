@@ -309,6 +309,27 @@
     </div>
     <div id="l-err" style="color:var(--red);font-size:.8rem;margin-bottom:12px;display:none"></div>
     <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign in →</button>
+    <p style="margin-top:14px;text-align:center;font-size:.78rem;color:var(--ink3)">
+      Platform admin? <span style="color:var(--gold);cursor:pointer" onclick="showSuperSetup()">Set up super admin →</span>
+    </p>
+  </div>
+</div>
+
+<!-- Super admin first-time setup -->
+<div id="super-setup-page" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:500;align-items:center;justify-content:center">
+  <div class="setup-card">
+    <div class="sidebar-logo" style="padding:0 0 20px;border:none;">
+      <div class="logo-mark">م</div>
+      <div><div class="logo-name" style="color:var(--ink)">Mumtaz ERP</div><div class="logo-sub" style="color:var(--ink3)">Platform Setup</div></div>
+    </div>
+    <h2 style="font-size:1.3rem;color:var(--ink);margin-bottom:6px;font-family:'Instrument Serif',serif;font-weight:400">Create Super Admin</h2>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:20px">The super admin manages all tenants and their module access. This runs once.</p>
+    <div class="field" style="margin-bottom:12px"><label>Your Name</label><input id="sa-name" value="Super Admin"/></div>
+    <div class="field" style="margin-bottom:12px"><label>Email</label><input id="sa-email" type="email" placeholder="platform@mumtaz.ae"/></div>
+    <div class="field" style="margin-bottom:20px"><label>Password</label><input id="sa-pass" type="password" placeholder="Min 8 characters"/></div>
+    <div id="sa-err" style="color:var(--red);font-size:.8rem;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doSuperSetup()">Create Super Admin →</button>
+    <p style="margin-top:12px;text-align:center;font-size:.78rem;color:var(--ink3)"><span style="cursor:pointer;color:var(--gold)" onclick="hideSuperSetup()">← Back to sign in</span></p>
   </div>
 </div>
 
@@ -433,6 +454,15 @@
       </div>
     </div>
 
+    <!-- Super admin only -->
+    <div class="nav-section" id="super-nav" style="display:none">
+      <div class="nav-label">Platform</div>
+      <div class="nav-item" onclick="nav('tenants')" data-page="tenants">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span>Tenants</span>
+      </div>
+    </div>
+
     <div class="sidebar-footer">
       <div class="user-chip">
         <div class="avatar" id="user-avatar">A</div>
@@ -473,6 +503,7 @@ const API = '/api';
 let token = localStorage.getItem('erp_token');
 let currentUser = null;
 let currentPage = 'dashboard';
+let enabledModules = [];
 
 // ── Utils ──────────────────────────────────────────────────────
 const fmt = (n, dec=2) => Number(n||0).toLocaleString('en-AE', {minimumFractionDigits:dec, maximumFractionDigits:dec});
@@ -499,13 +530,19 @@ async function api(method, path, body) {
 
 // ── Auth ───────────────────────────────────────────────────────
 async function boot() {
-  // Check setup status
   const status = await api('GET', '/setup/status').catch(() => null);
   if (!status) { showLogin(); return; }
-  if (!status.initialized) { qs('setup-page').classList.add('show'); return; }
+
+  // No super admin and no company yet → show first-time setup choice
+  if (!status.initialized && !status.has_super) {
+    qs('setup-page').classList.add('show');
+    return;
+  }
+
   if (!token) { showLogin(); return; }
   try {
     currentUser = await api('GET', '/auth/me');
+    enabledModules = await api('GET', '/me/modules').catch(() => []);
     showApp();
   } catch {
     showLogin();
@@ -526,7 +563,30 @@ function showApp() {
     qs('user-name').textContent = currentUser.name;
     qs('user-avatar').textContent = (currentUser.name || 'A')[0].toUpperCase();
   }
-  nav('dashboard');
+
+  // Show/hide module-gated nav items based on enabled modules
+  const moduleNav = {
+    invoicing:  ['customers', 'invoices'],
+    purchasing: ['vendors', 'bills'],
+    accounting: ['journal-entries', 'accounts'],
+    payments:   ['payments'],
+    inventory:  ['products'],
+  };
+  document.querySelectorAll('[data-page]').forEach(el => {
+    const page = el.dataset.page;
+    const gated = Object.entries(moduleNav).find(([, pages]) => pages.includes(page));
+    if (gated) {
+      const [mod] = gated;
+      el.style.display = (currentUser?.is_super || enabledModules.includes(mod)) ? '' : 'none';
+    }
+  });
+
+  // Super admin nav
+  if (currentUser?.is_super) {
+    qs('super-nav').style.display = '';
+  }
+
+  nav(currentUser?.is_super ? 'tenants' : 'dashboard');
 }
 
 async function doLogin() {
@@ -538,6 +598,7 @@ async function doLogin() {
     token = r.access_token;
     currentUser = r.user;
     localStorage.setItem('erp_token', token);
+    enabledModules = await api('GET', '/me/modules').catch(() => []);
     showApp();
   } catch(e) {
     qs('l-err').textContent = e.message;
@@ -583,6 +644,7 @@ const PAGE_TITLES = {
   invoices: 'Invoices', bills: 'Vendor Bills', payments: 'Payments',
   'journal-entries': 'Journal Entries', accounts: 'Chart of Accounts',
   products: 'Products', reports: 'Reports', settings: 'Settings',
+  tenants: 'Tenant Management',
 };
 
 function nav(page) {
@@ -607,6 +669,7 @@ function nav(page) {
     products:         renderProducts,
     reports:          renderReports,
     settings:         renderSettings,
+    tenants:          renderTenants,
   };
   if (renders[page]) renders[page]();
 }
@@ -1738,6 +1801,188 @@ async function saveSettings() {
   try {
     await api('PUT', '/company', body);
     toast('Settings saved');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Super Admin Setup Helpers ──────────────────────────────────
+function showSuperSetup() {
+  qs('login-page').classList.remove('show');
+  qs('super-setup-page').style.display = 'flex';
+}
+function hideSuperSetup() {
+  qs('super-setup-page').style.display = 'none';
+  qs('login-page').classList.add('show');
+}
+
+async function doSuperSetup() {
+  const name = qs('sa-name').value.trim();
+  const email = qs('sa-email').value.trim();
+  const pass  = qs('sa-pass').value;
+  qs('sa-err').style.display = 'none';
+  if (!email || !pass) { qs('sa-err').textContent = 'Email and password required'; qs('sa-err').style.display = 'block'; return; }
+  try {
+    const r = await api('POST', '/setup/super', { name, email, password: pass });
+    token = r.access_token;
+    currentUser = r.user;
+    localStorage.setItem('erp_token', token);
+    enabledModules = [];
+    qs('super-setup-page').style.display = 'none';
+    showApp();
+    toast('Super admin created. Create your first tenant below.');
+  } catch(e) {
+    qs('sa-err').textContent = e.message;
+    qs('sa-err').style.display = 'block';
+  }
+}
+
+// ── Tenant Management (super admin) ───────────────────────────
+const MODULE_LABELS = {
+  invoicing:  'Sales & Invoicing',
+  purchasing: 'Purchasing',
+  accounting: 'Full Accounting',
+  payments:   'Payments',
+  inventory:  'Products & Inventory',
+};
+
+async function renderTenants() {
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openCreateTenant()">+ New Tenant</button>`;
+  await loadTenants();
+}
+
+async function loadTenants() {
+  const c = qs('content');
+  try {
+    const tenants = await api('GET', '/super/tenants');
+    c.innerHTML = `
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Company</th><th>VAT</th><th>Status</th><th>Users</th><th>Invoices</th><th>Total Invoiced</th><th>Modules</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${tenants.map(t => `
+                <tr>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">#${t.id}</td>
+                  <td><strong>${t.name}</strong>${t.name_ar ? `<br><span style="font-size:.72rem;color:var(--ink3);direction:rtl">${t.name_ar}</span>` : ''}</td>
+                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">${t.vat_number||'—'}</td>
+                  <td>${badge(t.status||'active')}</td>
+                  <td>${t.user_count}</td>
+                  <td>${t.posted_moves}</td>
+                  <td>AED ${fmt(t.total_invoiced)}</td>
+                  <td style="max-width:200px">
+                    <div style="display:flex;flex-wrap:wrap;gap:3px">
+                      ${(t.enabled_modules||[]).map(m => `<span class="badge badge-posted" style="font-size:.65rem">${MODULE_LABELS[m]||m}</span>`).join('')}
+                      ${!(t.enabled_modules||[]).length ? '<span style="color:var(--ink3);font-size:.75rem">none</span>' : ''}
+                    </div>
+                  </td>
+                  <td style="white-space:nowrap">
+                    <button class="btn btn-ghost btn-sm" onclick="openModules(${t.id}, '${t.name}')">Modules</button>
+                    <button class="btn btn-ghost btn-sm" style="color:${t.status==='suspended'?'var(--teal)':'var(--red)'}" onclick="toggleTenantStatus(${t.id}, '${t.status||'active'}')">
+                      ${t.status === 'suspended' ? 'Activate' : 'Suspend'}
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+              ${tenants.length === 0 ? '<tr><td colspan="9" style="text-align:center;color:var(--ink3);padding:32px">No tenants yet — create your first one</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
+  }
+}
+
+async function openCreateTenant() {
+  openModal('Create New Tenant', `
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:16px">Each tenant gets their own company data, chart of accounts, and admin login.</p>
+    <div class="form-grid">
+      <div class="field form-full"><label>Company Name</label><input id="nt-company" placeholder="Acme Trading LLC"/></div>
+      <div class="field"><label>VAT Number (TRN)</label><input id="nt-vat" placeholder="100123456700003"/></div>
+      <div class="field"><label>Phone</label><input id="nt-phone" placeholder="+971 4 xxx xxxx"/></div>
+      <div class="field"><label>Admin Email</label><input id="nt-email" type="email" placeholder="admin@acme.ae"/></div>
+      <div class="field"><label>Admin Password</label><input id="nt-pass" type="password" placeholder="Temporary password"/></div>
+    </div>
+    <div style="margin-top:16px">
+      <div style="font-size:.78rem;font-weight:600;color:var(--ink2);margin-bottom:10px">ENABLED MODULES</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="nt-modules">
+        ${Object.entries(MODULE_LABELS).map(([key, label]) => `
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px;border:1.5px solid var(--border);border-radius:var(--r)">
+            <input type="checkbox" value="${key}" checked style="accent-color:var(--gold)"/>
+            <div><div style="font-size:.82rem;font-weight:600">${label}</div></div>
+          </label>
+        `).join('')}
+      </div>
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveNewTenant()">Create Tenant</button>`,
+    true
+  );
+}
+
+async function saveNewTenant() {
+  const company = qs('nt-company').value.trim();
+  const email   = qs('nt-email').value.trim();
+  const pass    = qs('nt-pass').value;
+  const vat     = qs('nt-vat').value.trim() || null;
+  const phone   = qs('nt-phone').value.trim() || null;
+  const modules = [...document.querySelectorAll('#nt-modules input:checked')].map(el => el.value);
+  if (!company || !email || !pass) { toast('Company name, email and password required', 'err'); return; }
+  try {
+    const r = await api('POST', '/super/tenants', { company_name:company, admin_email:email, admin_password:pass, vat_number:vat, phone, modules });
+    toast(`Tenant "${company}" created`);
+    closeModalForce();
+    await loadTenants();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function openModules(tenantId, tenantName) {
+  const current = await api('GET', `/super/tenants/${tenantId}/modules`).catch(()=>({}));
+  openModal(`Modules — ${tenantName}`, `
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:16px">Toggle which ERP modules this tenant can access. Changes take effect on next login.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="mod-grid">
+      ${Object.entries(MODULE_LABELS).map(([key, label]) => `
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;border:1.5px solid ${current[key]?'var(--gold)':'var(--border)'};border-radius:var(--r);transition:.15s" id="mod-row-${key}" onclick="this.style.borderColor=document.getElementById('mod-${key}').checked?'var(--border)':'var(--gold)'">
+          <input type="checkbox" id="mod-${key}" value="${key}" ${current[key]?'checked':''} style="accent-color:var(--gold)"/>
+          <div>
+            <div style="font-size:.85rem;font-weight:600">${label}</div>
+            <div style="font-size:.72rem;color:var(--ink3)">${getModuleDesc(key)}</div>
+          </div>
+        </label>
+      `).join('')}
+    </div>`,
+    `<button class="btn btn-outline" onclick="closeModalForce()">Cancel</button>
+     <button class="btn btn-primary" onclick="saveModules(${tenantId})">Save Modules</button>`
+  );
+}
+
+function getModuleDesc(key) {
+  const descs = {
+    invoicing:  'Customers, sales invoices, ZATCA QR',
+    purchasing: 'Vendors, vendor bills',
+    accounting: 'Chart of accounts, journal entries, reports',
+    payments:   'Payment tracking',
+    inventory:  'Product catalog',
+  };
+  return descs[key] || '';
+}
+
+async function saveModules(tenantId) {
+  const modules = [...document.querySelectorAll('#mod-grid input:checked')].map(el => el.value);
+  try {
+    await api('PUT', `/super/tenants/${tenantId}/modules`, { modules });
+    toast('Modules updated');
+    closeModalForce();
+    await loadTenants();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function toggleTenantStatus(tenantId, currentStatus) {
+  const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+  if (!confirm(`${newStatus === 'suspended' ? 'Suspend' : 'Activate'} this tenant?`)) return;
+  try {
+    await api('PUT', `/super/tenants/${tenantId}/status`, { status: newStatus });
+    toast(`Tenant ${newStatus}`);
+    await loadTenants();
   } catch(e) { toast(e.message, 'err'); }
 }
 
