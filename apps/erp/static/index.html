@@ -2175,6 +2175,780 @@ async function toggleTenantStatus(tenantId, newStatus) {
   } catch(e) { toast(e.message, 'err'); }
 }
 
+// ── CRM ────────────────────────────────────────────────────────
+async function renderCRM() {
+  const [leads] = await Promise.all([api('GET', '/crm/leads')]);
+  const stages = ['new','qualified','proposition','won','lost'];
+  const stageLabels = {new:'New',qualified:'Qualified',proposition:'Proposal',won:'Won',lost:'Lost'};
+  const stageColors = {new:'var(--ink3)',qualified:'var(--teal)',proposition:'var(--gold)',won:'var(--green)',lost:'var(--red)'};
+
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewLead()">+ New Lead</button>`;
+
+  // Kanban board
+  const board = document.createElement('div');
+  board.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:24px;min-height:400px;align-items:start';
+
+  stages.forEach(stage => {
+    const col = document.createElement('div');
+    col.style.cssText = 'background:var(--bg);border-radius:8px;padding:12px;';
+    const stageLeads = leads.filter(l => l.stage === stage);
+    const total = stageLeads.reduce((s,l) => s + parseFloat(l.expected_revenue||0), 0);
+    col.innerHTML = `
+      <div style="font-size:.72rem;font-weight:700;color:${stageColors[stage]};text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">
+        ${stageLabels[stage]} <span style="color:var(--ink3);font-weight:400">(${stageLeads.length})</span>
+      </div>
+      ${total > 0 ? `<div style="font-size:.75rem;color:var(--ink3);margin-bottom:8px">${fmtMoney(total)}</div>` : ''}
+      ${stageLeads.map(l => `
+        <div onclick="openLead(${l.id})" style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-weight:600;font-size:.85rem;color:var(--ink);margin-bottom:4px">${l.name}</div>
+          ${l.contact_name ? `<div style="font-size:.78rem;color:var(--ink3)">${l.contact_name}</div>` : ''}
+          ${l.expected_revenue > 0 ? `<div style="font-size:.8rem;color:var(--gold);font-weight:600;margin-top:6px">${fmtMoney(l.expected_revenue)}</div>` : ''}
+          ${l.probability > 0 ? `<div style="height:3px;background:var(--border);border-radius:2px;margin-top:6px"><div style="height:100%;background:var(--teal);border-radius:2px;width:${l.probability}%"></div></div>` : ''}
+        </div>
+      `).join('')}
+    `;
+    board.appendChild(col);
+  });
+
+  qs('content').innerHTML = '';
+  qs('content').appendChild(board);
+}
+
+async function openLead(id) {
+  const lead = await api('GET', `/crm/leads/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">${lead.name}</h3>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="field"><label>Stage</label>
+        <select id="m-stage">${['new','qualified','proposition','won','lost'].map(s=>`<option value="${s}"${lead.stage===s?' selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}</select></div>
+      <div class="field"><label>Probability (%)</label><input id="m-prob" type="number" value="${lead.probability||0}" min="0" max="100"/></div>
+      <div class="field"><label>Contact</label><input id="m-contact" value="${lead.contact_name||''}"/></div>
+      <div class="field"><label>Email</label><input id="m-email" type="email" value="${lead.email||''}"/></div>
+      <div class="field"><label>Phone</label><input id="m-phone" value="${lead.phone||''}"/></div>
+      <div class="field"><label>Expected Revenue</label><input id="m-rev" type="number" value="${lead.expected_revenue||0}"/></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-desc" rows="3">${lead.description||''}</textarea></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveLead(${id})">Save</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" style="margin-left:auto;color:var(--red)" onclick="deleteLead(${id})">Delete</button>
+    </div>
+  `);
+}
+
+async function saveLead(id) {
+  const body = {
+    name: document.querySelector('#modal-body input') ? document.querySelector('#modal-body h3').textContent : '',
+    stage: qs('m-stage').value,
+    probability: parseFloat(qs('m-prob').value)||0,
+    contact_name: qs('m-contact').value,
+    email: qs('m-email').value,
+    phone: qs('m-phone').value,
+    expected_revenue: parseFloat(qs('m-rev').value)||0,
+    description: qs('m-desc').value,
+  };
+  // Get name from a hidden element or from the lead
+  const lead = await api('GET', `/crm/leads/${id}`);
+  body.name = lead.name;
+  await api('PUT', `/crm/leads/${id}`, body);
+  closeModal(); toast('Lead updated'); nav('crm');
+}
+
+async function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  await api('DELETE', `/crm/leads/${id}`);
+  closeModal(); nav('crm');
+}
+
+async function openNewLead() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Lead</h3>
+    <div class="field"><label>Lead Name *</label><input id="m-lname" placeholder="e.g. ABC Corp - ERP Project"/></div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="field"><label>Contact Name</label><input id="m-contact"/></div>
+      <div class="field"><label>Email</label><input id="m-email" type="email"/></div>
+      <div class="field"><label>Phone</label><input id="m-phone"/></div>
+      <div class="field"><label>Expected Revenue</label><input id="m-rev" type="number" value="0"/></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewLead()">Create Lead</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewLead() {
+  const name = qs('m-lname').value.trim();
+  if (!name) { qs('m-err').textContent='Lead name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/crm/leads', {
+    name,
+    contact_name: qs('m-contact').value,
+    email: qs('m-email').value,
+    phone: qs('m-phone').value,
+    expected_revenue: parseFloat(qs('m-rev').value)||0,
+  });
+  closeModal(); toast('Lead created'); nav('crm');
+}
+
+// ── HR ─────────────────────────────────────────────────────────
+async function renderHR() {
+  const [employees, leaves] = await Promise.all([
+    api('GET', '/hr/employees'),
+    api('GET', '/hr/leaves'),
+  ]);
+
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewEmployee()">+ New Employee</button>`;
+
+  const depts = [...new Set(employees.map(e => e.department).filter(Boolean))];
+  const totalSalary = employees.reduce((s,e) => s + parseFloat(e.basic_salary||0), 0);
+  const pendingLeaves = leaves.filter(l => l.state === 'draft').length;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Employees', employees.length)}
+        ${statCard('Total Monthly Salary', fmtMoney(totalSalary))}
+        ${statCard('Departments', depts.length)}
+        ${statCard('Pending Leaves', pendingLeaves)}
+      </div>
+
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header"><span class="card-title">Employees</span></div>
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Job Title</th><th>Department</th><th>Email</th><th>Basic Salary</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${employees.map(e => `
+              <tr>
+                <td><strong>${e.name}</strong> ${e.employee_number ? `<span style="color:var(--ink3);font-size:.75rem">#${e.employee_number}</span>` : ''}</td>
+                <td>${e.job_title||'—'}</td>
+                <td>${e.department||'—'}</td>
+                <td>${e.email||'—'}</td>
+                <td>${fmtMoney(e.basic_salary)}</td>
+                <td><span class="badge ${e.active?'badge-ok':'badge-err'}">${e.active?'Active':'Inactive'}</span></td>
+                <td><button class="btn-link" onclick="openEmployee(${e.id})">Edit</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Leave Requests</span>
+          <button class="btn" onclick="openNewLeave()" style="font-size:.78rem;padding:6px 12px">+ New Leave</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${leaves.map(l => `
+              <tr>
+                <td>${l.employee_name}</td>
+                <td>${l.leave_type}</td>
+                <td>${fmtDate(l.date_from)}</td>
+                <td>${fmtDate(l.date_to)}</td>
+                <td>${l.days}</td>
+                <td><span class="badge ${l.state==='approved'?'badge-ok':l.state==='refused'?'badge-err':'badge-warn'}">${l.state}</span></td>
+                <td>
+                  ${l.state==='draft'?`
+                    <button class="btn-link" style="color:var(--teal)" onclick="approveLeave(${l.id})">Approve</button>
+                    <button class="btn-link" style="color:var(--red)" onclick="refuseLeave(${l.id})">Refuse</button>
+                  `:'—'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function openEmployee(id) {
+  const e = await api('GET', `/hr/employees/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">Edit Employee</h3>
+    <div class="form-grid">
+      <div class="field"><label>Name *</label><input id="m-ename" value="${e.name}"/></div>
+      <div class="field"><label>Employee #</label><input id="m-enum" value="${e.employee_number||''}"/></div>
+      <div class="field"><label>Job Title</label><input id="m-etitle" value="${e.job_title||''}"/></div>
+      <div class="field"><label>Department</label><input id="m-edept" value="${e.department||''}"/></div>
+      <div class="field"><label>Email</label><input id="m-eemail" value="${e.email||''}"/></div>
+      <div class="field"><label>Phone</label><input id="m-ephone" value="${e.phone||''}"/></div>
+      <div class="field"><label>Hire Date</label><input id="m-ehire" type="date" value="${e.hire_date?String(e.hire_date).slice(0,10):''}"/></div>
+      <div class="field"><label>Basic Salary</label><input id="m-esal" type="number" value="${e.basic_salary||0}"/></div>
+      <div class="field"><label>Housing Allowance</label><input id="m-ehousing" type="number" value="${e.housing_allowance||0}"/></div>
+      <div class="field"><label>Transport Allowance</label><input id="m-etrans" type="number" value="${e.transport_allowance||0}"/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveEmployee(${id})">Save</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveEmployee(id) {
+  await api('PUT', `/hr/employees/${id}`, {
+    name: qs('m-ename').value,
+    employee_number: qs('m-enum').value,
+    job_title: qs('m-etitle').value,
+    department: qs('m-edept').value,
+    email: qs('m-eemail').value,
+    phone: qs('m-ephone').value,
+    hire_date: qs('m-ehire').value || null,
+    basic_salary: parseFloat(qs('m-esal').value)||0,
+    housing_allowance: parseFloat(qs('m-ehousing').value)||0,
+    transport_allowance: parseFloat(qs('m-etrans').value)||0,
+    contract_type: 'full_time',
+  });
+  closeModal(); toast('Employee saved'); nav('hr');
+}
+
+async function openNewEmployee() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Employee</h3>
+    <div class="form-grid">
+      <div class="field"><label>Full Name *</label><input id="m-ename"/></div>
+      <div class="field"><label>Job Title</label><input id="m-etitle"/></div>
+      <div class="field"><label>Department</label><input id="m-edept"/></div>
+      <div class="field"><label>Email</label><input id="m-eemail" type="email"/></div>
+      <div class="field"><label>Phone</label><input id="m-ephone"/></div>
+      <div class="field"><label>Hire Date</label><input id="m-ehire" type="date" value="${today()}"/></div>
+      <div class="field"><label>Basic Salary</label><input id="m-esal" type="number" value="0"/></div>
+      <div class="field"><label>Housing Allowance</label><input id="m-ehousing" type="number" value="0"/></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewEmployee()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewEmployee() {
+  const name = qs('m-ename').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/hr/employees', {
+    name, job_title: qs('m-etitle').value, department: qs('m-edept').value,
+    email: qs('m-eemail').value, phone: qs('m-ephone').value,
+    hire_date: qs('m-ehire').value || null,
+    basic_salary: parseFloat(qs('m-esal').value)||0,
+    housing_allowance: parseFloat(qs('m-ehousing').value)||0,
+    contract_type: 'full_time',
+  });
+  closeModal(); toast('Employee created'); nav('hr');
+}
+
+async function openNewLeave() {
+  const employees = await api('GET', '/hr/employees');
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Leave Request</h3>
+    <div class="form-grid">
+      <div class="field"><label>Employee *</label>
+        <select id="m-lemp"><option value="">— select —</option>${employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Leave Type</label>
+        <select id="m-ltype"><option value="annual">Annual</option><option value="sick">Sick</option><option value="unpaid">Unpaid</option><option value="emergency">Emergency</option></select></div>
+      <div class="field"><label>From *</label><input id="m-ldf" type="date" value="${today()}"/></div>
+      <div class="field"><label>To *</label><input id="m-ldt" type="date" value="${today()}"/></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="m-lnotes" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewLeave()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewLeave() {
+  if (!qs('m-lemp').value) { qs('m-err').textContent='Employee required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/hr/leaves', {
+    employee_id: parseInt(qs('m-lemp').value),
+    leave_type: qs('m-ltype').value,
+    date_from: qs('m-ldf').value,
+    date_to: qs('m-ldt').value,
+    notes: qs('m-lnotes').value,
+  });
+  closeModal(); toast('Leave request created'); nav('hr');
+}
+
+async function approveLeave(id) {
+  await api('PUT', `/hr/leaves/${id}/approve`);
+  toast('Leave approved'); nav('hr');
+}
+
+async function refuseLeave(id) {
+  await api('PUT', `/hr/leaves/${id}/refuse`);
+  toast('Leave refused'); nav('hr');
+}
+
+// ── Projects ───────────────────────────────────────────────────
+async function renderProjects() {
+  const projects = await api('GET', '/projects');
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewProject()">+ New Project</button>`;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+        ${projects.map(p => `
+          <div class="card" style="cursor:pointer" onclick="openProject(${p.id})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-weight:600;font-size:.95rem;color:var(--ink);margin-bottom:4px">${p.name}</div>
+                ${p.client_name ? `<div style="font-size:.8rem;color:var(--ink3)">Client: ${p.client_name}</div>` : ''}
+                ${p.manager_name ? `<div style="font-size:.8rem;color:var(--ink3)">Manager: ${p.manager_name}</div>` : ''}
+              </div>
+              <span class="badge ${p.state==='open'?'badge-ok':p.state==='done'?'':'badge-warn'}">${p.state}</span>
+            </div>
+            <div style="display:flex;gap:16px;margin-top:12px;font-size:.8rem;color:var(--ink3)">
+              <span>📋 ${p.task_count} tasks</span>
+              ${p.date_end ? `<span>📅 Due ${fmtDate(p.date_end)}</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+        ${projects.length === 0 ? '<div style="color:var(--ink3);padding:40px;text-align:center;grid-column:1/-1">No projects yet. Create your first project.</div>' : ''}
+      </div>
+    </div>
+  `;
+}
+
+async function openProject(id) {
+  const project = await api('GET', `/projects/${id}`);
+  const taskStages = {todo:'To Do',in_progress:'In Progress',review:'In Review',done:'Done'};
+  const tasksByStage = {};
+  ['todo','in_progress','review','done'].forEach(s => { tasksByStage[s] = project.tasks.filter(t => t.stage===s); });
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <button class="btn" onclick="nav('projects')">← Projects</button>
+        <h2 style="font-family:'Instrument Serif',serif;font-weight:400">${project.name}</h2>
+        <span class="badge ${project.state==='open'?'badge-ok':''}">${project.state}</span>
+        <button class="btn btn-primary" style="margin-left:auto" onclick="openNewTask(${id})">+ Add Task</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        ${['todo','in_progress','review','done'].map(stage => `
+          <div style="background:var(--bg);border-radius:8px;padding:12px">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px">${taskStages[stage]} (${tasksByStage[stage].length})</div>
+            ${tasksByStage[stage].map(t => `
+              <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px">
+                <div style="font-size:.85rem;font-weight:600;color:var(--ink)">${t.name}</div>
+                ${t.assigned_to ? `<div style="font-size:.75rem;color:var(--ink3);margin-top:4px">👤 ${t.assigned_to}</div>` : ''}
+                ${t.deadline ? `<div style="font-size:.75rem;color:var(--ink3)">📅 ${fmtDate(t.deadline)}</div>` : ''}
+                ${t.planned_hours > 0 ? `<div style="font-size:.75rem;color:var(--gold)">⏱ ${t.planned_hours}h</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+async function openNewProject() {
+  const partners = await api('GET', '/partners');
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Project</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Project Name *</label><input id="m-pname"/></div>
+      <div class="field"><label>Client</label>
+        <select id="m-pclient"><option value="">— none —</option>${partners.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Start Date</label><input id="m-pstart" type="date" value="${today()}"/></div>
+      <div class="field"><label>End Date</label><input id="m-pend" type="date"/></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-pdesc" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewProject()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewProject() {
+  const name = qs('m-pname').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  const p = await api('POST', '/projects', {
+    name, partner_id: qs('m-pclient').value ? parseInt(qs('m-pclient').value) : null,
+    date_start: qs('m-pstart').value || null, date_end: qs('m-pend').value || null,
+    description: qs('m-pdesc').value,
+  });
+  closeModal(); toast('Project created'); openProject(p.id);
+}
+
+async function openNewTask(projectId) {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Task</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Task Name *</label><input id="m-tname"/></div>
+      <div class="field"><label>Stage</label>
+        <select id="m-tstage"><option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select></div>
+      <div class="field"><label>Deadline</label><input id="m-tdeadline" type="date"/></div>
+      <div class="field"><label>Planned Hours</label><input id="m-thours" type="number" value="0"/></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="m-tdesc" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewTask(${projectId})">Create Task</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewTask(projectId) {
+  const name = qs('m-tname').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/tasks', {
+    project_id: projectId, name, stage: qs('m-tstage').value,
+    deadline: qs('m-tdeadline').value || null,
+    planned_hours: parseFloat(qs('m-thours').value)||0,
+    description: qs('m-tdesc').value,
+  });
+  closeModal(); toast('Task created'); openProject(projectId);
+}
+
+// ── Fixed Assets ───────────────────────────────────────────────
+async function renderAssets() {
+  const [assets, categories] = await Promise.all([
+    api('GET', '/assets'),
+    api('GET', '/asset-categories'),
+  ]);
+
+  qs('topbar-actions').innerHTML = `
+    <button class="btn" onclick="openNewAssetCategory()">+ Category</button>
+    <button class="btn btn-primary" onclick="openNewAsset()">+ New Asset</button>
+  `;
+
+  const totalValue = assets.reduce((s,a) => s + parseFloat(a.purchase_value||0), 0);
+  const bookValue  = assets.reduce((s,a) => s + parseFloat(a.book_value||0), 0);
+  const activeCount = assets.filter(a => a.state==='active').length;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Assets', assets.length)}
+        ${statCard('Active Assets', activeCount)}
+        ${statCard('Purchase Value', fmtMoney(totalValue))}
+        ${statCard('Net Book Value', fmtMoney(bookValue))}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Fixed Assets</span>
+          <div style="display:flex;gap:8px">
+            ${['','draft','active','disposed'].map(s=>`<button class="btn${currentAssetFilter===s?' btn-primary':''}" onclick="filterAssets('${s}')" style="font-size:.75rem;padding:4px 10px">${s||'All'}</button>`).join('')}
+          </div>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Asset</th><th>Category</th><th>Purchase Date</th><th>Purchase Value</th><th>Accumulated Dep.</th><th>Net Book Value</th><th>State</th><th></th></tr></thead>
+          <tbody>
+            ${assets.map(a => `
+              <tr>
+                <td><strong>${a.name}</strong>${a.asset_number?` <span style="color:var(--ink3);font-size:.75rem">#${a.asset_number}</span>`:''}</td>
+                <td>${a.category_name||'—'}</td>
+                <td>${fmtDate(a.purchase_date)}</td>
+                <td>${fmtMoney(a.purchase_value)}</td>
+                <td>${fmtMoney(a.accumulated_depreciation)}</td>
+                <td><strong>${fmtMoney(a.book_value)}</strong></td>
+                <td><span class="badge ${a.state==='active'?'badge-ok':a.state==='disposed'?'badge-err':'badge-warn'}">${a.state}</span></td>
+                <td style="white-space:nowrap">
+                  <button class="btn-link" onclick="openAsset(${a.id})">View</button>
+                  ${a.state==='draft'?`<button class="btn-link" style="color:var(--teal)" onclick="confirmAsset(${a.id})">Activate</button>`:''}
+                  ${a.state==='active'?`<button class="btn-link" style="color:var(--red)" onclick="disposeAsset(${a.id})">Dispose</button>`:''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+let currentAssetFilter = '';
+async function filterAssets(state) {
+  currentAssetFilter = state;
+  nav('assets');
+}
+
+async function openAsset(id) {
+  const asset = await api('GET', `/assets/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:8px;font-family:'Instrument Serif',serif;font-weight:400">${asset.name}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      ${[
+        ['State', `<span class="badge ${asset.state==='active'?'badge-ok':''}">${asset.state}</span>`],
+        ['Purchase Value', fmtMoney(asset.purchase_value)],
+        ['Salvage Value', fmtMoney(asset.salvage_value)],
+        ['Useful Life', `${asset.useful_life} years`],
+        ['Accumulated Dep.', fmtMoney(asset.accumulated_depreciation)],
+        ['Net Book Value', `<strong>${fmtMoney(asset.book_value)}</strong>`],
+        ['Method', asset.depreciation_method],
+        ['Location', asset.location||'—'],
+      ].map(([l,v]) => `<div><span style="font-size:.72rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em">${l}</span><div style="margin-top:2px">${v}</div></div>`).join('')}
+    </div>
+    ${asset.depreciation_lines && asset.depreciation_lines.length > 0 ? `
+      <div style="font-size:.8rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Depreciation Schedule</div>
+      <div style="max-height:200px;overflow-y:auto">
+        <table class="data-table" style="font-size:.8rem">
+          <thead><tr><th>Date</th><th>Amount</th><th>Book Value After</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${asset.depreciation_lines.map(dl => `
+              <tr>
+                <td>${fmtDate(dl.date)}</td>
+                <td>${fmtMoney(dl.amount)}</td>
+                <td>${fmtMoney(dl.book_value_after)}</td>
+                <td><span class="badge ${dl.state==='posted'?'badge-ok':'badge-warn'}">${dl.state}</span></td>
+                <td>${dl.state==='draft' && asset.state==='active' ? `<button class="btn-link" onclick="postDepLine(${asset.id},${dl.id})">Post</button>` : ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : ''}
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn" onclick="closeModal()">Close</button>
+      ${asset.state==='draft' ? `<button class="btn btn-primary" onclick="confirmAsset(${asset.id});closeModal()">Activate Asset</button>` : ''}
+      ${asset.state==='active' ? `<button class="btn" style="color:var(--red)" onclick="disposeAsset(${asset.id});closeModal()">Dispose</button>` : ''}
+    </div>
+  `);
+}
+
+async function confirmAsset(id) {
+  await api('POST', `/assets/${id}/confirm`);
+  toast('Asset activated — depreciation schedule computed'); nav('assets');
+}
+
+async function disposeAsset(id) {
+  if (!confirm('Dispose this asset? This cannot be undone.')) return;
+  await api('POST', `/assets/${id}/dispose`, {});
+  toast('Asset disposed'); nav('assets');
+}
+
+async function postDepLine(assetId, lineId) {
+  await api('POST', `/assets/${assetId}/depreciate/${lineId}`, {});
+  toast('Depreciation posted'); closeModal(); nav('assets');
+}
+
+async function openNewAsset() {
+  const [categories, partners, accounts] = await Promise.all([
+    api('GET', '/asset-categories'),
+    api('GET', '/partners?is_vendor=true'),
+    api('GET', '/accounts?type=asset'),
+  ]);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Fixed Asset</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Asset Name *</label><input id="m-aname"/></div>
+      <div class="field"><label>Asset Number</label><input id="m-anum"/></div>
+      <div class="field"><label>Category</label>
+        <select id="m-acat"><option value="">— none —</option>${categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Purchase Date</label><input id="m-apdate" type="date" value="${today()}"/></div>
+      <div class="field"><label>In Service Date</label><input id="m-asdate" type="date" value="${today()}"/></div>
+      <div class="field"><label>Purchase Value *</label><input id="m-avalue" type="number" value="0"/></div>
+      <div class="field"><label>Salvage Value</label><input id="m-asalvage" type="number" value="0"/></div>
+      <div class="field"><label>Useful Life (years)</label><input id="m-alife" type="number" value="5"/></div>
+      <div class="field"><label>Depreciation Method</label>
+        <select id="m-amethod"><option value="straight_line">Straight Line</option><option value="declining_balance">Declining Balance</option></select></div>
+      <div class="field"><label>Location</label><input id="m-aloc"/></div>
+      <div class="field"><label>Serial Number</label><input id="m-aserial"/></div>
+      <div class="field"><label>Vendor</label>
+        <select id="m-avendor"><option value="">— none —</option>${partners.map(p=>`<option value="${p.id}">${p.name}</option>`).join('')}</select></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewAsset()">Create Asset</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewAsset() {
+  const name = qs('m-aname').value.trim();
+  if (!name) { qs('m-err').textContent='Asset name required'; qs('m-err').style.display=''; return; }
+  if (parseFloat(qs('m-avalue').value) <= 0) { qs('m-err').textContent='Purchase value must be > 0'; qs('m-err').style.display=''; return; }
+  await api('POST', '/assets', {
+    name, asset_number: qs('m-anum').value || null,
+    category_id: qs('m-acat').value ? parseInt(qs('m-acat').value) : null,
+    purchase_date: qs('m-apdate').value || null,
+    in_service_date: qs('m-asdate').value || null,
+    purchase_value: parseFloat(qs('m-avalue').value),
+    salvage_value: parseFloat(qs('m-asalvage').value)||0,
+    useful_life: parseInt(qs('m-alife').value)||5,
+    depreciation_method: qs('m-amethod').value,
+    location: qs('m-aloc').value || null,
+    serial_number: qs('m-aserial').value || null,
+    partner_id: qs('m-avendor').value ? parseInt(qs('m-avendor').value) : null,
+  });
+  closeModal(); toast('Asset created'); nav('assets');
+}
+
+async function openNewAssetCategory() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Asset Category</h3>
+    <div class="form-grid">
+      <div class="field"><label>Category Name *</label><input id="m-cname"/></div>
+      <div class="field"><label>Useful Life (years)</label><input id="m-clife" type="number" value="5"/></div>
+      <div class="field"><label>Method</label>
+        <select id="m-cmethod"><option value="straight_line">Straight Line</option><option value="declining_balance">Declining Balance</option></select></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewAssetCategory()">Create</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewAssetCategory() {
+  const name = qs('m-cname').value.trim();
+  if (!name) { qs('m-err').textContent='Name required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/asset-categories', {
+    name, useful_life: parseInt(qs('m-clife').value)||5, depreciation_method: qs('m-cmethod').value
+  });
+  closeModal(); toast('Category created'); nav('assets');
+}
+
+// ── Expenses ───────────────────────────────────────────────────
+async function renderExpenses() {
+  const expenses = await api('GET', '/expenses');
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openNewExpense()">+ New Expense</button>`;
+
+  const total = expenses.reduce((s,e) => s + parseFloat(e.amount||0), 0);
+  const pending = expenses.filter(e => e.state==='draft').length;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Expenses', expenses.length)}
+        ${statCard('Pending Approval', pending)}
+        ${statCard('Total Amount', fmtMoney(total))}
+        ${statCard('Approved', expenses.filter(e=>e.state==='approved').length)}
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Expense Claims</span></div>
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Employee</th><th>Description</th><th>Category</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${expenses.map(e => `
+              <tr>
+                <td>${fmtDate(e.date)}</td>
+                <td>${e.employee_name||'—'}</td>
+                <td>${e.name}</td>
+                <td>${e.category_name||'—'}</td>
+                <td>${fmtMoney(e.amount)}</td>
+                <td><span class="badge ${e.state==='approved'?'badge-ok':e.state==='refused'?'badge-err':'badge-warn'}">${e.state}</span></td>
+                <td>
+                  ${e.state==='draft'?`
+                    <button class="btn-link" style="color:var(--teal)" onclick="approveExpense(${e.id})">Approve</button>
+                    <button class="btn-link" style="color:var(--red)" onclick="refuseExpense(${e.id})">Refuse</button>
+                  `:''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function openNewExpense() {
+  const employees = await api('GET', '/hr/employees');
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">New Expense</h3>
+    <div class="form-grid">
+      <div class="field" style="grid-column:1/-1"><label>Description *</label><input id="m-expname"/></div>
+      <div class="field"><label>Employee</label>
+        <select id="m-expemp"><option value="">— none —</option>${employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Date</label><input id="m-expdate" type="date" value="${today()}"/></div>
+      <div class="field"><label>Amount</label><input id="m-expamt" type="number" value="0"/></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="m-expnotes" rows="2"></textarea></div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewExpense()">Submit</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewExpense() {
+  const name = qs('m-expname').value.trim();
+  if (!name) { qs('m-err').textContent='Description required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/expenses', {
+    name, date: qs('m-expdate').value,
+    amount: parseFloat(qs('m-expamt').value)||0,
+    employee_id: qs('m-expemp').value ? parseInt(qs('m-expemp').value) : null,
+    notes: qs('m-expnotes').value,
+  });
+  closeModal(); toast('Expense submitted'); nav('expenses');
+}
+
+async function approveExpense(id) {
+  await api('PUT', `/expenses/${id}/approve`);
+  toast('Expense approved'); nav('expenses');
+}
+
+async function refuseExpense(id) {
+  await api('PUT', `/expenses/${id}/refuse`);
+  toast('Expense refused'); nav('expenses');
+}
+
+// ── Settings Users ─────────────────────────────────────────────
+async function renderSettingsUsers() {
+  const users = await api('GET', '/users');
+  qs('settings-users-body').innerHTML = `
+    <div style="margin-bottom:12px;text-align:right">
+      <button class="btn btn-primary" onclick="openNewUser()" style="font-size:.82rem">+ Add User</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        ${users.map(u => `
+          <tr>
+            <td>${u.name}</td><td>${u.email}</td>
+            <td><span class="badge">${u.role}</span></td>
+            <td><span class="badge ${u.active?'badge-ok':'badge-err'}">${u.active?'Active':'Inactive'}</span></td>
+            <td><button class="btn-link" style="color:var(--red)" onclick="deactivateUser(${u.id})">Deactivate</button></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function openNewUser() {
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">Add User</h3>
+    <div class="form-grid">
+      <div class="field"><label>Full Name *</label><input id="m-uname"/></div>
+      <div class="field"><label>Email *</label><input id="m-uemail" type="email"/></div>
+      <div class="field"><label>Password *</label><input id="m-upass" type="password"/></div>
+      <div class="field"><label>Role</label>
+        <select id="m-urole"><option value="admin">Admin</option><option value="staff" selected>Staff</option><option value="viewer">Viewer</option></select></div>
+    </div>
+    <div id="m-err" style="color:var(--red);font-size:.8rem;display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="saveNewUser()">Create User</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+async function saveNewUser() {
+  const name = qs('m-uname').value.trim();
+  const email = qs('m-uemail').value.trim();
+  const pass = qs('m-upass').value;
+  if (!name || !email || !pass) { qs('m-err').textContent='All fields required'; qs('m-err').style.display=''; return; }
+  await api('POST', '/users', {name, email, password: pass, role: qs('m-urole').value});
+  closeModal(); toast('User created');
+}
+
+async function deactivateUser(id) {
+  if (!confirm('Deactivate this user?')) return;
+  await api('DELETE', `/users/${id}`);
+  toast('User deactivated');
+}
+
 // ── Keyboard shortcuts ─────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModalForce();
