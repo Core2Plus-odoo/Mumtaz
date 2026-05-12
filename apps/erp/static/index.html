@@ -1942,10 +1942,16 @@ const MODULE_LABELS = {
 };
 
 async function renderTenants() {
-  const [tenants, stats] = await Promise.all([
-    api('GET', '/super/tenants'),
-    api('GET', '/super/stats'),
-  ]);
+  let tenants, stats;
+  try {
+    [tenants, stats] = await Promise.all([
+      api('GET', '/super/tenants'),
+      api('GET', '/super/stats'),
+    ]);
+  } catch(e) {
+    qs('content').innerHTML = `<div class="card" style="color:var(--red);padding:24px">Error loading tenants: ${e.message}</div>`;
+    return;
+  }
 
   qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openCreateTenant()">+ New Tenant</button>`;
 

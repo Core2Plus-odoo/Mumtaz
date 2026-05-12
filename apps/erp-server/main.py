@@ -730,6 +730,9 @@ class TenantIn(BaseModel):
 class ModuleToggle(BaseModel):
     modules: List[str]
 
+class StatusUpdate(BaseModel):
+    status: str = "active"
+
 class CompanyUpdate(BaseModel):
     name: Optional[str] = None
     name_ar: Optional[str] = None
@@ -994,9 +997,10 @@ def login(data: LoginIn):
 @app.get("/api/auth/me")
 def me(ctx=Depends(get_user)):
     with get_db() as conn:
-        user = fetchone(conn, "SELECT id,name,email,role,company_id FROM users WHERE id=%s", (ctx["user_id"],))
+        user = fetchone(conn, "SELECT id,name,email,role,company_id,is_super_admin FROM users WHERE id=%s", (ctx["user_id"],))
         if not user:
             raise HTTPException(404, "User not found")
+        user["is_super"] = bool(user.pop("is_super_admin", False))
         return user
 
 
@@ -2363,11 +2367,10 @@ def create_tenant(data: TenantIn, ctx=Depends(require_super)):
         return {"company_id": company_id, "message": f"Tenant '{data.company_name}' created"}
 
 @app.put("/api/super/tenants/{tid}/status")
-def update_tenant_status(tid: int, body: dict, ctx=Depends(require_super)):
-    status = body.get("status", "active")
+def update_tenant_status(tid: int, body: StatusUpdate, ctx=Depends(require_super)):
     with get_db() as conn:
-        execute(conn, "UPDATE companies SET status=%s WHERE id=%s", (status, tid))
-        return {"ok": True, "status": status}
+        execute(conn, "UPDATE companies SET status=%s WHERE id=%s", (body.status, tid))
+        return {"ok": True, "status": body.status}
 
 @app.get("/api/super/tenants/{tid}/modules")
 def get_tenant_modules(tid: int, ctx=Depends(require_super)):
