@@ -280,6 +280,33 @@
     }
     #login-page.show { display: flex; }
 
+    /* ── Extra badge states ── */
+    .badge-ok   { background: var(--green-bg); color: var(--teal); }
+    .badge-err  { background: var(--red-bg);   color: var(--red);  }
+    .badge-warn { background: #FEF3C7;          color: #92400E;     }
+
+    /* ── Card header / title ── */
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-title { font-size: .9rem; font-weight: 600; color: var(--ink); }
+
+    /* ── Data table (alias) ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .data-table th { text-align: left; padding: 9px 12px; font-size: .7rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1.5px solid var(--border); }
+    .data-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: middle; }
+    .data-table tr:hover td { background: var(--bg); }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* ── Inline link-style button ── */
+    .btn-link {
+      background: none; border: none; cursor: pointer;
+      color: var(--gold); font-size: .78rem; font-weight: 600;
+      padding: 2px 4px; border-radius: 4px; transition: opacity .15s;
+    }
+    .btn-link:hover { opacity: .7; text-decoration: underline; }
+
     /* ── Responsive ── */
     @media (max-width: 768px) {
       #sidebar { width: 56px; }
@@ -439,6 +466,30 @@
     </div>
 
     <div class="nav-section">
+      <div class="nav-label">Business</div>
+      <div class="nav-item" data-page="crm" onclick="nav('crm')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>CRM</span>
+      </div>
+      <div class="nav-item" data-page="hr" onclick="nav('hr')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>HR</span>
+      </div>
+      <div class="nav-item" data-page="projects" onclick="nav('projects')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Projects</span>
+      </div>
+      <div class="nav-item" data-page="assets" onclick="nav('assets')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        <span>Assets</span>
+      </div>
+      <div class="nav-item" data-page="expenses" onclick="nav('expenses')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Expenses</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
       <div class="nav-label">Reports</div>
       <div class="nav-item" onclick="nav('reports')" data-page="reports">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -566,11 +617,18 @@ function showApp() {
 
   // Show/hide module-gated nav items based on enabled modules
   const moduleNav = {
-    invoicing:  ['customers', 'invoices'],
-    purchasing: ['vendors', 'bills'],
-    accounting: ['journal-entries', 'accounts'],
-    payments:   ['payments'],
-    inventory:  ['products'],
+    invoicing:     ['customers', 'invoices'],
+    purchasing:    ['vendors', 'bills'],
+    accounting:    ['journal-entries', 'accounts'],
+    payments:      ['payments'],
+    inventory:     ['products'],
+    crm:           ['crm'],
+    hr:            ['hr'],
+    project:       ['projects'],
+    manufacturing: ['manufacturing'],
+    assets:        ['assets'],
+    expenses:      ['expenses'],
+    pos:           ['pos'],
   };
   document.querySelectorAll('[data-page]').forEach(el => {
     const page = el.dataset.page;
@@ -646,6 +704,8 @@ const PAGE_TITLES = {
   'journal-entries': 'Journal Entries', accounts: 'Chart of Accounts',
   products: 'Products', reports: 'Reports', settings: 'Settings',
   tenants: 'Tenant Management',
+  crm: 'CRM', hr: 'HR & Employees', projects: 'Projects',
+  assets: 'Fixed Assets', expenses: 'Expenses',
 };
 
 function nav(page) {
@@ -671,6 +731,11 @@ function nav(page) {
     reports:          renderReports,
     settings:         renderSettings,
     tenants:          renderTenants,
+    crm:              renderCRM,
+    hr:               renderHR,
+    projects:         renderProjects,
+    assets:           renderAssets,
+    expenses:         renderExpenses,
   };
   if (renders[page]) renders[page]();
 }
@@ -1846,51 +1911,134 @@ const MODULE_LABELS = {
 };
 
 async function renderTenants() {
-  qs('topbar-actions').innerHTML = `<button class="btn btn-primary btn-sm" onclick="openCreateTenant()">+ New Tenant</button>`;
-  await loadTenants();
+  const [tenants, stats] = await Promise.all([
+    api('GET', '/super/tenants'),
+    api('GET', '/super/stats').catch(() => ({total_tenants:0,active_tenants:0,total_users:0,total_invoices:0})),
+  ]);
+
+  qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openCreateTenant()">+ New Tenant</button>`;
+
+  qs('content').innerHTML = `
+    <div style="padding:24px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        ${statCard('Total Tenants', stats.total_tenants)}
+        ${statCard('Active', stats.active_tenants)}
+        ${statCard('Total Users', stats.total_users)}
+        ${statCard('Posted Invoices', stats.total_invoices)}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Tenants</span></div>
+        <table class="data-table">
+          <thead><tr><th>Company</th><th>Plan</th><th>Modules</th><th>Users</th><th>Invoices</th><th>Revenue</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${tenants.map(t => `
+              <tr>
+                <td>
+                  <div style="font-weight:600">${t.name}</div>
+                  ${t.vat_number ? `<div style="font-size:.75rem;color:var(--ink3)">VAT: ${t.vat_number}</div>` : ''}
+                </td>
+                <td><span class="badge">${t.plan||'standard'}</span></td>
+                <td style="font-size:.75rem">${(t.enabled_modules||[]).slice(0,3).join(', ')}${(t.enabled_modules||[]).length > 3 ? ` +${(t.enabled_modules||[]).length-3}` : ''}</td>
+                <td>${t.user_count||0}</td>
+                <td>${t.posted_moves||0}</td>
+                <td>${fmtMoney(t.total_invoiced||0)}</td>
+                <td><span class="badge ${t.status==='active'?'badge-ok':t.status==='deleted'?'badge-err':'badge-warn'}">${t.status||'active'}</span></td>
+                <td style="white-space:nowrap">
+                  <button class="btn-link" onclick="openTenantDetail(${t.id})">Manage</button>
+                  <button class="btn-link" onclick="openModules(${t.id},'${t.name}')">Modules</button>
+                  ${t.status==='active'
+                    ? `<button class="btn-link" style="color:var(--red)" onclick="toggleTenantStatus(${t.id},'suspended')">Suspend</button>`
+                    : `<button class="btn-link" style="color:var(--teal)" onclick="toggleTenantStatus(${t.id},'active')">Activate</button>`}
+                </td>
+              </tr>
+            `).join('')}
+            ${tenants.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:var(--ink3);padding:32px">No tenants yet — create your first one</td></tr>' : ''}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
-async function loadTenants() {
-  const c = qs('content');
-  try {
-    const tenants = await api('GET', '/super/tenants');
-    c.innerHTML = `
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>ID</th><th>Company</th><th>VAT</th><th>Status</th><th>Users</th><th>Invoices</th><th>Total Invoiced</th><th>Modules</th><th>Actions</th></tr></thead>
-            <tbody>
-              ${tenants.map(t => `
-                <tr>
-                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">#${t.id}</td>
-                  <td><strong>${t.name}</strong>${t.name_ar ? `<br><span style="font-size:.72rem;color:var(--ink3);direction:rtl">${t.name_ar}</span>` : ''}</td>
-                  <td style="font-family:'DM Mono',monospace;font-size:.78rem">${t.vat_number||'—'}</td>
-                  <td>${badge(t.status||'active')}</td>
-                  <td>${t.user_count}</td>
-                  <td>${t.posted_moves}</td>
-                  <td>AED ${fmt(t.total_invoiced)}</td>
-                  <td style="max-width:200px">
-                    <div style="display:flex;flex-wrap:wrap;gap:3px">
-                      ${(t.enabled_modules||[]).map(m => `<span class="badge badge-posted" style="font-size:.65rem">${MODULE_LABELS[m]||m}</span>`).join('')}
-                      ${!(t.enabled_modules||[]).length ? '<span style="color:var(--ink3);font-size:.75rem">none</span>' : ''}
-                    </div>
-                  </td>
-                  <td style="white-space:nowrap">
-                    <button class="btn btn-ghost btn-sm" onclick="openModules(${t.id}, '${t.name}')">Modules</button>
-                    <button class="btn btn-ghost btn-sm" style="color:${t.status==='suspended'?'var(--teal)':'var(--red)'}" onclick="toggleTenantStatus(${t.id}, '${t.status||'active'}')">
-                      ${t.status === 'suspended' ? 'Activate' : 'Suspend'}
-                    </button>
-                  </td>
-                </tr>
-              `).join('')}
-              ${tenants.length === 0 ? '<tr><td colspan="9" style="text-align:center;color:var(--ink3);padding:32px">No tenants yet — create your first one</td></tr>' : ''}
-            </tbody>
-          </table>
-        </div>
-      </div>`;
-  } catch(e) {
-    c.innerHTML = `<div class="card" style="color:var(--red)">Error: ${e.message}</div>`;
-  }
+async function openTenantDetail(id) {
+  const tenant = await api('GET', `/super/tenants/${id}`);
+  showModal(`
+    <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">${tenant.name}</h3>
+    <div class="form-grid" style="margin-bottom:20px">
+      <div class="field"><label>Company Name</label><input id="m-tname" value="${tenant.name||''}"/></div>
+      <div class="field"><label>VAT Number</label><input id="m-tvat" value="${tenant.vat_number||''}"/></div>
+      <div class="field"><label>Phone</label><input id="m-tphone" value="${tenant.phone||''}"/></div>
+      <div class="field"><label>Email</label><input id="m-temail" value="${tenant.email||''}"/></div>
+      <div class="field"><label>Plan</label>
+        <select id="m-tplan"><option value="starter"${tenant.plan==='starter'?' selected':''}>Starter</option><option value="standard"${tenant.plan==='standard'?' selected':''}>Standard</option><option value="growth"${tenant.plan==='growth'?' selected':''}>Growth</option><option value="enterprise"${tenant.plan==='enterprise'?' selected':''}>Enterprise</option></select></div>
+    </div>
+
+    <div style="font-size:.8rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Users (${tenant.users?.length||0})</div>
+    <div style="max-height:180px;overflow-y:auto;margin-bottom:16px;border:1px solid var(--border);border-radius:8px">
+      <table class="data-table" style="font-size:.8rem">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead>
+        <tbody>
+          ${(tenant.users||[]).map(u => `
+            <tr>
+              <td>${u.name}</td><td>${u.email}</td><td>${u.role}</td>
+              <td><span class="badge ${u.active?'badge-ok':'badge-err'}">${u.active?'Yes':'No'}</span></td>
+              <td><button class="btn-link" style="color:var(--red)" onclick="removeTenantUser(${id},${u.id})">Remove</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <details style="margin-bottom:16px">
+      <summary style="font-size:.82rem;color:var(--gold);cursor:pointer;margin-bottom:8px">+ Add User to Tenant</summary>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:10px">
+        <div class="field"><label>Name</label><input id="m-uname-${id}"/></div>
+        <div class="field"><label>Email</label><input id="m-uemail-${id}" type="email"/></div>
+        <div class="field"><label>Password</label><input id="m-upass-${id}" type="password"/></div>
+        <div class="field"><label>Role</label><select id="m-urole-${id}"><option value="admin">Admin</option><option value="staff" selected>Staff</option><option value="viewer">Viewer</option></select></div>
+      </div>
+      <button class="btn" onclick="addTenantUser(${id})" style="font-size:.78rem;padding:6px 14px">Add User</button>
+    </details>
+
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" onclick="saveTenantInfo(${id})">Save</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" style="margin-left:auto;color:var(--red)" onclick="deleteTenantConfirm(${id},'${tenant.name}')">Delete Tenant</button>
+    </div>
+  `);
+}
+
+async function saveTenantInfo(id) {
+  await api('PUT', `/super/tenants/${id}`, {
+    company_name: qs('m-tname').value,
+    vat_number: qs('m-tvat').value || null,
+    phone: qs('m-tphone').value || null,
+    email: qs('m-temail').value || null,
+    plan: qs('m-tplan').value,
+  });
+  closeModal(); toast('Tenant updated'); nav('tenants');
+}
+
+async function addTenantUser(tid) {
+  const name  = qs(`m-uname-${tid}`).value.trim();
+  const email = qs(`m-uemail-${tid}`).value.trim();
+  const pass  = qs(`m-upass-${tid}`).value;
+  const role  = qs(`m-urole-${tid}`).value;
+  if (!name || !email || !pass) { toast('Name, email and password required', 'err'); return; }
+  await api('POST', `/super/tenants/${tid}/users`, {name, email, password: pass, role});
+  closeModal(); toast('User added'); openTenantDetail(tid);
+}
+
+async function removeTenantUser(tid, uid) {
+  if (!confirm('Remove this user?')) return;
+  await api('DELETE', `/super/tenants/${tid}/users/${uid}`);
+  closeModal(); toast('User removed'); openTenantDetail(tid);
+}
+
+async function deleteTenantConfirm(id, name) {
+  if (!confirm(`Delete tenant "${name}"? All users will be deactivated.`)) return;
+  await api('DELETE', `/super/tenants/${id}`);
+  closeModal(); toast('Tenant deleted'); nav('tenants');
 }
 
 async function openCreateTenant() {
@@ -1977,13 +2125,12 @@ async function saveModules(tenantId) {
   } catch(e) { toast(e.message, 'err'); }
 }
 
-async function toggleTenantStatus(tenantId, currentStatus) {
-  const newStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+async function toggleTenantStatus(tenantId, newStatus) {
   if (!confirm(`${newStatus === 'suspended' ? 'Suspend' : 'Activate'} this tenant?`)) return;
   try {
     await api('PUT', `/super/tenants/${tenantId}/status`, { status: newStatus });
     toast(`Tenant ${newStatus}`);
-    await loadTenants();
+    nav('tenants');
   } catch(e) { toast(e.message, 'err'); }
 }
 
