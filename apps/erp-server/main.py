@@ -514,6 +514,20 @@ def startup():
     with get_db() as conn:
         c = dictcur(conn)
         c.execute(SCHEMA)
+        # Backfill tenant_modules for companies created before multi-tenancy was added
+        orphans = fetchall(conn, """
+            SELECT c.id FROM companies c
+            WHERE NOT EXISTS (
+                SELECT 1 FROM tenant_modules tm WHERE tm.company_id = c.id
+            )
+        """)
+        for company in orphans:
+            for module in ALL_MODULES:
+                c.execute(
+                    "INSERT INTO tenant_modules (company_id, module, enabled) "
+                    "VALUES (%s, %s, TRUE) ON CONFLICT DO NOTHING",
+                    (company["id"], module)
+                )
 
 
 # ── Pydantic models ───────────────────────────────────────────

@@ -623,6 +623,7 @@ async function doSetup() {
     token = r.access_token;
     localStorage.setItem('erp_token', token);
     currentUser = await api('GET', '/auth/me');
+    enabledModules = await api('GET', '/me/modules').catch(() => []);
     showApp();
     toast('Company set up successfully!');
   } catch(e) {
