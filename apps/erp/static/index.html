@@ -748,8 +748,32 @@ function openModal(title, bodyHTML, footerHTML, large=false) {
   qs('modal').className = large ? 'modal modal-lg' : 'modal';
   qs('overlay').classList.add('open');
 }
-function closeModal(e) { if (e.target === qs('overlay')) closeModalForce(); }
+function closeModal(e) {
+  if (!e || e.target === qs('overlay')) closeModalForce();
+}
 function closeModalForce() { qs('overlay').classList.remove('open'); }
+
+// showModal — renders arbitrary HTML directly into modal-body, no header title, no footer
+function showModal(bodyHTML) {
+  qs('modal-title').textContent = '';
+  qs('modal-body').innerHTML = bodyHTML;
+  qs('modal-footer').innerHTML = '';
+  qs('modal').className = 'modal';
+  qs('overlay').classList.add('open');
+}
+
+// fmtMoney — formats a number as AED currency
+function fmtMoney(n) {
+  return 'AED ' + Number(n||0).toLocaleString('en-AE', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// statCard — renders a simple KPI stat card
+function statCard(label, value) {
+  return `<div class="card" style="padding:16px">
+    <div style="font-size:.72rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">${label}</div>
+    <div style="font-size:1.4rem;font-weight:700;color:var(--ink)">${value}</div>
+  </div>`;
+}
 
 // ── Dashboard ──────────────────────────────────────────────────
 async function renderDashboard() {
@@ -1903,17 +1927,24 @@ async function doSuperSetup() {
 
 // ── Tenant Management (super admin) ───────────────────────────
 const MODULE_LABELS = {
-  invoicing:  'Sales & Invoicing',
-  purchasing: 'Purchasing',
-  accounting: 'Full Accounting',
-  payments:   'Payments',
-  inventory:  'Products & Inventory',
+  invoicing:     'Sales & Invoicing',
+  purchasing:    'Purchasing',
+  accounting:    'Full Accounting',
+  payments:      'Payments',
+  inventory:     'Products & Inventory',
+  crm:           'CRM',
+  hr:            'HR & Employees',
+  project:       'Projects',
+  manufacturing: 'Manufacturing',
+  assets:        'Fixed Assets',
+  expenses:      'Expenses',
+  pos:           'Point of Sale',
 };
 
 async function renderTenants() {
   const [tenants, stats] = await Promise.all([
     api('GET', '/super/tenants'),
-    api('GET', '/super/stats').catch(() => ({total_tenants:0,active_tenants:0,total_users:0,total_invoices:0})),
+    api('GET', '/super/stats'),
   ]);
 
   qs('topbar-actions').innerHTML = `<button class="btn btn-primary" onclick="openCreateTenant()">+ New Tenant</button>`;
@@ -1963,6 +1994,7 @@ async function renderTenants() {
 
 async function openTenantDetail(id) {
   const tenant = await api('GET', `/super/tenants/${id}`);
+  const mods = tenant.modules || {};
   showModal(`
     <h3 style="margin-bottom:16px;font-family:'Instrument Serif',serif;font-weight:400">${tenant.name}</h3>
     <div class="form-grid" style="margin-bottom:20px">
@@ -2106,11 +2138,18 @@ async function openModules(tenantId, tenantName) {
 
 function getModuleDesc(key) {
   const descs = {
-    invoicing:  'Customers, sales invoices, ZATCA QR',
-    purchasing: 'Vendors, vendor bills',
-    accounting: 'Chart of accounts, journal entries, reports',
-    payments:   'Payment tracking',
-    inventory:  'Product catalog',
+    invoicing:     'Customers, sales invoices, ZATCA QR',
+    purchasing:    'Vendors, vendor bills',
+    accounting:    'Chart of accounts, journal entries, reports',
+    payments:      'Payment tracking',
+    inventory:     'Product catalog',
+    crm:           'Leads, pipeline, opportunities',
+    hr:            'Employees, payroll, leave management',
+    project:       'Projects, tasks, time tracking',
+    manufacturing: 'Production orders, BOM',
+    assets:        'Fixed assets, depreciation',
+    expenses:      'Expense claims, approvals',
+    pos:           'Point of sale terminal',
   };
   return descs[key] || '';
 }
@@ -2124,6 +2163,8 @@ async function saveModules(tenantId) {
     await loadTenants();
   } catch(e) { toast(e.message, 'err'); }
 }
+
+async function loadTenants() { nav('tenants'); }
 
 async function toggleTenantStatus(tenantId, newStatus) {
   if (!confirm(`${newStatus === 'suspended' ? 'Suspend' : 'Activate'} this tenant?`)) return;
