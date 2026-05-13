@@ -29,6 +29,33 @@ DB_NAME="mumtaz_erp"
 DB_USER="erp_user"
 DB_PASS="${ERP_DB_PASS:-erp_secure_pass_change_me}"
 ERP_SECRET="${ERP_SECRET:-erp-secret-change-in-production}"
+ALLOWED_ORIGINS="${ALLOWED_ORIGINS:-https://app.mumtaz.digital,https://erp.mumtaz.digital}"
+
+# Auto-generate and persist FERNET_KEY if not set (encryption key for secrets at rest)
+SECRETS_FILE="/opt/erp-server/.secrets"
+if [ -z "${FERNET_KEY:-}" ]; then
+  if [ -f "$SECRETS_FILE" ] && grep -q "FERNET_KEY=" "$SECRETS_FILE" 2>/dev/null; then
+    FERNET_KEY=$(grep "FERNET_KEY=" "$SECRETS_FILE" | cut -d= -f2-)
+    echo "  → Loaded existing FERNET_KEY from $SECRETS_FILE"
+  else
+    FERNET_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null \
+                 || openssl rand -base64 32)
+    sudo mkdir -p "$(dirname "$SECRETS_FILE")"
+    echo "FERNET_KEY=${FERNET_KEY}" | sudo tee "$SECRETS_FILE" > /dev/null
+    sudo chmod 600 "$SECRETS_FILE"
+    echo "  ✅ Generated new FERNET_KEY → $SECRETS_FILE"
+  fi
+fi
+
+# Warn about default secrets
+if [ "$ERP_SECRET" = "erp-secret-change-in-production" ] || [ "$ERP_SECRET" = "mumtaz-erp-secret-change-me" ]; then
+  echo "  ⚠️  WARNING: ERP_SECRET is using the default value."
+  echo "     Set a strong secret: export ERP_SECRET=\$(openssl rand -base64 32)"
+fi
+if [ "$DB_PASS" = "erp_secure_pass_change_me" ]; then
+  echo "  ⚠️  WARNING: ERP_DB_PASS is using the default value."
+  echo "     Set a strong password: export ERP_DB_PASS=\$(openssl rand -base64 16)"
+fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " Mumtaz ERP Deploy"
@@ -55,21 +82,28 @@ echo "✅ Python deps installed"
 
 # ── 3. Systemd service ────────────────────────────────────────
 echo "→ Installing systemd service…"
-sudo cp "$SERVER_DIR/main.py" /opt/erp-server/main.py
+sudo cp "$SERVER_DIR/main.py"        /opt/erp-server/main.py
+sudo cp "$SERVER_DIR/odoo_client.py" /opt/erp-server/odoo_client.py
 
 sudo tee /etc/systemd/system/${SERVICE_NAME}.service > /dev/null <<EOF
 [Unit]
-Description=Mumtaz ERP Server
+Description=Mumtaz ERP Server v2
 After=network.target postgresql.service
 
 [Service]
 User=www-data
 WorkingDirectory=/opt/erp-server
+EnvironmentFile=-/opt/erp-server/.secrets
 Environment="ERP_DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@localhost/${DB_NAME}"
 Environment="ERP_SECRET=${ERP_SECRET}"
-ExecStart=${VENV_DIR}/bin/uvicorn main:app --host 127.0.0.1 --port 8002 --workers 2
+Environment="ALLOWED_ORIGINS=${ALLOWED_ORIGINS}"
+Environment="ODOO_URL=${ODOO_URL:-http://187.77.128.199:8069}"
+ExecStart=${VENV_DIR}/bin/uvicorn main:app --host 127.0.0.1 --port 8002 --workers 2 --log-level info
 Restart=always
 RestartSec=5
+# Harden service
+NoNewPrivileges=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target

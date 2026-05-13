@@ -1,44 +1,114 @@
-"""Mumtaz ERP Server — FastAPI + PostgreSQL backend."""
-import os, base64
+"""Mumtaz ERP Server — FastAPI + PostgreSQL backend (v2)."""
+import os, base64, json, logging, hashlib, secrets
 from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 from typing import Optional, List, Any
 
 import psycopg2, psycopg2.extras
-from fastapi import FastAPI, HTTPException, Depends, Query, Header
+from psycopg2.pool import ThreadedConnectionPool
+from fastapi import FastAPI, HTTPException, Depends, Query, Header, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from jose import jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from cryptography.fernet import Fernet, InvalidToken
 
 import odoo_client as odoo
 from odoo_client import OdooError, OdooConnectionError
 
 load_dotenv()
 
+# ── Config ────────────────────────────────────────────────────
 DB_URL  = os.getenv("ERP_DATABASE_URL", "postgresql://erp_user:erp_pass@localhost/mumtaz_erp")
 SECRET  = os.getenv("ERP_SECRET", "mumtaz-erp-secret-change-me")
 ALGO    = "HS256"
+ALLOWED_ORIGINS = [
+    o.strip() for o in
+    os.getenv("ALLOWED_ORIGINS",
+              "https://app.mumtaz.digital,https://erp.mumtaz.digital,http://localhost:3000,http://localhost:5173").split(",")
+    if o.strip()
+]
+PLAN_LIMITS = {
+    "trial":    {"users": 2,  "invoices_per_month": 50,   "storage_mb": 100},
+    "starter":  {"users": 5,  "invoices_per_month": 500,  "storage_mb": 1000},
+    "growth":   {"users": 25, "invoices_per_month": 5000, "storage_mb": 10000},
+    "scale":    {"users": -1, "invoices_per_month": -1,   "storage_mb": -1},
+    "standard": {"users": 10, "invoices_per_month": 1000, "storage_mb": 5000},
+}
+
+# ── Logging ───────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger("mumtaz.erp")
 
 pwd_ctx = CryptContext(schemes=["bcrypt"])
-app     = FastAPI(title="Mumtaz ERP", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-                   allow_methods=["*"], allow_headers=["*"])
+
+# ── Rate limiter ──────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address, default_limits=["300/minute"])
+
+# ── App ───────────────────────────────────────────────────────
+app = FastAPI(
+    title="Mumtaz ERP API",
+    version="2.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+)
+
+@app.exception_handler(HTTPException)
+async def http_exc_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": True, "code": exc.status_code, "message": exc.detail},
+    )
+
+@app.exception_handler(Exception)
+async def generic_exc_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error on %s %s: %s", request.method, request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"error": True, "code": 500, "message": "Internal server error"},
+    )
 
 
-# ── Database ──────────────────────────────────────────────────
+# ── Database (connection pool) ────────────────────────────────
+_pool: Optional[ThreadedConnectionPool] = None
+
+def _get_pool() -> ThreadedConnectionPool:
+    global _pool
+    if _pool is None:
+        _pool = ThreadedConnectionPool(minconn=2, maxconn=20, dsn=DB_URL)
+    return _pool
+
 @contextmanager
 def get_db():
-    conn = psycopg2.connect(DB_URL)
+    pool = _get_pool()
+    conn = pool.getconn()
     try:
+        conn.autocommit = False
         yield conn
         conn.commit()
     except Exception:
         conn.rollback()
         raise
     finally:
-        conn.close()
+        pool.putconn(conn)
 
 def dictcur(conn):
     return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -63,6 +133,26 @@ def execute(conn, sql, params=()):
         return None
 
 
+# ── Encryption helpers (Fernet for secrets at rest) ───────────
+def _fernet() -> Fernet:
+    key = os.getenv("FERNET_KEY", "")
+    if key:
+        return Fernet(key.encode() if isinstance(key, str) else key)
+    # Derive a key from ERP_SECRET so existing deploys don't break
+    import base64 as _b64
+    raw = hashlib.sha256(SECRET.encode()).digest()
+    return Fernet(_b64.urlsafe_b64encode(raw))
+
+def encrypt_secret(plain: str) -> str:
+    return _fernet().encrypt(plain.encode()).decode()
+
+def decrypt_secret(encrypted: str) -> str:
+    try:
+        return _fernet().decrypt(encrypted.encode()).decode()
+    except (InvalidToken, Exception):
+        return encrypted  # legacy plaintext fallback
+
+
 # ── Auth ──────────────────────────────────────────────────────
 def make_token(user_id: int, company_id: Optional[int], is_super: bool = False) -> str:
     exp = datetime.utcnow() + timedelta(days=30)
@@ -81,6 +171,33 @@ def require_super(ctx=Depends(get_user)):
     if not ctx.get("is_super"):
         raise HTTPException(403, "Super admin access required")
     return ctx
+
+
+# ── Audit log helper ──────────────────────────────────────────
+def audit_log(conn, company_id, user_id, action: str, table_name: str,
+              record_id=None, summary: str = None, ip_address: str = None):
+    try:
+        execute(conn,
+            "INSERT INTO audit_logs (company_id,user_id,action,table_name,record_id,summary,ip_address) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            (company_id, user_id, action, table_name, record_id, summary, ip_address))
+    except Exception:
+        pass  # Never fail the main request due to audit log errors
+
+
+# ── Plan enforcement ──────────────────────────────────────────
+def check_user_limit(conn, company_id: int, plan: str):
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["starter"])
+    if limits["users"] == -1:
+        return
+    count = fetchone(conn, "SELECT COUNT(*) AS n FROM users WHERE company_id=%s AND active=TRUE", (company_id,))
+    current = int(count["n"]) if count else 0
+    if current >= limits["users"]:
+        raise HTTPException(402, f"User limit ({limits['users']}) reached for the '{plan}' plan. Please upgrade.")
+
+def get_company_plan(conn, company_id: int) -> str:
+    row = fetchone(conn, "SELECT plan FROM companies WHERE id=%s", (company_id,))
+    return (row or {}).get("plan", "starter") or "starter"
 
 
 # ── ZATCA QR (Phase 1 TLV) ────────────────────────────────────
@@ -439,6 +556,48 @@ CREATE TABLE IF NOT EXISTS expenses (
   notes       TEXT,
   created_at  TIMESTAMP DEFAULT NOW()
 );
+
+-- ── Audit log ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id          BIGSERIAL PRIMARY KEY,
+  company_id  INTEGER,
+  user_id     INTEGER,
+  action      VARCHAR(20) NOT NULL,
+  table_name  VARCHAR(50) NOT NULL,
+  record_id   INTEGER,
+  summary     TEXT,
+  ip_address  VARCHAR(45),
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- ── API keys ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS api_keys (
+  id          SERIAL PRIMARY KEY,
+  company_id  INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+  user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  name        VARCHAR(100) NOT NULL,
+  key_hash    VARCHAR(64)  NOT NULL UNIQUE,
+  key_prefix  VARCHAR(12)  NOT NULL,
+  scopes      TEXT         DEFAULT 'read',
+  active      BOOLEAN      DEFAULT TRUE,
+  last_used   TIMESTAMP,
+  expires_at  TIMESTAMP,
+  created_at  TIMESTAMP    DEFAULT NOW()
+);
+
+-- ── Performance indexes ────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_users_email     ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_company   ON users(company_id, active);
+CREATE INDEX IF NOT EXISTS idx_moves_company   ON moves(company_id, move_type, state);
+CREATE INDEX IF NOT EXISTS idx_moves_date      ON moves(company_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_move_lines_move ON move_lines(move_id);
+CREATE INDEX IF NOT EXISTS idx_inv_lines_move  ON invoice_lines(move_id);
+CREATE INDEX IF NOT EXISTS idx_partners_co     ON partners(company_id, active);
+CREATE INDEX IF NOT EXISTS idx_products_co     ON products(company_id, active);
+CREATE INDEX IF NOT EXISTS idx_payments_co     ON payments(company_id, state);
+CREATE INDEX IF NOT EXISTS idx_crm_co          ON crm_leads(company_id, stage, active);
+CREATE INDEX IF NOT EXISTS idx_audit_co_time   ON audit_logs(company_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_apikeys_hash    ON api_keys(key_hash) WHERE active = TRUE;
 """
 
 DEFAULT_COA = [
@@ -686,6 +845,12 @@ def post_move(conn, move_id: int, company_id: int):
 # ── Startup ───────────────────────────────────────────────────
 @app.on_event("startup")
 def startup():
+    # Warn loudly about default secrets in production
+    if SECRET in ("mumtaz-erp-secret-change-me", "erp-secret-change-in-production", "change-me"):
+        logger.warning("⚠️  ERP_SECRET is using default value — change immediately in production!")
+    if not os.getenv("FERNET_KEY"):
+        logger.warning("⚠️  FERNET_KEY not set — using derived key. Set FERNET_KEY for proper encryption.")
+
     with get_db() as conn:
         c = dictcur(conn)
         c.execute(SCHEMA)
@@ -1064,13 +1229,19 @@ def setup_init(data: SetupIn):
 
 # ── Auth ──────────────────────────────────────────────────────
 @app.post("/api/auth/login")
-def login(data: LoginIn):
+@limiter.limit("10/minute")
+def login(request: Request, data: LoginIn):
     with get_db() as conn:
-        user = fetchone(conn, "SELECT * FROM users WHERE email=%s AND active=TRUE", (data.email,))
+        user = fetchone(conn,
+            "SELECT id,name,email,role,company_id,is_super_admin,password_hash "
+            "FROM users WHERE email=%s AND active=TRUE", (data.email,))
         if not user or not pwd_ctx.verify(data.password, user["password_hash"]):
-            raise HTTPException(401, "Invalid credentials")
+            logger.warning("Failed login attempt for email=%s ip=%s",
+                           data.email, request.client.host if request.client else "?")
+            raise HTTPException(401, "Invalid email or password")
         is_super = bool(user.get("is_super_admin"))
         token = make_token(user["id"], user.get("company_id"), is_super=is_super)
+        logger.info("Login success user_id=%s company_id=%s", user["id"], user.get("company_id"))
         return {"access_token": token, "user": {
             "id": user["id"], "name": user["name"],
             "email": user["email"], "role": user["role"],
@@ -2374,7 +2545,29 @@ def portal_provision(data: PortalProvisionIn):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "mumtaz-erp"}
+    checks: dict = {}
+    # Database
+    try:
+        with get_db() as conn:
+            row = fetchone(conn, "SELECT COUNT(*) AS tenants FROM companies WHERE status!='deleted'")
+        checks["database"] = "ok"
+        checks["tenants"] = int(row["tenants"]) if row else 0
+    except Exception as exc:
+        checks["database"] = f"error: {exc}"
+    # Connection pool
+    try:
+        pool = _get_pool()
+        checks["pool"] = {"min": pool.minconn, "max": pool.maxconn}
+    except Exception:
+        checks["pool"] = "unavailable"
+    overall = "ok" if checks.get("database") == "ok" else "degraded"
+    return {
+        "status": overall,
+        "service": "mumtaz-erp",
+        "version": "2.0.0",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "checks": checks,
+    }
 
 
 # ── Super Admin Setup ─────────────────────────────────────────
@@ -2427,13 +2620,17 @@ def list_tenants(ctx=Depends(require_super)):
             """SELECT c.*,
                (SELECT COUNT(*) FROM users u WHERE u.company_id=c.id AND NOT COALESCE(u.is_super_admin,FALSE)) AS user_count,
                (SELECT COUNT(*) FROM moves m WHERE m.company_id=c.id AND m.state='posted') AS posted_moves,
-               (SELECT COALESCE(SUM(amount_total),0) FROM moves m WHERE m.company_id=c.id AND m.move_type='out_invoice' AND m.state='posted') AS total_invoiced
+               (SELECT COALESCE(SUM(amount_total),0) FROM moves m WHERE m.company_id=c.id
+                AND m.move_type='out_invoice' AND m.state='posted') AS total_invoiced
                FROM companies c ORDER BY c.id""")
-        # Attach enabled modules per tenant
+        # Batch-fetch all enabled modules in ONE query (avoids N+1)
+        all_modules = fetchall(conn,
+            "SELECT company_id, module FROM tenant_modules WHERE enabled=TRUE")
+        mod_map: dict = {}
+        for r in all_modules:
+            mod_map.setdefault(r["company_id"], []).append(r["module"])
         for t in tenants:
-            rows = fetchall(conn,
-                "SELECT module FROM tenant_modules WHERE company_id=%s AND enabled=TRUE", (t["id"],))
-            t["enabled_modules"] = [r["module"] for r in rows]
+            t["enabled_modules"] = mod_map.get(t["id"], [])
         return tenants
 
 @app.post("/api/super/tenants")
@@ -2575,7 +2772,7 @@ def _get_odoo_session(company_id: int) -> odoo.OdooSession:
         row["odoo_url"] or "http://187.77.128.199:8069",
         row["odoo_db"],
         row["odoo_user"] or "admin",
-        row["odoo_pass"],
+        decrypt_secret(row["odoo_pass"] or ""),
     )
 
 def _odoo_err(exc: OdooError) -> HTTPException:
@@ -2604,7 +2801,8 @@ def odoo_connect(tid: int, data: OdooConnectIn, ctx=Depends(require_super)):
     with get_db() as conn:
         execute(conn,
             "UPDATE companies SET odoo_url=%s, odoo_db=%s, odoo_user=%s, odoo_pass=%s WHERE id=%s",
-            (data.odoo_url, data.odoo_db, data.odoo_user, data.odoo_pass, tid))
+            (data.odoo_url, data.odoo_db, data.odoo_user, encrypt_secret(data.odoo_pass), tid))
+    logger.info("Odoo credentials saved for tenant_id=%s db=%s", tid, data.odoo_db)
     return {**info, "tenant_id": tid, "message": "Odoo credentials saved and connection verified."}
 
 
@@ -3120,17 +3318,181 @@ def odoo_list_databases(
     url: str = "http://187.77.128.199:8069",
     ctx=Depends(require_super),
 ):
-    """List available Odoo databases on the given server (for the connect wizard)."""
-    import json as _json
-    import urllib.request as _req
-    payload = _json.dumps({"jsonrpc": "2.0", "method": "call", "id": 1, "params": {}}).encode()
-    request = _req.Request(url.rstrip("/") + "/web/database/list",
-                           data=payload, headers={"Content-Type": "application/json"})
+    """List available Odoo databases on the given server."""
+    import urllib.request as _req, urllib.error as _uerr
+    payload = json.dumps({"jsonrpc": "2.0", "method": "call", "id": 1, "params": {}}).encode()
+    req = _req.Request(url.rstrip("/") + "/web/database/list",
+                       data=payload, headers={"Content-Type": "application/json"})
     try:
-        with _req.urlopen(request, timeout=10) as resp:
-            body = _json.loads(resp.read())
+        with _req.urlopen(req, timeout=10) as resp:
+            body = json.loads(resp.read())
             if "error" in body:
                 raise HTTPException(502, body["error"].get("message", "Odoo error"))
             return {"databases": body.get("result", []), "url": url}
-    except urllib.error.URLError as exc:
+    except _uerr.URLError as exc:
         raise HTTPException(502, f"Cannot reach Odoo at {url}: {exc.reason}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  API Key Management
+#  Tenants can create API keys for programmatic access instead of JWT tokens.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _hash_key(raw: str) -> str:
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+def get_user_or_api_key(
+    authorization: Optional[str] = Header(None),
+    x_api_key: Optional[str] = Header(None),
+):
+    """Auth via JWT bearer OR X-Api-Key header."""
+    if x_api_key:
+        key_hash = _hash_key(x_api_key)
+        with get_db() as conn:
+            row = fetchone(conn,
+                "SELECT ak.user_id, ak.company_id, ak.scopes, u.role "
+                "FROM api_keys ak JOIN users u ON u.id=ak.user_id "
+                "WHERE ak.key_hash=%s AND ak.active=TRUE "
+                "AND (ak.expires_at IS NULL OR ak.expires_at > NOW())",
+                (key_hash,))
+            if not row:
+                raise HTTPException(401, "Invalid or expired API key")
+            execute(conn, "UPDATE api_keys SET last_used=NOW() WHERE key_hash=%s", (key_hash,))
+        return {"user_id": row["user_id"], "company_id": row["company_id"],
+                "is_super": False, "via_api_key": True, "scopes": row["scopes"]}
+    if authorization:
+        try:
+            scheme, token = authorization.split()
+            assert scheme.lower() == "bearer"
+            p = jwt.decode(token, SECRET, algorithms=[ALGO])
+            return {"user_id": int(p["sub"]), "company_id": p.get("cid"),
+                    "is_super": bool(p.get("sup", False))}
+        except Exception:
+            raise HTTPException(401, "Not authenticated")
+    raise HTTPException(401, "Not authenticated")
+
+
+class ApiKeyCreateIn(BaseModel):
+    name: str
+    scopes: str = "read"
+    expires_days: Optional[int] = None
+
+@app.get("/api/keys")
+def list_api_keys(ctx=Depends(get_user)):
+    with get_db() as conn:
+        rows = fetchall(conn,
+            "SELECT id, name, key_prefix, scopes, active, last_used, expires_at, created_at "
+            "FROM api_keys WHERE company_id=%s AND active=TRUE ORDER BY created_at DESC",
+            (ctx["company_id"],))
+    return rows
+
+@app.post("/api/keys", status_code=201)
+def create_api_key(data: ApiKeyCreateIn, ctx=Depends(get_user)):
+    raw_key = "mk_" + secrets.token_urlsafe(32)
+    key_hash = _hash_key(raw_key)
+    prefix = raw_key[:12]
+    expires_at = None
+    if data.expires_days:
+        expires_at = datetime.utcnow() + timedelta(days=data.expires_days)
+    with get_db() as conn:
+        row = execute(conn,
+            "INSERT INTO api_keys (company_id, user_id, name, key_hash, key_prefix, scopes, expires_at) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id, created_at",
+            (ctx["company_id"], ctx["user_id"], data.name, key_hash, prefix, data.scopes, expires_at))
+        audit_log(conn, ctx["company_id"], ctx["user_id"], "CREATE", "api_keys",
+                  row["id"] if row else None, f"Created API key: {data.name}")
+    return {"id": row["id"] if row else None, "key": raw_key,
+            "prefix": prefix, "scopes": data.scopes,
+            "message": "Store this key securely — it will not be shown again."}
+
+@app.delete("/api/keys/{kid}", status_code=204)
+def revoke_api_key(kid: int, ctx=Depends(get_user)):
+    with get_db() as conn:
+        execute(conn,
+            "UPDATE api_keys SET active=FALSE WHERE id=%s AND company_id=%s",
+            (kid, ctx["company_id"]))
+        audit_log(conn, ctx["company_id"], ctx["user_id"], "DELETE", "api_keys", kid, "Revoked API key")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Audit Log Viewer (super admin + company admin)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/audit")
+def get_audit_log(
+    limit: int = Query(50, le=200),
+    offset: int = 0,
+    table_name: Optional[str] = None,
+    ctx=Depends(get_user),
+):
+    with get_db() as conn:
+        if ctx.get("is_super"):
+            base = "SELECT * FROM audit_logs WHERE 1=1"
+            params: list = []
+        else:
+            base = "SELECT * FROM audit_logs WHERE company_id=%s"
+            params = [ctx["company_id"]]
+        if table_name:
+            base += " AND table_name=%s"
+            params.append(table_name)
+        base += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+        params += [limit, offset]
+        rows = fetchall(conn, base, params)
+        return {"items": rows, "limit": limit, "offset": offset}
+
+@app.get("/api/super/audit")
+def super_audit_log(
+    company_id: Optional[int] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(require_super),
+):
+    with get_db() as conn:
+        if company_id:
+            rows = fetchall(conn,
+                "SELECT al.*, c.name AS company_name FROM audit_logs al "
+                "LEFT JOIN companies c ON c.id=al.company_id "
+                "WHERE al.company_id=%s ORDER BY al.created_at DESC LIMIT %s OFFSET %s",
+                (company_id, limit, offset))
+        else:
+            rows = fetchall(conn,
+                "SELECT al.*, c.name AS company_name FROM audit_logs al "
+                "LEFT JOIN companies c ON c.id=al.company_id "
+                "ORDER BY al.created_at DESC LIMIT %s OFFSET %s",
+                (limit, offset))
+        total = fetchone(conn, "SELECT COUNT(*) AS n FROM audit_logs" +
+                         (" WHERE company_id=%s" % company_id if company_id else ""),
+                         (company_id,) if company_id else ())
+        return {"total": int(total["n"]) if total else 0, "items": rows}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Super Admin Dashboard Stats (enhanced)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/super/dashboard")
+def super_dashboard(ctx=Depends(require_super)):
+    with get_db() as conn:
+        tenants      = fetchone(conn, "SELECT COUNT(*) AS n FROM companies WHERE status!='deleted'")
+        active       = fetchone(conn, "SELECT COUNT(*) AS n FROM companies WHERE status='active'")
+        trial        = fetchone(conn, "SELECT COUNT(*) AS n FROM companies WHERE plan='trial' OR plan IS NULL")
+        users        = fetchone(conn, "SELECT COUNT(*) AS n FROM users WHERE active=TRUE AND is_super_admin=FALSE")
+        invoices     = fetchone(conn, "SELECT COUNT(*) AS n FROM moves WHERE move_type='out_invoice' AND state='posted'")
+        revenue      = fetchone(conn, "SELECT COALESCE(SUM(amount_total),0) AS v FROM moves WHERE move_type='out_invoice' AND state='posted'")
+        new_tenants  = fetchone(conn,
+            "SELECT COUNT(*) AS n FROM companies WHERE created_at > NOW() - INTERVAL '30 days'")
+        plans_dist   = fetchall(conn,
+            "SELECT COALESCE(plan,'unknown') AS plan, COUNT(*) AS n FROM companies GROUP BY plan ORDER BY n DESC")
+        recent_logins= fetchall(conn,
+            "SELECT al.created_at, u.email, u.company_id, c.name AS company FROM audit_logs al "
+            "JOIN users u ON u.id=al.user_id LEFT JOIN companies c ON c.id=al.company_id "
+            "WHERE al.action='LOGIN' ORDER BY al.created_at DESC LIMIT 10")
+        return {
+            "tenants":       {"total": int(tenants["n"]),     "active": int(active["n"]),
+                               "trial": int(trial["n"]),       "new_30d": int(new_tenants["n"])},
+            "users":         int(users["n"]),
+            "invoices":      int(invoices["n"]),
+            "total_invoiced": float(revenue["v"]),
+            "plans":         plans_dist,
+            "recent_logins": recent_logins,
+        }
