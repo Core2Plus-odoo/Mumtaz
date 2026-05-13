@@ -12,6 +12,9 @@ from jose import jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv
 
+import odoo_client as odoo
+from odoo_client import OdooError, OdooConnectionError
+
 load_dotenv()
 
 DB_URL  = os.getenv("ERP_DATABASE_URL", "postgresql://erp_user:erp_pass@localhost/mumtaz_erp")
@@ -686,6 +689,19 @@ def startup():
     with get_db() as conn:
         c = dictcur(conn)
         c.execute(SCHEMA)
+
+        # Add Odoo connection columns (idempotent)
+        for col, coltype in [
+            ("odoo_url",  "VARCHAR(255)"),
+            ("odoo_db",   "VARCHAR(255)"),
+            ("odoo_user", "VARCHAR(255)"),
+            ("odoo_pass", "TEXT"),
+        ]:
+            try:
+                c.execute(f"ALTER TABLE companies ADD COLUMN IF NOT EXISTS {col} {coltype}")
+            except Exception:
+                conn.rollback()
+
         # Backfill tenant_modules for companies created before multi-tenancy was added
         orphans = fetchall(conn, """
             SELECT c.id FROM companies c
@@ -932,6 +948,74 @@ class TenantUpdateIn(BaseModel):
     email: Optional[str] = None
     plan: Optional[str] = None
     status: Optional[str] = None
+
+class OdooConnectIn(BaseModel):
+    odoo_url: str = "http://187.77.128.199:8069"
+    odoo_db: str
+    odoo_user: str = "admin"
+    odoo_pass: str
+
+class OdooPartnerIn(BaseModel):
+    name: str
+    is_company: bool = True
+    is_customer: bool = False
+    is_vendor: bool = False
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    mobile: Optional[str] = None
+    street: Optional[str] = None
+    city: Optional[str] = None
+    country_code: Optional[str] = None
+    vat: Optional[str] = None
+    ref: Optional[str] = None
+
+class OdooSaleLineIn(BaseModel):
+    product_id: int
+    name: Optional[str] = None
+    product_uom_qty: float = 1.0
+    price_unit: float = 0.0
+
+class OdooSaleIn(BaseModel):
+    partner_id: int
+    date_order: Optional[str] = None
+    validity_date: Optional[str] = None
+    note: Optional[str] = None
+    order_line: List[OdooSaleLineIn] = []
+
+class OdooInvoiceLineIn(BaseModel):
+    product_id: Optional[int] = None
+    name: str
+    quantity: float = 1.0
+    price_unit: float = 0.0
+    tax_ids: List[int] = []
+
+class OdooInvoiceIn(BaseModel):
+    partner_id: int
+    move_type: str = "out_invoice"
+    invoice_date: Optional[str] = None
+    invoice_date_due: Optional[str] = None
+    ref: Optional[str] = None
+    narration: Optional[str] = None
+    invoice_line_ids: List[OdooInvoiceLineIn] = []
+
+class OdooProductIn(BaseModel):
+    name: str
+    type: str = "service"
+    list_price: float = 0.0
+    standard_price: float = 0.0
+    default_code: Optional[str] = None
+    description: Optional[str] = None
+    categ_id: Optional[int] = None
+
+class OdooLeadIn(BaseModel):
+    name: str
+    partner_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    email_from: Optional[str] = None
+    phone: Optional[str] = None
+    description: Optional[str] = None
+    expected_revenue: float = 0.0
+    type: str = "lead"
 
 class PortalProvisionIn(BaseModel):
     company_name: str
@@ -2467,3 +2551,586 @@ def super_stats(ctx=Depends(require_super)):
             "total_users": int(total_users["n"]) if total_users else 0,
             "total_invoices": int(total_invoices["n"]) if total_invoices else 0,
         }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Odoo Integration — white-label API bridge
+#
+#  Each tenant stores their Odoo DB credentials in the companies table.
+#  erp-server authenticates to Odoo with a service account and caches the
+#  session. All /api/odoo/* endpoints proxy through to the real Odoo instance
+#  at the tenant's odoo_url — users never touch Odoo directly.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _get_odoo_session(company_id: int) -> odoo.OdooSession:
+    """Load Odoo credentials for company_id and return an authenticated session."""
+    with get_db() as conn:
+        row = fetchone(conn,
+            "SELECT odoo_url, odoo_db, odoo_user, odoo_pass FROM companies WHERE id=%s",
+            (company_id,))
+    if not row or not row.get("odoo_db"):
+        raise HTTPException(400, "This tenant has no Odoo database configured. "
+                                  "A super admin must call POST /api/super/tenants/{id}/odoo-connect first.")
+    return odoo.get_session(
+        row["odoo_url"] or "http://187.77.128.199:8069",
+        row["odoo_db"],
+        row["odoo_user"] or "admin",
+        row["odoo_pass"],
+    )
+
+def _odoo_err(exc: OdooError) -> HTTPException:
+    if exc.is_not_found():
+        return HTTPException(404, exc.message)
+    if exc.is_auth_error():
+        return HTTPException(401, "Odoo session error — credentials may be wrong.")
+    return HTTPException(502, f"Odoo error: {exc.message}")
+
+
+# ── Super-admin: connect a tenant to an Odoo database ────────────────────────
+
+@app.post("/api/super/tenants/{tid}/odoo-connect")
+def odoo_connect(tid: int, data: OdooConnectIn, ctx=Depends(require_super)):
+    """Store Odoo DB credentials for a tenant and verify the connection."""
+    try:
+        sess = odoo.get_session(data.odoo_url, data.odoo_db, data.odoo_user, data.odoo_pass)
+        odoo.invalidate_session(data.odoo_url, data.odoo_db, data.odoo_user)
+        sess = odoo.get_session(data.odoo_url, data.odoo_db, data.odoo_user, data.odoo_pass)
+        info = sess.test_connection()
+    except OdooConnectionError as exc:
+        raise HTTPException(502, str(exc))
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+    with get_db() as conn:
+        execute(conn,
+            "UPDATE companies SET odoo_url=%s, odoo_db=%s, odoo_user=%s, odoo_pass=%s WHERE id=%s",
+            (data.odoo_url, data.odoo_db, data.odoo_user, data.odoo_pass, tid))
+    return {**info, "tenant_id": tid, "message": "Odoo credentials saved and connection verified."}
+
+
+@app.get("/api/super/tenants/{tid}/odoo-test")
+def odoo_test(tid: int, ctx=Depends(require_super)):
+    """Test the stored Odoo connection for a tenant."""
+    try:
+        sess = _get_odoo_session(tid)
+        return sess.test_connection()
+    except OdooConnectionError as exc:
+        raise HTTPException(502, str(exc))
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.delete("/api/super/tenants/{tid}/odoo-connect")
+def odoo_disconnect(tid: int, ctx=Depends(require_super)):
+    """Remove Odoo credentials from a tenant."""
+    with get_db() as conn:
+        row = fetchone(conn, "SELECT odoo_url, odoo_db, odoo_user FROM companies WHERE id=%s", (tid,))
+        if row and row.get("odoo_db"):
+            odoo.invalidate_session(row["odoo_url"] or "", row["odoo_db"], row["odoo_user"] or "admin")
+        execute(conn,
+            "UPDATE companies SET odoo_url=NULL, odoo_db=NULL, odoo_user=NULL, odoo_pass=NULL WHERE id=%s",
+            (tid,))
+    return {"ok": True}
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────
+
+PARTNER_FIELDS = ["id", "name", "email", "phone", "mobile", "is_company",
+                  "customer_rank", "supplier_rank", "street", "city",
+                  "country_id", "vat", "ref", "active", "create_date"]
+
+SALE_FIELDS = ["id", "name", "state", "partner_id", "date_order",
+               "validity_date", "amount_untaxed", "amount_tax", "amount_total",
+               "invoice_status", "note", "order_line"]
+
+INVOICE_FIELDS = ["id", "name", "move_type", "state", "partner_id",
+                  "invoice_date", "invoice_date_due", "ref", "narration",
+                  "amount_untaxed", "amount_tax", "amount_total", "payment_state",
+                  "invoice_line_ids", "invoice_origin"]
+
+PRODUCT_FIELDS = ["id", "name", "default_code", "type", "list_price",
+                  "standard_price", "categ_id", "description", "active",
+                  "qty_available", "virtual_available"]
+
+INVENTORY_FIELDS = ["id", "product_id", "location_id", "quantity", "reserved_quantity"]
+
+LEAD_FIELDS = ["id", "name", "type", "stage_id", "partner_name", "contact_name",
+               "email_from", "phone", "expected_revenue", "probability",
+               "partner_id", "description", "create_date", "date_deadline"]
+
+
+# ── Partners (res.partner) ────────────────────────────────────────────────────
+
+@app.get("/api/odoo/partners")
+def odoo_list_partners(
+    search: Optional[str] = None,
+    is_customer: Optional[bool] = None,
+    is_vendor: Optional[bool] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(get_user),
+):
+    sess = _get_odoo_session(ctx["company_id"])
+    domain: list = [["active", "=", True]]
+    if search:
+        domain.append(["name", "ilike", search])
+    if is_customer is True:
+        domain.append(["customer_rank", ">", 0])
+    if is_vendor is True:
+        domain.append(["supplier_rank", ">", 0])
+    try:
+        return sess.search_read("res.partner", domain, PARTNER_FIELDS, limit=limit, offset=offset, order="name asc")
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/partners/{pid}")
+def odoo_get_partner(pid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        rows = sess.read("res.partner", [pid], PARTNER_FIELDS)
+        if not rows:
+            raise HTTPException(404, "Partner not found")
+        return rows[0]
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/partners", status_code=201)
+def odoo_create_partner(data: OdooPartnerIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {
+        "name": data.name,
+        "is_company": data.is_company,
+        "customer_rank": 1 if data.is_customer else 0,
+        "supplier_rank": 1 if data.is_vendor else 0,
+    }
+    for field in ("email", "phone", "mobile", "street", "city", "vat", "ref"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    if data.country_code:
+        try:
+            countries = sess.search_read("res.country", [["code", "=", data.country_code.upper()]], ["id"], limit=1)
+            if countries:
+                vals["country_id"] = countries[0]["id"]
+        except OdooError:
+            pass
+    try:
+        new_id = sess.create("res.partner", vals)
+        rows = sess.read("res.partner", [new_id], PARTNER_FIELDS)
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.put("/api/odoo/partners/{pid}")
+def odoo_update_partner(pid: int, data: OdooPartnerIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {"name": data.name, "is_company": data.is_company,
+                  "customer_rank": 1 if data.is_customer else 0,
+                  "supplier_rank": 1 if data.is_vendor else 0}
+    for field in ("email", "phone", "mobile", "street", "city", "vat", "ref"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        sess.write("res.partner", [pid], vals)
+        rows = sess.read("res.partner", [pid], PARTNER_FIELDS)
+        return rows[0] if rows else {"id": pid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.delete("/api/odoo/partners/{pid}")
+def odoo_delete_partner(pid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        sess.write("res.partner", [pid], {"active": False})
+        return {"ok": True}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Sales Orders (sale.order) ─────────────────────────────────────────────────
+
+@app.get("/api/odoo/sales")
+def odoo_list_sales(
+    state: Optional[str] = None,
+    partner_id: Optional[int] = None,
+    search: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(get_user),
+):
+    sess = _get_odoo_session(ctx["company_id"])
+    domain: list = []
+    if state:
+        domain.append(["state", "=", state])
+    if partner_id:
+        domain.append(["partner_id", "=", partner_id])
+    if search:
+        domain.append(["name", "ilike", search])
+    try:
+        orders = sess.search_read("sale.order", domain, SALE_FIELDS, limit=limit, offset=offset, order="date_order desc")
+        total = sess.search_count("sale.order", domain)
+        return {"total": total, "items": orders}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/sales/{sid}")
+def odoo_get_sale(sid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        rows = sess.read("sale.order", [sid], SALE_FIELDS)
+        if not rows:
+            raise HTTPException(404, "Sale order not found")
+        order = rows[0]
+        if order.get("order_line"):
+            order["lines"] = sess.read("sale.order.line", order["order_line"],
+                ["id", "product_id", "name", "product_uom_qty", "price_unit", "price_subtotal", "tax_id"])
+        return order
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/sales", status_code=201)
+def odoo_create_sale(data: OdooSaleIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {"partner_id": data.partner_id}
+    if data.date_order:
+        vals["date_order"] = data.date_order
+    if data.validity_date:
+        vals["validity_date"] = data.validity_date
+    if data.note:
+        vals["note"] = data.note
+    if data.order_line:
+        vals["order_line"] = [
+            (0, 0, {
+                "product_id": line.product_id,
+                "name": line.name or "",
+                "product_uom_qty": line.product_uom_qty,
+                "price_unit": line.price_unit,
+            })
+            for line in data.order_line
+        ]
+    try:
+        new_id = sess.create("sale.order", vals)
+        rows = sess.read("sale.order", [new_id], SALE_FIELDS)
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/sales/{sid}/confirm")
+def odoo_confirm_sale(sid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        sess.action_confirm("sale.order", [sid])
+        rows = sess.read("sale.order", [sid], ["id", "name", "state"])
+        return rows[0] if rows else {"id": sid, "state": "sale"}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/sales/{sid}/cancel")
+def odoo_cancel_sale(sid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        sess.call_kw("sale.order", "action_cancel", [[sid]])
+        return {"id": sid, "state": "cancel"}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Invoices (account.move) ───────────────────────────────────────────────────
+
+@app.get("/api/odoo/invoices")
+def odoo_list_invoices(
+    move_type: str = "out_invoice",
+    state: Optional[str] = None,
+    partner_id: Optional[int] = None,
+    payment_state: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(get_user),
+):
+    sess = _get_odoo_session(ctx["company_id"])
+    domain: list = [["move_type", "=", move_type]]
+    if state:
+        domain.append(["state", "=", state])
+    if partner_id:
+        domain.append(["partner_id", "=", partner_id])
+    if payment_state:
+        domain.append(["payment_state", "=", payment_state])
+    try:
+        invoices = sess.search_read("account.move", domain, INVOICE_FIELDS, limit=limit, offset=offset, order="invoice_date desc")
+        total = sess.search_count("account.move", domain)
+        return {"total": total, "items": invoices}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/invoices/{iid}")
+def odoo_get_invoice(iid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        rows = sess.read("account.move", [iid], INVOICE_FIELDS)
+        if not rows:
+            raise HTTPException(404, "Invoice not found")
+        inv = rows[0]
+        if inv.get("invoice_line_ids"):
+            inv["lines"] = sess.read("account.move.line", inv["invoice_line_ids"],
+                ["id", "product_id", "name", "quantity", "price_unit", "price_subtotal", "tax_ids"])
+        return inv
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/invoices", status_code=201)
+def odoo_create_invoice(data: OdooInvoiceIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {
+        "move_type": data.move_type,
+        "partner_id": data.partner_id,
+    }
+    if data.invoice_date:
+        vals["invoice_date"] = data.invoice_date
+    if data.invoice_date_due:
+        vals["invoice_date_due"] = data.invoice_date_due
+    if data.ref:
+        vals["ref"] = data.ref
+    if data.narration:
+        vals["narration"] = data.narration
+    if data.invoice_line_ids:
+        vals["invoice_line_ids"] = [
+            (0, 0, {
+                **({"product_id": line.product_id} if line.product_id else {}),
+                "name": line.name,
+                "quantity": line.quantity,
+                "price_unit": line.price_unit,
+                **({"tax_ids": [(6, 0, line.tax_ids)]} if line.tax_ids else {}),
+            })
+            for line in data.invoice_line_ids
+        ]
+    try:
+        new_id = sess.create("account.move", vals)
+        rows = sess.read("account.move", [new_id], INVOICE_FIELDS)
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/invoices/{iid}/post")
+def odoo_post_invoice(iid: int, ctx=Depends(get_user)):
+    """Confirm/post a draft invoice."""
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        sess.action_post("account.move", [iid])
+        rows = sess.read("account.move", [iid], ["id", "name", "state", "payment_state"])
+        return rows[0] if rows else {"id": iid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/invoices/{iid}/reset")
+def odoo_reset_invoice(iid: int, ctx=Depends(get_user)):
+    """Reset a posted invoice back to draft."""
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        sess.call_kw("account.move", "button_draft", [[iid]])
+        return {"id": iid, "state": "draft"}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Products (product.template / product.product) ─────────────────────────────
+
+@app.get("/api/odoo/products")
+def odoo_list_products(
+    search: Optional[str] = None,
+    type: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(get_user),
+):
+    sess = _get_odoo_session(ctx["company_id"])
+    domain: list = [["active", "=", True]]
+    if search:
+        domain.append(["name", "ilike", search])
+    if type:
+        domain.append(["type", "=", type])
+    try:
+        products = sess.search_read("product.product", domain, PRODUCT_FIELDS, limit=limit, offset=offset, order="name asc")
+        total = sess.search_count("product.product", domain)
+        return {"total": total, "items": products}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/products/{pid}")
+def odoo_get_product(pid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        rows = sess.read("product.product", [pid], PRODUCT_FIELDS)
+        if not rows:
+            raise HTTPException(404, "Product not found")
+        return rows[0]
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/products", status_code=201)
+def odoo_create_product(data: OdooProductIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {
+        "name": data.name,
+        "type": data.type,
+        "list_price": data.list_price,
+        "standard_price": data.standard_price,
+    }
+    for field in ("default_code", "description", "categ_id"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        new_id = sess.create("product.template", vals)
+        rows = sess.search_read("product.product", [["product_tmpl_id", "=", new_id]], PRODUCT_FIELDS, limit=1)
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.put("/api/odoo/products/{pid}")
+def odoo_update_product(pid: int, data: OdooProductIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {
+        "name": data.name,
+        "type": data.type,
+        "list_price": data.list_price,
+        "standard_price": data.standard_price,
+    }
+    for field in ("default_code", "description", "categ_id"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        sess.write("product.product", [pid], vals)
+        rows = sess.read("product.product", [pid], PRODUCT_FIELDS)
+        return rows[0] if rows else {"id": pid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Inventory (stock.quant) ───────────────────────────────────────────────────
+
+@app.get("/api/odoo/inventory")
+def odoo_inventory(
+    product_id: Optional[int] = None,
+    location: str = "WH/Stock",
+    limit: int = Query(200, le=1000),
+    ctx=Depends(get_user),
+):
+    sess = _get_odoo_session(ctx["company_id"])
+    domain: list = [["location_id.usage", "=", "internal"]]
+    if product_id:
+        domain.append(["product_id", "=", product_id])
+    if location and location != "all":
+        domain.append(["location_id.complete_name", "ilike", location])
+    try:
+        return sess.search_read("stock.quant", domain, INVENTORY_FIELDS, limit=limit)
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── CRM Leads/Opportunities (crm.lead) ────────────────────────────────────────
+
+@app.get("/api/odoo/crm")
+def odoo_list_leads(
+    type: str = "lead",
+    stage_id: Optional[int] = None,
+    search: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(get_user),
+):
+    sess = _get_odoo_session(ctx["company_id"])
+    domain: list = [["type", "=", type], ["active", "=", True]]
+    if stage_id:
+        domain.append(["stage_id", "=", stage_id])
+    if search:
+        domain.append("|", ["name", "ilike", search], ["partner_name", "ilike", search])
+    try:
+        leads = sess.search_read("crm.lead", domain, LEAD_FIELDS, limit=limit, offset=offset, order="create_date desc")
+        total = sess.search_count("crm.lead", domain)
+        return {"total": total, "items": leads}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/crm/{lid}")
+def odoo_get_lead(lid: int, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    try:
+        rows = sess.read("crm.lead", [lid], LEAD_FIELDS)
+        if not rows:
+            raise HTTPException(404, "Lead not found")
+        return rows[0]
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/crm", status_code=201)
+def odoo_create_lead(data: OdooLeadIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {"name": data.name, "type": data.type}
+    for field in ("partner_name", "contact_name", "email_from", "phone", "description", "expected_revenue"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        new_id = sess.create("crm.lead", vals)
+        rows = sess.read("crm.lead", [new_id], LEAD_FIELDS)
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.put("/api/odoo/crm/{lid}")
+def odoo_update_lead(lid: int, data: OdooLeadIn, ctx=Depends(get_user)):
+    sess = _get_odoo_session(ctx["company_id"])
+    vals: dict = {"name": data.name, "type": data.type}
+    for field in ("partner_name", "contact_name", "email_from", "phone", "description", "expected_revenue"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        sess.write("crm.lead", [lid], vals)
+        rows = sess.read("crm.lead", [lid], LEAD_FIELDS)
+        return rows[0] if rows else {"id": lid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Odoo meta: available databases ───────────────────────────────────────────
+
+@app.get("/api/super/odoo/databases")
+def odoo_list_databases(
+    url: str = "http://187.77.128.199:8069",
+    ctx=Depends(require_super),
+):
+    """List available Odoo databases on the given server (for the connect wizard)."""
+    import json as _json
+    import urllib.request as _req
+    payload = _json.dumps({"jsonrpc": "2.0", "method": "call", "id": 1, "params": {}}).encode()
+    request = _req.Request(url.rstrip("/") + "/web/database/list",
+                           data=payload, headers={"Content-Type": "application/json"})
+    try:
+        with _req.urlopen(request, timeout=10) as resp:
+            body = _json.loads(resp.read())
+            if "error" in body:
+                raise HTTPException(502, body["error"].get("message", "Odoo error"))
+            return {"databases": body.get("result", []), "url": url}
+    except urllib.error.URLError as exc:
+        raise HTTPException(502, f"Cannot reach Odoo at {url}: {exc.reason}")
