@@ -1,5 +1,5 @@
 """Mumtaz ERP Server — FastAPI + PostgreSQL backend (v2)."""
-import os, base64, json, logging, hashlib, secrets
+import os, base64, json, logging, hashlib, secrets, threading
 from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 from typing import Optional, List, Any
@@ -2847,28 +2847,52 @@ def odoo_disconnect(tid: int, ctx=Depends(require_super)):
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
-PARTNER_FIELDS = ["id", "name", "email", "phone", "is_company",
+# Desired fields per model — filtered at runtime against Odoo's actual schema
+PARTNER_FIELDS = ["id", "name", "email", "phone", "mobile", "is_company",
                   "customer_rank", "supplier_rank", "street", "city",
-                  "country_id", "vat", "ref", "active", "create_date"]
+                  "country_id", "vat", "ref", "active", "create_date",
+                  "write_date", "lang", "comment"]
 
 SALE_FIELDS = ["id", "name", "state", "partner_id", "date_order",
-               "validity_date", "amount_untaxed", "amount_tax", "amount_total",
-               "invoice_status", "note", "order_line"]
+               "validity_date", "expiration", "amount_untaxed", "amount_tax",
+               "amount_total", "invoice_status", "note", "order_line",
+               "commitment_date", "client_order_ref", "user_id"]
 
 INVOICE_FIELDS = ["id", "name", "move_type", "state", "partner_id",
                   "invoice_date", "invoice_date_due", "ref", "narration",
                   "amount_untaxed", "amount_tax", "amount_total", "payment_state",
-                  "invoice_line_ids", "invoice_origin"]
+                  "invoice_line_ids", "invoice_origin", "currency_id"]
 
-PRODUCT_FIELDS = ["id", "name", "default_code", "type", "list_price",
-                  "standard_price", "categ_id", "description", "active",
-                  "qty_available", "virtual_available"]
+PRODUCT_FIELDS = ["id", "name", "default_code", "type", "detailed_type",
+                  "list_price", "standard_price", "categ_id", "description",
+                  "active", "qty_available", "virtual_available",
+                  "uom_id", "barcode"]
 
-INVENTORY_FIELDS = ["id", "product_id", "location_id", "quantity", "reserved_quantity"]
+INVENTORY_FIELDS = ["id", "product_id", "location_id", "quantity",
+                    "reserved_quantity", "reserved_qty"]
 
 LEAD_FIELDS = ["id", "name", "type", "stage_id", "partner_name", "contact_name",
                "email_from", "phone", "expected_revenue", "probability",
-               "partner_id", "description", "create_date", "date_deadline"]
+               "partner_id", "description", "create_date", "date_deadline",
+               "user_id", "team_id", "priority"]
+
+# Per-worker cache: {(url, db, model) → set of valid field names}
+_field_cache: dict[tuple, set] = {}
+_field_cache_lock = threading.Lock()
+
+
+def _valid_fields(sess: "odoo.OdooSession", model: str, requested: list[str]) -> list[str]:
+    """Return only fields that actually exist on the model (cached per worker)."""
+    key = (sess.url, sess.db, model)
+    with _field_cache_lock:
+        if key not in _field_cache:
+            try:
+                info = sess.fields_get(model, ["string"])
+                _field_cache[key] = set(info.keys())
+            except Exception:
+                return requested  # fall back to requested list on any error
+        available = _field_cache[key]
+    return [f for f in requested if f in available]
 
 
 # ── Partners (res.partner) ────────────────────────────────────────────────────
@@ -2892,7 +2916,7 @@ def odoo_list_partners(
     if is_vendor is True:
         domain.append(["supplier_rank", ">", 0])
     try:
-        return sess.search_read("res.partner", domain, PARTNER_FIELDS, limit=limit, offset=offset, order="name asc")
+        return sess.search_read("res.partner", domain, _valid_fields(sess, "res.partner", PARTNER_FIELDS), limit=limit, offset=offset, order="name asc")
     except OdooError as exc:
         raise _odoo_err(exc)
 
@@ -2901,7 +2925,7 @@ def odoo_list_partners(
 def odoo_get_partner(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
-        rows = sess.read("res.partner", [pid], PARTNER_FIELDS)
+        rows = sess.read("res.partner", [pid], _valid_fields(sess, "res.partner", PARTNER_FIELDS))
         if not rows:
             raise HTTPException(404, "Partner not found")
         return rows[0]
@@ -2931,7 +2955,7 @@ def odoo_create_partner(data: OdooPartnerIn, tenant_id: Optional[int] = None, ct
             pass
     try:
         new_id = sess.create("res.partner", vals)
-        rows = sess.read("res.partner", [new_id], PARTNER_FIELDS)
+        rows = sess.read("res.partner", [new_id], _valid_fields(sess, "res.partner", PARTNER_FIELDS))
         return rows[0] if rows else {"id": new_id}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -2949,7 +2973,7 @@ def odoo_update_partner(pid: int, data: OdooPartnerIn, tenant_id: Optional[int] 
             vals[field] = v
     try:
         sess.write("res.partner", [pid], vals)
-        rows = sess.read("res.partner", [pid], PARTNER_FIELDS)
+        rows = sess.read("res.partner", [pid], _valid_fields(sess, "res.partner", PARTNER_FIELDS))
         return rows[0] if rows else {"id": pid}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -2986,7 +3010,7 @@ def odoo_list_sales(
     if search:
         domain.append(["name", "ilike", search])
     try:
-        orders = sess.search_read("sale.order", domain, SALE_FIELDS, limit=limit, offset=offset, order="date_order desc")
+        orders = sess.search_read("sale.order", domain, _valid_fields(sess, "sale.order", SALE_FIELDS), limit=limit, offset=offset, order="date_order desc")
         total = sess.search_count("sale.order", domain)
         return {"total": total, "items": orders}
     except OdooError as exc:
@@ -2997,7 +3021,7 @@ def odoo_list_sales(
 def odoo_get_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
-        rows = sess.read("sale.order", [sid], SALE_FIELDS)
+        rows = sess.read("sale.order", [sid], _valid_fields(sess, "sale.order", SALE_FIELDS))
         if not rows:
             raise HTTPException(404, "Sale order not found")
         order = rows[0]
@@ -3031,7 +3055,7 @@ def odoo_create_sale(data: OdooSaleIn, tenant_id: Optional[int] = None, ctx=Depe
         ]
     try:
         new_id = sess.create("sale.order", vals)
-        rows = sess.read("sale.order", [new_id], SALE_FIELDS)
+        rows = sess.read("sale.order", [new_id], _valid_fields(sess, "sale.order", SALE_FIELDS))
         return rows[0] if rows else {"id": new_id}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -3080,7 +3104,7 @@ def odoo_list_invoices(
     if payment_state:
         domain.append(["payment_state", "=", payment_state])
     try:
-        invoices = sess.search_read("account.move", domain, INVOICE_FIELDS, limit=limit, offset=offset, order="invoice_date desc")
+        invoices = sess.search_read("account.move", domain, _valid_fields(sess, "account.move", INVOICE_FIELDS), limit=limit, offset=offset, order="invoice_date desc")
         total = sess.search_count("account.move", domain)
         return {"total": total, "items": invoices}
     except OdooError as exc:
@@ -3091,7 +3115,7 @@ def odoo_list_invoices(
 def odoo_get_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
-        rows = sess.read("account.move", [iid], INVOICE_FIELDS)
+        rows = sess.read("account.move", [iid], _valid_fields(sess, "account.move", INVOICE_FIELDS))
         if not rows:
             raise HTTPException(404, "Invoice not found")
         inv = rows[0]
@@ -3131,7 +3155,7 @@ def odoo_create_invoice(data: OdooInvoiceIn, tenant_id: Optional[int] = None, ct
         ]
     try:
         new_id = sess.create("account.move", vals)
-        rows = sess.read("account.move", [new_id], INVOICE_FIELDS)
+        rows = sess.read("account.move", [new_id], _valid_fields(sess, "account.move", INVOICE_FIELDS))
         return rows[0] if rows else {"id": new_id}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -3178,7 +3202,7 @@ def odoo_list_products(
     if type:
         domain.append(["type", "=", type])
     try:
-        products = sess.search_read("product.product", domain, PRODUCT_FIELDS, limit=limit, offset=offset, order="name asc")
+        products = sess.search_read("product.product", domain, _valid_fields(sess, "product.product", PRODUCT_FIELDS), limit=limit, offset=offset, order="name asc")
         total = sess.search_count("product.product", domain)
         return {"total": total, "items": products}
     except OdooError as exc:
@@ -3189,7 +3213,7 @@ def odoo_list_products(
 def odoo_get_product(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
-        rows = sess.read("product.product", [pid], PRODUCT_FIELDS)
+        rows = sess.read("product.product", [pid], _valid_fields(sess, "product.product", PRODUCT_FIELDS))
         if not rows:
             raise HTTPException(404, "Product not found")
         return rows[0]
@@ -3212,7 +3236,7 @@ def odoo_create_product(data: OdooProductIn, tenant_id: Optional[int] = None, ct
             vals[field] = v
     try:
         new_id = sess.create("product.template", vals)
-        rows = sess.search_read("product.product", [["product_tmpl_id", "=", new_id]], PRODUCT_FIELDS, limit=1)
+        rows = sess.search_read("product.product", [["product_tmpl_id", "=", new_id]], _valid_fields(sess, "product.product", PRODUCT_FIELDS), limit=1)
         return rows[0] if rows else {"id": new_id}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -3233,7 +3257,7 @@ def odoo_update_product(pid: int, data: OdooProductIn, tenant_id: Optional[int] 
             vals[field] = v
     try:
         sess.write("product.product", [pid], vals)
-        rows = sess.read("product.product", [pid], PRODUCT_FIELDS)
+        rows = sess.read("product.product", [pid], _valid_fields(sess, "product.product", PRODUCT_FIELDS))
         return rows[0] if rows else {"id": pid}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -3256,7 +3280,7 @@ def odoo_inventory(
     if location and location != "all":
         domain.append(["location_id.complete_name", "ilike", location])
     try:
-        return sess.search_read("stock.quant", domain, INVENTORY_FIELDS, limit=limit)
+        return sess.search_read("stock.quant", domain, _valid_fields(sess, "stock.quant", INVENTORY_FIELDS), limit=limit)
     except OdooError as exc:
         raise _odoo_err(exc)
 
@@ -3280,7 +3304,7 @@ def odoo_list_leads(
     if search:
         domain.append("|", ["name", "ilike", search], ["partner_name", "ilike", search])
     try:
-        leads = sess.search_read("crm.lead", domain, LEAD_FIELDS, limit=limit, offset=offset, order="create_date desc")
+        leads = sess.search_read("crm.lead", domain, _valid_fields(sess, "crm.lead", LEAD_FIELDS), limit=limit, offset=offset, order="create_date desc")
         total = sess.search_count("crm.lead", domain)
         return {"total": total, "items": leads}
     except OdooError as exc:
@@ -3291,7 +3315,7 @@ def odoo_list_leads(
 def odoo_get_lead(lid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
-        rows = sess.read("crm.lead", [lid], LEAD_FIELDS)
+        rows = sess.read("crm.lead", [lid], _valid_fields(sess, "crm.lead", LEAD_FIELDS))
         if not rows:
             raise HTTPException(404, "Lead not found")
         return rows[0]
@@ -3309,7 +3333,7 @@ def odoo_create_lead(data: OdooLeadIn, tenant_id: Optional[int] = None, ctx=Depe
             vals[field] = v
     try:
         new_id = sess.create("crm.lead", vals)
-        rows = sess.read("crm.lead", [new_id], LEAD_FIELDS)
+        rows = sess.read("crm.lead", [new_id], _valid_fields(sess, "crm.lead", LEAD_FIELDS))
         return rows[0] if rows else {"id": new_id}
     except OdooError as exc:
         raise _odoo_err(exc)
@@ -3325,7 +3349,7 @@ def odoo_update_lead(lid: int, data: OdooLeadIn, tenant_id: Optional[int] = None
             vals[field] = v
     try:
         sess.write("crm.lead", [lid], vals)
-        rows = sess.read("crm.lead", [lid], LEAD_FIELDS)
+        rows = sess.read("crm.lead", [lid], _valid_fields(sess, "crm.lead", LEAD_FIELDS))
         return rows[0] if rows else {"id": lid}
     except OdooError as exc:
         raise _odoo_err(exc)
