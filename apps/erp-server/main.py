@@ -2847,7 +2847,7 @@ def odoo_disconnect(tid: int, ctx=Depends(require_super)):
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
-PARTNER_FIELDS = ["id", "name", "email", "phone", "mobile", "is_company",
+PARTNER_FIELDS = ["id", "name", "email", "phone", "is_company",
                   "customer_rank", "supplier_rank", "street", "city",
                   "country_id", "vat", "ref", "active", "create_date"]
 
