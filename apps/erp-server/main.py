@@ -2792,7 +2792,9 @@ def _odoo_err(exc: OdooError) -> HTTPException:
         return HTTPException(404, exc.message)
     if exc.is_auth_error():
         return HTTPException(401, "Odoo session error — credentials may be wrong.")
-    return HTTPException(502, f"Odoo error: {exc.message}")
+    detail = exc.data.get("message") or exc.data.get("debug") or exc.message
+    logger.error("Odoo error code=%s message=%s data=%s", exc.code, exc.message, exc.data)
+    return HTTPException(502, f"Odoo error: {detail}")
 
 
 # ── Super-admin: connect a tenant to an Odoo database ────────────────────────
