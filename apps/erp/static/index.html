@@ -575,7 +575,7 @@ async function api(method, path, body) {
   if (body)  opts.body = JSON.stringify(body);
   const r = await fetch(API + path, opts);
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.detail || data.error || `HTTP ${r.status}`);
+  if (!r.ok) throw new Error(data.detail || data.message || `HTTP ${r.status}`);
   return data;
 }
 
