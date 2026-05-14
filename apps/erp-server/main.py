@@ -2775,6 +2775,18 @@ def _get_odoo_session(company_id: int) -> odoo.OdooSession:
         decrypt_secret(row["odoo_pass"] or ""),
     )
 
+def _resolve_odoo_sess(ctx: dict, tenant_id: Optional[int] = None) -> "odoo.OdooSession":
+    """Return Odoo session for the current tenant, or a specified tenant (super admin only)."""
+    if ctx.get("is_super") and tenant_id:
+        cid = tenant_id
+    else:
+        cid = ctx.get("company_id")
+    if not cid:
+        raise HTTPException(400,
+            "Super admins: add ?tenant_id=<company_id> to specify which tenant's Odoo to use.")
+    return _get_odoo_session(cid)
+
+
 def _odoo_err(exc: OdooError) -> HTTPException:
     if exc.is_not_found():
         return HTTPException(404, exc.message)
@@ -2866,9 +2878,10 @@ def odoo_list_partners(
     is_vendor: Optional[bool] = None,
     limit: int = Query(100, le=500),
     offset: int = 0,
+    tenant_id: Optional[int] = None,
     ctx=Depends(get_user),
 ):
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     domain: list = [["active", "=", True]]
     if search:
         domain.append(["name", "ilike", search])
@@ -2883,8 +2896,8 @@ def odoo_list_partners(
 
 
 @app.get("/api/odoo/partners/{pid}")
-def odoo_get_partner(pid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_get_partner(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         rows = sess.read("res.partner", [pid], PARTNER_FIELDS)
         if not rows:
@@ -2895,8 +2908,8 @@ def odoo_get_partner(pid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/partners", status_code=201)
-def odoo_create_partner(data: OdooPartnerIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_create_partner(data: OdooPartnerIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {
         "name": data.name,
         "is_company": data.is_company,
@@ -2923,8 +2936,8 @@ def odoo_create_partner(data: OdooPartnerIn, ctx=Depends(get_user)):
 
 
 @app.put("/api/odoo/partners/{pid}")
-def odoo_update_partner(pid: int, data: OdooPartnerIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_update_partner(pid: int, data: OdooPartnerIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {"name": data.name, "is_company": data.is_company,
                   "customer_rank": 1 if data.is_customer else 0,
                   "supplier_rank": 1 if data.is_vendor else 0}
@@ -2941,8 +2954,8 @@ def odoo_update_partner(pid: int, data: OdooPartnerIn, ctx=Depends(get_user)):
 
 
 @app.delete("/api/odoo/partners/{pid}")
-def odoo_delete_partner(pid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_delete_partner(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         sess.write("res.partner", [pid], {"active": False})
         return {"ok": True}
@@ -2959,9 +2972,10 @@ def odoo_list_sales(
     search: Optional[str] = None,
     limit: int = Query(100, le=500),
     offset: int = 0,
+    tenant_id: Optional[int] = None,
     ctx=Depends(get_user),
 ):
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     domain: list = []
     if state:
         domain.append(["state", "=", state])
@@ -2978,8 +2992,8 @@ def odoo_list_sales(
 
 
 @app.get("/api/odoo/sales/{sid}")
-def odoo_get_sale(sid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_get_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         rows = sess.read("sale.order", [sid], SALE_FIELDS)
         if not rows:
@@ -2994,8 +3008,8 @@ def odoo_get_sale(sid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/sales", status_code=201)
-def odoo_create_sale(data: OdooSaleIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_create_sale(data: OdooSaleIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {"partner_id": data.partner_id}
     if data.date_order:
         vals["date_order"] = data.date_order
@@ -3022,8 +3036,8 @@ def odoo_create_sale(data: OdooSaleIn, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/sales/{sid}/confirm")
-def odoo_confirm_sale(sid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_confirm_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         sess.action_confirm("sale.order", [sid])
         rows = sess.read("sale.order", [sid], ["id", "name", "state"])
@@ -3033,8 +3047,8 @@ def odoo_confirm_sale(sid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/sales/{sid}/cancel")
-def odoo_cancel_sale(sid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_cancel_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         sess.call_kw("sale.order", "action_cancel", [[sid]])
         return {"id": sid, "state": "cancel"}
@@ -3052,9 +3066,10 @@ def odoo_list_invoices(
     payment_state: Optional[str] = None,
     limit: int = Query(100, le=500),
     offset: int = 0,
+    tenant_id: Optional[int] = None,
     ctx=Depends(get_user),
 ):
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     domain: list = [["move_type", "=", move_type]]
     if state:
         domain.append(["state", "=", state])
@@ -3071,8 +3086,8 @@ def odoo_list_invoices(
 
 
 @app.get("/api/odoo/invoices/{iid}")
-def odoo_get_invoice(iid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_get_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         rows = sess.read("account.move", [iid], INVOICE_FIELDS)
         if not rows:
@@ -3087,8 +3102,8 @@ def odoo_get_invoice(iid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/invoices", status_code=201)
-def odoo_create_invoice(data: OdooInvoiceIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_create_invoice(data: OdooInvoiceIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {
         "move_type": data.move_type,
         "partner_id": data.partner_id,
@@ -3121,9 +3136,9 @@ def odoo_create_invoice(data: OdooInvoiceIn, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/invoices/{iid}/post")
-def odoo_post_invoice(iid: int, ctx=Depends(get_user)):
+def odoo_post_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     """Confirm/post a draft invoice."""
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         sess.action_post("account.move", [iid])
         rows = sess.read("account.move", [iid], ["id", "name", "state", "payment_state"])
@@ -3133,9 +3148,9 @@ def odoo_post_invoice(iid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/invoices/{iid}/reset")
-def odoo_reset_invoice(iid: int, ctx=Depends(get_user)):
+def odoo_reset_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
     """Reset a posted invoice back to draft."""
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         sess.call_kw("account.move", "button_draft", [[iid]])
         return {"id": iid, "state": "draft"}
@@ -3151,9 +3166,10 @@ def odoo_list_products(
     type: Optional[str] = None,
     limit: int = Query(100, le=500),
     offset: int = 0,
+    tenant_id: Optional[int] = None,
     ctx=Depends(get_user),
 ):
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     domain: list = [["active", "=", True]]
     if search:
         domain.append(["name", "ilike", search])
@@ -3168,8 +3184,8 @@ def odoo_list_products(
 
 
 @app.get("/api/odoo/products/{pid}")
-def odoo_get_product(pid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_get_product(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         rows = sess.read("product.product", [pid], PRODUCT_FIELDS)
         if not rows:
@@ -3180,8 +3196,8 @@ def odoo_get_product(pid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/products", status_code=201)
-def odoo_create_product(data: OdooProductIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_create_product(data: OdooProductIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {
         "name": data.name,
         "type": data.type,
@@ -3201,8 +3217,8 @@ def odoo_create_product(data: OdooProductIn, ctx=Depends(get_user)):
 
 
 @app.put("/api/odoo/products/{pid}")
-def odoo_update_product(pid: int, data: OdooProductIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_update_product(pid: int, data: OdooProductIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {
         "name": data.name,
         "type": data.type,
@@ -3228,9 +3244,10 @@ def odoo_inventory(
     product_id: Optional[int] = None,
     location: str = "WH/Stock",
     limit: int = Query(200, le=1000),
+    tenant_id: Optional[int] = None,
     ctx=Depends(get_user),
 ):
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     domain: list = [["location_id.usage", "=", "internal"]]
     if product_id:
         domain.append(["product_id", "=", product_id])
@@ -3251,9 +3268,10 @@ def odoo_list_leads(
     search: Optional[str] = None,
     limit: int = Query(100, le=500),
     offset: int = 0,
+    tenant_id: Optional[int] = None,
     ctx=Depends(get_user),
 ):
-    sess = _get_odoo_session(ctx["company_id"])
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     domain: list = [["type", "=", type], ["active", "=", True]]
     if stage_id:
         domain.append(["stage_id", "=", stage_id])
@@ -3268,8 +3286,8 @@ def odoo_list_leads(
 
 
 @app.get("/api/odoo/crm/{lid}")
-def odoo_get_lead(lid: int, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_get_lead(lid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     try:
         rows = sess.read("crm.lead", [lid], LEAD_FIELDS)
         if not rows:
@@ -3280,8 +3298,8 @@ def odoo_get_lead(lid: int, ctx=Depends(get_user)):
 
 
 @app.post("/api/odoo/crm", status_code=201)
-def odoo_create_lead(data: OdooLeadIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_create_lead(data: OdooLeadIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {"name": data.name, "type": data.type}
     for field in ("partner_name", "contact_name", "email_from", "phone", "description", "expected_revenue"):
         v = getattr(data, field)
@@ -3296,8 +3314,8 @@ def odoo_create_lead(data: OdooLeadIn, ctx=Depends(get_user)):
 
 
 @app.put("/api/odoo/crm/{lid}")
-def odoo_update_lead(lid: int, data: OdooLeadIn, ctx=Depends(get_user)):
-    sess = _get_odoo_session(ctx["company_id"])
+def odoo_update_lead(lid: int, data: OdooLeadIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
     vals: dict = {"name": data.name, "type": data.type}
     for field in ("partner_name", "contact_name", "email_from", "phone", "description", "expected_revenue"):
         v = getattr(data, field)
