@@ -5,128 +5,168 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mumtaz Marketplace — UAE & GCC B2B</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f8fafc;--bg-1:#f1f5f9;--surface:#fff;
-  --text:#0f172a;--text-2:#475569;--text-3:#94a3b8;
-  --border:#e2e8f0;--border-2:#cbd5e1;
-  --indigo:#6366f1;--purple:#8b5cf6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--teal:#14b8a6;
-  --grad:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);
-  --font:'Inter',system-ui,sans-serif;
-  --shadow:0 1px 4px rgba(15,23,42,.08),0 4px 16px rgba(15,23,42,.06);
-  --shadow-lg:0 8px 32px rgba(15,23,42,.12);
-  --tr:.15s ease;--r:10px;
-}
-body.dark{
-  --bg:#07101e;--bg-1:#0b1829;--surface:#111e33;
-  --text:#f0f6ff;--text-2:#94a3b8;--text-3:#64748b;
-  --border:rgba(255,255,255,.07);--border-2:rgba(255,255,255,.13);
-  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --paper:   #F5F3EF;
+  --paper2:  #EDEAE3;
+  --paper3:  #E0DDD6;
+  --surface: #FFFFFF;
+  --ink:     #0C1118;
+  --ink2:    #1E2A3A;
+  --ink3:    #6B7A90;
+  --ink4:    #9BAAB8;
+  --gold:        #B8862A;
+  --gold2:       #D4A84C;
+  --gold3:       #F0CC78;
+  --gold-bg:     #FDF6E4;
+  --gold-border: #E8CC88;
+  --gold-dark:   #8E641A;
+  --teal:        #0B7A64;
+  --teal2:       #0EA882;
+  --teal-bg:     #E6F7F3;
+  --teal-border: #9FD9CC;
+  --coral:       #C0402A;
+  --coral-bg:    #FCECEA;
+  --coral-border:#F0B8B0;
+  --blue:        #1E4FA0;
+  --blue-bg:     #EDF2FC;
+  --amber:       #C8820A;
+  --border:  #E0DDD6;
+  --border2: #C8C4BC;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'DM Mono', 'Fira Code', monospace;
+  --shadow-sm: 0 1px 3px rgba(12,17,24,.06), 0 4px 16px rgba(12,17,24,.04);
+  --shadow:    0 2px 8px rgba(12,17,24,.08), 0 4px 24px rgba(12,17,24,.06);
+  --shadow-lg: 0 8px 40px rgba(12,17,24,.12), 0 2px 8px rgba(12,17,24,.04);
+  --shadow-gold: 0 4px 20px rgba(184,134,42,.24);
+  --r:10px;--r-md:14px;--r-lg:20px;--r-full:9999px;
+  --tr:.2s cubic-bezier(.4,0,.2,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text)}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink)}
 a{color:inherit;text-decoration:none}
-button{font-family:var(--font);cursor:pointer;border:none;outline:none;transition:all var(--tr)}
-input,select,textarea{font-family:var(--font);outline:none}
+button{font-family:var(--font-sans);cursor:pointer;border:none;outline:none;transition:all var(--tr)}
+input,select,textarea{font-family:var(--font-sans);outline:none}
 
 /* ── Header ── */
-.header{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.header{background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:50}
 .header-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:16px}
 .logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
-.logo-mark{width:34px;height:34px;background:var(--grad);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.95rem}
-.logo-text{font-size:.95rem;font-weight:700}
-.logo-sub{font-size:.7rem;color:var(--text-3);font-weight:500}
-.header-search{flex:1;max-width:480px;display:flex;gap:0;border:1px solid var(--border-2);border-radius:9px;overflow:hidden;background:var(--bg-1)}
-.header-search select{padding:0 12px;background:var(--bg-1);border:none;border-right:1px solid var(--border-2);font-size:.8rem;color:var(--text-2);cursor:pointer}
-.header-search input{flex:1;padding:9px 12px;background:transparent;border:none;font-size:.85rem;color:var(--text)}
-.header-search button{padding:0 16px;background:var(--grad);color:#fff;font-size:.82rem;font-weight:600}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-serif);font-size:1rem;box-shadow:var(--shadow-gold)}
+.logo-text{font-size:.95rem;font-weight:500;color:#fff}
+.logo-sub{font-size:.7rem;color:rgba(255,255,255,.4);font-weight:400}
+.header-search{flex:1;max-width:480px;display:flex;border:1px solid rgba(255,255,255,.12);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.06)}
+.header-search select{padding:0 12px;background:transparent;border:none;border-right:1px solid rgba(255,255,255,.1);font-size:.8rem;color:rgba(255,255,255,.6);cursor:pointer}
+.header-search select option{background:var(--ink);color:#fff}
+.header-search input{flex:1;padding:9px 12px;background:transparent;border:none;font-size:.85rem;color:#fff}
+.header-search input::placeholder{color:rgba(255,255,255,.35)}
+.header-search button{padding:0 16px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;font-size:.82rem;font-weight:500}
+.header-search button:hover{background:linear-gradient(135deg,var(--gold-dark),var(--gold))}
 .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
-.btn{padding:8px 16px;border-radius:8px;font-size:.83rem;font-weight:600;cursor:pointer;transition:all var(--tr)}
-.btn-grad{background:var(--grad);color:#fff;border:none}.btn-grad:hover{opacity:.88}
-.btn-outline{background:transparent;border:1px solid var(--border-2);color:var(--text-2)}.btn-outline:hover{border-color:var(--indigo);color:var(--indigo)}
-.btn-ghost{background:transparent;border:none;color:var(--text-2)}.btn-ghost:hover{color:var(--indigo)}
+.btn{padding:8px 16px;border-radius:8px;font-size:.83rem;font-weight:500;cursor:pointer;transition:all var(--tr);font-family:var(--font-sans)}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;border:none;box-shadow:var(--shadow-gold)}
+.btn-primary:hover{background:linear-gradient(135deg,var(--gold-dark),var(--gold))}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7)}
+.btn-outline:hover{border-color:var(--gold2);color:var(--gold2)}
+.btn-ghost{background:transparent;border:none;color:rgba(255,255,255,.5)}
+.btn-ghost:hover{color:rgba(255,255,255,.85)}
 .btn-sm{padding:6px 14px;font-size:.78rem}
+.btn-outline-dark{background:transparent;border:1px solid var(--border2);color:var(--ink3)}
+.btn-outline-dark:hover{border-color:var(--gold);color:var(--gold)}
 
 /* ── Hero ── */
-.hero{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#4c1d95 100%);padding:64px 24px;text-align:center;color:#fff}
-.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:.75rem;font-weight:600;margin-bottom:20px;backdrop-filter:blur(4px)}
-.hero h1{font-size:2.4rem;font-weight:700;line-height:1.2;margin-bottom:12px}
-.hero-sub{font-size:1rem;color:rgba(255,255,255,.75);margin-bottom:32px;max-width:560px;margin-left:auto;margin-right:auto}
-.hero-search{max-width:640px;margin:0 auto 28px;display:flex;background:#fff;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg)}
-.hero-search select{padding:0 16px;border:none;border-right:1px solid var(--border);font-size:.85rem;color:var(--text-2);background:#fff;cursor:pointer;min-width:140px}
-.hero-search input{flex:1;padding:14px 16px;border:none;font-size:.92rem;color:var(--text)}
-.hero-search button{padding:0 24px;background:var(--grad);color:#fff;font-weight:700;font-size:.9rem;white-space:nowrap}
-.hero-stats{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
-.hero-stat{color:rgba(255,255,255,.85);font-size:.85rem}
-.hero-stat strong{color:#fff;font-size:1.1rem;display:block}
+.hero{background:var(--ink);padding:72px 24px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(184,134,42,.18) 0%, transparent 70%);pointer-events:none}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(184,134,42,.15);border:1px solid rgba(184,134,42,.3);border-radius:var(--r-full);padding:4px 14px;font-size:.75rem;font-weight:500;margin-bottom:20px;color:var(--gold3)}
+.hero h1{font-family:var(--font-serif);font-size:clamp(2rem,4vw,3rem);font-weight:400;line-height:1.15;margin-bottom:14px;color:#fff}
+.hero h1 em{font-style:italic;color:var(--gold2)}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,.6);margin-bottom:36px;max-width:540px;margin-left:auto;margin-right:auto;line-height:1.6}
+.hero-search{max-width:640px;margin:0 auto 32px;display:flex;background:#fff;border-radius:var(--r-md);overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.hero-search select{padding:0 16px;border:none;border-right:1px solid var(--border);font-size:.85rem;color:var(--ink3);background:#fff;cursor:pointer;min-width:140px}
+.hero-search input{flex:1;padding:14px 16px;border:none;font-size:.92rem;color:var(--ink)}
+.hero-search button{padding:0 24px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;font-weight:500;font-size:.9rem;white-space:nowrap}
+.hero-search button:hover{background:linear-gradient(135deg,var(--gold-dark),var(--gold))}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.hero-stat{color:rgba(255,255,255,.6);font-size:.83rem}
+.hero-stat strong{font-family:var(--font-serif);color:var(--gold2);font-size:1.3rem;font-weight:400;display:block;margin-bottom:2px}
 
 /* ── Section ── */
-.section{max-width:1200px;margin:0 auto;padding:48px 24px}
-.section-title{font-size:1.25rem;font-weight:700;margin-bottom:4px}
-.section-sub{font-size:.85rem;color:var(--text-2);margin-bottom:24px}
+.section{max-width:1200px;margin:0 auto;padding:52px 24px}
+.section-title{font-family:var(--font-serif);font-size:1.5rem;font-weight:400;margin-bottom:6px;color:var(--ink)}
+.section-sub{font-size:.88rem;color:var(--ink3);margin-bottom:24px;line-height:1.6}
 
 /* ── Categories ── */
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 .cat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center;cursor:pointer;transition:all var(--tr)}
-.cat-card:hover{border-color:var(--indigo);box-shadow:var(--shadow);transform:translateY(-2px)}
+.cat-card:hover{border-color:var(--gold);box-shadow:var(--shadow-sm);transform:translateY(-2px)}
 .cat-icon{font-size:1.8rem;margin-bottom:8px}
-.cat-name{font-size:.8rem;font-weight:600;margin-bottom:2px}
-.cat-count{font-size:.72rem;color:var(--text-3)}
+.cat-name{font-size:.8rem;font-weight:500;margin-bottom:2px;color:var(--ink2)}
+.cat-count{font-size:.72rem;color:var(--ink4);font-family:var(--font-mono)}
 
 /* ── Supplier cards ── */
 .supplier-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:all var(--tr)}
-.supplier-card:hover{border-color:var(--indigo);box-shadow:var(--shadow-lg)}
+.supplier-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;transition:all var(--tr)}
+.supplier-card:hover{border-color:var(--gold-border);box-shadow:var(--shadow)}
 .supplier-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
-.supplier-logo{width:44px;height:44px;border-radius:10px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0}
-.supplier-name{font-weight:700;font-size:.9rem;margin-bottom:2px}
-.supplier-meta{font-size:.75rem;color:var(--text-3)}
-.verified{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:600;color:#059669;background:rgba(16,185,129,.1);padding:2px 7px;border-radius:20px}
-.rating{display:flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600}
-.stars{color:var(--amber)}
-.tag{display:inline-block;font-size:.68rem;font-weight:500;padding:2px 8px;border-radius:20px;background:rgba(99,102,241,.08);color:var(--indigo);margin:2px 2px 0 0}
+.supplier-logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-serif);font-size:1.1rem;flex-shrink:0;box-shadow:var(--shadow-gold)}
+.supplier-name{font-weight:500;font-size:.9rem;margin-bottom:2px;color:var(--ink)}
+.supplier-meta{font-size:.75rem;color:var(--ink4)}
+.verified{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:500;color:var(--teal);background:var(--teal-bg);padding:2px 8px;border-radius:var(--r-full);border:1px solid var(--teal-border)}
+.rating{display:flex;align-items:center;gap:4px;font-size:.78rem;font-weight:500;color:var(--ink2)}
+.stars{color:var(--gold)}
+.tag{display:inline-block;font-size:.68rem;font-weight:400;padding:2px 8px;border-radius:var(--r-full);background:var(--gold-bg);color:var(--gold-dark);border:1px solid var(--gold-border);margin:2px 2px 0 0}
 .supplier-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
 
 /* ── How it works ── */
-.hiw{background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:56px 24px}
+.hiw{background:var(--paper2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 24px}
 .hiw-inner{max-width:1200px;margin:0 auto}
 .hiw-cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}
-.hiw-col-title{font-size:1rem;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.hiw-col-title{font-family:var(--font-serif);font-size:1.1rem;font-weight:400;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--ink)}
 .hiw-steps{display:flex;flex-direction:column;gap:18px}
 .hiw-step{display:flex;gap:14px;align-items:flex-start}
-.hiw-num{width:32px;height:32px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.82rem;flex-shrink:0}
-.hiw-step-text strong{display:block;font-size:.88rem;font-weight:600;margin-bottom:2px}
-.hiw-step-text span{font-size:.8rem;color:var(--text-2);line-height:1.5}
+.hiw-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:.82rem;flex-shrink:0;box-shadow:var(--shadow-gold)}
+.hiw-step-text strong{display:block;font-size:.88rem;font-weight:500;margin-bottom:2px;color:var(--ink)}
+.hiw-step-text span{font-size:.8rem;color:var(--ink3);line-height:1.55}
 
 /* ── CTA banner ── */
-.cta-banner{background:var(--grad);color:#fff;padding:48px 24px;text-align:center}
-.cta-banner h2{font-size:1.6rem;font-weight:700;margin-bottom:8px}
-.cta-banner p{color:rgba(255,255,255,.8);margin-bottom:24px;font-size:.92rem}
-.cta-banner .btn{background:#fff;color:var(--indigo);padding:12px 28px;font-size:.92rem}
-.cta-banner .btn:hover{opacity:.92}
+.cta-banner{background:var(--ink);color:#fff;padding:64px 24px;text-align:center;position:relative;overflow:hidden}
+.cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%, rgba(184,134,42,.15) 0%, transparent 70%);pointer-events:none}
+.cta-banner h2{font-family:var(--font-serif);font-size:clamp(1.5rem,3vw,2rem);font-weight:400;margin-bottom:10px}
+.cta-banner p{color:rgba(255,255,255,.6);margin-bottom:28px;font-size:.92rem;line-height:1.6}
+.cta-banner .btn-cta{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;padding:14px 32px;border-radius:var(--r);font-size:.92rem;font-weight:500;box-shadow:var(--shadow-gold);transition:all var(--tr)}
+.cta-banner .btn-cta:hover{background:linear-gradient(135deg,var(--gold-dark),var(--gold))}
 
 /* ── Footer ── */
 footer{background:var(--surface);border-top:1px solid var(--border);padding:32px 24px}
 .footer-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-.footer-links{display:flex;gap:20px;font-size:.8rem;color:var(--text-3)}
-.footer-links a:hover{color:var(--indigo)}
+.footer-links{display:flex;gap:20px;font-size:.8rem;color:var(--ink4)}
+.footer-links a:hover{color:var(--gold)}
 
 /* ── Modal ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg{position:fixed;inset:0;background:rgba(12,17,24,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
-.modal-title{font-size:1.05rem;font-weight:700;margin-bottom:4px}
-.modal-sub{font-size:.82rem;color:var(--text-2);margin-bottom:20px}
+.modal{background:var(--surface);border-radius:var(--r-lg);padding:32px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--font-serif);font-size:1.2rem;font-weight:400;margin-bottom:4px;color:var(--ink)}
+.modal-sub{font-size:.82rem;color:var(--ink3);margin-bottom:20px;line-height:1.5}
 .field{margin-bottom:14px}
-.field label{display:block;font-size:.73rem;font-weight:600;color:var(--text-2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
-.field input,.field select,.field textarea{width:100%;padding:9px 12px;background:var(--bg-1);border:1px solid var(--border-2);border-radius:8px;font-size:.86rem;color:var(--text)}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--indigo);background:var(--surface)}
-.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.field label{display:block;font-size:.72rem;font-weight:500;color:var(--ink3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);font-size:.86rem;color:var(--ink);transition:border var(--tr)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,134,42,.12);background:var(--surface)}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 
 /* ── Toast ── */
-#toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:10px;font-size:.83rem;font-weight:500;box-shadow:var(--shadow-lg);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
-#toast.show{transform:translateY(0);opacity:1}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);z-index:9999;background:var(--ink);color:#fff;font-family:var(--font-sans);font-size:.83rem;padding:12px 20px;border-radius:var(--r-full);box-shadow:var(--shadow-lg);transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s;opacity:0;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+#toast.err{background:var(--coral)}
+
+@media(max-width:768px){
+  .hiw-cols{grid-template-columns:1fr}
+  .hero h1{font-size:1.8rem}
+  .hero-stats{gap:20px}
+  .header-search{display:none}
+}
 </style>
 </head>
 <body>
@@ -155,9 +195,8 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
       <button onclick="doSearch()">Search</button>
     </div>
     <div class="header-actions">
-      <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" title="Toggle theme">🌙</button>
-      <a href="vendor.html" class="btn btn-outline btn-sm">Vendor Login</a>
-      <a href="vendor.html#register" class="btn btn-grad btn-sm">List Your Business</a>
+      <a href="vendor.html" class="btn btn-ghost btn-sm">Vendor Login</a>
+      <a href="vendor.html#register" class="btn btn-primary btn-sm">List Your Business</a>
     </div>
   </div>
 </header>
@@ -165,7 +204,7 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 <!-- Hero -->
 <section class="hero">
   <div class="hero-tag">🇦🇪 UAE & GCC Verified B2B Platform</div>
-  <h1>Connect with Trusted<br>B2B Suppliers</h1>
+  <h1>Connect with Trusted<br><em>B2B Suppliers</em></h1>
   <p class="hero-sub">Browse verified manufacturers, wholesalers, and service providers across the UAE, Saudi Arabia, and GCC region.</p>
   <div class="hero-search">
     <select id="hero-cat">
@@ -187,10 +226,10 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
     <button onclick="doSearch()">Find Suppliers →</button>
   </div>
   <div class="hero-stats">
-    <div class="hero-stat"><strong>2,400+</strong>Verified Suppliers</div>
-    <div class="hero-stat"><strong>15,000+</strong>Products & Services</div>
-    <div class="hero-stat"><strong>40+</strong>Categories</div>
-    <div class="hero-stat"><strong>AED · SAR · PKR</strong>Multi-currency</div>
+    <div class="hero-stat"><strong>3,400+</strong>Verified Suppliers</div>
+    <div class="hero-stat"><strong>48,000+</strong>Products & Services</div>
+    <div class="hero-stat"><strong>7</strong>GCC Countries</div>
+    <div class="hero-stat"><strong>1.5%</strong>Platform Fee</div>
   </div>
 </section>
 
@@ -202,14 +241,14 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 </div>
 
 <!-- Featured Suppliers -->
-<div style="background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<div style="background:var(--paper2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
   <div class="section">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <div>
         <div class="section-title">Featured Suppliers</div>
         <div class="section-sub" style="margin-bottom:0">Verified businesses ready to quote.</div>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="showToast('Browse all coming soon')">View All →</button>
+      <button class="btn btn-outline-dark btn-sm" onclick="showToast('Browse all coming soon')">View All →</button>
     </div>
     <div class="supplier-grid" id="supplier-grid"></div>
   </div>
@@ -218,9 +257,9 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 <!-- How it Works -->
 <div class="hiw">
   <div class="hiw-inner">
-    <div style="text-align:center;margin-bottom:36px">
+    <div style="text-align:center;margin-bottom:40px">
       <div class="section-title">How It Works</div>
-      <div style="font-size:.85rem;color:var(--text-2)">Simple, fast, and free to get started.</div>
+      <div style="font-size:.88rem;color:var(--ink3)">Simple, fast, and free to get started.</div>
     </div>
     <div class="hiw-cols">
       <div>
@@ -246,16 +285,19 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 <!-- CTA -->
 <div class="cta-banner">
   <h2>Are you a supplier?</h2>
-  <p>Join 2,400+ verified businesses. Get 50 qualified leads per month — free forever.</p>
-  <a href="vendor.html#register" class="btn">Start Listing Free →</a>
+  <p>Join 3,400+ verified businesses. Get 50 qualified leads per month — free forever.</p>
+  <a href="vendor.html#register" class="btn-cta">Start Listing Free →</a>
 </div>
 
 <!-- Footer -->
 <footer>
   <div class="footer-inner">
-    <div class="logo">
-      <div class="logo-mark" style="width:28px;height:28px;font-size:.8rem">M</div>
-      <div><div style="font-size:.85rem;font-weight:700">Mumtaz Marketplace</div><div style="font-size:.7rem;color:var(--text-3)">© 2026 Mumtaz Digital</div></div>
+    <div class="logo" style="gap:9px">
+      <div class="logo-mark" style="width:28px;height:28px;font-size:.85rem">M</div>
+      <div>
+        <div style="font-size:.85rem;font-weight:500;color:var(--ink)">Mumtaz Marketplace</div>
+        <div style="font-size:.7rem;color:var(--ink4)">© 2026 Mumtaz Digital</div>
+      </div>
     </div>
     <div class="footer-links">
       <a href="https://mumtaz.digital/about.html">About</a>
@@ -286,8 +328,8 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
     </div>
     <div class="field"><label>Requirements</label><textarea id="rfq-msg" rows="3" placeholder="Describe what you need, specifications, delivery location…"></textarea></div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="closeModal('rfq-modal')">Cancel</button>
-      <button class="btn btn-grad" onclick="submitRFQ()">Submit RFQ →</button>
+      <button class="btn btn-outline-dark" onclick="closeModal('rfq-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitRFQ()">Submit RFQ →</button>
     </div>
   </div>
 </div>
@@ -342,7 +384,7 @@ function renderCats(){
 function renderSuppliers(list){
   const grid = document.getElementById('supplier-grid')
   if(!list.length){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-3)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><div style="font-weight:600">No suppliers found</div><div style="font-size:.82rem;margin-top:4px">Try a different search term or category</div></div>'
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:56px 0;color:var(--ink4)"><div style="font-size:2rem;margin-bottom:12px">🔍</div><div style="font-weight:500;color:var(--ink3)">No suppliers found</div><div style="font-size:.82rem;margin-top:4px">Try a different search term or category</div></div>'
     return
   }
   grid.innerHTML = list.map(s=>`
@@ -354,16 +396,16 @@ function renderSuppliers(list){
           <div class="supplier-meta">${s.cat} · ${s.loc}</div>
           ${s.verified?'<span class="verified">✓ KYB Verified</span>':''}
         </div>
-        <div class="rating"><span class="stars">★</span>${s.rating} <span style="color:var(--text-3);font-weight:400">(${s.reviews})</span></div>
+        <div class="rating"><span class="stars">★</span>${s.rating} <span style="color:var(--ink4);font-weight:400">(${s.reviews})</span></div>
       </div>
       <div>${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>
-      <div style="display:flex;gap:16px;margin-top:10px;font-size:.74rem;color:var(--text-3)">
-        <span>📦 MOQ: ${s.moq}</span>
-        <span>⏱ Lead: ${s.lead}</span>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:.74rem;color:var(--ink4);font-family:var(--font-mono)">
+        <span>MOQ: ${s.moq}</span>
+        <span>Lead: ${s.lead}</span>
       </div>
       <div class="supplier-footer">
-        <button class="btn btn-outline btn-sm" onclick="viewProfile(${SUPPLIERS.indexOf(s)})">View Profile</button>
-        <button class="btn btn-grad btn-sm" onclick="openRFQ('${s.name}')">Request Quote</button>
+        <button class="btn btn-outline-dark btn-sm" onclick="viewProfile(${SUPPLIERS.indexOf(s)})">View Profile</button>
+        <button class="btn btn-primary btn-sm" onclick="openRFQ('${s.name}')">Request Quote</button>
       </div>
     </div>`).join('')
 }
@@ -399,22 +441,22 @@ function viewProfile(idx){
   document.getElementById('profile-modal').innerHTML = `
     <div class="modal" style="max-width:560px">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-        <div class="supplier-logo" style="width:52px;height:52px;font-size:1.2rem">${s.init}</div>
+        <div class="supplier-logo" style="width:52px;height:52px;font-size:1.3rem">${s.init}</div>
         <div>
-          <div style="font-size:1.05rem;font-weight:700">${s.name}</div>
-          <div style="font-size:.8rem;color:var(--text-2);margin-top:2px">${s.cat} · ${s.loc}</div>
-          <div style="margin-top:5px">${s.verified?'<span class="verified">✓ KYB Verified</span>':''} <span class="rating" style="display:inline-flex;margin-left:6px"><span class="stars">★</span>${s.rating} <span style="color:var(--text-3);font-weight:400;margin-left:3px">(${s.reviews} reviews)</span></span></div>
+          <div style="font-family:var(--font-serif);font-size:1.15rem;font-weight:400">${s.name}</div>
+          <div style="font-size:.8rem;color:var(--ink3);margin-top:2px">${s.cat} · ${s.loc}</div>
+          <div style="margin-top:5px">${s.verified?'<span class="verified">✓ KYB Verified</span>':''} <span class="rating" style="display:inline-flex;margin-left:6px"><span class="stars">★</span>${s.rating} <span style="color:var(--ink4);font-weight:400;margin-left:3px">(${s.reviews} reviews)</span></span></div>
         </div>
       </div>
-      <p style="font-size:.85rem;color:var(--text-2);line-height:1.7;margin-bottom:18px">${s.desc}</p>
+      <p style="font-size:.85rem;color:var(--ink3);line-height:1.7;margin-bottom:18px">${s.desc}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-        <div style="background:var(--bg-1);border-radius:8px;padding:12px"><div style="font-size:.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Min. Order</div><div style="font-size:.88rem;font-weight:600">${s.moq}</div></div>
-        <div style="background:var(--bg-1);border-radius:8px;padding:12px"><div style="font-size:.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Lead Time</div><div style="font-size:.88rem;font-weight:600">${s.lead}</div></div>
+        <div style="background:var(--paper);border-radius:var(--r);padding:12px;border:1px solid var(--border)"><div style="font-size:.68rem;font-weight:500;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Min. Order</div><div style="font-size:.88rem;font-weight:500;font-family:var(--font-mono)">${s.moq}</div></div>
+        <div style="background:var(--paper);border-radius:var(--r);padding:12px;border:1px solid var(--border)"><div style="font-size:.68rem;font-weight:500;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Lead Time</div><div style="font-size:.88rem;font-weight:500;font-family:var(--font-mono)">${s.lead}</div></div>
       </div>
       <div style="margin-bottom:20px">${s.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-outline" style="flex:1" onclick="closeProfile()">Close</button>
-        <button class="btn btn-grad" style="flex:1" onclick="closeProfile();openRFQ('${s.name}')">Request Quote →</button>
+        <button class="btn btn-outline-dark" style="flex:1" onclick="closeProfile()">Close</button>
+        <button class="btn btn-primary" style="flex:1" onclick="closeProfile();openRFQ('${s.name}')">Request Quote →</button>
       </div>
     </div>`
   document.getElementById('profile-modal').style.display='flex'
@@ -432,7 +474,7 @@ function closeModal(id){ document.getElementById(id).classList.remove('open') }
 function submitRFQ(){
   const co    = document.getElementById('rfq-co').value.trim()
   const email = document.getElementById('rfq-email').value.trim()
-  if(!co||!email){ showToast('Please enter your company name and email','error'); return }
+  if(!co||!email){ showToast('Please enter your company name and email','err'); return }
   closeModal('rfq-modal')
   showToast('RFQ submitted! The supplier will respond within 24 hours. ✓')
   ;['rfq-co','rfq-name','rfq-email','rfq-phone','rfq-qty','rfq-budget','rfq-msg'].forEach(id=>{
@@ -443,13 +485,10 @@ function submitRFQ(){
 function showToast(msg, type=''){
   const t = document.getElementById('toast')
   t.textContent = msg
-  t.style.background = type==='error' ? '#dc2626' : '#1e293b'
-  t.classList.add('show')
+  t.className = 'show' + (type==='err' ? ' err' : '')
   clearTimeout(window._tto)
-  window._tto = setTimeout(()=>t.classList.remove('show'), 3200)
+  window._tto = setTimeout(()=>t.className='', 3200)
 }
-
-function toggleTheme(){ document.body.classList.toggle('dark') }
 
 // Sync search inputs
 document.addEventListener('DOMContentLoaded', () => {
