@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mumtaz_org_public,mumtaz.organization public,model_mumtaz_organization,base.group_public,1,0,0,0
+access_mumtaz_org_portal,mumtaz.organization portal,model_mumtaz_organization,base.group_portal,1,0,0,0
+access_mumtaz_org_user,mumtaz.organization user,model_mumtaz_organization,base.group_user,1,0,0,0
+access_mumtaz_org_manager,mumtaz.organization manager,model_mumtaz_organization,base.group_system,1,1,1,1
+access_mumtaz_sme_signup_public,mumtaz.sme.signup public,model_mumtaz_sme_signup,base.group_public,0,0,1,0
+access_mumtaz_sme_signup_portal,mumtaz.sme.signup portal,model_mumtaz_sme_signup,base.group_portal,0,0,1,0
+access_mumtaz_sme_signup_user,mumtaz.sme.signup user,model_mumtaz_sme_signup,base.group_user,1,0,0,0
+access_mumtaz_sme_signup_manager,mumtaz.sme.signup manager,model_mumtaz_sme_signup,base.group_system,1,1,1,1

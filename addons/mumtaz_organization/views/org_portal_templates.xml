@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══ Backend Views ══════════════════════════════════════════════ -->
+
+    <!-- Organisation list -->
+    <record id="view_mumtaz_org_tree" model="ir.ui.view">
+        <field name="name">mumtaz.organization.tree</field>
+        <field name="model">mumtaz.organization</field>
+        <field name="arch" type="xml">
+            <tree string="Organisations">
+                <field name="name"/>
+                <field name="slug"/>
+                <field name="industry"/>
+                <field name="country_id"/>
+                <field name="member_count"/>
+                <field name="state" widget="badge"
+                    decoration-success="state == 'active'"
+                    decoration-warning="state == 'pending'"
+                    decoration-danger="state == 'suspended'"/>
+                <field name="is_public"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Organisation form -->
+    <record id="view_mumtaz_org_form" model="ir.ui.view">
+        <field name="name">mumtaz.organization.form</field>
+        <field name="model">mumtaz.organization</field>
+        <field name="arch" type="xml">
+            <form string="Organisation">
+                <header>
+                    <button name="action_activate" string="Activate" type="object"
+                        invisible="state == 'active'" class="oe_highlight"/>
+                    <button name="action_suspend" string="Suspend" type="object"
+                        invisible="state == 'suspended'" confirm="Suspend this organisation?"/>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="pending,active,suspended"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_signups"
+                            icon="fa-users">
+                            <field name="member_count" widget="statinfo" string="Members"/>
+                        </button>
+                    </div>
+                    <field name="logo" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Organisation Name"/></h1>
+                        <h4><field name="tagline" placeholder="One-line tagline"/></h4>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="slug"/>
+                            <field name="industry"/>
+                            <field name="country_id"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="email"/>
+                            <field name="phone"/>
+                            <field name="website_url" widget="url"/>
+                            <field name="is_public"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" widget="html"/>
+                        </page>
+                        <page string="Signups">
+                            <field name="signup_ids">
+                                <tree>
+                                    <field name="company_name"/>
+                                    <field name="contact_name"/>
+                                    <field name="email"/>
+                                    <field name="country_id"/>
+                                    <field name="state" widget="badge"
+                                        decoration-success="state == 'approved'"
+                                        decoration-warning="state == 'new'"
+                                        decoration-danger="state == 'rejected'"/>
+                                    <field name="create_date"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Organisation action -->
+    <record id="action_mumtaz_organization" model="ir.actions.act_window">
+        <field name="name">Organisations</field>
+        <field name="res_model">mumtaz.organization</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- SME Signup list -->
+    <record id="view_mumtaz_sme_signup_tree" model="ir.ui.view">
+        <field name="name">mumtaz.sme.signup.tree</field>
+        <field name="model">mumtaz.sme.signup</field>
+        <field name="arch" type="xml">
+            <tree string="SME Signups" decoration-info="state == 'new'">
+                <field name="company_name"/>
+                <field name="contact_name"/>
+                <field name="email"/>
+                <field name="org_id"/>
+                <field name="country_id"/>
+                <field name="state" widget="badge"
+                    decoration-success="state == 'approved'"
+                    decoration-warning="state == 'new'"
+                    decoration-danger="state == 'rejected'"/>
+                <field name="create_date"/>
+                <button name="action_approve" string="Approve" type="object"
+                    icon="fa-check" invisible="state != 'new'"/>
+                <button name="action_reject" string="Reject" type="object"
+                    icon="fa-times" invisible="state != 'new'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- SME Signup form -->
+    <record id="view_mumtaz_sme_signup_form" model="ir.ui.view">
+        <field name="name">mumtaz.sme.signup.form</field>
+        <field name="model">mumtaz.sme.signup</field>
+        <field name="arch" type="xml">
+            <form string="SME Signup">
+                <header>
+                    <button name="action_approve" string="Approve" type="object"
+                        invisible="state != 'new'" class="oe_highlight"/>
+                    <button name="action_reject" string="Reject" type="object"
+                        invisible="state != 'new'" confirm="Reject this application?"/>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="new,reviewed,approved,rejected"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Applicant">
+                            <field name="org_id"/>
+                            <field name="company_name"/>
+                            <field name="contact_name"/>
+                            <field name="email"/>
+                            <field name="phone"/>
+                            <field name="country_id"/>
+                            <field name="industry"/>
+                            <field name="website"/>
+                        </group>
+                        <group string="Processing">
+                            <field name="partner_id"/>
+                        </group>
+                    </group>
+                    <group string="Message from applicant">
+                        <field name="message" nolabel="1"/>
+                    </group>
+                    <group string="Reviewer Notes">
+                        <field name="reviewer_notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- SME Signup action -->
+    <record id="action_mumtaz_sme_signup" model="ir.actions.act_window">
+        <field name="name">SME Signups</field>
+        <field name="res_model">mumtaz.sme.signup</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Backend menus (defined after actions so XML IDs exist) -->
+    <record id="menu_mumtaz_org_root" model="ir.ui.menu">
+        <field name="name">Organisations</field>
+        <field name="sequence">90</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+    </record>
+    <record id="menu_mumtaz_org_list" model="ir.ui.menu">
+        <field name="name">All Organisations</field>
+        <field name="parent_id" ref="menu_mumtaz_org_root"/>
+        <field name="action" ref="action_mumtaz_organization"/>
+    </record>
+    <record id="menu_mumtaz_sme_signups" model="ir.ui.menu">
+        <field name="name">SME Signups</field>
+        <field name="parent_id" ref="menu_mumtaz_org_root"/>
+        <field name="action" ref="action_mumtaz_sme_signup"/>
+    </record>
+
+
+    <!-- ══ Portal / Public Templates ══════════════════════════════════ -->
+
+    <!-- Base portal layout override (inherits Odoo's portal layout) -->
+    <template id="org_portal_layout" name="Mumtaz Org Portal Layout">
+        <!-- Inherits website layout via t-call in child templates -->
+    </template>
+
+    <!-- Public org profile page -->
+    <template id="org_profile" name="Organisation Profile">
+        <t t-call="website.layout">
+            <div id="wrap" class="mz-org-page">
+                <!-- Header -->
+                <div class="mz-org-hero">
+                    <div class="mz-org-hero-inner">
+                        <t t-if="org.logo">
+                            <img t-attf-src="/web/image/mumtaz.organization/#{org.id}/logo"
+                                 class="mz-org-logo" alt="Logo"/>
+                        </t>
+                        <t t-else="">
+                            <div class="mz-org-logo-placeholder">
+                                <t t-out="org.name[:1].upper()"/>
+                            </div>
+                        </t>
+                        <div>
+                            <h1 class="mz-org-name"><t t-out="org.name"/></h1>
+                            <t t-if="org.tagline">
+                                <p class="mz-org-tagline"><t t-out="org.tagline"/></p>
+                            </t>
+                            <div class="mz-org-meta">
+                                <t t-if="org.industry">
+                                    <span class="mz-badge"><t t-out="org.industry"/></span>
+                                </t>
+                                <t t-if="org.country_id">
+                                    <span class="mz-badge">
+                                        <t t-out="org.country_id.name"/>
+                                    </span>
+                                </t>
+                                <span class="mz-badge mz-badge-members">
+                                    <t t-out="org.member_count"/> members
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="mz-org-body">
+                    <div class="mz-org-content">
+                        <t t-if="org.description">
+                            <div class="mz-org-desc">
+                                <t t-out="org.description"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <p class="mz-org-no-desc">This organisation has not added a description yet.</p>
+                        </t>
+                    </div>
+
+                    <aside class="mz-org-sidebar">
+                        <div class="mz-sidebar-card">
+                            <div class="mz-sidebar-title">Contact</div>
+                            <t t-if="org.email">
+                                <a t-attf-href="mailto:#{org.email}" class="mz-sidebar-link">
+                                    <span class="mz-icon">✉</span> <t t-out="org.email"/>
+                                </a>
+                            </t>
+                            <t t-if="org.phone">
+                                <a t-attf-href="tel:#{org.phone}" class="mz-sidebar-link">
+                                    <span class="mz-icon">📞</span> <t t-out="org.phone"/>
+                                </a>
+                            </t>
+                            <t t-if="org.website_url">
+                                <a t-att-href="org.website_url" target="_blank" rel="noopener"
+                                   class="mz-sidebar-link">
+                                    <span class="mz-icon">🌐</span> Website
+                                </a>
+                            </t>
+                        </div>
+                        <a t-attf-href="/org/#{org.slug}/join" class="mz-btn-primary mz-join-btn">
+                            Join This Organisation →
+                        </a>
+                    </aside>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- SME join / signup form -->
+    <template id="org_join" name="Join Organisation">
+        <t t-call="website.layout">
+            <div id="wrap" class="mz-org-page mz-join-page">
+                <div class="mz-join-wrap">
+                    <!-- Left panel -->
+                    <div class="mz-join-left">
+                        <a t-attf-href="/org/#{org.slug}" class="mz-back-link">← Back to profile</a>
+                        <t t-if="org.logo">
+                            <img t-attf-src="/web/image/mumtaz.organization/#{org.id}/logo"
+                                 class="mz-join-org-logo" alt="Logo"/>
+                        </t>
+                        <t t-else="">
+                            <div class="mz-org-logo-placeholder mz-join-org-logo">
+                                <t t-out="org.name[:1].upper()"/>
+                            </div>
+                        </t>
+                        <h2 class="mz-join-org-name"><t t-out="org.name"/></h2>
+                        <t t-if="org.tagline">
+                            <p class="mz-join-org-tagline"><t t-out="org.tagline"/></p>
+                        </t>
+                        <div class="mz-join-perks">
+                            <div class="mz-perk">
+                                <span class="mz-perk-icon">🏪</span>
+                                <div>
+                                    <strong>Verified Business Profile</strong>
+                                    <span>Get listed in the Mumtaz marketplace</span>
+                                </div>
+                            </div>
+                            <div class="mz-perk">
+                                <span class="mz-perk-icon">📋</span>
+                                <div>
+                                    <strong>Receive RFQs</strong>
+                                    <span>Get quote requests from qualified buyers</span>
+                                </div>
+                            </div>
+                            <div class="mz-perk">
+                                <span class="mz-perk-icon">🌍</span>
+                                <div>
+                                    <strong>GCC-Wide Reach</strong>
+                                    <span>Sell across UAE, KSA, Qatar, and beyond</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right form panel -->
+                    <div class="mz-join-right">
+                        <div class="mz-join-form-wrap">
+                            <h1 class="mz-join-title">Register Your Business</h1>
+                            <p class="mz-join-sub">Join <strong><t t-out="org.name"/></strong> — free to start.</p>
+
+                            <t t-if="error">
+                                <div class="mz-form-error"><t t-out="error"/></div>
+                            </t>
+
+                            <form t-attf-action="/org/#{org.slug}/join" method="POST">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="mz-field-row">
+                                    <div class="mz-field">
+                                        <label>Company Name *</label>
+                                        <input type="text" name="company_name" required="1"
+                                               t-att-value="values.get('company_name', '') if values else ''"
+                                               placeholder="Al Rashid Trading LLC"/>
+                                    </div>
+                                    <div class="mz-field">
+                                        <label>Contact Name *</label>
+                                        <input type="text" name="contact_name" required="1"
+                                               t-att-value="values.get('contact_name', '') if values else ''"
+                                               placeholder="Ahmed Al Rashid"/>
+                                    </div>
+                                </div>
+                                <div class="mz-field-row">
+                                    <div class="mz-field">
+                                        <label>Work Email *</label>
+                                        <input type="email" name="email" required="1"
+                                               t-att-value="values.get('email', '') if values else ''"
+                                               placeholder="ahmed@company.com"/>
+                                    </div>
+                                    <div class="mz-field">
+                                        <label>Phone</label>
+                                        <input type="tel" name="phone"
+                                               t-att-value="values.get('phone', '') if values else ''"
+                                               placeholder="+971 50 000 0000"/>
+                                    </div>
+                                </div>
+                                <div class="mz-field-row">
+                                    <div class="mz-field">
+                                        <label>Country</label>
+                                        <select name="country_id">
+                                            <option value="">Select country…</option>
+                                            <t t-foreach="countries" t-as="c">
+                                                <option t-att-value="c.id"
+                                                    t-att-selected="str(values.get('country_id','')) == str(c.id) if values else None">
+                                                    <t t-out="c.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </div>
+                                    <div class="mz-field">
+                                        <label>Industry</label>
+                                        <input type="text" name="industry"
+                                               t-att-value="values.get('industry', '') if values else ''"
+                                               placeholder="e.g. Manufacturing, IT, Logistics"/>
+                                    </div>
+                                </div>
+                                <div class="mz-field">
+                                    <label>Website</label>
+                                    <input type="url" name="website"
+                                           t-att-value="values.get('website', '') if values else ''"
+                                           placeholder="https://yourcompany.com"/>
+                                </div>
+                                <div class="mz-field">
+                                    <label>Tell us more (optional)</label>
+                                    <textarea name="message" rows="3"
+                                        placeholder="How did you hear about us? Anything you'd like to add?"><t
+                                        t-out="values.get('message', '') if values else ''"/></textarea>
+                                </div>
+                                <button type="submit" class="mz-btn-primary mz-submit-btn">
+                                    Submit Application →
+                                </button>
+                                <p class="mz-form-note">
+                                    By submitting you agree to the Mumtaz
+                                    <a href="/terms" target="_blank">Terms of Service</a>.
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Signup success -->
+    <template id="org_join_success" name="Signup Success">
+        <t t-call="website.layout">
+            <div id="wrap" class="mz-org-page">
+                <div class="mz-success-wrap">
+                    <div class="mz-success-icon">✓</div>
+                    <h1 class="mz-success-title">Application Submitted!</h1>
+                    <p class="mz-success-sub">
+                        Thank you for applying to join <strong><t t-out="org.name"/></strong>.
+                        Our team will review your application and get back to you within 2 business days.
+                    </p>
+                    <a t-attf-href="/org/#{org.slug}" class="mz-btn-primary">← Back to Profile</a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- General SME registration listing -->
+    <template id="org_register" name="Register with Mumtaz">
+        <t t-call="website.layout">
+            <div id="wrap" class="mz-org-page mz-register-page">
+                <div class="mz-register-hero">
+                    <h1>Join the Mumtaz Platform</h1>
+                    <p>Register your business with one of our partner organisations and get access to verified B2B buyers across the GCC.</p>
+                </div>
+                <div class="mz-register-grid">
+                    <t t-foreach="orgs" t-as="org">
+                        <div class="mz-register-card">
+                            <t t-if="org.logo">
+                                <img t-attf-src="/web/image/mumtaz.organization/#{org.id}/logo"
+                                     class="mz-register-card-logo" alt="Logo"/>
+                            </t>
+                            <t t-else="">
+                                <div class="mz-register-card-logo mz-logo-placeholder">
+                                    <t t-out="org.name[:1].upper()"/>
+                                </div>
+                            </t>
+                            <div class="mz-register-card-name"><t t-out="org.name"/></div>
+                            <t t-if="org.tagline">
+                                <div class="mz-register-card-tagline"><t t-out="org.tagline"/></div>
+                            </t>
+                            <div class="mz-register-card-meta">
+                                <t t-if="org.industry">
+                                    <span class="mz-badge"><t t-out="org.industry"/></span>
+                                </t>
+                                <span class="mz-badge mz-badge-members">
+                                    <t t-out="org.member_count"/> members
+                                </span>
+                            </div>
+                            <div class="mz-register-card-actions">
+                                <a t-attf-href="/org/#{org.slug}" class="mz-btn-outline">View Profile</a>
+                                <a t-attf-href="/org/#{org.slug}/join" class="mz-btn-primary">Join →</a>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-if="not orgs">
+                        <div class="mz-register-empty">
+                            No organisations are currently accepting registrations.
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>
