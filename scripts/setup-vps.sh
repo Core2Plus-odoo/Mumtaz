@@ -130,32 +130,32 @@ else
 fi
 
 # ── 9. PM2 ecosystem file ─────────────────────────────────────────────
+# zaki-server runs on port 8002 to avoid conflict with existing zaki-ai (8001).
+# Nginx for app.mumtaz.digital proxies /api/* → 8002.
 cat > /opt/mumtaz-pm2.config.js <<PMEOF
 module.exports = {
   apps: [
     {
-      name: 'zaki-server',
-      cwd:  '${ZAKI_DIR}',
-      interpreter: '${ZAKI_DIR}/.venv/bin/python',
-      script: '-m',
-      args:   'uvicorn main:app --host 127.0.0.1 --port 8001 --workers 2',
-      env_file: '${ZAKI_DIR}/.env',
-      max_restarts: 10,
+      name:          'zaki-server',
+      cwd:           '${ZAKI_DIR}',
+      script:        '${ZAKI_DIR}/.venv/bin/uvicorn',
+      args:          'main:app --host 127.0.0.1 --port 8002',
+      env_file:      '${ZAKI_DIR}/.env',
+      max_restarts:  10,
       restart_delay: 3000,
-      error_file: '/var/log/zaki-server.err.log',
-      out_file:   '/var/log/zaki-server.out.log',
+      error_file:    '/var/log/zaki-server.err.log',
+      out_file:      '/var/log/zaki-server.out.log',
     },
     {
-      name: 'erp-server',
-      cwd:  '${ERP_DIR}',
-      interpreter: '${ERP_DIR}/.venv/bin/python',
-      script: '-m',
-      args:   'uvicorn main:app --host 127.0.0.1 --port 8002 --workers 2',
-      env_file: '${ERP_DIR}/.env',
-      max_restarts: 10,
+      name:          'erp-server',
+      cwd:           '${ERP_DIR}',
+      script:        '${ERP_DIR}/.venv/bin/uvicorn',
+      args:          'main:app --host 127.0.0.1 --port 8003',
+      env_file:      '${ERP_DIR}/.env',
+      max_restarts:  10,
       restart_delay: 3000,
-      error_file: '/var/log/erp-server.err.log',
-      out_file:   '/var/log/erp-server.out.log',
+      error_file:    '/var/log/erp-server.err.log',
+      out_file:      '/var/log/erp-server.out.log',
     },
   ],
 };
