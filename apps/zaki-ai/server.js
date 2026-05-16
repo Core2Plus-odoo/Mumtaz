@@ -11,7 +11,7 @@ const zaki            = require('./agents/zaki');
 
 const app         = express();
 const PORT        = process.env.PORT || 3000;
-const ZAKI_SERVER = process.env.ZAKI_SERVER_URL || 'http://localhost:8001';
+const ZAKI_SERVER = process.env.ZAKI_SERVER_URL || 'http://localhost:8002';
 
 /* ── Middleware ─────────────────────────────────────────────────── */
 app.use(cors({ origin: true, credentials: true }));
@@ -376,7 +376,7 @@ app.get('/chat', (req, res) => {
 /* ── Health Check ───────────────────────────────────────────────── */
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'zaki-ai' }));
 
-/* ── Proxy /api/v1/* to zaki-server (FastAPI on 8001) ───────────── */
+/* ── Proxy /api/v1/* to zaki-server (FastAPI on 8002) ───────────── */
 app.use('/api/v1', async (req, res) => {
   const target = `${ZAKI_SERVER}/api/v1${req.url}`;
   try {
