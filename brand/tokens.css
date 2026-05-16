@@ -1,96 +1,111 @@
-/* Mumtaz Brand Tokens — v2 Clean White & Teal */
+/* ═══════════════════════════════════════════════════════════
+   Mumtaz Brand Tokens — v3 Gold-First Design System
+   Gold = primary · Teal = secondary · Warm Ivory = background
+   ═══════════════════════════════════════════════════════════ */
 :root {
-  /* Backgrounds */
-  --white: #FFFFFF;
-  --bg: #F8FAFC;
-  --bg2: #F1F5F9;
-  --bg3: #E8F0F5;
-  --surface: #FFFFFF;
 
-  /* Borders */
-  --border: #E2E8F0;
-  --border2: #CBD5E1;
+  /* ── Surfaces & Backgrounds ──────────────────────────────── */
+  --paper:   #F5F3EF;   /* warm ivory — main page background */
+  --paper2:  #EDEAE3;   /* card backgrounds */
+  --paper3:  #E0DDD6;   /* borders, dividers */
+  --surface: #FFFFFF;   /* pure white for cards */
+  --white:   #FFFFFF;
 
-  /* Ink / Text */
-  --ink: #0F172A;
-  --ink2: #1E293B;
-  --ink3: #475569;
-  --ink4: #94A3B8;
-  --ink5: #CBD5E1;
+  /* Legacy compat */
+  --bg:  var(--paper);
+  --bg2: var(--paper2);
+  --bg3: var(--paper3);
 
-  /* Teal — Primary Brand */
-  --teal: #0891B2;
-  --teal2: #06B6D4;
-  --teal3: #67E8F9;
-  --teal-dark: #0E7490;
-  --teal-bg: #ECFEFF;
-  --teal-border: #A5F3FC;
+  /* ── Ink / Text ──────────────────────────────────────────── */
+  --ink:  #0C1118;   /* dark near-black — sidebar, headers, nav */
+  --ink2: #1E2A3A;   /* slightly lighter dark */
+  --ink3: #6B7A90;   /* muted / secondary text */
+  --ink4: #9BAAB8;   /* placeholder, disabled */
+  --ink5: var(--paper3);
 
-  /* Navy */
-  --navy: #0F172A;
-  --navy2: #1E293B;
-  --navy3: #334155;
+  /* ── Gold — Primary Accent ───────────────────────────────── */
+  --gold:        #B8862A;   /* primary CTAs, highlights, active states */
+  --gold2:       #D4A84C;   /* hover states, gradients */
+  --gold3:       #F0CC78;   /* subtle highlights */
+  --gold-bg:     #FDF6E4;   /* gold tint backgrounds */
+  --gold-border: #E8CC88;   /* gold borders */
+  --gold-dark:   #8E641A;   /* depth / pressed */
 
-  /* Green */
-  --green: #059669;
-  --green2: #10B981;
-  --green-bg: #ECFDF5;
-  --green-border: #A7F3D0;
+  /* ── Teal — Secondary Accent ─────────────────────────────── */
+  --teal:        #0B7A64;
+  --teal2:       #0EA882;
+  --teal3:       #4DC4A8;   /* light teal for dark surfaces */
+  --teal-bg:     #E6F7F3;
+  --teal-border: #9FD9CC;
+  --teal-dark:   #085C4A;
 
-  /* Amber */
-  --amber: #D97706;
-  --amber2: #F59E0B;
-  --amber-bg: #FFFBEB;
-  --amber-border: #FDE68A;
+  /* ── Coral — Danger / Overdue / Alerts ───────────────────── */
+  --coral:        #C0402A;
+  --coral2:       #D9634A;
+  --coral-bg:     #FCECEA;
+  --coral-border: #F0B8B0;
 
-  /* Red */
-  --red: #DC2626;
-  --red2: #EF4444;
-  --red-bg: #FEF2F2;
-  --red-border: #FECACA;
+  /* Legacy aliases */
+  --red:        var(--coral);
+  --red2:       var(--coral2);
+  --red-bg:     var(--coral-bg);
+  --red-border: var(--coral-border);
 
-  /* Purple */
-  --purple: #7C3AED;
-  --purple-bg: #F5F3FF;
-  --purple-border: #DDD6FE;
+  /* ── Blue — Info / Links ─────────────────────────────────── */
+  --blue:        #1E4FA0;
+  --blue2:       #2E6FD4;
+  --blue-bg:     #EDF2FC;
+  --blue-border: #B8D0F4;
 
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(15,23,42,.04);
-  --shadow-sm: 0 1px 3px rgba(15,23,42,.06), 0 1px 8px rgba(15,23,42,.04);
-  --shadow: 0 2px 8px rgba(15,23,42,.08), 0 4px 24px rgba(15,23,42,.04);
-  --shadow-lg: 0 8px 32px rgba(15,23,42,.10), 0 2px 8px rgba(15,23,42,.04);
-  --shadow-teal: 0 4px 20px rgba(8,145,178,.20);
+  /* ── Purple — Finance SDK ────────────────────────────────── */
+  --purple:        #6030A0;
+  --purple-bg:     #F3EEF9;
+  --purple-border: #C4A8E8;
 
-  /* Radii */
-  --r-sm: 6px;
-  --r: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 20px;
-  --r-full: 9999px;
+  /* ── Amber — Watch / Warning ─────────────────────────────── */
+  --amber:        #C8820A;
+  --amber2:       #E8A020;
+  --amber-bg:     #FEF6E4;
+  --amber-border: #F0CC80;
 
-  /* Transitions */
+  /* ── Green — healthy alias ───────────────────────────────── */
+  --green:        var(--teal);
+  --green2:       var(--teal2);
+  --green-bg:     var(--teal-bg);
+  --green-border: var(--teal-border);
+
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  --sidebar:  var(--ink);   /* #0C1118 — dark */
+  --sidebar2: #1A2332;
+
+  /* ── Borders ─────────────────────────────────────────────── */
+  --border:  var(--paper3);  /* #E0DDD6 */
+  --border2: #C8C4BC;
+
+  /* ── Typography ──────────────────────────────────────────── */
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:  'DM Mono', 'Fira Code', monospace;
+
+  /* ── Radii ───────────────────────────────────────────────── */
+  --r-sm:   6px;
+  --r:      10px;    /* buttons, inputs */
+  --r-md:   14px;    /* cards */
+  --r-lg:   20px;    /* modals */
+  --r-xl:   28px;
+  --r-full: 9999px;  /* chips / badges */
+
+  /* ── Shadows ─────────────────────────────────────────────── */
+  --shadow-xs:   0 1px 2px rgba(12,17,24,.04);
+  --shadow-sm:   0 1px 3px rgba(12,17,24,.06), 0 4px 16px rgba(12,17,24,.04);
+  --shadow:      0 2px 8px rgba(12,17,24,.08), 0 4px 24px rgba(12,17,24,.06);
+  --shadow-lg:   0 8px 40px rgba(12,17,24,.12), 0 2px 8px rgba(12,17,24,.04);
+  --shadow-gold: 0 4px 20px rgba(184,134,42,.24);
+  --shadow-hover:0 4px 24px rgba(12,17,24,.10);
+
+  /* ── Transitions ─────────────────────────────────────────── */
   --t-fast: 150ms;
   --t-base: 200ms;
   --t-slow: 300ms;
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'DM Mono', 'Fira Code', monospace;
-}
-
-/* Dark mode for sites that support toggle */
-[data-theme="dark"] {
-  --bg: #0F172A;
-  --bg2: #1E293B;
-  --bg3: #334155;
-  --surface: #1E293B;
-  --border: #334155;
-  --border2: #475569;
-  --ink: #F8FAFC;
-  --ink2: #E2E8F0;
-  --ink3: #94A3B8;
-  --ink4: #64748B;
-  --ink5: #475569;
+  --ease:   cubic-bezier(0.4, 0, 0.2, 1);
 }

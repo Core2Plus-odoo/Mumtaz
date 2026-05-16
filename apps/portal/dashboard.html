@@ -391,6 +391,102 @@
       flex-shrink: 0;
     }
 
+    /* ── Workspace / Domain settings ── */
+    .workspace-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      margin-bottom: 12px;
+    }
+    .workspace-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .workspace-info { flex: 1; min-width: 0; }
+    .workspace-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem; color: var(--ink3);
+      letter-spacing: .07em; text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .workspace-value {
+      font-size: 1rem; font-weight: 600; color: var(--ink);
+      word-break: break-all;
+    }
+    .workspace-sub {
+      font-size: .8rem; color: var(--ink3); margin-top: 3px;
+    }
+    .domain-form {
+      display: flex; gap: 10px; align-items: center;
+      margin-top: 14px; flex-wrap: wrap;
+    }
+    .domain-input {
+      flex: 1; min-width: 220px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 14px;
+      font: inherit; font-size: .9rem; color: var(--ink);
+      background: var(--bg);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .domain-input:focus { border-color: var(--gold); background: var(--white); }
+    .domain-input::placeholder { color: var(--ink3); }
+    .domain-save {
+      background: var(--gold); color: #fff;
+      font-size: .85rem; font-weight: 600;
+      padding: 9px 20px; border-radius: var(--radius);
+      transition: opacity .15s;
+      white-space: nowrap;
+    }
+    .domain-save:hover { opacity: .88; }
+    .domain-save:disabled { opacity: .4; cursor: not-allowed; }
+    .domain-remove {
+      font-size: .82rem; color: var(--ink3);
+      padding: 9px 14px; border-radius: var(--radius);
+      border: 1.5px solid var(--border);
+      transition: color .15s, border-color .15s;
+    }
+    .domain-remove:hover { color: #991B1B; border-color: #FCA5A5; }
+    .domain-msg {
+      margin-top: 10px; font-size: .82rem; padding: 8px 12px;
+      border-radius: 8px;
+    }
+    .domain-msg.ok   { background: rgba(11,122,100,.1); color: var(--teal); }
+    .domain-msg.err  { background: #FEE2E2; color: #991B1B; }
+    .cname-box {
+      margin-top: 14px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .cname-box-title {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem; color: var(--gold);
+      letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .cname-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: .82rem; margin-bottom: 5px;
+    }
+    .cname-key {
+      font-family: 'DM Mono', monospace; color: var(--ink3);
+      width: 60px; flex-shrink: 0;
+    }
+    .cname-val {
+      font-family: 'DM Mono', monospace;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 10px; color: var(--ink);
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .cname-note {
+      font-size: .78rem; color: var(--ink3); margin-top: 8px; line-height: 1.5;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 640px) {
       .topbar { padding: 10px 16px; }
@@ -468,6 +564,57 @@
     <!-- Role-specific content placeholder (filled in patch 2) -->
     <div id="role-content"></div>
 
+    <!-- ── Workspace Settings ── -->
+    <div class="sec-head" style="margin-top:48px">
+      <span class="sec-label">Workspace settings</span>
+    </div>
+
+    <div class="workspace-card" id="ws-domain-card">
+      <div class="workspace-row">
+        <div class="workspace-info">
+          <div class="workspace-label">Custom Domain</div>
+          <div class="workspace-value" id="ws-domain-current">—</div>
+          <div class="workspace-sub" id="ws-domain-sub">
+            Point your own domain to your Mumtaz workspace
+          </div>
+        </div>
+        <div id="ws-domain-badge"></div>
+      </div>
+
+      <div class="domain-form" id="ws-domain-form">
+        <input
+          class="domain-input"
+          id="ws-domain-input"
+          type="text"
+          placeholder="erp.yourcompany.com"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button class="domain-save" id="ws-domain-save">Save domain</button>
+        <button class="domain-remove" id="ws-domain-remove" style="display:none">Remove</button>
+      </div>
+      <div id="ws-domain-msg" style="display:none" class="domain-msg"></div>
+      <div id="ws-cname-box" style="display:none" class="cname-box">
+        <div class="cname-box-title">DNS Setup — add this CNAME record</div>
+        <div class="cname-row">
+          <span class="cname-key">Type</span>
+          <span class="cname-val">CNAME</span>
+        </div>
+        <div class="cname-row">
+          <span class="cname-key">Name</span>
+          <span class="cname-val" id="cname-name">erp.yourcompany.com</span>
+        </div>
+        <div class="cname-row">
+          <span class="cname-key">Value</span>
+          <span class="cname-val" id="cname-target">app.mumtaz.digital</span>
+        </div>
+        <p class="cname-note">
+          DNS changes can take up to 48 hours to propagate. Once set, contact
+          Mumtaz support to activate SSL for your domain.
+        </p>
+      </div>
+    </div>
+
   </main>
 
   <script>
@@ -528,7 +675,7 @@
         name: 'Mumtaz ERP',
         desc: 'Accounting, sales, inventory, HR, payroll — pre-configured for GCC compliance.',
         icon: '⬡', tone: 'teal',
-        launchUrl: 'https://app.mumtaz.digital/web/login',
+        launchUrl: 'https://erp.mumtaz.digital/web/login',
         launchLabel: 'Open ERP →',
       },
       zaki: {
@@ -995,6 +1142,95 @@
 
     // Re-apply overlay when user switches roles
     $('role-selector').addEventListener('change', () => { if (liveData) patchRender(); });
+
+    /* ── Workspace: Custom Domain ── */
+    (async function loadDomain() {
+      const token = localStorage.getItem('mumtaz_token');
+      if (!token) return;
+      try {
+        const r = await fetch('/api/v1/tenant/domain', {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        applyDomainState(data);
+      } catch { /* no tenant yet — leave defaults */ }
+    })();
+
+    function applyDomainState(data) {
+      const current   = data.custom_domain;
+      const cname     = data.cname_target || 'app.mumtaz.digital';
+      const $current  = $('ws-domain-current');
+      const $sub      = $('ws-domain-sub');
+      const $input    = $('ws-domain-input');
+      const $remove   = $('ws-domain-remove');
+      const $badge    = $('ws-domain-badge');
+      const $cnameBox = $('ws-cname-box');
+
+      if (current) {
+        $current.textContent   = current;
+        $sub.textContent       = 'Your custom domain is set. Point CNAME as shown below.';
+        $input.value           = current;
+        $remove.style.display  = '';
+        $badge.innerHTML       = '<span class="pill teal" style="font-size:.72rem">Active</span>';
+        $('cname-name').textContent   = current;
+        $('cname-target').textContent = cname;
+        $cnameBox.style.display = '';
+      } else {
+        $current.textContent   = 'Not configured';
+        $sub.textContent       = 'Point your own domain (e.g. erp.acme.com) to this workspace.';
+        $remove.style.display  = 'none';
+        $cnameBox.style.display = 'none';
+      }
+    }
+
+    function showDomainMsg(msg, type) {
+      const el = $('ws-domain-msg');
+      el.textContent  = msg;
+      el.className    = 'domain-msg ' + type;
+      el.style.display = '';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    $('ws-domain-save').addEventListener('click', async () => {
+      const token  = localStorage.getItem('mumtaz_token');
+      const domain = $('ws-domain-input').value.trim();
+      if (!domain) { showDomainMsg('Please enter a domain.', 'err'); return; }
+      $('ws-domain-save').disabled = true;
+      try {
+        const r = await fetch('/api/v1/tenant/domain', {
+          method:  'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization:  'Bearer ' + token,
+          },
+          body: JSON.stringify({ domain }),
+        });
+        const data = await r.json();
+        if (!r.ok) { showDomainMsg(data.detail || 'Error saving domain.', 'err'); return; }
+        showDomainMsg('Domain saved! Set up the CNAME record below to activate it.', 'ok');
+        applyDomainState({ custom_domain: data.custom_domain, cname_target: data.cname_target });
+      } catch {
+        showDomainMsg('Network error — please try again.', 'err');
+      } finally {
+        $('ws-domain-save').disabled = false;
+      }
+    });
+
+    $('ws-domain-remove').addEventListener('click', async () => {
+      if (!confirm('Remove your custom domain? The domain will stop routing to your workspace.')) return;
+      const token = localStorage.getItem('mumtaz_token');
+      try {
+        await fetch('/api/v1/tenant/domain', {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        showDomainMsg('Custom domain removed.', 'ok');
+        applyDomainState({ custom_domain: null });
+      } catch {
+        showDomainMsg('Network error — please try again.', 'err');
+      }
+    });
   </script>
 
 </body>

@@ -1,14 +1,15 @@
 /* =============================================================
    Mumtaz Platform — Login / Auth Page
-   Split-screen: dark brand panel left + form right
+   Gold-First Design System v3
+   Split-screen: dark ink panel left + form right
 ============================================================= */
 
 /* ── Reset Odoo login defaults ─────────────────────────────── */
 body.o_login_page {
     margin: 0;
     padding: 0;
-    background: #0f172a !important;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #0C1118 !important;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     min-height: 100vh;
     display: flex;
     align-items: stretch;
@@ -25,7 +26,7 @@ body.o_login_page {
 .mumtaz-login-left {
     width: 420px;
     flex-shrink: 0;
-    background: linear-gradient(160deg, #0c1527 0%, #0f2040 50%, #0a1930 100%);
+    background: #0C1118;
     padding: 48px 44px;
     display: flex;
     flex-direction: column;
@@ -39,9 +40,9 @@ body.o_login_page {
     position: absolute;
     top: -80px;
     right: -80px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(8,145,178,.30) 0%, transparent 70%);
+    width: 340px;
+    height: 340px;
+    background: radial-gradient(circle, rgba(184,134,42,.22) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -50,9 +51,9 @@ body.o_login_page {
     position: absolute;
     bottom: -60px;
     left: -60px;
-    width: 240px;
-    height: 240px;
-    background: radial-gradient(circle, rgba(6,182,212,.18) 0%, transparent 70%);
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(184,134,42,.12) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -69,37 +70,38 @@ body.o_login_page {
 .mumtaz-brand-icon {
     width: 42px;
     height: 42px;
-    background: #0891B2;
+    background: linear-gradient(135deg, #B8862A, #D4A84C);
     border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: 'Instrument Serif', serif;
     font-size: 1.3rem;
-    font-weight: 800;
     color: #fff;
     flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(8,145,178,.45);
+    box-shadow: 0 4px 20px rgba(184,134,42,.4);
 }
 
 .mumtaz-brand-name {
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: #fff;
     letter-spacing: .02em;
 }
 
 .mumtaz-brand-tagline {
     font-size: .72rem;
-    color: rgba(255,255,255,.5);
+    color: rgba(255,255,255,.4);
     letter-spacing: .03em;
     margin-top: 1px;
 }
 
 /* Headline */
 .mumtaz-login-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    line-height: 1.25;
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    line-height: 1.2;
     margin-bottom: 14px;
     position: relative;
     z-index: 1;
@@ -107,7 +109,7 @@ body.o_login_page {
 
 .mumtaz-login-subtitle {
     font-size: .9rem;
-    color: rgba(255,255,255,.65);
+    color: rgba(255,255,255,.55);
     line-height: 1.7;
     margin-bottom: 44px;
     position: relative;
@@ -133,8 +135,8 @@ body.o_login_page {
 .mumtaz-feature-icon {
     width: 34px;
     height: 34px;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(184,134,42,.12);
+    border: 1px solid rgba(184,134,42,.22);
     border-radius: 9px;
     display: flex;
     align-items: center;
@@ -146,20 +148,20 @@ body.o_login_page {
 .mumtaz-feature-text strong {
     display: block;
     font-size: .84rem;
-    font-weight: 600;
+    font-weight: 500;
     margin-bottom: 2px;
     color: rgba(255,255,255,.92);
 }
 
 .mumtaz-feature-text span {
     font-size: .76rem;
-    color: rgba(255,255,255,.5);
+    color: rgba(255,255,255,.45);
     line-height: 1.5;
 }
 
 .mumtaz-login-footer {
     font-size: .7rem;
-    color: rgba(255,255,255,.28);
+    color: rgba(255,255,255,.22);
     margin-top: 36px;
     position: relative;
     z-index: 1;
@@ -168,7 +170,7 @@ body.o_login_page {
 /* ── Right form panel ──────────────────────────────────────── */
 .mumtaz-login-right {
     flex: 1;
-    background: #fff;
+    background: #F5F3EF;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -193,16 +195,17 @@ body.o_login_page {
 
 .o_login_form h5.card-title,
 .o_login_form .o_login_auth_text {
-    font-size: 1.4rem !important;
-    font-weight: 800 !important;
-    color: #0f172a !important;
+    font-family: 'Instrument Serif', serif !important;
+    font-size: 1.5rem !important;
+    font-weight: 400 !important;
+    color: #0C1118 !important;
     margin-bottom: 6px !important;
 }
 
 .o_login_form .o_login_auth_subtitle,
 .o_login_form p.text-muted {
     font-size: .85rem !important;
-    color: #64748b !important;
+    color: #6B7A90 !important;
     margin-bottom: 28px !important;
 }
 
@@ -211,53 +214,58 @@ body.o_login_page {
 .o_login_form input[type="text"],
 .o_login_form input[type="email"],
 .o_login_form input[type="password"] {
-    background: #f8fafc !important;
-    border: 1.5px solid #e2e8f0 !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E0DDD6 !important;
     border-radius: 10px !important;
     padding: 11px 14px !important;
     font-size: .88rem !important;
-    color: #0f172a !important;
+    color: #0C1118 !important;
+    font-family: 'DM Sans', sans-serif !important;
     transition: border-color .2s, box-shadow .2s;
 }
 
 .o_login_form .form-control:focus,
 .o_login_form input:focus {
-    border-color: #0891B2 !important;
+    border-color: #B8862A !important;
     background: #fff !important;
-    box-shadow: 0 0 0 3px rgba(26,115,232,.12) !important;
+    box-shadow: 0 0 0 3px rgba(184,134,42,.12) !important;
     outline: none !important;
 }
 
 /* Labels */
 .o_login_form label {
     font-size: .78rem !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
+    font-weight: 500 !important;
+    color: #6B7A90 !important;
     margin-bottom: 5px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .04em !important;
 }
 
 /* Submit button */
 .o_login_form .btn-primary,
 .o_login_form button[type="submit"],
 .o_login_form .btn.btn-primary {
-    background: #0891B2 !important;
-    border-color: #0891B2 !important;
+    background: linear-gradient(135deg, #B8862A, #D4A84C) !important;
+    border-color: #8E641A !important;
     border-radius: 10px !important;
     padding: 12px !important;
     font-size: .9rem !important;
-    font-weight: 700 !important;
+    font-weight: 500 !important;
+    font-family: 'DM Sans', sans-serif !important;
     width: 100% !important;
+    box-shadow: 0 4px 20px rgba(184,134,42,.28) !important;
     transition: background .2s !important;
 }
 
 .o_login_form .btn-primary:hover {
-    background: #0E7490 !important;
-    border-color: #0E7490 !important;
+    background: linear-gradient(135deg, #8E641A, #B8862A) !important;
+    border-color: #8E641A !important;
 }
 
 /* Links (forgot password etc.) */
 .o_login_form a {
-    color: #0891B2 !important;
+    color: #B8862A !important;
     font-weight: 500;
 }
 
@@ -271,7 +279,10 @@ body.o_login_page {
         padding: 32px 28px;
     }
     .mumtaz-features { display: none; }
-    .mumtaz-login-title { font-size: 1.4rem; margin-bottom: 8px; }
+    .mumtaz-login-title { font-size: 1.5rem; margin-bottom: 8px; }
     .mumtaz-login-subtitle { margin-bottom: 0; }
-    .mumtaz-login-right { padding: 32px 24px; }
+    .mumtaz-login-right {
+        background: #fff;
+        padding: 32px 24px;
+    }
 }

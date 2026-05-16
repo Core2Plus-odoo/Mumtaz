@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- SME Signup reference sequence -->
+    <record id="seq_mumtaz_sme_signup" model="ir.sequence">
+        <field name="name">Mumtaz SME Signup</field>
+        <field name="code">mumtaz.sme.signup</field>
+        <field name="prefix">SME/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

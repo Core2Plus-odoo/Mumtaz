@@ -108,6 +108,22 @@ _STRIPE_EVENTS_DDL = """
     )
 """
 
+_TENANTS_DDL = """
+    CREATE TABLE IF NOT EXISTS tenants (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        db_name        TEXT    UNIQUE NOT NULL,
+        odoo_url       TEXT    NOT NULL,
+        company        TEXT    NOT NULL,
+        admin_email    TEXT    NOT NULL,
+        plan           TEXT    DEFAULT 'trial',
+        status         TEXT    DEFAULT 'provisioning',
+        error_msg      TEXT,
+        custom_domain  TEXT,
+        created_at     INTEGER DEFAULT (strftime('%s','now')),
+        provisioned_at INTEGER
+    )
+"""
+
 _PARTNERS_DDL = """
     CREATE TABLE IF NOT EXISTS partners (
         id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -160,7 +176,9 @@ def init_db():
             ("active",    "INTEGER DEFAULT 1"),
             ("created_at","INTEGER DEFAULT (strftime('%s','now'))"),
             ("onboarding_json", "TEXT"),
-            ("role",      "TEXT"),
+            ("role",           "TEXT"),
+            ("erp_company_id", "INTEGER"),
+            ("tenant_db",      "TEXT"),
         ]:
             try:
                 conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
@@ -170,6 +188,15 @@ def init_db():
     conn.execute(_RESET_TOKENS_DDL)
     conn.execute(_STRIPE_EVENTS_DDL)
     conn.execute(_PARTNERS_DDL)
+    conn.execute(_TENANTS_DDL)
+    # Migrate tenants table — add any missing columns
+    for col, defn in [
+        ("custom_domain", "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE tenants ADD COLUMN {col} {defn}")
+        except Exception:
+            pass
     conn.commit()
     conn.close()
 
@@ -250,36 +277,39 @@ def odoo_server_info() -> dict:
         _record_odoo_error("version", e)
         return {}
 
-def odoo_get_admin_uid() -> int | None:
+def odoo_get_admin_uid(db: str = None) -> int | None:
+    _db = db or ODOO_DB
     try:
-        uid = _odoo_common().authenticate(ODOO_DB, ODOO_ADMIN, ODOO_PASS, {})
+        uid = _odoo_common().authenticate(_db, ODOO_ADMIN, ODOO_PASS, {})
         return uid if uid else None
     except Exception as e:
         _record_odoo_error("admin_auth", e)
         return None
 
-def odoo_authenticate(email: str, password: str) -> int | None:
-    """Returns Odoo UID on success, None on failure (wrong creds OR network down)."""
+def odoo_authenticate(email: str, password: str, db: str = None) -> int | None:
+    """Returns Odoo UID on success, None on failure. Uses tenant DB when provided."""
+    _db = db or ODOO_DB
     try:
-        uid = _odoo_common().authenticate(ODOO_DB, email, password, {})
+        uid = _odoo_common().authenticate(_db, email, password, {})
         return uid if uid else None
     except Exception as e:
         _record_odoo_error("user_auth", e)
         return None
 
-def odoo_create_user(name: str, email: str, password: str) -> int | None:
-    """Create an internal Odoo user. Returns res.users ID."""
-    admin_uid = odoo_get_admin_uid()
+def odoo_create_user(name: str, email: str, password: str, db: str = None) -> int | None:
+    """Create an Odoo user in the given DB (defaults to shared admin DB)."""
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid:
-        print("[Odoo] cannot create user — admin auth failed")
+        print(f"[Odoo] cannot create user in {_db} — admin auth failed")
         return None
     try:
         obj = _odoo_object()
         user_id = obj.execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "res.users", "create", [{
-                "name": name,
-                "login": email,
-                "email": email,
+            _db, admin_uid, ODOO_PASS, "res.users", "create", [{
+                "name":     name,
+                "login":    email,
+                "email":    email,
                 "password": password,
             }]
         )
@@ -288,15 +318,15 @@ def odoo_create_user(name: str, email: str, password: str) -> int | None:
         _record_odoo_error("create_user", e)
         return None
 
-def odoo_set_password(odoo_uid: int, new_password: str) -> bool:
-    """Update an Odoo user's password. Used by the password-reset flow so
-    users can actually log in after resetting (Odoo is the auth source of truth)."""
-    admin_uid = odoo_get_admin_uid()
+def odoo_set_password(odoo_uid: int, new_password: str, db: str = None) -> bool:
+    """Update an Odoo user's password in the tenant DB."""
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid or not odoo_uid:
         return False
     try:
         _odoo_object().execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "res.users", "write",
+            _db, admin_uid, ODOO_PASS, "res.users", "write",
             [[int(odoo_uid)], {"password": new_password}],
         )
         return True
@@ -304,13 +334,14 @@ def odoo_set_password(odoo_uid: int, new_password: str) -> bool:
         _record_odoo_error("set_password", e)
         return False
 
-def odoo_read_user(odoo_uid: int) -> dict:
-    admin_uid = odoo_get_admin_uid()
+def odoo_read_user(odoo_uid: int, db: str = None) -> dict:
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid or not odoo_uid:
         return {}
     try:
         rows = _odoo_object().execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "res.users", "read",
+            _db, admin_uid, ODOO_PASS, "res.users", "read",
             [[odoo_uid]], {"fields": ["name", "email", "login"]}
         )
         return rows[0] if rows else {}
@@ -318,43 +349,114 @@ def odoo_read_user(odoo_uid: int) -> dict:
         _record_odoo_error("read_user", e)
         return {}
 
+def _odoo_create_saas_invoice(email: str, name: str | None, plan_key: str, db: str = None) -> int | None:
+    """Create and post an Odoo customer invoice for a SaaS plan change.
+
+    - Non-blocking caller: always returns (None on any error, int on success).
+    - Skips free/trial plans (price == 0).
+    - Finds or creates the res.partner by email.
+    - Finds or creates a service product per plan.
+    - Applies the first 15% sale tax found (ZATCA VAT), posts the invoice.
+    """
+    plan = PLANS.get(plan_key)
+    if not plan or plan.get("price", 0) == 0:
+        return None
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
+    if not admin_uid:
+        print(f"[Invoice] Odoo admin auth failed — cannot create invoice for {email}")
+        return None
+    try:
+        obj = _odoo_object()
+
+        # ── partner ──────────────────────────────────────────────────
+        pids = obj.execute_kw(_db, admin_uid, ODOO_PASS, "res.partner", "search",
+                              [[["email", "=", email]]], {"limit": 1})
+        if pids:
+            partner_id = pids[0]
+        else:
+            partner_id = obj.execute_kw(_db, admin_uid, ODOO_PASS, "res.partner", "create", [{
+                "name": name or email,
+                "email": email,
+                "customer_rank": 1,
+            }])
+
+        # ── product ───────────────────────────────────────────────────
+        product_name = f"Mumtaz {plan['name']} Plan"
+        prods = obj.execute_kw(_db, admin_uid, ODOO_PASS, "product.product", "search",
+                               [[["name", "=", product_name]]], {"limit": 1})
+        product_id = prods[0] if prods else obj.execute_kw(
+            _db, admin_uid, ODOO_PASS, "product.product", "create", [{
+                "name": product_name, "type": "service",
+                "sale_ok": True, "purchase_ok": False,
+            }]
+        )
+
+        # ── 15% VAT tax ───────────────────────────────────────────────
+        tax_ids = obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.tax", "search",
+                                 [[["amount", "=", 15.0], ["type_tax_use", "=", "sale"],
+                                   ["active", "=", True]]], {"limit": 1})
+        tax_cmd = [(6, 0, tax_ids)] if tax_ids else []
+
+        # ── invoice ───────────────────────────────────────────────────
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        inv_id = obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.move", "create", [{
+            "move_type":  "out_invoice",
+            "partner_id": partner_id,
+            "invoice_date": today,
+            "ref": f"SAAS-{plan_key.upper()}-{email[:30]}",
+            "invoice_line_ids": [(0, 0, {
+                "name":       f"Mumtaz {plan['name']} — monthly SaaS subscription",
+                "product_id": product_id,
+                "quantity":   1.0,
+                "price_unit": float(plan["price"]),
+                **({"tax_ids": tax_cmd} if tax_cmd else {}),
+            })],
+        }])
+        obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.move", "action_post", [[inv_id]])
+        print(f"[Invoice] #{inv_id} created → {email} {plan['name']} {plan['price']} {plan['currency']}")
+        return inv_id
+    except Exception as e:
+        _record_odoo_error("create_saas_invoice", e)
+        print(f"[Invoice] Failed for {email}: {e}")
+        return None
+
 def _make_tenant_code(company: str) -> str:
     slug = re.sub(r"[^a-z0-9]", "", company.lower())[:8] or "co"
     suffix = str(int(time.time()))[-5:]
     code = slug + suffix          # e.g. "acme12345" — satisfies [a-z0-9]{3-30}
     return code[:30]
 
-def odoo_create_tenant(company: str, admin_email: str, admin_name: str) -> int | None:
-    """Create a mumtaz.tenant draft record. Returns tenant ID."""
-    admin_uid = odoo_get_admin_uid()
+def odoo_create_tenant(company: str, admin_email: str, admin_name: str, db: str = None) -> int | None:
+    """Create a mumtaz.tenant record in the given DB. Returns tenant ID or None."""
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid:
         return None
     try:
-        obj    = _odoo_object()
-        code   = _make_tenant_code(company)
-        db_name = "mt_" + code                 # mt_acme12345
+        obj  = _odoo_object()
+        code = _make_tenant_code(company)
 
-        # Find a default bundle (first available)
         bundles = obj.execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "mumtaz.module.bundle", "search",
+            _db, admin_uid, ODOO_PASS, "mumtaz.module.bundle", "search",
             [[]], {"limit": 1}
         )
         bundle_id = bundles[0] if bundles else False
 
         tenant_id = obj.execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "mumtaz.tenant", "create", [{
-                "name": company,
-                "code": code,
-                "database_name": db_name,
-                "admin_email": admin_email,
-                "admin_name": admin_name,
-                "bundle_id": bundle_id,
-                "state": "draft",
+            _db, admin_uid, ODOO_PASS, "mumtaz.tenant", "create", [{
+                "name":          company,
+                "code":          code,
+                "database_name": _db,
+                "admin_email":   admin_email,
+                "admin_name":    admin_name,
+                "bundle_id":     bundle_id,
+                "state":         "draft",
             }]
         )
         return tenant_id
     except Exception as e:
-        print(f"[Odoo] create tenant error: {e}")
+        print(f"[Odoo] create tenant error in {_db}: {e}")
         return None
 
 def odoo_read_tenant(tenant_id: int) -> dict:
@@ -477,53 +579,172 @@ def health():
         "odoo_last_error": _odoo_last_error.get("message") if not admin_uid else None,
     }
 
+def _provision_tenant_bg(user_id: int, company: str, email: str,
+                         name: str, password: str) -> None:
+    """
+    Background task: provision an isolated Odoo DB, create user, update registry.
+    Runs after the signup response is already sent to the client.
+    """
+    from provisioning import provision_tenant as _provision
+    db = get_db()
+    try:
+        result = _provision(company, email)
+
+        if not result["ok"]:
+            # Record failure in tenants table
+            db.execute(
+                "INSERT OR REPLACE INTO tenants "
+                "(db_name, odoo_url, company, admin_email, status, error_msg) "
+                "VALUES (?, ?, ?, ?, 'error', ?)",
+                (result["db_name"], ODOO_URL, company, email, result["error"])
+            )
+            db.commit()
+            print(f"[provision] FAILED for {email}: {result['error']}")
+            return
+
+        db_name = result["db_name"]
+
+        # Create the human admin user in the new tenant DB
+        uid = odoo_create_user(name, email, password, db=db_name)
+
+        # Create mumtaz.tenant record in the new DB (non-fatal)
+        tenant_id = None
+        try:
+            tenant_id = odoo_create_tenant(company, email, name, db=db_name)
+        except Exception as exc:
+            print(f"[provision] mumtaz.tenant record skipped: {exc}")
+
+        # Record active tenant
+        db.execute(
+            "INSERT OR REPLACE INTO tenants "
+            "(db_name, odoo_url, company, admin_email, plan, status, provisioned_at) "
+            "VALUES (?, ?, ?, ?, 'trial', 'active', strftime('%s','now'))",
+            (db_name, ODOO_URL, company, email)
+        )
+        db.execute(
+            "UPDATE users SET tenant_db=?, odoo_uid=?, tenant_id=? WHERE id=?",
+            (db_name, uid, tenant_id, user_id)
+        )
+        db.commit()
+        print(f"[provision] SUCCESS for {email}: db={db_name}")
+
+    except Exception as exc:
+        print(f"[provision] EXCEPTION for {email}: {exc}")
+        try:
+            db.execute(
+                "INSERT OR REPLACE INTO tenants "
+                "(db_name, odoo_url, company, admin_email, status, error_msg) "
+                "VALUES (?, ?, ?, ?, 'error', ?)",
+                (f"mt_unknown_{user_id}", ODOO_URL, company, email, str(exc))
+            )
+            db.commit()
+        except Exception:
+            pass
+    finally:
+        db.close()
+
+
 @app.post("/api/v1/auth/signup")
-def signup(req: SignupReq, background_tasks: BackgroundTasks = None):
+def signup(req: SignupReq, background_tasks: BackgroundTasks):
     email = req.email.strip().lower()
     db    = get_db()
 
     if db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone():
         db.close()
-        raise HTTPException(400, detail="An account with this email already exists.")
+        raise HTTPException(400, "An account with this email already exists.")
 
-    # 1. Create Odoo user
-    odoo_uid = odoo_create_user(req.name, email, req.password)
-
-    # 2. Create mumtaz.tenant record in Odoo
-    tenant_id = odoo_create_tenant(req.company, email, req.name)
-
-    # 3. Cache in SQLite
+    # 1. Reserve user record immediately — tenant DB provisioned in background
     ph = _hash_pw(req.password)
     db.execute(
-        "INSERT INTO users (email, password_hash, name, company, odoo_uid, tenant_id, plan) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (email, ph, req.name, req.company, odoo_uid, tenant_id, "trial")
+        "INSERT INTO users (email, password_hash, name, company, plan, active) "
+        "VALUES (?, ?, ?, ?, 'trial', 1)",
+        (email, ph, req.name, req.company)
     )
     db.commit()
     row = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     db.close()
+    user_id = row["id"]
 
-    # 4. Welcome email (background — never blocks signup)
-    if background_tasks is not None:
+    # 2. Provision Odoo DB in background (30-60 s, non-blocking)
+    background_tasks.add_task(
+        _provision_tenant_bg, user_id, req.company, email, req.name, req.password
+    )
+
+    # 3. Welcome email
+    try:
         subject, html, text = mailer.welcome_email(req.name, email)
         background_tasks.add_task(mailer.send_email, email, subject, html, text)
+    except Exception:
+        pass
 
-    token = make_token(row["id"], email, {
-        "name": req.name, "company": req.company,
-        "odoo_uid": odoo_uid, "tenant_id": tenant_id, "plan": "trial",
+    # 4. Return provisional token — odoo_db will be added once status=active
+    token = make_token(user_id, email, {
+        "name":    req.name,
+        "company": req.company,
+        "plan":    "trial",
+        "status":  "provisioning",
     })
     return {
         "access_token": token,
         "token_type":   "bearer",
+        "status":       "provisioning",
+        "message":      "Your workspace is being set up. Poll /api/v1/tenant/status for readiness.",
         "user": {
-            "name":      req.name,
-            "email":     email,
-            "company":   req.company,
-            "plan":      "trial",
-            "odoo_uid":  odoo_uid,
-            "tenant_id": tenant_id,
+            "name":    req.name,
+            "email":   email,
+            "company": req.company,
+            "plan":    "trial",
         },
     }
+
+
+@app.get("/api/v1/tenant/status")
+async def tenant_status(auth: dict = Depends(require_auth)):
+    """
+    Poll this after signup to know when the tenant DB is ready.
+    Once status='active', a fresh JWT with odoo_db is returned.
+    """
+    db  = get_db()
+    row = db.execute(
+        "SELECT id, name, company, plan, odoo_uid, tenant_id, tenant_db FROM users WHERE email=?",
+        (auth["email"],)
+    ).fetchone()
+    db.close()
+
+    if not row:
+        raise HTTPException(404, "User not found")
+
+    tenant_db = row["tenant_db"]
+
+    if not tenant_db:
+        return {"status": "provisioning", "odoo_db": None}
+
+    # Check the tenants registry
+    db  = get_db()
+    rec = db.execute(
+        "SELECT status, error_msg FROM tenants WHERE db_name=?", (tenant_db,)
+    ).fetchone()
+    db.close()
+
+    if not rec:
+        return {"status": "provisioning", "odoo_db": None}
+
+    if rec["status"] == "active":
+        fresh_token = make_token(row["id"], auth["email"], {
+            "name":      row["name"]      or "",
+            "company":   row["company"]   or "",
+            "odoo_uid":  row["odoo_uid"],
+            "tenant_id": row["tenant_id"],
+            "plan":      row["plan"]      or "trial",
+            "odoo_db":   tenant_db,
+        })
+        return {
+            "status":       "active",
+            "odoo_db":      tenant_db,
+            "access_token": fresh_token,
+        }
+
+    return {"status": rec["status"], "odoo_db": None, "error": rec["error_msg"]}
 
 class ForgotReq(BaseModel):
     email: str
@@ -642,8 +863,12 @@ def login(req: LoginReq):
     db    = get_db()
 
     try:
-        # Primary: validate against Odoo
-        odoo_uid = odoo_authenticate(email, req.password)
+        # Resolve which Odoo DB to authenticate against
+        _db_row = db.execute("SELECT tenant_db FROM users WHERE email=?", (email,)).fetchone()
+        _tenant_db = _db_row["tenant_db"] if _db_row else None
+
+        # Primary: validate against the tenant's Odoo DB (or shared DB if not yet provisioned)
+        odoo_uid = odoo_authenticate(email, req.password, db=_tenant_db)
 
         if odoo_uid:
             row = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
@@ -683,6 +908,7 @@ def login(req: LoginReq):
         "odoo_uid":  row["odoo_uid"],
         "tenant_id": row["tenant_id"],
         "plan":      row["plan"]      or "growth",
+        "odoo_db":   row["tenant_db"],   # tenant's isolated Odoo DB name
     })
     return {
         "access_token": token,
@@ -694,6 +920,7 @@ def login(req: LoginReq):
             "plan":      row["plan"]      or "growth",
             "odoo_uid":  row["odoo_uid"],
             "tenant_id": row["tenant_id"],
+            "odoo_db":   row["tenant_db"],
         },
     }
 
@@ -756,6 +983,108 @@ async def get_onboarding(auth: dict = Depends(require_auth)):
     except Exception:
         return {"onboarding": None, "role": row["role"]}
 
+# ── Tenant Custom Domain ─────────────────────────────────────────────
+
+_DOMAIN_RE = re.compile(
+    r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,}$"
+)
+_PORTAL_HOST = os.environ.get("PORTAL_HOST", "app.mumtaz.digital")
+
+class DomainReq(BaseModel):
+    domain: str
+
+@app.get("/api/v1/tenant/domain")
+async def get_tenant_domain(auth: dict = Depends(require_auth)):
+    """Return the tenant's current custom domain and CNAME instructions."""
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db FROM users WHERE email = ?", (auth["email"],)
+    ).fetchone()
+    db.close()
+
+    tenant_db = row["tenant_db"] if row else None
+    if not tenant_db:
+        return {"custom_domain": None, "cname_target": _PORTAL_HOST, "status": "no_tenant"}
+
+    db  = get_db()
+    rec = db.execute(
+        "SELECT custom_domain, status FROM tenants WHERE db_name = ?", (tenant_db,)
+    ).fetchone()
+    db.close()
+
+    if not rec:
+        return {"custom_domain": None, "cname_target": _PORTAL_HOST, "status": "provisioning"}
+
+    return {
+        "custom_domain": rec["custom_domain"],
+        "cname_target":  _PORTAL_HOST,
+        "tenant_db":     tenant_db,
+        "status":        rec["status"],
+    }
+
+@app.put("/api/v1/tenant/domain")
+async def set_tenant_domain(req: DomainReq, auth: dict = Depends(require_auth)):
+    """Set or update the tenant's custom domain. Validates format and uniqueness."""
+    domain = req.domain.strip().lower().lstrip("https://").lstrip("http://").rstrip("/")
+
+    if not domain:
+        raise HTTPException(400, "Domain cannot be empty")
+    if not _DOMAIN_RE.match(domain):
+        raise HTTPException(400, "Invalid domain format — use e.g. erp.yourcompany.com")
+    if len(domain) > 253:
+        raise HTTPException(400, "Domain too long")
+    # Block attempts to use our own hostname
+    if domain == _PORTAL_HOST or domain.endswith("." + _PORTAL_HOST):
+        raise HTTPException(400, "Cannot use mumtaz.digital domain — use your own domain")
+
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db FROM users WHERE email = ?", (auth["email"],)
+    ).fetchone()
+    tenant_db = row["tenant_db"] if row else None
+    if not tenant_db:
+        db.close()
+        raise HTTPException(400, "Your workspace is still being set up")
+
+    # Check domain isn't already claimed by another tenant
+    conflict = db.execute(
+        "SELECT db_name FROM tenants WHERE custom_domain = ? AND db_name != ?",
+        (domain, tenant_db),
+    ).fetchone()
+    if conflict:
+        db.close()
+        raise HTTPException(409, "This domain is already linked to another workspace")
+
+    db.execute(
+        "UPDATE tenants SET custom_domain = ? WHERE db_name = ?",
+        (domain, tenant_db),
+    )
+    db.commit()
+    db.close()
+
+    return {
+        "ok":           True,
+        "custom_domain": domain,
+        "cname_target":  _PORTAL_HOST,
+        "message":       f"Point a CNAME record for {domain} → {_PORTAL_HOST}",
+    }
+
+@app.delete("/api/v1/tenant/domain")
+async def remove_tenant_domain(auth: dict = Depends(require_auth)):
+    """Remove the tenant's custom domain."""
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db FROM users WHERE email = ?", (auth["email"],)
+    ).fetchone()
+    tenant_db = row["tenant_db"] if row else None
+    if not tenant_db:
+        db.close()
+        raise HTTPException(400, "No workspace found")
+    db.execute("UPDATE tenants SET custom_domain = NULL WHERE db_name = ?", (tenant_db,))
+    db.commit()
+    db.close()
+    return {"ok": True}
+
 # ── Plans / Billing ──────────────────────────────────────────────────
 PLANS = {
     "trial": {
@@ -801,16 +1130,18 @@ class ChangePlanReq(BaseModel):
     plan: str
 
 @app.post("/api/v1/plan")
-async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
-    """Change the user's plan. No payment integration yet — this just
-    updates the SQLite record so the rest of the platform reflects it.
-    A real implementation would create a Stripe/Tap subscription here."""
+async def change_plan(req: ChangePlanReq, background_tasks: BackgroundTasks,
+                      auth: dict = Depends(require_auth)):
+    """Change the user's plan and raise an Odoo SaaS invoice in the background."""
     if req.plan not in PLANS:
         raise HTTPException(400, f"Unknown plan '{req.plan}'. Valid: {list(PLANS.keys())}")
     db = get_db()
+    row = db.execute("SELECT name FROM users WHERE email=?", (auth["email"],)).fetchone()
+    user_name = row["name"] if row else None
     db.execute("UPDATE users SET plan=? WHERE email=?", (req.plan, auth["email"]))
     db.commit()
     db.close()
+    background_tasks.add_task(_odoo_create_saas_invoice, auth["email"], user_name, req.plan)
     return {"ok": True, "plan": PLANS[req.plan]}
 
 # ── ZATCA / e-invoicing ──────────────────────────────────────────────
@@ -1166,9 +1497,9 @@ def billing_portal(auth: dict = Depends(require_auth)):
     return {"url": url}
 
 @app.post("/api/v1/billing/webhook")
-async def billing_webhook(request: Request):
+async def billing_webhook(request: Request, background_tasks: BackgroundTasks):
     """Receive Stripe webhook events. Updates the user's plan in SQLite when
-    a subscription is created, updated, or deleted.
+    a subscription is created, updated, or deleted, and raises an Odoo invoice.
 
     Idempotent: each Stripe event ID is recorded on first processing;
     duplicates are acknowledged without re-applying the plan change."""
@@ -1199,9 +1530,12 @@ async def billing_webhook(request: Request):
         email    = billing_svc.email_from_event(obj)
         if plan_key and email:
             db = get_db()
+            row = db.execute("SELECT name FROM users WHERE email=?", (email.lower(),)).fetchone()
+            user_name = row["name"] if row else None
             db.execute("UPDATE users SET plan=? WHERE email=?", (plan_key, email.lower()))
             db.commit(); db.close()
             print(f"[billing] subscription {etype} → {email} = {plan_key}")
+            background_tasks.add_task(_odoo_create_saas_invoice, email.lower(), user_name, plan_key)
     elif etype == "customer.subscription.deleted":
         email = billing_svc.email_from_event(obj)
         if email:
@@ -1223,7 +1557,7 @@ def admin_list_users(auth: dict = Depends(require_admin)):
     db   = get_db()
     rows = db.execute("""
         SELECT id, email, name, company, plan, active, odoo_uid, tenant_id,
-               created_at, onboarding_json, role
+               created_at, onboarding_json, role, erp_company_id
         FROM users
         ORDER BY created_at DESC
     """).fetchall()
@@ -1236,22 +1570,84 @@ def admin_list_users(auth: dict = Depends(require_admin)):
         except Exception:
             ob = None
         users.append({
-            "id":         r["id"],
-            "email":      r["email"],
-            "name":       r["name"],
-            "company":    r["company"],
-            "plan":       r["plan"] or "trial",
-            "active":     bool(r["active"]),
-            "odoo_uid":   r["odoo_uid"],
-            "tenant_id":  r["tenant_id"],
-            "created_at": r["created_at"],
-            "role":       r["role"],
-            "products":   (ob or {}).get("products", []),
-            "industry":   (ob or {}).get("industry"),
-            "team_size":  (ob or {}).get("teamSize"),
-            "is_admin":   (r["email"] or "").lower() in ADMIN_EMAILS,
+            "id":             r["id"],
+            "email":          r["email"],
+            "name":           r["name"],
+            "company":        r["company"],
+            "plan":           r["plan"] or "trial",
+            "active":         bool(r["active"]),
+            "odoo_uid":       r["odoo_uid"],
+            "tenant_id":      r["tenant_id"],
+            "erp_company_id": r["erp_company_id"],
+            "created_at":     r["created_at"],
+            "role":           r["role"],
+            "products":       (ob or {}).get("products", []),
+            "industry":       (ob or {}).get("industry"),
+            "team_size":      (ob or {}).get("teamSize"),
+            "is_admin":       (r["email"] or "").lower() in ADMIN_EMAILS,
         })
     return {"users": users, "total": len(users)}
+
+
+@app.post("/api/v1/admin/sync-erp")
+def admin_sync_erp(auth: dict = Depends(require_admin)):
+    """Provision all active portal users (who have a company) into the ERP as tenants."""
+    import secrets as _secrets
+    import urllib.request as _url
+    import json as _json
+
+    erp_url     = settings.get("ERP_API_URL",    "https://erp.mumtaz.digital")
+    portal_key  = settings.get("PORTAL_API_KEY", "mumtaz-portal-key-change-me")
+
+    db   = get_db()
+    rows = db.execute(
+        "SELECT id, email, name, company, erp_company_id FROM users WHERE active=1"
+    ).fetchall()
+    db.close()
+
+    synced, skipped, failed = [], [], []
+
+    for row in rows:
+        if not row["company"]:
+            continue
+        if row["erp_company_id"]:
+            skipped.append({"email": row["email"], "erp_company_id": row["erp_company_id"]})
+            continue
+        temp_pass = _secrets.token_urlsafe(10)
+        payload   = _json.dumps({
+            "portal_api_key": portal_key,
+            "company_name":   row["company"],
+            "admin_email":    row["email"],
+            "admin_password": temp_pass,
+        }).encode()
+        try:
+            req = _url.Request(
+                f"{erp_url}/api/portal/provision",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with _url.urlopen(req, timeout=20) as resp:
+                data = _json.loads(resp.read())
+            cid = data.get("company_id")
+            db2 = get_db()
+            db2.execute("UPDATE users SET erp_company_id=? WHERE id=?", (cid, row["id"]))
+            db2.commit(); db2.close()
+            synced.append({
+                "email":        row["email"],
+                "company":      row["company"],
+                "erp_company_id": cid,
+                "temp_password":  temp_pass if not data.get("already_existed") else "(existing account)",
+            })
+        except Exception as e:
+            failed.append({"email": row["email"], "error": str(e)})
+
+    return {
+        "synced":  synced,
+        "skipped": skipped,
+        "failed":  failed,
+        "summary": f"{len(synced)} synced, {len(skipped)} already synced, {len(failed)} failed",
+    }
 
 class AdminToggleReq(BaseModel):
     active: bool
@@ -1268,18 +1664,41 @@ def admin_toggle_user(user_id: int, req: AdminToggleReq, auth: dict = Depends(re
     db.commit(); db.close()
     return {"ok": True, "active": req.active}
 
+@app.post("/api/v1/admin/users/{user_id}/make-admin")
+def admin_make_admin(user_id: int, auth: dict = Depends(require_admin)):
+    """Promote a portal user to platform admin (adds to MUMTAZ_ADMINS)."""
+    db = get_db()
+    row = db.execute("SELECT email, name FROM users WHERE id=?", (user_id,)).fetchone()
+    db.close()
+    if not row:
+        raise HTTPException(404, "User not found.")
+    email = (row["email"] or "").lower()
+    current = settings.get("MUMTAZ_ADMINS", "") or ""
+    existing = {e.strip().lower() for e in current.split(",") if e.strip()}
+    if email not in existing:
+        existing.add(email)
+        settings.set_value("MUMTAZ_ADMINS", ",".join(sorted(existing)), updated_by=auth.get("email"))
+    global ADMIN_EMAILS
+    ADMIN_EMAILS = admin_emails()
+    return {"ok": True, "email": email, "is_admin": True}
+
 class AdminPlanReq(BaseModel):
     plan: str
 
 @app.post("/api/v1/admin/users/{user_id}/plan")
-def admin_change_user_plan(user_id: int, req: AdminPlanReq, auth: dict = Depends(require_admin)):
+def admin_change_user_plan(user_id: int, req: AdminPlanReq,
+                           background_tasks: BackgroundTasks,
+                           auth: dict = Depends(require_admin)):
     if req.plan not in PLANS:
         raise HTTPException(400, f"Unknown plan '{req.plan}'.")
     db = get_db()
-    if not db.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone():
+    row = db.execute("SELECT email, name FROM users WHERE id=?", (user_id,)).fetchone()
+    if not row:
         db.close(); raise HTTPException(404, "User not found.")
+    email, name = row["email"], row["name"]
     db.execute("UPDATE users SET plan=? WHERE id=?", (req.plan, user_id))
     db.commit(); db.close()
+    background_tasks.add_task(_odoo_create_saas_invoice, email, name, req.plan)
     return {"ok": True, "plan": PLANS[req.plan]}
 
 @app.get("/api/v1/tenant/me")

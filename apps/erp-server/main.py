@@ -1,41 +1,118 @@
-"""Mumtaz ERP Server — FastAPI + PostgreSQL backend."""
-import os, base64
+"""Mumtaz ERP Server — FastAPI + PostgreSQL backend (v2)."""
+import os, base64, json, logging, hashlib, secrets, threading
 from contextlib import contextmanager
 from datetime import datetime, date, timedelta
 from typing import Optional, List, Any
 
 import psycopg2, psycopg2.extras
-from fastapi import FastAPI, HTTPException, Depends, Query, Header
+from psycopg2.pool import ThreadedConnectionPool
+from fastapi import FastAPI, HTTPException, Depends, Query, Header, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from jose import jwt
 from passlib.context import CryptContext
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from cryptography.fernet import Fernet, InvalidToken
+
+import odoo_client as odoo
+from odoo_client import OdooError, OdooConnectionError
 
 load_dotenv()
 
+# ── Config ────────────────────────────────────────────────────
 DB_URL  = os.getenv("ERP_DATABASE_URL", "postgresql://erp_user:erp_pass@localhost/mumtaz_erp")
 SECRET  = os.getenv("ERP_SECRET", "mumtaz-erp-secret-change-me")
 ALGO    = "HS256"
+# Odoo server shared by all tenant DBs — credentials are the same, only DB name changes
+ODOO_URL_ENV   = os.getenv("ODOO_URL",   "http://localhost:8069")
+ODOO_ADMIN_ENV = os.getenv("ODOO_ADMIN", "admin@mumtaz.digital")
+ODOO_PASS_ENV  = os.getenv("ODOO_PASS",  "admin")
+ALLOWED_ORIGINS = [
+    o.strip() for o in
+    os.getenv("ALLOWED_ORIGINS",
+              "https://app.mumtaz.digital,https://erp.mumtaz.digital,http://localhost:3000,http://localhost:5173").split(",")
+    if o.strip()
+]
+PLAN_LIMITS = {
+    "trial":    {"users": 2,  "invoices_per_month": 50,   "storage_mb": 100},
+    "starter":  {"users": 5,  "invoices_per_month": 500,  "storage_mb": 1000},
+    "growth":   {"users": 25, "invoices_per_month": 5000, "storage_mb": 10000},
+    "scale":    {"users": -1, "invoices_per_month": -1,   "storage_mb": -1},
+    "standard": {"users": 10, "invoices_per_month": 1000, "storage_mb": 5000},
+}
+
+# ── Logging ───────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger("mumtaz.erp")
 
 pwd_ctx = CryptContext(schemes=["bcrypt"])
-app     = FastAPI(title="Mumtaz ERP", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-                   allow_methods=["*"], allow_headers=["*"])
+
+# ── Rate limiter ──────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address, default_limits=["300/minute"])
+
+# ── App ───────────────────────────────────────────────────────
+app = FastAPI(
+    title="Mumtaz ERP API",
+    version="2.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+)
+
+@app.exception_handler(HTTPException)
+async def http_exc_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": True, "code": exc.status_code, "message": exc.detail},
+    )
+
+@app.exception_handler(Exception)
+async def generic_exc_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error on %s %s: %s", request.method, request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"error": True, "code": 500, "message": "Internal server error"},
+    )
 
 
-# ── Database ──────────────────────────────────────────────────
+# ── Database (connection pool) ────────────────────────────────
+_pool: Optional[ThreadedConnectionPool] = None
+
+def _get_pool() -> ThreadedConnectionPool:
+    global _pool
+    if _pool is None:
+        _pool = ThreadedConnectionPool(minconn=2, maxconn=20, dsn=DB_URL)
+    return _pool
+
 @contextmanager
 def get_db():
-    conn = psycopg2.connect(DB_URL)
+    pool = _get_pool()
+    conn = pool.getconn()
     try:
+        conn.autocommit = False
         yield conn
         conn.commit()
     except Exception:
         conn.rollback()
         raise
     finally:
-        conn.close()
+        pool.putconn(conn)
 
 def dictcur(conn):
     return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -60,6 +137,26 @@ def execute(conn, sql, params=()):
         return None
 
 
+# ── Encryption helpers (Fernet for secrets at rest) ───────────
+def _fernet() -> Fernet:
+    key = os.getenv("FERNET_KEY", "")
+    if key:
+        return Fernet(key.encode() if isinstance(key, str) else key)
+    # Derive a key from ERP_SECRET so existing deploys don't break
+    import base64 as _b64
+    raw = hashlib.sha256(SECRET.encode()).digest()
+    return Fernet(_b64.urlsafe_b64encode(raw))
+
+def encrypt_secret(plain: str) -> str:
+    return _fernet().encrypt(plain.encode()).decode()
+
+def decrypt_secret(encrypted: str) -> str:
+    try:
+        return _fernet().decrypt(encrypted.encode()).decode()
+    except (InvalidToken, Exception):
+        return encrypted  # legacy plaintext fallback
+
+
 # ── Auth ──────────────────────────────────────────────────────
 def make_token(user_id: int, company_id: Optional[int], is_super: bool = False) -> str:
     exp = datetime.utcnow() + timedelta(days=30)
@@ -70,7 +167,12 @@ def get_user(authorization: str = Header(...)):
         scheme, token = authorization.split()
         assert scheme.lower() == "bearer"
         p = jwt.decode(token, SECRET, algorithms=[ALGO])
-        return {"user_id": int(p["sub"]), "company_id": p.get("cid"), "is_super": bool(p.get("sup", False))}
+        return {
+            "user_id":    int(p["sub"]),
+            "company_id": p.get("cid"),
+            "is_super":   bool(p.get("sup", False)),
+            "odoo_db":    p.get("odoo_db"),   # tenant's isolated Odoo DB name
+        }
     except Exception:
         raise HTTPException(401, "Not authenticated")
 
@@ -78,6 +180,33 @@ def require_super(ctx=Depends(get_user)):
     if not ctx.get("is_super"):
         raise HTTPException(403, "Super admin access required")
     return ctx
+
+
+# ── Audit log helper ──────────────────────────────────────────
+def audit_log(conn, company_id, user_id, action: str, table_name: str,
+              record_id=None, summary: str = None, ip_address: str = None):
+    try:
+        execute(conn,
+            "INSERT INTO audit_logs (company_id,user_id,action,table_name,record_id,summary,ip_address) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            (company_id, user_id, action, table_name, record_id, summary, ip_address))
+    except Exception:
+        pass  # Never fail the main request due to audit log errors
+
+
+# ── Plan enforcement ──────────────────────────────────────────
+def check_user_limit(conn, company_id: int, plan: str):
+    limits = PLAN_LIMITS.get(plan, PLAN_LIMITS["starter"])
+    if limits["users"] == -1:
+        return
+    count = fetchone(conn, "SELECT COUNT(*) AS n FROM users WHERE company_id=%s AND active=TRUE", (company_id,))
+    current = int(count["n"]) if count else 0
+    if current >= limits["users"]:
+        raise HTTPException(402, f"User limit ({limits['users']}) reached for the '{plan}' plan. Please upgrade.")
+
+def get_company_plan(conn, company_id: int) -> str:
+    row = fetchone(conn, "SELECT plan FROM companies WHERE id=%s", (company_id,))
+    return (row or {}).get("plan", "starter") or "starter"
 
 
 # ── ZATCA QR (Phase 1 TLV) ────────────────────────────────────
@@ -436,6 +565,48 @@ CREATE TABLE IF NOT EXISTS expenses (
   notes       TEXT,
   created_at  TIMESTAMP DEFAULT NOW()
 );
+
+-- ── Audit log ──────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id          BIGSERIAL PRIMARY KEY,
+  company_id  INTEGER,
+  user_id     INTEGER,
+  action      VARCHAR(20) NOT NULL,
+  table_name  VARCHAR(50) NOT NULL,
+  record_id   INTEGER,
+  summary     TEXT,
+  ip_address  VARCHAR(45),
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- ── API keys ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS api_keys (
+  id          SERIAL PRIMARY KEY,
+  company_id  INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+  user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  name        VARCHAR(100) NOT NULL,
+  key_hash    VARCHAR(64)  NOT NULL UNIQUE,
+  key_prefix  VARCHAR(12)  NOT NULL,
+  scopes      TEXT         DEFAULT 'read',
+  active      BOOLEAN      DEFAULT TRUE,
+  last_used   TIMESTAMP,
+  expires_at  TIMESTAMP,
+  created_at  TIMESTAMP    DEFAULT NOW()
+);
+
+-- ── Performance indexes ────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_users_email     ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_company   ON users(company_id, active);
+CREATE INDEX IF NOT EXISTS idx_moves_company   ON moves(company_id, move_type, state);
+CREATE INDEX IF NOT EXISTS idx_moves_date      ON moves(company_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_move_lines_move ON move_lines(move_id);
+CREATE INDEX IF NOT EXISTS idx_inv_lines_move  ON invoice_lines(move_id);
+CREATE INDEX IF NOT EXISTS idx_partners_co     ON partners(company_id, active);
+CREATE INDEX IF NOT EXISTS idx_products_co     ON products(company_id, active);
+CREATE INDEX IF NOT EXISTS idx_payments_co     ON payments(company_id, state);
+CREATE INDEX IF NOT EXISTS idx_crm_co          ON crm_leads(company_id, stage, active);
+CREATE INDEX IF NOT EXISTS idx_audit_co_time   ON audit_logs(company_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_apikeys_hash    ON api_keys(key_hash) WHERE active = TRUE;
 """
 
 DEFAULT_COA = [
@@ -683,9 +854,28 @@ def post_move(conn, move_id: int, company_id: int):
 # ── Startup ───────────────────────────────────────────────────
 @app.on_event("startup")
 def startup():
+    # Warn loudly about default secrets in production
+    if SECRET in ("mumtaz-erp-secret-change-me", "erp-secret-change-in-production", "change-me"):
+        logger.warning("⚠️  ERP_SECRET is using default value — change immediately in production!")
+    if not os.getenv("FERNET_KEY"):
+        logger.warning("⚠️  FERNET_KEY not set — using derived key. Set FERNET_KEY for proper encryption.")
+
     with get_db() as conn:
         c = dictcur(conn)
         c.execute(SCHEMA)
+
+        # Add Odoo connection columns (idempotent)
+        for col, coltype in [
+            ("odoo_url",  "VARCHAR(255)"),
+            ("odoo_db",   "VARCHAR(255)"),
+            ("odoo_user", "VARCHAR(255)"),
+            ("odoo_pass", "TEXT"),
+        ]:
+            try:
+                c.execute(f"ALTER TABLE companies ADD COLUMN IF NOT EXISTS {col} {coltype}")
+            except Exception:
+                conn.rollback()
+
         # Backfill tenant_modules for companies created before multi-tenancy was added
         orphans = fetchall(conn, """
             SELECT c.id FROM companies c
@@ -729,6 +919,9 @@ class TenantIn(BaseModel):
 
 class ModuleToggle(BaseModel):
     modules: List[str]
+
+class StatusUpdate(BaseModel):
+    status: str = "active"
 
 class CompanyUpdate(BaseModel):
     name: Optional[str] = None
@@ -930,6 +1123,74 @@ class TenantUpdateIn(BaseModel):
     plan: Optional[str] = None
     status: Optional[str] = None
 
+class OdooConnectIn(BaseModel):
+    odoo_url: str = "http://187.77.128.199:8069"
+    odoo_db: str
+    odoo_user: str = "admin"
+    odoo_pass: str
+
+class OdooPartnerIn(BaseModel):
+    name: str
+    is_company: bool = True
+    is_customer: bool = False
+    is_vendor: bool = False
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    mobile: Optional[str] = None
+    street: Optional[str] = None
+    city: Optional[str] = None
+    country_code: Optional[str] = None
+    vat: Optional[str] = None
+    ref: Optional[str] = None
+
+class OdooSaleLineIn(BaseModel):
+    product_id: int
+    name: Optional[str] = None
+    product_uom_qty: float = 1.0
+    price_unit: float = 0.0
+
+class OdooSaleIn(BaseModel):
+    partner_id: int
+    date_order: Optional[str] = None
+    validity_date: Optional[str] = None
+    note: Optional[str] = None
+    order_line: List[OdooSaleLineIn] = []
+
+class OdooInvoiceLineIn(BaseModel):
+    product_id: Optional[int] = None
+    name: str
+    quantity: float = 1.0
+    price_unit: float = 0.0
+    tax_ids: List[int] = []
+
+class OdooInvoiceIn(BaseModel):
+    partner_id: int
+    move_type: str = "out_invoice"
+    invoice_date: Optional[str] = None
+    invoice_date_due: Optional[str] = None
+    ref: Optional[str] = None
+    narration: Optional[str] = None
+    invoice_line_ids: List[OdooInvoiceLineIn] = []
+
+class OdooProductIn(BaseModel):
+    name: str
+    type: str = "service"
+    list_price: float = 0.0
+    standard_price: float = 0.0
+    default_code: Optional[str] = None
+    description: Optional[str] = None
+    categ_id: Optional[int] = None
+
+class OdooLeadIn(BaseModel):
+    name: str
+    partner_name: Optional[str] = None
+    contact_name: Optional[str] = None
+    email_from: Optional[str] = None
+    phone: Optional[str] = None
+    description: Optional[str] = None
+    expected_revenue: float = 0.0
+    type: str = "lead"
+
 class PortalProvisionIn(BaseModel):
     company_name: str
     admin_email: str
@@ -977,13 +1238,19 @@ def setup_init(data: SetupIn):
 
 # ── Auth ──────────────────────────────────────────────────────
 @app.post("/api/auth/login")
-def login(data: LoginIn):
+@limiter.limit("10/minute")
+def login(request: Request, data: LoginIn):
     with get_db() as conn:
-        user = fetchone(conn, "SELECT * FROM users WHERE email=%s AND active=TRUE", (data.email,))
+        user = fetchone(conn,
+            "SELECT id,name,email,role,company_id,is_super_admin,password_hash "
+            "FROM users WHERE email=%s AND active=TRUE", (data.email,))
         if not user or not pwd_ctx.verify(data.password, user["password_hash"]):
-            raise HTTPException(401, "Invalid credentials")
+            logger.warning("Failed login attempt for email=%s ip=%s",
+                           data.email, request.client.host if request.client else "?")
+            raise HTTPException(401, "Invalid email or password")
         is_super = bool(user.get("is_super_admin"))
         token = make_token(user["id"], user.get("company_id"), is_super=is_super)
+        logger.info("Login success user_id=%s company_id=%s", user["id"], user.get("company_id"))
         return {"access_token": token, "user": {
             "id": user["id"], "name": user["name"],
             "email": user["email"], "role": user["role"],
@@ -994,9 +1261,10 @@ def login(data: LoginIn):
 @app.get("/api/auth/me")
 def me(ctx=Depends(get_user)):
     with get_db() as conn:
-        user = fetchone(conn, "SELECT id,name,email,role,company_id FROM users WHERE id=%s", (ctx["user_id"],))
+        user = fetchone(conn, "SELECT id,name,email,role,company_id,is_super_admin FROM users WHERE id=%s", (ctx["user_id"],))
         if not user:
             raise HTTPException(404, "User not found")
+        user["is_super"] = bool(user.pop("is_super_admin", False))
         return user
 
 
@@ -2248,14 +2516,21 @@ PORTAL_API_KEY = os.getenv("PORTAL_API_KEY", "mumtaz-portal-key-change-me")
 
 @app.post("/api/portal/provision")
 def portal_provision(data: PortalProvisionIn):
-    """Called by app.mumtaz.digital after onboarding to create a tenant."""
+    """Called by app.mumtaz.digital after onboarding to create a tenant. Idempotent."""
     if data.portal_api_key != PORTAL_API_KEY:
         raise HTTPException(403, "Invalid portal API key")
     enabled = data.modules if data.modules else ALL_MODULES
     with get_db() as conn:
-        existing = fetchone(conn, "SELECT id FROM users WHERE email=%s", (data.admin_email,))
-        if existing:
-            raise HTTPException(400, "Email already in use")
+        existing_user = fetchone(conn, "SELECT id, company_id FROM users WHERE email=%s", (data.admin_email,))
+        if existing_user:
+            # Already provisioned — return existing company info
+            company_id = existing_user["company_id"]
+            return {
+                "company_id": company_id,
+                "erp_url": "https://erp.mumtaz.digital",
+                "message": f"Tenant already provisioned",
+                "already_existed": True,
+            }
         c = dictcur(conn)
         c.execute(
             "INSERT INTO companies (name, vat_number) VALUES (%s, NULL) RETURNING id",
@@ -2273,12 +2548,35 @@ def portal_provision(data: PortalProvisionIn):
             "access_token": token,
             "erp_url": "https://erp.mumtaz.digital",
             "message": f"Tenant '{data.company_name}' provisioned",
+            "already_existed": False,
         }
 
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "mumtaz-erp"}
+    checks: dict = {}
+    # Database
+    try:
+        with get_db() as conn:
+            row = fetchone(conn, "SELECT COUNT(*) AS tenants FROM companies WHERE status!='deleted'")
+        checks["database"] = "ok"
+        checks["tenants"] = int(row["tenants"]) if row else 0
+    except Exception as exc:
+        checks["database"] = f"error: {exc}"
+    # Connection pool
+    try:
+        pool = _get_pool()
+        checks["pool"] = {"min": pool.minconn, "max": pool.maxconn}
+    except Exception:
+        checks["pool"] = "unavailable"
+    overall = "ok" if checks.get("database") == "ok" else "degraded"
+    return {
+        "status": overall,
+        "service": "mumtaz-erp",
+        "version": "2.0.0",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "checks": checks,
+    }
 
 
 # ── Super Admin Setup ─────────────────────────────────────────
@@ -2331,13 +2629,17 @@ def list_tenants(ctx=Depends(require_super)):
             """SELECT c.*,
                (SELECT COUNT(*) FROM users u WHERE u.company_id=c.id AND NOT COALESCE(u.is_super_admin,FALSE)) AS user_count,
                (SELECT COUNT(*) FROM moves m WHERE m.company_id=c.id AND m.state='posted') AS posted_moves,
-               (SELECT COALESCE(SUM(amount_total),0) FROM moves m WHERE m.company_id=c.id AND m.move_type='out_invoice' AND m.state='posted') AS total_invoiced
+               (SELECT COALESCE(SUM(amount_total),0) FROM moves m WHERE m.company_id=c.id
+                AND m.move_type='out_invoice' AND m.state='posted') AS total_invoiced
                FROM companies c ORDER BY c.id""")
-        # Attach enabled modules per tenant
+        # Batch-fetch all enabled modules in ONE query (avoids N+1)
+        all_modules = fetchall(conn,
+            "SELECT company_id, module FROM tenant_modules WHERE enabled=TRUE")
+        mod_map: dict = {}
+        for r in all_modules:
+            mod_map.setdefault(r["company_id"], []).append(r["module"])
         for t in tenants:
-            rows = fetchall(conn,
-                "SELECT module FROM tenant_modules WHERE company_id=%s AND enabled=TRUE", (t["id"],))
-            t["enabled_modules"] = [r["module"] for r in rows]
+            t["enabled_modules"] = mod_map.get(t["id"], [])
         return tenants
 
 @app.post("/api/super/tenants")
@@ -2363,11 +2665,10 @@ def create_tenant(data: TenantIn, ctx=Depends(require_super)):
         return {"company_id": company_id, "message": f"Tenant '{data.company_name}' created"}
 
 @app.put("/api/super/tenants/{tid}/status")
-def update_tenant_status(tid: int, body: dict, ctx=Depends(require_super)):
-    status = body.get("status", "active")
+def update_tenant_status(tid: int, body: StatusUpdate, ctx=Depends(require_super)):
     with get_db() as conn:
-        execute(conn, "UPDATE companies SET status=%s WHERE id=%s", (status, tid))
-        return {"ok": True, "status": status}
+        execute(conn, "UPDATE companies SET status=%s WHERE id=%s", (body.status, tid))
+        return {"ok": True, "status": body.status}
 
 @app.get("/api/super/tenants/{tid}/modules")
 def get_tenant_modules(tid: int, ctx=Depends(require_super)):
@@ -2455,4 +2756,813 @@ def super_stats(ctx=Depends(require_super)):
             "active_tenants": int(active_tenants["n"]) if active_tenants else 0,
             "total_users": int(total_users["n"]) if total_users else 0,
             "total_invoices": int(total_invoices["n"]) if total_invoices else 0,
+        }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Odoo Integration — white-label API bridge
+#
+#  Each tenant stores their Odoo DB credentials in the companies table.
+#  erp-server authenticates to Odoo with a service account and caches the
+#  session. All /api/odoo/* endpoints proxy through to the real Odoo instance
+#  at the tenant's odoo_url — users never touch Odoo directly.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _get_odoo_session(company_id: int) -> odoo.OdooSession:
+    """Load Odoo credentials for company_id and return an authenticated session."""
+    with get_db() as conn:
+        row = fetchone(conn,
+            "SELECT odoo_url, odoo_db, odoo_user, odoo_pass FROM companies WHERE id=%s",
+            (company_id,))
+    if not row or not row.get("odoo_db"):
+        raise HTTPException(400, "This tenant has no Odoo database configured. "
+                                  "A super admin must call POST /api/super/tenants/{id}/odoo-connect first.")
+    return odoo.get_session(
+        row["odoo_url"] or "http://187.77.128.199:8069",
+        row["odoo_db"],
+        row["odoo_user"] or "admin",
+        decrypt_secret(row["odoo_pass"] or ""),
+    )
+
+def _resolve_odoo_sess(ctx: dict, tenant_id: Optional[int] = None) -> "odoo.OdooSession":
+    """
+    Return an Odoo session for the request's tenant.
+
+    Priority:
+      1. JWT carries odoo_db (auto-provisioned tenant) → use global admin creds + that DB
+      2. Super admin specifying tenant_id → look up stored credentials from companies table
+      3. User's own company_id → look up stored credentials from companies table
+    """
+    # Path 1: self-provisioned tenant — DB name is in the JWT
+    if ctx.get("odoo_db") and not (ctx.get("is_super") and tenant_id):
+        return odoo.get_session(
+            ODOO_URL_ENV,
+            ctx["odoo_db"],
+            ODOO_ADMIN_ENV,
+            ODOO_PASS_ENV,
+        )
+
+    # Path 2/3: manually configured tenant (super admin panel or legacy setup)
+    if ctx.get("is_super") and tenant_id:
+        cid = tenant_id
+    else:
+        cid = ctx.get("company_id")
+    if not cid:
+        raise HTTPException(400,
+            "No tenant configured. Super admins: add ?tenant_id=<id>.")
+    return _get_odoo_session(cid)
+
+
+def _odoo_err(exc: OdooError) -> HTTPException:
+    if exc.is_not_found():
+        return HTTPException(404, exc.message)
+    if exc.is_auth_error():
+        return HTTPException(401, "Odoo session error — credentials may be wrong.")
+    detail = exc.data.get("message") or exc.data.get("debug") or exc.message
+    logger.error("Odoo error code=%s message=%s data=%s", exc.code, exc.message, exc.data)
+    return HTTPException(502, f"Odoo error: {detail}")
+
+
+# ── Super-admin: connect a tenant to an Odoo database ────────────────────────
+
+@app.post("/api/super/tenants/{tid}/odoo-connect")
+def odoo_connect(tid: int, data: OdooConnectIn, ctx=Depends(require_super)):
+    """Store Odoo DB credentials for a tenant and verify the connection."""
+    try:
+        sess = odoo.get_session(data.odoo_url, data.odoo_db, data.odoo_user, data.odoo_pass)
+        odoo.invalidate_session(data.odoo_url, data.odoo_db, data.odoo_user)
+        sess = odoo.get_session(data.odoo_url, data.odoo_db, data.odoo_user, data.odoo_pass)
+        info = sess.test_connection()
+    except OdooConnectionError as exc:
+        raise HTTPException(502, str(exc))
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+    with get_db() as conn:
+        execute(conn,
+            "UPDATE companies SET odoo_url=%s, odoo_db=%s, odoo_user=%s, odoo_pass=%s WHERE id=%s",
+            (data.odoo_url, data.odoo_db, data.odoo_user, encrypt_secret(data.odoo_pass), tid))
+    logger.info("Odoo credentials saved for tenant_id=%s db=%s", tid, data.odoo_db)
+    return {**info, "tenant_id": tid, "message": "Odoo credentials saved and connection verified."}
+
+
+@app.get("/api/super/tenants/{tid}/odoo-test")
+def odoo_test(tid: int, ctx=Depends(require_super)):
+    """Test the stored Odoo connection for a tenant."""
+    try:
+        sess = _get_odoo_session(tid)
+        return sess.test_connection()
+    except OdooConnectionError as exc:
+        raise HTTPException(502, str(exc))
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.delete("/api/super/tenants/{tid}/odoo-connect")
+def odoo_disconnect(tid: int, ctx=Depends(require_super)):
+    """Remove Odoo credentials from a tenant."""
+    with get_db() as conn:
+        row = fetchone(conn, "SELECT odoo_url, odoo_db, odoo_user FROM companies WHERE id=%s", (tid,))
+        if row and row.get("odoo_db"):
+            odoo.invalidate_session(row["odoo_url"] or "", row["odoo_db"], row["odoo_user"] or "admin")
+        execute(conn,
+            "UPDATE companies SET odoo_url=NULL, odoo_db=NULL, odoo_user=NULL, odoo_pass=NULL WHERE id=%s",
+            (tid,))
+    return {"ok": True}
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────
+
+# Desired fields per model — filtered at runtime against Odoo's actual schema
+PARTNER_FIELDS = ["id", "name", "email", "phone", "mobile", "is_company",
+                  "customer_rank", "supplier_rank", "street", "city",
+                  "country_id", "vat", "ref", "active", "create_date",
+                  "write_date", "lang", "comment"]
+
+SALE_FIELDS = ["id", "name", "state", "partner_id", "date_order",
+               "validity_date", "expiration", "amount_untaxed", "amount_tax",
+               "amount_total", "invoice_status", "note", "order_line",
+               "commitment_date", "client_order_ref", "user_id"]
+
+INVOICE_FIELDS = ["id", "name", "move_type", "state", "partner_id",
+                  "invoice_date", "invoice_date_due", "ref", "narration",
+                  "amount_untaxed", "amount_tax", "amount_total", "payment_state",
+                  "invoice_line_ids", "invoice_origin", "currency_id"]
+
+PRODUCT_FIELDS = ["id", "name", "default_code", "type", "detailed_type",
+                  "list_price", "standard_price", "categ_id", "description",
+                  "active", "qty_available", "virtual_available",
+                  "uom_id", "barcode"]
+
+INVENTORY_FIELDS = ["id", "product_id", "location_id", "quantity",
+                    "reserved_quantity", "reserved_qty"]
+
+LEAD_FIELDS = ["id", "name", "type", "stage_id", "partner_name", "contact_name",
+               "email_from", "phone", "expected_revenue", "probability",
+               "partner_id", "description", "create_date", "date_deadline",
+               "user_id", "team_id", "priority"]
+
+# Per-worker cache: {(url, db, model) → set of valid field names}
+_field_cache: dict[tuple, set] = {}
+_field_cache_lock = threading.Lock()
+
+
+def _valid_fields(sess: "odoo.OdooSession", model: str, requested: list[str]) -> list[str]:
+    """Return only fields that actually exist on the model (cached per worker)."""
+    key = (sess.url, sess.db, model)
+    with _field_cache_lock:
+        if key not in _field_cache:
+            try:
+                info = sess.fields_get(model, ["string"])
+                _field_cache[key] = set(info.keys())
+            except Exception:
+                return requested  # fall back to requested list on any error
+        available = _field_cache[key]
+    return [f for f in requested if f in available]
+
+
+# ── Partners (res.partner) ────────────────────────────────────────────────────
+
+@app.get("/api/odoo/partners")
+def odoo_list_partners(
+    search: Optional[str] = None,
+    is_customer: Optional[bool] = None,
+    is_vendor: Optional[bool] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    tenant_id: Optional[int] = None,
+    ctx=Depends(get_user),
+):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    domain: list = [["active", "=", True]]
+    if search:
+        domain.append(["name", "ilike", search])
+    if is_customer is True:
+        domain.append(["customer_rank", ">", 0])
+    if is_vendor is True:
+        domain.append(["supplier_rank", ">", 0])
+    try:
+        return sess.search_read("res.partner", domain, _valid_fields(sess, "res.partner", PARTNER_FIELDS), limit=limit, offset=offset, order="name asc")
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/partners/{pid}")
+def odoo_get_partner(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        rows = sess.read("res.partner", [pid], _valid_fields(sess, "res.partner", PARTNER_FIELDS))
+        if not rows:
+            raise HTTPException(404, "Partner not found")
+        return rows[0]
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/partners", status_code=201)
+def odoo_create_partner(data: OdooPartnerIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {
+        "name": data.name,
+        "is_company": data.is_company,
+        "customer_rank": 1 if data.is_customer else 0,
+        "supplier_rank": 1 if data.is_vendor else 0,
+    }
+    for field in ("email", "phone", "mobile", "street", "city", "vat", "ref"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    if data.country_code:
+        try:
+            countries = sess.search_read("res.country", [["code", "=", data.country_code.upper()]], ["id"], limit=1)
+            if countries:
+                vals["country_id"] = countries[0]["id"]
+        except OdooError:
+            pass
+    try:
+        new_id = sess.create("res.partner", vals)
+        rows = sess.read("res.partner", [new_id], _valid_fields(sess, "res.partner", PARTNER_FIELDS))
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.put("/api/odoo/partners/{pid}")
+def odoo_update_partner(pid: int, data: OdooPartnerIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {"name": data.name, "is_company": data.is_company,
+                  "customer_rank": 1 if data.is_customer else 0,
+                  "supplier_rank": 1 if data.is_vendor else 0}
+    for field in ("email", "phone", "mobile", "street", "city", "vat", "ref"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        sess.write("res.partner", [pid], vals)
+        rows = sess.read("res.partner", [pid], _valid_fields(sess, "res.partner", PARTNER_FIELDS))
+        return rows[0] if rows else {"id": pid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.delete("/api/odoo/partners/{pid}")
+def odoo_delete_partner(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        sess.write("res.partner", [pid], {"active": False})
+        return {"ok": True}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Sales Orders (sale.order) ─────────────────────────────────────────────────
+
+@app.get("/api/odoo/sales")
+def odoo_list_sales(
+    state: Optional[str] = None,
+    partner_id: Optional[int] = None,
+    search: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    tenant_id: Optional[int] = None,
+    ctx=Depends(get_user),
+):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    domain: list = []
+    if state:
+        domain.append(["state", "=", state])
+    if partner_id:
+        domain.append(["partner_id", "=", partner_id])
+    if search:
+        domain.append(["name", "ilike", search])
+    try:
+        orders = sess.search_read("sale.order", domain, _valid_fields(sess, "sale.order", SALE_FIELDS), limit=limit, offset=offset, order="date_order desc")
+        total = sess.search_count("sale.order", domain)
+        return {"total": total, "items": orders}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/sales/{sid}")
+def odoo_get_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        rows = sess.read("sale.order", [sid], _valid_fields(sess, "sale.order", SALE_FIELDS))
+        if not rows:
+            raise HTTPException(404, "Sale order not found")
+        order = rows[0]
+        if order.get("order_line"):
+            order["lines"] = sess.read("sale.order.line", order["order_line"],
+                ["id", "product_id", "name", "product_uom_qty", "price_unit", "price_subtotal", "tax_id"])
+        return order
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/sales", status_code=201)
+def odoo_create_sale(data: OdooSaleIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {"partner_id": data.partner_id}
+    if data.date_order:
+        vals["date_order"] = data.date_order
+    if data.validity_date:
+        vals["validity_date"] = data.validity_date
+    if data.note:
+        vals["note"] = data.note
+    if data.order_line:
+        vals["order_line"] = [
+            (0, 0, {
+                "product_id": line.product_id,
+                "name": line.name or "",
+                "product_uom_qty": line.product_uom_qty,
+                "price_unit": line.price_unit,
+            })
+            for line in data.order_line
+        ]
+    try:
+        new_id = sess.create("sale.order", vals)
+        rows = sess.read("sale.order", [new_id], _valid_fields(sess, "sale.order", SALE_FIELDS))
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/sales/{sid}/confirm")
+def odoo_confirm_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        sess.action_confirm("sale.order", [sid])
+        rows = sess.read("sale.order", [sid], ["id", "name", "state"])
+        return rows[0] if rows else {"id": sid, "state": "sale"}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/sales/{sid}/cancel")
+def odoo_cancel_sale(sid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        sess.call_kw("sale.order", "action_cancel", [[sid]])
+        return {"id": sid, "state": "cancel"}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Invoices (account.move) ───────────────────────────────────────────────────
+
+@app.get("/api/odoo/invoices")
+def odoo_list_invoices(
+    move_type: str = "out_invoice",
+    state: Optional[str] = None,
+    partner_id: Optional[int] = None,
+    payment_state: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    tenant_id: Optional[int] = None,
+    ctx=Depends(get_user),
+):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    domain: list = [["move_type", "=", move_type]]
+    if state:
+        domain.append(["state", "=", state])
+    if partner_id:
+        domain.append(["partner_id", "=", partner_id])
+    if payment_state:
+        domain.append(["payment_state", "=", payment_state])
+    try:
+        invoices = sess.search_read("account.move", domain, _valid_fields(sess, "account.move", INVOICE_FIELDS), limit=limit, offset=offset, order="invoice_date desc")
+        total = sess.search_count("account.move", domain)
+        return {"total": total, "items": invoices}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/invoices/{iid}")
+def odoo_get_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        rows = sess.read("account.move", [iid], _valid_fields(sess, "account.move", INVOICE_FIELDS))
+        if not rows:
+            raise HTTPException(404, "Invoice not found")
+        inv = rows[0]
+        if inv.get("invoice_line_ids"):
+            inv["lines"] = sess.read("account.move.line", inv["invoice_line_ids"],
+                ["id", "product_id", "name", "quantity", "price_unit", "price_subtotal", "tax_ids"])
+        return inv
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/invoices", status_code=201)
+def odoo_create_invoice(data: OdooInvoiceIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {
+        "move_type": data.move_type,
+        "partner_id": data.partner_id,
+    }
+    if data.invoice_date:
+        vals["invoice_date"] = data.invoice_date
+    if data.invoice_date_due:
+        vals["invoice_date_due"] = data.invoice_date_due
+    if data.ref:
+        vals["ref"] = data.ref
+    if data.narration:
+        vals["narration"] = data.narration
+    if data.invoice_line_ids:
+        vals["invoice_line_ids"] = [
+            (0, 0, {
+                **({"product_id": line.product_id} if line.product_id else {}),
+                "name": line.name,
+                "quantity": line.quantity,
+                "price_unit": line.price_unit,
+                **({"tax_ids": [(6, 0, line.tax_ids)]} if line.tax_ids else {}),
+            })
+            for line in data.invoice_line_ids
+        ]
+    try:
+        new_id = sess.create("account.move", vals)
+        rows = sess.read("account.move", [new_id], _valid_fields(sess, "account.move", INVOICE_FIELDS))
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/invoices/{iid}/post")
+def odoo_post_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    """Confirm/post a draft invoice."""
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        sess.action_post("account.move", [iid])
+        rows = sess.read("account.move", [iid], ["id", "name", "state", "payment_state"])
+        return rows[0] if rows else {"id": iid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/invoices/{iid}/reset")
+def odoo_reset_invoice(iid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    """Reset a posted invoice back to draft."""
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        sess.call_kw("account.move", "button_draft", [[iid]])
+        return {"id": iid, "state": "draft"}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Products (product.template / product.product) ─────────────────────────────
+
+@app.get("/api/odoo/products")
+def odoo_list_products(
+    search: Optional[str] = None,
+    type: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    tenant_id: Optional[int] = None,
+    ctx=Depends(get_user),
+):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    domain: list = [["active", "=", True]]
+    if search:
+        domain.append(["name", "ilike", search])
+    if type:
+        domain.append(["type", "=", type])
+    try:
+        products = sess.search_read("product.product", domain, _valid_fields(sess, "product.product", PRODUCT_FIELDS), limit=limit, offset=offset, order="name asc")
+        total = sess.search_count("product.product", domain)
+        return {"total": total, "items": products}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/products/{pid}")
+def odoo_get_product(pid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        rows = sess.read("product.product", [pid], _valid_fields(sess, "product.product", PRODUCT_FIELDS))
+        if not rows:
+            raise HTTPException(404, "Product not found")
+        return rows[0]
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/products", status_code=201)
+def odoo_create_product(data: OdooProductIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {
+        "name": data.name,
+        "type": data.type,
+        "list_price": data.list_price,
+        "standard_price": data.standard_price,
+    }
+    for field in ("default_code", "description", "categ_id"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        new_id = sess.create("product.template", vals)
+        rows = sess.search_read("product.product", [["product_tmpl_id", "=", new_id]], _valid_fields(sess, "product.product", PRODUCT_FIELDS), limit=1)
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.put("/api/odoo/products/{pid}")
+def odoo_update_product(pid: int, data: OdooProductIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {
+        "name": data.name,
+        "type": data.type,
+        "list_price": data.list_price,
+        "standard_price": data.standard_price,
+    }
+    for field in ("default_code", "description", "categ_id"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        sess.write("product.product", [pid], vals)
+        rows = sess.read("product.product", [pid], _valid_fields(sess, "product.product", PRODUCT_FIELDS))
+        return rows[0] if rows else {"id": pid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Inventory (stock.quant) ───────────────────────────────────────────────────
+
+@app.get("/api/odoo/inventory")
+def odoo_inventory(
+    product_id: Optional[int] = None,
+    location: str = "WH/Stock",
+    limit: int = Query(200, le=1000),
+    tenant_id: Optional[int] = None,
+    ctx=Depends(get_user),
+):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    domain: list = [["location_id.usage", "=", "internal"]]
+    if product_id:
+        domain.append(["product_id", "=", product_id])
+    if location and location != "all":
+        domain.append(["location_id.complete_name", "ilike", location])
+    try:
+        return sess.search_read("stock.quant", domain, _valid_fields(sess, "stock.quant", INVENTORY_FIELDS), limit=limit)
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── CRM Leads/Opportunities (crm.lead) ────────────────────────────────────────
+
+@app.get("/api/odoo/crm")
+def odoo_list_leads(
+    type: str = "lead",
+    stage_id: Optional[int] = None,
+    search: Optional[str] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    tenant_id: Optional[int] = None,
+    ctx=Depends(get_user),
+):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    domain: list = [["type", "=", type], ["active", "=", True]]
+    if stage_id:
+        domain.append(["stage_id", "=", stage_id])
+    if search:
+        domain.append("|", ["name", "ilike", search], ["partner_name", "ilike", search])
+    try:
+        leads = sess.search_read("crm.lead", domain, _valid_fields(sess, "crm.lead", LEAD_FIELDS), limit=limit, offset=offset, order="create_date desc")
+        total = sess.search_count("crm.lead", domain)
+        return {"total": total, "items": leads}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.get("/api/odoo/crm/{lid}")
+def odoo_get_lead(lid: int, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    try:
+        rows = sess.read("crm.lead", [lid], _valid_fields(sess, "crm.lead", LEAD_FIELDS))
+        if not rows:
+            raise HTTPException(404, "Lead not found")
+        return rows[0]
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.post("/api/odoo/crm", status_code=201)
+def odoo_create_lead(data: OdooLeadIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {"name": data.name, "type": data.type}
+    for field in ("partner_name", "contact_name", "email_from", "phone", "description", "expected_revenue"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        new_id = sess.create("crm.lead", vals)
+        rows = sess.read("crm.lead", [new_id], _valid_fields(sess, "crm.lead", LEAD_FIELDS))
+        return rows[0] if rows else {"id": new_id}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+@app.put("/api/odoo/crm/{lid}")
+def odoo_update_lead(lid: int, data: OdooLeadIn, tenant_id: Optional[int] = None, ctx=Depends(get_user)):
+    sess = _resolve_odoo_sess(ctx, tenant_id)
+    vals: dict = {"name": data.name, "type": data.type}
+    for field in ("partner_name", "contact_name", "email_from", "phone", "description", "expected_revenue"):
+        v = getattr(data, field)
+        if v is not None:
+            vals[field] = v
+    try:
+        sess.write("crm.lead", [lid], vals)
+        rows = sess.read("crm.lead", [lid], _valid_fields(sess, "crm.lead", LEAD_FIELDS))
+        return rows[0] if rows else {"id": lid}
+    except OdooError as exc:
+        raise _odoo_err(exc)
+
+
+# ── Odoo meta: available databases ───────────────────────────────────────────
+
+@app.get("/api/super/odoo/databases")
+def odoo_list_databases(
+    url: str = "http://187.77.128.199:8069",
+    ctx=Depends(require_super),
+):
+    """List available Odoo databases on the given server."""
+    import urllib.request as _req, urllib.error as _uerr
+    payload = json.dumps({"jsonrpc": "2.0", "method": "call", "id": 1, "params": {}}).encode()
+    req = _req.Request(url.rstrip("/") + "/web/database/list",
+                       data=payload, headers={"Content-Type": "application/json"})
+    try:
+        with _req.urlopen(req, timeout=10) as resp:
+            body = json.loads(resp.read())
+            if "error" in body:
+                raise HTTPException(502, body["error"].get("message", "Odoo error"))
+            return {"databases": body.get("result", []), "url": url}
+    except _uerr.URLError as exc:
+        raise HTTPException(502, f"Cannot reach Odoo at {url}: {exc.reason}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  API Key Management
+#  Tenants can create API keys for programmatic access instead of JWT tokens.
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _hash_key(raw: str) -> str:
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+def get_user_or_api_key(
+    authorization: Optional[str] = Header(None),
+    x_api_key: Optional[str] = Header(None),
+):
+    """Auth via JWT bearer OR X-Api-Key header."""
+    if x_api_key:
+        key_hash = _hash_key(x_api_key)
+        with get_db() as conn:
+            row = fetchone(conn,
+                "SELECT ak.user_id, ak.company_id, ak.scopes, u.role "
+                "FROM api_keys ak JOIN users u ON u.id=ak.user_id "
+                "WHERE ak.key_hash=%s AND ak.active=TRUE "
+                "AND (ak.expires_at IS NULL OR ak.expires_at > NOW())",
+                (key_hash,))
+            if not row:
+                raise HTTPException(401, "Invalid or expired API key")
+            execute(conn, "UPDATE api_keys SET last_used=NOW() WHERE key_hash=%s", (key_hash,))
+        return {"user_id": row["user_id"], "company_id": row["company_id"],
+                "is_super": False, "via_api_key": True, "scopes": row["scopes"]}
+    if authorization:
+        try:
+            scheme, token = authorization.split()
+            assert scheme.lower() == "bearer"
+            p = jwt.decode(token, SECRET, algorithms=[ALGO])
+            return {"user_id": int(p["sub"]), "company_id": p.get("cid"),
+                    "is_super": bool(p.get("sup", False))}
+        except Exception:
+            raise HTTPException(401, "Not authenticated")
+    raise HTTPException(401, "Not authenticated")
+
+
+class ApiKeyCreateIn(BaseModel):
+    name: str
+    scopes: str = "read"
+    expires_days: Optional[int] = None
+
+@app.get("/api/keys")
+def list_api_keys(ctx=Depends(get_user)):
+    with get_db() as conn:
+        rows = fetchall(conn,
+            "SELECT id, name, key_prefix, scopes, active, last_used, expires_at, created_at "
+            "FROM api_keys WHERE company_id=%s AND active=TRUE ORDER BY created_at DESC",
+            (ctx["company_id"],))
+    return rows
+
+@app.post("/api/keys", status_code=201)
+def create_api_key(data: ApiKeyCreateIn, ctx=Depends(get_user)):
+    raw_key = "mk_" + secrets.token_urlsafe(32)
+    key_hash = _hash_key(raw_key)
+    prefix = raw_key[:12]
+    expires_at = None
+    if data.expires_days:
+        expires_at = datetime.utcnow() + timedelta(days=data.expires_days)
+    with get_db() as conn:
+        row = execute(conn,
+            "INSERT INTO api_keys (company_id, user_id, name, key_hash, key_prefix, scopes, expires_at) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id, created_at",
+            (ctx["company_id"], ctx["user_id"], data.name, key_hash, prefix, data.scopes, expires_at))
+        audit_log(conn, ctx["company_id"], ctx["user_id"], "CREATE", "api_keys",
+                  row["id"] if row else None, f"Created API key: {data.name}")
+    return {"id": row["id"] if row else None, "key": raw_key,
+            "prefix": prefix, "scopes": data.scopes,
+            "message": "Store this key securely — it will not be shown again."}
+
+@app.delete("/api/keys/{kid}", status_code=204)
+def revoke_api_key(kid: int, ctx=Depends(get_user)):
+    with get_db() as conn:
+        execute(conn,
+            "UPDATE api_keys SET active=FALSE WHERE id=%s AND company_id=%s",
+            (kid, ctx["company_id"]))
+        audit_log(conn, ctx["company_id"], ctx["user_id"], "DELETE", "api_keys", kid, "Revoked API key")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Audit Log Viewer (super admin + company admin)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/audit")
+def get_audit_log(
+    limit: int = Query(50, le=200),
+    offset: int = 0,
+    table_name: Optional[str] = None,
+    ctx=Depends(get_user),
+):
+    with get_db() as conn:
+        if ctx.get("is_super"):
+            base = "SELECT * FROM audit_logs WHERE 1=1"
+            params: list = []
+        else:
+            base = "SELECT * FROM audit_logs WHERE company_id=%s"
+            params = [ctx["company_id"]]
+        if table_name:
+            base += " AND table_name=%s"
+            params.append(table_name)
+        base += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+        params += [limit, offset]
+        rows = fetchall(conn, base, params)
+        return {"items": rows, "limit": limit, "offset": offset}
+
+@app.get("/api/super/audit")
+def super_audit_log(
+    company_id: Optional[int] = None,
+    limit: int = Query(100, le=500),
+    offset: int = 0,
+    ctx=Depends(require_super),
+):
+    with get_db() as conn:
+        if company_id:
+            rows = fetchall(conn,
+                "SELECT al.*, c.name AS company_name FROM audit_logs al "
+                "LEFT JOIN companies c ON c.id=al.company_id "
+                "WHERE al.company_id=%s ORDER BY al.created_at DESC LIMIT %s OFFSET %s",
+                (company_id, limit, offset))
+        else:
+            rows = fetchall(conn,
+                "SELECT al.*, c.name AS company_name FROM audit_logs al "
+                "LEFT JOIN companies c ON c.id=al.company_id "
+                "ORDER BY al.created_at DESC LIMIT %s OFFSET %s",
+                (limit, offset))
+        total = fetchone(conn, "SELECT COUNT(*) AS n FROM audit_logs" +
+                         (" WHERE company_id=%s" % company_id if company_id else ""),
+                         (company_id,) if company_id else ())
+        return {"total": int(total["n"]) if total else 0, "items": rows}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Super Admin Dashboard Stats (enhanced)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/super/dashboard")
+def super_dashboard(ctx=Depends(require_super)):
+    with get_db() as conn:
+        tenants      = fetchone(conn, "SELECT COUNT(*) AS n FROM companies WHERE status!='deleted'")
+        active       = fetchone(conn, "SELECT COUNT(*) AS n FROM companies WHERE status='active'")
+        trial        = fetchone(conn, "SELECT COUNT(*) AS n FROM companies WHERE plan='trial' OR plan IS NULL")
+        users        = fetchone(conn, "SELECT COUNT(*) AS n FROM users WHERE active=TRUE AND is_super_admin=FALSE")
+        invoices     = fetchone(conn, "SELECT COUNT(*) AS n FROM moves WHERE move_type='out_invoice' AND state='posted'")
+        revenue      = fetchone(conn, "SELECT COALESCE(SUM(amount_total),0) AS v FROM moves WHERE move_type='out_invoice' AND state='posted'")
+        new_tenants  = fetchone(conn,
+            "SELECT COUNT(*) AS n FROM companies WHERE created_at > NOW() - INTERVAL '30 days'")
+        plans_dist   = fetchall(conn,
+            "SELECT COALESCE(plan,'unknown') AS plan, COUNT(*) AS n FROM companies GROUP BY plan ORDER BY n DESC")
+        recent_logins= fetchall(conn,
+            "SELECT al.created_at, u.email, u.company_id, c.name AS company FROM audit_logs al "
+            "JOIN users u ON u.id=al.user_id LEFT JOIN companies c ON c.id=al.company_id "
+            "WHERE al.action='LOGIN' ORDER BY al.created_at DESC LIMIT 10")
+        return {
+            "tenants":       {"total": int(tenants["n"]),     "active": int(active["n"]),
+                               "trial": int(trial["n"]),       "new_30d": int(new_tenants["n"])},
+            "users":         int(users["n"]),
+            "invoices":      int(invoices["n"]),
+            "total_invoiced": float(revenue["v"]),
+            "plans":         plans_dist,
+            "recent_logins": recent_logins,
         }

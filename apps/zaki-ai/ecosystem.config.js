@@ -13,8 +13,9 @@ module.exports = {
     watch:       false,
     max_memory_restart: '512M',
     env: {
-      NODE_ENV:         'production',
-      PORT:             3000,
+      NODE_ENV:          'production',
+      PORT:              3000,
+      ZAKI_SERVER_URL:   'http://localhost:8002',
     },
     error_file:  '/var/log/zaki/error.log',
     out_file:    '/var/log/zaki/out.log',

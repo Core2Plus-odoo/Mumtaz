@@ -98,6 +98,81 @@
       border-radius: var(--radius);
       padding: 9px 12px;
       margin-bottom: 14px;
+
+    /* ── Provisioning panel ─────────────── */
+    .prov-header { text-align: center; margin-bottom: 22px; }
+    .prov-gear {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin: 0 auto 16px;
+      animation: gear-spin 5s linear infinite;
+    }
+    @keyframes gear-spin {
+      from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+    }
+    .prov-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.4rem; font-weight: 400; color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .prov-subtitle { font-size: .82rem; color: var(--ink3); }
+
+    .prov-bar-wrap {
+      height: 4px; background: var(--border); border-radius: 2px;
+      margin-bottom: 24px; overflow: hidden;
+    }
+    .prov-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold2));
+      border-radius: 2px; width: 8%;
+      transition: width 1.8s cubic-bezier(.4,0,.2,1);
+    }
+
+    .prov-steps { display: flex; flex-direction: column; gap: 11px; margin-bottom: 22px; }
+    .prov-step { display: flex; align-items: center; gap: 12px; font-size: .875rem; }
+    .step-dot {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      border: 1.5px solid var(--border); background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .6rem; transition: all .3s;
+    }
+    .prov-step[data-s="done"] .step-dot {
+      background: var(--teal); border-color: var(--teal); color: #fff;
+    }
+    .prov-step[data-s="done"] .step-dot::after { content: '✓'; }
+    .prov-step[data-s="active"] .step-dot {
+      border-color: var(--gold);
+      animation: step-pulse 1.3s ease-in-out infinite;
+    }
+    .prov-step[data-s="active"] .step-dot::after {
+      content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: block;
+    }
+    .prov-step[data-s="active"] span { color: var(--ink); font-weight: 500; }
+    .prov-step[data-s="pending"] span { color: var(--ink3); }
+    @keyframes step-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(184,134,42,.4); }
+      50%      { box-shadow: 0 0 0 5px rgba(184,134,42,0); }
+    }
+
+    .prov-tip {
+      display: flex; align-items: flex-start; gap: 11px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 13px; margin-top: 4px;
+    }
+    .prov-tip-icon {
+      width: 30px; height: 30px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Instrument Serif', serif; font-size: .9rem; color: #fff;
+    }
+    .prov-tip p { font-size: .78rem; color: var(--ink3); line-height: 1.65; }
+    .prov-tip strong { color: var(--ink2); font-weight: 600; }
+    .prov-done {
+      text-align: center; padding: 12px 0 4px;
+      font-size: .875rem; color: var(--teal); font-weight: 500;
+    }
     }
 
     .btn-submit {
@@ -204,6 +279,42 @@
       </form>
     </div>
 
+    <!-- Provisioning panel (shown after signup) -->
+    <div class="panel" id="panel-provisioning">
+      <div class="prov-header">
+        <div class="prov-gear">⚙</div>
+        <div class="prov-title">Setting up <span id="prov-company">your workspace</span></div>
+        <div class="prov-subtitle">Creating your private ERP environment · usually 30–60 seconds</div>
+      </div>
+
+      <div class="prov-bar-wrap">
+        <div class="prov-bar-fill" id="prov-bar"></div>
+      </div>
+
+      <div class="prov-steps" id="prov-steps">
+        <div class="prov-step" id="step-1" data-s="active">
+          <div class="step-dot"></div><span>Creating your database</span>
+        </div>
+        <div class="prov-step" id="step-2" data-s="pending">
+          <div class="step-dot"></div><span>Installing ERP modules</span>
+        </div>
+        <div class="prov-step" id="step-3" data-s="pending">
+          <div class="step-dot"></div><span>Configuring your workspace</span>
+        </div>
+        <div class="prov-step" id="step-4" data-s="pending">
+          <div class="step-dot"></div><span>Ready to launch</span>
+        </div>
+      </div>
+
+      <div class="error" id="prov-error" hidden></div>
+      <div class="prov-done" id="prov-done" hidden>✓ All done! Redirecting…</div>
+
+      <div class="prov-tip">
+        <div class="prov-tip-icon">ذ</div>
+        <p>Once ready, <strong>ZAKI</strong> — your AI CFO — is available 24/7 to answer questions about your business in Arabic or English.</p>
+      </div>
+    </div>
+
     <p class="footer">
       By continuing you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy</a>.
     </p>
@@ -268,12 +379,12 @@
       $('su-success').hidden = true;
       setSubmitting('su', true);
       try {
-        const r = await fetch('/api/auth/signup', {
+        const r = await fetch('/api/v1/auth/signup', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({
             name:     $('su-name').value.trim(),
-            company:  $('su-company').value.trim(),
+            company:  $('su-company').value.trim() || 'My Company',
             email:    $('su-email').value.trim(),
             password: $('su-password').value,
           }),
@@ -281,16 +392,85 @@
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || data.error || 'Sign up failed');
         localStorage.setItem('mumtaz_token', data.access_token);
-        $('su-success').textContent = 'Account created. Setting up your workspace…';
-        $('su-success').hidden = false;
-        setTimeout(() => { window.location.href = '/onboarding.html'; }, 800);
+        // Switch to provisioning screen and start polling
+        showProvisioning(data.user?.company || $('su-company').value.trim() || 'your workspace');
+        startPolling();
       } catch (err) {
         $('su-error').textContent = err.message;
         $('su-error').hidden = false;
-      } finally {
         setSubmitting('su', false);
       }
     });
+
+    // ── Provisioning helpers ─────────────────────────────────────
+
+    function showProvisioning(company) {
+      document.querySelector('.tabs').style.display = 'none';
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      $('panel-provisioning').classList.add('active');
+      $('prov-company').textContent = company || 'your workspace';
+    }
+
+    function setStep(n) {
+      for (let i = 1; i <= 4; i++) {
+        const el = $('step-' + i);
+        el.dataset.s = i < n ? 'done' : i === n ? 'active' : 'pending';
+      }
+      // Progress bar: 10% → 35% → 65% → 90%
+      const pct = [10, 35, 65, 90][n - 1] || 10;
+      $('prov-bar').style.width = pct + '%';
+    }
+
+    function showProvError(msg) {
+      $('prov-error').textContent = msg;
+      $('prov-error').hidden = false;
+    }
+
+    let _poll = null, _pollN = 0;
+
+    function startPolling() {
+      _pollN = 0;
+      setStep(1);
+      // Advance steps on a time estimate while we wait for the real signal
+      const stepTimers = [
+        setTimeout(() => setStep(2), 10000),   // ~10s: database created
+        setTimeout(() => setStep(3), 28000),   // ~28s: modules installed
+      ];
+
+      _poll = setInterval(async () => {
+        _pollN++;
+        if (_pollN > 120) {  // 5 minutes max
+          clearInterval(_poll);
+          stepTimers.forEach(clearTimeout);
+          showProvError('Setup is taking longer than usual. Please refresh or contact support@mumtaz.digital');
+          return;
+        }
+        try {
+          const token = localStorage.getItem('mumtaz_token');
+          const res = await fetch('/api/v1/tenant/status', {
+            headers: { Authorization: 'Bearer ' + token }
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+
+          if (data.status === 'active') {
+            clearInterval(_poll);
+            stepTimers.forEach(clearTimeout);
+            // Swap provisional token → full token with odoo_db
+            if (data.access_token) localStorage.setItem('mumtaz_token', data.access_token);
+            setStep(4);
+            $('prov-bar').style.width = '100%';
+            $('prov-done').hidden = false;
+            setTimeout(() => { window.location.href = '/onboarding.html'; }, 1800);
+
+          } else if (data.status === 'error') {
+            clearInterval(_poll);
+            stepTimers.forEach(clearTimeout);
+            showProvError(data.error || 'Workspace setup failed. Please contact support@mumtaz.digital');
+          }
+        } catch (_) { /* network blip — keep polling */ }
+      }, 2500);
+    }
   </script>
 
 </body>

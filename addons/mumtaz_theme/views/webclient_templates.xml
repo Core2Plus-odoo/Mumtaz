@@ -10,15 +10,15 @@
         </xpath>
     </template>
 
-    <!-- ── Inter font ────────────────────────────────────────────── -->
-    <template id="mumtaz_inter_font" inherit_id="web.layout" name="Mumtaz Inter Font">
+    <!-- ── DM Sans + Instrument Serif fonts ────────────────────── -->
+    <template id="mumtaz_fonts" inherit_id="web.layout" name="Mumtaz Fonts">
         <xpath expr="//head" position="inside">
             <link rel="preconnect" href="https://fonts.googleapis.com"/>
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"
+            <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:wght@400;500;600&amp;family=DM+Mono:wght@400;500&amp;display=swap"
                   rel="stylesheet"/>
             <style>
-                body, .o_web_client { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important; }
+                body, .o_web_client { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif !important; }
             </style>
         </xpath>
     </template>

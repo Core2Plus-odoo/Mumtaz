@@ -3986,10 +3986,11 @@ async function loginZakiServer() {
 
 function logoutZakiServer() {
   S.keys.zakiJwt = ''
+  S.keys.zakiEmail = ''
+  S.me.firstName = ''
   save()
-  renderZakiServerStatus()
-  showToast('Disconnected from Zaki Server')
-  if (!aiReady()) document.getElementById('nav-api-banner')?.classList.remove('hide')
+  showToast('Disconnected — redirecting to login…')
+  setTimeout(() => location.reload(), 800)
 }
 
 async function syncFromOdoo() {
@@ -7131,7 +7132,34 @@ Give your recommended valuation range and the single most important thing to do 
 // INIT
 // ═══════════════════════════════════════════
 load()
-if (S.me.firstName) {
+if (S.keys.zakiJwt) {
+  // Validate stored JWT before auto-launching to prevent stale-session auto-login
+  ;(async () => {
+    const url = (S.keys.zakiUrl || window.location.origin).replace(/\/$/, '')
+    try {
+      const r = await fetch(`${url}/api/v1/auth/me`, {
+        headers: { 'Authorization': `Bearer ${S.keys.zakiJwt}` }
+      })
+      if (r.ok) {
+        const me = await r.json()
+        if (me.name) { S.me.firstName = me.name; S.me.name = me.name }
+        save()
+        launchApp()
+      } else {
+        // JWT expired or invalid — force re-login
+        S.keys.zakiJwt = ''
+        S.keys.zakiEmail = ''
+        S.me.firstName = ''
+        save()
+        document.getElementById('setup').style.display = 'flex'
+      }
+    } catch {
+      // Network error — allow offline use if name already set
+      if (S.me.firstName) launchApp()
+      else document.getElementById('setup').style.display = 'flex'
+    }
+  })()
+} else if (S.me.firstName) {
   launchApp()
 } else {
   document.getElementById('setup').style.display = 'flex'

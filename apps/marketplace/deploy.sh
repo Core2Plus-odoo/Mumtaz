@@ -1,46 +1,72 @@
 #!/usr/bin/env bash
-# Deploy the Mumtaz portal (apps/portal) to /var/www/app.mumtaz.digital.
+# Deploy Mumtaz Marketplace static site to /var/www/marketplace.mumtaz.digital
 #
-# Usage on the VPS:
-#   cd /home/user/Mumtaz
+# Usage on VPS:
+#   cd /opt/Mumtaz
 #   git pull origin claude/odoo-architecture-review-ujm0W
-#   sudo bash apps/portal/deploy.sh
+#   sudo bash apps/marketplace/deploy.sh
 #
 # What this does:
-#   1. Syncs portal HTML/CSS/JS → /var/www/app.mumtaz.digital
-#   2. Installs the nginx site config (idempotent)
+#   1. Syncs marketplace HTML/CSS/JS → /var/www/marketplace.mumtaz.digital
+#   2. Installs nginx site config (idempotent)
 #   3. Reloads nginx
-#   4. Optionally gets/renews SSL via certbot (prompt)
+#   4. Optionally gets SSL via certbot
 set -euo pipefail
 
-DOMAIN="app.mumtaz.digital"
+DOMAIN="marketplace.mumtaz.digital"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEST_DIR="/var/www/${DOMAIN}"
 NGINX_AVAIL="/etc/nginx/sites-available/${DOMAIN}"
 NGINX_ENABLED="/etc/nginx/sites-enabled/${DOMAIN}"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " Mumtaz Portal Deploy"
+echo " Mumtaz Marketplace Deploy"
 echo " src:    $SRC_DIR"
 echo " dest:   $DEST_DIR"
 echo " domain: $DOMAIN"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # ── 1. Sync static files ──────────────────────────────────────────────
-echo "→ Syncing portal files…"
+echo "→ Syncing marketplace files…"
 sudo mkdir -p "$DEST_DIR"
 sudo rsync -av --delete \
-    --exclude='nginx.conf' \
     --exclude='deploy.sh' \
+    --exclude='nginx.conf' \
     --exclude='*.sh' \
-    --exclude='onboarding.css' \
     "$SRC_DIR/" "$DEST_DIR/"
 sudo chown -R www-data:www-data "$DEST_DIR"
-echo "✅ Portal files synced to $DEST_DIR"
+echo "✅ Marketplace files synced to $DEST_DIR"
 
 # ── 2. Install nginx config ───────────────────────────────────────────
 echo "→ Installing nginx config…"
-sudo cp "$SRC_DIR/nginx.conf" "$NGINX_AVAIL"
+sudo tee "$NGINX_AVAIL" > /dev/null <<NGINX_EOF
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    root ${DEST_DIR};
+    index index.html;
+
+    # Gzip
+    gzip on;
+    gzip_types text/html text/css application/javascript application/json image/svg+xml;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location ~* \.(css|js|svg|png|jpg|jpeg|webp|woff2)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+}
+NGINX_EOF
+
 sudo ln -sf "$NGINX_AVAIL" "$NGINX_ENABLED"
 echo "✅ Nginx config installed"
 
@@ -58,26 +84,22 @@ echo "✅ Nginx reloaded"
 # ── 4. SSL (certbot) ─────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-if sudo certbot certificates 2>/dev/null | grep -q "$DOMAIN"; then
-    echo "✅ SSL cert already exists for $DOMAIN."
-    echo "   Renewing if near expiry:"
-    sudo certbot renew --quiet --nginx --cert-name "$DOMAIN" || true
-else
-    read -rp "   Get SSL cert for $DOMAIN now? [Y/n] " ans
-    if [[ "${ans,,}" != "n" ]]; then
-        sudo certbot --nginx -d "$DOMAIN"
-    else
-        echo "   Skipped — site is HTTP-only. Run later:"
-        echo "   sudo certbot --nginx -d $DOMAIN"
+echo " SSL Setup"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+if command -v certbot &>/dev/null; then
+    read -rp "Get/renew SSL certificate for ${DOMAIN}? [y/N] " yn
+    if [[ "$yn" =~ ^[Yy]$ ]]; then
+        sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos \
+            --email "${SSL_EMAIL:-admin@mumtaz.digital}" --redirect
+        echo "✅ SSL certificate obtained"
     fi
+else
+    echo "  certbot not installed — skipping SSL"
+    echo "  Install: apt-get install certbot python3-certbot-nginx"
 fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅ Portal deploy complete!"
-echo "   Visit: https://${DOMAIN}"
-echo ""
-echo "   Also verify zaki-server is running:"
-echo "   pm2 list"
-echo "   curl http://localhost:8002/api/v1/health"
+echo " ✅ Marketplace deployed!"
+echo " URL: https://${DOMAIN}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

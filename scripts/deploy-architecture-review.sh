@@ -162,7 +162,7 @@ curl -sf -o /dev/null "http://localhost:8069/web/database/selector" \
     || { warn "Odoo HTTP not responding"; SMOKE_OK=0; }
 
 if systemctl is-enabled --quiet zaki-server 2>/dev/null; then
-    curl -sf -o /dev/null "http://localhost:8001/api/v1/health" \
+    curl -sf -o /dev/null "http://localhost:8002/api/v1/health" \
         && ok "zaki-server healthy" \
         || warn "zaki-server health check failed"
 fi
