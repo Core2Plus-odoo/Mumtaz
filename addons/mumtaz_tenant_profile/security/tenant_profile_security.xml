@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Group implication rules for tenant (customer) users.
+
+        Any internal Odoo user (base.group_user) automatically receives
+        CRM User → which now implies Lead Scraper User + Lead Nurture User.
+
+        Admins on the Mumtaz platform (control plane groups) are separate;
+        tenants never receive those groups.
+    -->
+
+    <!-- Every CRM user automatically gets Lead Scraper access -->
+    <record id="crm.group_crm_user" model="res.groups">
+        <field name="implied_ids" eval="[
+            (4, ref('mumtaz_lead_scraper.group_lead_scraper_user')),
+            (4, ref('mumtaz_lead_nurture.group_lead_nurture_user')),
+        ]"/>
+    </record>
+
+</odoo>
