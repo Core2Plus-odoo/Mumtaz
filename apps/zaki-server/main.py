@@ -6,7 +6,8 @@ Mumtaz Auth & AI API
 - Issues JWT used by all frontends
 """
 
-import os, json, re, time, sqlite3
+import os, json, re, time, sqlite3, secrets
+import urllib.request as urllib_request
 import xmlrpc.client
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone, timedelta
@@ -784,7 +785,6 @@ def require_admin(auth: dict = Depends(require_auth)) -> dict:
 @app.post("/api/v1/auth/forgot")
 def forgot_password(req: ForgotReq, background_tasks: BackgroundTasks = None):
     """Initiate password reset. Always returns 200 to prevent email enumeration."""
-    import secrets
     email = req.email.strip().lower()
     db    = get_db()
     row   = db.execute("SELECT name FROM users WHERE email=?", (email,)).fetchone()
@@ -953,11 +953,10 @@ class OnboardingReq(BaseModel):
 async def save_onboarding(req: OnboardingReq, auth: dict = Depends(require_auth)):
     """Persist a user's onboarding preferences (industry, products, agents,
     modules, team size). Idempotent — overwrites previous selection."""
-    import json as _json
     db = get_db()
     db.execute(
         "UPDATE users SET onboarding_json = ?, role = COALESCE(?, role) WHERE email = ?",
-        (_json.dumps(req.model_dump()), req.role, auth["email"]),
+        (json.dumps(req.model_dump()), req.role, auth["email"]),
     )
     db.commit()
     db.close()
@@ -966,7 +965,6 @@ async def save_onboarding(req: OnboardingReq, auth: dict = Depends(require_auth)
 @app.get("/api/v1/onboarding")
 async def get_onboarding(auth: dict = Depends(require_auth)):
     """Return the user's saved onboarding preferences (or null)."""
-    import json as _json
     db  = get_db()
     row = db.execute(
         "SELECT onboarding_json, role FROM users WHERE email = ?",
@@ -977,7 +975,7 @@ async def get_onboarding(auth: dict = Depends(require_auth)):
         return {"onboarding": None, "role": row["role"] if row else None}
     try:
         return {
-            "onboarding": _json.loads(row["onboarding_json"]),
+            "onboarding": json.loads(row["onboarding_json"]),
             "role": row["role"],
         }
     except Exception:
@@ -1355,8 +1353,7 @@ def admin_zatca_csr(auth: dict = Depends(require_admin)):
     seller = (settings.get("ZATCA_SELLER_NAME") or "").strip()
     if not vat or not seller:
         raise HTTPException(400, "Set ZATCA_VAT_NUMBER and ZATCA_SELLER_NAME first.")
-    import secrets as _sec
-    serial = "1-mumtaz|2-zaki|3-" + _sec.token_hex(8)
+    serial = "1-mumtaz|2-zaki|3-" + secrets.token_hex(8)
     pair = zatca_svc.generate_keypair_and_csr(
         common_name=seller, vat_number=vat,
         serial_number=serial, organization=seller,
@@ -1562,11 +1559,10 @@ def admin_list_users(auth: dict = Depends(require_admin)):
         ORDER BY created_at DESC
     """).fetchall()
     db.close()
-    import json as _json
     users = []
     for r in rows:
         try:
-            ob = _json.loads(r["onboarding_json"]) if r["onboarding_json"] else None
+            ob = json.loads(r["onboarding_json"]) if r["onboarding_json"] else None
         except Exception:
             ob = None
         users.append({
@@ -1592,10 +1588,6 @@ def admin_list_users(auth: dict = Depends(require_admin)):
 @app.post("/api/v1/admin/sync-erp")
 def admin_sync_erp(auth: dict = Depends(require_admin)):
     """Provision all active portal users (who have a company) into the ERP as tenants."""
-    import secrets as _secrets
-    import urllib.request as _url
-    import json as _json
-
     erp_url     = settings.get("ERP_API_URL",    "https://erp.mumtaz.digital")
     portal_key  = settings.get("PORTAL_API_KEY", "mumtaz-portal-key-change-me")
 
@@ -1613,22 +1605,22 @@ def admin_sync_erp(auth: dict = Depends(require_admin)):
         if row["erp_company_id"]:
             skipped.append({"email": row["email"], "erp_company_id": row["erp_company_id"]})
             continue
-        temp_pass = _secrets.token_urlsafe(10)
-        payload   = _json.dumps({
+        temp_pass = secrets.token_urlsafe(10)
+        payload   = json.dumps({
             "portal_api_key": portal_key,
             "company_name":   row["company"],
             "admin_email":    row["email"],
             "admin_password": temp_pass,
         }).encode()
         try:
-            req = _url.Request(
+            http_req = urllib_request.Request(
                 f"{erp_url}/api/portal/provision",
                 data=payload,
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
-            with _url.urlopen(req, timeout=20) as resp:
-                data = _json.loads(resp.read())
+            with urllib_request.urlopen(http_req, timeout=20) as resp:
+                data = json.loads(resp.read())
             cid = data.get("company_id")
             db2 = get_db()
             db2.execute("UPDATE users SET erp_company_id=? WHERE id=?", (cid, row["id"]))

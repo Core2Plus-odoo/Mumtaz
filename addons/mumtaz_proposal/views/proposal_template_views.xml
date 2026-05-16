@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Actions ──────────────────────────────────────────────────────────── -->
+
+    <record id="action_mumtaz_proposal_template" model="ir.actions.act_window">
+        <field name="name">Proposal Templates</field>
+        <field name="res_model">mumtaz.proposal.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first proposal template
+            </p>
+        </field>
+    </record>
+
+    <!-- ── Form View ────────────────────────────────────────────────────────── -->
+
+    <record id="view_mumtaz_proposal_template_form" model="ir.ui.view">
+        <field name="name">mumtaz.proposal.template.form</field>
+        <field name="model">mumtaz.proposal.template</field>
+        <field name="arch" type="xml">
+            <form string="Proposal Template">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Template name..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <field name="description" placeholder="Short description of this template..."/>
+                        <field name="active" invisible="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Lines" name="lines">
+                            <field name="line_ids">
+                                <list string="Template Lines" editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id"/>
+                                    <field name="name"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit" widget="monetary"/>
+                                    <field name="discount"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Terms &amp; Conditions" name="terms">
+                            <field name="terms_conditions" widget="html"
+                                   placeholder="Default terms and conditions for proposals using this template..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List View ────────────────────────────────────────────────────────── -->
+
+    <record id="view_mumtaz_proposal_template_list" model="ir.ui.view">
+        <field name="name">mumtaz.proposal.template.list</field>
+        <field name="model">mumtaz.proposal.template</field>
+        <field name="arch" type="xml">
+            <list string="Proposal Templates">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search View ──────────────────────────────────────────────────────── -->
+
+    <record id="view_mumtaz_proposal_template_search" model="ir.ui.view">
+        <field name="name">mumtaz.proposal.template.search</field>
+        <field name="model">mumtaz.proposal.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Templates">
+                <field name="name"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Archived" name="archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+</odoo>
