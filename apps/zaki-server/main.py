@@ -349,6 +349,78 @@ def odoo_read_user(odoo_uid: int, db: str = None) -> dict:
         _record_odoo_error("read_user", e)
         return {}
 
+def _odoo_create_saas_invoice(email: str, name: str | None, plan_key: str, db: str = None) -> int | None:
+    """Create and post an Odoo customer invoice for a SaaS plan change.
+
+    - Non-blocking caller: always returns (None on any error, int on success).
+    - Skips free/trial plans (price == 0).
+    - Finds or creates the res.partner by email.
+    - Finds or creates a service product per plan.
+    - Applies the first 15% sale tax found (ZATCA VAT), posts the invoice.
+    """
+    plan = PLANS.get(plan_key)
+    if not plan or plan.get("price", 0) == 0:
+        return None
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
+    if not admin_uid:
+        print(f"[Invoice] Odoo admin auth failed — cannot create invoice for {email}")
+        return None
+    try:
+        obj = _odoo_object()
+
+        # ── partner ──────────────────────────────────────────────────
+        pids = obj.execute_kw(_db, admin_uid, ODOO_PASS, "res.partner", "search",
+                              [[["email", "=", email]]], {"limit": 1})
+        if pids:
+            partner_id = pids[0]
+        else:
+            partner_id = obj.execute_kw(_db, admin_uid, ODOO_PASS, "res.partner", "create", [{
+                "name": name or email,
+                "email": email,
+                "customer_rank": 1,
+            }])
+
+        # ── product ───────────────────────────────────────────────────
+        product_name = f"Mumtaz {plan['name']} Plan"
+        prods = obj.execute_kw(_db, admin_uid, ODOO_PASS, "product.product", "search",
+                               [[["name", "=", product_name]]], {"limit": 1})
+        product_id = prods[0] if prods else obj.execute_kw(
+            _db, admin_uid, ODOO_PASS, "product.product", "create", [{
+                "name": product_name, "type": "service",
+                "sale_ok": True, "purchase_ok": False,
+            }]
+        )
+
+        # ── 15% VAT tax ───────────────────────────────────────────────
+        tax_ids = obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.tax", "search",
+                                 [[["amount", "=", 15.0], ["type_tax_use", "=", "sale"],
+                                   ["active", "=", True]]], {"limit": 1})
+        tax_cmd = [(6, 0, tax_ids)] if tax_ids else []
+
+        # ── invoice ───────────────────────────────────────────────────
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        inv_id = obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.move", "create", [{
+            "move_type":  "out_invoice",
+            "partner_id": partner_id,
+            "invoice_date": today,
+            "ref": f"SAAS-{plan_key.upper()}-{email[:30]}",
+            "invoice_line_ids": [(0, 0, {
+                "name":       f"Mumtaz {plan['name']} — monthly SaaS subscription",
+                "product_id": product_id,
+                "quantity":   1.0,
+                "price_unit": float(plan["price"]),
+                **({"tax_ids": tax_cmd} if tax_cmd else {}),
+            })],
+        }])
+        obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.move", "action_post", [[inv_id]])
+        print(f"[Invoice] #{inv_id} created → {email} {plan['name']} {plan['price']} {plan['currency']}")
+        return inv_id
+    except Exception as e:
+        _record_odoo_error("create_saas_invoice", e)
+        print(f"[Invoice] Failed for {email}: {e}")
+        return None
+
 def _make_tenant_code(company: str) -> str:
     slug = re.sub(r"[^a-z0-9]", "", company.lower())[:8] or "co"
     suffix = str(int(time.time()))[-5:]
@@ -1058,16 +1130,18 @@ class ChangePlanReq(BaseModel):
     plan: str
 
 @app.post("/api/v1/plan")
-async def change_plan(req: ChangePlanReq, auth: dict = Depends(require_auth)):
-    """Change the user's plan. No payment integration yet — this just
-    updates the SQLite record so the rest of the platform reflects it.
-    A real implementation would create a Stripe/Tap subscription here."""
+async def change_plan(req: ChangePlanReq, background_tasks: BackgroundTasks,
+                      auth: dict = Depends(require_auth)):
+    """Change the user's plan and raise an Odoo SaaS invoice in the background."""
     if req.plan not in PLANS:
         raise HTTPException(400, f"Unknown plan '{req.plan}'. Valid: {list(PLANS.keys())}")
     db = get_db()
+    row = db.execute("SELECT name FROM users WHERE email=?", (auth["email"],)).fetchone()
+    user_name = row["name"] if row else None
     db.execute("UPDATE users SET plan=? WHERE email=?", (req.plan, auth["email"]))
     db.commit()
     db.close()
+    background_tasks.add_task(_odoo_create_saas_invoice, auth["email"], user_name, req.plan)
     return {"ok": True, "plan": PLANS[req.plan]}
 
 # ── ZATCA / e-invoicing ──────────────────────────────────────────────
@@ -1423,9 +1497,9 @@ def billing_portal(auth: dict = Depends(require_auth)):
     return {"url": url}
 
 @app.post("/api/v1/billing/webhook")
-async def billing_webhook(request: Request):
+async def billing_webhook(request: Request, background_tasks: BackgroundTasks):
     """Receive Stripe webhook events. Updates the user's plan in SQLite when
-    a subscription is created, updated, or deleted.
+    a subscription is created, updated, or deleted, and raises an Odoo invoice.
 
     Idempotent: each Stripe event ID is recorded on first processing;
     duplicates are acknowledged without re-applying the plan change."""
@@ -1456,9 +1530,12 @@ async def billing_webhook(request: Request):
         email    = billing_svc.email_from_event(obj)
         if plan_key and email:
             db = get_db()
+            row = db.execute("SELECT name FROM users WHERE email=?", (email.lower(),)).fetchone()
+            user_name = row["name"] if row else None
             db.execute("UPDATE users SET plan=? WHERE email=?", (plan_key, email.lower()))
             db.commit(); db.close()
             print(f"[billing] subscription {etype} → {email} = {plan_key}")
+            background_tasks.add_task(_odoo_create_saas_invoice, email.lower(), user_name, plan_key)
     elif etype == "customer.subscription.deleted":
         email = billing_svc.email_from_event(obj)
         if email:
@@ -1609,14 +1686,19 @@ class AdminPlanReq(BaseModel):
     plan: str
 
 @app.post("/api/v1/admin/users/{user_id}/plan")
-def admin_change_user_plan(user_id: int, req: AdminPlanReq, auth: dict = Depends(require_admin)):
+def admin_change_user_plan(user_id: int, req: AdminPlanReq,
+                           background_tasks: BackgroundTasks,
+                           auth: dict = Depends(require_admin)):
     if req.plan not in PLANS:
         raise HTTPException(400, f"Unknown plan '{req.plan}'.")
     db = get_db()
-    if not db.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone():
+    row = db.execute("SELECT email, name FROM users WHERE id=?", (user_id,)).fetchone()
+    if not row:
         db.close(); raise HTTPException(404, "User not found.")
+    email, name = row["email"], row["name"]
     db.execute("UPDATE users SET plan=? WHERE id=?", (req.plan, user_id))
     db.commit(); db.close()
+    background_tasks.add_task(_odoo_create_saas_invoice, email, name, req.plan)
     return {"ok": True, "plan": PLANS[req.plan]}
 
 @app.get("/api/v1/tenant/me")
