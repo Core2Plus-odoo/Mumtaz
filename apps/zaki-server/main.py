@@ -1170,7 +1170,6 @@ class ZatcaQRReq(BaseModel):
 def zatca_generate_qr(req: ZatcaQRReq, auth: dict = Depends(require_auth)):
     """Generate a ZATCA-compliant base64 QR string for a simplified invoice.
     Falls back to env defaults when seller_name/vat_number aren't supplied."""
-    from datetime import datetime, timezone
     if not zatca_svc.is_configured() and not (req.seller_name and req.vat_number):
         raise HTTPException(400, "ZATCA not configured. Provide seller_name + vat_number, "
                                   "or set ZATCA_SELLER_NAME + ZATCA_VAT_NUMBER on the server.")
@@ -1835,7 +1834,7 @@ async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
         raise HTTPException(404, "User has no Odoo company assigned.")
 
     # Last 12 months of posted invoices + bills for this company
-    cutoff = (datetime.utcnow() - timedelta(days=365)).date().isoformat()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=365)).date().isoformat()
     domain_inv = [
         ["company_id", "=", company_id],
         ["move_type", "in", ["out_invoice", "out_refund"]],
