@@ -16,7 +16,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC_DIR="${REPO_ROOT}/addons"
 DEST_DIR="/opt/custom_addons"
-ODOO_BIN="${ODOO_BIN:-/usr/bin/odoo}"
+ODOO_BIN="${ODOO_BIN:-$(command -v odoo || command -v odoo-bin || echo '/usr/bin/odoo')}"
 ODOO_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
 ODOO_USER="${ODOO_USER:-odoo}"
 
@@ -52,12 +52,14 @@ if [[ -f "$ODOO_CONF" ]]; then
     echo "  ✅ proxy_mode = True"
 
     # dbfilter — allow Mumtaz_ERP (admin) and all mt_* tenant databases
+    # Use # as delimiter so the | in the filter value is not misread by sed
+    DBFILTER='dbfilter = ^(Mumtaz_ERP|mt_)'
     if grep -q 'dbfilter' "$ODOO_CONF"; then
-        sudo sed -i 's|dbfilter.*|dbfilter = ^(Mumtaz_ERP|mt_)|' "$ODOO_CONF"
+        sudo sed -i "s#dbfilter.*#${DBFILTER}#" "$ODOO_CONF"
     else
-        echo "dbfilter = ^(Mumtaz_ERP|mt_)" | sudo tee -a "$ODOO_CONF" > /dev/null
+        echo "$DBFILTER" | sudo tee -a "$ODOO_CONF" > /dev/null
     fi
-    echo "  ✅ dbfilter = ^(Mumtaz_ERP|mt_)"
+    echo "  ✅ ${DBFILTER}"
 fi
 
 echo "→ Checking odoo.conf addons_path…"
