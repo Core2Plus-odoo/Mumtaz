@@ -40,7 +40,26 @@ sudo rsync -av --delete \
 sudo chown -R "${ODOO_USER}:${ODOO_USER}" "$DEST_DIR"
 echo "✅ Addons synced to $DEST_DIR"
 
-# ── 2. Patch odoo.conf — ensure DEST_DIR is in addons_path ───────────
+# ── 2. Patch odoo.conf — proxy_mode + dbfilter + addons_path ─────────
+echo "→ Checking odoo.conf settings…"
+if [[ -f "$ODOO_CONF" ]]; then
+    # proxy_mode — required when Odoo sits behind nginx
+    if grep -q 'proxy_mode' "$ODOO_CONF"; then
+        sudo sed -i 's/proxy_mode.*/proxy_mode = True/' "$ODOO_CONF"
+    else
+        echo "proxy_mode = True" | sudo tee -a "$ODOO_CONF" > /dev/null
+    fi
+    echo "  ✅ proxy_mode = True"
+
+    # dbfilter — allow any database (needed for multi-tenant + custom domains)
+    if ! grep -q 'dbfilter' "$ODOO_CONF"; then
+        echo "dbfilter = .*" | sudo tee -a "$ODOO_CONF" > /dev/null
+        echo "  ✅ dbfilter = .*"
+    else
+        echo "  ✅ dbfilter already set"
+    fi
+fi
+
 echo "→ Checking odoo.conf addons_path…"
 if [[ -f "$ODOO_CONF" ]]; then
     current_path=$(grep -E '^addons_path\s*=' "$ODOO_CONF" | sed 's/.*=\s*//' | tr -d ' ')
