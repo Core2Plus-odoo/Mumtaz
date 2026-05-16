@@ -1,49 +1,337 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>About | Mumtaz</title>
-  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
-  <link rel="icon" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mumtaz is building the intelligence layer for GCC enterprise operations — combining ERP depth, AI-native decisioning, and embedded finance in one platform." />
+  <title>About Mumtaz — The ERP That Thinks With Your Business</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } }
+
+    .page-hero { background: var(--navy); position: relative; overflow: hidden; padding: 100px 0 80px; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 10% 50%, rgba(200,146,42,.14) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 80% 30%, rgba(0,166,147,.10) 0%, transparent 55%); }
+    .page-hero .inner { position: relative; z-index: 1; max-width: 760px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(200,146,42,.14); border: 1px solid rgba(200,146,42,.28); color: var(--gold); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.4rem, 4vw, 3.6rem); font-weight: 400; line-height: 1.1; color: #fff; margin-bottom: 20px; }
+    .page-hero h1 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-hero p { font-size: 1.0625rem; color: rgba(255,255,255,.52); max-width: 560px; line-height: 1.8; }
+
+    .section { padding: 80px 0; }
+    .section-alt { padding: 80px 0; background: var(--navy2); }
+    .section-label { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    h2 { font-family: 'Instrument Serif', serif; font-size: clamp(1.9rem, 3vw, 2.7rem); font-weight: 400; line-height: 1.15; color: var(--ink); margin-bottom: 16px; }
+    .dark h2 { color: #fff; }
+    .section-lead { font-size: 1.05rem; color: var(--ink3); max-width: 580px; line-height: 1.8; margin-bottom: 56px; }
+    .dark .section-lead { color: rgba(255,255,255,.5); }
+
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 32px; }
+    .card-dark { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09); border-radius: var(--r-lg); padding: 32px; }
+    .card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 16px; }
+    .icon-gold { background: rgba(200,146,42,.12); }
+    .icon-teal { background: rgba(0,166,147,.12); }
+    .card h3 { font-family: 'Instrument Serif', serif; font-size: 1.25rem; color: var(--ink2); margin-bottom: 10px; }
+    .card-dark h3 { color: #fff; }
+    .card p { font-size: .9375rem; color: var(--ink3); line-height: 1.7; }
+    .card-dark p { color: rgba(255,255,255,.48); }
+
+    .stat-row { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 48px; padding-top: 48px; border-top: 1px solid var(--border); }
+    .stat { flex: 1; min-width: 140px; }
+    .stat-num { font-family: 'Instrument Serif', serif; font-size: 2.4rem; color: var(--gold); line-height: 1; }
+    .stat-label { font-size: .83rem; color: var(--ink3); margin-top: 4px; }
+
+    .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 720px) { .team-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 500px) { .team-grid { grid-template-columns: 1fr; } }
+    .team-card { background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 24px; }
+    .team-avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--navy), var(--ink2)); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1.3rem; color: var(--gold); margin-bottom: 14px; }
+    .team-name { font-weight: 600; color: var(--ink2); margin-bottom: 2px; }
+    .team-title { font-size: .82rem; color: var(--teal); font-weight: 500; margin-bottom: 10px; }
+    .team-bio { font-size: .875rem; color: var(--ink3); line-height: 1.65; }
+
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .tl-item { display: flex; gap: 28px; padding: 28px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .tl-item:last-child { border-bottom: none; }
+    .tl-year { font-family: 'Instrument Serif', serif; font-size: 1.5rem; color: var(--gold); min-width: 80px; padding-top: 2px; }
+    .tl-content h4 { font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .tl-content p { font-size: .9rem; color: rgba(255,255,255,.48); line-height: 1.7; }
+
+    .cta-section { background: linear-gradient(135deg, var(--navy) 0%, #0a1628 100%); padding: 100px 0; text-align: center; }
+    .cta-section h2 { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 3.5vw, 3rem); color: #fff; margin-bottom: 18px; }
+    .cta-section h2 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .cta-section p { color: rgba(255,255,255,.52); font-size: 1.05rem; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; box-shadow: 0 4px 28px rgba(200,146,42,.35); transition: opacity .15s, transform .15s; }
+    .btn-primary:hover { opacity: .91; transform: translateY(-2px); }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.8); font-weight: 600; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: background .15s; }
+    .btn-ghost:hover { background: rgba(255,255,255,.12); }
+
+    footer { background: var(--navy); padding: 64px 0 32px; color: rgba(255,255,255,.48); font-size: .875rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+    @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .footer-brand-name { font-weight: 600; font-size: 1rem; color: #fff; }
+    .footer-tagline { font-size: .84rem; color: rgba(255,255,255,.35); line-height: 1.7; max-width: 240px; }
+    footer h5 { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.32); margin-bottom: 14px; }
+    footer a { display: block; margin-bottom: 10px; color: rgba(255,255,255,.52); font-size: .875rem; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.07); padding-top: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-bottom-links { display: flex; gap: 24px; }
+    .footer-bottom-links a { margin: 0; }
+  </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle>Menu</button>
-    <nav class="nav-menu" data-nav-menu>
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
-      <a class="nav-link" href="pricing.html">Pricing</a>
-      <a class="nav-link" href="docs.html">Docs</a>
-      <a class="nav-link active" href="about.html">About</a>
-      <a class="nav-link" href="blog.html">Blog</a>
-      <a class="nav-link" href="contact.html">Contact</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/index.html" class="brand">
+      <div class="brand-mark">م</div>
+      <span>Mumtaz</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+      <li><a href="/about.html" class="active">About</a></li>
+      <li><a href="/blog.html">Blog</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="/contact.html" class="btn-nav-ghost">Contact</a>
+      <a href="/demo.html" class="btn-nav-primary">Book Demo →</a>
     </div>
   </div>
-</header>
-<main>
+</nav>
 
-<section class="hero"><div class="container"><div class="section-header reveal"><span class="badge">About Mumtaz</span><h1>Building the intelligence layer for enterprise operations</h1><p>We combine ERP depth with AI-native decisioning and finance connectivity.</p></div><div class="grid-3"><article class="glass card reveal"><h3>Mission</h3><p>Empower GCC enterprises with faster, safer, and smarter operations.</p></article><article class="glass card reveal"><h3>Values</h3><p>Trust, execution speed, domain depth, and measurable business outcomes.</p></article><article class="glass card reveal"><h3>Impact</h3><p>500+ users, multi-entity deployments, and proven finance activation results.</p></article></div></div></section>
-<section class="section"><div class="container grid-2"><article class="glass card reveal"><h3>Leadership Team</h3><p>Cross-functional experts in ERP architecture, banking products, and AI systems.</p></article><article class="glass card reveal"><h3>Awards & Recognition</h3><p>Recognized for digital transformation and embedded finance innovation in the region.</p></article></div></section>
-</main>
-<footer class="footer">
-  <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
-    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
-    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
-    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+<section class="page-hero">
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <span class="eyebrow">Our Story</span>
+      <h1>Building the intelligence layer for <em>GCC enterprise</em></h1>
+      <p>We started with a simple observation: businesses in the Gulf were running on ERP systems that didn't speak their language — not Arabic, not VAT, not ZATCA, not the reality of multi-entity operations across borders. Mumtaz was built to fix that.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">Why we exist</div>
+    <h2>ERP built for this region, not retrofitted to it</h2>
+    <p class="section-lead">The GCC is one of the world's fastest-growing economic zones. It deserves software that's native to its regulatory environment, languages, and business patterns.</p>
+
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon icon-gold">🎯</div>
+        <h3>Mission</h3>
+        <p>Empower GCC and South Asian businesses with ERP that thinks alongside them — surfacing insights before they're asked, flagging risks before they surface, and automating the workflows that drain teams.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-teal">⚖️</div>
+        <h3>Compliance-first</h3>
+        <p>ZATCA Phase 2 e-invoicing, UAE VAT, Saudi VAT, withholding tax — built in from day one, not bolted on. Our compliance layer updates automatically when regulations change.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-gold">🤝</div>
+        <h3>Partner model</h3>
+        <p>Banks, free zones, and chambers of commerce can white-label the full Mumtaz platform, earning recurring revenue while their members get world-class ERP at zero deployment friction.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-num">AED 2.4B+</div>
+        <div class="stat-label">Transactions processed</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">7</div>
+        <div class="stat-label">Countries covered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">500+</div>
+        <div class="stat-label">Active business users</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">&lt;30 min</div>
+        <div class="stat-label">Average onboarding time</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-alt dark">
+  <div class="wrap">
+    <div class="section-label">Our journey</div>
+    <h2 style="color:#fff;">From idea to infrastructure</h2>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-year">2022</div>
+        <div class="tl-content">
+          <h4>Founded in Dubai</h4>
+          <p>Team of ERP architects, ex-bankers, and AI engineers came together after recognising a gap in locally-built, regulation-aware business software for the Gulf.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2023</div>
+        <div class="tl-content">
+          <h4>First enterprise deployments</h4>
+          <p>Launched multi-entity ERP with full Arabic localisation and ZATCA Phase 1 e-invoicing across Saudi Arabia and UAE. First 50 business customers onboarded.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2024</div>
+        <div class="tl-content">
+          <h4>ZAKI AI + bank partnerships</h4>
+          <p>Introduced ZAKI, the conversational AI agent embedded in ERP. Signed first white-label agreements with regional banks and free zone authorities.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2025</div>
+        <div class="tl-content">
+          <h4>B2B Marketplace &amp; embedded finance</h4>
+          <p>Launched the Mumtaz B2B Marketplace connecting buyers and suppliers with financing embedded at the point of purchase. Expanded to Pakistan and Qatar.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2026</div>
+        <div class="tl-content">
+          <h4>Multi-country SaaS platform</h4>
+          <p>Full multi-tenant SaaS with partner control plane, per-tenant database isolation, and full ZATCA Phase 2 clearance. Now serving 7 countries.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-label">The team</div>
+    <h2>Built by operators who've been in your seat</h2>
+    <p class="section-lead">Our team combines deep ERP implementation experience, banking product design, and AI systems research.</p>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">A</div>
+        <div class="team-name">Ahmad Al-Sayed</div>
+        <div class="team-title">CEO & Co-founder</div>
+        <p class="team-bio">15 years in ERP implementation across Saudi Arabia and UAE. Former partner at a Big 4 digital transformation practice.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">S</div>
+        <div class="team-name">Sana Mirza</div>
+        <div class="team-title">CTO & Co-founder</div>
+        <p class="team-bio">AI systems architect. Previously led ML infrastructure at a major GCC digital bank. Expert in enterprise LLM integration.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">F</div>
+        <div class="team-name">Faisal Al-Rashid</div>
+        <div class="team-title">CPO</div>
+        <p class="team-bio">Product leader with deep expertise in SME banking journeys. Designed embedded finance flows adopted by 3 regional banks.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">L</div>
+        <div class="team-name">Layla Hassan</div>
+        <div class="team-title">VP Finance & Compliance</div>
+        <p class="team-bio">Chartered accountant and ZATCA-certified. Architected the e-invoicing compliance layer now used by hundreds of Saudi businesses.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">O</div>
+        <div class="team-name">Omar Khalid</div>
+        <div class="team-title">VP Partnerships</div>
+        <p class="team-bio">Led channel partnerships at two GCC fintechs. Manages relationships with banks, free zones, and chambers across the region.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">N</div>
+        <div class="team-name">Nadia Qureshi</div>
+        <div class="team-title">Head of Customer Success</div>
+        <p class="team-bio">Onboarded 200+ businesses onto enterprise ERP platforms. Holds the record for fastest Mumtaz deployment: 19 minutes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Ready to see <em>Mumtaz</em> in action?</h2>
+    <p>Book a 30-minute live demo and see how your business runs differently with AI-powered ERP.</p>
+    <div class="cta-row">
+      <a href="/demo.html" class="btn-primary">Book a live demo →</a>
+      <a href="/contact.html" class="btn-ghost">Talk to our team</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span class="footer-brand-name">Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="/contact.html">Partner Program</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
   </div>
 </footer>
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
+
 </body>
 </html>

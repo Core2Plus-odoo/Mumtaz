@@ -1,49 +1,317 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Documentation | Mumtaz</title>
-  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
-  <link rel="icon" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mumtaz documentation — setup guides, API reference, integration patterns, and admin playbooks for GCC enterprise operators." />
+  <title>Documentation — Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --teal: #00A693; --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } }
+
+    .page-hero { background: var(--navy); position: relative; overflow: hidden; padding: 80px 0 60px; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 60% at 90% 40%, rgba(200,146,42,.12) 0%, transparent 55%); }
+    .page-hero .inner { position: relative; z-index: 1; max-width: 700px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,166,147,.14); border: 1px solid rgba(0,166,147,.28); color: var(--teal); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 24px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 400; line-height: 1.1; color: #fff; margin-bottom: 18px; }
+    .page-hero p { font-size: 1rem; color: rgba(255,255,255,.52); max-width: 520px; line-height: 1.8; margin-bottom: 32px; }
+    .search-bar { display: flex; gap: 10px; max-width: 480px; }
+    .search-input { flex: 1; font-family: 'DM Sans', sans-serif; font-size: .9375rem; padding: 13px 20px; border-radius: 100px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; outline: none; }
+    .search-input::placeholder { color: rgba(255,255,255,.3); }
+    .search-input:focus { border-color: rgba(0,166,147,.5); }
+
+    .docs-layout { display: grid; grid-template-columns: 240px 1fr; gap: 40px; padding: 64px 0; }
+    @media (max-width: 800px) { .docs-layout { grid-template-columns: 1fr; } }
+
+    .sidebar { position: sticky; top: 82px; align-self: start; }
+    .sidebar-section { margin-bottom: 28px; }
+    .sidebar-title { font-size: .72rem; font-weight: 700; letter-spacing: .10em; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; }
+    .sidebar-link { display: block; font-size: .875rem; color: var(--ink3); padding: 5px 0; transition: color .15s; }
+    .sidebar-link:hover, .sidebar-link.active { color: var(--gold); }
+    .sidebar-link.active { font-weight: 500; }
+
+    .docs-content {}
+    .doc-section { margin-bottom: 56px; }
+    .doc-section h2 { font-family: 'Instrument Serif', serif; font-size: 1.7rem; color: var(--ink2); margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .doc-section p { font-size: .9375rem; color: var(--ink3); line-height: 1.8; margin-bottom: 16px; }
+    .doc-section h3 { font-size: 1rem; font-weight: 600; color: var(--ink2); margin: 24px 0 8px; }
+
+    .doc-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    @media (max-width: 600px) { .doc-cards { grid-template-columns: 1fr; } }
+    .doc-card { background: #fff; border: 1px solid var(--border); border-radius: var(--r); padding: 20px; transition: border-color .15s, transform .15s; cursor: pointer; }
+    .doc-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    .doc-card-icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .doc-card-title { font-weight: 600; font-size: .9375rem; color: var(--ink2); margin-bottom: 4px; }
+    .doc-card-desc { font-size: .84rem; color: var(--ink3); line-height: 1.6; }
+
+    code { font-family: 'DM Mono', monospace; font-size: .83rem; background: rgba(7,13,26,.07); border: 1px solid var(--border); padding: 2px 7px; border-radius: 5px; color: var(--ink2); }
+    pre { background: var(--navy); border-radius: var(--r); padding: 20px 24px; margin: 16px 0; overflow-x: auto; }
+    pre code { background: none; border: none; padding: 0; color: rgba(255,255,255,.8); font-size: .84rem; }
+
+    .badge { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 100px; margin-left: 8px; vertical-align: middle; }
+    .badge-new { background: rgba(0,166,147,.15); color: var(--teal); }
+    .badge-beta { background: rgba(200,146,42,.15); color: var(--gold); }
+
+    footer { background: var(--navy); border-top: 1px solid rgba(255,255,255,.07); padding: 64px 0 32px; color: rgba(255,255,255,.48); font-size: .875rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+    @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .footer-brand-name { font-weight: 600; font-size: 1rem; color: #fff; }
+    .footer-tagline { font-size: .84rem; color: rgba(255,255,255,.35); line-height: 1.7; max-width: 240px; }
+    footer h5 { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.32); margin-bottom: 14px; }
+    footer a { display: block; margin-bottom: 10px; color: rgba(255,255,255,.52); font-size: .875rem; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.07); padding-top: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-bottom-links { display: flex; gap: 24px; }
+    .footer-bottom-links a { margin: 0; }
+  </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle>Menu</button>
-    <nav class="nav-menu" data-nav-menu>
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
-      <a class="nav-link" href="pricing.html">Pricing</a>
-      <a class="nav-link active" href="docs.html">Docs</a>
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link" href="blog.html">Blog</a>
-      <a class="nav-link" href="contact.html">Contact</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/index.html" class="brand">
+      <div class="brand-mark">م</div>
+      <span>Mumtaz</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/docs.html" class="active">Docs</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="/contact.html" class="btn-nav-ghost">Contact</a>
+      <a href="/demo.html" class="btn-nav-primary">Book Demo →</a>
     </div>
   </div>
-</header>
-<main>
+</nav>
 
-<section class="hero"><div class="container"><div class="section-header reveal"><span class="badge">Documentation</span><h1>Everything your team needs to launch confidently</h1></div><div class="grid-3"><article class="glass card reveal"><h3>Getting Started</h3><p>Tenant setup, workspace provisioning, users, and permissions.</p></article><article class="glass card reveal"><h3>API Reference</h3><p>Authentication, usage limits, and endpoint examples.</p></article><article class="glass card reveal"><h3>Integration Guides</h3><p>Banking APIs, payment gateways, and BI tool integrations.</p></article></div></div></section>
-<section class="section"><div class="container grid-2"><article class="glass card reveal"><h3>Portal Guide</h3><p>Best practices for configuring company profiles and automations.</p></article><article class="glass card reveal"><h3>Video Tutorials</h3><p>Step-by-step walkthroughs for administrators and operators.</p></article></div></section>
-</main>
-<footer class="footer">
-  <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
-    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
-    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
-    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+<section class="page-hero">
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <span class="eyebrow">Documentation</span>
+      <h1>Everything you need to launch and operate confidently</h1>
+      <p>Step-by-step guides, API reference, integration patterns, and compliance playbooks — all in one place.</p>
+      <div class="search-bar">
+        <input type="search" class="search-input" placeholder="Search documentation…" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="docs-layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <a href="#quickstart" class="sidebar-link active">Quick Start</a>
+        <a href="#tenant-setup" class="sidebar-link">Tenant Setup</a>
+        <a href="#users" class="sidebar-link">Users &amp; Roles</a>
+        <a href="#billing" class="sidebar-link">Billing</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">ERP Modules</div>
+        <a href="#accounting" class="sidebar-link">Accounting</a>
+        <a href="#crm" class="sidebar-link">CRM</a>
+        <a href="#inventory" class="sidebar-link">Inventory</a>
+        <a href="#hr" class="sidebar-link">HR &amp; Payroll</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">ZAKI AI</div>
+        <a href="#zaki-intro" class="sidebar-link">Introduction</a>
+        <a href="#zaki-prompts" class="sidebar-link">Prompt Examples</a>
+        <a href="#zaki-api" class="sidebar-link">API Access</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Compliance</div>
+        <a href="#zatca" class="sidebar-link">ZATCA Phase 2</a>
+        <a href="#uae-vat" class="sidebar-link">UAE VAT</a>
+        <a href="#ct" class="sidebar-link">Corporate Tax</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Integrations</div>
+        <a href="#api-ref" class="sidebar-link">API Reference</a>
+        <a href="#webhooks" class="sidebar-link">Webhooks</a>
+        <a href="#banking-api" class="sidebar-link">Banking APIs</a>
+      </div>
+    </aside>
+
+    <main class="docs-content">
+
+      <div class="doc-section" id="quickstart">
+        <h2>Quick Start</h2>
+        <p>Get your Mumtaz workspace running in under 30 minutes. This guide covers provisioning, initial configuration, and your first transaction.</p>
+
+        <div class="doc-cards">
+          <div class="doc-card">
+            <div class="doc-card-icon">🚀</div>
+            <div class="doc-card-title">Workspace Provisioning</div>
+            <div class="doc-card-desc">Sign up, select your plan, and have a live ERP environment in minutes.</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-icon">🏢</div>
+            <div class="doc-card-title">Company Profile</div>
+            <div class="doc-card-desc">Set legal name, tax registration numbers, fiscal year, and base currency.</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-icon">👥</div>
+            <div class="doc-card-title">Invite Your Team</div>
+            <div class="doc-card-desc">Add users, assign roles, and configure department-level permissions.</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-icon">💳</div>
+            <div class="doc-card-title">First Transaction</div>
+            <div class="doc-card-desc">Create a customer, raise an invoice, and record payment in under 5 minutes.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-section" id="zatca">
+        <h2>ZATCA Phase 2 Integration <span class="badge badge-new">Updated 2026</span></h2>
+        <p>All Mumtaz plans include built-in ZATCA Phase 2 clearance integration. The following steps walk you through onboarding your CCSID and configuring automatic clearance.</p>
+
+        <h3>Prerequisites</h3>
+        <p>You will need: your Saudi VAT registration number (15 digits), your ZATCA portal credentials, and a valid CCSID certificate. Mumtaz handles the CSR generation automatically.</p>
+
+        <h3>Configuration</h3>
+        <p>Navigate to <strong>Settings → Compliance → E-Invoicing</strong>. Enter your VAT number and click <strong>Generate CSR</strong>. Mumtaz will create a cryptographic signing key pair and display the CSR for submission to FATOORAH.</p>
+
+        <pre><code># ZATCA e-invoice structure (simplified)
+{
+  "invoiceTypeCode": "388",
+  "documentCurrencyCode": "SAR",
+  "taxCurrencyCode": "SAR",
+  "invoiceLines": [...],
+  "taxTotal": { "taxAmount": "15.00" }
+}</code></pre>
+
+        <h3>Clearance flow</h3>
+        <p>Standard invoices (B2B above SAR 1,000) go through <strong>clearance mode</strong> — Mumtaz sends the signed XML to FATOORAH before delivery to the buyer and stores the cleared XML with the ZATCA stamp. Below-threshold and B2C invoices go through <strong>reporting mode</strong> automatically.</p>
+      </div>
+
+      <div class="doc-section" id="api-ref">
+        <h2>API Reference <span class="badge badge-beta">Beta</span></h2>
+        <p>The Mumtaz REST API lets you read and write ERP data from external systems. All endpoints require a Bearer token issued through the auth endpoint.</p>
+
+        <h3>Authentication</h3>
+        <pre><code>POST /api/v1/auth/token
+Content-Type: application/json
+
+{
+  "email": "admin@yourcompany.com",
+  "password": "••••••••"
+}
+
+# Response
+{
+  "access_token": "eyJ...",
+  "token_type": "Bearer",
+  "odoo_db": "mt_yourcompany_a1b2c3"
+}</code></pre>
+
+        <h3>Common endpoints</h3>
+        <p>Once authenticated, pass <code>Authorization: Bearer {token}</code> on every request.</p>
+        <pre><code>GET  /api/v1/invoices          # List invoices
+POST /api/v1/invoices          # Create invoice
+GET  /api/v1/invoices/{id}     # Get invoice details
+POST /api/v1/invoices/{id}/pay # Record payment
+
+GET  /api/v1/customers         # List customers
+GET  /api/v1/products          # List products
+GET  /api/v1/reports/pl        # Profit &amp; loss summary</code></pre>
+
+        <h3>Rate limits</h3>
+        <p>Starter: 60 requests/minute. Professional: 300 requests/minute. Enterprise: custom. Rate limit headers are included in every response: <code>X-RateLimit-Remaining</code> and <code>X-RateLimit-Reset</code>.</p>
+      </div>
+
+      <div class="doc-section" id="zaki-intro">
+        <h2>ZAKI AI — Getting Started</h2>
+        <p>ZAKI is an AI agent embedded directly in your Mumtaz workspace. It has read access to all your ERP data and can answer questions in plain language, run reports, and flag anomalies.</p>
+
+        <h3>How to access ZAKI</h3>
+        <p>Click the <strong>ZAKI</strong> button in the top-right of any ERP screen, or press <code>Cmd+K</code> (Mac) / <code>Ctrl+K</code> (Windows) from anywhere in the platform.</p>
+
+        <h3>Example prompts</h3>
+        <div class="doc-cards">
+          <div class="doc-card"><div class="doc-card-title">"What's my cash position today?"</div><div class="doc-card-desc">ZAKI pulls bank balances, outstanding receivables, and payables due this week.</div></div>
+          <div class="doc-card"><div class="doc-card-title">"Which customers are overdue by more than 30 days?"</div><div class="doc-card-desc">Returns an aged receivables breakdown with contact details.</div></div>
+          <div class="doc-card"><div class="doc-card-title">"Show me gross margin by product line this quarter."</div><div class="doc-card-desc">Generates a formatted table with variance vs. prior quarter.</div></div>
+          <div class="doc-card"><div class="doc-card-title">"Draft a payment reminder for invoice INV-1042."</div><div class="doc-card-desc">Writes a professional email in Arabic or English, ready to send.</div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span class="footer-brand-name">Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="/contact.html">Partner Program</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
   </div>
 </footer>
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
+
 </body>
 </html>

@@ -1,50 +1,307 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Blog | Mumtaz</title>
-  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
-  <link rel="icon" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Insights on AI-powered ERP, embedded finance, ZATCA compliance, and business automation for GCC enterprises." />
+  <title>Blog — Mumtaz Insights</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --teal: #00A693; --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } }
+
+    .page-hero { background: var(--navy); position: relative; overflow: hidden; padding: 80px 0 60px; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 80% 50%, rgba(0,166,147,.12) 0%, transparent 60%); }
+    .page-hero .inner { position: relative; z-index: 1; max-width: 700px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(200,146,42,.14); border: 1px solid rgba(200,146,42,.28); color: var(--gold); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 24px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 400; line-height: 1.1; color: #fff; margin-bottom: 18px; }
+    .page-hero p { font-size: 1rem; color: rgba(255,255,255,.52); max-width: 520px; line-height: 1.8; }
+
+    .filter-bar { background: var(--navy2); border-bottom: 1px solid rgba(255,255,255,.07); padding: 16px 0; }
+    .filter-inner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .filter-btn { font-size: .82rem; font-weight: 500; padding: 6px 16px; border-radius: 100px; border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.5); background: transparent; cursor: pointer; transition: all .15s; }
+    .filter-btn:hover, .filter-btn.active { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+    .blog-section { padding: 64px 0; }
+    .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 900px) { .blog-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 580px) { .blog-grid { grid-template-columns: 1fr; } }
+
+    .post-card { background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; transition: transform .2s, box-shadow .2s; cursor: pointer; }
+    .post-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.1); }
+    .post-thumb { height: 160px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+    .thumb-ai { background: linear-gradient(135deg, rgba(0,166,147,.15), rgba(0,166,147,.05)); }
+    .thumb-erp { background: linear-gradient(135deg, rgba(200,146,42,.15), rgba(200,146,42,.05)); }
+    .thumb-fin { background: linear-gradient(135deg, rgba(7,13,26,.08), rgba(7,13,26,.02)); }
+    .post-body { padding: 24px; }
+    .post-tag { font-size: .72rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--teal); margin-bottom: 8px; }
+    .post-title { font-family: 'Instrument Serif', serif; font-size: 1.15rem; color: var(--ink2); line-height: 1.3; margin-bottom: 10px; }
+    .post-excerpt { font-size: .875rem; color: var(--ink3); line-height: 1.7; margin-bottom: 18px; }
+    .post-meta { display: flex; justify-content: space-between; font-size: .78rem; color: var(--ink3); }
+    .post-read { color: var(--gold); font-weight: 500; }
+
+    .featured { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    @media (max-width: 720px) { .featured { grid-template-columns: 1fr; } }
+    .featured .post-thumb { height: 100%; min-height: 200px; font-size: 4rem; }
+    .featured .post-body { padding: 36px; }
+    .featured .post-title { font-size: 1.5rem; margin-bottom: 14px; }
+
+    .newsletter { background: var(--navy); padding: 80px 0; text-align: center; }
+    .newsletter h2 { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); color: #fff; margin-bottom: 14px; }
+    .newsletter p { color: rgba(255,255,255,.5); margin-bottom: 32px; max-width: 440px; margin-left: auto; margin-right: auto; }
+    .nl-form { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .nl-input { font-family: 'DM Sans', sans-serif; font-size: .9375rem; padding: 13px 20px; border-radius: 100px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; width: 300px; outline: none; }
+    .nl-input::placeholder { color: rgba(255,255,255,.3); }
+    .nl-input:focus { border-color: rgba(200,146,42,.5); }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 13px 26px; border-radius: 100px; border: none; cursor: pointer; transition: opacity .15s; }
+    .btn-primary:hover { opacity: .88; }
+
+    footer { background: var(--navy); border-top: 1px solid rgba(255,255,255,.07); padding: 64px 0 32px; color: rgba(255,255,255,.48); font-size: .875rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+    @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .footer-brand-name { font-weight: 600; font-size: 1rem; color: #fff; }
+    .footer-tagline { font-size: .84rem; color: rgba(255,255,255,.35); line-height: 1.7; max-width: 240px; }
+    footer h5 { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.32); margin-bottom: 14px; }
+    footer a { display: block; margin-bottom: 10px; color: rgba(255,255,255,.52); font-size: .875rem; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.07); padding-top: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-bottom-links { display: flex; gap: 24px; }
+    .footer-bottom-links a { margin: 0; }
+  </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle>Menu</button>
-    <nav class="nav-menu" data-nav-menu>
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
-      <a class="nav-link" href="pricing.html">Pricing</a>
-      <a class="nav-link" href="docs.html">Docs</a>
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link active" href="blog.html">Blog</a>
-      <a class="nav-link" href="contact.html">Contact</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/index.html" class="brand">
+      <div class="brand-mark">م</div>
+      <span>Mumtaz</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/blog.html" class="active">Blog</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="/contact.html" class="btn-nav-ghost">Contact</a>
+      <a href="/demo.html" class="btn-nav-primary">Book Demo →</a>
     </div>
   </div>
-</header>
-<main>
+</nav>
 
-<section class="hero"><div class="container"><div class="section-header reveal"><span class="badge">Insights</span><h1>Enterprise AI, ERP, and embedded finance insights</h1><p>Trends, implementation patterns, and practical playbooks for GCC operators.</p></div><div class="glass card reveal"><input id="blog-search" type="search" placeholder="Search posts, tags, or categories"></div></div></section>
-<section class="section"><div class="container grid-3" id="posts"><article class="glass card reveal" data-tags="ai finance"><h3>How AI CFO workflows improve liquidity planning</h3><p class="small">Category: AI • Finance</p></article><article class="glass card reveal" data-tags="erp operations"><h3>ERP modernization checklist for multi-entity GCC groups</h3><p class="small">Category: ERP • Operations</p></article><article class="glass card reveal" data-tags="bank fintech"><h3>Designing embedded finance journeys for SME ecosystems</h3><p class="small">Category: Banking • Product</p></article></div></section>
-<script>document.addEventListener("DOMContentLoaded",()=>{const i=document.getElementById("blog-search");if(!i)return;i.addEventListener("input",()=>{document.querySelectorAll("#posts article").forEach(p=>{const t=(p.textContent+p.dataset.tags).toLowerCase();p.style.display=t.includes(i.value.toLowerCase())?"block":"none";});});});</script>
-</main>
-<footer class="footer">
-  <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
-    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
-    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
-    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+<section class="page-hero">
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <span class="eyebrow">Insights</span>
+      <h1>Enterprise AI, ERP, and embedded finance for GCC operators</h1>
+      <p>Practical playbooks, implementation patterns, and trend analysis from the Mumtaz team.</p>
+    </div>
+  </div>
+</section>
+
+<div class="filter-bar">
+  <div class="wrap">
+    <div class="filter-inner" id="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="ai">AI &amp; Automation</button>
+      <button class="filter-btn" data-filter="erp">ERP</button>
+      <button class="filter-btn" data-filter="finance">Finance</button>
+      <button class="filter-btn" data-filter="compliance">Compliance</button>
+      <button class="filter-btn" data-filter="banking">Banking</button>
+    </div>
+  </div>
+</div>
+
+<section class="blog-section">
+  <div class="wrap">
+    <div class="blog-grid" id="posts">
+
+      <article class="post-card featured" data-cat="ai">
+        <div class="post-thumb thumb-ai">🤖</div>
+        <div class="post-body">
+          <div class="post-tag">AI &amp; Automation</div>
+          <div class="post-title">How ZAKI AI replaced three weekly finance meetings at a Dubai trading group</div>
+          <p class="post-excerpt">We followed one customer for 60 days as they introduced ZAKI to their finance workflow. The results surprised even us — not just time savings, but a qualitative shift in how their leadership team consumes business data.</p>
+          <div class="post-meta"><span>May 2026 · 8 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="compliance">
+        <div class="post-thumb thumb-erp">🧾</div>
+        <div class="post-body">
+          <div class="post-tag">Compliance</div>
+          <div class="post-title">ZATCA Phase 2 clearance: what SMEs actually need to do in 2026</div>
+          <p class="post-excerpt">The mandate is live and the grace period is narrowing. Here's a practical checklist for businesses that still need to integrate their ERP with the FATOORAH portal.</p>
+          <div class="post-meta"><span>Apr 2026 · 6 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="banking">
+        <div class="post-thumb thumb-fin">🏦</div>
+        <div class="post-body">
+          <div class="post-tag">Banking</div>
+          <div class="post-title">Why GCC banks are building ERP products — and what it means for SMEs</div>
+          <p class="post-excerpt">Embedded ERP is the new battleground for SME banking in the Gulf. Three banks have already launched white-label versions of full ERP platforms. Here's what's driving it.</p>
+          <div class="post-meta"><span>Apr 2026 · 5 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="erp">
+        <div class="post-thumb thumb-erp">⚙️</div>
+        <div class="post-body">
+          <div class="post-tag">ERP</div>
+          <div class="post-title">Multi-entity ERP for GCC groups: a setup checklist that actually works</div>
+          <p class="post-excerpt">Running operations across UAE, Saudi, and Qatar? Here's how to structure your chart of accounts, intercompany reconciliation, and reporting so month-end doesn't take two weeks.</p>
+          <div class="post-meta"><span>Mar 2026 · 7 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="finance">
+        <div class="post-thumb thumb-fin">💳</div>
+        <div class="post-body">
+          <div class="post-tag">Finance</div>
+          <div class="post-title">Credit readiness: how ERP data can unlock financing for GCC SMEs</div>
+          <p class="post-excerpt">Banks can't see inside your business. But when your ERP is connected, they can — and the results for SME credit access are significant. We look at the numbers.</p>
+          <div class="post-meta"><span>Mar 2026 · 5 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="ai">
+        <div class="post-thumb thumb-ai">💡</div>
+        <div class="post-body">
+          <div class="post-tag">AI &amp; Automation</div>
+          <div class="post-title">Predictive cashflow in plain language: what AI CFO tools can and can't do</div>
+          <p class="post-excerpt">There's a lot of hype around AI finance tools. We cut through it with a realistic assessment of what AI can reliably forecast, where it still needs human judgment, and how to set expectations with your team.</p>
+          <div class="post-meta"><span>Feb 2026 · 6 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="compliance">
+        <div class="post-thumb thumb-erp">📋</div>
+        <div class="post-body">
+          <div class="post-tag">Compliance</div>
+          <div class="post-title">UAE Corporate Tax 2026: a practical ERP integration guide</div>
+          <p class="post-excerpt">CT is now in full effect for most UAE businesses. Here's how to configure your ERP to capture the right data, automate quarterly provisioning, and generate FTA-ready returns.</p>
+          <div class="post-meta"><span>Feb 2026 · 8 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="erp">
+        <div class="post-thumb thumb-ai">📦</div>
+        <div class="post-body">
+          <div class="post-tag">ERP</div>
+          <div class="post-title">Inventory costing methods for GCC trading companies: FIFO vs. average cost</div>
+          <p class="post-excerpt">The choice of costing method has significant tax and reporting implications in a VAT environment. We explain the trade-offs and how to switch methods without breaking your financials.</p>
+          <div class="post-meta"><span>Jan 2026 · 5 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+      <article class="post-card" data-cat="banking">
+        <div class="post-thumb thumb-fin">🤝</div>
+        <div class="post-body">
+          <div class="post-tag">Banking</div>
+          <div class="post-title">Free zone ERP programs: what Jafza, DIFC, and ADGM are offering SME tenants</div>
+          <p class="post-excerpt">Free zones are competing on more than just license fees. The latest wave of SME services includes subsidised ERP, built-in banking, and procurement networks. Here's the state of play.</p>
+          <div class="post-meta"><span>Jan 2026 · 4 min read</span><span class="post-read">Read →</span></div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section class="newsletter">
+  <div class="wrap">
+    <h2>Stay ahead of the curve</h2>
+    <p>Monthly digest of GCC business software, finance regulation updates, and AI operator insights.</p>
+    <form class="nl-form" onsubmit="return false;">
+      <input type="email" class="nl-input" placeholder="your@email.com" />
+      <button type="submit" class="btn-primary">Subscribe →</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span class="footer-brand-name">Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="/contact.html">Partner Program</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
   </div>
 </footer>
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
+
+<script>
+  document.getElementById('filters').addEventListener('click', function(e) {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+    document.querySelectorAll('#posts .post-card').forEach(card => {
+      card.style.display = (filter === 'all' || card.dataset.cat === filter) ? '' : 'none';
+    });
+  });
+</script>
+
 </body>
 </html>
