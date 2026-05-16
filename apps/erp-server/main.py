@@ -27,6 +27,10 @@ load_dotenv()
 DB_URL  = os.getenv("ERP_DATABASE_URL", "postgresql://erp_user:erp_pass@localhost/mumtaz_erp")
 SECRET  = os.getenv("ERP_SECRET", "mumtaz-erp-secret-change-me")
 ALGO    = "HS256"
+# Odoo server shared by all tenant DBs — credentials are the same, only DB name changes
+ODOO_URL_ENV   = os.getenv("ODOO_URL",   "http://localhost:8069")
+ODOO_ADMIN_ENV = os.getenv("ODOO_ADMIN", "admin@mumtaz.digital")
+ODOO_PASS_ENV  = os.getenv("ODOO_PASS",  "admin")
 ALLOWED_ORIGINS = [
     o.strip() for o in
     os.getenv("ALLOWED_ORIGINS",
@@ -163,7 +167,12 @@ def get_user(authorization: str = Header(...)):
         scheme, token = authorization.split()
         assert scheme.lower() == "bearer"
         p = jwt.decode(token, SECRET, algorithms=[ALGO])
-        return {"user_id": int(p["sub"]), "company_id": p.get("cid"), "is_super": bool(p.get("sup", False))}
+        return {
+            "user_id":    int(p["sub"]),
+            "company_id": p.get("cid"),
+            "is_super":   bool(p.get("sup", False)),
+            "odoo_db":    p.get("odoo_db"),   # tenant's isolated Odoo DB name
+        }
     except Exception:
         raise HTTPException(401, "Not authenticated")
 
@@ -2776,14 +2785,31 @@ def _get_odoo_session(company_id: int) -> odoo.OdooSession:
     )
 
 def _resolve_odoo_sess(ctx: dict, tenant_id: Optional[int] = None) -> "odoo.OdooSession":
-    """Return Odoo session for the current tenant, or a specified tenant (super admin only)."""
+    """
+    Return an Odoo session for the request's tenant.
+
+    Priority:
+      1. JWT carries odoo_db (auto-provisioned tenant) → use global admin creds + that DB
+      2. Super admin specifying tenant_id → look up stored credentials from companies table
+      3. User's own company_id → look up stored credentials from companies table
+    """
+    # Path 1: self-provisioned tenant — DB name is in the JWT
+    if ctx.get("odoo_db") and not (ctx.get("is_super") and tenant_id):
+        return odoo.get_session(
+            ODOO_URL_ENV,
+            ctx["odoo_db"],
+            ODOO_ADMIN_ENV,
+            ODOO_PASS_ENV,
+        )
+
+    # Path 2/3: manually configured tenant (super admin panel or legacy setup)
     if ctx.get("is_super") and tenant_id:
         cid = tenant_id
     else:
         cid = ctx.get("company_id")
     if not cid:
         raise HTTPException(400,
-            "Super admins: add ?tenant_id=<company_id> to specify which tenant's Odoo to use.")
+            "No tenant configured. Super admins: add ?tenant_id=<id>.")
     return _get_odoo_session(cid)
 
 
