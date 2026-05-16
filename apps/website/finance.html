@@ -1,207 +1,370 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="assets/images/favicon.svg">
-<link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
-<title>Mumtaz Finance | Embedded Finance for SME Ecosystems</title>
-<meta name="description" content="Mumtaz Finance connects SME business performance to financial products through embedded finance infrastructure.">
-<link rel="canonical" href="https://mumtaz.digital/finance.html">
-<meta property="og:title" content="Mumtaz Finance | Embedded Finance for SME Ecosystems">
-<meta property="og:description" content="Mumtaz Finance connects SME business performance to financial products through embedded finance infrastructure.">
-<meta property="og:url" content="https://mumtaz.digital/finance.html">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Mumtaz">
-<meta property="og:image" content="https://mumtaz.digital/assets/images/og-image.jpg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mumtaz embedded finance — trade finance, B2B marketplace, and credit readiness for Gulf SMEs. Connect to 14+ banks and fintechs." />
+  <title>Embedded Finance & Trade — Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --gold-bg: #FBF4E3; --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.6); border-radius: 2px; }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } .nav-hamburger { display: flex; } }
+
+    /* PAGE HERO */
+    .page-hero { background: var(--navy); position: relative; overflow: hidden; padding: 100px 0 80px; }
+    .page-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); background-size: 300px; opacity: .5; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 10% 50%, rgba(0,166,147,.18) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 85% 25%, rgba(200,146,42,.1) 0%, transparent 55%); }
+    .inner { position: relative; z-index: 1; max-width: 780px; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,166,147,.14); border: 1px solid rgba(0,166,147,.28); color: var(--teal); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.4rem, 4vw, 3.8rem); font-weight: 400; line-height: 1.1; letter-spacing: -.02em; color: #fff; margin-bottom: 20px; }
+    .page-hero h1 em { font-style: italic; background: linear-gradient(100deg, var(--teal), #4DD9CA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-hero p { font-size: 1.0625rem; color: rgba(255,255,255,.52); max-width: 560px; line-height: 1.8; margin-bottom: 36px; }
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; box-shadow: 0 4px 28px rgba(200,146,42,.35); transition: opacity .15s, transform .15s; }
+    .btn-primary:hover { opacity: .91; transform: translateY(-2px); }
+    .btn-ghost-dark { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); font-weight: 500; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; transition: background .15s; }
+    .btn-ghost-dark:hover { background: rgba(255,255,255,.1); }
+
+    /* FINANCE FEATURES */
+    .finance-section { background: var(--paper); padding: 80px 0; }
+    .section-hdr { text-align: center; margin-bottom: 56px; }
+    .section-label { display: inline-block; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; line-height: 1.1; color: var(--ink); margin-bottom: 14px; }
+    .section-sub { color: var(--ink3); max-width: 520px; margin: 0 auto; }
+    .finance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 768px) { .finance-grid { grid-template-columns: 1fr; } }
+    .fin-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 28px 24px; }
+    .fin-icon { font-size: 1.5rem; margin-bottom: 14px; }
+    .fin-card h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+    .fin-card p { font-size: .875rem; color: var(--ink3); line-height: 1.65; margin-bottom: 12px; }
+    .fin-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .fin-list li { font-size: .82rem; color: var(--ink2); display: flex; gap: 8px; }
+    .fin-list li::before { content: '→'; color: var(--teal); flex-shrink: 0; }
+
+    /* MARKETPLACE */
+    .marketplace-section { background: var(--navy2); padding: 80px 0; }
+    .mp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    @media (max-width: 860px) { .mp-inner { grid-template-columns: 1fr; } }
+    .mp-text h2 { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; color: #fff; margin-bottom: 14px; line-height: 1.1; }
+    .mp-text h2 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .mp-text p { color: rgba(255,255,255,.5); line-height: 1.8; margin-bottom: 24px; }
+    .mp-text .section-label { color: var(--gold2); }
+    .mp-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+    .mp-list li { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: rgba(255,255,255,.7); }
+    .mp-list li::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+    .supplier-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: var(--r-lg); overflow: hidden; }
+    .supplier-hdr { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; justify-content: space-between; align-items: center; }
+    .supplier-hdr-title { font-size: .82rem; font-weight: 600; color: rgba(255,255,255,.7); }
+    .supplier-hdr-count { font-size: .72rem; color: var(--teal); font-weight: 600; }
+    .supplier-row { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.05); display: flex; justify-content: space-between; align-items: center; }
+    .supplier-row:last-child { border-bottom: none; }
+    .supplier-name { font-size: .875rem; font-weight: 600; color: rgba(255,255,255,.8); }
+    .supplier-loc { font-size: .72rem; color: rgba(255,255,255,.3); margin-top: 2px; }
+    .supplier-right { text-align: right; }
+    .supplier-ver { font-size: .72rem; font-weight: 700; color: #34D399; }
+    .supplier-price { font-size: .82rem; font-weight: 600; color: var(--gold2); margin-top: 2px; }
+
+    /* CREDIT SCORE */
+    .credit-section { background: var(--paper); padding: 80px 0; }
+    .credit-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    @media (max-width: 860px) { .credit-inner { grid-template-columns: 1fr; } }
+    .credit-text h2 { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; color: var(--ink); margin-bottom: 14px; line-height: 1.1; }
+    .credit-text h2 em { font-style: italic; color: var(--teal); }
+    .credit-text p { color: var(--ink3); line-height: 1.8; margin-bottom: 24px; }
+    .credit-text .section-label { color: var(--teal); }
+    .credit-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .credit-list li { display: flex; align-items: flex-start; gap: 10px; font-size: .9rem; color: var(--ink2); }
+    .credit-list li::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; }
+    .score-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 28px; }
+    .score-hdr { font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink3); margin-bottom: 18px; }
+    .score-bar { margin-bottom: 20px; }
+    .score-bar-lbl { display: flex; justify-content: space-between; font-size: .8rem; color: var(--ink3); margin-bottom: 6px; }
+    .score-bar-track { height: 6px; background: var(--border); border-radius: 100px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 100px; }
+    .score-metric { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: .85rem; }
+    .score-metric:last-child { border-bottom: none; }
+    .score-lbl { color: var(--ink3); }
+    .score-val { font-weight: 600; color: var(--ink); }
+    .score-val.good { color: #059669; }
+    .score-val.warn { color: var(--gold); }
+
+    /* CTA */
+    .cta-section { background: var(--gold-bg); padding: 80px 0; text-align: center; }
+    .cta-section h2 { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 400; color: var(--ink); margin-bottom: 14px; }
+    .cta-section h2 em { font-style: italic; color: var(--gold); }
+    .cta-section p { color: var(--ink3); max-width: 480px; margin: 0 auto 32px; }
+    .cta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--border); color: var(--ink2); font-weight: 500; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: border-color .15s; }
+    .btn-ghost:hover { border-color: var(--ink2); }
+
+    /* FOOTER */
+    footer { background: var(--navy); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-bottom: 12px; }
+    .footer-tagline { font-size: .83rem; color: rgba(255,255,255,.35); line-height: 1.65; }
+    footer h5 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 14px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.52); margin-bottom: 10px; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 20px 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: rgba(255,255,255,.28); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; font-size: .8rem; }
+  </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="index.html"><span class="brand-mark"></span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle menu">Menu</button>
-    <nav class="main-nav" data-nav>
-      <a href="index.html">Home</a>
-      <a href="platform.html">Platform</a>
-      <a href="erp.html">ERP</a>
-      <a href="ai.html">AI</a>
-      <a class="active" href="finance.html">Finance</a>
-      <a href="banks.html">For Banks</a>
-      <a href="smes.html">For SMEs</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a class="btn btn-primary btn-sm" href="demo.html">Book a Demo</a>
-    </nav>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand"><div class="brand-mark">م</div>Mumtaz</a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://app.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://app.mumtaz.digital" class="btn-nav-primary">Get started free</a>
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
+    </div>
   </div>
-</header>
+</nav>
 
-<main>
-
+<!-- PAGE HERO -->
 <section class="page-hero">
-  <div class="container">
-    <span class="eyebrow"><span class="eyebrow-dot"></span>Mumtaz Finance</span>
-    <h1>Embedded finance <span class="gold-text">by design.</span></h1>
-    <p>From credit readiness to partner routing, Mumtaz Finance connects SME business performance directly to relevant financial products — creating a live, data-driven bridge between operations and capital.</p>
-    <div style="margin-top:28px; display:flex; gap:12px; flex-wrap:wrap;">
-      <a class="btn btn-gold" href="banks.html">Partner with Mumtaz</a>
-      <a class="btn btn-ghost" href="demo.html">Book a Demo</a>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<section class="section-sm">
-  <div class="container">
-    <div class="stats-grid reveal">
-      <div class="stat-item">
-        <span class="stat-number">14+</span>
-        <span class="stat-label">Bank &amp; fintech partners</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">Live</span>
-        <span class="stat-label">Credit readiness scoring</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">API-first</span>
-        <span class="stat-label">Partner integration layer</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">Structured</span>
-        <span class="stat-label">SME data for lenders</span>
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <div class="page-eyebrow">Finance & Trade</div>
+      <h1>Capital when you<br/>need it, <em>connected.</em></h1>
+      <p>Mumtaz connects your business performance to financial products. Get credit readiness scoring, trade finance, and a marketplace with 3,400+ verified suppliers — all from inside your ERP.</p>
+      <div class="hero-ctas">
+        <a href="https://app.mumtaz.digital" class="btn-primary">Start free →</a>
+        <a href="/banks.html" class="btn-ghost-dark">Partner with us</a>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Finance Capabilities</span>
-      <h2>The bridge between <span class="gold-text">performance and capital</span></h2>
-      <p class="section-intro">Mumtaz Finance turns business operating data into financial access signals — enabling faster, smarter credit decisions for both SMEs and their lenders.</p>
+<!-- FINANCE FEATURES -->
+<section class="finance-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">Finance capabilities</span>
+      <h2 class="section-title">From business performance<br/>to financial access</h2>
+      <p class="section-sub">Your ERP data becomes your credit story. Mumtaz connects your operational performance to banks, fintechs, and suppliers who can help you grow.</p>
     </div>
-    <div class="grid-3">
-      <article class="card card-accent-gold reveal">
-        <div class="card-icon">📈</div>
-        <h3>Credit Readiness</h3>
-        <p>Continuous credit readiness scoring derived from operational data — giving SMEs a clear picture of their borrowing capacity before they apply.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Live credit readiness index</li>
-          <li>Pre-qualification signals for partners</li>
-          <li>Improvement recommendations</li>
+    <div class="finance-grid">
+      <div class="fin-card">
+        <div class="fin-icon">📈</div>
+        <h3>Credit Readiness Score</h3>
+        <p>A live score derived from your ERP data — invoicing discipline, payment history, cash flow — gives you a clear picture of your borrowing capacity.</p>
+        <ul class="fin-list">
+          <li>Updated in real time from your ERP</li>
+          <li>Improvement recommendations from ZAKI</li>
+          <li>Shared with banks only with your consent</li>
         </ul>
-      </article>
-      <article class="card card-accent-gold reveal delay-1">
-        <div class="card-icon">🔗</div>
-        <h3>Partner Routing</h3>
-        <p>Intelligent matching between SME profiles and the right financial products across a curated network of banking and fintech partners.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Product matching by business profile</li>
-          <li>Multi-lender comparison visibility</li>
-          <li>Contextual activation journeys</li>
+      </div>
+      <div class="fin-card">
+        <div class="fin-icon">🔗</div>
+        <h3>Partner Finance Network</h3>
+        <p>14+ banks and fintechs are connected to Mumtaz. When your credit readiness is strong, matched product offers appear in your dashboard.</p>
+        <ul class="fin-list">
+          <li>Working capital financing</li>
+          <li>Invoice discounting</li>
+          <li>Trade finance for marketplace orders</li>
         </ul>
-      </article>
-      <article class="card card-accent-gold reveal delay-2">
-        <div class="card-icon">🏦</div>
-        <h3>Structured Data for Lenders</h3>
-        <p>Give your banking and fintech partners a structured, verified SME data layer that transforms how they assess and serve business clients.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Standardized financial data packages</li>
-          <li>Real-time operational signals for risk teams</li>
-          <li>Compliant data exchange via secure APIs</li>
+      </div>
+      <div class="fin-card">
+        <div class="fin-icon">🌐</div>
+        <h3>B2B Marketplace & Trade</h3>
+        <p>Buy from 3,400+ verified Gulf suppliers. Finance your purchases through partner institutions — from inside the same platform.</p>
+        <ul class="fin-list">
+          <li>1.5% marketplace fee — no hidden costs</li>
+          <li>POs sync directly to supplier ERP</li>
+          <li>Trade finance on eligible orders</li>
         </ul>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container split reverse reveal">
-    <div>
-      <span class="eyebrow"><span class="eyebrow-dot"></span>For Partners</span>
-      <h2>A new standard for <span class="gold-text">SME banking</span></h2>
-      <p class="section-intro">Banks and fintechs that partner with Mumtaz gain access to the richest SME operating data layer in the region — enabling better origination, lower risk, and deeper client relationships.</p>
-      <ul class="feature-list">
-        <li>Pre-qualified SME pipeline with structured financials</li>
-        <li>Real-time signals replace quarterly statements</li>
-        <li>White-label integration into your digital banking stack</li>
-        <li>Segmentation data for targeted product campaigns</li>
-      </ul>
-      <a class="btn btn-gold" href="banks.html">Explore Partner Programme</a>
-    </div>
-    <div class="feature-visual" style="box-shadow: var(--shadow-lg), var(--glow-gold);">
-      <div class="feature-visual-inner" style="background: linear-gradient(155deg, rgba(245,158,11,0.08), rgba(252,211,77,0.04)); border-color: rgba(245,158,11,0.15);">
-        <div class="mock-row" style="background:rgba(245,158,11,0.35); width:75%"></div>
-        <div class="mock-row medium" style="margin-top:8px"></div>
-        <div class="mock-row short"></div>
-        <div class="mock-metric"><span>Credit Readiness</span><span style="color:var(--gold-2)">Strong ↑</span></div>
-        <div class="mock-metric"><span>Matched Products</span><span style="color:var(--gold-2)">3 offers</span></div>
-        <div class="mock-metric"><span>Partner Banks</span><span style="color:var(--gold-2)">14 active</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <div class="cta-band reveal" style="background: linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(252,211,77,0.08) 100%); border-color: rgba(245,158,11,0.25);">
-      <span class="eyebrow" style="margin-bottom:20px"><span class="eyebrow-dot" style="background:var(--grad-gold)"></span>Partner Programme</span>
-      <h2>Connect your institution to <span class="gold-text">the Mumtaz network</span></h2>
-      <p>Join the growing network of banks and fintechs using Mumtaz Finance to serve SMEs with precision, speed, and confidence.</p>
-      <div class="cta-actions">
-        <a class="btn btn-gold btn-lg" href="banks.html">Learn About Partnership</a>
-        <a class="btn btn-ghost btn-lg" href="contact.html">Contact Partnerships Team</a>
+<!-- MARKETPLACE -->
+<section class="marketplace-section">
+  <div class="wrap">
+    <div class="mp-inner">
+      <div class="mp-text">
+        <span class="section-label" style="color:var(--gold2)">B2B Marketplace</span>
+        <h2>3,400+ suppliers.<br/><em>Two clicks to order.</em></h2>
+        <p>Browse verified GCC businesses, place a purchase order from inside your ERP, and watch it land in the supplier's system instantly. No emails. No PDF attachments. No chasing.</p>
+        <ul class="mp-list">
+          <li>Suppliers verified and rated by Mumtaz</li>
+          <li>PO sent directly to supplier's Mumtaz ERP</li>
+          <li>Invoice syncs back automatically when issued</li>
+          <li>Trade finance available on eligible orders</li>
+          <li>1.5% fee on orders only — no listing fees</li>
+        </ul>
+        <a href="https://app.mumtaz.digital" class="btn-primary">Browse suppliers →</a>
+      </div>
+      <div class="supplier-card">
+        <div class="supplier-hdr">
+          <span class="supplier-hdr-title">Supplier search results</span>
+          <span class="supplier-hdr-count">3,400+ verified</span>
+        </div>
+        <div class="supplier-row">
+          <div>
+            <div class="supplier-name">Al Badr Industrial Supplies</div>
+            <div class="supplier-loc">Industrial · Dubai, UAE</div>
+          </div>
+          <div class="supplier-right">
+            <div class="supplier-ver">✓ Verified</div>
+            <div class="supplier-price">AED 18/unit</div>
+          </div>
+        </div>
+        <div class="supplier-row">
+          <div>
+            <div class="supplier-name">Riyadh Logistics Co.</div>
+            <div class="supplier-loc">Wholesale · Riyadh, KSA</div>
+          </div>
+          <div class="supplier-right">
+            <div class="supplier-ver">✓ Verified</div>
+            <div class="supplier-price">SAR 22/unit</div>
+          </div>
+        </div>
+        <div class="supplier-row">
+          <div>
+            <div class="supplier-name">Karachi Manufacturing Ltd</div>
+            <div class="supplier-loc">Manufacturing · Karachi, PK</div>
+          </div>
+          <div class="supplier-right">
+            <div class="supplier-ver">✓ Verified</div>
+            <div class="supplier-price">PKR 2,400/unit</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-</main>
-
-<footer class="footer">
-  <div class="container footer-grid">
-    <div class="footer-brand">
-      <a class="brand" href="index.html"><span class="brand-mark"></span><span>Mumtaz</span></a>
-      <p>AI-powered SME operating platform with intelligent finance infrastructure for modern business ecosystems.</p>
-      <div class="footer-socials">
-        <a class="social-btn" href="https://linkedin.com/company/mumtaz-digital" aria-label="LinkedIn">in</a>
-        <a class="social-btn" href="https://twitter.com/mumtazdigital" aria-label="Twitter">𝕏</a>
+<!-- CREDIT SCORE -->
+<section class="credit-section">
+  <div class="wrap">
+    <div class="credit-inner">
+      <div class="credit-text">
+        <span class="section-label">Credit readiness</span>
+        <h2>Your data is your<br/><em>credit story</em></h2>
+        <p>Banks have always asked for 3 years of audited financials. Mumtaz gives them something better — real-time operating data, updated daily, straight from your ERP.</p>
+        <ul class="credit-list">
+          <li>Score based on invoicing discipline, AR age, and cash flow</li>
+          <li>ZAKI explains what's driving your score and what to improve</li>
+          <li>Shared with partner banks only when you consent</li>
+          <li>Improves automatically as you run your business better</li>
+        </ul>
+        <a href="/banks.html" class="btn-primary">Partner with us →</a>
+      </div>
+      <div class="score-card">
+        <div class="score-hdr">Credit Readiness Profile</div>
+        <div class="score-bar">
+          <div class="score-bar-lbl"><span>Overall score</span><span style="font-weight:700;color:var(--ink)">87 / 100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:87%;background:linear-gradient(90deg,var(--teal),var(--teal-dk))"></div></div>
+        </div>
+        <div class="score-bar">
+          <div class="score-bar-lbl"><span>Invoicing discipline</span><span>94 / 100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:94%;background:linear-gradient(90deg,#34D399,#059669)"></div></div>
+        </div>
+        <div class="score-bar">
+          <div class="score-bar-lbl"><span>Cash flow consistency</span><span>81 / 100</span></div>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:81%;background:linear-gradient(90deg,var(--gold),var(--gold2))"></div></div>
+        </div>
+        <div class="score-metric"><span class="score-lbl">Avg payment received (days)</span><span class="score-val good">23 days</span></div>
+        <div class="score-metric"><span class="score-lbl">AR overdue ratio</span><span class="score-val good">4.2%</span></div>
+        <div class="score-metric"><span class="score-lbl">Finance offers available</span><span class="score-val warn">3 matched</span></div>
       </div>
     </div>
-    <div class="footer-col">
-      <h4>Platform</h4>
-      <a href="platform.html">Overview</a>
-      <a href="erp.html">Mumtaz ERP</a>
-      <a href="ai.html">Mumtaz AI</a>
-      <a href="finance.html">Mumtaz Finance</a>
-    </div>
-    <div class="footer-col">
-      <h4>Solutions</h4>
-      <a href="smes.html">For SMEs</a>
-      <a href="banks.html">For Banks &amp; Fintechs</a>
-      <a href="demo.html">Book a Demo</a>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="mailto:hello@mumtaz.digital">hello@mumtaz.digital</a>
-      <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Build your financial<br/><em>track record today</em></h2>
+    <p>The better you run your business on Mumtaz, the stronger your credit story becomes. Start free — your data is yours.</p>
+    <div class="cta-row">
+      <a href="https://app.mumtaz.digital" class="btn-primary">Start free →</a>
+      <a href="/banks.html" class="btn-ghost">Become a partner</a>
     </div>
   </div>
-  <div class="container footer-bottom">
-    <p>© <span data-year></span> Mumtaz Digital. All rights reserved.</p>
-    <div class="footer-bottom-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Use</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span>Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
     </div>
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
 </body>
 </html>

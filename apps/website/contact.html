@@ -1,173 +1,245 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contact | Mumtaz</title>
-  <meta name="description" content="Contact Mumtaz — speak with product, sales, and implementation experts. Based in Dubai, serving GCC enterprises.">
-  <link rel="icon" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Contact Mumtaz — speak with our team about demos, enterprise plans, partnerships, or technical support. Based in Dubai, serving GCC and Pakistan." />
+  <title>Contact — Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
   <style>
-    /* Contact layout */
-    .contact-grid { display:grid; grid-template-columns:1fr 1.2fr; gap:40px; align-items:start; }
-    @media(max-width:768px){ .contact-grid { grid-template-columns:1fr; } }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --gold-bg: #FBF4E3; --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-    /* Contact info */
-    .contact-info-item { display:flex; gap:16px; align-items:flex-start; padding:20px 0; border-bottom:1px solid var(--border); }
-    .contact-info-item:last-child { border-bottom:none; }
-    .contact-icon { width:44px; height:44px; background:rgba(26,115,232,.1); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
-    .contact-label { font-size:.72rem; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
-    .contact-value { font-size:.9rem; color:var(--text); font-weight:500; }
-    .contact-sub { font-size:.78rem; color:var(--text-2); margin-top:2px; }
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.6); border-radius: 2px; }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } .nav-hamburger { display: flex; } }
 
-    /* Form */
-    .contact-form { display:flex; flex-direction:column; gap:16px; }
-    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    @media(max-width:520px){ .form-row { grid-template-columns:1fr; } }
-    .form-field { display:flex; flex-direction:column; gap:6px; }
-    .form-field label { font-size:.78rem; font-weight:600; color:var(--text-2); }
-    .form-field input,
-    .form-field select,
-    .form-field textarea { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; font-size:.88rem; color:var(--text); font-family:inherit; transition:border-color .2s; width:100%; box-sizing:border-box; }
-    .form-field input:focus,
-    .form-field select:focus,
-    .form-field textarea:focus { outline:none; border-color:var(--primary); }
-    .form-field textarea { resize:vertical; }
-    .form-success { display:none; background:rgba(16,185,129,.08); border:1.5px solid rgba(16,185,129,.3); border-radius:12px; padding:20px; text-align:center; color:var(--green); font-weight:600; }
+    /* PAGE HERO */
+    .page-hero { background: var(--navy); padding: 80px 0 64px; text-align: center; position: relative; overflow: hidden; }
+    .page-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); background-size: 300px; opacity: .4; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 60% at 50% 40%, rgba(200,146,42,.12) 0%, transparent 60%); }
+    .page-hero .inner { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(200,146,42,.12); border: 1px solid rgba(200,146,42,.26); color: var(--gold2); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.2rem, 4vw, 3.4rem); font-weight: 400; color: #fff; line-height: 1.1; margin-bottom: 16px; }
+    .page-hero h1 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-hero p { color: rgba(255,255,255,.45); max-width: 440px; margin: 0 auto; line-height: 1.75; }
 
-    /* Office cards */
-    .office-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
-    .office-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
-    .office-flag { font-size:1.6rem; margin-bottom:8px; }
-    .office-city { font-weight:700; color:var(--text); margin-bottom:4px; }
-    .office-detail { font-size:.8rem; color:var(--text-2); line-height:1.5; }
+    /* CONTACT GRID */
+    .contact-section { background: var(--paper); padding: 72px 0; }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: start; }
+    @media (max-width: 860px) { .contact-grid { grid-template-columns: 1fr; } }
 
-    /* Map */
-    .map-wrap { border-radius:16px; overflow:hidden; border:1.5px solid var(--border); }
-    .map-wrap iframe { display:block; }
+    /* INFO */
+    .contact-info-item { display: flex; gap: 16px; align-items: flex-start; padding: 18px 0; border-bottom: 1px solid var(--border); }
+    .contact-info-item:last-child { border-bottom: none; }
+    .ci-icon { width: 42px; height: 42px; background: rgba(200,146,42,.08); border: 1px solid rgba(200,146,42,.18); border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .ci-label { font-size: .7rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+    .ci-value { font-size: .9rem; color: var(--ink); font-weight: 600; }
+    .ci-sub { font-size: .78rem; color: var(--ink3); margin-top: 2px; }
+    .map-embed { margin-top: 24px; border-radius: var(--r-lg); overflow: hidden; border: 1.5px solid var(--border); }
+    .map-embed iframe { display: block; }
+
+    /* FORM */
+    .form-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 36px; }
+    .form-title { font-size: 1.125rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .form-sub { font-size: .82rem; color: var(--ink3); margin-bottom: 24px; }
+    .form-success { display: none; background: rgba(0,166,147,.06); border: 1.5px solid rgba(0,166,147,.2); border-radius: var(--r); padding: 24px; text-align: center; }
+    .form-success-icon { font-size: 2rem; margin-bottom: 8px; }
+    .form-success h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+    .form-success p { font-size: .875rem; color: var(--ink3); }
+    .contact-form { display: flex; flex-direction: column; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: .78rem; font-weight: 600; color: var(--ink2); }
+    .field input, .field select, .field textarea {
+      background: var(--paper); border: 1.5px solid var(--border); border-radius: var(--r);
+      padding: 10px 14px; font-size: .875rem; color: var(--ink); font-family: inherit;
+      transition: border-color .15s; width: 100%;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
+    .btn-submit { width: 100%; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px; border-radius: 100px; border: none; cursor: pointer; transition: opacity .15s; font-family: inherit; }
+    .btn-submit:hover { opacity: .9; }
+    .form-note { font-size: .75rem; color: var(--ink3); text-align: center; }
+
+    /* OFFICES */
+    .offices-section { background: var(--white); padding: 72px 0; border-top: 1px solid var(--border); }
+    .section-hdr { text-align: center; margin-bottom: 40px; }
+    .section-label { display: inline-block; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 400; color: var(--ink); }
+    .offices-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    @media (max-width: 860px) { .offices-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 480px) { .offices-grid { grid-template-columns: 1fr; } }
+    .office-card { background: var(--paper); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 24px; }
+    .office-flag { font-size: 1.8rem; margin-bottom: 10px; }
+    .office-city { font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .office-detail { font-size: .8rem; color: var(--ink3); line-height: 1.6; }
+
+    /* DEMO STRIP */
+    .demo-strip-section { background: var(--gold-bg); padding: 72px 0; text-align: center; }
+    .demo-strip-section h2 { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; color: var(--ink); margin-bottom: 12px; }
+    .demo-strip-section h2 em { font-style: italic; color: var(--gold); }
+    .demo-strip-section p { color: var(--ink3); max-width: 460px; margin: 0 auto 28px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; box-shadow: 0 4px 28px rgba(200,146,42,.3); transition: opacity .15s; }
+    .btn-primary:hover { opacity: .9; }
+
+    /* FOOTER */
+    footer { background: var(--navy); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-bottom: 12px; }
+    .footer-tagline { font-size: .83rem; color: rgba(255,255,255,.35); line-height: 1.65; }
+    footer h5 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 14px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.52); margin-bottom: 10px; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 20px 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: rgba(255,255,255,.28); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; font-size: .8rem; }
   </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation">Menu</button>
-    <nav class="nav-menu" data-nav-menu>
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
-      <a class="nav-link" href="pricing.html">Pricing</a>
-      <a class="nav-link" href="docs.html">Docs</a>
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link active" href="contact.html">Contact</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand"><div class="brand-mark">م</div>Mumtaz</a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://app.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://app.mumtaz.digital" class="btn-nav-primary">Get started free</a>
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
     </div>
   </div>
-</header>
+</nav>
 
-<main>
-
-<!-- Hero -->
-<section class="hero" style="padding-bottom:0">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="badge">Contact</span>
-      <h1>Talk to our team</h1>
-      <p>Whether you need a demo, a custom quote, or technical guidance — we respond within one business day.</p>
+<!-- HERO -->
+<section class="page-hero">
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <div class="page-eyebrow">Contact</div>
+      <h1>Let's talk about<br/><em>your business</em></h1>
+      <p>Whether you need a demo, a custom quote, a partnership conversation, or technical help — we respond within one business day.</p>
     </div>
   </div>
 </section>
 
-<!-- Contact grid -->
-<section class="section" style="padding-top:40px">
-  <div class="container">
+<!-- CONTACT GRID -->
+<section class="contact-section">
+  <div class="wrap">
     <div class="contact-grid">
 
-      <!-- Left: info -->
-      <div class="reveal">
+      <!-- Info -->
+      <div>
         <div class="contact-info-item">
-          <div class="contact-icon">✉️</div>
+          <div class="ci-icon">✉️</div>
           <div>
-            <div class="contact-label">Email</div>
-            <div class="contact-value">hello@mumtaz.digital</div>
-            <div class="contact-sub">General enquiries & partnership</div>
+            <div class="ci-label">General</div>
+            <div class="ci-value">hello@mumtaz.digital</div>
+            <div class="ci-sub">Enquiries, partnerships, feedback</div>
           </div>
         </div>
         <div class="contact-info-item">
-          <div class="contact-icon">💼</div>
+          <div class="ci-icon">💼</div>
           <div>
-            <div class="contact-label">Sales</div>
-            <div class="contact-value">sales@mumtaz.digital</div>
-            <div class="contact-sub">Pricing, demos & enterprise plans</div>
+            <div class="ci-label">Sales</div>
+            <div class="ci-value">sales@mumtaz.digital</div>
+            <div class="ci-sub">Pricing, demos, enterprise plans</div>
           </div>
         </div>
         <div class="contact-info-item">
-          <div class="contact-icon">🛠️</div>
+          <div class="ci-icon">🤝</div>
           <div>
-            <div class="contact-label">Support</div>
-            <div class="contact-value">support@mumtaz.digital</div>
-            <div class="contact-sub">Technical help for existing customers</div>
+            <div class="ci-label">Partnerships</div>
+            <div class="ci-value">partnerships@mumtaz.digital</div>
+            <div class="ci-sub">Banks, free zones, white-label</div>
           </div>
         </div>
         <div class="contact-info-item">
-          <div class="contact-icon">📍</div>
+          <div class="ci-icon">🛠️</div>
           <div>
-            <div class="contact-label">Headquarters</div>
-            <div class="contact-value">Dubai, United Arab Emirates</div>
-            <div class="contact-sub">Regional offices across GCC</div>
+            <div class="ci-label">Support</div>
+            <div class="ci-value">support@mumtaz.digital</div>
+            <div class="ci-sub">Technical help for existing customers</div>
           </div>
         </div>
         <div class="contact-info-item">
-          <div class="contact-icon">⏰</div>
+          <div class="ci-icon">📍</div>
           <div>
-            <div class="contact-label">Business Hours</div>
-            <div class="contact-value">Sun – Thu, 9am – 6pm GST</div>
-            <div class="contact-sub">Enterprise 24/7 support available</div>
+            <div class="ci-label">Headquarters</div>
+            <div class="ci-value">Dubai, United Arab Emirates</div>
+            <div class="ci-sub">Regional offices across GCC · Sun–Thu 9am–6pm GST</div>
           </div>
         </div>
-
-        <!-- Map -->
-        <div class="map-wrap" style="margin-top:28px">
+        <div class="map-embed">
           <iframe
-            title="Mumtaz HQ – Dubai"
+            title="Mumtaz HQ — Dubai"
             width="100%"
-            height="200"
+            height="180"
             loading="lazy"
             src="https://www.openstreetmap.org/export/embed.html?bbox=55.2%2C25.0%2C55.5%2C25.3&layer=mapnik">
           </iframe>
         </div>
       </div>
 
-      <!-- Right: form -->
-      <div class="glass card reveal" style="padding:32px">
-        <h3 style="margin-bottom:4px">Send us a message</h3>
-        <p class="small" style="color:var(--text-2);margin-bottom:24px">We will reply within one business day.</p>
+      <!-- Form -->
+      <div class="form-card">
+        <div class="form-title">Send us a message</div>
+        <div class="form-sub">We'll reply within one business day.</div>
 
-        <div id="form-success" class="form-success">
-          Thank you — your message has been received. We will be in touch shortly.
+        <div class="form-success" id="contact-success">
+          <div class="form-success-icon">✓</div>
+          <h3>Message received</h3>
+          <p>Thank you — a member of our team will be in touch shortly.</p>
         </div>
 
         <form class="contact-form" id="contact-form" onsubmit="handleContactSubmit(event)">
           <div class="form-row">
-            <div class="form-field">
+            <div class="field">
               <label for="cf-name">Full name *</label>
-              <input type="text" id="cf-name" placeholder="Ahmed Al-Rashid" required>
+              <input type="text" id="cf-name" placeholder="Ahmed Al-Rashid" required />
             </div>
-            <div class="form-field">
+            <div class="field">
               <label for="cf-email">Work email *</label>
-              <input type="email" id="cf-email" placeholder="ahmed@company.ae" required>
+              <input type="email" id="cf-email" placeholder="ahmed@company.ae" required />
             </div>
           </div>
           <div class="form-row">
-            <div class="form-field">
+            <div class="field">
               <label for="cf-company">Company</label>
-              <input type="text" id="cf-company" placeholder="Company name">
+              <input type="text" id="cf-company" placeholder="Company name" />
             </div>
-            <div class="form-field">
+            <div class="field">
               <label for="cf-size">Team size</label>
               <select id="cf-size">
                 <option value="">Select size</option>
@@ -178,24 +250,24 @@
               </select>
             </div>
           </div>
-          <div class="form-field">
+          <div class="field">
             <label for="cf-subject">What can we help with? *</label>
             <select id="cf-subject" required>
               <option value="">Select a topic</option>
               <option>Product demo</option>
               <option>Pricing & plans</option>
               <option>Enterprise / custom deployment</option>
+              <option>Partnership (banks, free zones, chambers)</option>
               <option>Technical support</option>
-              <option>Partnership</option>
               <option>Other</option>
             </select>
           </div>
-          <div class="form-field">
+          <div class="field">
             <label for="cf-message">Message *</label>
             <textarea id="cf-message" rows="5" placeholder="Tell us about your business and what you are looking to achieve…" required></textarea>
           </div>
-          <button class="btn btn-primary" type="submit" style="width:100%">Send Message →</button>
-          <p class="small" style="color:var(--text-3);text-align:center">By submitting you agree to our Privacy Policy.</p>
+          <button class="btn-submit" type="submit">Send message →</button>
+          <p class="form-note">By submitting you agree to our Privacy Policy. No spam, ever.</p>
         </form>
       </div>
 
@@ -203,91 +275,95 @@
   </div>
 </section>
 
-<!-- Regional offices -->
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal" style="margin-bottom:28px">
-      <h2>Regional presence</h2>
-      <p>Local expertise across the Gulf Cooperation Council.</p>
+<!-- OFFICES -->
+<section class="offices-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">Regional presence</span>
+      <h2 class="section-title">Local expertise across the GCC</h2>
     </div>
-    <div class="office-grid">
-      <div class="office-card reveal">
+    <div class="offices-grid">
+      <div class="office-card">
         <div class="office-flag">🇦🇪</div>
         <div class="office-city">Dubai, UAE</div>
-        <div class="office-detail">Regional HQ<br>DIFC & Downtown operations<br>Sun – Thu, 9am – 6pm GST</div>
+        <div class="office-detail">Regional HQ<br/>DIFC & Downtown<br/>Sun–Thu 9am–6pm GST</div>
       </div>
-      <div class="office-card reveal">
+      <div class="office-card">
         <div class="office-flag">🇸🇦</div>
         <div class="office-city">Riyadh, KSA</div>
-        <div class="office-detail">Kingdom operations<br>SAMA compliance centre<br>Sun – Thu, 8am – 5pm AST</div>
+        <div class="office-detail">Kingdom operations<br/>ZATCA compliance centre<br/>Sun–Thu 8am–5pm AST</div>
       </div>
-      <div class="office-card reveal">
+      <div class="office-card">
+        <div class="office-flag">🇵🇰</div>
+        <div class="office-city">Karachi, Pakistan</div>
+        <div class="office-detail">FBR & tech operations<br/>Engineering & support<br/>Mon–Fri 9am–6pm PKT</div>
+      </div>
+      <div class="office-card">
         <div class="office-flag">🇶🇦</div>
         <div class="office-city">Doha, Qatar</div>
-        <div class="office-detail">Enterprise accounts<br>QFC registered entity<br>Sun – Thu, 9am – 6pm AST</div>
-      </div>
-      <div class="office-card reveal">
-        <div class="office-flag">🇰🇼</div>
-        <div class="office-city">Kuwait City</div>
-        <div class="office-detail">Gulf coverage<br>Partner network<br>By appointment</div>
+        <div class="office-detail">Enterprise accounts<br/>QFC registered entity<br/>Sun–Thu 9am–6pm AST</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Book demo strip -->
-<section class="section" style="padding-top:0">
-  <div class="container">
-    <div class="glass card reveal" style="text-align:center;padding:48px 32px;background:linear-gradient(135deg,rgba(26,115,232,.06),rgba(16,185,129,.04))">
-      <h2 style="margin-bottom:10px">Prefer a live walkthrough?</h2>
-      <p style="color:var(--text-2);max-width:480px;margin:0 auto 24px">Book a 30-minute product demo with one of our solutions engineers. We will tailor it to your industry and company size.</p>
-      <a class="btn btn-primary" href="demo.html">Book a Demo →</a>
-    </div>
+<!-- DEMO STRIP -->
+<section class="demo-strip-section">
+  <div class="wrap">
+    <h2>Prefer a live <em>walkthrough?</em></h2>
+    <p>Book a 30-minute product demo with a solutions engineer — tailored to your industry and company size.</p>
+    <a href="/demo.html" class="btn-primary">Book a demo →</a>
   </div>
 </section>
 
-</main>
-
-<footer class="footer">
-  <div class="container footer-grid">
-    <div>
-      <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-      <p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p>
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span>Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+      </div>
     </div>
-    <div class="footer-col">
-      <strong>Product</strong>
-      <a href="platform.html">Platform</a>
-      <a href="solutions.html">Solutions</a>
-      <a href="pricing.html">Pricing</a>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
     </div>
-    <div class="footer-col">
-      <strong>Resources</strong>
-      <a href="docs.html">Documentation</a>
-      <a href="blog.html">Blog</a>
-      <a href="demo.html">Book Demo</a>
-    </div>
-    <div class="footer-col">
-      <strong>Company</strong>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="https://app.mumtaz.digital">Sign In</a>
-    </div>
-  </div>
-  <div class="container" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-    <p class="small" style="color:var(--text-3)">© 2026 Mumtaz Technologies. All rights reserved.</p>
-    <p class="small" style="color:var(--text-3)">Dubai, United Arab Emirates</p>
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
 <script>
 function handleContactSubmit(e) {
   e.preventDefault();
-  // Show success state (in production, POST to API)
   document.getElementById('contact-form').style.display = 'none';
-  document.getElementById('form-success').style.display = 'block';
-  window.scrollTo({ top: document.getElementById('form-success').offsetTop - 80, behavior: 'smooth' });
+  document.getElementById('contact-success').style.display = 'block';
+  window.scrollTo({ top: document.querySelector('.form-card').offsetTop - 80, behavior: 'smooth' });
 }
 </script>
+
 </body>
 </html>

@@ -1,200 +1,366 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="assets/images/favicon.svg">
-<link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
-<title>Mumtaz for SMEs | Run Sharper, Grow Smarter</title>
-<meta name="description" content="Mumtaz gives SMEs the operating discipline, AI intelligence, and financial access needed to run sharper and grow with confidence.">
-<link rel="canonical" href="https://mumtaz.digital/smes.html">
-<meta property="og:title" content="Mumtaz for SMEs | Run Sharper, Grow Smarter">
-<meta property="og:description" content="Mumtaz gives SMEs the operating discipline, AI intelligence, and financial access needed to run sharper and grow with confidence.">
-<meta property="og:url" content="https://mumtaz.digital/smes.html">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Mumtaz">
-<meta property="og:image" content="https://mumtaz.digital/assets/images/og-image.jpg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mumtaz for Gulf SMEs — ERP, AI agent, and B2B marketplace in one platform. Free e-invoicing, 30-minute setup, and no enterprise price tag." />
+  <title>Mumtaz for Gulf SMEs — Run Smarter | Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --gold-bg: #FBF4E3; --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.6); border-radius: 2px; }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } .nav-hamburger { display: flex; } }
+
+    /* PAGE HERO */
+    .page-hero { background: var(--navy); position: relative; overflow: hidden; padding: 100px 0 80px; }
+    .page-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); background-size: 300px; opacity: .5; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 10% 50%, rgba(200,146,42,.15) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 85% 25%, rgba(0,166,147,.12) 0%, transparent 55%); }
+    .inner { position: relative; z-index: 1; max-width: 780px; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,166,147,.14); border: 1px solid rgba(0,166,147,.28); color: var(--teal); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.4rem, 4vw, 3.8rem); font-weight: 400; line-height: 1.1; letter-spacing: -.02em; color: #fff; margin-bottom: 20px; }
+    .page-hero h1 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-hero p { font-size: 1.0625rem; color: rgba(255,255,255,.52); max-width: 560px; line-height: 1.8; margin-bottom: 36px; }
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; box-shadow: 0 4px 28px rgba(200,146,42,.35); transition: opacity .15s, transform .15s; }
+    .btn-primary:hover { opacity: .91; transform: translateY(-2px); }
+    .btn-ghost-dark { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.72); font-weight: 500; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; transition: background .15s; }
+    .btn-ghost-dark:hover { background: rgba(255,255,255,.1); }
+
+    /* PAIN POINTS */
+    .pain-section { background: var(--white); padding: 72px 0; border-bottom: 1px solid var(--border); }
+    .pain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    @media (max-width: 768px) { .pain-grid { grid-template-columns: 1fr; } }
+    .pain-card { padding: 28px 24px; background: var(--paper); border-radius: var(--r-lg); border: 1.5px solid var(--border); }
+    .pain-before { font-size: .72rem; font-weight: 700; color: #EF4444; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; }
+    .pain-card h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+    .pain-card p { font-size: .875rem; color: var(--ink3); line-height: 1.65; }
+    .pain-after { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); font-size: .82rem; color: var(--teal-dk); font-weight: 600; display: flex; gap: 6px; }
+    .pain-after::before { content: '→'; }
+
+    /* VALUE PROPS */
+    .value-section { background: var(--paper); padding: 80px 0; }
+    .section-hdr { text-align: center; margin-bottom: 56px; }
+    .section-label { display: inline-block; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; line-height: 1.1; color: var(--ink); margin-bottom: 14px; }
+    .section-sub { color: var(--ink3); max-width: 520px; margin: 0 auto; }
+    .value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 768px) { .value-grid { grid-template-columns: 1fr; } }
+    .value-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 32px; }
+    .value-icon { font-size: 1.8rem; margin-bottom: 16px; }
+    .value-card h3 { font-size: 1.125rem; font-weight: 600; color: var(--ink); margin-bottom: 10px; }
+    .value-card p { font-size: .9rem; color: var(--ink3); line-height: 1.7; margin-bottom: 16px; }
+    .value-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .value-list li { font-size: .875rem; color: var(--ink2); display: flex; gap: 8px; }
+    .value-list li::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; }
+
+    /* JOURNEY */
+    .journey-section { background: var(--navy); padding: 80px 0; }
+    .journey-title { text-align: center; font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; color: #fff; margin-bottom: 8px; }
+    .journey-title em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .journey-sub { text-align: center; color: rgba(255,255,255,.45); max-width: 480px; margin: 0 auto 48px; }
+    .journey-label { text-align: center; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold2); margin-bottom: 12px; }
+    .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; }
+    @media (max-width: 768px) { .timeline { grid-template-columns: 1fr 1fr; gap: 16px; } }
+    @media (max-width: 480px) { .timeline { grid-template-columns: 1fr; } }
+    .timeline::before { content: ''; position: absolute; top: 20px; left: 10%; right: 10%; height: 1px; background: rgba(255,255,255,.1); }
+    @media (max-width: 768px) { .timeline::before { display: none; } }
+    .timeline-item { text-align: center; padding: 0 12px; position: relative; z-index: 1; }
+    .timeline-dot { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold2)); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; color: #fff; margin: 0 auto 16px; }
+    .timeline-when { font-size: .72rem; font-weight: 700; color: var(--gold2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .timeline-item h4 { font-size: .9375rem; font-weight: 600; color: rgba(255,255,255,.9); margin-bottom: 6px; }
+    .timeline-item p { font-size: .8rem; color: rgba(255,255,255,.42); line-height: 1.55; }
+
+    /* TESTIMONIAL */
+    .testimonial-section { background: var(--paper); padding: 72px 0; }
+    .testimonial-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 36px; max-width: 680px; margin: 0 auto; }
+    .quote-mark { font-family: 'Instrument Serif', serif; font-size: 4rem; color: var(--gold); line-height: .6; display: block; margin-bottom: 16px; }
+    blockquote { font-size: 1.0625rem; color: var(--ink2); line-height: 1.75; font-style: italic; margin-bottom: 24px; }
+    .author { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold2)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: .9rem; flex-shrink: 0; }
+    .author-name { font-size: .9rem; font-weight: 600; color: var(--ink); }
+    .author-title { font-size: .78rem; color: var(--ink3); }
+
+    /* CTA */
+    .cta-section { background: var(--gold-bg); padding: 80px 0; text-align: center; }
+    .cta-section h2 { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 400; color: var(--ink); margin-bottom: 14px; }
+    .cta-section h2 em { font-style: italic; color: var(--gold); }
+    .cta-section p { color: var(--ink3); max-width: 480px; margin: 0 auto 32px; }
+    .cta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--border); color: var(--ink2); font-weight: 500; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: border-color .15s; }
+    .btn-ghost:hover { border-color: var(--ink2); }
+    .cta-badges { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .cta-badge { font-size: .78rem; color: var(--ink3); display: flex; align-items: center; gap: 6px; }
+    .cta-badge::before { content: '✓'; color: var(--teal); font-weight: 700; }
+
+    /* FOOTER */
+    footer { background: var(--navy); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-bottom: 12px; }
+    .footer-tagline { font-size: .83rem; color: rgba(255,255,255,.35); line-height: 1.65; }
+    footer h5 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 14px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.52); margin-bottom: 10px; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 20px 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: rgba(255,255,255,.28); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; font-size: .8rem; }
+  </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="index.html"><span class="brand-mark"></span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle menu">Menu</button>
-    <nav class="main-nav" data-nav>
-      <a href="index.html">Home</a>
-      <a href="platform.html">Platform</a>
-      <a href="erp.html">ERP</a>
-      <a href="ai.html">AI</a>
-      <a href="finance.html">Finance</a>
-      <a href="banks.html">For Banks</a>
-      <a class="active" href="smes.html">For SMEs</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a class="btn btn-primary btn-sm" href="demo.html">Book a Demo</a>
-    </nav>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand"><div class="brand-mark">م</div>Mumtaz</a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://app.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://app.mumtaz.digital" class="btn-nav-primary">Get started free</a>
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
+    </div>
   </div>
-</header>
+</nav>
 
-<main>
-
+<!-- PAGE HERO -->
 <section class="page-hero">
-  <div class="container">
-    <span class="eyebrow"><span class="eyebrow-dot"></span>For SMEs</span>
-    <h1>Run sharper.<br><span class="gradient-text">Grow smarter.</span></h1>
-    <p>Mumtaz gives founders and business leaders the operational discipline, AI guidance, and financial connectivity needed to compete at the highest level — without a full finance team.</p>
-    <div style="margin-top:28px; display:flex; gap:12px; flex-wrap:wrap;">
-      <a class="btn btn-primary" href="demo.html">See Mumtaz in Action</a>
-      <a class="btn btn-ghost" href="platform.html">Explore the Platform</a>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>SME Value</span>
-      <h2>Everything a growing business <span class="gradient-text">actually needs</span></h2>
-      <p class="section-intro">From operational clarity to AI-powered financial guidance, Mumtaz replaces a patchwork of tools with one intelligent platform.</p>
-    </div>
-    <div class="grid-3">
-      <article class="card card-accent-indigo reveal">
-        <div class="card-icon">⚙️</div>
-        <h3>Operational Clarity</h3>
-        <p>Get enterprise-grade process discipline without enterprise complexity. Invoicing, expenses, and workflows — all under one roof with full visibility.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Professional invoicing &amp; AR tracking</li>
-          <li>Controlled expense management</li>
-          <li>Streamlined approval workflows</li>
-        </ul>
-      </article>
-      <article class="card card-accent-gold reveal delay-1">
-        <div class="card-icon">🧠</div>
-        <h3>AI CFO Intelligence</h3>
-        <p>Get the strategic insight of a CFO without hiring one. Mumtaz AI monitors your business 24/7 and tells you what matters most — and what to do about it.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Weekly AI briefings with priority actions</li>
-          <li>Cash flow forecasting &amp; risk alerts</li>
-          <li>Scenario planning for key decisions</li>
-        </ul>
-      </article>
-      <article class="card card-accent-teal reveal delay-2">
-        <div class="card-icon">💳</div>
-        <h3>Financial Access</h3>
-        <p>Build a track record that opens doors. Mumtaz translates your operational performance into credit signals and connects you to the right financial products.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Live credit readiness scoring</li>
-          <li>Matched finance product offers</li>
-          <li>Streamlined application support</li>
-        </ul>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container split reveal">
-    <div>
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Typical SME Journey</span>
-      <h2>From chaos to <span class="gradient-text">confidence in 90 days</span></h2>
-      <p class="section-intro">Most SMEs join Mumtaz with fragmented processes, limited financial visibility, and no clear credit story. Within 90 days, they have all three — and more.</p>
-      <ul class="feature-list">
-        <li><strong>Week 1:</strong> Operational workflows live, data flowing in</li>
-        <li><strong>Week 2:</strong> AI CFO first briefing with priority actions</li>
-        <li><strong>Month 1:</strong> Cash flow visibility and risk baseline established</li>
-        <li><strong>Month 3:</strong> Credit readiness score and finance matches available</li>
-      </ul>
-      <a class="btn btn-primary" href="demo.html">Start Your Journey</a>
-    </div>
-    <div class="feature-visual animate-pulse-glow">
-      <div class="feature-visual-inner">
-        <div class="mock-row accent"></div>
-        <div class="mock-row medium" style="margin-top:8px"></div>
-        <div class="mock-row short"></div>
-        <div class="mock-metric"><span>Day 1 — Operations</span><span style="color:var(--emerald)">Live ✓</span></div>
-        <div class="mock-metric"><span>Day 14 — AI Brief</span><span style="color:var(--gold-2)">Delivered ✓</span></div>
-        <div class="mock-metric"><span>Day 90 — Finance</span><span style="color:var(--teal)">3 offers ↑</span></div>
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <div class="page-eyebrow">For Gulf SMEs</div>
+      <h1>Enterprise tools at<br/><em>SME prices.</em></h1>
+      <p>Mumtaz gives you accounting, AI, inventory, HR, and e-invoicing in one platform — without the enterprise price tag or the 6-month implementation project.</p>
+      <div class="hero-ctas">
+        <a href="https://app.mumtaz.digital" class="btn-primary">Start free — no card →</a>
+        <a href="/demo.html" class="btn-ghost-dark">See a live demo</a>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section-sm">
-  <div class="container" style="max-width: 780px;">
-    <article class="testimonial-card reveal">
+<!-- PAIN POINTS -->
+<section class="pain-section">
+  <div class="wrap">
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-before">Before Mumtaz</div>
+        <h3>Spreadsheets & WhatsApp</h3>
+        <p>Invoices in Excel, payments tracked in WhatsApp, no idea what your cash position is until month-end when your accountant calls.</p>
+        <div class="pain-after">One dashboard shows everything — live</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-before">Before Mumtaz</div>
+        <h3>Missing compliance deadlines</h3>
+        <p>UAE FTA, ZATCA, FBR — three different systems, three different login portals, three different ways to get fined for late submission.</p>
+        <div class="pain-after">All three — submitted automatically, free</div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-before">Before Mumtaz</div>
+        <h3>No CFO, no visibility</h3>
+        <p>You make cash decisions by gut feel. You only find out about a problem when it's already a crisis. There's no one to call at 11pm.</p>
+        <div class="pain-after">ZAKI AI answers in seconds, 24/7</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VALUE PROPS -->
+<section class="value-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">Why Mumtaz</span>
+      <h2 class="section-title">Everything a growing SME actually needs</h2>
+      <p class="section-sub">One platform replaces your accounting software, HR system, e-invoicing portal, and AI tools. All connected. All included.</p>
+    </div>
+    <div class="value-grid">
+      <div class="value-card">
+        <div class="value-icon">⚙️</div>
+        <h3>Full ERP — not a starter pack</h3>
+        <p>You get accounting, CRM, inventory, HR, payroll, and e-invoicing from day one. No modules to unlock, no per-feature pricing.</p>
+        <ul class="value-list">
+          <li>Double-entry accounting & bank sync</li>
+          <li>CRM with proposals and sales orders</li>
+          <li>Inventory with multi-warehouse support</li>
+          <li>HR, payroll & WPS compliance</li>
+        </ul>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">🤖</div>
+        <h3>ZAKI — your AI CFO</h3>
+        <p>Ask anything about your business in plain language and get instant, data-backed answers. Available 24/7, knows your numbers cold.</p>
+        <ul class="value-list">
+          <li>"What's our cash runway?"</li>
+          <li>"Who owes us money and how overdue?"</li>
+          <li>"What's our burn rate trend?"</li>
+          <li>English and Arabic supported</li>
+        </ul>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">🌍</div>
+        <h3>GCC compliance — built in</h3>
+        <p>E-invoicing for UAE FTA, KSA ZATCA Phase 2, and Pakistan FBR is included at no extra charge — not a paid add-on.</p>
+        <ul class="value-list">
+          <li>Real-time ZATCA clearance</li>
+          <li>UAE FTA submission</li>
+          <li>Pakistan FBR IRN generation</li>
+          <li>VAT returns and filing reminders</li>
+        </ul>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">🛒</div>
+        <h3>B2B Marketplace access</h3>
+        <p>Buy from 3,400+ verified Gulf suppliers directly from inside your ERP. POs sync automatically. Trade finance available.</p>
+        <ul class="value-list">
+          <li>Verified supplier network</li>
+          <li>1.5% marketplace fee only</li>
+          <li>Direct PO to supplier ERP</li>
+          <li>Trade finance options</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOURNEY -->
+<section class="journey-section">
+  <div class="wrap">
+    <div class="journey-label">Typical journey</div>
+    <h2 class="journey-title">From spreadsheets to<br/><em>clarity in 90 days</em></h2>
+    <p class="journey-sub">Most SMEs join Mumtaz in the morning and have their first invoice live by lunch.</p>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot">1</div>
+        <div class="timeline-when">Day 1</div>
+        <h4>Sign up & import</h4>
+        <p>Import your customers, products, and opening balances. Under 30 minutes.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">2</div>
+        <div class="timeline-when">Day 2</div>
+        <h4>First invoice sent</h4>
+        <p>Create and send your first e-invoice — automatically cleared with the tax authority.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">3</div>
+        <div class="timeline-when">Week 2</div>
+        <h4>ZAKI first brief</h4>
+        <p>ZAKI starts surfacing cash risks, overdue AR, and business insights every week.</p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot">4</div>
+        <div class="timeline-when">Day 90</div>
+        <h4>Full clarity</h4>
+        <p>Live P&L, cash forecast, and supplier network all running. You have a real business OS.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial-section">
+  <div class="wrap">
+    <div class="testimonial-card">
       <span class="quote-mark">"</span>
-      <blockquote>"We used to run on gut feeling and quarterly accountant reports. Mumtaz gives us a live picture of the business and tells us exactly where to focus each week. It changed how we run everything."</blockquote>
-      <div class="testimonial-author">
-        <div class="author-avatar">S</div>
+      <blockquote>"We used to run on gut feel and quarterly accountant reports. Mumtaz gives us a live picture of the business every day — and ZAKI tells me exactly where to focus each week. It changed how we run everything."</blockquote>
+      <div class="author">
+        <div class="avatar">S</div>
         <div>
           <div class="author-name">Sara Al-Hamdan</div>
           <div class="author-title">Co-founder, Nestify — Riyadh, KSA</div>
         </div>
       </div>
-    </article>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="cta-band reveal">
-      <span class="eyebrow" style="margin-bottom:20px"><span class="eyebrow-dot"></span>Get Started</span>
-      <h2>Give your SME the tools to <span class="gradient-text">compete and win</span></h2>
-      <p>Book a demo to see exactly how Mumtaz can transform your operations, financial visibility, and access to capital.</p>
-      <div class="cta-actions">
-        <a class="btn btn-primary btn-lg" href="demo.html">Book a Demo</a>
-        <a class="btn btn-ghost btn-lg" href="platform.html">Explore the Platform</a>
-      </div>
     </div>
   </div>
 </section>
 
-</main>
-
-<footer class="footer">
-  <div class="container footer-grid">
-    <div class="footer-brand">
-      <a class="brand" href="index.html"><span class="brand-mark"></span><span>Mumtaz</span></a>
-      <p>AI-powered SME operating platform with intelligent finance infrastructure for modern business ecosystems.</p>
-      <div class="footer-socials">
-        <a class="social-btn" href="https://linkedin.com/company/mumtaz-digital" aria-label="LinkedIn">in</a>
-        <a class="social-btn" href="https://twitter.com/mumtazdigital" aria-label="Twitter">𝕏</a>
-      </div>
+<!-- CTA -->
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Give your SME the<br/><em>tools to win</em></h2>
+    <p>14-day free trial. No credit card. No sales call required. Just sign up and start running your business properly.</p>
+    <div class="cta-row">
+      <a href="https://app.mumtaz.digital" class="btn-primary">Start free →</a>
+      <a href="/demo.html" class="btn-ghost">Book a demo first</a>
     </div>
-    <div class="footer-col">
-      <h4>Platform</h4>
-      <a href="platform.html">Overview</a>
-      <a href="erp.html">Mumtaz ERP</a>
-      <a href="ai.html">Mumtaz AI</a>
-      <a href="finance.html">Mumtaz Finance</a>
-    </div>
-    <div class="footer-col">
-      <h4>Solutions</h4>
-      <a href="smes.html">For SMEs</a>
-      <a href="banks.html">For Banks &amp; Fintechs</a>
-      <a href="demo.html">Book a Demo</a>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="mailto:hello@mumtaz.digital">hello@mumtaz.digital</a>
-      <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+    <div class="cta-badges">
+      <span class="cta-badge">14-day free trial</span>
+      <span class="cta-badge">Free e-invoicing forever</span>
+      <span class="cta-badge">Setup under 30 minutes</span>
     </div>
   </div>
-  <div class="container footer-bottom">
-    <p>© <span data-year></span> Mumtaz Digital. All rights reserved.</p>
-    <div class="footer-bottom-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Use</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span>Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="/contact.html">Partner Program</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
     </div>
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
 </body>
 </html>

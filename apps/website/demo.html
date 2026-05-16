@@ -1,49 +1,317 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Demo | Mumtaz</title>
-  <meta name="description" content="Mumtaz premium AI ERP and embedded finance platform for GCC enterprises.">
-  <link rel="icon" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Book a live Mumtaz demo — 30 minutes with a solutions engineer, tailored to your industry and company size." />
+  <title>Book a Demo — Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --gold-bg: #FBF4E3; --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.6); border-radius: 2px; }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } .nav-hamburger { display: flex; } }
+
+    /* DEMO SECTION */
+    .demo-section { background: var(--navy); min-height: 100vh; padding: 80px 0; position: relative; overflow: hidden; }
+    .demo-section::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); background-size: 300px; opacity: .4; }
+    .demo-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 20% 40%, rgba(200,146,42,.16) 0%, transparent 55%), radial-gradient(ellipse 40% 50% at 75% 20%, rgba(0,166,147,.12) 0%, transparent 50%); }
+    .demo-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+    @media (max-width: 860px) { .demo-inner { grid-template-columns: 1fr; } }
+
+    /* LEFT */
+    .demo-left { padding-top: 24px; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(200,146,42,.12); border: 1px solid rgba(200,146,42,.26); color: var(--gold2); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .demo-left h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 400; line-height: 1.1; color: #fff; margin-bottom: 18px; }
+    .demo-left h1 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .demo-left p { color: rgba(255,255,255,.5); line-height: 1.8; margin-bottom: 36px; max-width: 420px; }
+    .what-expect { margin-top: 8px; }
+    .expect-title { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 16px; }
+    .expect-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .expect-item { display: flex; align-items: flex-start; gap: 12px; }
+    .expect-num { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--gold2)); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .expect-text h4 { font-size: .9rem; font-weight: 600; color: rgba(255,255,255,.85); margin-bottom: 2px; }
+    .expect-text p { font-size: .8rem; color: rgba(255,255,255,.4); line-height: 1.5; }
+
+    /* RIGHT — FORM */
+    .demo-form-card { background: var(--white); border-radius: var(--r-lg); padding: 36px; }
+    .form-title { font-size: 1.125rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .form-sub { font-size: .82rem; color: var(--ink3); margin-bottom: 24px; }
+    .form-success { display: none; background: rgba(0,166,147,.06); border: 1.5px solid rgba(0,166,147,.2); border-radius: var(--r); padding: 24px; text-align: center; }
+    .form-success-icon { font-size: 2rem; margin-bottom: 8px; }
+    .form-success h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+    .form-success p { font-size: .875rem; color: var(--ink3); }
+    .demo-form { display: flex; flex-direction: column; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: .78rem; font-weight: 600; color: var(--ink2); }
+    .field input, .field select, .field textarea {
+      background: var(--paper); border: 1.5px solid var(--border); border-radius: var(--r);
+      padding: 10px 14px; font-size: .875rem; color: var(--ink); font-family: inherit;
+      transition: border-color .15s; width: 100%;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
+    .btn-submit { width: 100%; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px; border-radius: 100px; border: none; cursor: pointer; transition: opacity .15s, transform .15s; font-family: inherit; }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .form-note { font-size: .75rem; color: var(--ink3); text-align: center; }
+
+    /* WHAT YOU GET */
+    .perks-section { background: var(--paper); padding: 72px 0; }
+    .section-hdr { text-align: center; margin-bottom: 48px; }
+    .section-label { display: inline-block; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; line-height: 1.1; color: var(--ink); margin-bottom: 14px; }
+    .perks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 768px) { .perks-grid { grid-template-columns: 1fr; } }
+    .perk { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 28px 24px; text-align: center; }
+    .perk-icon { font-size: 1.8rem; margin-bottom: 12px; }
+    .perk h3 { font-size: .9375rem; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+    .perk p { font-size: .82rem; color: var(--ink3); line-height: 1.6; }
+
+    /* FOOTER */
+    footer { background: var(--navy); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-bottom: 12px; }
+    .footer-tagline { font-size: .83rem; color: rgba(255,255,255,.35); line-height: 1.65; }
+    footer h5 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 14px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.52); margin-bottom: 10px; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 20px 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: rgba(255,255,255,.28); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; font-size: .8rem; }
+  </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle>Menu</button>
-    <nav class="nav-menu" data-nav-menu>
-      <a class="nav-link active" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
-      <a class="nav-link" href="pricing.html">Pricing</a>
-      <a class="nav-link" href="docs.html">Docs</a>
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link" href="blog.html">Blog</a>
-      <a class="nav-link" href="contact.html">Contact</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="demo.html">Book Demo</a>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand"><div class="brand-mark">م</div>Mumtaz</a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://app.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://app.mumtaz.digital" class="btn-nav-primary">Get started free</a>
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
     </div>
   </div>
-</header>
-<main>
+</nav>
 
-<section class="hero"><div class="container"><div class="section-header reveal"><span class="badge">Interactive Demo</span><h1>Explore Mumtaz in a guided product tour</h1><p>See workflows for ERP operations, AI CFO recommendations, and finance activation.</p></div><div class="grid-2"><article class="glass card reveal"><h3>Platform Walkthrough</h3><div style="aspect-ratio:16/9;background:linear-gradient(135deg,rgba(26,115,232,.15) 0%,rgba(139,92,246,.15) 100%);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer" onclick="window.open('https://erp.mumtaz.digital','_blank')"><div style="width:56px;height:56px;background:rgba(26,115,232,.2);border-radius:50%;display:grid;place-items:center;font-size:1.5rem">▶</div><div style="font-size:.9rem;font-weight:600;color:rgba(255,255,255,.85)">Launch Live Platform</div><div style="font-size:.75rem;color:rgba(255,255,255,.5)">Explore the full ERP dashboard</div></div></article><article class="glass card reveal"><h3>Book a Live Session</h3><p>Choose your preferred time and team objectives. We tailor each walkthrough.</p><a class="btn btn-primary" href="contact.html">Schedule Meeting</a></article></div></div></section>
-<section class="section"><div class="container"><div class="grid-3"><article class="glass card reveal"><h3>FAQ</h3><p>How quickly can we deploy? Typical launch is 2–6 weeks by scope.</p></article><article class="glass card reveal"><h3>Use Cases</h3><p>Banks, manufacturers, distributors, and multi-brand commerce operators.</p></article><article class="glass card reveal"><h3>Outcomes</h3><p>Reduced close cycle, better financing conversion, and tighter control.</p></article></div></div></section>
-</main>
-<footer class="footer">
-  <div class="container footer-grid">
-    <div><a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a><p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p></div>
-    <div class="footer-col"><strong>Product</strong><a href="platform.html">Platform</a><a href="solutions.html">Solutions</a><a href="pricing.html">Pricing</a></div>
-    <div class="footer-col"><strong>Resources</strong><a href="docs.html">Documentation</a><a href="blog.html">Blog</a><a href="demo.html">Interactive Demo</a></div>
-    <div class="footer-col"><strong>Company</strong><a href="about.html">About</a><a href="contact.html">Contact</a><a href="http://187.77.128.199:8069/">Platform Login</a></div>
+<!-- DEMO SECTION -->
+<section class="demo-section">
+  <div class="demo-glow"></div>
+  <div class="wrap">
+    <div class="demo-inner">
+
+      <!-- LEFT -->
+      <div class="demo-left">
+        <div class="page-eyebrow">Live Demo</div>
+        <h1>See Mumtaz in<br/><em>30 minutes.</em></h1>
+        <p>A solutions engineer will walk you through the ERP, ZAKI AI, and e-invoicing — tailored to your industry and company size. No sales pitch, just the product.</p>
+
+        <div class="what-expect">
+          <div class="expect-title">What to expect</div>
+          <ul class="expect-list">
+            <li class="expect-item">
+              <div class="expect-num">1</div>
+              <div class="expect-text"><h4>Live product walkthrough</h4><p>We'll show you the modules most relevant to your business — accounting, CRM, inventory, HR, or e-invoicing.</p></div>
+            </li>
+            <li class="expect-item">
+              <div class="expect-num">2</div>
+              <div class="expect-text"><h4>ZAKI AI in action</h4><p>Ask ZAKI real questions during the demo — see how it answers from live ERP data in seconds.</p></div>
+            </li>
+            <li class="expect-item">
+              <div class="expect-num">3</div>
+              <div class="expect-text"><h4>Your questions answered</h4><p>Pricing, compliance, setup time, migration — we'll cover everything. No follow-up required unless you want it.</p></div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- RIGHT — FORM -->
+      <div class="demo-form-card">
+        <div class="form-title">Book your free demo</div>
+        <div class="form-sub">We'll confirm within one business day and send a calendar invite.</div>
+
+        <div class="form-success" id="demo-success">
+          <div class="form-success-icon">✓</div>
+          <h3>Demo request received!</h3>
+          <p>A solutions engineer will reach out within one business day to confirm your slot.</p>
+        </div>
+
+        <form class="demo-form" id="demo-form" onsubmit="handleDemoSubmit(event)">
+          <div class="form-row">
+            <div class="field">
+              <label for="d-name">Full name *</label>
+              <input type="text" id="d-name" placeholder="Ahmed Al-Rashid" required />
+            </div>
+            <div class="field">
+              <label for="d-email">Work email *</label>
+              <input type="email" id="d-email" placeholder="ahmed@company.ae" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="d-company">Company *</label>
+              <input type="text" id="d-company" placeholder="Company name" required />
+            </div>
+            <div class="field">
+              <label for="d-country">Country *</label>
+              <select id="d-country" required>
+                <option value="">Select country</option>
+                <option>United Arab Emirates</option>
+                <option>Saudi Arabia</option>
+                <option>Pakistan</option>
+                <option>Kuwait</option>
+                <option>Qatar</option>
+                <option>Bahrain</option>
+                <option>Oman</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="d-size">Company size</label>
+            <select id="d-size">
+              <option value="">Select size</option>
+              <option>1 – 10 employees</option>
+              <option>11 – 50 employees</option>
+              <option>51 – 200 employees</option>
+              <option>200+ employees</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="d-interest">What are you most interested in? *</label>
+            <select id="d-interest" required>
+              <option value="">Select focus area</option>
+              <option>Full ERP walkthrough</option>
+              <option>ZAKI AI agent</option>
+              <option>E-invoicing & compliance</option>
+              <option>B2B Marketplace</option>
+              <option>White-label / partner program</option>
+              <option>Everything — general overview</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="d-note">Anything you'd like us to focus on?</label>
+            <textarea id="d-note" rows="3" placeholder="e.g. We have 3 warehouses and need help with inventory…"></textarea>
+          </div>
+          <button class="btn-submit" type="submit">Book my free demo →</button>
+          <p class="form-note">By submitting you agree to our Privacy Policy. No spam, ever.</p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PERKS -->
+<section class="perks-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">After the demo</span>
+      <h2 class="section-title">Your next steps are easy</h2>
+    </div>
+    <div class="perks-grid">
+      <div class="perk">
+        <div class="perk-icon">🚀</div>
+        <h3>Start free immediately</h3>
+        <p>No contract, no credit card. Sign up and start your 14-day trial the same day as the demo if you like what you see.</p>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">🛠️</div>
+        <h3>We help you set up</h3>
+        <p>Every trial includes onboarding support. We'll help you import your data and configure the modules that matter most.</p>
+      </div>
+      <div class="perk">
+        <div class="perk-icon">💬</div>
+        <h3>No pressure, ever</h3>
+        <p>The demo is just a demo. If Mumtaz isn't the right fit, we'll tell you. If it is, we'll make the next step simple.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span>Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
   </div>
 </footer>
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
+
+<script>
+function handleDemoSubmit(e) {
+  e.preventDefault();
+  document.getElementById('demo-form').style.display = 'none';
+  document.getElementById('demo-success').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
 </body>
 </html>

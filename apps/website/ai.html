@@ -1,215 +1,419 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="assets/images/favicon.svg">
-<link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
-<title>Mumtaz AI | AI CFO and Intelligent Business Insights</title>
-<meta name="description" content="Mumtaz AI delivers AI CFO capabilities, strategic insight, and prioritized guidance for SME decision-makers.">
-<link rel="canonical" href="https://mumtaz.digital/ai.html">
-<meta property="og:title" content="Mumtaz AI | AI CFO and Intelligent Business Insights">
-<meta property="og:description" content="Mumtaz AI delivers AI CFO capabilities, strategic insight, and prioritized guidance for SME decision-makers.">
-<meta property="og:url" content="https://mumtaz.digital/ai.html">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Mumtaz">
-<meta property="og:image" content="https://mumtaz.digital/assets/images/og-image.jpg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ZAKI — the AI agent that lives inside your Mumtaz ERP. Ask anything about your business in plain language. 24/7 CFO-level intelligence for Gulf SMEs." />
+  <title>ZAKI AI — Your Business Brain | Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --gold-bg: #FBF4E3; --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.6); border-radius: 2px; }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } .nav-hamburger { display: flex; } }
+
+    /* PAGE HERO */
+    .page-hero { background: var(--navy); position: relative; overflow: hidden; padding: 100px 0 80px; }
+    .page-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); background-size: 300px; opacity: .5; }
+    .page-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 10% 50%, rgba(0,166,147,.18) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 80% 30%, rgba(200,146,42,.12) 0%, transparent 55%); }
+    .page-hero .inner { position: relative; z-index: 1; max-width: 780px; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,166,147,.14); border: 1px solid rgba(0,166,147,.28); color: var(--teal); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .page-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.4rem, 4vw, 3.8rem); font-weight: 400; line-height: 1.1; letter-spacing: -.02em; color: #fff; margin-bottom: 20px; }
+    .page-hero h1 em { font-style: italic; background: linear-gradient(100deg, var(--teal), #4DD9CA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-hero p { font-size: 1.0625rem; color: rgba(255,255,255,.52); max-width: 560px; line-height: 1.8; margin-bottom: 36px; }
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 14px 30px; border-radius: 100px; box-shadow: 0 4px 28px rgba(200,146,42,.35); transition: opacity .15s, transform .15s; }
+    .btn-primary:hover { opacity: .91; transform: translateY(-2px); }
+    .btn-teal { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,166,147,.15); border: 1px solid rgba(0,166,147,.35); color: var(--teal); font-weight: 600; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: background .15s; }
+    .btn-teal:hover { background: rgba(0,166,147,.22); }
+
+    /* CHAT DEMO */
+    .chat-section { background: var(--navy2); padding: 80px 0; }
+    .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+    @media (max-width: 860px) { .chat-grid { grid-template-columns: 1fr; } }
+    .chat-text h2 { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 3vw, 2.8rem); font-weight: 400; line-height: 1.1; color: #fff; margin-bottom: 16px; }
+    .chat-text h2 em { font-style: italic; background: linear-gradient(100deg, var(--teal), #4DD9CA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .chat-text p { color: rgba(255,255,255,.5); line-height: 1.8; margin-bottom: 28px; }
+    .chat-window { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: var(--r-lg); overflow: hidden; }
+    .chat-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 10px; }
+    .chat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 0 0 rgba(0,166,147,.5); animation: pulse-teal 2s ease-in-out infinite; }
+    @keyframes pulse-teal { 0%,100% { box-shadow: 0 0 0 0 rgba(0,166,147,.5); } 50% { box-shadow: 0 0 0 5px rgba(0,166,147,0); } }
+    .chat-header-name { font-size: .82rem; font-weight: 600; color: rgba(255,255,255,.8); }
+    .chat-header-sub { font-size: .72rem; color: rgba(255,255,255,.35); }
+    .chat-body { padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+    .chat-msg { max-width: 85%; }
+    .chat-msg.user { align-self: flex-end; }
+    .chat-bubble { padding: 10px 14px; border-radius: 14px; font-size: .875rem; line-height: 1.5; }
+    .chat-msg.user .chat-bubble { background: rgba(200,146,42,.15); border: 1px solid rgba(200,146,42,.25); color: rgba(255,255,255,.85); border-bottom-right-radius: 4px; }
+    .chat-msg.zaki .chat-bubble { background: rgba(0,166,147,.1); border: 1px solid rgba(0,166,147,.2); color: rgba(255,255,255,.8); border-bottom-left-radius: 4px; }
+    .chat-sender { font-size: .7rem; font-weight: 600; color: rgba(255,255,255,.35); margin-bottom: 4px; }
+    .chat-msg.user .chat-sender { text-align: right; }
+    .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .kpi-chip { font-size: .72rem; font-weight: 600; padding: 3px 10px; border-radius: 100px; }
+    .kpi-red { background: rgba(239,68,68,.15); color: #F87171; }
+    .kpi-green { background: rgba(52,211,153,.15); color: #34D399; }
+    .kpi-gold { background: rgba(200,146,42,.15); color: var(--gold2); }
+
+    /* FEATURES GRID */
+    .features-section { background: var(--paper); padding: 80px 0; }
+    .section-hdr { text-align: center; margin-bottom: 56px; }
+    .section-label { display: inline-block; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; line-height: 1.1; color: var(--ink); margin-bottom: 14px; }
+    .section-sub { color: var(--ink3); max-width: 520px; margin: 0 auto; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 860px) { .features-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .features-grid { grid-template-columns: 1fr; } }
+    .feat-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 28px 24px; }
+    .feat-icon { font-size: 1.5rem; margin-bottom: 14px; }
+    .feat-card h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+    .feat-card p { font-size: .875rem; color: var(--ink3); line-height: 1.65; }
+    .feat-card ul { list-style: none; margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .feat-card li { font-size: .82rem; color: var(--ink2); display: flex; gap: 8px; }
+    .feat-card li::before { content: '→'; color: var(--teal); flex-shrink: 0; }
+
+    /* HOW IT WORKS */
+    .how-section { background: var(--navy); padding: 80px 0; }
+    .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 48px; }
+    @media (max-width: 860px) { .steps-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .steps-grid { grid-template-columns: 1fr; } }
+    .step-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: var(--r-lg); padding: 24px 20px; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--teal), var(--teal-dk)); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; color: #fff; margin-bottom: 16px; }
+    .step-card h4 { font-size: .9375rem; font-weight: 600; color: rgba(255,255,255,.9); margin-bottom: 8px; }
+    .step-card p { font-size: .82rem; color: rgba(255,255,255,.45); line-height: 1.6; }
+    .how-title { text-align: center; font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; color: #fff; margin-bottom: 8px; }
+    .how-title em { font-style: italic; background: linear-gradient(100deg, var(--teal), #4DD9CA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .how-sub { text-align: center; color: rgba(255,255,255,.45); max-width: 480px; margin: 0 auto; }
+    .how-label { text-align: center; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+
+    /* TESTIMONIAL */
+    .testimonial-section { background: var(--paper); padding: 72px 0; }
+    .testimonial-card { background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 36px; max-width: 680px; margin: 0 auto; }
+    .quote-mark { font-family: 'Instrument Serif', serif; font-size: 4rem; color: var(--teal); line-height: .6; display: block; margin-bottom: 16px; }
+    blockquote { font-size: 1.0625rem; color: var(--ink2); line-height: 1.75; font-style: italic; margin-bottom: 24px; }
+    .author { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--teal), var(--teal-dk)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; font-size: .9rem; flex-shrink: 0; }
+    .author-name { font-size: .9rem; font-weight: 600; color: var(--ink); }
+    .author-title { font-size: .78rem; color: var(--ink3); }
+
+    /* CTA SECTION */
+    .cta-section { background: var(--gold-bg); padding: 80px 0; text-align: center; }
+    .cta-section h2 { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 400; color: var(--ink); margin-bottom: 14px; }
+    .cta-section h2 em { font-style: italic; color: var(--gold); }
+    .cta-section p { color: var(--ink3); max-width: 480px; margin: 0 auto 32px; }
+    .cta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--border); color: var(--ink2); font-weight: 500; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: border-color .15s; }
+    .btn-ghost:hover { border-color: var(--ink2); }
+    .cta-badges { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .cta-badge { font-size: .78rem; color: var(--ink3); display: flex; align-items: center; gap: 6px; }
+    .cta-badge::before { content: '✓'; color: var(--teal); font-weight: 700; }
+
+    /* FOOTER */
+    footer { background: var(--navy); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-bottom: 12px; }
+    .footer-brand-name { font-size: 1rem; }
+    .footer-tagline { font-size: .83rem; color: rgba(255,255,255,.35); line-height: 1.65; }
+    footer h5 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 14px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.52); margin-bottom: 10px; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 20px 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: rgba(255,255,255,.28); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; font-size: .8rem; }
+  </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="index.html"><span class="brand-mark"></span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle menu">Menu</button>
-    <nav class="main-nav" data-nav>
-      <a href="index.html">Home</a>
-      <a href="platform.html">Platform</a>
-      <a href="erp.html">ERP</a>
-      <a class="active" href="ai.html">AI</a>
-      <a href="finance.html">Finance</a>
-      <a href="banks.html">For Banks</a>
-      <a href="smes.html">For SMEs</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a class="btn btn-primary btn-sm" href="demo.html">Book a Demo</a>
-    </nav>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand"><div class="brand-mark">م</div>Mumtaz</a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html" class="active">ZAKI AI</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://app.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://app.mumtaz.digital" class="btn-nav-primary">Get started free</a>
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
+    </div>
   </div>
-</header>
+</nav>
 
-<main>
-
+<!-- PAGE HERO -->
 <section class="page-hero">
-  <div class="container">
-    <span class="eyebrow"><span class="eyebrow-dot"></span>Mumtaz AI</span>
-    <h1>AI CFO intelligence for <span class="gradient-text">everyday strategic decisions.</span></h1>
-    <p>Convert operating and financial signals into clear, prioritized actions. Mumtaz AI is the intelligence layer that turns your business data into board-level clarity — automatically, continuously, and with full explainability.</p>
-    <div style="margin-top:28px; display:flex; gap:12px; flex-wrap:wrap;">
-      <a class="btn btn-primary" href="demo.html">Experience AI CFO</a>
-      <a class="btn btn-ghost" href="platform.html">View Full Platform</a>
-    </div>
-  </div>
-</section>
-
-<div class="divider"></div>
-
-<section class="section-sm">
-  <div class="container">
-    <div class="stats-grid reveal">
-      <div class="stat-item">
-        <span class="stat-number">92/100</span>
-        <span class="stat-label">Average AI CFO readiness score</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">137d</span>
-        <span class="stat-label">Average cash horizon visibility</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">Weekly</span>
-        <span class="stat-label">AI CFO executive briefings</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number">Explainable</span>
-        <span class="stat-label">Every recommendation has context</span>
+  <div class="page-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <div class="page-eyebrow">ZAKI — AI Agent</div>
+      <h1>Your business brain,<br/><em>always on.</em></h1>
+      <p>ZAKI is the AI agent embedded in every Mumtaz workspace. Ask questions in plain Arabic or English, get CFO-level answers about your cash, customers, invoices, and risks — in seconds.</p>
+      <div class="hero-ctas">
+        <a href="https://app.mumtaz.digital" class="btn-primary">Try ZAKI free →</a>
+        <a href="/demo.html" class="btn-teal">Watch a demo</a>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>AI Capabilities</span>
-      <h2>Intelligence across every <span class="gradient-text">business dimension</span></h2>
-      <p class="section-intro">Mumtaz AI operates across liquidity, risk, operations, and growth — surfacing the signals that matter most to founders and finance teams.</p>
+<!-- CHAT DEMO -->
+<section class="chat-section">
+  <div class="wrap">
+    <div class="chat-grid">
+      <div class="chat-text">
+        <span class="section-label" style="color:var(--teal)">Live demo</span>
+        <h2>Ask in plain language,<br/>get <em>real answers</em></h2>
+        <p>ZAKI reads your actual ERP data — invoices, expenses, cash flow, payroll — and answers in seconds. No reports, no pivot tables, no waiting for your accountant.</p>
+        <p style="font-size:.875rem; color:rgba(255,255,255,.35)">ZAKI supports English and Arabic. Answers are always traceable back to source data.</p>
+      </div>
+      <div class="chat-window">
+        <div class="chat-header">
+          <span class="chat-dot"></span>
+          <div>
+            <div class="chat-header-name">ZAKI — AI Agent</div>
+            <div class="chat-header-sub">Connected to your ERP · Live data</div>
+          </div>
+        </div>
+        <div class="chat-body">
+          <div class="chat-msg user">
+            <div class="chat-sender">You</div>
+            <div class="chat-bubble">What's our cash runway and biggest risk this month?</div>
+          </div>
+          <div class="chat-msg zaki">
+            <div class="chat-sender">ZAKI</div>
+            <div class="chat-bubble">
+              Based on your current burn rate of AED 148k/month, you have <strong style="color:#34D399">4.3 months runway</strong>. Your biggest risk is AED 92k in overdue invoices from 3 clients — Al-Rashid Group (31 days), Noor Trading (44 days), and Gulf Tech (58 days).
+              <div class="kpi-row">
+                <span class="kpi-chip kpi-red">AR at risk: AED 92k</span>
+                <span class="kpi-chip kpi-green">Runway: 4.3 mo</span>
+              </div>
+            </div>
+          </div>
+          <div class="chat-msg user">
+            <div class="chat-sender">You</div>
+            <div class="chat-bubble">What should I do about the overdue invoices?</div>
+          </div>
+          <div class="chat-msg zaki">
+            <div class="chat-sender">ZAKI</div>
+            <div class="chat-bubble">
+              I'd prioritise Gulf Tech first (58 days, AED 34k). I can draft a payment reminder email now, or escalate to a formal notice. For Al-Rashid Group, their payment history shows they typically pay within 7 days of a call.
+              <div class="kpi-row">
+                <span class="kpi-chip kpi-gold">Action: Send reminder</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="grid-2">
-      <article class="card card-accent-gold reveal">
-        <div class="card-icon">📊</div>
-        <h3>Intelligent Insights</h3>
-        <p>Pattern detection across cash flow behaviour, operational efficiency, and risk posture — translated into language your leadership team can act on.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Early warnings for margin and liquidity pressure</li>
-          <li>Priority-ranked recommendations with context</li>
-          <li>Explainable decision support — not black-box AI</li>
-          <li>Continuous signal monitoring across business layers</li>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">What ZAKI can do</span>
+      <h2 class="section-title">CFO-grade intelligence,<br/>no CFO required</h2>
+      <p class="section-sub">ZAKI is trained on financial operations and reads your live ERP data. Every answer is grounded in facts, not guesses.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">💵</div>
+        <h3>Cash Flow Intelligence</h3>
+        <p>Know your runway, burn rate, and upcoming cash gaps before they become problems.</p>
+        <ul>
+          <li>30/60/90 day cash projections</li>
+          <li>Burn rate trend analysis</li>
+          <li>Receivables risk alerts</li>
         </ul>
-      </article>
-      <article class="card card-accent-gold reveal delay-1">
-        <div class="card-icon">🎯</div>
-        <h3>AI CFO Workflows</h3>
-        <p>Purpose-built guidance for founders, finance leads, and partner teams — structured to close the loop from insight to action.</p>
-        <ul class="feature-list" style="margin-top:14px">
-          <li>Weekly executive briefings with priority actions</li>
-          <li>Scenario simulation for growth and liquidity decisions</li>
-          <li>Action plans with assigned owners and deadlines</li>
-          <li>Partner intervention triggers for finance teams</li>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h3>Revenue & Sales</h3>
+        <p>Track pipeline value, conversion rates, and top customers with instant answers.</p>
+        <ul>
+          <li>Revenue vs target tracking</li>
+          <li>Customer churn signals</li>
+          <li>Gross margin by product</li>
         </ul>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container split reveal">
-    <div>
-      <span class="eyebrow"><span class="eyebrow-dot"></span>How It Works</span>
-      <h2>From signals to <span class="gradient-text">decisions in seconds</span></h2>
-      <p class="section-intro">Mumtaz AI continuously ingests data from the ERP layer, enriches it with market context, and surfaces prioritized guidance through a conversational, always-on interface.</p>
-      <ul class="feature-list">
-        <li>Ingests ERP data: invoices, expenses, workflows, cash</li>
-        <li>Applies financial models: cash flow, risk, performance benchmarks</li>
-        <li>Surfaces insights in plain language with recommended actions</li>
-        <li>Learns from feedback to improve guidance over time</li>
-      </ul>
-      <a class="btn btn-primary" href="demo.html">See AI CFO Live</a>
-    </div>
-    <div class="feature-visual animate-pulse-glow">
-      <div class="feature-visual-inner" style="background: linear-gradient(155deg, rgba(245,158,11,0.08), rgba(252,211,77,0.04)); border-color: rgba(245,158,11,0.15);">
-        <div class="mock-row" style="background:rgba(245,158,11,0.35); width:80%"></div>
-        <div class="mock-row medium" style="margin-top:8px"></div>
-        <div class="mock-row short"></div>
-        <div class="mock-metric"><span>CFO Score</span><span style="color:var(--gold-2)">92 / 100</span></div>
-        <div class="mock-metric"><span>Cash Horizon</span><span style="color:var(--teal)">+137 Days</span></div>
-        <div class="mock-metric"><span>Top Action</span><span style="color:var(--gold-2)">Collect AR →</span></div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⚠️</div>
+        <h3>Risk & Anomaly Detection</h3>
+        <p>ZAKI flags unusual spending, late payments, and compliance gaps automatically.</p>
+        <ul>
+          <li>Expense anomaly detection</li>
+          <li>Overdue AR prioritization</li>
+          <li>VAT filing reminders</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🧾</div>
+        <h3>Invoice & AP/AR</h3>
+        <p>Query any invoice, check payment status, or get aging summaries in plain language.</p>
+        <ul>
+          <li>Invoice status lookups</li>
+          <li>Payables due this week</li>
+          <li>Customer payment history</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">👥</div>
+        <h3>HR & Payroll</h3>
+        <p>Get payroll summaries, headcount trends, and WPS compliance status on demand.</p>
+        <ul>
+          <li>Monthly payroll totals</li>
+          <li>WPS compliance status</li>
+          <li>Leave balance lookups</li>
+        </ul>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌍</div>
+        <h3>Compliance Assistant</h3>
+        <p>ZAKI knows UAE FTA, KSA ZATCA, and FBR rules — and tells you when something's due or wrong.</p>
+        <ul>
+          <li>VAT return due dates</li>
+          <li>ZATCA clearance status</li>
+          <li>FBR invoice validation</li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container" style="max-width: 780px;">
-    <article class="testimonial-card reveal">
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="wrap">
+    <div class="how-label">How it works</div>
+    <h2 class="how-title">Connected to your data,<br/><em>not the internet</em></h2>
+    <p class="how-sub">ZAKI reads your company's actual ERP data — securely, in your isolated database. It never pulls from the web or other companies.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h4>You ask</h4>
+        <p>Type any business question in English or Arabic. No SQL, no menus, no filters.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h4>ZAKI reads your ERP</h4>
+        <p>ZAKI queries your live invoices, expenses, payroll, and inventory data directly.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h4>Answer in seconds</h4>
+        <p>A clear, plain-language answer — with the numbers, the context, and the action.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h4>Take action</h4>
+        <p>ZAKI can draft emails, create tasks, or flag items for your team — right from the chat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial-section">
+  <div class="wrap">
+    <div class="testimonial-card">
       <span class="quote-mark">"</span>
-      <blockquote>"The AI CFO briefing every Monday is genuinely the most useful 5 minutes of my week. It tells me exactly what to focus on and why — with the data to back it up."</blockquote>
-      <div class="testimonial-author">
-        <div class="author-avatar">K</div>
+      <blockquote>"I used to spend Friday mornings pulling reports and calling my accountant. Now I just ask ZAKI. It knows everything about the business — and it tells me what to focus on that week. It's the most useful tool we have."</blockquote>
+      <div class="author">
+        <div class="avatar">K</div>
         <div>
-          <div class="author-name">Khalid Ibrahim</div>
+          <div class="author-name">Khalid Al-Rasheed</div>
           <div class="author-title">CEO, TechFlow Solutions — Abu Dhabi, UAE</div>
         </div>
       </div>
-    </article>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="cta-band reveal">
-      <span class="eyebrow" style="margin-bottom:20px"><span class="eyebrow-dot"></span>Try Mumtaz AI</span>
-      <h2>Experience <span class="gradient-text">AI CFO intelligence</span> firsthand</h2>
-      <p>Book a demo to see how Mumtaz AI turns your business signals into actionable strategic guidance.</p>
-      <div class="cta-actions">
-        <a class="btn btn-primary btn-lg" href="demo.html">Book a Demo</a>
-        <a class="btn btn-ghost btn-lg" href="platform.html">View Full Platform</a>
-      </div>
     </div>
   </div>
 </section>
 
-</main>
-
-<footer class="footer">
-  <div class="container footer-grid">
-    <div class="footer-brand">
-      <a class="brand" href="index.html"><span class="brand-mark"></span><span>Mumtaz</span></a>
-      <p>AI-powered SME operating platform with intelligent finance infrastructure for modern business ecosystems.</p>
-      <div class="footer-socials">
-        <a class="social-btn" href="https://linkedin.com/company/mumtaz-digital" aria-label="LinkedIn">in</a>
-        <a class="social-btn" href="https://twitter.com/mumtazdigital" aria-label="Twitter">𝕏</a>
-      </div>
+<!-- CTA -->
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Meet <em>ZAKI</em> today</h2>
+    <p>Start a free trial and have your first ZAKI conversation within 30 minutes of signing up.</p>
+    <div class="cta-row">
+      <a href="https://app.mumtaz.digital" class="btn-primary">Start free — no card needed →</a>
+      <a href="/demo.html" class="btn-ghost">Book a live demo</a>
     </div>
-    <div class="footer-col">
-      <h4>Platform</h4>
-      <a href="platform.html">Overview</a>
-      <a href="erp.html">Mumtaz ERP</a>
-      <a href="ai.html">Mumtaz AI</a>
-      <a href="finance.html">Mumtaz Finance</a>
-    </div>
-    <div class="footer-col">
-      <h4>Solutions</h4>
-      <a href="smes.html">For SMEs</a>
-      <a href="banks.html">For Banks &amp; Fintechs</a>
-      <a href="demo.html">Book a Demo</a>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="mailto:hello@mumtaz.digital">hello@mumtaz.digital</a>
-      <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+    <div class="cta-badges">
+      <span class="cta-badge">No credit card required</span>
+      <span class="cta-badge">14-day free trial</span>
+      <span class="cta-badge">Setup in 30 minutes</span>
     </div>
   </div>
-  <div class="container footer-bottom">
-    <p>© <span data-year></span> Mumtaz Digital. All rights reserved.</p>
-    <div class="footer-bottom-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Use</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span class="footer-brand-name">Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="/contact.html">Partner Program</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
     </div>
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
-<script src="assets/js/animations.js"></script>
 </body>
 </html>

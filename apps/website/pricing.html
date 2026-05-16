@@ -1,179 +1,272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pricing | Mumtaz</title>
-  <meta name="description" content="Transparent pricing for Mumtaz AI ERP and embedded finance. Starter, Professional, and Enterprise plans for GCC businesses.">
-  <link rel="icon" href="assets/images/favicon.svg">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/animations.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mumtaz pricing — transparent plans for Gulf SMEs. Starter AED 99/mo, Professional AED 299/mo, Enterprise custom. Free e-invoicing on all plans." />
+  <title>Pricing — Mumtaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml" />
   <style>
-    /* Pricing toggle */
-    .billing-toggle { display:flex; align-items:center; justify-content:center; gap:14px; margin:28px 0 48px; }
-    .billing-label { font-size:.9rem; color:var(--text-2); font-weight:500; }
-    .billing-label.active { color:var(--text); font-weight:700; }
-    .toggle-switch { position:relative; width:52px; height:28px; background:var(--primary); border-radius:20px; cursor:pointer; border:none; transition:background .2s; }
-    .toggle-knob { position:absolute; top:4px; left:4px; width:20px; height:20px; background:#fff; border-radius:50%; transition:transform .2s; }
-    .toggle-switch.annual .toggle-knob { transform:translateX(24px); }
-    .save-badge { background:var(--green); color:#fff; font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:20px; margin-left:6px; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070D1A; --navy2: #0E1826; --gold: #C8922A; --gold2: #E0AE52;
+      --gold-bg: #FBF4E3; --teal: #00A693; --teal-dk: #007A6B;
+      --ink: #0B1220; --ink2: #1C2A3E; --ink3: #5A6880;
+      --paper: #F7F5F1; --border: #DDD9D0; --white: #fff;
+      --r: 12px; --r-lg: 20px;
+    }
+    body { font-family: 'DM Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.6; color: var(--ink); background: var(--paper); }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-    /* Pricing cards */
-    .pricing-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; margin-top:0; }
-    .pricing-card { background:var(--surface); border:1.5px solid var(--border); border-radius:20px; padding:32px 28px; display:flex; flex-direction:column; position:relative; transition:transform .2s, box-shadow .2s; }
-    .pricing-card:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,.1); }
-    .pricing-card.popular { border-color:var(--primary); box-shadow:0 0 0 1px var(--primary); }
-    .popular-badge { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; font-size:.72rem; font-weight:700; padding:4px 16px; border-radius:20px; white-space:nowrap; }
-    .plan-name { font-size:1rem; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.06em; }
-    .plan-price { margin:16px 0 4px; display:flex; align-items:baseline; gap:4px; }
-    .plan-amount { font-size:2.6rem; font-weight:800; color:var(--text); }
-    .plan-per { font-size:.85rem; color:var(--text-3); }
-    .plan-desc { font-size:.85rem; color:var(--text-2); margin-bottom:24px; min-height:40px; }
-    .plan-cta { margin-bottom:28px; }
-    .plan-features { list-style:none; padding:0; margin:0; flex:1; border-top:1px solid var(--border); padding-top:20px; }
-    .plan-features li { font-size:.83rem; color:var(--text-2); padding:7px 0; display:flex; gap:10px; border-bottom:1px solid rgba(0,0,0,.04); }
-    .plan-features li:last-child { border-bottom:none; }
-    .feat-check { color:var(--green); font-weight:700; flex-shrink:0; }
-    .feat-dash { color:var(--text-3); flex-shrink:0; }
+    /* NAV */
+    nav { position: sticky; top: 0; z-index: 200; background: rgba(7,13,26,.90); backdrop-filter: blur(18px) saturate(180%); border-bottom: 1px solid rgba(255,255,255,.06); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
+    .brand-mark { width: 34px; height: 34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 1rem; color: #fff; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.48); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
+    .btn-nav-primary { font-size: .84rem; font-weight: 600; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; padding: 8px 20px; border-radius: 100px; transition: opacity .15s, transform .15s; }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .nav-hamburger span { display: block; width: 22px; height: 2px; background: rgba(255,255,255,.6); border-radius: 2px; }
+    @media (max-width: 720px) { .nav-links { display: none; } .btn-nav-ghost { display: none; } .nav-hamburger { display: flex; } }
 
-    /* Compare table */
-    .compare-table { width:100%; border-collapse:collapse; font-size:.85rem; }
-    .compare-table th { padding:12px 16px; text-align:left; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-2); border-bottom:2px solid var(--border); }
-    .compare-table th:not(:first-child) { text-align:center; }
-    .compare-table td { padding:12px 16px; border-bottom:1px solid var(--border); color:var(--text-2); }
-    .compare-table td:not(:first-child) { text-align:center; }
-    .compare-table tr:last-child td { border-bottom:none; }
-    .compare-table .section-row td { background:var(--surface-2,rgba(0,0,0,.03)); font-weight:700; color:var(--text); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; padding:8px 16px; }
-    .ct-yes { color:var(--green); font-size:1.1rem; }
-    .ct-no { color:var(--text-3); font-size:1rem; }
+    /* HERO */
+    .price-hero { background: var(--navy); padding: 80px 0 72px; text-align: center; position: relative; overflow: hidden; }
+    .price-hero::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); background-size: 300px; opacity: .4; }
+    .price-hero-glow { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 60% at 50% 40%, rgba(200,146,42,.15) 0%, transparent 60%); }
+    .price-hero .inner { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .page-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(200,146,42,.12); border: 1px solid rgba(200,146,42,.26); color: var(--gold2); font-size: .74rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 28px; }
+    .price-hero h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.2rem, 4vw, 3.4rem); font-weight: 400; color: #fff; line-height: 1.1; margin-bottom: 16px; }
+    .price-hero h1 em { font-style: italic; background: linear-gradient(100deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .price-hero p { color: rgba(255,255,255,.48); max-width: 480px; margin: 0 auto 36px; line-height: 1.75; }
 
-    /* ROI strip */
-    .roi-strip { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px; display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:center; }
-    @media(max-width:640px){ .roi-strip { grid-template-columns:1fr; } }
-    .roi-stat { text-align:center; }
-    .roi-stat strong { font-size:2.2rem; font-weight:800; color:var(--primary); display:block; }
-    .roi-stat span { font-size:.82rem; color:var(--text-2); }
+    /* BILLING TOGGLE */
+    .toggle-wrap { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 52px; }
+    .toggle-lbl { font-size: .9rem; font-weight: 500; color: rgba(255,255,255,.4); transition: color .2s; }
+    .toggle-lbl.active { color: #fff; }
+    .toggle-btn { position: relative; width: 52px; height: 28px; background: rgba(255,255,255,.15); border-radius: 100px; border: none; cursor: pointer; transition: background .2s; padding: 0; }
+    .toggle-btn.annual { background: linear-gradient(135deg, var(--gold), var(--gold2)); }
+    .toggle-knob { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform .2s; }
+    .toggle-btn.annual .toggle-knob { transform: translateX(24px); }
+    .save-pill { background: rgba(0,166,147,.2); color: var(--teal); font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+
+    /* PRICING CARDS */
+    .pricing-section { background: var(--navy); padding: 0 0 80px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 860px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .plan-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: var(--r-lg); padding: 32px 28px; position: relative; display: flex; flex-direction: column; }
+    .plan-card.popular { background: rgba(200,146,42,.06); border-color: rgba(200,146,42,.35); }
+    .popular-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-size: .7rem; font-weight: 700; padding: 4px 16px; border-radius: 100px; white-space: nowrap; }
+    .plan-name { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: 12px; }
+    .plan-price { margin-bottom: 6px; }
+    .plan-amount { font-family: 'Instrument Serif', serif; font-size: 2.8rem; font-weight: 400; color: #fff; }
+    .plan-per { font-size: .82rem; color: rgba(255,255,255,.35); }
+    .plan-desc { font-size: .875rem; color: rgba(255,255,255,.45); margin-bottom: 24px; min-height: 44px; line-height: 1.6; }
+    .plan-cta { margin-bottom: 24px; }
+    .btn-plan-primary { display: block; text-align: center; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9rem; padding: 13px 24px; border-radius: 100px; transition: opacity .15s; }
+    .btn-plan-primary:hover { opacity: .88; }
+    .btn-plan-ghost { display: block; text-align: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.7); font-weight: 500; font-size: .9rem; padding: 13px 24px; border-radius: 100px; transition: background .15s; }
+    .btn-plan-ghost:hover { background: rgba(255,255,255,.1); }
+    .plan-features { list-style: none; flex: 1; border-top: 1px solid rgba(255,255,255,.08); padding-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .plan-features li { font-size: .845rem; color: rgba(255,255,255,.6); display: flex; gap: 10px; align-items: flex-start; }
+    .feat-check { color: var(--teal); font-weight: 700; flex-shrink: 0; }
+    .feat-dash { color: rgba(255,255,255,.2); flex-shrink: 0; }
+
+    /* ROI STRIP */
+    .roi-section { background: var(--paper); padding: 72px 0; }
+    .roi-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 40px; }
+    @media (max-width: 768px) { .roi-inner { grid-template-columns: 1fr; } }
+    .roi-text h2 { font-family: 'Instrument Serif', serif; font-size: 1.8rem; font-weight: 400; color: var(--ink); margin-bottom: 10px; }
+    .roi-text p { color: var(--ink3); font-size: .9rem; line-height: 1.7; margin-bottom: 20px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #fff; font-weight: 600; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: opacity .15s; }
+    .btn-primary:hover { opacity: .9; }
+    .roi-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .roi-stat { text-align: center; padding: 16px; background: var(--paper); border-radius: var(--r); }
+    .roi-num { font-family: 'Instrument Serif', serif; font-size: 2rem; font-weight: 400; color: var(--ink); margin-bottom: 4px; }
+    .roi-lbl { font-size: .78rem; color: var(--ink3); }
+
+    /* COMPARE TABLE */
+    .compare-section { background: var(--white); padding: 72px 0; border-top: 1px solid var(--border); }
+    .section-hdr { text-align: center; margin-bottom: 40px; }
+    .section-label { display: inline-block; font-size: .74rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+    .section-title { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 400; color: var(--ink); }
+    .compare-wrap { overflow-x: auto; border: 1.5px solid var(--border); border-radius: var(--r-lg); }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th { padding: 14px 18px; text-align: left; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink3); border-bottom: 2px solid var(--border); background: var(--paper); }
+    th:not(:first-child) { text-align: center; }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); color: var(--ink2); }
+    td:not(:first-child) { text-align: center; }
+    tr:last-child td { border-bottom: none; }
+    .tr-section td { background: var(--paper); font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); padding: 10px 18px; }
+    .ct-yes { color: var(--teal); font-size: 1.1rem; }
+    .ct-no { color: var(--border); }
 
     /* FAQ */
-    .faq-list { max-width:720px; margin:0 auto; }
+    .faq-section { background: var(--paper); padding: 72px 0; }
+    .faq-list { max-width: 720px; margin: 0 auto; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q { width: 100%; text-align: left; font-size: .9375rem; font-weight: 600; color: var(--ink); padding: 20px 0; background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-family: inherit; }
+    .faq-chevron { font-size: .875rem; color: var(--ink3); transition: transform .2s; flex-shrink: 0; }
+    .faq-q.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a { font-size: .875rem; color: var(--ink3); line-height: 1.75; padding-bottom: 20px; display: none; }
+    .faq-a.open { display: block; }
+
+    /* CTA */
+    .cta-section { background: var(--gold-bg); padding: 80px 0; text-align: center; }
+    .cta-section h2 { font-family: 'Instrument Serif', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 400; color: var(--ink); margin-bottom: 14px; }
+    .cta-section h2 em { font-style: italic; color: var(--gold); }
+    .cta-section p { color: var(--ink3); max-width: 480px; margin: 0 auto 32px; }
+    .cta-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--border); color: var(--ink2); font-weight: 500; font-size: .9375rem; padding: 13px 28px; border-radius: 100px; transition: border-color .15s; }
+    .btn-ghost:hover { border-color: var(--ink2); }
+    .cta-badges { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .cta-badge { font-size: .78rem; color: var(--ink3); display: flex; align-items: center; gap: 6px; }
+    .cta-badge::before { content: '✓'; color: var(--teal); font-weight: 700; }
+
+    /* FOOTER */
+    footer { background: var(--navy); padding: 60px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 48px; }
+    @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+    @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; margin-bottom: 12px; }
+    .footer-tagline { font-size: .83rem; color: rgba(255,255,255,.35); line-height: 1.65; }
+    footer h5 { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.28); margin-bottom: 14px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.52); margin-bottom: 10px; transition: color .15s; }
+    footer a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.06); padding: 20px 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: .8rem; color: rgba(255,255,255,.28); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; font-size: .8rem; }
   </style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container nav-wrap">
-    <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation">Menu</button>
-    <nav class="nav-menu" data-nav-menu>
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link" href="platform.html">Platform</a>
-      <a class="nav-link" href="solutions.html">Solutions</a>
-      <a class="nav-link active" href="pricing.html">Pricing</a>
-      <a class="nav-link" href="docs.html">Docs</a>
-      <a class="nav-link" href="about.html">About</a>
-      <a class="nav-link" href="contact.html">Contact</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode">◐</button>
-      <a class="btn btn-primary" href="https://app.mumtaz.digital">Get Started</a>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand"><div class="brand-mark">م</div>Mumtaz</a>
+    <ul class="nav-links">
+      <li><a href="/erp.html">ERP</a></li>
+      <li><a href="/ai.html">ZAKI AI</a></li>
+      <li><a href="/pricing.html" class="active">Pricing</a></li>
+      <li><a href="/banks.html">Partners</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://app.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://app.mumtaz.digital" class="btn-nav-primary">Get started free</a>
+      <div class="nav-hamburger"><span></span><span></span><span></span></div>
     </div>
   </div>
-</header>
+</nav>
 
-<main>
+<!-- HERO -->
+<section class="price-hero">
+  <div class="price-hero-glow"></div>
+  <div class="wrap">
+    <div class="inner">
+      <div class="page-eyebrow">Pricing</div>
+      <h1>Transparent plans for<br/><em>every stage of growth</em></h1>
+      <p>No hidden fees. No per-module pricing. E-invoicing included on every plan. Cancel anytime.</p>
 
-<!-- Hero -->
-<section class="hero" style="padding-bottom:0">
-  <div class="container">
-    <div class="section-header reveal">
-      <span class="badge">Pricing</span>
-      <h1>Transparent plans for every stage of growth</h1>
-      <p>No hidden fees. Cancel anytime. All plans include onboarding support and GCC compliance.</p>
+      <!-- Billing toggle -->
+      <div class="toggle-wrap">
+        <span class="toggle-lbl active" id="lbl-monthly">Monthly</span>
+        <button class="toggle-btn" id="billing-toggle" onclick="toggleBilling()" aria-label="Toggle annual billing">
+          <span class="toggle-knob"></span>
+        </button>
+        <span class="toggle-lbl" id="lbl-annual">Annual <span class="save-pill">Save 20%</span></span>
+      </div>
     </div>
+  </div>
+</section>
 
-    <!-- Billing toggle -->
-    <div class="billing-toggle">
-      <span class="billing-label active" id="lbl-monthly">Monthly</span>
-      <button class="toggle-switch" id="billing-toggle" onclick="toggleBilling()" aria-label="Toggle annual billing">
-        <span class="toggle-knob"></span>
-      </button>
-      <span class="billing-label" id="lbl-annual">Annual <span class="save-badge">Save 20%</span></span>
-    </div>
-
-    <!-- Pricing cards -->
-    <div class="pricing-grid reveal">
+<!-- PRICING CARDS -->
+<section class="pricing-section">
+  <div class="wrap">
+    <div class="pricing-grid">
 
       <!-- Starter -->
-      <div class="pricing-card">
+      <div class="plan-card">
         <div class="plan-name">Starter</div>
         <div class="plan-price">
-          <span class="plan-amount" data-monthly="99" data-annual="79">AED 99</span>
+          <span class="plan-amount" id="starter-price">AED 99</span>
           <span class="plan-per">/ month</span>
         </div>
-        <p class="plan-desc">Perfect for SMEs getting started with AI-powered ERP.</p>
+        <p class="plan-desc">For SMEs getting started with ERP and AI.</p>
         <div class="plan-cta">
-          <a class="btn btn-outline" style="width:100%;text-align:center" href="https://app.mumtaz.digital">Start Free Trial</a>
+          <a href="https://app.mumtaz.digital" class="btn-plan-ghost">Start free trial</a>
         </div>
         <ul class="plan-features">
-          <li><span class="feat-check">✓</span> Core ERP modules (Accounting, Inventory, HR)</li>
-          <li><span class="feat-check">✓</span> Up to 5 users</li>
-          <li><span class="feat-check">✓</span> 1 company / 1 workspace</li>
-          <li><span class="feat-check">✓</span> ZAKI AI CFO (basic queries)</li>
-          <li><span class="feat-check">✓</span> Standard dashboards</li>
-          <li><span class="feat-check">✓</span> Email support (48h SLA)</li>
-          <li><span class="feat-check">✓</span> VAT-ready invoicing (UAE / KSA)</li>
-          <li><span class="feat-dash">–</span> Multi-company</li>
-          <li><span class="feat-dash">–</span> Embedded finance APIs</li>
-          <li><span class="feat-dash">–</span> B2B Marketplace</li>
+          <li><span class="feat-check">✓</span>Accounting, invoicing & AR</li>
+          <li><span class="feat-check">✓</span>Inventory management</li>
+          <li><span class="feat-check">✓</span>HR & payroll (up to 20 employees)</li>
+          <li><span class="feat-check">✓</span>ZAKI AI — basic queries</li>
+          <li><span class="feat-check">✓</span>UAE FTA e-invoicing (free)</li>
+          <li><span class="feat-check">✓</span>Up to 5 users</li>
+          <li><span class="feat-check">✓</span>Email support (48h SLA)</li>
+          <li><span class="feat-dash">–</span>ZATCA / FBR e-invoicing</li>
+          <li><span class="feat-dash">–</span>CRM & lead scraper</li>
+          <li><span class="feat-dash">–</span>B2B Marketplace</li>
+          <li><span class="feat-dash">–</span>Multi-company</li>
         </ul>
       </div>
 
       <!-- Professional -->
-      <div class="pricing-card popular">
+      <div class="plan-card popular">
         <div class="popular-badge">Most Popular</div>
         <div class="plan-name">Professional</div>
         <div class="plan-price">
-          <span class="plan-amount" data-monthly="299" data-annual="239">AED 299</span>
+          <span class="plan-amount" id="pro-price">AED 299</span>
           <span class="plan-per">/ month</span>
         </div>
-        <p class="plan-desc">For growing businesses needing full AI CFO and finance tools.</p>
+        <p class="plan-desc">For growing businesses that need the full platform.</p>
         <div class="plan-cta">
-          <a class="btn btn-primary" style="width:100%;text-align:center" href="https://app.mumtaz.digital">Start Free Trial</a>
+          <a href="https://app.mumtaz.digital" class="btn-plan-primary">Start free trial</a>
         </div>
         <ul class="plan-features">
-          <li><span class="feat-check">✓</span> Everything in Starter</li>
-          <li><span class="feat-check">✓</span> Up to 25 users</li>
-          <li><span class="feat-check">✓</span> Multi-company management</li>
-          <li><span class="feat-check">✓</span> ZAKI AI CFO (full access)</li>
-          <li><span class="feat-check">✓</span> Embedded finance activation APIs</li>
-          <li><span class="feat-check">✓</span> B2B Marketplace (vendor + buyer)</li>
-          <li><span class="feat-check">✓</span> Advanced analytics & forecasting</li>
-          <li><span class="feat-check">✓</span> Priority support (12h SLA)</li>
-          <li><span class="feat-check">✓</span> Custom domain</li>
-          <li><span class="feat-check">✓</span> API access (10k calls/mo)</li>
+          <li><span class="feat-check">✓</span>Everything in Starter</li>
+          <li><span class="feat-check">✓</span>Up to 25 users</li>
+          <li><span class="feat-check">✓</span>KSA ZATCA Phase 2 (free)</li>
+          <li><span class="feat-check">✓</span>Pakistan FBR (free)</li>
+          <li><span class="feat-check">✓</span>CRM, lead scraper & proposals</li>
+          <li><span class="feat-check">✓</span>ZAKI AI — full access</li>
+          <li><span class="feat-check">✓</span>B2B Marketplace access</li>
+          <li><span class="feat-check">✓</span>Multi-company management</li>
+          <li><span class="feat-check">✓</span>Priority support (12h SLA)</li>
+          <li><span class="feat-check">✓</span>API access (10k calls/mo)</li>
+          <li><span class="feat-check">✓</span>Advanced analytics</li>
         </ul>
       </div>
 
       <!-- Enterprise -->
-      <div class="pricing-card">
+      <div class="plan-card">
         <div class="plan-name">Enterprise</div>
         <div class="plan-price">
           <span class="plan-amount" style="font-size:2rem">Custom</span>
         </div>
         <p class="plan-desc">Dedicated infrastructure, custom SLA, and compliance engineering.</p>
         <div class="plan-cta">
-          <a class="btn btn-outline" style="width:100%;text-align:center" href="contact.html">Contact Sales</a>
+          <a href="/contact.html" class="btn-plan-ghost">Contact sales</a>
         </div>
         <ul class="plan-features">
-          <li><span class="feat-check">✓</span> Everything in Professional</li>
-          <li><span class="feat-check">✓</span> Unlimited users</li>
-          <li><span class="feat-check">✓</span> On-premises or hybrid deployment</li>
-          <li><span class="feat-check">✓</span> Custom AI model fine-tuning</li>
-          <li><span class="feat-check">✓</span> Dedicated account engineer</li>
-          <li><span class="feat-check">✓</span> 4h SLA with escalation</li>
-          <li><span class="feat-check">✓</span> SAMA / CBUAE compliance pack</li>
-          <li><span class="feat-check">✓</span> Unlimited API calls</li>
-          <li><span class="feat-check">✓</span> Data residency options (UAE, KSA)</li>
-          <li><span class="feat-check">✓</span> SSO / SAML / custom auth</li>
+          <li><span class="feat-check">✓</span>Everything in Professional</li>
+          <li><span class="feat-check">✓</span>Unlimited users</li>
+          <li><span class="feat-check">✓</span>White-label / partner program</li>
+          <li><span class="feat-check">✓</span>On-premises or hybrid deployment</li>
+          <li><span class="feat-check">✓</span>Custom AI fine-tuning</li>
+          <li><span class="feat-check">✓</span>Dedicated account engineer</li>
+          <li><span class="feat-check">✓</span>4h SLA with escalation</li>
+          <li><span class="feat-check">✓</span>SAMA / CBUAE compliance pack</li>
+          <li><span class="feat-check">✓</span>Unlimited API calls</li>
+          <li><span class="feat-check">✓</span>UAE / KSA data residency</li>
+          <li><span class="feat-check">✓</span>SSO / SAML / custom auth</li>
         </ul>
       </div>
 
@@ -181,33 +274,34 @@
   </div>
 </section>
 
-<!-- ROI strip -->
-<section class="section">
-  <div class="container">
-    <div class="roi-strip reveal">
-      <div>
-        <h3 style="margin-bottom:8px">Measurable ROI from day one</h3>
-        <p class="small" style="color:var(--text-2)">Mumtaz customers typically recover their subscription cost within the first 60 days through automation savings and smarter cash-flow decisions.</p>
-        <a class="btn btn-primary" href="contact.html" style="margin-top:16px;display:inline-block">Talk to our team →</a>
+<!-- ROI STRIP -->
+<section class="roi-section">
+  <div class="wrap">
+    <div class="roi-inner">
+      <div class="roi-text">
+        <h2>Measurable ROI from day one</h2>
+        <p>Mumtaz customers typically recover their subscription cost within the first 60 days through automation savings, faster invoicing cycles, and smarter cash-flow decisions.</p>
+        <a href="/contact.html" class="btn-primary">Talk to our team →</a>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="roi-stat"><strong>68%</strong><span>Reduction in manual accounting time</span></div>
-        <div class="roi-stat"><strong>3.2×</strong><span>Faster month-end close</span></div>
-        <div class="roi-stat"><strong>AED 45k</strong><span>Average annual savings per company</span></div>
-        <div class="roi-stat"><strong>99.9%</strong><span>Platform uptime SLA</span></div>
+      <div class="roi-stats">
+        <div class="roi-stat"><div class="roi-num">68%</div><div class="roi-lbl">Less time on manual accounting</div></div>
+        <div class="roi-stat"><div class="roi-num">3.2×</div><div class="roi-lbl">Faster month-end close</div></div>
+        <div class="roi-stat"><div class="roi-num">AED 45k</div><div class="roi-lbl">Average annual savings</div></div>
+        <div class="roi-stat"><div class="roi-num">99.9%</div><div class="roi-lbl">Platform uptime SLA</div></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Feature comparison table -->
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal" style="margin-bottom:32px">
-      <h2>Full feature comparison</h2>
+<!-- COMPARE TABLE -->
+<section class="compare-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">Full comparison</span>
+      <h2 class="section-title">Feature breakdown</h2>
     </div>
-    <div class="glass card reveal" style="overflow-x:auto;padding:0">
-      <table class="compare-table">
+    <div class="compare-wrap">
+      <table>
         <thead>
           <tr>
             <th style="width:40%">Feature</th>
@@ -217,26 +311,26 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="section-row"><td colspan="4">Core ERP</td></tr>
-          <tr><td>Accounting & Invoicing</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>Inventory & Warehouse</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>HR & Payroll</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>CRM & Sales</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>Multi-company management</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-
-          <tr class="section-row"><td colspan="4">ZAKI AI CFO</td></tr>
+          <tr class="tr-section"><td colspan="4">Core ERP</td></tr>
+          <tr><td>Accounting & invoicing</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>Inventory & warehouse</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>HR & payroll</td><td>Up to 20</td><td>Unlimited</td><td>Unlimited</td></tr>
+          <tr><td>CRM & sales</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>Multi-company</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>Users</td><td>Up to 5</td><td>Up to 25</td><td>Unlimited</td></tr>
+          <tr class="tr-section"><td colspan="4">E-Invoicing (all free)</td></tr>
+          <tr><td>UAE FTA</td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>KSA ZATCA Phase 2</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>Pakistan FBR</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr class="tr-section"><td colspan="4">ZAKI AI Agent</td></tr>
           <tr><td>Natural language queries</td><td>Basic</td><td>Full</td><td>Advanced</td></tr>
           <tr><td>Cash flow forecasting</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>Anomaly detection</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>Custom AI model fine-tuning</td><td><span class="ct-no">–</span></td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td></tr>
-
-          <tr class="section-row"><td colspan="4">Finance & Marketplace</td></tr>
-          <tr><td>Embedded finance APIs</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr><td>Custom AI fine-tuning</td><td><span class="ct-no">–</span></td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr class="tr-section"><td colspan="4">Marketplace & Finance</td></tr>
           <tr><td>B2B Marketplace</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-          <tr><td>Payment gateway integrations</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
-
-          <tr class="section-row"><td colspan="4">Infrastructure & Support</td></tr>
-          <tr><td>Deployment</td><td>SaaS</td><td>SaaS / Hybrid</td><td>SaaS / On-Prem / Hybrid</td></tr>
+          <tr><td>Credit readiness score</td><td><span class="ct-no">–</span></td><td><span class="ct-yes">✓</span></td><td><span class="ct-yes">✓</span></td></tr>
+          <tr class="tr-section"><td colspan="4">Infrastructure & Support</td></tr>
+          <tr><td>Deployment</td><td>SaaS</td><td>SaaS / Hybrid</td><td>SaaS / On-prem</td></tr>
           <tr><td>Data residency</td><td>Shared</td><td>Shared</td><td>UAE / KSA dedicated</td></tr>
           <tr><td>API calls / month</td><td>1,000</td><td>10,000</td><td>Unlimited</td></tr>
           <tr><td>Support SLA</td><td>48h email</td><td>12h priority</td><td>4h + dedicated</td></tr>
@@ -248,108 +342,99 @@
 </section>
 
 <!-- FAQ -->
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal" style="margin-bottom:32px">
-      <h2>Pricing FAQ</h2>
+<section class="faq-section">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">Questions</span>
+      <h2 class="section-title">Pricing FAQ</h2>
     </div>
     <div class="faq-list">
-      <div class="faq-item reveal">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Is there a free trial?
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-a">Yes — all plans come with a 14-day free trial, no credit card required. You can explore the full feature set of your chosen plan during the trial.</div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is there a free trial? <span class="faq-chevron">▾</span></button>
+        <div class="faq-a">Yes — all plans include a 14-day free trial, no credit card required. You get the full feature set of your chosen plan during the trial.</div>
       </div>
-      <div class="faq-item reveal">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Can I switch plans later?
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-a">Absolutely. You can upgrade or downgrade at any time. Upgrades take effect immediately; downgrades apply at the next billing cycle. Your data is always preserved.</div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Is e-invoicing really free? <span class="faq-chevron">▾</span></button>
+        <div class="faq-a">Yes, permanently free — not a trial. UAE FTA submission is on the Starter plan. KSA ZATCA Phase 2 and Pakistan FBR are included on Professional and above. We will never charge for e-invoicing.</div>
       </div>
-      <div class="faq-item reveal">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Are prices in AED or USD?
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-a">Prices are displayed in AED by default. USD, SAR, and KWD invoicing is available for Enterprise accounts. Contact sales to set up multi-currency billing.</div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Can I switch plans later? <span class="faq-chevron">▾</span></button>
+        <div class="faq-a">Yes, at any time. Upgrades take effect immediately. Downgrades apply at the next billing cycle. All your data is always preserved.</div>
       </div>
-      <div class="faq-item reveal">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          What happens after the trial?
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-a">Your account moves to a read-only state until you select a plan. All data is retained for 30 days. Our team will reach out before the trial ends to help you find the right plan.</div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Are prices in AED or USD? <span class="faq-chevron">▾</span></button>
+        <div class="faq-a">Prices are in AED by default. USD, SAR, and KWD invoicing is available on Enterprise. Contact sales to set up multi-currency billing.</div>
       </div>
-      <div class="faq-item reveal">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Do you support on-premises deployment?
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-a">On-premises and hybrid deployments are available on the Enterprise plan. We support deployment in UAE and KSA data centres, as well as customer-owned infrastructure with dedicated engineering assistance.</div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">Do you support on-premises deployment? <span class="faq-chevron">▾</span></button>
+        <div class="faq-a">Yes, on the Enterprise plan. We support deployment in UAE and KSA data centres, as well as customer-owned infrastructure. Our engineering team handles the setup.</div>
       </div>
-      <div class="faq-item reveal">
-        <button class="faq-q" onclick="toggleFaq(this)">
-          Is Mumtaz SAMA / CBUAE compliant?
-          <span class="faq-chevron">▾</span>
-        </button>
-        <div class="faq-a">Yes. Our Enterprise compliance pack covers SAMA open banking guidelines, CBUAE regulations, and UAE VAT (FTA) requirements. Professional plan customers receive standard VAT-ready invoicing and basic compliance reporting.</div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What happens after the trial ends? <span class="faq-chevron">▾</span></button>
+        <div class="faq-a">Your account moves to read-only mode until you select a plan. All data is retained for 30 days. Our team will reach out before the trial ends to help you choose the right plan.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Enterprise CTA -->
-<section class="section" style="padding-top:0">
-  <div class="container">
-    <div class="glass card reveal" style="text-align:center;padding:56px 32px;background:linear-gradient(135deg,rgba(26,115,232,.06),rgba(16,185,129,.04))">
-      <h2 style="margin-bottom:12px">Need a custom plan?</h2>
-      <p style="color:var(--text-2);max-width:500px;margin:0 auto 28px">Our enterprise team will scope your requirements, estimate TCO, and build a proposal within 48 hours.</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <a class="btn btn-primary" href="contact.html">Contact Sales</a>
-        <a class="btn btn-outline" href="demo.html">Book a Demo</a>
-      </div>
+<!-- CTA -->
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Start your free trial<br/><em>today</em></h2>
+    <p>No credit card. No contracts. Cancel anytime. The first 14 days are completely on us.</p>
+    <div class="cta-row">
+      <a href="https://app.mumtaz.digital" class="btn-primary">Get started free →</a>
+      <a href="/contact.html" class="btn-ghost">Talk to sales</a>
+    </div>
+    <div class="cta-badges">
+      <span class="cta-badge">14-day free trial</span>
+      <span class="cta-badge">Free e-invoicing forever</span>
+      <span class="cta-badge">Cancel anytime</span>
     </div>
   </div>
 </section>
 
-</main>
-
-<footer class="footer">
-  <div class="container footer-grid">
-    <div>
-      <a class="brand" href="index.html"><span class="brand-mark">M</span><span>Mumtaz</span></a>
-      <p class="small">AI-powered ERP and embedded finance for GCC enterprises.</p>
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand"><div class="brand-mark">م</div><span>Mumtaz</span></div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="/ai.html">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="/pricing.html">Pricing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/smes.html">For SMEs</a>
+        <a href="/docs.html">Documentation</a>
+        <a href="mailto:partnerships@mumtaz.digital">partnerships@mumtaz.digital</a>
+      </div>
     </div>
-    <div class="footer-col">
-      <strong>Product</strong>
-      <a href="platform.html">Platform</a>
-      <a href="solutions.html">Solutions</a>
-      <a href="pricing.html">Pricing</a>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
     </div>
-    <div class="footer-col">
-      <strong>Resources</strong>
-      <a href="docs.html">Documentation</a>
-      <a href="blog.html">Blog</a>
-      <a href="demo.html">Book Demo</a>
-    </div>
-    <div class="footer-col">
-      <strong>Company</strong>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="https://app.mumtaz.digital">Sign In</a>
-    </div>
-  </div>
-  <div class="container" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-    <p class="small" style="color:var(--text-3)">© 2026 Mumtaz Technologies. All rights reserved.</p>
-    <p class="small" style="color:var(--text-3)">Dubai, United Arab Emirates</p>
   </div>
 </footer>
 
-<script src="assets/js/main.js"></script>
 <script>
-// Billing toggle
 let isAnnual = false;
 function toggleBilling() {
   isAnnual = !isAnnual;
@@ -357,11 +442,17 @@ function toggleBilling() {
   btn.classList.toggle('annual', isAnnual);
   document.getElementById('lbl-monthly').classList.toggle('active', !isAnnual);
   document.getElementById('lbl-annual').classList.toggle('active', isAnnual);
-  document.querySelectorAll('[data-monthly]').forEach(el => {
-    const val = isAnnual ? el.dataset.annual : el.dataset.monthly;
-    el.textContent = 'AED ' + val;
-  });
+  document.getElementById('starter-price').textContent = isAnnual ? 'AED 79' : 'AED 99';
+  document.getElementById('pro-price').textContent = isAnnual ? 'AED 239' : 'AED 299';
+}
+function toggleFaq(btn) {
+  const a = btn.nextElementSibling;
+  const isOpen = a.classList.contains('open');
+  document.querySelectorAll('.faq-a.open').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.faq-q.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) { a.classList.add('open'); btn.classList.add('open'); }
 }
 </script>
+
 </body>
 </html>
