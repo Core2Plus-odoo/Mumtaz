@@ -118,6 +118,7 @@ _TENANTS_DDL = """
         plan           TEXT    DEFAULT 'trial',
         status         TEXT    DEFAULT 'provisioning',
         error_msg      TEXT,
+        custom_domain  TEXT,
         created_at     INTEGER DEFAULT (strftime('%s','now')),
         provisioned_at INTEGER
     )
@@ -188,6 +189,14 @@ def init_db():
     conn.execute(_STRIPE_EVENTS_DDL)
     conn.execute(_PARTNERS_DDL)
     conn.execute(_TENANTS_DDL)
+    # Migrate tenants table — add any missing columns
+    for col, defn in [
+        ("custom_domain", "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE tenants ADD COLUMN {col} {defn}")
+        except Exception:
+            pass
     conn.commit()
     conn.close()
 
@@ -901,6 +910,108 @@ async def get_onboarding(auth: dict = Depends(require_auth)):
         }
     except Exception:
         return {"onboarding": None, "role": row["role"]}
+
+# ── Tenant Custom Domain ─────────────────────────────────────────────
+
+_DOMAIN_RE = re.compile(
+    r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,}$"
+)
+_PORTAL_HOST = os.environ.get("PORTAL_HOST", "app.mumtaz.digital")
+
+class DomainReq(BaseModel):
+    domain: str
+
+@app.get("/api/v1/tenant/domain")
+async def get_tenant_domain(auth: dict = Depends(require_auth)):
+    """Return the tenant's current custom domain and CNAME instructions."""
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db FROM users WHERE email = ?", (auth["email"],)
+    ).fetchone()
+    db.close()
+
+    tenant_db = row["tenant_db"] if row else None
+    if not tenant_db:
+        return {"custom_domain": None, "cname_target": _PORTAL_HOST, "status": "no_tenant"}
+
+    db  = get_db()
+    rec = db.execute(
+        "SELECT custom_domain, status FROM tenants WHERE db_name = ?", (tenant_db,)
+    ).fetchone()
+    db.close()
+
+    if not rec:
+        return {"custom_domain": None, "cname_target": _PORTAL_HOST, "status": "provisioning"}
+
+    return {
+        "custom_domain": rec["custom_domain"],
+        "cname_target":  _PORTAL_HOST,
+        "tenant_db":     tenant_db,
+        "status":        rec["status"],
+    }
+
+@app.put("/api/v1/tenant/domain")
+async def set_tenant_domain(req: DomainReq, auth: dict = Depends(require_auth)):
+    """Set or update the tenant's custom domain. Validates format and uniqueness."""
+    domain = req.domain.strip().lower().lstrip("https://").lstrip("http://").rstrip("/")
+
+    if not domain:
+        raise HTTPException(400, "Domain cannot be empty")
+    if not _DOMAIN_RE.match(domain):
+        raise HTTPException(400, "Invalid domain format — use e.g. erp.yourcompany.com")
+    if len(domain) > 253:
+        raise HTTPException(400, "Domain too long")
+    # Block attempts to use our own hostname
+    if domain == _PORTAL_HOST or domain.endswith("." + _PORTAL_HOST):
+        raise HTTPException(400, "Cannot use mumtaz.digital domain — use your own domain")
+
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db FROM users WHERE email = ?", (auth["email"],)
+    ).fetchone()
+    tenant_db = row["tenant_db"] if row else None
+    if not tenant_db:
+        db.close()
+        raise HTTPException(400, "Your workspace is still being set up")
+
+    # Check domain isn't already claimed by another tenant
+    conflict = db.execute(
+        "SELECT db_name FROM tenants WHERE custom_domain = ? AND db_name != ?",
+        (domain, tenant_db),
+    ).fetchone()
+    if conflict:
+        db.close()
+        raise HTTPException(409, "This domain is already linked to another workspace")
+
+    db.execute(
+        "UPDATE tenants SET custom_domain = ? WHERE db_name = ?",
+        (domain, tenant_db),
+    )
+    db.commit()
+    db.close()
+
+    return {
+        "ok":           True,
+        "custom_domain": domain,
+        "cname_target":  _PORTAL_HOST,
+        "message":       f"Point a CNAME record for {domain} → {_PORTAL_HOST}",
+    }
+
+@app.delete("/api/v1/tenant/domain")
+async def remove_tenant_domain(auth: dict = Depends(require_auth)):
+    """Remove the tenant's custom domain."""
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db FROM users WHERE email = ?", (auth["email"],)
+    ).fetchone()
+    tenant_db = row["tenant_db"] if row else None
+    if not tenant_db:
+        db.close()
+        raise HTTPException(400, "No workspace found")
+    db.execute("UPDATE tenants SET custom_domain = NULL WHERE db_name = ?", (tenant_db,))
+    db.commit()
+    db.close()
+    return {"ok": True}
 
 # ── Plans / Billing ──────────────────────────────────────────────────
 PLANS = {

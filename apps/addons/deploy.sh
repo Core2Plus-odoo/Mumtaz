@@ -40,7 +40,28 @@ sudo rsync -av --delete \
 sudo chown -R "${ODOO_USER}:${ODOO_USER}" "$DEST_DIR"
 echo "✅ Addons synced to $DEST_DIR"
 
-# ── 2. Restart Odoo service ───────────────────────────────────────────
+# ── 2. Patch odoo.conf — ensure DEST_DIR is in addons_path ───────────
+echo "→ Checking odoo.conf addons_path…"
+if [[ -f "$ODOO_CONF" ]]; then
+    current_path=$(grep -E '^addons_path\s*=' "$ODOO_CONF" | sed 's/.*=\s*//' | tr -d ' ')
+    if echo "$current_path" | grep -qF "$DEST_DIR"; then
+        echo "  ✅ $DEST_DIR already in addons_path"
+    else
+        if [[ -n "$current_path" ]]; then
+            new_path="${current_path},${DEST_DIR}"
+            sudo sed -i "s|^addons_path\s*=.*|addons_path = ${new_path}|" "$ODOO_CONF"
+        else
+            echo "addons_path = ${DEST_DIR}" | sudo tee -a "$ODOO_CONF" > /dev/null
+            new_path="$DEST_DIR"
+        fi
+        echo "  ✅ addons_path updated → $new_path"
+    fi
+else
+    echo "  ⚠  $ODOO_CONF not found — skipping addons_path patch"
+    echo "     Add this line manually: addons_path = $DEST_DIR"
+fi
+
+# ── 3. Restart Odoo service ───────────────────────────────────────────
 echo "→ Restarting Odoo service…"
 if sudo systemctl is-active --quiet odoo; then
     sudo systemctl restart odoo
