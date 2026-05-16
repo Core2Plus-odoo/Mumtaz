@@ -15,17 +15,19 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --gold:    #B8862A;
-      --gold-lt: #F5EDD8;
-      --teal:    #0B7A64;
-      --teal-lt: #E6F4F1;
-      --ink:     #0C1118;
-      --ink2:    #3D4A5C;
-      --ink3:    #7A8799;
-      --bg:      #FAFAF8;
-      --white:   #FFFFFF;
-      --border:  #E4E0D8;
-      --radius:  12px;
+      --gold:     #B8862A;
+      --gold2:    #D4A84C;
+      --gold-dk:  #8E641A;
+      --gold-bg:  #FDF6E4;
+      --teal:     #0B7A64;
+      --ink:      #0C1118;
+      --ink2:     #1E2A3A;
+      --ink3:     #6B7A90;
+      --paper:    #F5F3EF;
+      --border:   #E0DDD6;
+      --white:    #fff;
+      --r:        14px;
+      --r-lg:     22px;
     }
 
     body {
@@ -33,618 +35,905 @@
       font-size: 16px;
       line-height: 1.6;
       color: var(--ink);
-      background: var(--bg);
+      background: var(--paper);
     }
-
     a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-    .wrap {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* ── Nav ── */
+    /* ── NAV ──────────────────────────────────────── */
     nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(250,250,248,.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 0;
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(12,17,24,.88);
+      backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid rgba(255,255,255,.06);
     }
     .nav-inner {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      height: 64px;
-      max-width: 1120px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px; max-width: 1120px; margin: 0 auto; padding: 0 24px;
     }
-    .brand {
-      display: flex; align-items: center; gap: 10px;
-      font-weight: 600; font-size: 1.1rem; color: var(--ink);
-    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1rem; color: #fff; }
     .brand-mark {
-      width: 34px; height: 34px;
-      background: linear-gradient(135deg, var(--gold), #D4A84C);
-      border-radius: 9px;
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Instrument Serif', serif;
-      font-size: 1rem; color: #fff;
+      font-family: 'Instrument Serif', serif; font-size: .95rem; color: #fff;
     }
-    .nav-links {
-      display: flex; align-items: center; gap: 32px;
-      list-style: none;
-    }
-    .nav-links a {
-      font-size: .9rem; font-weight: 500;
-      color: var(--ink2);
-      transition: color .15s;
-    }
-    .nav-links a:hover { color: var(--ink); }
-    .nav-cta {
-      display: flex; align-items: center; gap: 12px;
-    }
-    .btn-nav-ghost {
-      font-size: .9rem; font-weight: 500;
-      color: var(--ink2);
-      transition: color .15s;
-    }
-    .btn-nav-ghost:hover { color: var(--ink); }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.5); transition: color .15s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta { display: flex; align-items: center; gap: 10px; }
+    .btn-nav-ghost { font-size: .875rem; font-weight: 500; color: rgba(255,255,255,.5); transition: color .15s; }
+    .btn-nav-ghost:hover { color: #fff; }
     .btn-nav-primary {
-      font-size: .875rem; font-weight: 600;
-      background: var(--gold);
-      color: #fff;
-      padding: 8px 20px; border-radius: 100px;
-      transition: opacity .15s;
+      font-size: .85rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #fff; padding: 7px 18px; border-radius: 100px;
+      transition: opacity .15s, transform .15s;
     }
-    .btn-nav-primary:hover { opacity: .88; }
-    @media (max-width: 720px) {
-      .nav-links { display: none; }
-    }
+    .btn-nav-primary:hover { opacity: .88; transform: translateY(-1px); }
+    @media (max-width: 720px) { .nav-links { display: none; } }
 
-    /* ── Hero ── */
+    /* ── HERO ─────────────────────────────────────── */
     .hero {
-      padding: 80px 0 72px;
-      text-align: center;
+      background: var(--ink);
+      position: relative; overflow: hidden;
     }
-    .hero-tag {
-      display: inline-block;
-      background: var(--gold-lt);
-      color: var(--gold);
-      font-size: .8rem; font-weight: 600;
-      letter-spacing: .05em; text-transform: uppercase;
-      padding: 5px 14px; border-radius: 100px;
-      margin-bottom: 24px;
+    .hero-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 65% 70% at 15% 55%, rgba(184,134,42,.2) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 85% 25%, rgba(11,122,100,.12) 0%, transparent 55%);
+    }
+    .hero-inner {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 56px; align-items: center;
+      min-height: 640px;
+      max-width: 1120px; margin: 0 auto; padding: 88px 24px 72px;
+    }
+    @media (max-width: 860px) {
+      .hero-inner { grid-template-columns: 1fr; min-height: auto; padding: 64px 24px 56px; }
+      .hero-visual { display: none; }
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(184,134,42,.12);
+      border: 1px solid rgba(184,134,42,.28);
+      color: var(--gold2); font-size: .76rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 100px; margin-bottom: 26px;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--gold);
+      animation: blink 2.2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .45; transform: scale(.75); }
     }
     .hero h1 {
       font-family: 'Instrument Serif', Georgia, serif;
-      font-size: clamp(2.4rem, 5vw, 3.75rem);
-      font-weight: 400; line-height: 1.1;
-      letter-spacing: -.02em;
-      color: var(--ink);
-      margin-bottom: 20px;
+      font-size: clamp(2.75rem, 4.5vw, 4.25rem);
+      font-weight: 400; line-height: 1.05;
+      letter-spacing: -.03em; color: #fff;
+      margin-bottom: 22px;
     }
-    .hero h1 em {
-      font-style: italic; color: var(--gold);
-    }
+    .hero h1 em { font-style: italic; color: var(--gold2); }
     .hero-sub {
-      font-size: 1.125rem; color: var(--ink2);
-      max-width: 520px; margin: 0 auto 36px;
-      line-height: 1.7;
+      font-size: 1.0625rem; color: rgba(255,255,255,.5);
+      max-width: 420px; line-height: 1.8; margin-bottom: 36px;
     }
-    .hero-ctas {
-      display: flex; align-items: center;
-      justify-content: center; gap: 12px;
-      flex-wrap: wrap;
-    }
+    .hero-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 44px; }
     .btn-primary {
       display: inline-flex; align-items: center; gap: 6px;
-      background: var(--gold); color: #fff;
-      font-weight: 600; font-size: .9375rem;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #fff; font-weight: 600; font-size: .9375rem;
       padding: 13px 28px; border-radius: 100px;
-      transition: opacity .15s, transform .15s;
+      box-shadow: 0 4px 24px rgba(184,134,42,.38);
+      transition: opacity .15s, transform .15s, box-shadow .15s;
     }
-    .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-primary:hover { opacity: .9; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(184,134,42,.44); }
+    .btn-ghost-dark {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.75); font-weight: 500; font-size: .9375rem;
+      padding: 13px 28px; border-radius: 100px;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-ghost-dark:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
     .btn-ghost {
       display: inline-flex; align-items: center; gap: 6px;
-      background: var(--white); color: var(--ink2);
-      font-weight: 500; font-size: .9375rem;
+      background: var(--white); border: 1.5px solid var(--border);
+      color: var(--ink2); font-weight: 500; font-size: .9375rem;
       padding: 13px 28px; border-radius: 100px;
-      border: 1.5px solid var(--border);
       transition: border-color .15s, color .15s;
     }
     .btn-ghost:hover { border-color: var(--ink3); color: var(--ink); }
 
-    /* ── Section header ── */
-    .section { padding: 80px 0; }
-    .section + .section { border-top: 1px solid var(--border); }
+    /* Hero inline stats */
+    .hero-stats { display: flex; align-items: center; gap: 0; }
+    .h-stat { padding-right: 24px; }
+    .h-stat + .h-stat { padding-left: 24px; border-left: 1px solid rgba(255,255,255,.1); }
+    .h-stat-num {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 1.5rem; font-weight: 400; color: #fff; line-height: 1;
+      margin-bottom: 4px;
+    }
+    .h-stat-lbl { font-size: .73rem; color: rgba(255,255,255,.35); line-height: 1.4; }
+
+    /* ── Hero fake-UI visual ─────────────────────── */
+    .hero-visual { position: relative; }
+    .ui-window {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px; padding: 20px 22px;
+      backdrop-filter: blur(8px);
+    }
+    .ui-titlebar {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    }
+    .ui-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .ui-dot-r { background: rgba(255,255,255,.15); }
+    .ui-dot-y { background: rgba(184,134,42,.4); }
+    .ui-dot-g { background: rgba(11,122,100,.4); }
+    .ui-label { margin-left: 8px; font-size: .72rem; color: rgba(255,255,255,.3); font-family: 'DM Mono', monospace; }
+    .ui-chat { display: flex; flex-direction: column; gap: 10px; }
+    .ui-msg {
+      padding: 10px 14px; border-radius: 12px;
+      font-size: .8rem; line-height: 1.55; max-width: 86%;
+    }
+    .ui-msg--user {
+      background: rgba(184,134,42,.18); border: 1px solid rgba(184,134,42,.22);
+      color: rgba(255,255,255,.78); align-self: flex-end;
+    }
+    .ui-msg--ai {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.7); align-self: flex-start;
+    }
+    .ui-msg--ai strong { color: var(--gold2); }
+    .ui-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .ui-kpi {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px; padding: 12px 10px;
+    }
+    .ui-kpi-val { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 3px; }
+    .ui-kpi-lbl { font-size: .67rem; color: rgba(255,255,255,.3); }
+    .ui-kpi-up { font-size: .67rem; color: #4EC9A8; margin-top: 3px; }
+
+    /* Floating mini card */
+    .ui-float {
+      position: absolute; bottom: -24px; right: -18px; width: 210px;
+      background: rgba(20,30,44,.95);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 14px 16px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .ui-float-title { font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 10px; }
+    .ui-inv-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .ui-inv-row:last-child { margin-bottom: 0; }
+    .ui-inv-co { font-size: .73rem; color: rgba(255,255,255,.6); }
+    .ui-inv-amt { font-size: .73rem; font-weight: 600; color: #fff; }
+    .ui-badge {
+      font-size: .62rem; font-weight: 600; padding: 2px 7px; border-radius: 100px;
+    }
+    .badge-paid { background: rgba(11,122,100,.22); color: #4EC9A8; }
+    .badge-pending { background: rgba(184,134,42,.2); color: var(--gold2); }
+
+    /* ── COUNTRY STRIP ────────────────────────────── */
+    .country-strip {
+      background: rgba(255,255,255,.025);
+      border-top: 1px solid rgba(255,255,255,.06);
+      position: relative; z-index: 1;
+    }
+    .country-track {
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 0; max-width: 1120px; margin: 0 auto; padding: 0 24px;
+    }
+    .c-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 14px 24px;
+      border-right: 1px solid rgba(255,255,255,.06);
+    }
+    .c-item:last-child { border-right: none; }
+    .c-item span { font-size: 1.1rem; }
+    .c-item strong { font-size: .78rem; font-weight: 500; color: rgba(255,255,255,.35); }
+
+    /* ── STATS BAR ────────────────────────────────── */
+    .stats-bar { background: var(--white); border-bottom: 1px solid var(--border); }
+    .stats-inner {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      max-width: 1120px; margin: 0 auto;
+    }
+    @media (max-width: 600px) { .stats-inner { grid-template-columns: repeat(2, 1fr); } }
+    .stat-item {
+      padding: 30px 24px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 2.25rem; font-weight: 400; color: var(--ink); line-height: 1; margin-bottom: 6px;
+    }
+    .stat-num em { font-style: normal; color: var(--gold); }
+    .stat-lbl { font-size: .78rem; color: var(--ink3); font-weight: 500; }
+
+    /* ── SECTIONS ─────────────────────────────────── */
+    .section { padding: 96px 0; }
     .section-label {
-      display: inline-block;
       font-family: 'DM Mono', monospace;
-      font-size: .75rem; letter-spacing: .1em; text-transform: uppercase;
-      color: var(--ink3); margin-bottom: 12px;
+      font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px; display: block;
     }
     .section-title {
       font-family: 'Instrument Serif', Georgia, serif;
-      font-size: clamp(1.75rem, 3vw, 2.5rem);
-      font-weight: 400; line-height: 1.15;
-      letter-spacing: -.015em;
+      font-size: clamp(1.9rem, 3vw, 2.75rem);
+      font-weight: 400; line-height: 1.1; letter-spacing: -.02em;
       color: var(--ink); margin-bottom: 14px;
     }
-    .section-sub {
-      font-size: 1rem; color: var(--ink2);
-      max-width: 560px; line-height: 1.7;
-    }
-    .section-hdr { margin-bottom: 48px; }
+    .section-sub { font-size: 1rem; color: var(--ink3); max-width: 520px; line-height: 1.75; }
+    .section-hdr { margin-bottom: 52px; }
 
-    /* ── Solutions ── */
-    .solutions-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+    /* ── BENTO GRID ───────────────────────────────── */
+    .bento {
+      display: grid; grid-template-columns: 5fr 4fr;
+      grid-template-rows: 1fr 1fr; gap: 16px;
     }
-    @media (max-width: 860px) {
-      .solutions-grid { grid-template-columns: 1fr; }
+    @media (max-width: 860px) { .bento { grid-template-columns: 1fr; grid-template-rows: auto; } }
+    .bento-card {
+      border-radius: var(--r-lg); padding: 36px 32px;
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
     }
-    .sol-card {
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px 28px;
-      transition: border-color .2s, box-shadow .2s;
+    .bento-main {
+      grid-row: 1 / 3; background: var(--ink);
+      min-height: 460px;
     }
-    .sol-card:hover {
-      border-color: var(--gold);
-      box-shadow: 0 4px 20px rgba(184,134,42,.1);
+    .bento-main::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 70% 55% at 15% 80%, rgba(184,134,42,.22) 0%, transparent 60%);
     }
-    .sol-icon {
-      width: 44px; height: 44px;
-      border-radius: 10px;
+    .bento-erp {
+      background: var(--white); border: 1.5px solid var(--border);
+    }
+    .bento-market {
+      background: var(--gold-bg); border: 1.5px solid rgba(184,134,42,.18);
+    }
+    .bento-icon {
+      width: 46px; height: 46px; border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem; margin-bottom: 18px;
+      font-size: 1.35rem; margin-bottom: 20px; flex-shrink: 0;
     }
-    .icon-gold { background: var(--gold-lt); }
-    .icon-teal { background: var(--teal-lt); }
-    .icon-blue { background: #EEF2FF; }
-    .sol-card h3 {
-      font-size: 1.125rem; font-weight: 600;
-      color: var(--ink); margin-bottom: 10px;
+    .bento-main .bento-icon { background: rgba(184,134,42,.18); }
+    .bento-erp .bento-icon  { background: #E6F4F1; }
+    .bento-market .bento-icon { background: rgba(184,134,42,.15); }
+    .bento-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: .7rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: 9px; display: block;
     }
-    .sol-card p {
-      font-size: .9375rem; color: var(--ink2);
-      line-height: 1.65; margin-bottom: 20px;
+    .bento-main .bento-eyebrow   { color: var(--gold2); }
+    .bento-erp .bento-eyebrow    { color: var(--teal); }
+    .bento-market .bento-eyebrow { color: var(--gold); }
+    .bento-card h3 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 1.625rem; font-weight: 400; line-height: 1.2; margin-bottom: 12px;
     }
-    .sol-features {
-      list-style: none; display: flex;
-      flex-direction: column; gap: 7px;
-      margin-bottom: 24px;
-    }
-    .sol-features li {
-      font-size: .875rem; color: var(--ink2);
-      padding-left: 16px; position: relative;
-    }
-    .sol-features li::before {
-      content: '·'; position: absolute; left: 0;
-      color: var(--gold);
-    }
-    .sol-link {
-      font-size: .875rem; font-weight: 600;
-      color: var(--gold);
-      display: inline-flex; align-items: center; gap: 4px;
+    .bento-main h3 { color: #fff; }
+    .bento-erp h3, .bento-market h3 { color: var(--ink); }
+    .bento-card p { font-size: .9375rem; line-height: 1.7; }
+    .bento-main p { color: rgba(255,255,255,.5); }
+    .bento-erp p, .bento-market p { color: var(--ink3); }
+    .bento-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+    .bento-features li { font-size: .875rem; display: flex; align-items: center; gap: 9px; }
+    .bento-main .bento-features li   { color: rgba(255,255,255,.55); }
+    .bento-erp .bento-features li    { color: var(--ink3); }
+    .bento-market .bento-features li { color: var(--ink3); }
+    .fdot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .bento-main .fdot   { background: var(--gold); }
+    .bento-erp .fdot    { background: var(--teal); }
+    .bento-market .fdot { background: var(--gold); }
+    .bento-link {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .875rem; font-weight: 600; margin-top: 26px;
       transition: gap .15s;
     }
-    .sol-link:hover { gap: 8px; }
+    .bento-main .bento-link   { color: var(--gold2); }
+    .bento-erp .bento-link    { color: var(--teal); }
+    .bento-market .bento-link { color: var(--gold); }
+    .bento-link:hover { gap: 10px; }
 
-    /* ── Two paths ── */
-    .paths-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
+    /* Chat preview inside ZAKI bento */
+    .bento-chat { display: flex; flex-direction: column; gap: 9px; margin-top: 24px; position: relative; z-index: 1; }
+    .cb {
+      padding: 9px 13px; border-radius: 11px;
+      font-size: .8rem; line-height: 1.55; max-width: 90%;
     }
-    @media (max-width: 720px) {
-      .paths-grid { grid-template-columns: 1fr; }
+    .cb--u { background: rgba(184,134,42,.18); border: 1px solid rgba(184,134,42,.22); color: rgba(255,255,255,.75); align-self: flex-end; }
+    .cb--a { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.65); align-self: flex-start; }
+    .cb--a strong { color: var(--gold2); }
+
+    /* ── FEATURE ROWS ─────────────────────────────── */
+    .feature-section { background: var(--white); }
+    .feature-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 80px; align-items: center;
+      padding: 80px 0; border-bottom: 1px solid var(--border);
     }
+    .feature-row:last-child { border-bottom: none; }
+    .feature-row--rev .feature-text { order: 2; }
+    .feature-row--rev .feature-vis  { order: 1; }
+    @media (max-width: 780px) {
+      .feature-row { grid-template-columns: 1fr; gap: 40px; }
+      .feature-row--rev .feature-text,
+      .feature-row--rev .feature-vis { order: unset; }
+    }
+    .feature-eyebrow {
+      font-family: 'DM Mono', monospace; font-size: .72rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 14px; display: block;
+    }
+    .feature-heading {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: clamp(1.65rem, 2.5vw, 2.25rem);
+      font-weight: 400; line-height: 1.15; letter-spacing: -.015em;
+      color: var(--ink); margin-bottom: 16px;
+    }
+    .feature-body { font-size: 1rem; color: var(--ink3); line-height: 1.8; margin-bottom: 22px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      font-size: .78rem; font-weight: 500; padding: 5px 12px; border-radius: 100px;
+      border: 1px solid transparent;
+    }
+    .chip-gold { background: var(--gold-bg); color: var(--gold); border-color: rgba(184,134,42,.2); }
+    .chip-teal { background: #E6F4F1; color: var(--teal); border-color: rgba(11,122,100,.15); }
+    .chip-ink  { background: var(--paper); color: var(--ink2); border-color: var(--border); }
+
+    /* E-invoice mock */
+    .ev-card {
+      background: var(--ink); border-radius: var(--r-lg); padding: 28px;
+      position: relative; overflow: hidden;
+    }
+    .ev-card::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 45% at 85% 20%, rgba(11,122,100,.2) 0%, transparent 55%);
+    }
+    .ev-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; position: relative; z-index: 1; }
+    .ev-co { font-family: 'Instrument Serif', Georgia, serif; font-size: 1.2rem; color: #fff; }
+    .ev-co-meta { font-size: .73rem; color: rgba(255,255,255,.3); margin-top: 3px; }
+    .ev-cleared { font-size: .7rem; font-weight: 600; padding: 4px 10px; border-radius: 100px; background: rgba(11,122,100,.25); color: #4EC9A8; }
+    .ev-divider { border: none; border-top: 1px solid rgba(255,255,255,.07); margin: 14px 0; position: relative; z-index: 1; }
+    .ev-lines { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+    .ev-line { display: flex; justify-content: space-between; font-size: .8rem; }
+    .ev-lbl { color: rgba(255,255,255,.38); }
+    .ev-val { color: rgba(255,255,255,.78); font-weight: 500; }
+    .ev-total { display: flex; justify-content: space-between; font-size: 1rem; font-weight: 600; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); position: relative; z-index: 1; }
+    .ev-total-lbl { color: rgba(255,255,255,.45); }
+    .ev-total-val { color: var(--gold2); }
+    .ev-qr { position: absolute; bottom: 22px; right: 22px; width: 50px; height: 50px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; z-index: 1; }
+
+    /* Marketplace mock */
+    .mp-card {
+      background: var(--paper); border: 1.5px solid var(--border); border-radius: var(--r-lg); padding: 20px;
+    }
+    .mp-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .mp-title { font-size: .73rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--ink3); }
+    .mp-count { font-size: .73rem; color: var(--ink3); }
+    .mp-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px; background: var(--white); border: 1px solid var(--border);
+      border-radius: 9px; margin-bottom: 8px;
+    }
+    .mp-row:last-child { margin-bottom: 0; }
+    .mp-name { font-size: .84rem; font-weight: 500; color: var(--ink); }
+    .mp-cat  { font-size: .71rem; color: var(--ink3); margin-top: 2px; }
+    .mp-right { display: flex; align-items: center; gap: 7px; }
+    .mp-ver { font-size: .63rem; font-weight: 600; padding: 2px 7px; border-radius: 100px; background: rgba(11,122,100,.1); color: var(--teal); }
+    .mp-price { font-size: .84rem; font-weight: 600; color: var(--gold); }
+
+    /* ── PATHS (dark) ─────────────────────────────── */
+    .paths-section {
+      background: var(--ink); padding: 96px 0; position: relative; overflow: hidden;
+    }
+    .paths-section::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 60% at 70% 50%, rgba(184,134,42,.1) 0%, transparent 60%);
+    }
+    .paths-section .section-label { color: rgba(255,255,255,.25); }
+    .paths-section .section-title { color: #fff; }
+    .paths-section .section-sub   { color: rgba(255,255,255,.38); }
+    .paths-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 720px) { .paths-grid { grid-template-columns: 1fr; } }
     .path-card {
-      border-radius: var(--radius);
-      padding: 40px 36px;
+      border-radius: var(--r-lg); padding: 40px 36px;
       display: flex; flex-direction: column;
     }
-    .path-card--business {
-      background: var(--white);
-      border: 1.5px solid var(--border);
+    .path-card--biz {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.09);
     }
-    .path-card--platform {
-      background: var(--ink);
-      border: 1.5px solid var(--ink);
-      color: #fff;
+    .path-card--partner {
+      background: linear-gradient(145deg, rgba(184,134,42,.16) 0%, rgba(212,168,76,.06) 100%);
+      border: 1px solid rgba(184,134,42,.24);
     }
     .path-tag {
-      display: inline-block;
-      font-size: .75rem; font-weight: 600;
-      letter-spacing: .07em; text-transform: uppercase;
-      padding: 4px 12px; border-radius: 100px;
-      margin-bottom: 20px;
+      font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 100px; display: inline-block;
+      margin-bottom: 20px; align-self: flex-start;
     }
-    .path-card--business .path-tag {
-      background: var(--gold-lt); color: var(--gold);
-    }
-    .path-card--platform .path-tag {
-      background: rgba(184,134,42,.2); color: #D4A84C;
-    }
+    .path-card--biz .path-tag     { background: rgba(255,255,255,.07); color: rgba(255,255,255,.42); }
+    .path-card--partner .path-tag { background: rgba(184,134,42,.2);   color: var(--gold2); }
     .path-card h3 {
       font-family: 'Instrument Serif', Georgia, serif;
-      font-size: 1.625rem; font-weight: 400;
-      line-height: 1.2; margin-bottom: 14px;
+      font-size: 1.75rem; font-weight: 400; line-height: 1.15;
+      color: #fff; margin-bottom: 12px;
     }
-    .path-card--platform h3 { color: #fff; }
-    .path-card p {
-      font-size: .9375rem; line-height: 1.7;
-      margin-bottom: 28px; flex: 1;
-    }
-    .path-card--business p { color: var(--ink2); }
-    .path-card--platform p { color: rgba(255,255,255,.65); }
-    .path-includes {
-      list-style: none; display: flex;
-      flex-direction: column; gap: 9px;
-      margin-bottom: 32px;
-    }
-    .path-includes li {
-      font-size: .875rem;
-      display: flex; align-items: flex-start; gap: 10px;
-    }
-    .path-card--business .path-includes li { color: var(--ink2); }
-    .path-card--platform .path-includes li { color: rgba(255,255,255,.7); }
-    .path-check {
-      width: 18px; height: 18px; flex-shrink: 0;
-      border-radius: 50%;
+    .path-card > p { font-size: .9375rem; line-height: 1.7; color: rgba(255,255,255,.42); margin-bottom: 28px; flex: 1; }
+    .path-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    .path-list li { font-size: .875rem; color: rgba(255,255,255,.5); display: flex; align-items: flex-start; gap: 10px; }
+    .pcheck {
+      width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; margin-top: 2px;
+      font-size: .6rem; margin-top: 2px;
     }
-    .path-card--business .path-check {
-      background: var(--gold-lt); color: var(--gold);
-    }
-    .path-card--platform .path-check {
-      background: rgba(184,134,42,.25); color: #D4A84C;
-    }
-    .btn-path-primary {
+    .path-card--biz .pcheck     { background: rgba(255,255,255,.07); color: rgba(255,255,255,.4); }
+    .path-card--partner .pcheck { background: rgba(184,134,42,.22);  color: var(--gold2); }
+    .btn-path {
       display: inline-flex; align-items: center; gap: 6px;
-      background: var(--gold); color: #fff;
       font-weight: 600; font-size: .9375rem;
-      padding: 13px 28px; border-radius: 100px;
-      align-self: flex-start;
-      transition: opacity .15s;
+      padding: 12px 26px; border-radius: 100px; align-self: flex-start;
+      transition: opacity .15s, transform .15s;
     }
-    .btn-path-primary:hover { opacity: .88; }
-    .btn-path-ghost {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,.1); color: #fff;
-      font-weight: 500; font-size: .9375rem;
-      padding: 13px 28px; border-radius: 100px;
-      border: 1.5px solid rgba(255,255,255,.2);
-      align-self: flex-start;
-      transition: background .15s;
+    .btn-path--primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #fff; box-shadow: 0 4px 20px rgba(184,134,42,.3);
     }
-    .btn-path-ghost:hover { background: rgba(255,255,255,.16); }
+    .btn-path--ghost {
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.78);
+    }
+    .btn-path:hover { opacity: .88; transform: translateY(-1px); }
 
-    /* ── Countries bar ── */
-    .countries {
-      padding: 40px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      background: var(--white);
-    }
-    .countries-inner {
-      display: flex; align-items: center;
-      gap: 32px; flex-wrap: wrap;
-      justify-content: center;
-    }
-    .country-item {
-      display: flex; align-items: center; gap: 8px;
-      font-size: .875rem; color: var(--ink2);
-    }
-    .country-item span { font-size: 1.25rem; }
-
-    /* ── Final CTA ── */
-    .cta-section {
-      padding: 80px 0;
-      text-align: center;
-    }
+    /* ── FINAL CTA ────────────────────────────────── */
+    .cta-section { padding: 96px 0; text-align: center; background: var(--paper); }
     .cta-section h2 {
       font-family: 'Instrument Serif', Georgia, serif;
-      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
-      font-weight: 400; color: var(--ink);
-      margin-bottom: 14px;
-      letter-spacing: -.015em;
+      font-size: clamp(2rem, 3.5vw, 3.25rem);
+      font-weight: 400; color: var(--ink); letter-spacing: -.025em; margin-bottom: 16px;
     }
-    .cta-section p {
-      font-size: 1rem; color: var(--ink2);
-      margin-bottom: 32px;
-    }
-    .cta-note {
-      margin-top: 16px;
-      font-size: .8rem; color: var(--ink3);
-    }
+    .cta-section h2 em { font-style: italic; color: var(--gold); }
+    .cta-section > .wrap > p { font-size: 1.0625rem; color: var(--ink3); margin-bottom: 36px; }
+    .cta-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .cta-badges { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; margin-top: 28px; }
+    .cta-badge { font-size: .8rem; color: var(--ink3); display: flex; align-items: center; gap: 6px; }
+    .cta-badge::before { content: '✓'; color: var(--teal); font-weight: 700; }
 
-    /* ── Footer ── */
-    footer {
-      background: var(--ink);
-      color: rgba(255,255,255,.6);
-      padding: 56px 0 32px;
-    }
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 40px; margin-bottom: 48px;
-    }
-    @media (max-width: 720px) {
-      .footer-grid { grid-template-columns: 1fr 1fr; }
-    }
-    .footer-brand-name {
-      font-weight: 600; font-size: 1rem; color: #fff;
-      margin-top: 2px;
-    }
-    .footer-tagline {
-      font-size: .875rem; line-height: 1.65;
-      margin-top: 12px; max-width: 220px;
-    }
-    footer h5 {
-      font-size: .8rem; font-weight: 600;
-      letter-spacing: .08em; text-transform: uppercase;
-      color: rgba(255,255,255,.4);
-      margin-bottom: 14px;
-    }
-    footer a {
-      display: block; font-size: .875rem;
-      color: rgba(255,255,255,.55);
-      margin-bottom: 9px;
-      transition: color .15s;
-    }
+    /* ── FOOTER ───────────────────────────────────── */
+    footer { background: var(--ink); color: rgba(255,255,255,.4); padding: 64px 0 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 56px; }
+    @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+    .footer-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+    .footer-brand-name { font-weight: 600; font-size: 1rem; color: #fff; }
+    .footer-tagline { font-size: .875rem; line-height: 1.7; max-width: 220px; }
+    footer h5 { font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.22); margin-bottom: 16px; }
+    footer a { display: block; font-size: .875rem; color: rgba(255,255,255,.42); margin-bottom: 10px; transition: color .15s; }
     footer a:hover { color: #fff; }
     .footer-bottom {
-      border-top: 1px solid rgba(255,255,255,.08);
-      padding-top: 24px;
-      display: flex; align-items: center;
-      justify-content: space-between; flex-wrap: wrap; gap: 12px;
-      font-size: .8rem;
+      border-top: 1px solid rgba(255,255,255,.06); padding-top: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; font-size: .8rem;
     }
-    .footer-bottom a { display: inline; margin: 0 16px 0 0; }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-links a { display: inline; margin: 0; }
   </style>
 </head>
 <body>
 
-  <!-- Nav -->
-  <nav>
-    <div class="nav-inner">
-      <a href="/" class="brand">
-        <div class="brand-mark">م</div>
-        Mumtaz
-      </a>
-      <ul class="nav-links">
-        <li><a href="#solutions">Solutions</a></li>
-        <li><a href="#for-business">For Business</a></li>
-        <li><a href="#for-partners">For Partners</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-      <div class="nav-cta">
-        <a href="https://zaki.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
-        <a href="https://zaki.mumtaz.digital" class="btn-nav-primary">Get started</a>
-      </div>
+<!-- ── NAV ─────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand">
+      <div class="brand-mark">م</div>
+      Mumtaz
+    </a>
+    <ul class="nav-links">
+      <li><a href="#solutions">Solutions</a></li>
+      <li><a href="#compliance">Compliance</a></li>
+      <li><a href="#for-partners">Partners</a></li>
+      <li><a href="/pricing.html">Pricing</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://zaki.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
+      <a href="https://zaki.mumtaz.digital" class="btn-nav-primary">Get started</a>
     </div>
-  </nav>
+  </div>
+</nav>
 
-  <!-- Hero -->
-  <section class="hero">
-    <div class="wrap">
-      <div class="hero-tag">GCC &amp; Pakistan</div>
-      <h1>Run your business<br />on <em>one platform</em></h1>
+<!-- ── HERO ────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-glow"></div>
+
+  <div class="hero-inner">
+    <!-- Left: text -->
+    <div class="hero-text">
+      <div class="hero-badge"><span class="dot"></span>GCC &amp; Pakistan</div>
+      <h1>Run your business<br/>on <em>one platform</em></h1>
       <p class="hero-sub">
         ERP, AI Agent, and B2B Marketplace — built for SMEs in the Gulf and Pakistan.
         Free e-invoicing included.
       </p>
       <div class="hero-ctas">
         <a href="https://zaki.mumtaz.digital" class="btn-primary">Start free →</a>
-        <a href="#solutions" class="btn-ghost">See how it works</a>
+        <a href="#solutions" class="btn-ghost-dark">See how it works</a>
+      </div>
+      <div class="hero-stats">
+        <div class="h-stat">
+          <div class="h-stat-num">3,400+</div>
+          <div class="h-stat-lbl">Verified<br/>suppliers</div>
+        </div>
+        <div class="h-stat">
+          <div class="h-stat-num">7</div>
+          <div class="h-stat-lbl">Countries<br/>supported</div>
+        </div>
+        <div class="h-stat">
+          <div class="h-stat-num">Free</div>
+          <div class="h-stat-lbl">E-invoicing<br/>UAE · KSA · PK</div>
+        </div>
       </div>
     </div>
-  </section>
 
-  <!-- Countries -->
-  <div class="countries">
-    <div class="wrap">
-      <div class="countries-inner">
-        <div class="country-item"><span>🇦🇪</span> UAE</div>
-        <div class="country-item"><span>🇸🇦</span> Saudi Arabia</div>
-        <div class="country-item"><span>🇶🇦</span> Qatar</div>
-        <div class="country-item"><span>🇰🇼</span> Kuwait</div>
-        <div class="country-item"><span>🇧🇭</span> Bahrain</div>
-        <div class="country-item"><span>🇴🇲</span> Oman</div>
-        <div class="country-item"><span>🇵🇰</span> Pakistan</div>
+    <!-- Right: fake product UI -->
+    <div class="hero-visual">
+      <div class="ui-window">
+        <div class="ui-titlebar">
+          <div class="ui-dot ui-dot-r"></div>
+          <div class="ui-dot ui-dot-y"></div>
+          <div class="ui-dot ui-dot-g"></div>
+          <span class="ui-label">ZAKI AI CFO — Live</span>
+        </div>
+        <div class="ui-chat">
+          <div class="ui-msg ui-msg--user">What's my cash position today?</div>
+          <div class="ui-msg ui-msg--ai">Your available cash is <strong>AED 284,500</strong> across 3 accounts. Emirates NBD leads at AED 189K. You have 4 invoices totalling AED 92K due in the next 7 days.</div>
+        </div>
+        <div class="ui-kpis">
+          <div class="ui-kpi">
+            <div class="ui-kpi-val">AED 284K</div>
+            <div class="ui-kpi-lbl">Cash</div>
+            <div class="ui-kpi-up">↑ 12%</div>
+          </div>
+          <div class="ui-kpi">
+            <div class="ui-kpi-val">AED 412K</div>
+            <div class="ui-kpi-lbl">Receivables</div>
+            <div class="ui-kpi-up">↑ 8%</div>
+          </div>
+          <div class="ui-kpi">
+            <div class="ui-kpi-val">98.2%</div>
+            <div class="ui-kpi-lbl">Collection</div>
+            <div class="ui-kpi-up">↑ 2%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating invoice mini-card -->
+      <div class="ui-float">
+        <div class="ui-float-title">Recent invoices</div>
+        <div class="ui-inv-row">
+          <div>
+            <div class="ui-inv-co">Gulf Trade LLC</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="ui-badge badge-paid">Paid</span>
+            <span class="ui-inv-amt">AED 18,400</span>
+          </div>
+        </div>
+        <div class="ui-inv-row">
+          <div>
+            <div class="ui-inv-co">Al Noor Supplies</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="ui-badge badge-pending">Pending</span>
+            <span class="ui-inv-amt">AED 9,750</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Solutions -->
-  <section class="section" id="solutions">
-    <div class="wrap">
-      <div class="section-hdr">
-        <div class="section-label">Solutions</div>
-        <h2 class="section-title">Everything your business needs</h2>
-        <p class="section-sub">Three integrated products that work together out of the box.</p>
-      </div>
-
-      <div class="solutions-grid">
-
-        <div class="sol-card">
-          <div class="sol-icon icon-teal">⬡</div>
-          <h3>Mumtaz ERP</h3>
-          <p>Full business management — accounting, sales, inventory, HR, and payroll. Configured for GCC compliance from day one.</p>
-          <ul class="sol-features">
-            <li>UAE FTA, KSA ZATCA, Pakistan FBR e-invoicing — free</li>
-            <li>Accounting &amp; VAT returns</li>
-            <li>CRM, Inventory, HR &amp; Payroll</li>
-            <li>Multi-currency &amp; multi-company</li>
-          </ul>
-          <a href="/erp.html" class="sol-link">Explore ERP →</a>
-        </div>
-
-        <div class="sol-card">
-          <div class="sol-icon icon-gold">ذ</div>
-          <h3>ZAKI AI Agent</h3>
-          <p>Your AI CFO. Ask anything about your business in Arabic or English and get instant answers backed by your live data.</p>
-          <ul class="sol-features">
-            <li>"What's my cash position today?"</li>
-            <li>"Which invoices are overdue?"</li>
-            <li>"Forecast next quarter revenue"</li>
-            <li>Voice &amp; text, Arabic &amp; English</li>
-          </ul>
-          <a href="https://zaki.mumtaz.digital" class="sol-link">Try ZAKI →</a>
-        </div>
-
-        <div class="sol-card">
-          <div class="sol-icon icon-blue">⟁</div>
-          <h3>B2B Marketplace</h3>
-          <p>Buy and sell with verified GCC businesses on the Mumtaz network. Purchase orders and invoices flow automatically into your ERP.</p>
-          <ul class="sol-features">
-            <li>Verified GCC business network</li>
-            <li>Direct PO &amp; invoice integration</li>
-            <li>Trade finance options</li>
-          </ul>
-          <a href="#solutions" class="sol-link">Learn more →</a>
-        </div>
-
-      </div>
+  <!-- Country strip at base of dark hero -->
+  <div class="country-strip">
+    <div class="country-track">
+      <div class="c-item"><span>🇦🇪</span><strong>UAE</strong></div>
+      <div class="c-item"><span>🇸🇦</span><strong>Saudi Arabia</strong></div>
+      <div class="c-item"><span>🇶🇦</span><strong>Qatar</strong></div>
+      <div class="c-item"><span>🇰🇼</span><strong>Kuwait</strong></div>
+      <div class="c-item"><span>🇧🇭</span><strong>Bahrain</strong></div>
+      <div class="c-item"><span>🇴🇲</span><strong>Oman</strong></div>
+      <div class="c-item"><span>🇵🇰</span><strong>Pakistan</strong></div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Two paths -->
-  <section class="section" id="for-business">
-    <div class="wrap">
-      <div class="section-hdr">
-        <div class="section-label">How it works</div>
-        <h2 class="section-title">Two ways to use Mumtaz</h2>
-        <p class="section-sub">Use it for your own operations, or offer it to others and earn recurring revenue.</p>
-      </div>
-
-      <div class="paths-grid">
-
-        <!-- Path 1: For your business -->
-        <div class="path-card path-card--business" id="for-business">
-          <div class="path-tag">For Your Business</div>
-          <h3>Manage your company on one platform</h3>
-          <p>Replace disconnected tools with a single system — accounting, sales, operations, HR, and AI — all connected and GCC-compliant.</p>
-          <ul class="path-includes">
-            <li>
-              <div class="path-check">✓</div>
-              Free e-invoicing (UAE, KSA, Pakistan)
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              Full ERP: accounting, CRM, inventory, HR, payroll
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              ZAKI AI Agent — your always-on CFO
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              B2B Marketplace access
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              14-day free trial, no credit card
-            </li>
-          </ul>
-          <a href="https://zaki.mumtaz.digital" class="btn-path-primary">Start free →</a>
-        </div>
-
-        <!-- Path 2: White-label platform -->
-        <div class="path-card path-card--platform" id="for-partners">
-          <div class="path-tag">For Your Platform</div>
-          <h3>Offer Mumtaz under your brand</h3>
-          <p>Banks, free zones, chambers, and enterprises white-label Mumtaz — with their own domain, pricing, and revenue stream.</p>
-          <ul class="path-includes">
-            <li>
-              <div class="path-check">✓</div>
-              Your brand, your domain — clients never see Mumtaz
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              Set your own pricing for each module
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              Full ERP + ZAKI AI + Marketplace for your clients
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              Revenue dashboard — see earnings in real time
-            </li>
-            <li>
-              <div class="path-check">✓</div>
-              Dedicated onboarding &amp; support team
-            </li>
-          </ul>
-          <a href="https://app.mumtaz.digital/partner.html" class="btn-path-ghost">Apply for partner access →</a>
-        </div>
-
-      </div>
+<!-- ── STATS BAR ────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num">3,400<em>+</em></div>
+      <div class="stat-lbl">Verified Suppliers</div>
     </div>
-  </section>
-
-  <!-- Final CTA -->
-  <section class="cta-section" id="contact">
-    <div class="wrap">
-      <h2>Ready to get started?</h2>
-      <p>Join businesses across the GCC and Pakistan running on Mumtaz.</p>
-      <div class="hero-ctas">
-        <a href="https://zaki.mumtaz.digital" class="btn-primary">Start free — 2 modules →</a>
-        <a href="/demo.html" class="btn-ghost">Book a demo</a>
-      </div>
-      <p class="cta-note">No credit card required · Free e-invoicing always · Cancel anytime</p>
+    <div class="stat-item">
+      <div class="stat-num">7</div>
+      <div class="stat-lbl">Countries</div>
     </div>
-  </section>
+    <div class="stat-item">
+      <div class="stat-num">1.5<em>%</em></div>
+      <div class="stat-lbl">Marketplace Fee</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">Free</div>
+      <div class="stat-lbl">E-invoicing Always</div>
+    </div>
+  </div>
+</div>
 
-  <!-- Footer -->
-  <footer>
-    <div class="wrap">
-      <div class="footer-grid">
+<!-- ── SOLUTIONS BENTO ──────────────────────────────── -->
+<section class="section" id="solutions">
+  <div class="wrap">
+    <div class="section-hdr">
+      <span class="section-label">Solutions</span>
+      <h2 class="section-title">Everything your business needs</h2>
+      <p class="section-sub">Three integrated products that work together out of the box.</p>
+    </div>
+
+    <div class="bento">
+      <!-- ZAKI — tall left -->
+      <div class="bento-card bento-main">
         <div>
-          <div class="brand" style="color:#fff;">
-            <div class="brand-mark">م</div>
-            <span class="footer-brand-name">Mumtaz</span>
+          <div class="bento-icon">ذ</div>
+          <span class="bento-eyebrow">AI Agent</span>
+          <h3>ZAKI — Your AI CFO</h3>
+          <p>Ask anything about your business in Arabic or English and get instant answers backed by your live ERP data.</p>
+          <div class="bento-chat">
+            <div class="cb cb--u">Forecast next quarter revenue</div>
+            <div class="cb cb--a">Based on current pipeline and seasonality, Q3 forecast is <strong>AED 1.24M</strong> — up 18% from Q2. Key driver: 3 large deals closing by July.</div>
           </div>
-          <p class="footer-tagline">The Complete Business Platform for GCC and Pakistan SMEs.</p>
         </div>
+        <a href="https://zaki.mumtaz.digital" class="bento-link">Try ZAKI free →</a>
+      </div>
+
+      <!-- ERP — top right -->
+      <div class="bento-card bento-erp">
         <div>
-          <h5>Products</h5>
-          <a href="/erp.html">Mumtaz ERP</a>
-          <a href="https://zaki.mumtaz.digital">ZAKI AI Agent</a>
-          <a href="#solutions">B2B Marketplace</a>
-          <a href="#solutions">E-Invoicing</a>
+          <div class="bento-icon">⬡</div>
+          <span class="bento-eyebrow">ERP</span>
+          <h3>Mumtaz ERP</h3>
+          <p>Full business management — accounting, sales, inventory, HR, payroll. GCC-compliant from day one.</p>
+          <ul class="bento-features">
+            <li><span class="fdot"></span>UAE FTA, KSA ZATCA, Pakistan FBR</li>
+            <li><span class="fdot"></span>Accounting &amp; VAT returns</li>
+            <li><span class="fdot"></span>CRM, Inventory, HR &amp; Payroll</li>
+          </ul>
         </div>
+        <a href="/erp.html" class="bento-link">Explore ERP →</a>
+      </div>
+
+      <!-- Marketplace — bottom right -->
+      <div class="bento-card bento-market">
         <div>
-          <h5>Company</h5>
-          <a href="/about.html">About</a>
-          <a href="/blog.html">Blog</a>
-          <a href="/contact.html">Contact</a>
-          <a href="/demo.html">Book a Demo</a>
+          <div class="bento-icon">⟁</div>
+          <span class="bento-eyebrow">Marketplace</span>
+          <h3>B2B Marketplace</h3>
+          <p>Buy and sell with verified GCC businesses. POs and invoices flow directly into your ERP.</p>
+          <ul class="bento-features">
+            <li><span class="fdot"></span>3,400+ verified suppliers</li>
+            <li><span class="fdot"></span>Direct PO &amp; invoice integration</li>
+            <li><span class="fdot"></span>Trade finance options</li>
+          </ul>
         </div>
-        <div>
-          <h5>Partners</h5>
-          <a href="/banks.html">For Banks</a>
-          <a href="/banks.html">For Free Zones</a>
-          <a href="/banks.html">For Chambers</a>
-          <a href="/docs.html">Documentation</a>
+        <a href="/marketplace/" class="bento-link">Browse marketplace →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURE ROWS ─────────────────────────────────── -->
+<div class="feature-section" id="compliance">
+  <div class="wrap">
+
+    <!-- Row 1: E-invoicing -->
+    <div class="feature-row">
+      <div class="feature-text">
+        <span class="feature-eyebrow">Compliance</span>
+        <h2 class="feature-heading">E-invoicing for every GCC market — free, always</h2>
+        <p class="feature-body">Most ERP vendors charge extra for e-invoicing. Mumtaz includes full compliance for UAE FTA, KSA ZATCA Phase 2, and Pakistan FBR at no additional cost — with automatic submission and QR codes.</p>
+        <div class="chips">
+          <span class="chip chip-teal">UAE FTA</span>
+          <span class="chip chip-teal">KSA ZATCA Phase 2</span>
+          <span class="chip chip-teal">Pakistan FBR</span>
+          <span class="chip chip-ink">UBL 2.1 XML</span>
+          <span class="chip chip-ink">FATOORA QR</span>
         </div>
       </div>
-      <div class="footer-bottom">
-        <span>© 2026 Mumtaz Digital</span>
-        <div>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
+      <div class="feature-vis">
+        <div class="ev-card">
+          <div class="ev-hdr">
+            <div>
+              <div class="ev-co">Gulf Trade LLC</div>
+              <div class="ev-co-meta">INV/2026/04/0042 · April 15, 2026</div>
+            </div>
+            <div class="ev-cleared">✓ ZATCA Cleared</div>
+          </div>
+          <hr class="ev-divider" />
+          <div class="ev-lines">
+            <div class="ev-line"><span class="ev-lbl">Office Supplies × 50</span><span class="ev-val">SAR 4,800</span></div>
+            <div class="ev-line"><span class="ev-lbl">IT Equipment × 2</span><span class="ev-val">SAR 12,600</span></div>
+            <div class="ev-line"><span class="ev-lbl">VAT 15%</span><span class="ev-val">SAR 2,610</span></div>
+          </div>
+          <div class="ev-total">
+            <span class="ev-total-lbl">Total Due</span>
+            <span class="ev-total-val">SAR 20,010</span>
+          </div>
+          <div class="ev-qr">⬛</div>
         </div>
       </div>
     </div>
-  </footer>
+
+    <!-- Row 2: Marketplace (reversed) -->
+    <div class="feature-row feature-row--rev">
+      <div class="feature-text">
+        <span class="feature-eyebrow">B2B Marketplace</span>
+        <h2 class="feature-heading">Find verified suppliers, send POs directly from your ERP</h2>
+        <p class="feature-body">Browse the Mumtaz network of 3,400+ verified GCC businesses. Send a purchase order in two clicks — it lands in the supplier's Mumtaz ERP instantly, with no email required.</p>
+        <div class="chips">
+          <span class="chip chip-gold">Verified Network</span>
+          <span class="chip chip-gold">1.5% Fee</span>
+          <span class="chip chip-ink">Trade Finance</span>
+          <span class="chip chip-ink">Auto PO Sync</span>
+        </div>
+      </div>
+      <div class="feature-vis">
+        <div class="mp-card">
+          <div class="mp-hdr">
+            <span class="mp-title">Suppliers — Office Supplies</span>
+            <span class="mp-count">128 results</span>
+          </div>
+          <div class="mp-row">
+            <div>
+              <div class="mp-name">Al Badr Office Supplies</div>
+              <div class="mp-cat">Office Supplies · Dubai</div>
+            </div>
+            <div class="mp-right">
+              <span class="mp-ver">✓ Verified</span>
+              <span class="mp-price">AED 18/unit</span>
+            </div>
+          </div>
+          <div class="mp-row">
+            <div>
+              <div class="mp-name">Riyadh Trading Co.</div>
+              <div class="mp-cat">Wholesale · Riyadh</div>
+            </div>
+            <div class="mp-right">
+              <span class="mp-ver">✓ Verified</span>
+              <span class="mp-price">SAR 22/unit</span>
+            </div>
+          </div>
+          <div class="mp-row">
+            <div>
+              <div class="mp-name">Karachi Supplies Ltd</div>
+              <div class="mp-cat">Manufacturing · Karachi</div>
+            </div>
+            <div class="mp-right">
+              <span class="mp-ver">✓ Verified</span>
+              <span class="mp-price">PKR 2,400/unit</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── TWO PATHS (dark) ─────────────────────────────── -->
+<section class="paths-section" id="for-partners">
+  <div class="wrap" style="position:relative;z-index:1">
+    <div class="section-hdr">
+      <span class="section-label">How it works</span>
+      <h2 class="section-title">Two ways to use Mumtaz</h2>
+      <p class="section-sub">Use it for your own operations, or white-label it and earn recurring revenue.</p>
+    </div>
+
+    <div class="paths-grid">
+      <div class="path-card path-card--biz">
+        <span class="path-tag">For Your Business</span>
+        <h3>Manage your company on one platform</h3>
+        <p>Replace disconnected tools with a single system — accounting, sales, operations, HR, and AI — GCC-compliant from day one.</p>
+        <ul class="path-list">
+          <li><div class="pcheck">✓</div>Free e-invoicing (UAE, KSA, Pakistan)</li>
+          <li><div class="pcheck">✓</div>Full ERP: accounting, CRM, inventory, HR, payroll</li>
+          <li><div class="pcheck">✓</div>ZAKI AI Agent — your always-on CFO</li>
+          <li><div class="pcheck">✓</div>B2B Marketplace access</li>
+          <li><div class="pcheck">✓</div>14-day free trial, no credit card</li>
+        </ul>
+        <a href="https://zaki.mumtaz.digital" class="btn-path btn-path--primary">Start free →</a>
+      </div>
+
+      <div class="path-card path-card--partner">
+        <span class="path-tag">For Your Platform</span>
+        <h3>Offer Mumtaz under your brand</h3>
+        <p>Banks, free zones, chambers, and enterprises white-label Mumtaz — your domain, your pricing, your revenue stream.</p>
+        <ul class="path-list">
+          <li><div class="pcheck">✓</div>Your brand, your domain — clients never see Mumtaz</li>
+          <li><div class="pcheck">✓</div>Set your own pricing for each module</li>
+          <li><div class="pcheck">✓</div>Full ERP + ZAKI AI + Marketplace for your clients</li>
+          <li><div class="pcheck">✓</div>Revenue dashboard — earnings in real time</li>
+          <li><div class="pcheck">✓</div>Dedicated onboarding &amp; support team</li>
+        </ul>
+        <a href="https://app.mumtaz.digital/partner.html" class="btn-path btn-path--ghost">Apply for partner access →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="wrap">
+    <h2>Ready to <em>get started?</em></h2>
+    <p>Join businesses across the GCC and Pakistan running on Mumtaz.</p>
+    <div class="cta-row">
+      <a href="https://zaki.mumtaz.digital" class="btn-primary">Start free — 2 modules →</a>
+      <a href="/demo.html" class="btn-ghost">Book a demo</a>
+    </div>
+    <div class="cta-badges">
+      <span class="cta-badge">No credit card required</span>
+      <span class="cta-badge">Free e-invoicing always</span>
+      <span class="cta-badge">Cancel anytime</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ───────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <div class="brand-mark">م</div>
+          <span class="footer-brand-name">Mumtaz</span>
+        </div>
+        <p class="footer-tagline">The complete business platform for GCC and Pakistan SMEs.</p>
+      </div>
+      <div>
+        <h5>Products</h5>
+        <a href="/erp.html">Mumtaz ERP</a>
+        <a href="https://zaki.mumtaz.digital">ZAKI AI Agent</a>
+        <a href="/marketplace/">B2B Marketplace</a>
+        <a href="#compliance">E-Invoicing</a>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <a href="/about.html">About</a>
+        <a href="/blog.html">Blog</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/demo.html">Book a Demo</a>
+      </div>
+      <div>
+        <h5>Partners</h5>
+        <a href="/banks.html">For Banks</a>
+        <a href="/banks.html">For Free Zones</a>
+        <a href="/banks.html">For Chambers</a>
+        <a href="/docs.html">Documentation</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mumtaz Digital</span>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
