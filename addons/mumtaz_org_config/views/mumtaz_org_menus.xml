@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-
-    <!-- Root menu — only visible to Odoo Administrators -->
-    <menuitem id="mumtaz_org_root_menu"
-              name="Mumtaz Orgs"
-              sequence="90"
-              groups="base.group_system"/>
+    <!--
+        Standalone "Mumtaz Orgs" root menu removed.
+        Organisation list is now under Mumtaz Control Plane → Organisations.
+    -->
 
     <menuitem id="mumtaz_org_list_menu"
               name="Organisations"
-              parent="mumtaz_org_root_menu"
+              parent="mumtaz_control_plane.menu_mumtaz_control_plane_root"
               action="mumtaz_org_action"
-              sequence="10"/>
+              sequence="15"
+              groups="mumtaz_control_plane.group_mumtaz_super_admin,
+                      mumtaz_control_plane.group_mumtaz_tenant_admin,
+                      base.group_system"/>
 
 </odoo>

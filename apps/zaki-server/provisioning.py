@@ -26,11 +26,16 @@ ODOO_ADMIN_USER  = os.environ.get("ODOO_ADMIN",       "admin@mumtaz.digital")
 ODOO_ADMIN_PASS  = os.environ.get("ODOO_PASS",        "admin")
 ODOO_TIMEOUT     = int(os.environ.get("ODOO_PROVISION_TIMEOUT", "120"))
 
-# Addons installed in every new tenant DB.
-# Keep minimal for fast provisioning; more can be installed post-onboarding.
+# Addons installed in every new tenant DB (order matters — dependencies first).
 DEFAULT_ADDONS: list[str] = [
     "mumtaz_theme",
     "mumtaz_base",
+    "mumtaz_branding",
+    "mumtaz_einvoicing",
+    "mumtaz_lead_scraper",
+    "mumtaz_lead_nurture",
+    "mumtaz_proposal",
+    "mumtaz_tenant_profile",   # hides Apps menu, wires CRM→Lead Scraper groups
 ]
 
 

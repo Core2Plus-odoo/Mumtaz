@@ -499,13 +499,21 @@ MODULE_MAP = {
 }
 INSTALLED_STATES = {"installed", "to install", "to upgrade"}
 
-def odoo_get_module_states() -> dict:
-    admin_uid = odoo_get_admin_uid()
+
+def _tenant_db(auth: dict) -> str:
+    """Resolve the correct Odoo DB for the authenticated user.
+    Falls back to the platform admin DB if the tenant has no isolated DB yet."""
+    return auth.get("odoo_db") or ODOO_DB
+
+
+def odoo_get_module_states(db: str = None) -> dict:
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid:
         return {}
     try:
         rows = _odoo_object().execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", "search_read",
+            _db, admin_uid, ODOO_PASS, "ir.module.module", "search_read",
             [[["name", "in", list(MODULE_MAP.values())]]],
             {"fields": ["name", "state"]}
         )
@@ -515,27 +523,29 @@ def odoo_get_module_states() -> dict:
             for portal_id, odoo_name in MODULE_MAP.items()
         }
     except Exception as e:
-        print(f"[modules] get states error: {e}")
+        print(f"[modules] get states error ({_db}): {e}")
         return {}
 
-def odoo_toggle_module(portal_id: str, install: bool) -> bool:
+
+def odoo_toggle_module(portal_id: str, install: bool, db: str = None) -> bool:
     odoo_name = MODULE_MAP.get(portal_id)
     if not odoo_name:
         return False
-    admin_uid = odoo_get_admin_uid()
+    _db = db or ODOO_DB
+    admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid:
         return False
     try:
         obj = _odoo_object()
-        ids = obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", "search",
+        ids = obj.execute_kw(_db, admin_uid, ODOO_PASS, "ir.module.module", "search",
                              [[["name", "=", odoo_name]]])
         if not ids:
             return False
         method = "button_immediate_install" if install else "button_immediate_uninstall"
-        obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", method, [ids])
+        obj.execute_kw(_db, admin_uid, ODOO_PASS, "ir.module.module", method, [ids])
         return True
     except Exception as e:
-        print(f"[modules] toggle error ({portal_id}, install={install}): {e}")
+        print(f"[modules] toggle error ({portal_id}, install={install}, db={_db}): {e}")
         return False
 
 # ── Pydantic models ───────────────────────────────────────────────────
@@ -938,6 +948,7 @@ async def me(auth: dict = Depends(require_auth)):
         "plan":      row["plan"],
         "odoo_uid":  row["odoo_uid"],
         "tenant_id": row["tenant_id"],
+        "odoo_db":   row["tenant_db"],
     }
 
 class OnboardingReq(BaseModel):
@@ -1702,8 +1713,8 @@ async def tenant_me(auth: dict = Depends(require_auth)):
 
 @app.get("/api/v1/modules")
 async def get_modules(auth: dict = Depends(require_auth)):
-    """Return installed state of each portal module from Odoo ERP."""
-    return {"modules": odoo_get_module_states()}
+    """Return installed state of each portal module from the tenant's Odoo DB."""
+    return {"modules": odoo_get_module_states(db=_tenant_db(auth))}
 
 class ModuleToggleReq(BaseModel):
     module_id: str
@@ -1712,7 +1723,7 @@ class ModuleToggleReq(BaseModel):
 async def install_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
     if req.module_id not in MODULE_MAP:
         raise HTTPException(400, f"Unknown module: {req.module_id}")
-    ok = odoo_toggle_module(req.module_id, install=True)
+    ok = odoo_toggle_module(req.module_id, install=True, db=_tenant_db(auth))
     if not ok:
         raise HTTPException(500, f"Failed to install {req.module_id}")
     return {"ok": True, "module": req.module_id, "installed": True}
@@ -1721,15 +1732,16 @@ async def install_module(req: ModuleToggleReq, auth: dict = Depends(require_auth
 async def uninstall_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
     if req.module_id not in MODULE_MAP:
         raise HTTPException(400, f"Unknown module: {req.module_id}")
-    ok = odoo_toggle_module(req.module_id, install=False)
+    ok = odoo_toggle_module(req.module_id, install=False, db=_tenant_db(auth))
     if not ok:
         raise HTTPException(500, f"Failed to uninstall {req.module_id}")
     return {"ok": True, "module": req.module_id, "installed": False}
 
 @app.get("/api/v1/dashboard")
 async def get_dashboard(auth: dict = Depends(require_auth)):
-    """Real KPIs pulled from Odoo: invoices, revenue, outstanding, user count."""
-    admin_uid = odoo_get_admin_uid()
+    """Real KPIs pulled from the tenant's Odoo DB."""
+    tdb = _tenant_db(auth)
+    admin_uid = odoo_get_admin_uid(tdb)
     obj = _odoo_object()
 
     kpis = {
@@ -1743,7 +1755,7 @@ async def get_dashboard(auth: dict = Depends(require_auth)):
     if admin_uid:
         try:
             rows = obj.execute_kw(
-                ODOO_DB, admin_uid, ODOO_PASS, "account.move", "search_read",
+                tdb, admin_uid, ODOO_PASS, "account.move", "search_read",
                 [[["move_type", "=", "out_invoice"], ["state", "=", "posted"]]],
                 {"fields": ["name", "partner_id", "amount_total", "amount_residual",
                             "invoice_date", "payment_state", "currency_id"],
@@ -1768,17 +1780,17 @@ async def get_dashboard(auth: dict = Depends(require_auth)):
                 for r in rows[:10]
             ]
         except Exception as e:
-            print(f"[dashboard] invoice fetch error: {e}")
+            print(f"[dashboard] invoice fetch error ({tdb}): {e}")
 
         try:
             uid_list = obj.execute_kw(
-                ODOO_DB, admin_uid, ODOO_PASS, "res.users", "search",
+                tdb, admin_uid, ODOO_PASS, "res.users", "search",
                 [[["active", "=", True], ["share", "=", False]]]
             )
             users_data["active"] = len(uid_list)
             users_data["total"]  = len(uid_list)
         except Exception as e:
-            print(f"[dashboard] users fetch error: {e}")
+            print(f"[dashboard] users fetch error ({tdb}): {e}")
 
     # Pull plan from SQLite
     plan = auth.get("plan", "trial")
@@ -1792,10 +1804,10 @@ async def get_dashboard(auth: dict = Depends(require_auth)):
 
 @app.post("/api/v1/zaki/sync-odoo")
 async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
-    """Pull the authenticated user's posted invoices and bills from Odoo and
-    return them in Zaki's transaction format. Frontend writes them into
-    S.transactions; computeFin() then derives KPIs."""
-    admin_uid = odoo_get_admin_uid()
+    """Pull the authenticated user's posted invoices and bills from their
+    isolated Odoo DB. Frontend writes them into S.transactions."""
+    tdb = _tenant_db(auth)
+    admin_uid = odoo_get_admin_uid(tdb)
     if not admin_uid:
         raise HTTPException(503, "Odoo unreachable.")
 
@@ -1805,12 +1817,10 @@ async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
     company_name = None
     currency = "AED"
 
-    # Find the user's company. If not linked to Odoo (rare — local-only login),
-    # fall back to admin's default company.
     try:
         target_uid = int(user_odoo_uid) if user_odoo_uid else admin_uid
         rows = obj.execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "res.users", "read",
+            tdb, admin_uid, ODOO_PASS, "res.users", "read",
             [[target_uid]],
             {"fields": ["company_id", "name"]},
         )
@@ -1838,8 +1848,8 @@ async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
         ["state", "=", "posted"],
         ["invoice_date", ">=", cutoff],
     ]
-    fields = ["name", "invoice_date", "amount_total", "amount_residual",
-              "currency_id", "partner_id", "payment_state", "ref", "move_type"]
+    inv_fields = ["name", "invoice_date", "amount_total", "amount_residual",
+                  "currency_id", "partner_id", "payment_state", "ref", "move_type"]
 
     transactions: list[dict] = []
     ar_outstanding = 0.0
@@ -1847,9 +1857,9 @@ async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
 
     try:
         invoices = obj.execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "account.move", "search_read",
+            tdb, admin_uid, ODOO_PASS, "account.move", "search_read",
             [domain_inv],
-            {"fields": fields, "order": "invoice_date desc", "limit": 1000},
+            {"fields": inv_fields, "order": "invoice_date desc", "limit": 1000},
         )
         for r in invoices:
             sign = -1 if r["move_type"] == "out_refund" else 1
@@ -1873,9 +1883,9 @@ async def zaki_sync_odoo(auth: dict = Depends(require_auth)):
 
     try:
         bills = obj.execute_kw(
-            ODOO_DB, admin_uid, ODOO_PASS, "account.move", "search_read",
+            tdb, admin_uid, ODOO_PASS, "account.move", "search_read",
             [domain_bill],
-            {"fields": fields, "order": "invoice_date desc", "limit": 1000},
+            {"fields": inv_fields, "order": "invoice_date desc", "limit": 1000},
         )
         for r in bills:
             sign = -1 if r["move_type"] == "in_refund" else 1

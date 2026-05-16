@@ -653,6 +653,11 @@
         h < 12 ? 'Good morning'   :
         h < 17 ? 'Good afternoon' :
         h < 21 ? 'Good evening'   : 'Working late';
+      // Point ERP button to the tenant's isolated Odoo database
+      if (user.odoo_db) {
+        PRODUCTS.erp.launchUrl =
+          'https://erp.mumtaz.digital/web/login?db=' + encodeURIComponent(user.odoo_db);
+      }
     }
 
     /* ── Sign out ── */

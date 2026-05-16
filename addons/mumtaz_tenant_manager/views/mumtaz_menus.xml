@@ -1,35 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!--
+        Standalone "Mumtaz Platform" root menu removed.
+        All tenant management is consolidated under "Mumtaz Control Plane".
 
-    <!-- ── Top-level application menu ─────────────────────────────── -->
-    <menuitem id="menu_mumtaz_platform_root"
-              name="Mumtaz Platform"
-              groups="mumtaz_tenant_manager.group_mumtaz_platform_manager"
-              sequence="90"/>
+        Module Bundles is surfaced there via the menu entry below.
+    -->
 
-    <!-- ── Tenants ────────────────────────────────────────────────── -->
-    <menuitem id="menu_mumtaz_tenants"
-              name="Tenants"
-              parent="menu_mumtaz_platform_root"
-              sequence="10"/>
-
-    <menuitem id="menu_mumtaz_tenant_list"
-              name="All Tenants"
-              parent="menu_mumtaz_tenants"
-              action="action_mumtaz_tenant"
-              sequence="10"/>
-
-    <!-- ── Configuration ──────────────────────────────────────────── -->
-    <menuitem id="menu_mumtaz_platform_config"
-              name="Configuration"
-              parent="menu_mumtaz_platform_root"
-              groups="mumtaz_tenant_manager.group_mumtaz_platform_admin"
-              sequence="90"/>
-
+    <!-- Module Bundles nested under Control Plane → Configuration -->
     <menuitem id="menu_mumtaz_module_bundles"
               name="Module Bundles"
-              parent="menu_mumtaz_platform_config"
+              parent="mumtaz_control_plane.menu_mumtaz_control_plane_root"
               action="action_mumtaz_module_bundle"
-              sequence="10"/>
+              sequence="90"
+              groups="mumtaz_control_plane.group_mumtaz_super_admin,
+                      mumtaz_control_plane.group_mumtaz_tenant_admin"/>
 
 </odoo>

@@ -51,13 +51,13 @@ if [[ -f "$ODOO_CONF" ]]; then
     fi
     echo "  ✅ proxy_mode = True"
 
-    # dbfilter — allow any database (needed for multi-tenant + custom domains)
-    if ! grep -q 'dbfilter' "$ODOO_CONF"; then
-        echo "dbfilter = .*" | sudo tee -a "$ODOO_CONF" > /dev/null
-        echo "  ✅ dbfilter = .*"
+    # dbfilter — allow Mumtaz_ERP (admin) and all mt_* tenant databases
+    if grep -q 'dbfilter' "$ODOO_CONF"; then
+        sudo sed -i 's|dbfilter.*|dbfilter = ^(Mumtaz_ERP|mt_)|' "$ODOO_CONF"
     else
-        echo "  ✅ dbfilter already set"
+        echo "dbfilter = ^(Mumtaz_ERP|mt_)" | sudo tee -a "$ODOO_CONF" > /dev/null
     fi
+    echo "  ✅ dbfilter = ^(Mumtaz_ERP|mt_)"
 fi
 
 echo "→ Checking odoo.conf addons_path…"
