@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Mashreq NEO BIZ — C2P Consultants FZC LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #F47920; --red: #ED1C24; --yellow: #FCB72E;
+  --navy: #1B3284; --bg: #F5F6FA; --card: #fff;
+  --border: #E4E7F0; --text: #1B3284; --text-mute: #6B7388;
+  --success: #16A34A; --warn: #F59E0B;
+  --grad: linear-gradient(135deg,#FCB72E 0%,#F47920 45%,#ED1C24 100%);
+  --grad-soft: linear-gradient(135deg,#FFF4E6 0%,#FFE8E0 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Inter',-apple-system,sans-serif;color:var(--text);
+  background:radial-gradient(circle at 20% 0%,#1a1f3a 0%,#0a0d1f 60%,#050714 100%);}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input{font-family:inherit;}
+::-webkit-scrollbar{display:none;} *{scrollbar-width:none;}
+
+.device-wrap{height:100dvh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.phone{width:100%;max-width:400px;height:min(860px,96dvh);background:var(--bg);border-radius:44px;
+  overflow:hidden;position:relative;box-shadow:0 0 0 10px #1a1a1a,0 0 0 12px #2a2a2a,
+  0 50px 100px -20px rgba(244,121,32,.25),0 30px 60px -30px rgba(0,0,0,.8);
+  display:flex;flex-direction:column;}
+@media(max-width:480px){.device-wrap{padding:0;}
+  .phone{max-width:none;height:100dvh;border-radius:0;box-shadow:none;}}
+
+.screen{flex:1;display:none;flex-direction:column;overflow:hidden;position:relative;
+  background:var(--bg);animation:slideIn .32s cubic-bezier(.22,1,.36,1);}
+.screen.active{display:flex;}
+@keyframes slideIn{from{transform:translateX(28px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* STATUS BAR */
+.status-bar{display:flex;justify-content:space-between;align-items:center;
+  padding:12px 22px 6px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--navy);}
+.status-bar.light{color:#fff;}
+.status-icons{display:flex;gap:6px;align-items:center;}
+
+/* SCREEN HEADER */
+.screen-header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 18px;}
+.back-btn{width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;}
+.screen-title{font-size:17px;font-weight:700;color:var(--navy);}
+.header-spacer{width:38px;}
+
+/* ── LOGIN ── */
+#screen-login{background:#fff;}
+.login-blob{position:absolute;top:-100px;right:-80px;width:320px;height:320px;border-radius:50%;
+  background:var(--grad);opacity:.12;filter:blur(20px);}
+.login-body{flex:1;padding:28px 26px;display:flex;flex-direction:column;position:relative;z-index:1;}
+.logo-block{margin-top:20px;margin-bottom:32px;display:flex;justify-content:center;}
+.mashreq-logo{display:flex;align-items:center;gap:14px;}
+.m-symbol{width:52px;height:52px;border-radius:14px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;}
+.m-symbol svg{color:#fff;}
+.m-text{}
+.m-name{font-size:20px;font-weight:800;color:var(--navy);letter-spacing:-0.5px;display:block;}
+.m-sub{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--orange);text-transform:uppercase;display:block;margin-top:1px;}
+.welcome-block{margin-bottom:28px;}
+.welcome-h1{font-size:24px;font-weight:700;color:var(--navy);letter-spacing:-0.4px;}
+.welcome-p{font-size:14px;color:var(--text-mute);margin-top:5px;}
+.field-group{display:flex;flex-direction:column;gap:14px;}
+.field-label{font-size:12px;color:var(--text-mute);font-weight:600;margin-left:4px;display:block;}
+.field{display:flex;align-items:center;gap:10px;background:#F8F9FC;border:1.5px solid var(--border);
+  border-radius:14px;padding:13px 16px;margin-top:5px;transition:border-color .15s;}
+.field:focus-within{border-color:var(--orange);}
+.field svg{color:var(--orange);flex-shrink:0;}
+.field input{flex:1;border:none;background:transparent;outline:none;font-size:15px;font-weight:500;color:var(--navy);min-width:0;}
+.field .eye{color:var(--text-mute);padding:0;}
+.forgot{margin-top:12px;text-align:right;}
+.forgot span{font-size:13px;color:var(--orange);font-weight:600;}
+.btn-primary{background:var(--grad);color:#fff;border-radius:16px;padding:15px;font-size:16px;
+  font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 10px 24px -8px rgba(237,28,36,.4);transition:transform .1s,opacity .15s;}
+.btn-primary:active{transform:scale(.985);}
+.btn-secondary{background:#fff;color:var(--navy);border:1.5px solid var(--border);border-radius:16px;
+  padding:13px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;}
+.divider{display:flex;align-items:center;gap:14px;margin:18px 0 14px;}
+.divider .line{flex:1;height:1px;background:var(--border);}
+.divider span{font-size:12px;color:var(--text-mute);font-weight:500;}
+.secure-foot{text-align:center;margin-top:16px;font-size:12px;color:var(--text-mute);}
+.flex-grow{flex:1;}
+.mt-20{margin-top:20px;}
+
+/* ── DASHBOARD ── */
+.dash-header{background:var(--grad);padding-bottom:86px;position:relative;}
+.dash-top{padding:8px 20px 0;display:flex;justify-content:space-between;align-items:center;}
+.dash-user{display:flex;align-items:center;gap:12px;}
+.avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.22);
+  backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:15px;border:1.5px solid rgba(255,255,255,.3);}
+.greet{color:rgba(255,255,255,.8);font-size:12px;font-weight:500;}
+.username{color:#fff;font-size:16px;font-weight:700;}
+.top-actions{display:flex;gap:10px;}
+.icon-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;position:relative;}
+.badge-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;
+  background:var(--yellow);border-radius:50%;border:2px solid #fff;}
+.scroll-area{flex:1;overflow-y:auto;margin-top:-70px;padding-bottom:88px;}
+
+.balance-card{margin:0 18px;background:#fff;border-radius:22px;padding:20px;
+  box-shadow:0 20px 50px -20px rgba(15,26,61,.18),0 8px 16px -8px rgba(15,26,61,.08);}
+.bal-row1{display:flex;justify-content:space-between;align-items:flex-start;}
+.label-tiny{font-size:11px;color:var(--text-mute);font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+.acct-name{font-size:13px;font-weight:700;color:var(--navy);margin-top:3px;}
+.iban{font-size:11px;color:var(--text-mute);margin-top:2px;font-family:ui-monospace,'SF Mono',Menlo,monospace;}
+.eye-toggle-2{color:var(--text-mute);padding:4px;background:transparent;border:none;}
+.bal-display{margin-top:16px;display:flex;align-items:baseline;gap:6px;}
+.bal-cur{font-size:13px;color:var(--text-mute);font-weight:600;}
+.bal-amt{font-size:30px;font-weight:700;color:var(--navy);letter-spacing:-1px;font-variant-numeric:tabular-nums;}
+.bal-trend{display:flex;align-items:center;gap:5px;margin-top:5px;font-size:12px;color:var(--success);font-weight:600;}
+.mini-row{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);}
+.mini{flex:1;}
+.mini-label{font-size:11px;color:var(--text-mute);font-weight:600;}
+.mini-val{font-size:13px;color:var(--navy);font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;}
+.mini-sep{width:1px;background:var(--border);}
+
+/* COOLDOWN BANNER */
+.hold-banner{margin:16px 18px 0;padding:14px 16px;background:#FFF4E6;
+  border:1.5px solid #FFD9A8;border-radius:16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.hold-ic{width:38px;height:38px;border-radius:11px;background:var(--grad);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;}
+.hold-body{flex:1;}
+.hold-title{font-size:13px;font-weight:700;color:var(--navy);}
+.hold-sub{font-size:12px;color:var(--text-mute);margin-top:2px;}
+.hold-sub span{color:var(--orange);font-weight:700;font-variant-numeric:tabular-nums;}
+.hold-arrow{color:var(--text-mute);}
+
+.quick-grid{margin:18px 18px 0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.quick{background:#fff;border-radius:16px;padding:13px 6px;display:flex;flex-direction:column;
+  align-items:center;gap:7px;box-shadow:0 4px 12px -4px rgba(15,26,61,.08);transition:transform .1s;}
+.quick:active{transform:scale(.96);}
+.quick.locked{opacity:.5;}
+.quick-icon{width:40px;height:40px;border-radius:12px;background:var(--grad-soft);
+  color:var(--orange);display:flex;align-items:center;justify-content:center;}
+.quick.primary .quick-icon{background:var(--grad);color:#fff;}
+.quick span{font-size:11px;font-weight:600;color:var(--navy);}
+
+.recent{margin:22px 18px 0;}
+.recent-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.recent-head h3{font-size:16px;font-weight:700;color:var(--navy);}
+.see-all{font-size:13px;color:var(--orange);font-weight:600;}
+.txn-list{background:#fff;border-radius:18px;padding:6px;}
+.txn-group-label{font-size:11px;font-weight:700;color:var(--text-mute);letter-spacing:.5px;
+  text-transform:uppercase;padding:10px 12px 4px;}
+.txn{display:flex;align-items:center;gap:12px;padding:11px 10px;border-bottom:1px solid var(--border);}
+.txn:last-child{border-bottom:none;}
+.txn-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.txn-ic.out{background:#FEF0EE;color:var(--red);}
+.txn-ic.in{background:#E8F5EC;color:var(--success);}
+.txn-body{flex:1;min-width:0;}
+.txn-name{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.txn-sub{font-size:11px;color:var(--text-mute);margin-top:1px;}
+.txn-right{text-align:right;}
+.txn-amt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--navy);}
+.txn-amt.in{color:var(--success);}
+.txn-time{font-size:11px;color:var(--text-mute);margin-top:1px;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
+  padding:10px 16px 20px;display:flex;justify-content:space-around;
+  box-shadow:0 -8px 24px -8px rgba(15,26,61,.08);}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-mute);}
+.nav-item.active{color:var(--orange);}
+.nav-item span{font-size:10px;font-weight:600;}
+
+/* ── BENEFICIARY ── */
+.search-wrap{padding:0 18px 16px;}
+.search-field{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--border);
+  border-radius:14px;padding:11px 14px;}
+.search-field input{flex:1;border:none;outline:none;background:transparent;font-size:14px;color:var(--navy);}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 18px;}
+.section-title{font-size:12px;font-weight:700;color:var(--text-mute);letter-spacing:.5px;text-transform:uppercase;}
+.add-new{font-size:13px;color:var(--orange);font-weight:600;display:flex;align-items:center;gap:4px;}
+.bene-list-wrap{padding:0 18px 24px;flex:1;overflow-y:auto;}
+.bene-list{background:#fff;border-radius:18px;overflow:hidden;}
+.bene-item{display:flex;align-items:center;gap:14px;padding:13px 16px;width:100%;
+  text-align:left;border-bottom:1px solid var(--border);transition:background .1s;}
+.bene-item:last-child{border-bottom:none;}
+.bene-item:active{background:#FAFBFD;}
+.bene-avatar{width:42px;height:42px;border-radius:13px;color:#fff;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+.bene-body{flex:1;min-width:0;}
+.bene-name{font-size:14px;font-weight:600;color:var(--navy);}
+.bene-sub{font-size:12px;color:var(--text-mute);margin-top:2px;}
+.bene-bank{font-size:11px;color:var(--orange);font-weight:600;margin-top:2px;}
+.bene-arrow{color:var(--text-mute);}
+
+/* ── AMOUNT ── */
+.scroll-content{flex:1;overflow-y:auto;padding-bottom:24px;}
+.small-card{background:#fff;border-radius:16px;padding:14px 16px;margin:0 18px 14px;}
+.small-card.with-arrow{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.small-card.with-arrow>div:first-child{flex:1;min-width:0;}
+.amount-block{text-align:center;padding:20px 0;}
+.amount-label{font-size:12px;color:var(--text-mute);font-weight:600;letter-spacing:1px;text-transform:uppercase;}
+.amount-input-row{display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:8px;}
+.amount-input-row span{font-size:16px;color:var(--text-mute);font-weight:700;}
+.amount-input{border:none;outline:none;background:transparent;font-size:36px;font-weight:700;
+  color:var(--navy);text-align:center;width:200px;font-variant-numeric:tabular-nums;
+  letter-spacing:-1px;font-family:inherit;}
+.amount-input.over{color:var(--red);}
+.amount-warn{font-size:12px;color:var(--red);margin-top:6px;display:inline-flex;align-items:center;gap:4px;font-weight:600;}
+.quick-chips{display:flex;gap:8px;justify-content:center;margin:0 18px 20px;flex-wrap:wrap;}
+.chip{padding:8px 14px;background:#fff;border:1.5px solid var(--border);border-radius:20px;
+  font-size:12px;font-weight:600;color:var(--navy);transition:all .1s;}
+.chip:active,.chip.selected{background:var(--grad-soft);border-color:var(--orange);color:var(--orange);}
+.form-block{padding:0 18px;}
+.field-row{margin-bottom:14px;}
+.select-field{display:flex;align-items:center;gap:10px;background:#F8F9FC;border:1.5px solid var(--border);
+  border-radius:14px;padding:13px 16px;margin-top:5px;}
+.select-field select{flex:1;border:none;background:transparent;outline:none;
+  font-size:14px;font-weight:500;color:var(--navy);font-family:inherit;}
+.bottom-cta{padding:12px 18px 20px;background:#fff;border-top:1px solid var(--border);}
+.bottom-cta button{width:100%;}
+
+/* ── REVIEW ── */
+.hero-amt{background:#fff;border-radius:20px;padding:22px 20px;text-align:center;margin:0 18px 14px;}
+.hero-amt-row{margin-top:8px;display:flex;justify-content:center;align-items:baseline;gap:6px;}
+.hero-amt-row .cur{font-size:14px;color:var(--navy);font-weight:700;}
+.hero-amt-row .num{font-size:30px;color:var(--navy);font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
+.hero-amt-to{margin-top:4px;font-size:12px;color:var(--text-mute);}
+.info-card{background:#fff;border-radius:18px;padding:4px 0;margin:0 18px;}
+.info-row{padding:13px 18px;display:flex;justify-content:space-between;
+  align-items:flex-start;gap:12px;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-label{font-size:13px;color:var(--text-mute);font-weight:500;}
+.info-value-block{text-align:right;max-width:65%;}
+.info-value{font-size:13px;color:var(--navy);font-weight:600;word-wrap:break-word;}
+.info-value.bold{font-weight:700;}
+.info-sub{font-size:11px;color:var(--text-mute);margin-top:2px;font-family:ui-monospace,monospace;}
+.notice{margin:14px 18px 0;padding:13px;border-radius:14px;background:#FFF9EE;
+  border:1px solid #FCE7A6;display:flex;gap:10px;align-items:flex-start;}
+.notice svg{color:var(--warn);flex-shrink:0;margin-top:1px;}
+.notice p{font-size:12px;color:#854D0E;line-height:1.5;}
+
+/* ── COOLDOWN ── */
+#screen-cooldown{background:#fff;}
+.cd-header{background:var(--grad);padding:0 0 60px;}
+.cd-glow{position:absolute;top:-80px;left:-60px;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.18) 0%,transparent 70%);pointer-events:none;}
+.cd-body{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 22px 16px;
+  position:relative;margin-top:-48px;}
+.ring-wrap{position:relative;width:210px;height:210px;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.shield-ic{width:52px;height:52px;border-radius:50%;background:var(--grad-soft);
+  display:flex;align-items:center;justify-content:center;margin-bottom:6px;animation:pulse 2s ease-in-out infinite;}
+.shield-ic.done{background:#E8F5EC;animation:none;}
+.shield-ic svg{color:var(--orange);}
+.shield-ic.done svg{color:var(--success);}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.timer-display{font-size:32px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-1px;line-height:1;}
+.timer-label{font-size:11px;color:var(--text-mute);font-weight:600;margin-top:4px;letter-spacing:.5px;}
+.cd-text{text-align:center;margin-top:18px;max-width:290px;}
+.cd-text h2{font-size:18px;font-weight:700;color:var(--navy);letter-spacing:-.3px;}
+.cd-text p{font-size:13px;color:var(--text-mute);margin-top:6px;line-height:1.5;}
+.cd-summary{margin-top:20px;width:100%;background:#F8F9FC;border:1.5px solid var(--border);
+  border-radius:18px;padding:16px;}
+.cd-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+  border-bottom:1px solid var(--border);}
+.cd-row:last-child{border-bottom:none;}
+.cd-key{font-size:12px;color:var(--text-mute);font-weight:500;}
+.cd-val{font-size:13px;color:var(--navy);font-weight:600;font-variant-numeric:tabular-nums;text-align:right;max-width:60%;}
+.cd-val.green{color:var(--success);}
+.cd-bottom{padding:12px 22px 24px;width:100%;}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--navy);border-radius:16px;
+  padding:14px;font-size:15px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+</style>
+</head>
+<body>
+<div class="device-wrap">
+<div class="phone">
+
+<!-- ═══════════ SCREEN 1: LOGIN ═══════════ -->
+<div class="screen active" id="screen-login">
+  <div class="login-blob"></div>
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="status-icons">
+      <svg width="16" height="12" fill="currentColor" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="1" width="2.5" height="11" rx="1" opacity=".3"/></svg>
+      <svg width="16" height="12" fill="currentColor" viewBox="0 0 16 12"><path d="M8 2.4C5.2 2.4 2.7 3.6 1 5.5L0 4.4C2 2.2 4.8 1 8 1s6 1.2 8 3.4l-1 1.1C13.3 3.6 10.8 2.4 8 2.4z"/><path d="M8 5.6c-1.8 0-3.4.7-4.6 1.9L2.4 6.4C3.9 4.9 5.8 4 8 4s4.1.9 5.6 2.4l-1 1.1C11.4 6.3 9.8 5.6 8 5.6z"/><circle cx="8" cy="10" r="1.5"/></svg>
+      <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="18" height="9" rx="2.5" fill="currentColor"/><path d="M23.5 4v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg>
+    </div>
+  </div>
+  <div class="login-body">
+    <div class="logo-block">
+      <div class="mashreq-logo">
+        <div class="m-symbol">
+          <svg width="28" height="24" viewBox="0 0 28 24" fill="none">
+            <path d="M0 24V6L7 0l7 6 7-6 7 6v18h-6V10l-8 7-8-7v14H0z" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="m-text">
+          <span class="m-name">mashreq</span>
+          <span class="m-sub">NEO BIZ</span>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-block">
+      <div class="welcome-h1">Welcome back</div>
+      <div class="welcome-p">Sign in to your business account</div>
+    </div>
+    <div class="field-group">
+      <div>
+        <label class="field-label">User ID</label>
+        <div class="field">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <input type="text" placeholder="Enter your User ID" value="BIZ-C2P-7742" />
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Password</label>
+        <div class="field">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <input type="password" placeholder="••••••••" value="password" id="pw-input"/>
+          <button class="eye" onclick="togglePw()">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div class="forgot"><span>Forgot password?</span></div>
+      </div>
+    </div>
+    <div class="mt-20">
+      <button class="btn-primary" onclick="go('screen-dash')">
+        Sign In
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="divider"><div class="line"></div><span>or sign in with</span><div class="line"></div></div>
+    <button class="btn-secondary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12a4 4 0 118 0"/><circle cx="12" cy="12" r="1.5"/></svg>
+      Biometric Authentication
+    </button>
+    <div class="flex-grow"></div>
+    <div class="secure-foot">🔒 256-bit SSL secured · CBUAE regulated</div>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN 2: DASHBOARD ═══════════ -->
+<div class="screen" id="screen-dash">
+  <div class="dash-header">
+    <div class="status-bar light">
+      <span>9:41</span>
+      <div class="status-icons" style="color:#fff">
+        <svg width="16" height="12" fill="white" viewBox="0 0 16 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="1" width="2.5" height="11" rx="1" opacity=".5"/></svg>
+        <svg width="16" height="12" fill="white" viewBox="0 0 16 12"><path d="M8 2.4C5.2 2.4 2.7 3.6 1 5.5L0 4.4C2 2.2 4.8 1 8 1s6 1.2 8 3.4l-1 1.1C13.3 3.6 10.8 2.4 8 2.4z"/><path d="M8 5.6c-1.8 0-3.4.7-4.6 1.9L2.4 6.4C3.9 4.9 5.8 4 8 4s4.1.9 5.6 2.4l-1 1.1C11.4 6.3 9.8 5.6 8 5.6z"/><circle cx="8" cy="10" r="1.5"/></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="white" stroke-opacity=".5"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="white"/><path d="M23.5 4v4a2 2 0 000-4z" fill="white" opacity=".5"/></svg>
+      </div>
+    </div>
+    <div class="dash-top">
+      <div class="dash-user">
+        <div class="avatar">C</div>
+        <div>
+          <div class="greet">Good morning,</div>
+          <div class="username">C2P Consultants</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn">
+          <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <div class="badge-dot"></div>
+        </button>
+        <button class="icon-btn">
+          <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-area">
+    <div class="balance-card">
+      <div class="bal-row1">
+        <div>
+          <div class="label-tiny">Business Current Account</div>
+          <div class="acct-name">C2P Consultants FZC LLC</div>
+          <div class="iban">AE07 0330 0000 1790 0123 456</div>
+        </div>
+        <button class="eye-toggle-2" onclick="toggleBalance()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="bal-display">
+        <span class="bal-cur">AED</span>
+        <span class="bal-amt" id="bal-main">847,234.56</span>
+      </div>
+      <div class="bal-trend">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 17l5-5 5 5M7 7l5-5 5 5"/></svg>
+        +AED 75,000.00 received yesterday
+      </div>
+      <div class="mini-row">
+        <div class="mini">
+          <div class="mini-label">Available</div>
+          <div class="mini-val" id="bal-avail">847,234.56</div>
+        </div>
+        <div class="mini-sep"></div>
+        <div class="mini">
+          <div class="mini-label">Blocked</div>
+          <div class="mini-val">0.00</div>
+        </div>
+        <div class="mini-sep"></div>
+        <div class="mini">
+          <div class="mini-label">This month</div>
+          <div class="mini-val">+285,600.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSFER COOLDOWN BANNER -->
+    <div class="hold-banner" onclick="go('screen-cooldown')">
+      <div class="hold-ic">
+        <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <div class="hold-body">
+        <div class="hold-title">Transfer cooldown active</div>
+        <div class="hold-sub">Next transfer in <span id="dash-countdown">07:00:00</span></div>
+      </div>
+      <div class="hold-arrow">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="quick-grid">
+      <button class="quick locked" onclick="go('screen-cooldown')">
+        <div class="quick-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <span>Transfer</span>
+      </button>
+      <button class="quick">
+        <div class="quick-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        </div>
+        <span>Pay Bills</span>
+      </button>
+      <button class="quick">
+        <div class="quick-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span>Accounts</span>
+      </button>
+      <button class="quick">
+        <div class="quick-icon">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </div>
+        <span>More</span>
+      </button>
+    </div>
+
+    <div class="recent">
+      <div class="recent-head">
+        <h3>Recent Transactions</h3>
+        <span class="see-all">See all</span>
+      </div>
+      <div class="txn-list">
+        <div class="txn-group-label">Yesterday · 16 Dec 2024</div>
+        <div class="txn">
+          <div class="txn-ic out">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="txn-body">
+            <div class="txn-name">Emirates NBD Wire</div>
+            <div class="txn-sub">To: Al Rashidi Trading LLC</div>
+          </div>
+          <div class="txn-right">
+            <div class="txn-amt">-23,450.00</div>
+            <div class="txn-time">02:14 PM</div>
+          </div>
+        </div>
+        <div class="txn">
+          <div class="txn-ic in">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </div>
+          <div class="txn-body">
+            <div class="txn-name">Payment Received</div>
+            <div class="txn-sub">Aldar Properties PJSC</div>
+          </div>
+          <div class="txn-right">
+            <div class="txn-amt in">+75,000.00</div>
+            <div class="txn-time">10:32 AM</div>
+          </div>
+        </div>
+        <div class="txn-group-label">Sunday · 15 Dec 2024</div>
+        <div class="txn">
+          <div class="txn-ic out">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="txn-body">
+            <div class="txn-name">DEWA Business</div>
+            <div class="txn-sub">Electricity & Water Bill</div>
+          </div>
+          <div class="txn-right">
+            <div class="txn-amt">-8,200.00</div>
+            <div class="txn-time">11:05 AM</div>
+          </div>
+        </div>
+        <div class="txn">
+          <div class="txn-ic out">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="txn-body">
+            <div class="txn-name">Du Telecom Corporate</div>
+            <div class="txn-sub">Monthly subscription</div>
+          </div>
+          <div class="txn-right">
+            <div class="txn-amt">-3,250.00</div>
+            <div class="txn-time">09:18 AM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      <span>Payments</span>
+    </button>
+    <button class="nav-item">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Analytics</span>
+    </button>
+    <button class="nav-item">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span>Profile</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN 3: BENEFICIARY ═══════════ -->
+<div class="screen" id="screen-bene">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="currentColor"/><path d="M23.5 4v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg></div></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('screen-dash')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="screen-title">Select Beneficiary</span>
+    <div class="header-spacer"></div>
+  </div>
+  <div class="search-wrap">
+    <div class="search-field">
+      <svg width="18" height="18" fill="none" stroke="#6B7388" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="search" placeholder="Search name, account or IBAN…" />
+    </div>
+  </div>
+  <div class="section-head">
+    <span class="section-title">Saved Beneficiaries</span>
+    <span class="add-new">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Add New
+    </span>
+  </div>
+  <div class="bene-list-wrap">
+    <div class="bene-list">
+      <button class="bene-item" onclick="selectBene('Mohammed Al Rashidi','FAB · AE29 0350 0000 0020 1234 567','M','#2563EB')">
+        <div class="bene-avatar" style="background:#2563EB">M</div>
+        <div class="bene-body">
+          <div class="bene-name">Mohammed Al Rashidi</div>
+          <div class="bene-sub">AE29 0350 0000 0020 1234 567</div>
+          <div class="bene-bank">First Abu Dhabi Bank</div>
+        </div>
+        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </button>
+      <button class="bene-item" onclick="selectBene('Sara Al-Hamdan','ENBD · AE46 0260 0000 0079 8765 432','S','#7C3AED')">
+        <div class="bene-avatar" style="background:#7C3AED">S</div>
+        <div class="bene-body">
+          <div class="bene-name">Sara Al-Hamdan</div>
+          <div class="bene-sub">AE46 0260 0000 0079 8765 432</div>
+          <div class="bene-bank">Emirates NBD</div>
+        </div>
+        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </button>
+      <button class="bene-item" onclick="selectBene('Al Fardan Exchange LLC','ADCB · AE57 0030 0000 0098 2345 678','A','#059669')">
+        <div class="bene-avatar" style="background:#059669">A</div>
+        <div class="bene-body">
+          <div class="bene-name">Al Fardan Exchange LLC</div>
+          <div class="bene-sub">AE57 0030 0000 0098 2345 678</div>
+          <div class="bene-bank">Abu Dhabi Commercial Bank</div>
+        </div>
+        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </button>
+      <button class="bene-item" onclick="selectBene('Adnoc Distribution PJSC','MASHREQ · AE07 0330 0000 5566 7788 99','A','#DC2626')">
+        <div class="bene-avatar" style="background:#DC2626">A</div>
+        <div class="bene-body">
+          <div class="bene-name">Adnoc Distribution PJSC</div>
+          <div class="bene-sub">AE07 0330 0000 5566 7788 99</div>
+          <div class="bene-bank">Mashreq Bank</div>
+        </div>
+        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </button>
+      <button class="bene-item" onclick="selectBene('Emaar Properties LLC','DIB · AE82 0240 0000 0043 2109 876','E','#0891B2')">
+        <div class="bene-avatar" style="background:#0891B2">E</div>
+        <div class="bene-body">
+          <div class="bene-name">Emaar Properties LLC</div>
+          <div class="bene-sub">AE82 0240 0000 0043 2109 876</div>
+          <div class="bene-bank">Dubai Islamic Bank</div>
+        </div>
+        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN 4: AMOUNT ═══════════ -->
+<div class="screen" id="screen-amount">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="currentColor"/></svg></div></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('screen-bene')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="screen-title">Enter Amount</span>
+    <div class="header-spacer"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="small-card with-arrow">
+      <div>
+        <div class="label-tiny">To</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-top:3px" id="amt-to-name">Mohammed Al Rashidi</div>
+        <div style="font-size:12px;color:var(--text-mute);margin-top:2px" id="amt-to-sub">FAB · AE29 0350 0000 0020 1234 567</div>
+      </div>
+      <svg width="18" height="18" fill="none" stroke="#6B7388" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    <div class="amount-block">
+      <div class="amount-label">Transfer Amount</div>
+      <div class="amount-input-row">
+        <span>AED</span>
+        <input class="amount-input" type="number" id="amt-input" placeholder="0.00" min="1" step="0.01" oninput="checkAmount()" />
+      </div>
+      <div id="amt-warn" style="display:none">
+        <span class="amount-warn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Exceeds available balance (AED 847,234.56)
+        </span>
+      </div>
+    </div>
+    <div class="quick-chips">
+      <button class="chip" onclick="setAmt(500)">AED 500</button>
+      <button class="chip" onclick="setAmt(1000)">AED 1,000</button>
+      <button class="chip" onclick="setAmt(5000)">AED 5,000</button>
+      <button class="chip" onclick="setAmt(25000)">AED 25,000</button>
+    </div>
+    <div class="form-block">
+      <div class="field-row">
+        <label class="field-label">From Account</label>
+        <div class="small-card" style="margin:6px 0 0;padding:12px 14px">
+          <div style="font-size:13px;font-weight:700;color:var(--navy)">C2P Consultants FZC LLC</div>
+          <div style="font-size:12px;color:var(--text-mute);margin-top:2px">AE07 0330 0000 1790 0123 456 · AED 847,234.56</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Purpose of Transfer</label>
+        <div class="select-field" style="margin-top:6px">
+          <svg width="16" height="16" fill="none" stroke="#6B7388" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <select>
+            <option>Business Payment</option>
+            <option>Supplier Invoice</option>
+            <option>Salary Payment</option>
+            <option>Service Fees</option>
+            <option>Rent Payment</option>
+            <option>Project Advance</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <label class="field-label">Payment Reference (optional)</label>
+        <div class="field" style="margin-top:6px">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <input type="text" placeholder="e.g. INV-2024-0892" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="btn-primary" id="btn-continue" onclick="goReview()">
+      Continue
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN 5: REVIEW ═══════════ -->
+<div class="screen" id="screen-review">
+  <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" stroke-opacity=".35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="currentColor"/></svg></div></div>
+  <div class="screen-header">
+    <button class="back-btn" onclick="go('screen-amount')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
+    <span class="screen-title">Review Transfer</span>
+    <div class="header-spacer"></div>
+  </div>
+  <div class="scroll-content">
+    <div class="hero-amt">
+      <div class="label-tiny">You are sending</div>
+      <div class="hero-amt-row">
+        <span class="cur">AED</span>
+        <span class="num" id="rev-amt">5,000.00</span>
+      </div>
+      <div class="hero-amt-to" id="rev-to">to Mohammed Al Rashidi</div>
+    </div>
+    <div class="info-card">
+      <div class="info-row">
+        <span class="info-label">From</span>
+        <div class="info-value-block">
+          <div class="info-value bold">C2P Consultants FZC LLC</div>
+          <div class="info-sub">AE07 0330 0000 1790 0123 456</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">To</span>
+        <div class="info-value-block">
+          <div class="info-value bold" id="rev-bene-name">Mohammed Al Rashidi</div>
+          <div class="info-sub" id="rev-bene-sub">AE29 0350 0000 0020 1234 567</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Bank</span>
+        <div class="info-value-block">
+          <div class="info-value" id="rev-bank">First Abu Dhabi Bank</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Transfer fee</span>
+        <div class="info-value-block">
+          <div class="info-value" style="color:var(--success)">Free</div>
+          <div class="info-sub">Instant transfer · UAE local</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Expected arrival</span>
+        <div class="info-value-block">
+          <div class="info-value">Instant (within 2 mins)</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Purpose</span>
+        <div class="info-value-block">
+          <div class="info-value">Business Payment</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Reference</span>
+        <div class="info-value-block">
+          <div class="info-sub">TXN-20241217-84920</div>
+        </div>
+      </div>
+    </div>
+    <div class="notice">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>Verify the recipient details before confirming. Mashreq Bank is not liable for transfers sent to incorrect accounts. A 24-hour transfer cooldown will apply after this transaction.</p>
+    </div>
+  </div>
+  <div class="bottom-cta">
+    <button class="btn-primary" onclick="submitTransfer()">
+      Confirm &amp; Transfer
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ SCREEN 6: COOLDOWN ═══════════ -->
+<div class="screen" id="screen-cooldown">
+  <div class="cd-header">
+    <div class="cd-glow"></div>
+    <div class="status-bar light">
+      <span>9:41</span>
+      <div class="status-icons" style="color:#fff">
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="white" stroke-opacity=".5"/><rect x="1.5" y="1.5" width="16" height="9" rx="2.5" fill="white"/><path d="M23.5 4v4a2 2 0 000-4z" fill="white" opacity=".5"/></svg>
+      </div>
+    </div>
+    <div style="padding:8px 22px 0;display:flex;align-items:center;justify-content:space-between">
+      <button onclick="go('screen-dash')" style="color:rgba(255,255,255,.8);font-size:14px;font-weight:600;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:7px 14px;border-radius:10px">
+        ← Home
+      </button>
+      <span style="color:#fff;font-size:16px;font-weight:700">Transfer Status</span>
+      <div style="width:72px"></div>
+    </div>
+  </div>
+
+  <div class="cd-body">
+    <div class="ring-wrap">
+      <svg width="210" height="210" viewBox="0 0 210 210">
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FCB72E"/>
+            <stop offset="50%" stop-color="#F47920"/>
+            <stop offset="100%" stop-color="#ED1C24"/>
+          </linearGradient>
+        </defs>
+        <!-- Background track -->
+        <circle cx="105" cy="105" r="90" fill="none" stroke="#F0F1F5" stroke-width="14"/>
+        <!-- Progress arc -->
+        <circle id="cd-ring" cx="105" cy="105" r="90" fill="none"
+          stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round"
+          stroke-dasharray="131.95 565.49"
+          stroke-dashoffset="0"
+          transform="rotate(-90 105 105)"/>
+      </svg>
+      <div class="ring-center">
+        <div class="shield-ic" id="cd-shield">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <div class="timer-display" id="cd-timer">07:00:00</div>
+        <div class="timer-label">UNTIL NEXT TRANSFER</div>
+      </div>
+    </div>
+
+    <div class="cd-text">
+      <h2>Transfer submitted</h2>
+      <p>Your transfer is being processed. A 24-hour security cooldown is now active. Your next transfer will be available in <strong id="cd-text-time">7 hours</strong>.</p>
+    </div>
+
+    <div class="cd-summary">
+      <div class="cd-row">
+        <span class="cd-key">Amount sent</span>
+        <span class="cd-val" id="cd-amt">AED 5,000.00</span>
+      </div>
+      <div class="cd-row">
+        <span class="cd-key">Recipient</span>
+        <span class="cd-val" id="cd-recip">Mohammed Al Rashidi</span>
+      </div>
+      <div class="cd-row">
+        <span class="cd-key">Status</span>
+        <span class="cd-val green">✓ Processing</span>
+      </div>
+      <div class="cd-row">
+        <span class="cd-key">Ref. No.</span>
+        <span class="cd-val">TXN-20241217-84920</span>
+      </div>
+      <div class="cd-row">
+        <span class="cd-key">Cooldown resets</span>
+        <span class="cd-val" id="cd-reset-time">Today, 4:41 PM</span>
+      </div>
+    </div>
+  </div>
+  <div class="cd-bottom">
+    <button class="btn-outline" onclick="go('screen-dash')">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Back to Dashboard
+    </button>
+  </div>
+</div>
+
+</div><!-- .phone -->
+</div><!-- .device-wrap -->
+
+<script>
+// ── State ──
+let selectedBene = { name:'Mohammed Al Rashidi', sub:'FAB · AE29 0350 0000 0020 1234 567' };
+let enteredAmt = 5000;
+
+// ── Countdown (7 hours = 25200 seconds) ──
+const TOTAL_COOLDOWN_SEC = 24 * 3600; // 24h total cooldown period
+const C = 2 * Math.PI * 90; // circumference ≈ 565.49
+
+let remainingSec = 7 * 3600; // start at exactly 7 hours
+
+function fmt(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function updateCountdown() {
+  if (remainingSec <= 0) {
+    document.getElementById('dash-countdown').textContent = '00:00:00';
+    document.getElementById('cd-timer').textContent = '00:00:00';
+    document.getElementById('cd-ring').setAttribute('stroke-dasharray', `0 ${C.toFixed(2)}`);
+    return;
+  }
+  const display = fmt(remainingSec);
+  document.getElementById('dash-countdown').textContent = display;
+  document.getElementById('cd-timer').textContent = display;
+
+  // Ring: show remaining fraction of 24h
+  const frac = remainingSec / TOTAL_COOLDOWN_SEC;
+  const arcLen = (frac * C).toFixed(2);
+  document.getElementById('cd-ring').setAttribute('stroke-dasharray', `${arcLen} ${C.toFixed(2)}`);
+
+  // Inline text
+  const h = Math.floor(remainingSec / 3600);
+  const m = Math.floor((remainingSec % 3600) / 60);
+  const el = document.getElementById('cd-text-time');
+  if (el) el.textContent = h > 0 ? `${h}h ${m}m` : `${m} minutes`;
+
+  remainingSec--;
+}
+
+// Set reset time label
+(function() {
+  const now = new Date();
+  const reset = new Date(now.getTime() + 7 * 3600 * 1000);
+  const hh = reset.getHours();
+  const mm = String(reset.getMinutes()).padStart(2,'0');
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  const h12 = hh % 12 || 12;
+  document.getElementById('cd-reset-time').textContent = `Today, ${h12}:${mm} ${ampm}`;
+})();
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+// ── Navigation ──
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-amount') {
+    document.getElementById('amt-to-name').textContent = selectedBene.name;
+    document.getElementById('amt-to-sub').textContent = selectedBene.sub;
+  }
+}
+
+// ── Beneficiary select ──
+function selectBene(name, sub, initial, color) {
+  selectedBene = { name, sub };
+  go('screen-amount');
+}
+
+// ── Amount validation ──
+function checkAmount() {
+  const v = parseFloat(document.getElementById('amt-input').value) || 0;
+  const warn = document.getElementById('amt-warn');
+  const inp = document.getElementById('amt-input');
+  if (v > 847234.56) {
+    warn.style.display = 'block'; inp.classList.add('over');
+  } else {
+    warn.style.display = 'none'; inp.classList.remove('over');
+  }
+  enteredAmt = v;
+}
+
+function setAmt(n) {
+  document.getElementById('amt-input').value = n;
+  enteredAmt = n;
+  checkAmount();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  event.target.classList.add('selected');
+}
+
+// ── Go to review ──
+function goReview() {
+  const v = parseFloat(document.getElementById('amt-input').value) || 0;
+  if (v <= 0 || v > 847234.56) return;
+  enteredAmt = v;
+  const fmt2 = n => n.toLocaleString('en-AE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('rev-amt').textContent = fmt2(enteredAmt);
+  document.getElementById('rev-to').textContent = 'to ' + selectedBene.name;
+  document.getElementById('rev-bene-name').textContent = selectedBene.name;
+  const parts = selectedBene.sub.split(' · ');
+  document.getElementById('rev-bene-sub').textContent = parts[1] || selectedBene.sub;
+  document.getElementById('rev-bank').textContent =
+    parts[0] === 'FAB' ? 'First Abu Dhabi Bank' :
+    parts[0] === 'ENBD' ? 'Emirates NBD' :
+    parts[0] === 'ADCB' ? 'Abu Dhabi Commercial Bank' :
+    parts[0] === 'MASHREQ' ? 'Mashreq Bank' :
+    parts[0] === 'DIB' ? 'Dubai Islamic Bank' : parts[0];
+  go('screen-review');
+}
+
+// ── Submit transfer ──
+function submitTransfer() {
+  const fmt2 = n => n.toLocaleString('en-AE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('cd-amt').textContent = 'AED ' + fmt2(enteredAmt);
+  document.getElementById('cd-recip').textContent = selectedBene.name;
+  // Reset countdown to 7h after new transfer
+  remainingSec = 7 * 3600;
+  go('screen-cooldown');
+}
+
+// ── Balance hide/show ──
+let balHidden = false;
+function toggleBalance() {
+  balHidden = !balHidden;
+  document.getElementById('bal-main').textContent = balHidden ? '••••••' : '847,234.56';
+  document.getElementById('bal-avail').textContent = balHidden ? '••••••' : '847,234.56';
+}
+
+// ── Password toggle ──
+function togglePw() {
+  const inp = document.getElementById('pw-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+</script>
+</body>
+</html>
