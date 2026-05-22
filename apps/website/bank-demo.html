@@ -380,7 +380,7 @@ input{font-family:inherit;}
         <div>
           <div class="label-tiny">Business Current Account</div>
           <div class="acct-name">C2P Consultants FZC LLC</div>
-          <div class="iban">AE07 0330 0000 1790 0123 456</div>
+          <div class="iban">AE07 0330 0000 1790 0000 8842</div>
         </div>
         <button class="eye-toggle-2" onclick="toggleBalance()">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -389,10 +389,6 @@ input{font-family:inherit;}
       <div class="bal-display">
         <span class="bal-cur">AED</span>
         <span class="bal-amt" id="bal-main">847,234.56</span>
-      </div>
-      <div class="bal-trend">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 17l5-5 5 5M7 7l5-5 5 5"/></svg>
-        +AED 75,000.00 received yesterday
       </div>
       <div class="mini-row">
         <div class="mini">
@@ -406,8 +402,8 @@ input{font-family:inherit;}
         </div>
         <div class="mini-sep"></div>
         <div class="mini">
-          <div class="mini-label">This month</div>
-          <div class="mini-val">+285,600.00</div>
+          <div class="mini-label">Sent this month</div>
+          <div class="mini-val">-20,000.00</div>
         </div>
       </div>
     </div>
@@ -468,7 +464,7 @@ input{font-family:inherit;}
           </div>
           <div class="txn-body">
             <div class="txn-name">Wire Transfer</div>
-            <div class="txn-sub">To: Mohammed Al Rashidi · FAB</div>
+            <div class="txn-sub">To: Muhammad Umer · ···4912</div>
           </div>
           <div class="txn-right">
             <div class="txn-amt">-2,500.00</div>
@@ -484,34 +480,18 @@ input{font-family:inherit;}
           </div>
           <div class="txn-body">
             <div class="txn-name">Wire Transfer</div>
-            <div class="txn-sub">To: Sara Al-Hamdan · ENBD</div>
+            <div class="txn-sub">To: Muhammad Umer · ···4912</div>
           </div>
           <div class="txn-right">
             <div class="txn-amt">-2,500.00</div>
-            <div class="txn-time">03:47 PM</div>
+            <div class="txn-time">03:14 PM</div>
           </div>
         </div>
 
-        <!-- 2 days ago — return credit lands here -->
-        <div class="txn-group-label">Wednesday · 20 May 2026</div>
-        <div class="txn">
-          <div class="txn-ic in">
-            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          </div>
-          <div class="txn-body">
-            <div class="txn-name">Transfer Return Credit</div>
-            <div class="txn-sub">Ref: TXN-20260519-33812 · Adnoc</div>
-          </div>
-          <div class="txn-right">
-            <div class="txn-amt in">+10,000.00</div>
-            <div class="txn-time">09:04 AM</div>
-          </div>
-        </div>
-
-        <!-- 3 days ago — 10k sent + one 2500 -->
+        <!-- 3 days ago — returned 10k -->
         <div class="txn-group-label">Tuesday · 19 May 2026</div>
         <div class="txn">
-          <div class="txn-ic out" style="background:#FEF0EE;position:relative;">
+          <div class="txn-ic out">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </div>
           <div class="txn-body">
@@ -519,11 +499,11 @@ input{font-family:inherit;}
               Wire Transfer
               <span style="font-size:10px;font-weight:700;background:#FEF0EE;color:#ED1C24;border:1px solid #FECACA;padding:1px 6px;border-radius:20px;letter-spacing:.3px;">RETURNED</span>
             </div>
-            <div class="txn-sub">To: Adnoc Distribution · ADCB</div>
+            <div class="txn-sub">To: Muhammad Umer · ···4912</div>
           </div>
           <div class="txn-right">
             <div class="txn-amt" style="text-decoration:line-through;opacity:.55;">-10,000.00</div>
-            <div class="txn-time">04:52 PM</div>
+            <div class="txn-time">02:38 PM</div>
           </div>
         </div>
         <div class="txn">
@@ -532,27 +512,27 @@ input{font-family:inherit;}
           </div>
           <div class="txn-body">
             <div class="txn-name">Wire Transfer</div>
-            <div class="txn-sub">To: Al Fardan Exchange LLC · ADCB</div>
+            <div class="txn-sub">To: Muhammad Umer · ···4912</div>
           </div>
           <div class="txn-right">
             <div class="txn-amt">-2,500.00</div>
-            <div class="txn-time">10:15 AM</div>
+            <div class="txn-time">10:05 AM</div>
           </div>
         </div>
 
-        <!-- 4-5 days ago -->
-        <div class="txn-group-label">Saturday · 17 May 2026</div>
+        <!-- 5 days ago -->
+        <div class="txn-group-label">Sunday · 18 May 2026</div>
         <div class="txn">
           <div class="txn-ic out">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </div>
           <div class="txn-body">
             <div class="txn-name">Wire Transfer</div>
-            <div class="txn-sub">To: Emaar Properties LLC · DIB</div>
+            <div class="txn-sub">To: Muhammad Umer · ···4912</div>
           </div>
           <div class="txn-right">
             <div class="txn-amt">-2,500.00</div>
-            <div class="txn-time">01:38 PM</div>
+            <div class="txn-time">09:47 AM</div>
           </div>
         </div>
 
@@ -605,48 +585,12 @@ input{font-family:inherit;}
   </div>
   <div class="bene-list-wrap">
     <div class="bene-list">
-      <button class="bene-item" onclick="selectBene('Mohammed Al Rashidi','FAB · AE29 0350 0000 0020 1234 567','M','#2563EB')">
-        <div class="bene-avatar" style="background:#2563EB">M</div>
+      <button class="bene-item" onclick="selectBene('Muhammad Umer','ENBD · AE46 0260 0000 0000 0000 4912','M','#1B3284')">
+        <div class="bene-avatar" style="background:var(--grad)">MU</div>
         <div class="bene-body">
-          <div class="bene-name">Mohammed Al Rashidi</div>
-          <div class="bene-sub">AE29 0350 0000 0020 1234 567</div>
-          <div class="bene-bank">First Abu Dhabi Bank</div>
-        </div>
-        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
-      </button>
-      <button class="bene-item" onclick="selectBene('Sara Al-Hamdan','ENBD · AE46 0260 0000 0079 8765 432','S','#7C3AED')">
-        <div class="bene-avatar" style="background:#7C3AED">S</div>
-        <div class="bene-body">
-          <div class="bene-name">Sara Al-Hamdan</div>
-          <div class="bene-sub">AE46 0260 0000 0079 8765 432</div>
-          <div class="bene-bank">Emirates NBD</div>
-        </div>
-        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
-      </button>
-      <button class="bene-item" onclick="selectBene('Al Fardan Exchange LLC','ADCB · AE57 0030 0000 0098 2345 678','A','#059669')">
-        <div class="bene-avatar" style="background:#059669">A</div>
-        <div class="bene-body">
-          <div class="bene-name">Al Fardan Exchange LLC</div>
-          <div class="bene-sub">AE57 0030 0000 0098 2345 678</div>
-          <div class="bene-bank">Abu Dhabi Commercial Bank</div>
-        </div>
-        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
-      </button>
-      <button class="bene-item" onclick="selectBene('Adnoc Distribution PJSC','MASHREQ · AE07 0330 0000 5566 7788 99','A','#DC2626')">
-        <div class="bene-avatar" style="background:#DC2626">A</div>
-        <div class="bene-body">
-          <div class="bene-name">Adnoc Distribution PJSC</div>
-          <div class="bene-sub">AE07 0330 0000 5566 7788 99</div>
-          <div class="bene-bank">Mashreq Bank</div>
-        </div>
-        <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
-      </button>
-      <button class="bene-item" onclick="selectBene('Emaar Properties LLC','DIB · AE82 0240 0000 0043 2109 876','E','#0891B2')">
-        <div class="bene-avatar" style="background:#0891B2">E</div>
-        <div class="bene-body">
-          <div class="bene-name">Emaar Properties LLC</div>
-          <div class="bene-sub">AE82 0240 0000 0043 2109 876</div>
-          <div class="bene-bank">Dubai Islamic Bank</div>
+          <div class="bene-name">Muhammad Umer</div>
+          <div class="bene-sub">AE46 0260 0000 0000 0000 4912</div>
+          <div class="bene-bank">Emirates NBD · ···4912</div>
         </div>
         <div class="bene-arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
       </button>
@@ -697,7 +641,7 @@ input{font-family:inherit;}
         <label class="field-label">From Account</label>
         <div class="small-card" style="margin:6px 0 0;padding:12px 14px">
           <div style="font-size:13px;font-weight:700;color:var(--navy)">C2P Consultants FZC LLC</div>
-          <div style="font-size:12px;color:var(--text-mute);margin-top:2px">AE07 0330 0000 1790 0123 456 · AED 847,234.56</div>
+          <div style="font-size:12px;color:var(--text-mute);margin-top:2px">AE07 0330 0000 1790 0000 8842 · AED 847,234.56</div>
         </div>
       </div>
       <div class="field-row">
@@ -748,21 +692,21 @@ input{font-family:inherit;}
         <span class="cur">AED</span>
         <span class="num" id="rev-amt">5,000.00</span>
       </div>
-      <div class="hero-amt-to" id="rev-to">to Mohammed Al Rashidi</div>
+      <div class="hero-amt-to" id="rev-to">to Muhammad Umer</div>
     </div>
     <div class="info-card">
       <div class="info-row">
         <span class="info-label">From</span>
         <div class="info-value-block">
           <div class="info-value bold">C2P Consultants FZC LLC</div>
-          <div class="info-sub">AE07 0330 0000 1790 0123 456</div>
+          <div class="info-sub">AE07 0330 0000 1790 0000 8842</div>
         </div>
       </div>
       <div class="info-row">
         <span class="info-label">To</span>
         <div class="info-value-block">
-          <div class="info-value bold" id="rev-bene-name">Mohammed Al Rashidi</div>
-          <div class="info-sub" id="rev-bene-sub">AE29 0350 0000 0020 1234 567</div>
+          <div class="info-value bold" id="rev-bene-name">Muhammad Umer</div>
+          <div class="info-sub" id="rev-bene-sub">AE46 0260 0000 0000 0000 4912</div>
         </div>
       </div>
       <div class="info-row">
@@ -869,7 +813,7 @@ input{font-family:inherit;}
       </div>
       <div class="cd-row">
         <span class="cd-key">Recipient</span>
-        <span class="cd-val" id="cd-recip">Mohammed Al Rashidi</span>
+        <span class="cd-val" id="cd-recip">Muhammad Umer</span>
       </div>
       <div class="cd-row">
         <span class="cd-key">Status</span>
@@ -898,7 +842,7 @@ input{font-family:inherit;}
 
 <script>
 // ── State ──
-let selectedBene = { name:'Mohammed Al Rashidi', sub:'FAB · AE29 0350 0000 0020 1234 567' };
+let selectedBene = { name:'Muhammad Umer', sub:'ENBD · AE46 0260 0000 0000 0000 4912' };
 let enteredAmt = 5000;
 
 // ── Countdown (7 hours = 25200 seconds) ──
@@ -1001,12 +945,7 @@ function goReview() {
   document.getElementById('rev-bene-name').textContent = selectedBene.name;
   const parts = selectedBene.sub.split(' · ');
   document.getElementById('rev-bene-sub').textContent = parts[1] || selectedBene.sub;
-  document.getElementById('rev-bank').textContent =
-    parts[0] === 'FAB' ? 'First Abu Dhabi Bank' :
-    parts[0] === 'ENBD' ? 'Emirates NBD' :
-    parts[0] === 'ADCB' ? 'Abu Dhabi Commercial Bank' :
-    parts[0] === 'MASHREQ' ? 'Mashreq Bank' :
-    parts[0] === 'DIB' ? 'Dubai Islamic Bank' : parts[0];
+  document.getElementById('rev-bank').textContent = 'Emirates NBD';
   go('screen-review');
 }
 
