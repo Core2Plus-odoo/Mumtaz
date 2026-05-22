@@ -824,15 +824,6 @@ input{font-family:inherit;}
 </div><!-- .phone -->
 </div><!-- .device-wrap -->
 
-<!-- floating download button -->
-<button onclick="downloadFile()" style="position:fixed;bottom:22px;right:22px;z-index:9999;
-  background:linear-gradient(135deg,#FCB72E,#F47920,#ED1C24);color:#fff;border:none;
-  border-radius:50px;padding:12px 20px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;
-  display:flex;align-items:center;gap:8px;cursor:pointer;
-  box-shadow:0 8px 24px -4px rgba(237,28,36,.45);letter-spacing:.2px;">
-  <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-  Download HTML
-</button>
 
 <script>
 // ── State ──
@@ -967,16 +958,7 @@ function togglePw() {
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 
-// ── Download ──
-function downloadFile() {
-  const html = document.documentElement.outerHTML;
-  const blob = new Blob([html], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'mashreq-neo-biz-demo.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+
 </script>
 </body>
 </html>
