@@ -471,7 +471,7 @@ input{font-family:inherit;}
           </div>
           <div class="txn-right">
             <div class="txn-amt" style="color:#D97706;">-9,999.00</div>
-            <div class="txn-time">Pending</div>
+            <div class="txn-time" id="queued-time">Pending</div>
           </div>
         </div>
 
@@ -846,6 +846,14 @@ input{font-family:inherit;}
 
 <script>
 // ── State ──
+// Set queued transaction time to current device time
+(function() {
+  const now = new Date();
+  const hh = now.getHours(), mm = String(now.getMinutes()).padStart(2,'0');
+  const ampm = hh >= 12 ? 'PM' : 'AM', h12 = hh % 12 || 12;
+  document.getElementById('queued-time').textContent = `${h12}:${mm} ${ampm}`;
+})();
+
 let selectedBene = { name:'Muhammad Umer', sub:'ENBD · AE46 0260 0000 0000 0000 4912' };
 let enteredAmt = 2500;
 
