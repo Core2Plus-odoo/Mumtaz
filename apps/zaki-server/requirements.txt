@@ -8,3 +8,6 @@ bcrypt==4.2.0
 stripe==11.4.1
 # PostgreSQL support (used when DATABASE_URL is set to postgresql://)
 psycopg2-binary==2.9.9
+# Test / CI (not installed in production Docker image)
+# Install with: pip install httpx pytest pytest-asyncio
+

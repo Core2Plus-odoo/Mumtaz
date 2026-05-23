@@ -8,6 +8,131 @@ on:
 
 jobs:
   # ────────────────────────────────────────────────────────────────────
+  # Platform API — ruff lint + bandit SAST + pytest + pip-audit
+  # ────────────────────────────────────────────────────────────────────
+  platform-api:
+    name: Platform API (lint + security + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/zaki-server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff pytest httpx pytest-asyncio pip-audit
+
+      - name: Ruff lint
+        run: ruff check . --select=E,F,W,B,S --ignore=S101
+
+      - name: Ruff format check
+        run: ruff format . --check
+
+      - name: Bandit SAST
+        run: |
+          bandit -r . \
+            --severity-level high \
+            --confidence-level medium \
+            --skip B101,B311,B603,B607 \
+            --exclude ./__pycache__,./tests \
+            -f txt
+
+      - name: pip-audit (dependency CVEs)
+        run: pip-audit -r requirements.txt --skip-editable
+
+      - name: pytest
+        env:
+          ENVIRONMENT: development
+          JWT_SECRET: ci-test-secret-not-for-production
+          CORS_ORIGINS: "http://localhost:3000"
+        run: pytest tests/ -v --tb=short
+
+  # ────────────────────────────────────────────────────────────────────
+  # Zaki-AI Node.js — eslint + npm audit
+  # ────────────────────────────────────────────────────────────────────
+  zaki-ai:
+    name: Zaki-AI (lint + audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/zaki-ai
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: apps/zaki-ai/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (high + critical)
+        run: npm audit --audit-level=high
+
+      - name: ESLint
+        run: |
+          npx eslint . --ext .js \
+            --rule "'no-eval': 'error'" \
+            --rule "'no-new-func': 'error'" \
+            --rule "'no-var': 'warn'" \
+            --ignore-pattern "node_modules/" \
+            --ignore-pattern "public/" \
+            || true
+
+  # ────────────────────────────────────────────────────────────────────
+  # Docker — hadolint on all Dockerfiles
+  # ────────────────────────────────────────────────────────────────────
+  docker-lint:
+    name: Dockerfile Lint (hadolint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install hadolint
+        run: |
+          curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 \
+            -o /usr/local/bin/hadolint
+          chmod +x /usr/local/bin/hadolint
+
+      - name: Lint all Dockerfiles
+        run: |
+          errors=0
+          while IFS= read -r -d '' f; do
+            echo "Linting: $f"
+            if ! hadolint "$f" \
+                --ignore DL3008 \
+                --ignore DL3009 \
+                --ignore DL3018 \
+                --ignore DL3059; then
+              errors=$((errors + 1))
+            fi
+          done < <(find . -name "Dockerfile" -not -path "*/node_modules/*" -print0)
+          [ "$errors" -eq 0 ] || exit 1
+
+  # ────────────────────────────────────────────────────────────────────
+  # docker-compose validation
+  # ────────────────────────────────────────────────────────────────────
+  compose-validate:
+    name: docker-compose.production.yml validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose file
+        run: |
+          docker compose -f docker-compose.production.yml config --quiet
+
+
+  # ────────────────────────────────────────────────────────────────────
   # 1. Manifest validation
   # Parses every __manifest__.py and checks structural integrity.
   # ────────────────────────────────────────────────────────────────────

@@ -144,10 +144,97 @@ services:
       timeout: 5s
       retries: 3
 
+  # ── Observability stack ───────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-changeme}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "https://metrics.mumtaz.digital"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  loki:
+    image: grafana/loki:2.9.8
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ./config/loki.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./config/promtail.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
 volumes:
   db_prod:
   redis_data:
   odoo_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
 
 networks:
   internal:
