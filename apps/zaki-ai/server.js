@@ -2,12 +2,13 @@
 
 require('dotenv').config();
 
-const express = require('express');
-const cors    = require('cors');
-const path    = require('path');
-const fetch   = require('node-fetch');
-const { authenticate } = require('./odoo/client');
-const zaki            = require('./agents/zaki');
+const express  = require('express');
+const cors     = require('cors');
+const path     = require('path');
+const fetch    = require('node-fetch');
+const { authenticate }       = require('./odoo/client');
+const zaki                   = require('./agents/zaki');
+const { sanitizeMiddleware } = require('./middleware/sanitize');
 
 const app         = express();
 const PORT        = process.env.PORT || 3000;
@@ -139,7 +140,7 @@ function getOdooConn(req, res) {
 }
 
 /* ── Chat Route (SSE streaming) ─────────────────────────────────── */
-app.post('/api/chat', requireAuth, async (req, res) => {
+app.post('/api/chat', requireAuth, sanitizeMiddleware, async (req, res) => {
   const { message, history = [] } = req.body;
   if (!message || !message.trim()) {
     return res.status(400).json({ error: 'Message is required.' });

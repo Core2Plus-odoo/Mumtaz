@@ -1,4 +1,5 @@
 services:
+
   db:
     image: postgres:15-alpine
     env_file: .env.production
@@ -6,20 +7,151 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    restart: unless-stopped
     volumes:
       - db_prod:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks: [internal]
+    shm_size: 256mb
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+        --requirepass ${REDIS_PASSWORD}
+        --appendonly yes
+        --maxmemory 512mb
+        --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   odoo:
-    build: .
-    depends_on: [db]
+    build:
+      context: .
+      dockerfile: Dockerfile
     env_file: .env.production
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
-    ports:
-      - "8069:8069"
+    networks: [internal]
     volumes:
-      - ./addons:/mnt/extra-addons
-      - ./config/odoo.conf:/etc/odoo/odoo.conf
+      - ./addons:/mnt/extra-addons:ro
+      - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
+      - odoo_data:/var/lib/odoo
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8069/web/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+
+  platform:
+    build:
+      context: ./apps/zaki-server
+      dockerfile: Dockerfile
+    env_file: .env.production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8002/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  zaki-ai:
+    build:
+      context: ./apps/zaki-ai
+      dockerfile: Dockerfile
+    env_file: .env.production
+    depends_on:
+      platform:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [internal]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/ssl/mumtaz:ro
+    depends_on:
+      - odoo
+      - platform
+      - zaki-ai
+    restart: unless-stopped
+    networks: [internal, external]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
   db_prod:
+  redis_data:
+  odoo_data:
+
+networks:
+  internal:
+    driver: bridge
+    internal: false   # allow outbound for Odoo/API external calls
+  external:
+    driver: bridge

@@ -12,7 +12,7 @@ If STRIPE_SECRET_KEY is unset, billing endpoints will return a clear error
 so the front-end can fall back to the current direct-plan-change flow.
 """
 
-import os, sqlite3
+import os
 from typing import Optional
 
 import settings_store as store

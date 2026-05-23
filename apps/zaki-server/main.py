@@ -6,7 +6,7 @@ Mumtaz Auth & AI API
 - Issues JWT used by all frontends
 """
 
-import os, json, re, time, sqlite3, secrets
+import os, json, re, time, secrets
 import urllib.request as urllib_request
 import xmlrpc.client
 from contextlib import asynccontextmanager
@@ -25,16 +25,25 @@ import mail as mailer
 import billing as billing_svc
 import zatca as zatca_svc
 import settings_store as settings
+from db import get_db, add_column_if_missing, USE_POSTGRES
 
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────
-SECRET      = os.environ.get("JWT_SECRET",        "change-me-in-production")
+_raw_secret = os.environ.get("JWT_SECRET", "")
+if not _raw_secret or _raw_secret == "change-me-in-production":
+    _env_mode = os.environ.get("ENVIRONMENT", "production").lower()
+    if _env_mode != "development":
+        raise RuntimeError(
+            "[FATAL] JWT_SECRET is not set or uses the insecure default. "
+            "Generate a strong secret with: openssl rand -hex 64"
+        )
+    _raw_secret = "dev-only-insecure-secret-not-for-production"
+SECRET      = _raw_secret
 ALGO        = "HS256"
-TOKEN_DAYS  = 30
+TOKEN_HOURS = int(os.environ.get("TOKEN_HOURS", "24"))   # Was 30 days — now 24 hours
 ANT_KEY     = os.environ.get("ANTHROPIC_API_KEY", "")
 ZAKI_MODEL  = os.environ.get("ZAKI_MODEL",         "claude-opus-4-7")
-DB_PATH     = os.environ.get("DB_PATH",            "/opt/zaki-server/users.db")
 
 ODOO_URL    = os.environ.get("ODOO_URL",            "http://127.0.0.1:8069")
 ODOO_DB     = os.environ.get("ODOO_DB",             "mumtaz")
@@ -60,26 +69,47 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0", lifespan=lifespan)
 
-_cors_env = os.environ.get("CORS_ORIGINS", "")
-CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()] or ["*"]
+_cors_raw = os.environ.get("CORS_ORIGINS", "")
+CORS_ORIGINS = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+if not CORS_ORIGINS:
+    _env_mode = os.environ.get("ENVIRONMENT", "production").lower()
+    if _env_mode != "development":
+        raise RuntimeError(
+            "[FATAL] CORS_ORIGINS is not set. "
+            "Set to a comma-separated list of allowed origins, e.g.: "
+            "https://mumtaz.digital,https://app.mumtaz.digital"
+        )
+    CORS_ORIGINS = [
+        "http://localhost:3000", "http://localhost:8080",
+        "http://localhost:5173", "http://127.0.0.1:3000",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "Idempotency-Key"],
 )
 
-# ── SQLite (local cache + non-Odoo users) ─────────────────────────────
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+# ── Database (SQLite dev / PostgreSQL production) ─────────────────────
+# get_db() imported from db.py above
 
-_USERS_DDL = """
-    CREATE TABLE users (
-        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+def _ddl(sqlite_sql: str, pg_sql: str) -> str:
+    """Return the appropriate DDL string for the current database backend."""
+    return pg_sql if USE_POSTGRES else sqlite_sql
+
+
+_TS_DEFAULT = (
+    "DEFAULT extract(epoch from now())::bigint"
+    if USE_POSTGRES
+    else "DEFAULT (strftime('%s','now'))"
+)
+_PK = "SERIAL PRIMARY KEY" if USE_POSTGRES else "INTEGER PRIMARY KEY AUTOINCREMENT"
+
+_USERS_DDL = f"""
+    CREATE TABLE IF NOT EXISTS users (
+        id            {_PK},
         email         TEXT    UNIQUE NOT NULL,
         password_hash TEXT,
         name          TEXT,
@@ -88,30 +118,34 @@ _USERS_DDL = """
         tenant_id     INTEGER,
         plan          TEXT    DEFAULT 'trial',
         active        INTEGER DEFAULT 1,
-        created_at    INTEGER DEFAULT (strftime('%s','now'))
+        onboarding_json TEXT,
+        role          TEXT,
+        erp_company_id INTEGER,
+        tenant_db     TEXT,
+        created_at    BIGINT  {_TS_DEFAULT}
     )
 """
 
-_RESET_TOKENS_DDL = """
+_RESET_TOKENS_DDL = f"""
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
         token       TEXT    PRIMARY KEY,
         email       TEXT    NOT NULL,
-        expires_at  INTEGER NOT NULL,
+        expires_at  BIGINT  NOT NULL,
         used        INTEGER DEFAULT 0,
-        created_at  INTEGER DEFAULT (strftime('%s','now'))
+        created_at  BIGINT  {_TS_DEFAULT}
     )
 """
 
-_STRIPE_EVENTS_DDL = """
+_STRIPE_EVENTS_DDL = f"""
     CREATE TABLE IF NOT EXISTS stripe_events (
-        event_id   TEXT PRIMARY KEY,
-        processed_at INTEGER DEFAULT (strftime('%s','now'))
+        event_id     TEXT   PRIMARY KEY,
+        processed_at BIGINT {_TS_DEFAULT}
     )
 """
 
-_TENANTS_DDL = """
+_TENANTS_DDL = f"""
     CREATE TABLE IF NOT EXISTS tenants (
-        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        id             {_PK},
         db_name        TEXT    UNIQUE NOT NULL,
         odoo_url       TEXT    NOT NULL,
         company        TEXT    NOT NULL,
@@ -120,93 +154,59 @@ _TENANTS_DDL = """
         status         TEXT    DEFAULT 'provisioning',
         error_msg      TEXT,
         custom_domain  TEXT,
-        created_at     INTEGER DEFAULT (strftime('%s','now')),
-        provisioned_at INTEGER
+        created_at     BIGINT  {_TS_DEFAULT},
+        provisioned_at BIGINT
     )
 """
 
-_PARTNERS_DDL = """
+_PARTNERS_DDL = f"""
     CREATE TABLE IF NOT EXISTS partners (
-        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        id            {_PK},
         company       TEXT    NOT NULL,
         contact_name  TEXT    NOT NULL,
         email         TEXT    NOT NULL,
         phone         TEXT,
         country       TEXT,
-        kind          TEXT,            -- bank, freezone, chamber, agency, enterprise, other
-        clients       TEXT,            -- estimated client count: 1-50, 51-500, 500+
-        domain        TEXT,            -- desired white-label domain
+        kind          TEXT,
+        clients       TEXT,
+        domain        TEXT,
         notes         TEXT,
-        status        TEXT    DEFAULT 'pending',  -- pending, approved, rejected
-        created_at    INTEGER DEFAULT (strftime('%s','now'))
+        status        TEXT    DEFAULT 'pending',
+        created_at    BIGINT  {_TS_DEFAULT}
     )
 """
 
+
 def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = get_db()
-    conn.execute(f"CREATE TABLE IF NOT EXISTS users {_USERS_DDL.split('CREATE TABLE users')[1]}")
+    db = get_db()
+    db.execute(_USERS_DDL)
 
-    # Detect old schema with NOT NULL on password_hash — recreate preserving data
-    cols = {r[1]: r for r in conn.execute("PRAGMA table_info(users)").fetchall()}
-    need_rebuild = cols.get("password_hash") and cols["password_hash"][3]  # notnull flag
-    if need_rebuild:
-        print("[init_db] old schema detected — rebuilding users table")
-        conn.execute("ALTER TABLE users RENAME TO users_old")
-        conn.execute(_USERS_DDL)
-        try:
-            conn.execute("""
-                INSERT INTO users (id, email, password_hash, name, company,
-                                   odoo_uid, tenant_id, plan, active, created_at)
-                SELECT id, email, password_hash,
-                       COALESCE(name, ''), COALESCE(company, ''),
-                       odoo_uid, tenant_id,
-                       COALESCE(plan, 'trial'), COALESCE(active, 1),
-                       COALESCE(created_at, strftime('%s','now'))
-                FROM users_old
-            """)
-        except Exception as e:
-            print(f"[init_db] data migration error: {e}")
-        conn.execute("DROP TABLE IF EXISTS users_old")
-    else:
-        # Add any columns missing from older nullable schemas
-        for col, defn in [
-            ("name",      "TEXT"), ("company", "TEXT"),
-            ("odoo_uid",  "INTEGER"), ("tenant_id", "INTEGER"),
-            ("plan",      "TEXT DEFAULT 'trial'"),
-            ("active",    "INTEGER DEFAULT 1"),
-            ("created_at","INTEGER DEFAULT (strftime('%s','now'))"),
-            ("onboarding_json", "TEXT"),
-            ("role",           "TEXT"),
-            ("erp_company_id", "INTEGER"),
-            ("tenant_db",      "TEXT"),
-        ]:
-            try:
-                conn.execute(f"ALTER TABLE users ADD COLUMN {col} {defn}")
-            except Exception:
-                pass
-
-    conn.execute(_RESET_TOKENS_DDL)
-    conn.execute(_STRIPE_EVENTS_DDL)
-    conn.execute(_PARTNERS_DDL)
-    conn.execute(_TENANTS_DDL)
-    # Migrate tenants table — add any missing columns
+    # Add columns that may be missing from older schemas
     for col, defn in [
-        ("custom_domain", "TEXT"),
+        ("onboarding_json", "TEXT"),
+        ("role",            "TEXT"),
+        ("erp_company_id",  "INTEGER"),
+        ("tenant_db",       "TEXT"),
     ]:
-        try:
-            conn.execute(f"ALTER TABLE tenants ADD COLUMN {col} {defn}")
-        except Exception:
-            pass
-    conn.commit()
-    conn.close()
+        add_column_if_missing(db, "users", col, defn)
+
+    db.execute(_RESET_TOKENS_DDL)
+    db.execute(_STRIPE_EVENTS_DDL)
+    db.execute(_PARTNERS_DDL)
+    db.execute(_TENANTS_DDL)
+    add_column_if_missing(db, "tenants", "custom_domain", "TEXT")
+
+    db.commit()
+    db.close()
 
 # ── JWT ───────────────────────────────────────────────────────────────
 def make_token(user_id: int, email: str, extra: dict = None) -> str:
     payload = {
-        "sub": str(user_id),
+        "sub":   str(user_id),
         "email": email,
-        "exp": int(time.time()) + 86400 * TOKEN_DAYS,
+        "exp":   int(time.time()) + 3600 * TOKEN_HOURS,
+        "iat":   int(time.time()),
+        "jti":   secrets.token_hex(8),   # unique token ID
     }
     if extra:
         payload.update(extra)
@@ -604,9 +604,11 @@ def _provision_tenant_bg(user_id: int, company: str, email: str,
         if not result["ok"]:
             # Record failure in tenants table
             db.execute(
-                "INSERT OR REPLACE INTO tenants "
+                "INSERT INTO tenants "
                 "(db_name, odoo_url, company, admin_email, status, error_msg) "
-                "VALUES (?, ?, ?, ?, 'error', ?)",
+                "VALUES (?, ?, ?, ?, 'error', ?) "
+                "ON CONFLICT(db_name) DO UPDATE SET "
+                "status = 'error', error_msg = EXCLUDED.error_msg",
                 (result["db_name"], ODOO_URL, company, email, result["error"])
             )
             db.commit()
@@ -626,11 +628,14 @@ def _provision_tenant_bg(user_id: int, company: str, email: str,
             print(f"[provision] mumtaz.tenant record skipped: {exc}")
 
         # Record active tenant
+        now_ts = int(time.time())
         db.execute(
-            "INSERT OR REPLACE INTO tenants "
+            "INSERT INTO tenants "
             "(db_name, odoo_url, company, admin_email, plan, status, provisioned_at) "
-            "VALUES (?, ?, ?, ?, 'trial', 'active', strftime('%s','now'))",
-            (db_name, ODOO_URL, company, email)
+            "VALUES (?, ?, ?, ?, 'trial', 'active', ?) "
+            "ON CONFLICT(db_name) DO UPDATE SET "
+            "status = 'active', provisioned_at = EXCLUDED.provisioned_at",
+            (db_name, ODOO_URL, company, email, now_ts)
         )
         db.execute(
             "UPDATE users SET tenant_db=?, odoo_uid=?, tenant_id=? WHERE id=?",
@@ -643,9 +648,11 @@ def _provision_tenant_bg(user_id: int, company: str, email: str,
         print(f"[provision] EXCEPTION for {email}: {exc}")
         try:
             db.execute(
-                "INSERT OR REPLACE INTO tenants "
+                "INSERT INTO tenants "
                 "(db_name, odoo_url, company, admin_email, status, error_msg) "
-                "VALUES (?, ?, ?, ?, 'error', ?)",
+                "VALUES (?, ?, ?, ?, 'error', ?) "
+                "ON CONFLICT(db_name) DO UPDATE SET "
+                "status = 'error', error_msg = EXCLUDED.error_msg",
                 (f"mt_unknown_{user_id}", ODOO_URL, company, email, str(exc))
             )
             db.commit()
@@ -885,7 +892,8 @@ def login(req: LoginReq):
             if not row:
                 info = odoo_read_user(odoo_uid)
                 db.execute(
-                    "INSERT OR IGNORE INTO users (email, name, odoo_uid, plan) VALUES (?, ?, ?, ?)",
+                    "INSERT INTO users (email, name, odoo_uid, plan) VALUES (?, ?, ?, ?) "
+                    "ON CONFLICT(email) DO NOTHING",
                     (email, info.get("name", email.split("@")[0]), odoo_uid, "growth")
                 )
                 db.commit()
@@ -1521,12 +1529,16 @@ async def billing_webhook(request: Request, background_tasks: BackgroundTasks):
     if event_id:
         db = get_db()
         already = db.execute(
-            "SELECT 1 FROM stripe_events WHERE event_id=?", (event_id,)
+            "SELECT 1 FROM stripe_events WHERE event_id = ?", (event_id,)
         ).fetchone()
         if already:
             db.close()
             return {"received": True, "duplicate": True}
-        db.execute("INSERT OR IGNORE INTO stripe_events (event_id) VALUES (?)", (event_id,))
+        db.execute(
+            "INSERT INTO stripe_events (event_id) VALUES (?) "
+            "ON CONFLICT(event_id) DO NOTHING",
+            (event_id,)
+        )
         db.commit(); db.close()
 
     etype = event.get("type", "")

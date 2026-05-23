@@ -1,0 +1,63 @@
+repos:
+  # Secrets detection — runs first, catches committed secrets
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.89.0
+    hooks:
+      - id: trufflehog
+        name: TruffleHog secret scan
+        entry: trufflehog git file://. --since-commit HEAD --only-verified --fail
+        language: golang
+        pass_filenames: false
+
+  # Generic pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
+      - id: detect-private-key
+
+  # Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.10
+    hooks:
+      - id: ruff
+        name: Ruff linter
+        args: [--fix]
+        files: \.(py)$
+      - id: ruff-format
+        name: Ruff formatter
+        files: \.(py)$
+
+  # Python security scanning
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        name: Bandit security scan
+        args: ['-ll', '--skip', 'B101']   # -ll = high severity only; B101 = assert (OK in tests)
+        files: apps/zaki-server/.*\.py$
+
+  # JavaScript linting
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.27.0
+    hooks:
+      - id: eslint
+        name: ESLint
+        files: apps/zaki-ai/.*\.(js)$
+        additional_dependencies:
+          - eslint@9.27.0
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.13.1-beta
+    hooks:
+      - id: hadolint-docker
+        name: Hadolint (Dockerfile lint)
