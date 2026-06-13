@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_lead_form_mumtaz" model="ir.ui.view">
+        <field name="name">crm.lead.form.mumtaz.starter</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- email_from is a stable anchor on the CRM lead form across versions -->
+            <field name="email_from" position="after">
+                <field name="x_lead_source"/>
+                <field name="x_next_followup"/>
+            </field>
+        </field>
+    </record>
+</odoo>
