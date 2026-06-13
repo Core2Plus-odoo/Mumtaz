@@ -7,6 +7,10 @@ their own — decided by the JWT). Runs on the mumtaz_platform schema. Products
 Secrets/config from /opt/mumtaz/.env.
 """
 import asyncio
+import base64
+import hashlib
+import hmac
+import json
 import os
 import re
 import secrets as _secrets
@@ -36,6 +40,10 @@ OWNERS.add("umer@mumtaz.digital")
 CORS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()] or ["*"]
 ODOO_BIN  = os.environ.get("ODOO_BIN", "odoo")
 ODOO_CONF = os.environ.get("ODOO_CONF", "/etc/odoo/odoo.conf")
+ODOO_ADMIN_EMAIL = os.environ.get("ODOO_ADMIN_EMAIL", "admin")
+# Shared HMAC secret for the mumtaz_sso bridge. Must equal the per-DB
+# ir.config_parameter 'mumtaz.sso_secret' (planted at provision time).
+ODOO_SSO_SECRET = os.environ.get("ODOO_SSO_SECRET", "")
 FREE_KEYS = ("einvoicing", "crm")
 # Core ERP every new tenant is provisioned with (mapped to Odoo Community apps
 # via module_catalogue.odoo_module). Billing still follows each module's price.
@@ -61,6 +69,17 @@ def make_jwt(payload: dict) -> str:
     if "sub" in p and p["sub"] is not None:
         p["sub"] = str(p["sub"])
     return jwt.encode(p, JWT_SECRET, algorithm=ALGO)
+
+def _sso_url(db: str | None, login: str | None) -> str:
+    """Build a password-less Open-ERP link for the mumtaz_sso bridge.
+    Falls back to a plain ?db= deep-link if SSO is not configured."""
+    if not (ODOO_SSO_SECRET and db and login):
+        return f"{ERP_URL}/web?db={db or ''}"
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"db": db, "login": login, "exp": int(time.time()) + 120}).encode()
+    ).rstrip(b"=").decode()
+    sig = hmac.new(ODOO_SSO_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{ERP_URL}/mumtaz/sso?token={payload}.{sig}"
 
 def hash_pw(pw: str) -> str:
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt(12)).decode()
@@ -375,6 +394,23 @@ async def admin_activate(tid: int, user: dict = Depends(require_admin)):
 async def admin_cancel(tid: int, user: dict = Depends(require_admin)):
     return await _set_status(tid, "cancelled", "tenant_cancelled", user, ", cancelled_at=NOW()")
 
+async def _odoo_post_provision(db: str, owner_email: str | None, owner_name: str | None):
+    """Plant the SSO secret in the tenant DB and ensure the owner is an Odoo
+    admin user, so the control-panel Open-ERP link can log them in directly."""
+    if not ODOO_SSO_SECRET:
+        return
+    lines = ["icp = env['ir.config_parameter'].sudo()",
+             f"icp.set_param('mumtaz.sso_secret', {ODOO_SSO_SECRET!r})"]
+    if owner_email:
+        lines += [
+            "U = env['res.users'].sudo()",
+            f"if not U.search([('login','=',{owner_email!r})], limit=1):",
+            f"    U.create({{'name': {(owner_name or owner_email)!r}, 'login': {owner_email!r},"
+            f" 'email': {owner_email!r}, 'groups_id': [(6, 0, [env.ref('base.group_system').id])]}})",
+        ]
+    lines.append("env.cr.commit()")
+    await _odoo_run(db, ["shell"], stdin=("\n".join(lines) + "\n").encode())
+
 async def _provision(tid: int):
     async with _pool.acquire() as c:
         t = await c.fetchrow("SELECT slug,type,odoo_db FROM tenants WHERE id=$1", tid)
@@ -383,7 +419,11 @@ async def _provision(tid: int):
         mods = await c.fetch("""SELECT mc.odoo_module FROM tenant_modules tm
             JOIN module_catalogue mc ON mc.id=tm.module_id
             WHERE tm.tenant_id=$1 AND tm.status='active' AND mc.odoo_module IS NOT NULL""", tid)
-    install = ",".join(m["odoo_module"] for m in mods) or "base"
+        owner = await c.fetchrow(
+            "SELECT email,name FROM platform_users WHERE tenant_id=$1 ORDER BY id LIMIT 1", tid)
+    # Always include the SSO bridge so the Open-ERP handoff works for this DB.
+    mod_list = [m["odoo_module"] for m in mods] + ["mumtaz_sso"]
+    install = ",".join(m for m in mod_list if m) or "base"
     try:
         logf = open(f"/opt/mumtaz/logs/provision_{db}.log", "ab")
         proc = await asyncio.create_subprocess_exec(
@@ -395,6 +435,12 @@ async def _provision(tid: int):
         ok = proc.returncode == 0
     except Exception:
         ok = False
+    if ok:
+        try:
+            await _odoo_post_provision(db, owner["email"] if owner else None,
+                                       owner["name"] if owner else None)
+        except Exception:
+            pass
     async with _pool.acquire() as c:
         await c.execute("UPDATE tenants SET odoo_db=$1, status=$2, activated_at=NOW() WHERE id=$3",
                         db, "active" if ok else "provisioning", tid)
@@ -472,8 +518,13 @@ async def _sync_module_to_odoo(tid: int, key: str, install: bool):
 @app.get("/api/v1/admin/tenants/{tid}/odoo-link")
 async def admin_odoo_link(tid: int, _: dict = Depends(require_admin)):
     async with _pool.acquire() as c:
-        db = await c.fetchval("SELECT odoo_db FROM tenants WHERE id=$1", tid)
-    return {"url": f"{ERP_URL}/web?db={db or ''}"}
+        row = await c.fetchrow(
+            "SELECT t.odoo_db, (SELECT email FROM platform_users u "
+            "WHERE u.tenant_id=t.id ORDER BY u.id LIMIT 1) AS owner_email "
+            "FROM tenants t WHERE t.id=$1", tid)
+    db = row["odoo_db"] if row else None
+    login = (row["owner_email"] if row else None) or ODOO_ADMIN_EMAIL
+    return {"url": _sso_url(db, login)}
 
 @app.post("/api/v1/admin/tenants/{tid}/impersonate")
 async def admin_impersonate(tid: int, user: dict = Depends(require_admin)):
@@ -681,7 +732,7 @@ async def tenant_invite(req: InviteReq, user: dict = Depends(current_user)):
 async def tenant_odoo_link(user: dict = Depends(current_user)):
     async with _pool.acquire() as c:
         db = await c.fetchval("SELECT odoo_db FROM tenants WHERE id=$1", _tid(user))
-    return {"url": f"{ERP_URL}/web?db={db or ''}"}
+    return {"url": _sso_url(db, user.get("email"))}
 
 @app.get("/api/v1/tenant/zaki-link")
 async def tenant_zaki_link(user: dict = Depends(current_user)):
