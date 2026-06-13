@@ -15,6 +15,7 @@
         "security/ir.model.access.csv",
         "data/subscription_lifecycle_cron.xml",
         "data/subscription_notification_cron.xml",
+        "data/feature_baseline.xml",
         "views/plan_views.xml",
         "views/feature_views.xml",
         "views/subscription_views.xml",

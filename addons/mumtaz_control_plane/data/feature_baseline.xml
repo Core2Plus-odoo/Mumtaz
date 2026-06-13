@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Baseline customer-facing app features.
+
+        These map the Mumtaz portal app cards (app.mumtaz.digital) to
+        mumtaz.feature codes so the per-tenant enable/disable toggles have a
+        registry to resolve against. Enabling/disabling an app writes a
+        force_on / force_off mumtaz.tenant.feature override against these.
+
+        noupdate="1" so admins can rename/recategorise without re-seeding.
+    -->
+    <data noupdate="1">
+
+        <record id="feature_erp_access" model="mumtaz.feature">
+            <field name="name">Mumtaz ERP</field>
+            <field name="code">erp_access</field>
+            <field name="product_area">erp</field>
+            <field name="feature_type">toggle</field>
+            <field name="description">Core ERP — accounting, sales, inventory, HR, payroll.</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+
+        <record id="feature_zaki_access" model="mumtaz.feature">
+            <field name="name">ZAKI AI Agents</field>
+            <field name="code">zaki_access</field>
+            <field name="product_area">ai</field>
+            <field name="feature_type">toggle</field>
+            <field name="description">AI workforce — CFO, marketing, HR, operations agents.</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+
+        <record id="feature_marketplace_access" model="mumtaz.feature">
+            <field name="name">B2B Marketplace</field>
+            <field name="code">marketplace_access</field>
+            <field name="product_area">marketplace</field>
+            <field name="feature_type">toggle</field>
+            <field name="description">Trade with verified GCC &amp; Pakistan businesses; orders flow into the ERP.</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

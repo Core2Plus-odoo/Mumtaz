@@ -169,12 +169,34 @@
     }
     .pc-launch:hover { opacity: .88; }
     .pc-card-disabled {
-      opacity: .55;
+      opacity: .6;
     }
     .pc-card-disabled .pc-launch {
       background: var(--bg); color: var(--ink3);
       border: 1.5px solid var(--border);
+      pointer-events: none;
     }
+
+    /* App enable/disable toggle */
+    .pc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .pc-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer; }
+    .pc-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .pc-slider { position: absolute; inset: 0; background: var(--border); border-radius: 22px; transition: background .15s; }
+    .pc-slider::before {
+      content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .pc-switch input:checked + .pc-slider { background: var(--gold); }
+    .pc-switch input:checked + .pc-slider::before { transform: translateX(18px); }
+    .pc-switch input:disabled + .pc-slider { opacity: .5; cursor: wait; }
+
+    #pf-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--ink); color: #fff; font-size: .85rem; padding: 11px 20px;
+      border-radius: 100px; box-shadow: 0 8px 30px rgba(0,0,0,.25); opacity: 0;
+      transition: transform .3s, opacity .3s; z-index: 9999; pointer-events: none;
+    }
+    #pf-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
     /* ── Empty state when no onboarding ── */
     .empty-onboard {
@@ -669,6 +691,51 @@
       renderRoleContent(e.target.value);
     });
 
+    /* ── App enable/disable (control-plane feature toggles) ── */
+    const APP_FEATURE_CODE = { erp: 'erp_access', zaki: 'zaki_access', marketplace: 'marketplace_access' };
+    let FEATURE_STATE = {};   // feature code -> enabled (default: enabled)
+
+    function pfToast(msg) {
+      let t = document.getElementById('pf-toast');
+      if (!t) { t = document.createElement('div'); t.id = 'pf-toast'; document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(window._pft); window._pft = setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    async function loadFeatures() {
+      const token = localStorage.getItem('mumtaz_token');
+      if (!token) return;
+      try {
+        const r = await fetch('/api/v1/tenant/features', { headers: { Authorization: 'Bearer ' + token } });
+        if (!r.ok) return;                       // fail-open: keep defaults (enabled)
+        const d = await r.json();
+        (d.apps || []).forEach(a => { FEATURE_STATE[a.code] = a.enabled; });
+        renderProducts();
+      } catch (e) { /* fail-open */ }
+    }
+
+    async function toggleApp(key, code, el) {
+      const token = localStorage.getItem('mumtaz_token');
+      const next = el.checked;
+      el.disabled = true;
+      try {
+        const r = await fetch('/api/v1/tenant/features', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ code, enabled: next }),
+        });
+        if (!r.ok) throw new Error('failed');
+        FEATURE_STATE[code] = next;
+        pfToast(`${(PRODUCTS[key] && PRODUCTS[key].name) || 'App'} ${next ? 'enabled' : 'disabled'}.`);
+        renderProducts();
+      } catch (e) {
+        el.checked = !next;                      // revert the switch
+        pfToast('Could not update. Please try again.');
+      } finally {
+        el.disabled = false;
+      }
+    }
+
     /* ── Products ── */
     const PRODUCTS = {
       erp: {
@@ -711,12 +778,27 @@
       area.innerHTML = '<div class="products-grid">' +
         onboarding.products.map(key => {
           const p = PRODUCTS[key]; if (!p) return '';
+          const code = APP_FEATURE_CODE[key];
+          // Apps are enabled by default; only an explicit force_off disables.
+          const enabled = code ? (FEATURE_STATE[code] !== false) : true;
+          const toggle = code ? `
+              <label class="pc-switch" title="${enabled ? 'Disable' : 'Enable'} ${p.name}">
+                <input type="checkbox" ${enabled ? 'checked' : ''}
+                       onchange="toggleApp('${key}','${code}',this)">
+                <span class="pc-slider"></span>
+              </label>` : '';
+          const launch = enabled
+            ? `<a href="${p.launchUrl}" class="pc-launch">${p.launchLabel}</a>`
+            : `<a class="pc-launch" aria-disabled="true" onclick="return false">Disabled</a>`;
           return `
-            <div class="product-card ${p.disabled ? 'pc-card-disabled' : ''}">
-              <div class="pc-icon ${p.tone}">${p.icon}</div>
+            <div class="product-card ${enabled ? '' : 'pc-card-disabled'}">
+              <div class="pc-head">
+                <div class="pc-icon ${p.tone}">${p.icon}</div>
+                ${toggle}
+              </div>
               <div class="pc-name">${p.name}</div>
               <div class="pc-desc">${p.desc}</div>
-              <a href="${p.launchUrl}" class="pc-launch" ${p.disabled ? 'aria-disabled="true"' : ''}>${p.launchLabel}</a>
+              ${launch}
             </div>`;
         }).join('') + '</div>';
     }
@@ -1052,6 +1134,7 @@
     }
 
     renderProducts();
+    loadFeatures();          // reflect real per-tenant app enable/disable state
     renderRoleContent(savedRole);
 
     /* ── Show Admin link if user is admin (best-effort, silent on failure) ── */

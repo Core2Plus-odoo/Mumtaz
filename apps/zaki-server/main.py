@@ -853,6 +853,142 @@ async def erp_products(auth: dict = Depends(require_auth)):
 
     return {"erp_enabled": True, "products": out}
 
+# ── Tenant app enable/disable (control-plane feature toggles) ─────────
+# Maps the portal's app cards to mumtaz.feature codes. Enabling an app
+# writes a force_on tenant override; disabling writes force_off. This is
+# non-destructive (no Odoo module install/uninstall) and instant.
+APP_FEATURES = {
+    "erp":         {"code": "erp_access",         "name": "Mumtaz ERP",      "area": "erp"},
+    "zaki":        {"code": "zaki_access",        "name": "ZAKI AI Agents",  "area": "ai"},
+    "marketplace": {"code": "marketplace_access", "name": "B2B Marketplace", "area": "marketplace"},
+}
+
+def _erp_find_tenant(obj, db: str, admin_uid: int, create: bool = False) -> int | None:
+    """Resolve (optionally create) the mumtaz.tenant record inside a tenant DB."""
+    ids = obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.tenant", "search",
+                         [[["database_name", "=", db]]], {"limit": 1})
+    if not ids:
+        ids = obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.tenant", "search", [[]], {"limit": 1})
+    if ids:
+        return ids[0]
+    if not create:
+        return None
+    code = (re.sub(r"[^a-z0-9]+", "", db.lower())[:32] or "tenant")
+    return obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.tenant", "create",
+        [{"name": db, "code": code, "database_name": db, "state": "active"}])
+
+def _erp_find_feature(obj, db: str, admin_uid: int, spec: dict, create: bool = False) -> int | None:
+    """Resolve (optionally create) a mumtaz.feature by code inside a tenant DB."""
+    ids = obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.feature", "search",
+                         [[["code", "=", spec["code"]]]], {"limit": 1})
+    if ids:
+        return ids[0]
+    if not create:
+        return None
+    return obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.feature", "create",
+        [{"code": spec["code"], "name": spec["name"], "product_area": spec["area"],
+          "feature_type": "toggle", "is_customer_visible": True}])
+
+
+@app.get("/api/v1/tenant/features")
+async def get_tenant_features(auth: dict = Depends(require_auth)):
+    """
+    Return enable/disable state of each Mumtaz app for the caller's tenant.
+    Apps are ON by default unless explicitly force_off in the tenant's Odoo
+    control plane. Fails open (everything enabled) when the ERP/control plane
+    is not yet provisioned — never errors.
+    """
+    def _all_enabled(provisioned: bool):
+        return {"provisioned": provisioned, "apps": [
+            {"key": k, "code": s["code"], "name": s["name"], "area": s["area"], "enabled": True}
+            for k, s in APP_FEATURES.items()
+        ]}
+
+    tenant_db, _ = _user_tenant_and_products(auth["email"])
+    if not tenant_db:
+        return _all_enabled(False)
+
+    try:
+        admin_uid = odoo_get_admin_uid(db=tenant_db)
+        if not admin_uid:
+            return _all_enabled(False)
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, tenant_db, admin_uid, create=False)
+        if not tenant_id:
+            return _all_enabled(False)
+
+        codes = [s["code"] for s in APP_FEATURES.values()]
+        feats = obj.execute_kw(tenant_db, admin_uid, ODOO_PASS, "mumtaz.feature",
+                               "search_read", [[["code", "in", codes]]], {"fields": ["code"]})
+        code_to_fid = {r["code"]: r["id"] for r in feats}
+        fids = list(code_to_fid.values())
+        modes: dict = {}
+        if fids:
+            ov = obj.execute_kw(tenant_db, admin_uid, ODOO_PASS, "mumtaz.tenant.feature",
+                                "search_read",
+                                [[["tenant_id", "=", tenant_id], ["feature_id", "in", fids]]],
+                                {"fields": ["feature_id", "override_mode"]})
+            modes = {r["feature_id"][0]: r["override_mode"] for r in ov}
+    except Exception as e:
+        _record_odoo_error("get_tenant_features", e)
+        return _all_enabled(False)
+
+    apps = []
+    for k, s in APP_FEATURES.items():
+        fid = code_to_fid.get(s["code"])
+        mode = modes.get(fid) if fid else None
+        apps.append({"key": k, "code": s["code"], "name": s["name"], "area": s["area"],
+                     "enabled": mode != "force_off"})
+    return {"provisioned": True, "apps": apps}
+
+
+class FeatureToggleReq(BaseModel):
+    code: str
+    enabled: bool
+
+@app.put("/api/v1/tenant/features")
+async def set_tenant_feature(req: FeatureToggleReq, auth: dict = Depends(require_auth)):
+    """
+    Enable/disable a Mumtaz app for the caller's tenant by writing a
+    force_on / force_off override in their isolated Odoo control plane.
+    Tenant-scoped; find-or-creates the tenant + feature records as needed.
+    """
+    spec = next((s for s in APP_FEATURES.values() if s["code"] == req.code), None)
+    if not spec:
+        raise HTTPException(400, "Unknown feature")
+
+    tenant_db, _ = _user_tenant_and_products(auth["email"])
+    if not tenant_db:
+        raise HTTPException(409, "ERP is not provisioned for this account yet")
+
+    try:
+        admin_uid = odoo_get_admin_uid(db=tenant_db)
+        if not admin_uid:
+            raise RuntimeError("no admin uid for tenant db")
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, tenant_db, admin_uid, create=True)
+        fid       = _erp_find_feature(obj, tenant_db, admin_uid, spec, create=True)
+        mode      = "force_on" if req.enabled else "force_off"
+
+        existing = obj.execute_kw(tenant_db, admin_uid, ODOO_PASS, "mumtaz.tenant.feature",
+                                  "search",
+                                  [[["tenant_id", "=", tenant_id], ["feature_id", "=", fid]]],
+                                  {"limit": 1})
+        vals = {"override_mode": mode, "reason": "Set from Mumtaz portal app toggle."}
+        if existing:
+            obj.execute_kw(tenant_db, admin_uid, ODOO_PASS, "mumtaz.tenant.feature",
+                           "write", [existing, vals])
+        else:
+            obj.execute_kw(tenant_db, admin_uid, ODOO_PASS, "mumtaz.tenant.feature",
+                           "create", [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+    except HTTPException:
+        raise
+    except Exception as e:
+        _record_odoo_error("set_tenant_feature", e)
+        raise HTTPException(502, "Could not update the app in your ERP. Please try again.")
+
+    return {"ok": True, "code": req.code, "enabled": req.enabled}
+
 class ForgotReq(BaseModel):
     email: str
 
