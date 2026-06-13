@@ -39,7 +39,152 @@
       color: var(--t1);
       background: var(--bg);
       overflow-x: hidden;
+      transition: background-color .3s, color .3s;
     }
+
+    /* ── LIGHT MODE ──────────────────────────────────────── */
+    body.light {
+      --gold:   #2563EB;
+      --gold-2: #3B82F6;
+      --gold-3: #1D4ED8;
+      --teal:   #0891B2;
+      --surf-1: rgba(15,23,42,0.04);
+      --surf-2: rgba(15,23,42,0.07);
+      --bdr-1:  rgba(15,23,42,0.09);
+      --bdr-2:  rgba(15,23,42,0.16);
+      --t1:     #0F172A;
+      --t2:     rgba(15,23,42,0.68);
+      --t3:     rgba(15,23,42,0.44);
+      --t4:     rgba(15,23,42,0.26);
+      background: #EEF2FF;
+      color: #0F172A;
+    }
+
+    body.light .bg { background: #EEF2FF; }
+    body.light .bg-grid {
+      background-image:
+        linear-gradient(rgba(15,23,42,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,23,42,0.05) 1px, transparent 1px);
+    }
+    body.light .orb-1 { background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 70%); }
+    body.light .orb-2 { background: radial-gradient(circle, rgba(8,145,178,0.13) 0%, transparent 70%); }
+    body.light .orb-3 { background: radial-gradient(circle, rgba(37,99,235,0.1) 0%, transparent 70%); }
+
+    /* Nav light */
+    body.light #main-nav {
+      background: rgba(238,242,255,0.82);
+      border-color: rgba(15,23,42,0.1);
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.06), 0 4px 24px rgba(15,23,42,0.1);
+    }
+    body.light #main-nav.scrolled {
+      background: rgba(238,242,255,0.96);
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.1), 0 8px 36px rgba(15,23,42,0.14);
+    }
+    body.light .brand-mark {
+      background: linear-gradient(135deg, #1D4ED8, #2563EB, #60A5FA);
+      box-shadow: 0 2px 12px rgba(37,99,235,0.45);
+    }
+    body.light .btn-nav-primary { color: #fff; }
+
+    /* Hero light */
+    body.light .hero-badge { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.2); }
+    body.light .pulse-dot  { background: #2563EB; }
+    body.light .hero-preview-window {
+      background: rgba(255,255,255,0.88);
+      border-color: rgba(15,23,42,0.1);
+      box-shadow: 0 40px 80px rgba(15,23,42,0.12), 0 0 120px rgba(37,99,235,0.06);
+    }
+    body.light .win-bar { background: rgba(15,23,42,0.04); border-color: rgba(15,23,42,0.08); }
+    body.light .win-bar-dot { background: rgba(37,99,235,0.5); }
+    body.light .zaki-chat-panel { background: rgba(15,23,42,0.03); border-color: rgba(15,23,42,0.08); }
+    body.light .chat-msg--user { background: rgba(37,99,235,0.1); border-color: rgba(37,99,235,0.2); }
+    body.light .chat-msg--ai   { background: rgba(255,255,255,0.9); border-color: rgba(15,23,42,0.1); }
+    body.light .chat-msg--ai .amt { color: #2563EB; }
+    body.light .kpi-card { background: rgba(255,255,255,0.9); border-color: rgba(15,23,42,0.1); }
+    body.light .kpi-badge--up   { background: rgba(8,145,178,0.1); color: #0891B2; }
+    body.light .kpi-badge--warn { background: rgba(37,99,235,0.1); color: #2563EB; }
+
+    /* Country strip light */
+    body.light .country-strip { border-color: rgba(15,23,42,0.1); }
+    body.light .c-item { border-color: rgba(15,23,42,0.08); }
+
+    /* Stats light */
+    body.light .stats-grid { background: rgba(15,23,42,0.1); border-color: rgba(15,23,42,0.1); }
+    body.light .stat-item  { background: #fff; }
+
+    /* Chips light */
+    body.light .chip-gold { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.18); }
+
+    /* Bento light */
+    body.light .bento-card--main::before {
+      background: radial-gradient(circle, rgba(37,99,235,0.22) 0%, transparent 60%);
+    }
+    body.light .bento-card--main .bcm--u { background: rgba(37,99,235,0.18); border-color: rgba(37,99,235,0.25); }
+    body.light .bento-card--main .bcm--a .g { color: #60A5FA; }
+    body.light .bento-card--erp,
+    body.light .bento-card--market { background: #fff; border-color: rgba(15,23,42,0.1); }
+    body.light .bento-card--erp .bento-icon   { background: rgba(8,145,178,0.08); border-color: rgba(8,145,178,0.15); }
+    body.light .bento-card--market .bento-icon { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.15); }
+    body.light .bento-card--erp h3,
+    body.light .bento-card--market h3 { color: #0F172A; }
+    body.light .bento-card--erp p,
+    body.light .bento-card--market p  { color: rgba(15,23,42,0.65); }
+    body.light .bento-card--erp .bento-features li,
+    body.light .bento-card--market .bento-features li { color: rgba(15,23,42,0.65); }
+
+    /* Feature rows light */
+    body.light .feature-row { border-color: rgba(15,23,42,0.08); }
+    body.light .mp-card { background: #fff; border-color: rgba(15,23,42,0.12); box-shadow: 0 12px 36px rgba(15,23,42,0.08); }
+    body.light .mp-row { background: rgba(15,23,42,0.03); border-color: rgba(15,23,42,0.08); }
+    body.light .mp-row:hover { background: rgba(37,99,235,0.04); border-color: rgba(37,99,235,0.14); }
+    body.light .mp-name  { color: #0F172A; }
+    body.light .mp-cat   { color: rgba(15,23,42,0.5); }
+    body.light .mp-count { color: rgba(15,23,42,0.5); }
+    body.light .mp-price    { color: #2563EB; }
+    body.light .mp-verified { background: rgba(8,145,178,0.1); color: #0891B2; }
+
+    /* Paths light */
+    body.light .path-card--biz { background: #fff; border-color: rgba(15,23,42,0.1); }
+    body.light .path-card--partner {
+      background: linear-gradient(145deg, rgba(37,99,235,0.07), rgba(59,130,246,0.03));
+      border-color: rgba(37,99,235,0.2);
+    }
+    body.light .path-card--partner::before { background: radial-gradient(circle, rgba(37,99,235,0.1) 0%, transparent 60%); }
+    body.light .path-card h3  { color: #0F172A; }
+    body.light .path-card > p { color: rgba(15,23,42,0.65); }
+    body.light .path-list li  { color: rgba(15,23,42,0.65); }
+    body.light .path-card--biz .pcheck     { background: rgba(15,23,42,0.07); color: rgba(15,23,42,0.4); }
+    body.light .path-card--partner .pcheck { background: rgba(37,99,235,0.14); color: #2563EB; }
+    body.light .path-card--partner .path-tag { background: rgba(37,99,235,0.12); color: #2563EB; }
+    body.light .btn-path--ghost { background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.14); color: rgba(15,23,42,0.72); }
+
+    /* CTA light */
+    body.light .cta-section::before { background: linear-gradient(135deg, rgba(37,99,235,0.08), transparent 50%, rgba(8,145,178,0.04)); }
+    body.light .cta-section h2 { color: #0F172A; }
+    body.light .cta-section p  { color: rgba(15,23,42,0.65); }
+    body.light .trust-item     { color: rgba(15,23,42,0.5); }
+    body.light .trust-item::before { color: #0891B2; }
+    body.light .btn-ghost { background: rgba(255,255,255,0.9); border-color: rgba(15,23,42,0.16); color: rgba(15,23,42,0.75); }
+    body.light .btn-ghost:hover { background: #fff; color: #0F172A; border-color: rgba(15,23,42,0.25); }
+
+    /* Theme toggle button */
+    .theme-toggle {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      border: 1px solid var(--bdr-2);
+      background: var(--surf-1);
+      color: var(--t2);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s, border-color .15s, color .15s, transform .2s;
+      margin-right: 4px;
+    }
+    .theme-toggle:hover { background: var(--surf-2); color: var(--t1); transform: rotate(18deg) scale(1.08); }
+    .theme-toggle svg   { pointer-events: none; }
+    .icon-sun           { display: none; }
+    body.light .icon-moon { display: none; }
+    body.light .icon-sun  { display: flex; align-items: center; justify-content: center; }
 
     a { color: inherit; text-decoration: none; }
 
@@ -1441,6 +1586,10 @@
     <li><a href="/pricing.html">Pricing</a></li>
   </ul>
   <div class="nav-actions">
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle light/dark mode">
+      <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
     <a href="https://zaki.mumtaz.digital" class="btn-nav-ghost">Sign in</a>
     <a href="https://zaki.mumtaz.digital" class="btn-nav-primary">Get started</a>
   </div>
@@ -1816,6 +1965,14 @@
 </footer>
 
 <script>
+  // Theme toggle — persist preference
+  const themeBtn = document.getElementById('theme-toggle');
+  if (localStorage.getItem('mumtaz-theme') === 'light') document.body.classList.add('light');
+  themeBtn.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light');
+    localStorage.setItem('mumtaz-theme', isLight ? 'light' : 'dark');
+  });
+
   // Nav scroll opacity
   const nav = document.getElementById('main-nav');
   window.addEventListener('scroll', () => {
