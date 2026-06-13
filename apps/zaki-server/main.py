@@ -1124,10 +1124,25 @@ def portal_base_url() -> str:
 # Backwards-compat shim — anything that did `f"{PORTAL_BASE_URL}/..."` keeps working.
 PORTAL_BASE_URL = portal_base_url()
 
+# Platform owners are always super-admins: they implicitly have admin access,
+# cannot be removed through the UI, and can oversee every tenant. Configurable
+# via the MUMTAZ_OWNERS setting (comma-separated); the founding owner is always
+# included so the platform is never left without a super-admin.
+DEFAULT_OWNER_EMAIL = "umer@mumtaz.digital"
+
+def owner_emails() -> set[str]:
+    """Live read of platform owners (super-admins). Always includes the founder."""
+    raw = settings.get("MUMTAZ_OWNERS", "") or ""
+    owners = {e.strip().lower() for e in raw.split(",") if e.strip()}
+    owners.add(DEFAULT_OWNER_EMAIL)
+    return owners
+
 def admin_emails() -> set[str]:
-    """Live read so admins added through the UI take effect immediately."""
+    """Live read so admins added through the UI take effect immediately.
+    Owners are always admins."""
     raw = settings.get("MUMTAZ_ADMINS", "") or ""
-    return {e.strip().lower() for e in raw.split(",") if e.strip()}
+    admins = {e.strip().lower() for e in raw.split(",") if e.strip()}
+    return admins | owner_emails()
 
 # Backwards-compat shim — modules importing ADMIN_EMAILS still see the env list.
 ADMIN_EMAILS = admin_emails()
@@ -1142,6 +1157,13 @@ def require_admin(auth: dict = Depends(require_auth)) -> dict:
     db.close()
     if row and not row["active"]:
         raise HTTPException(403, "Account is deactivated.")
+    return auth
+
+def require_owner(auth: dict = Depends(require_auth)) -> dict:
+    """Gate owner-only actions (platform-wide oversight)."""
+    email = (auth.get("email") or "").lower()
+    if email not in owner_emails():
+        raise HTTPException(403, "Owner access required.")
     return auth
 
 @app.post("/api/v1/auth/forgot")
@@ -1294,6 +1316,7 @@ async def me(auth: dict = Depends(require_auth)):
     db.close()
     if not row:
         raise HTTPException(404, detail="User not found.")
+    email_l = (row["email"] or "").lower()
     return {
         "name":      row["name"],
         "email":     row["email"],
@@ -1301,6 +1324,8 @@ async def me(auth: dict = Depends(require_auth)):
         "plan":      row["plan"],
         "odoo_uid":  row["odoo_uid"],
         "tenant_id": row["tenant_id"],
+        "is_admin":  email_l in admin_emails(),
+        "is_owner":  email_l in owner_emails(),
     }
 
 class OnboardingReq(BaseModel):
@@ -1947,9 +1972,191 @@ def admin_list_users(auth: dict = Depends(require_admin)):
             "products":       (ob or {}).get("products", []),
             "industry":       (ob or {}).get("industry"),
             "team_size":      (ob or {}).get("teamSize"),
-            "is_admin":       (r["email"] or "").lower() in ADMIN_EMAILS,
+            "is_admin":       (r["email"] or "").lower() in admin_emails(),
+            "is_owner":       (r["email"] or "").lower() in owner_emails(),
         })
     return {"users": users, "total": len(users)}
+
+
+# ── Owner: platform-wide oversight (tenants, revenue, apps) ──────────
+def _validate_tenant_db(db_name: str) -> bool:
+    conn = get_db()
+    row = conn.execute("SELECT 1 FROM tenants WHERE db_name=?", (db_name,)).fetchone()
+    conn.close()
+    return bool(row)
+
+
+@app.get("/api/v1/admin/overview")
+def admin_overview(auth: dict = Depends(require_admin)):
+    """Platform KPIs for the owner console: subscription MRR/ARR, tenant and
+    user counts, and plan distribution. Local DB only — fast."""
+    db = get_db()
+    total_users    = db.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+    active_users   = db.execute("SELECT COUNT(*) FROM users WHERE active=1").fetchone()[0]
+    total_tenants  = db.execute("SELECT COUNT(*) FROM tenants").fetchone()[0]
+    active_tenants = db.execute("SELECT COUNT(*) FROM tenants WHERE status='active'").fetchone()[0]
+    plan_rows = db.execute(
+        "SELECT COALESCE(plan,'trial') p, COUNT(*) c FROM tenants GROUP BY p"
+    ).fetchall()
+    db.close()
+
+    plans, mrr = {}, 0.0
+    for r in plan_rows:
+        key, cnt = r["p"], r["c"]
+        price = float(PLANS.get(key, {}).get("price", 0) or 0)
+        plans[key] = {"count": cnt, "price": price}
+        mrr += price * cnt
+
+    return {
+        "currency": "AED",
+        "mrr": round(mrr, 2),
+        "arr": round(mrr * 12, 2),
+        "users":   {"total": total_users,  "active": active_users},
+        "tenants": {"total": total_tenants, "active": active_tenants},
+        "plans": plans,
+    }
+
+
+@app.get("/api/v1/admin/tenants")
+def admin_tenants(auth: dict = Depends(require_admin)):
+    """List every tenant with plan, status, user count and subscription MRR.
+    Their own business revenue is fetched per-row via .../revenue (owner)."""
+    db = get_db()
+    rows = db.execute("""
+        SELECT id, db_name, company, admin_email, plan, status,
+               custom_domain, created_at, provisioned_at, error_msg
+        FROM tenants ORDER BY created_at DESC
+    """).fetchall()
+    counts = {r["tenant_db"]: r["c"] for r in db.execute(
+        "SELECT tenant_db, COUNT(*) c FROM users WHERE tenant_db IS NOT NULL GROUP BY tenant_db"
+    ).fetchall()}
+    db.close()
+
+    tenants = [{
+        "id":             r["id"],
+        "db_name":        r["db_name"],
+        "company":        r["company"],
+        "admin_email":    r["admin_email"],
+        "plan":           r["plan"] or "trial",
+        "status":         r["status"],
+        "custom_domain":  r["custom_domain"],
+        "created_at":     r["created_at"],
+        "provisioned_at": r["provisioned_at"],
+        "error_msg":      r["error_msg"],
+        "users":          counts.get(r["db_name"], 0),
+        "mrr":            float(PLANS.get(r["plan"] or "trial", {}).get("price", 0) or 0),
+    } for r in rows]
+    return {"tenants": tenants, "total": len(tenants), "currency": "AED"}
+
+
+@app.get("/api/v1/admin/tenants/{db_name}/revenue")
+def admin_tenant_revenue(db_name: str, auth: dict = Depends(require_owner)):
+    """A single tenant's OWN business revenue from their Odoo accounting:
+    posted customer-invoice total, invoice count, and customer count.
+    Loaded per-row by the owner dashboard so the list stays fast."""
+    if not _validate_tenant_db(db_name):
+        raise HTTPException(404, "Unknown tenant")
+    try:
+        uid = odoo_get_admin_uid(db=db_name)
+        if not uid:
+            return {"db_name": db_name, "reachable": False}
+        obj = _odoo_object()
+        grp = obj.execute_kw(
+            db_name, uid, ODOO_PASS, "account.move", "read_group",
+            [[["move_type", "=", "out_invoice"], ["state", "=", "posted"]]],
+            ["amount_total:sum"], [],
+        )
+        revenue  = (grp[0].get("amount_total") if grp else 0) or 0
+        invoices = (grp[0].get("__count") if grp else 0) or 0
+        try:
+            customers = obj.execute_kw(db_name, uid, ODOO_PASS, "res.partner",
+                                       "search_count", [[["customer_rank", ">", 0]]])
+        except Exception:
+            customers = 0
+        currency = "AED"
+        try:
+            comp = obj.execute_kw(db_name, uid, ODOO_PASS, "res.company", "search_read",
+                                  [[]], {"fields": ["currency_id"], "limit": 1})
+            if comp and comp[0].get("currency_id"):
+                currency = comp[0]["currency_id"][1]
+        except Exception:
+            pass
+    except Exception as e:
+        _record_odoo_error("admin_tenant_revenue", e)
+        return {"db_name": db_name, "reachable": False}
+
+    return {"db_name": db_name, "reachable": True, "revenue": round(revenue, 2),
+            "invoices": invoices, "customers": customers, "currency": currency}
+
+
+@app.get("/api/v1/admin/tenants/{db_name}/features")
+def admin_get_tenant_features(db_name: str, auth: dict = Depends(require_owner)):
+    """Read a specific tenant's app enable/disable state (owner oversight)."""
+    if not _validate_tenant_db(db_name):
+        raise HTTPException(404, "Unknown tenant")
+    code_to_fid, modes = {}, {}
+    try:
+        uid = odoo_get_admin_uid(db=db_name)
+        if not uid:
+            raise RuntimeError("no admin uid")
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, db_name, uid, create=False)
+        if tenant_id:
+            codes = [s["code"] for s in APP_FEATURES.values()]
+            feats = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.feature", "search_read",
+                                   [[["code", "in", codes]]], {"fields": ["code"]})
+            code_to_fid = {r["code"]: r["id"] for r in feats}
+            fids = list(code_to_fid.values())
+            if fids:
+                ov = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature",
+                                    "search_read",
+                                    [[["tenant_id", "=", tenant_id], ["feature_id", "in", fids]]],
+                                    {"fields": ["feature_id", "override_mode"]})
+                modes = {r["feature_id"][0]: r["override_mode"] for r in ov}
+    except Exception as e:
+        _record_odoo_error("admin_get_tenant_features", e)
+        raise HTTPException(502, "Could not read tenant apps")
+
+    apps = []
+    for k, s in APP_FEATURES.items():
+        fid = code_to_fid.get(s["code"])
+        mode = modes.get(fid) if fid else None
+        apps.append({"key": k, "code": s["code"], "name": s["name"], "enabled": mode != "force_off"})
+    return {"db_name": db_name, "apps": apps}
+
+
+@app.put("/api/v1/admin/tenants/{db_name}/features")
+def admin_set_tenant_feature(db_name: str, req: FeatureToggleReq,
+                             auth: dict = Depends(require_owner)):
+    """Enable/disable an app for a specific tenant (owner oversight)."""
+    if not _validate_tenant_db(db_name):
+        raise HTTPException(404, "Unknown tenant")
+    spec = next((s for s in APP_FEATURES.values() if s["code"] == req.code), None)
+    if not spec:
+        raise HTTPException(400, "Unknown feature")
+    try:
+        uid = odoo_get_admin_uid(db=db_name)
+        if not uid:
+            raise RuntimeError("no admin uid")
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, db_name, uid, create=True)
+        fid       = _erp_find_feature(obj, db_name, uid, spec, create=True)
+        mode      = "force_on" if req.enabled else "force_off"
+        existing  = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "search",
+                                   [[["tenant_id", "=", tenant_id], ["feature_id", "=", fid]]],
+                                   {"limit": 1})
+        vals = {"override_mode": mode, "reason": f"Set by platform owner {auth.get('email')}."}
+        if existing:
+            obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "write", [existing, vals])
+        else:
+            obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "create",
+                           [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+    except HTTPException:
+        raise
+    except Exception as e:
+        _record_odoo_error("admin_set_tenant_feature", e)
+        raise HTTPException(502, "Could not update the tenant's app")
+    return {"ok": True, "db_name": db_name, "code": req.code, "enabled": req.enabled}
 
 
 @app.post("/api/v1/admin/sync-erp")

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Owner Console — Mumtaz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF8F4; --paper2:#F2EDE6; --surface:#FFFFFF;
+    --ink:#1C1917; --ink2:#44403C; --ink3:#78716C; --ink4:#A8A29E;
+    --gold:#B8862A; --gold2:#D4A84C; --gold-bg:#FDF6E4; --gold-border:#E8CC88;
+    --teal:#0B7A64; --teal-bg:#E6F7F3; --coral:#C0402A; --coral-bg:#FCECEA;
+    --blue:#1E4FA0; --blue-bg:#EDF2FC; --border:#E7E0D6;
+    --r:12px; --r-sm:8px; --r-full:9999px;
+    --shadow:0 1px 3px rgba(28,25,23,.06),0 4px 16px rgba(28,25,23,.04);
+    --font:'Inter',system-ui,-apple-system,sans-serif; --mono:'DM Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .top{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+  .top-in{max-width:1280px;margin:0 auto;padding:0 28px;height:62px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.15rem}
+  .owner-chip{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-border);padding:3px 10px;border-radius:var(--r-full)}
+  .top-right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:.85rem;color:var(--ink3)}
+  .btn{font-family:var(--font);cursor:pointer;border:none;font-size:.82rem;font-weight:600;padding:8px 16px;border-radius:var(--r-sm);transition:.15s}
+  .btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--border)}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--ink3)}
+  .wrap{max-width:1280px;margin:0 auto;padding:28px}
+  h1{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+  .sub{font-size:.88rem;color:var(--ink3);margin-bottom:24px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+  .kpi-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink4);margin-bottom:8px}
+  .kpi-val{font-size:1.9rem;font-weight:800;line-height:1;color:var(--ink)}
+  .kpi-val.gold{color:var(--gold)} .kpi-val.teal{color:var(--teal)}
+  .kpi-sub{font-size:.74rem;color:var(--ink3);margin-top:6px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden}
+  .card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+  .card-title{font-size:1rem;font-weight:700}
+  .plan-pills{display:flex;flex-wrap:wrap;gap:10px;padding:18px 22px}
+  .plan-pill{background:var(--paper2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;font-size:.82rem}
+  .plan-pill b{color:var(--ink);font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:.84rem}
+  th{text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink4);padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+  th:not(:first-child),td:not(:first-child){text-align:center}
+  td{padding:13px 16px;border-bottom:1px solid var(--border);color:var(--ink2)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--paper)}
+  .t-co{font-weight:600;color:var(--ink);text-align:left}
+  .t-email{font-size:.72rem;color:var(--ink4);font-family:var(--mono)}
+  .mono{font-family:var(--mono)}
+  .rev{font-weight:700;color:var(--teal);font-family:var(--mono)}
+  .pill{display:inline-block;font-size:.68rem;font-weight:600;padding:2px 9px;border-radius:var(--r-full);text-transform:capitalize}
+  .pill.active{background:var(--teal-bg);color:var(--teal)}
+  .pill.provisioning,.pill.trial{background:var(--gold-bg);color:var(--gold)}
+  .pill.suspended,.pill.error{background:var(--coral-bg);color:var(--coral)}
+  .apps{display:inline-flex;gap:5px}
+  .app-dot{width:24px;height:24px;border-radius:6px;font-size:.62rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--border);transition:.15s;user-select:none}
+  .app-dot.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .app-dot.off{background:var(--paper2);color:var(--ink4)}
+  .app-dot.pending{opacity:.5;cursor:wait}
+  .muted{color:var(--ink4)}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty{padding:40px;text-align:center;color:var(--ink4);font-size:.88rem}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;font-size:.84rem;padding:11px 20px;border-radius:var(--r-full);box-shadow:0 8px 30px rgba(0,0,0,.25);opacity:0;transition:.3s;z-index:999;pointer-events:none}
+  #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  @media(max-width:720px){ .t-hide{display:none} }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <a class="brand" href="/dashboard.html"><span class="brand-mark">م</span>Mumtaz</a>
+    <span class="owner-chip">Owner</span>
+    <div class="top-right">
+      <span id="who"></span>
+      <a class="btn btn-ghost" href="/dashboard.html">← Portal</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>Business Command Center</h1>
+  <div class="sub">Every tenant, their revenue, subscriptions, and apps — in one place.</div>
+
+  <div class="kpis" id="kpis">
+    <div class="kpi"><div class="kpi-label">Loading…</div><div class="kpi-val"><span class="spin"></span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Subscription plans</div></div>
+    <div class="plan-pills" id="plans"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Tenants</div>
+      <button class="btn btn-ghost" onclick="loadAll()">↻ Refresh</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Company</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Users</th>
+          <th class="t-hide">Sub. MRR</th>
+          <th>Their Revenue</th>
+          <th class="t-hide">Invoices</th>
+          <th class="t-hide">Customers</th>
+          <th>Apps</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="9" class="empty"><span class="spin"></span> Loading tenants…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('mumtaz_token');
+const H = { Authorization: 'Bearer ' + TOKEN };
+const APPS = [{key:'erp',code:'erp_access',label:'ERP'},{key:'zaki',code:'zaki_access',label:'ZAKI'},{key:'marketplace',code:'marketplace_access',label:'MKT'}];
+let TENANTS = [];
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(window._t); window._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(n,cur){ return (cur||'AED')+' '+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0}); }
+function fdate(ts){ if(!ts) return '—'; try{ return new Date(ts*1000).toLocaleDateString(); }catch(e){ return '—'; } }
+
+// ── Gate: owner only ──
+(async function guard(){
+  if(!TOKEN){ location.href='/'; return; }
+  try{
+    const r = await fetch('/api/auth/me', {headers:H});
+    if(!r.ok){ localStorage.removeItem('mumtaz_token'); location.href='/'; return; }
+    const me = await r.json();
+    document.getElementById('who').textContent = me.email || '';
+    if(!me.is_owner){ document.body.innerHTML='<div class="wrap"><h1>Owner access required</h1><div class="sub">This console is restricted to platform owners. <a style="color:var(--gold)" href="/dashboard.html">Back to portal →</a></div></div>'; return; }
+    loadAll();
+  }catch(e){ location.href='/'; }
+})();
+
+async function loadAll(){
+  await Promise.all([loadOverview(), loadTenants()]);
+}
+
+async function loadOverview(){
+  try{
+    const r = await fetch('/api/v1/admin/overview', {headers:H});
+    if(!r.ok) return;
+    const d = await r.json();
+    document.getElementById('kpis').innerHTML = `
+      <div class="kpi"><div class="kpi-label">Recurring revenue (MRR)</div><div class="kpi-val gold">${money(d.mrr,d.currency)}</div><div class="kpi-sub">${money(d.arr,d.currency)} / year</div></div>
+      <div class="kpi"><div class="kpi-label">Tenants</div><div class="kpi-val">${d.tenants.total}</div><div class="kpi-sub">${d.tenants.active} active</div></div>
+      <div class="kpi"><div class="kpi-label">Users</div><div class="kpi-val">${d.users.total}</div><div class="kpi-sub">${d.users.active} active</div></div>
+      <div class="kpi"><div class="kpi-label">Paying tenants</div><div class="kpi-val teal">${Object.entries(d.plans).filter(([k])=>k!=='trial').reduce((a,[,v])=>a+v.count,0)}</div><div class="kpi-sub">of ${d.tenants.total} total</div></div>`;
+    document.getElementById('plans').innerHTML = Object.entries(d.plans).length
+      ? Object.entries(d.plans).map(([k,v])=>`<div class="plan-pill"><b>${esc(k)}</b> · ${v.count} × ${money(v.price,d.currency)}</div>`).join('')
+      : '<div class="muted" style="font-size:.84rem">No subscriptions yet.</div>';
+  }catch(e){}
+}
+
+async function loadTenants(){
+  try{
+    const r = await fetch('/api/v1/admin/tenants', {headers:H});
+    if(!r.ok){ document.getElementById('rows').innerHTML='<tr><td colspan="9" class="empty">Could not load tenants.</td></tr>'; return; }
+    const d = await r.json();
+    TENANTS = d.tenants || [];
+    if(!TENANTS.length){ document.getElementById('rows').innerHTML='<tr><td colspan="9" class="empty">No tenants yet.</td></tr>'; return; }
+    document.getElementById('rows').innerHTML = TENANTS.map(t=>`
+      <tr data-db="${esc(t.db_name)}">
+        <td class="t-co">${esc(t.company||t.db_name)}<div class="t-email">${esc(t.admin_email||'')}</div></td>
+        <td><span class="pill ${esc(t.plan)}">${esc(t.plan)}</span></td>
+        <td><span class="pill ${esc(t.status)}">${esc(t.status)}</span></td>
+        <td class="mono">${t.users}</td>
+        <td class="t-hide mono">${money(t.mrr,d.currency)}</td>
+        <td class="rev" data-rev><span class="spin"></span></td>
+        <td class="t-hide mono" data-inv>—</td>
+        <td class="t-hide mono" data-cust>—</td>
+        <td><span class="apps" data-apps><span class="spin"></span></span></td>
+      </tr>`).join('');
+    // Lazy-load each tenant's own revenue + app state in parallel.
+    TENANTS.forEach(t=>{ loadRevenue(t.db_name); loadApps(t.db_name); });
+  }catch(e){ document.getElementById('rows').innerHTML='<tr><td colspan="9" class="empty">Could not load tenants.</td></tr>'; }
+}
+
+function row(db){ return document.querySelector(`tr[data-db="${CSS.escape(db)}"]`); }
+
+async function loadRevenue(db){
+  const tr = row(db); if(!tr) return;
+  try{
+    const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/revenue`, {headers:H});
+    const d = await r.json();
+    if(d.reachable){
+      tr.querySelector('[data-rev]').textContent = money(d.revenue, d.currency);
+      tr.querySelector('[data-inv]').textContent = d.invoices;
+      tr.querySelector('[data-cust]').textContent = d.customers;
+    } else {
+      tr.querySelector('[data-rev]').innerHTML = '<span class="muted">offline</span>';
+    }
+  }catch(e){ tr.querySelector('[data-rev]').innerHTML='<span class="muted">—</span>'; }
+}
+
+async function loadApps(db){
+  const tr = row(db); if(!tr) return;
+  const cell = tr.querySelector('[data-apps]');
+  try{
+    const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/features`, {headers:H});
+    const d = await r.json();
+    const state = {}; (d.apps||[]).forEach(a=>state[a.code]=a.enabled);
+    cell.innerHTML = APPS.map(a=>`<span class="app-dot ${state[a.code]!==false?'on':'off'}" title="${a.label}: click to toggle" onclick="toggleApp('${esc(db)}','${a.code}',this)">${a.label}</span>`).join('');
+  }catch(e){ cell.innerHTML='<span class="muted">—</span>'; }
+}
+
+async function toggleApp(db, code, el){
+  const next = !el.classList.contains('on');
+  el.classList.add('pending');
+  try{
+    const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/features`, {
+      method:'PUT', headers:{...H,'Content-Type':'application/json'},
+      body: JSON.stringify({code, enabled: next})
+    });
+    if(!r.ok) throw new Error('failed');
+    el.classList.toggle('on', next); el.classList.toggle('off', !next);
+    toast(`${code.replace('_access','').toUpperCase()} ${next?'enabled':'disabled'} for ${db}`);
+  }catch(e){ toast('Could not update. Try again.'); }
+  finally{ el.classList.remove('pending'); }
+}
+</script>
+</body>
+</html>

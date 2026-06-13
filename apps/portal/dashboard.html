@@ -555,6 +555,7 @@
       </div>
     </div>
     <div class="tb-right">
+      <a href="/owner.html" class="tb-signout" id="owner-link" style="display:none;color:var(--gold);font-weight:700">★ Owner Console</a>
       <a href="/admin.html" class="tb-signout" id="admin-link" style="display:none;color:var(--gold);font-weight:600">Admin</a>
       <a href="/billing.html" class="tb-signout">Plan & Billing</a>
       <div class="tb-user">
@@ -651,6 +652,7 @@
         if (!r.ok) { localStorage.removeItem('mumtaz_token'); window.location.href = '/'; return; }
         const user = await r.json();
         renderUser(user);
+        if (user.is_owner) { const o = $('owner-link'); if (o) o.style.display = ''; }
       } catch {
         // offline fallback: read from token payload
         try {
