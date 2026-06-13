@@ -973,6 +973,65 @@ async def erp_import_listings(req: ImportListingsReq, auth: dict = Depends(requi
     return {"ok": True, "created": created, "skipped": skipped}
 
 
+# ── Public marketplace feed (published listings across tenants) ──────
+_PUBLIC_LISTINGS_CACHE: dict = {"ts": 0.0, "data": []}
+_PUBLIC_LISTINGS_TTL = 120  # seconds — avoid querying every tenant DB per hit
+
+@app.get("/api/v1/marketplace/public/listings")
+def public_marketplace_listings():
+    """
+    Public (no auth): PUBLISHED marketplace listings aggregated across active
+    tenants, for the marketplace.mumtaz.digital homepage. Only published
+    records and public fields are returned. Cached briefly so a page view
+    doesn't fan out to every tenant DB.
+    """
+    now = time.time()
+    if (now - _PUBLIC_LISTINGS_CACHE["ts"]) < _PUBLIC_LISTINGS_TTL and _PUBLIC_LISTINGS_CACHE["data"]:
+        return {"listings": _PUBLIC_LISTINGS_CACHE["data"], "cached": True}
+
+    db = get_db()
+    tenant_dbs = [r["db_name"] for r in db.execute(
+        "SELECT db_name FROM tenants WHERE status='active'").fetchall()]
+    db.close()
+
+    def _m2o(v):
+        return v[1] if isinstance(v, (list, tuple)) and len(v) == 2 else None
+
+    out = []
+    for tdb in tenant_dbs[:100]:
+        try:
+            uid = odoo_get_admin_uid(db=tdb)
+            if not uid:
+                continue
+            obj  = _odoo_object()
+            rows = obj.execute_kw(
+                tdb, uid, ODOO_PASS, "mumtaz.marketplace.listing", "search_read",
+                [[["state", "=", "published"]]],
+                {"fields": ["name", "category_id", "price", "currency_id",
+                            "short_description", "listing_type", "min_order_qty",
+                            "lead_time_days", "company_id"],
+                 "limit": 50, "order": "id desc"},
+            )
+        except Exception as e:
+            _record_odoo_error("public_listings", e)
+            continue
+        for r in rows:
+            out.append({
+                "name":      r.get("name") or "",
+                "company":   _m2o(r.get("company_id")) or "Verified Supplier",
+                "category":  _m2o(r.get("category_id")) or "General",
+                "price":     r.get("price") or 0,
+                "currency":  _m2o(r.get("currency_id")) or "AED",
+                "summary":   r.get("short_description") or "",
+                "type":      r.get("listing_type") or "product",
+                "moq":       r.get("min_order_qty") or 0,
+                "lead_days": r.get("lead_time_days") or 0,
+            })
+
+    _PUBLIC_LISTINGS_CACHE.update({"ts": now, "data": out})
+    return {"listings": out, "cached": False}
+
+
 # ── Tenant app enable/disable (control-plane feature toggles) ─────────
 # Maps the portal's app cards to mumtaz.feature codes. Enabling an app
 # writes a force_on tenant override; disabling writes force_off. This is

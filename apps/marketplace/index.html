@@ -252,6 +252,16 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
   </div>
 </div>
 
+<!-- Live Listings (real published listings; shown only when data exists) -->
+<div class="section" id="live-section" style="display:none">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+    <div class="section-title" style="margin-bottom:0">Live on Mumtaz</div>
+    <span style="font-size:.62rem;font-weight:700;letter-spacing:.05em;color:var(--teal);background:var(--teal-bg);border:1px solid var(--teal-border);padding:2px 8px;border-radius:var(--r-full)">● LIVE</span>
+  </div>
+  <div class="section-sub">Published products &amp; services from verified Mumtaz businesses.</div>
+  <div class="supplier-grid" id="live-listings"></div>
+</div>
+
 <!-- How it Works -->
 <div class="hiw">
   <div class="hiw-inner">
@@ -500,8 +510,48 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
+// ── Live published listings from real Mumtaz tenants ──────────────
+let LIVE = []
+function escMP(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+function openLiveRFQ(i){ const l = LIVE[i]; if(l) openRFQ(l.company || l.name) }
+
+async function loadPublicListings(){
+  try{
+    const r = await fetch('/api/v1/marketplace/public/listings')
+    if(!r.ok) return
+    const d = await r.json()
+    LIVE = d.listings || []
+    if(!LIVE.length) return
+    document.getElementById('live-listings').innerHTML = LIVE.map((l,i)=>{
+      const init = (l.company || 'M').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+      return `<div class="supplier-card">
+        <div class="supplier-header">
+          <div class="supplier-logo">${escMP(init)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="supplier-name">${escMP(l.name)}</div>
+            <div class="supplier-meta">${escMP(l.company)} · ${escMP(l.category)}</div>
+            <span class="verified">✓ Published</span>
+          </div>
+        </div>
+        ${l.summary ? `<div style="font-size:.8rem;color:var(--ink3);margin:8px 0;line-height:1.5">${escMP(l.summary)}</div>` : ''}
+        <div style="display:flex;gap:14px;margin-top:8px;font-size:.74rem;color:var(--ink4);font-family:var(--font-mono)">
+          <span>${escMP(l.currency)} ${Number(l.price||0).toLocaleString()}</span>
+          <span>MOQ: ${escMP(String(l.moq||'—'))}</span>
+          <span>Lead: ${l.lead_days ? l.lead_days+'d' : '—'}</span>
+        </div>
+        <div class="supplier-footer">
+          <span class="tag">${escMP(l.type)}</span>
+          <button class="btn btn-primary btn-sm" onclick="openLiveRFQ(${i})">Request Quote</button>
+        </div>
+      </div>`
+    }).join('')
+    document.getElementById('live-section').style.display = ''
+  }catch(e){ /* keep homepage as-is on failure */ }
+}
+
 renderCats()
 renderSuppliers(SUPPLIERS)
+loadPublicListings()
 </script>
 </body>
 </html>
