@@ -385,11 +385,13 @@ async def _provision(tid: int):
             WHERE tm.tenant_id=$1 AND tm.status='active' AND mc.odoo_module IS NOT NULL""", tid)
     install = ",".join(m["odoo_module"] for m in mods) or "base"
     try:
+        logf = open(f"/opt/mumtaz/logs/provision_{db}.log", "ab")
         proc = await asyncio.create_subprocess_exec(
             "sudo", "-u", "odoo", ODOO_BIN, "-c", ODOO_CONF, "-d", db,
-            "-i", install, "--without-demo=all", "--stop-after-init",
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+            "-i", install, "--without-demo=all", "--stop-after-init", "--no-http",
+            stdout=logf, stderr=logf)
         await proc.wait()
+        logf.close()
         ok = proc.returncode == 0
     except Exception:
         ok = False
@@ -417,12 +419,16 @@ def _odoo_lock(db: str) -> asyncio.Lock:
     return lk
 
 async def _odoo_run(db: str, args: list[str], stdin: bytes | None = None) -> bool:
+    # --no-http is essential: the live odoo service already owns port 8069, so a
+    # spawned process must not try to bind it. Output is logged for diagnosis.
     try:
+        logf = open(f"/opt/mumtaz/logs/odoo_ops_{db}.log", "ab")
         proc = await asyncio.create_subprocess_exec(
-            "sudo", "-u", "odoo", ODOO_BIN, *args, "-c", ODOO_CONF, "-d", db,
+            "sudo", "-u", "odoo", ODOO_BIN, *args, "--no-http", "-c", ODOO_CONF, "-d", db,
             stdin=asyncio.subprocess.PIPE if stdin is not None else asyncio.subprocess.DEVNULL,
-            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+            stdout=logf, stderr=logf)
         await proc.communicate(stdin)
+        logf.close()
         return proc.returncode == 0
     except Exception:
         return False
@@ -440,7 +446,7 @@ async def _odoo_uninstall(db: str, modules: list[str]) -> bool:
               f"[('name','in',[{names}]),('state','=','installed')])\n"
               "m and m.button_immediate_uninstall()\n"
               "env.cr.commit()\n")
-    return await _odoo_run(db, ["shell", "--no-http"], stdin=script.encode())
+    return await _odoo_run(db, ["shell"], stdin=script.encode())
 
 async def _sync_module_to_odoo(tid: int, key: str, install: bool):
     """Background: install/uninstall a catalogue module in the tenant's Odoo DB."""
