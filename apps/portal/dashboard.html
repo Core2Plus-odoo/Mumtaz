@@ -196,6 +196,21 @@
       padding: 8px 18px; border-radius: 100px; transition: opacity .15s;
     }
     .pc-upgrade:hover { opacity: .85; }
+    .pc-modules { display:inline-block; margin-top:10px; font-size:.78rem; font-weight:600; color:var(--gold); cursor:pointer; }
+    .pc-modules:hover { text-decoration:underline; }
+
+    /* Module manager modal */
+    .mdl-bg { position:fixed; inset:0; background:rgba(28,25,23,.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+    .mdl-bg.open { display:flex; }
+    .mdl { background:var(--white); border-radius:14px; max-width:480px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden; }
+    .mdl-h { padding:18px 22px; border-bottom:1px solid var(--border); font-weight:700; display:flex; align-items:center; justify-content:space-between; }
+    .mdl-h .mdl-plan { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--gold); background:var(--gold-bg); border:1px solid var(--gold-border); padding:2px 8px; border-radius:100px; }
+    .mdl-b { padding:6px 22px; max-height:58vh; overflow-y:auto; }
+    .mdl-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; border-bottom:1px solid var(--border); }
+    .mdl-row:last-child { border-bottom:none; }
+    .mdl-row .nm { font-size:.9rem; font-weight:500; color:var(--ink); }
+    .mdl-lock { font-size:.74rem; color:var(--gold); font-weight:700; }
+    .mdl-f { padding:14px 22px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--border); }
 
     #pf-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -749,6 +764,61 @@
       }
     }
 
+    /* ── ERP module manager ── */
+    async function openModules() {
+      let m = document.getElementById('mdl-modules');
+      if (!m) {
+        m = document.createElement('div');
+        m.id = 'mdl-modules'; m.className = 'mdl-bg';
+        m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+        document.body.appendChild(m);
+      }
+      m.innerHTML = `<div class="mdl"><div class="mdl-h">ERP Modules</div><div class="mdl-b"><div class="mdl-row"><span class="nm">Loading…</span></div></div></div>`;
+      m.classList.add('open');
+      const token = localStorage.getItem('mumtaz_token');
+      try {
+        const r = await fetch('/api/v1/tenant/modules', { headers: { Authorization: 'Bearer ' + token } });
+        const d = await r.json();
+        const rows = (d.modules || []).map(mod => {
+          if (!mod.included) {
+            return `<div class="mdl-row"><span class="nm">${mod.name} <span class="mdl-lock">🔒 not in plan</span></span>
+              <a class="pc-modules" href="/billing.html" style="margin:0">Upgrade →</a></div>`;
+          }
+          return `<div class="mdl-row"><span class="nm">${mod.name}</span>
+            <label class="pc-switch"><input type="checkbox" ${mod.enabled ? 'checked' : ''}
+              onchange="toggleModule('${mod.key}', this)"><span class="pc-slider"></span></label></div>`;
+        }).join('');
+        m.innerHTML = `<div class="mdl">
+          <div class="mdl-h">ERP Modules <span class="mdl-plan">${d.plan || ''} plan</span></div>
+          <div class="mdl-b">${rows || '<div class="mdl-row"><span class="nm">No modules.</span></div>'}</div>
+          <div class="mdl-f"><button class="tb-signout" onclick="document.getElementById('mdl-modules').classList.remove('open')">Close</button></div>
+        </div>`;
+      } catch (e) {
+        m.innerHTML = `<div class="mdl"><div class="mdl-h">ERP Modules</div><div class="mdl-b"><div class="mdl-row"><span class="nm">Couldn't load modules.</span></div></div>
+          <div class="mdl-f"><button class="tb-signout" onclick="document.getElementById('mdl-modules').classList.remove('open')">Close</button></div></div>`;
+      }
+    }
+
+    async function toggleModule(key, el) {
+      const token = localStorage.getItem('mumtaz_token');
+      const next = el.checked;
+      el.disabled = true;
+      try {
+        const r = await fetch('/api/v1/tenant/modules', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ key, enabled: next }),
+        });
+        if (!r.ok) throw new Error('failed');
+        pfToast(`Module ${next ? 'enabled' : 'disabled'}.`);
+      } catch (e) {
+        el.checked = !next;
+        pfToast('Could not update module.');
+      } finally {
+        el.disabled = false;
+      }
+    }
+
     /* ── Products ── */
     const PRODUCTS = {
       erp: {
@@ -820,6 +890,7 @@
               <div class="pc-name">${p.name}</div>
               <div class="pc-desc">${p.desc}</div>
               ${footer}
+              ${(key === 'erp' && enabled) ? '<a class="pc-modules" onclick="openModules()">⚙ Manage modules →</a>' : ''}
             </div>`;
         }).join('') + '</div>';
     }

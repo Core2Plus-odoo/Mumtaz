@@ -65,6 +65,20 @@
   .app-dot.pending{opacity:.5;cursor:wait}
   .plan-sel{font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--ink);background:var(--paper2);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;text-transform:capitalize}
   .plan-sel:disabled{opacity:.5;cursor:wait}
+  .app-mods{margin-left:8px;cursor:pointer;color:var(--ink3);font-size:.95rem}
+  .app-mods:hover{color:var(--gold)}
+  .mdl-bg{position:fixed;inset:0;background:rgba(28,25,23,.5);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+  .mdl-bg.open{display:flex}
+  .mdl{background:var(--surface);border-radius:14px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+  .mdl-h{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700;font-size:.95rem}
+  .mdl-b{padding:6px 20px;max-height:58vh;overflow-y:auto}
+  .mdl-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+  .mdl-row:last-child{border-bottom:none}
+  .mdl-f{padding:12px 20px;display:flex;justify-content:flex-end;border-top:1px solid var(--border)}
+  .mod-toggle{font-size:.68rem;font-weight:700;padding:4px 14px;border-radius:var(--r-full);cursor:pointer;border:1px solid var(--border)}
+  .mod-toggle.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .mod-toggle.off{background:var(--paper2);color:var(--ink4)}
+  .mod-toggle.pending{opacity:.5;cursor:wait}
   .muted{color:var(--ink4)}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -234,8 +248,45 @@ async function loadApps(db){
     const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/features`, {headers:H});
     const d = await r.json();
     const state = {}; (d.apps||[]).forEach(a=>state[a.code]=a.enabled);
-    cell.innerHTML = APPS.map(a=>`<span class="app-dot ${state[a.code]!==false?'on':'off'}" title="${a.label}: click to toggle" onclick="toggleApp('${esc(db)}','${a.code}',this)">${a.label}</span>`).join('');
+    cell.innerHTML = APPS.map(a=>`<span class="app-dot ${state[a.code]!==false?'on':'off'}" title="${a.label}: click to toggle" onclick="toggleApp('${esc(db)}','${a.code}',this)">${a.label}</span>`).join('')
+      + `<span class="app-mods" title="ERP modules" onclick="openTenantModules('${esc(db)}')">⚙</span>`;
   }catch(e){ cell.innerHTML='<span class="muted">—</span>'; }
+}
+
+async function openTenantModules(db){
+  let m = document.getElementById('mdl');
+  if(!m){ m=document.createElement('div'); m.id='mdl'; m.className='mdl-bg';
+    m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+    document.body.appendChild(m); }
+  m.innerHTML = `<div class="mdl"><div class="mdl-h">ERP Modules — ${esc(db)}</div><div class="mdl-b"><div class="mdl-row"><span class="spin"></span> Loading…</div></div></div>`;
+  m.classList.add('open');
+  try{
+    const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/modules`, {headers:H});
+    const d = await r.json();
+    const rows = (d.modules||[]).map(mod=>`<div class="mdl-row"><span>${esc(mod.name)}</span>
+      <span class="mod-toggle ${mod.enabled?'on':'off'}" onclick="toggleTenantModule('${esc(db)}','${mod.key}',this)">${mod.enabled?'On':'Off'}</span></div>`).join('');
+    m.innerHTML = `<div class="mdl"><div class="mdl-h">ERP Modules — ${esc(db)}</div>
+      <div class="mdl-b">${rows||'<div class="mdl-row">No modules</div>'}</div>
+      <div class="mdl-f"><button class="btn btn-ghost" onclick="document.getElementById('mdl').classList.remove('open')">Close</button></div></div>`;
+  }catch(e){
+    m.innerHTML = `<div class="mdl"><div class="mdl-h">ERP Modules</div><div class="mdl-b"><div class="mdl-row">Couldn't load.</div></div>
+      <div class="mdl-f"><button class="btn btn-ghost" onclick="document.getElementById('mdl').classList.remove('open')">Close</button></div></div>`;
+  }
+}
+
+async function toggleTenantModule(db, key, el){
+  const next = !el.classList.contains('on');
+  el.classList.add('pending');
+  try{
+    const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/modules`, {
+      method:'PUT', headers:{...H,'Content-Type':'application/json'},
+      body: JSON.stringify({key, enabled: next})
+    });
+    if(!r.ok) throw new Error('failed');
+    el.classList.toggle('on', next); el.classList.toggle('off', !next); el.textContent = next?'On':'Off';
+    toast(`Module ${next?'enabled':'disabled'} for ${db}`);
+  }catch(e){ toast('Could not update module.'); }
+  finally{ el.classList.remove('pending'); }
 }
 
 async function toggleApp(db, code, el){
