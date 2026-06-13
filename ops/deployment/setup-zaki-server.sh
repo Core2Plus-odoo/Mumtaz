@@ -43,14 +43,20 @@ cp -r apps/zaki-server/. "$DEST/"
 log "Ensuring Python venv support..."
 apt-get install -y python3-venv python3-pip 2>/dev/null || true
 
-if [ ! -d "$DEST/venv" ]; then
-  log "Creating Python venv..."
+# Recreate the venv if it is missing OR broken (e.g. no interpreter/pip).
+if [ ! -x "$DEST/venv/bin/python" ]; then
+  log "Creating Python venv (missing or broken)..."
+  rm -rf "$DEST/venv"
   python3 -m venv "$DEST/venv"
 fi
 
 log "Installing Python dependencies..."
-"$DEST/venv/bin/pip" install -q --upgrade pip
-"$DEST/venv/bin/pip" install -q -r "$DEST/requirements.txt" \
+# Use `python -m pip` (works even when the pip console-script is missing) and
+# bootstrap pip via ensurepip in case the venv was created without it.
+"$DEST/venv/bin/python" -m ensurepip --upgrade 2>/dev/null || true
+"$DEST/venv/bin/python" -m pip install -q --upgrade pip \
+  || die "pip bootstrap failed — venv may be broken at $DEST/venv"
+"$DEST/venv/bin/python" -m pip install -q -r "$DEST/requirements.txt" \
   || die "pip install failed — check requirements.txt"
 
 # ── Create .env (only if it doesn't exist) ───────────────────────────

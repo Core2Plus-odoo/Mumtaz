@@ -20,8 +20,11 @@ echo ""
 # ── 1. Pull latest code ───────────────────────────────────
 echo "[1/6] Pulling latest code from git..."
 cd $REPO
-git pull origin main
-echo "      ✓ Code up to date"
+# Deploy box mirrors origin/main exactly — avoids "divergent branches" errors
+# from any local commits/state on the server clone.
+git fetch origin main
+git reset --hard origin/main
+echo "      ✓ Code synced to origin/main"
 
 # ── 2. Deploy static sites ────────────────────────────────
 echo "[2/6] Deploying static files..."
