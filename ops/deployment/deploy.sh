@@ -20,7 +20,7 @@ echo ""
 # ── 1. Pull latest code ───────────────────────────────────
 echo "[1/6] Pulling latest code from git..."
 cd $REPO
-git pull origin claude/odoo-architecture-review-ujm0W
+git pull origin main
 echo "      ✓ Code up to date"
 
 # ── 2. Deploy static sites ────────────────────────────────
