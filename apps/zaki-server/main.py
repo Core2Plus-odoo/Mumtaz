@@ -1032,6 +1032,75 @@ def public_marketplace_listings():
     return {"listings": out, "cached": False}
 
 
+@app.get("/api/v1/tenant/invoices")
+async def tenant_invoices(auth: dict = Depends(require_auth)):
+    """
+    The tenant's OWN customer invoices from their Odoo (account.move,
+    out_invoice): a summary (total invoiced / paid / outstanding / count) plus
+    the most recent invoices. Tenant-scoped; fails soft if the ERP is
+    unprovisioned or unreachable so the console always renders.
+    """
+    tenant_db, _ = _user_tenant_and_products(auth["email"])
+    if not tenant_db:
+        return {"provisioned": False, "reachable": False, "currency": "AED",
+                "summary": {"total": 0, "paid": 0, "due": 0, "count": 0}, "invoices": []}
+    try:
+        uid = odoo_get_admin_uid(db=tenant_db)
+        if not uid:
+            return {"provisioned": True, "reachable": False, "currency": "AED",
+                    "summary": {"total": 0, "paid": 0, "due": 0, "count": 0}, "invoices": []}
+        obj  = _odoo_object()
+        rows = obj.execute_kw(
+            tenant_db, uid, ODOO_PASS, "account.move", "search_read",
+            [[["move_type", "=", "out_invoice"]]],
+            {"fields": ["name", "invoice_date", "amount_total", "amount_residual",
+                        "state", "payment_state", "partner_id", "currency_id"],
+             "limit": 50, "order": "invoice_date desc, id desc"},
+        )
+        grp = obj.execute_kw(
+            tenant_db, uid, ODOO_PASS, "account.move", "read_group",
+            [[["move_type", "=", "out_invoice"], ["state", "=", "posted"]]],
+            ["amount_total:sum", "amount_residual:sum"], [],
+        )
+        currency = "AED"
+        try:
+            comp = obj.execute_kw(tenant_db, uid, ODOO_PASS, "res.company", "search_read",
+                                  [[]], {"fields": ["currency_id"], "limit": 1})
+            if comp and comp[0].get("currency_id"):
+                currency = comp[0]["currency_id"][1]
+        except Exception:
+            pass
+    except Exception as e:
+        _record_odoo_error("tenant_invoices", e)
+        return {"provisioned": True, "reachable": False, "currency": "AED",
+                "summary": {"total": 0, "paid": 0, "due": 0, "count": 0}, "invoices": []}
+
+    def _m2o(v):
+        return v[1] if isinstance(v, (list, tuple)) and len(v) == 2 else None
+
+    total = (grp[0].get("amount_total")    if grp else 0) or 0
+    due   = (grp[0].get("amount_residual") if grp else 0) or 0
+    count = (grp[0].get("__count")         if grp else 0) or 0
+
+    invoices = [{
+        "number":        r.get("name") or "Draft",
+        "partner":       _m2o(r.get("partner_id")) or "—",
+        "date":          r.get("invoice_date") or "",
+        "total":         r.get("amount_total") or 0,
+        "due":           r.get("amount_residual") or 0,
+        "currency":      _m2o(r.get("currency_id")) or currency,
+        "state":         r.get("state") or "draft",
+        "payment_state": r.get("payment_state") or "not_paid",
+    } for r in rows]
+
+    return {
+        "provisioned": True, "reachable": True, "currency": currency,
+        "summary": {"total": round(total, 2), "paid": round(total - due, 2),
+                    "due": round(due, 2), "count": count},
+        "invoices": invoices,
+    }
+
+
 # ── Tenant app enable/disable (control-plane feature toggles) ─────────
 # Maps the portal's app cards to mumtaz.feature codes. Enabling an app
 # writes a force_on tenant override; disabling writes force_off. This is

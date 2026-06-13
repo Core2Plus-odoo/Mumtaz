@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoicing — Mumtaz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF8F4; --paper2:#F2EDE6; --surface:#FFFFFF;
+    --ink:#1C1917; --ink2:#44403C; --ink3:#78716C; --ink4:#A8A29E;
+    --gold:#B8862A; --gold2:#D4A84C; --gold-bg:#FDF6E4; --gold-border:#E8CC88;
+    --teal:#0B7A64; --teal-bg:#E6F7F3; --coral:#C0402A; --coral-bg:#FCECEA;
+    --border:#E7E0D6; --r:12px; --r-sm:8px; --r-full:9999px;
+    --shadow:0 1px 3px rgba(28,25,23,.06),0 4px 16px rgba(28,25,23,.04);
+    --font:'Inter',system-ui,-apple-system,sans-serif; --mono:'DM Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .top{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:30}
+  .top-in{max-width:1180px;margin:0 auto;padding:0 28px;height:62px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600}
+  .brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.15rem}
+  .top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .btn{font-family:var(--font);cursor:pointer;border:none;font-size:.82rem;font-weight:600;padding:9px 16px;border-radius:var(--r-sm);transition:.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn-ghost{background:transparent;color:var(--ink3);border:1px solid var(--border)}
+  .btn-ghost:hover{color:var(--ink);border-color:var(--ink3)}
+  .btn-gold{background:var(--gold);color:#fff}
+  .btn-gold:hover{background:var(--gold2)}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px}
+  h1{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+  .sub{font-size:.88rem;color:var(--ink3);margin-bottom:24px}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:24px 0 28px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+  .kpi-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink4);margin-bottom:8px}
+  .kpi-val{font-size:1.7rem;font-weight:800;line-height:1}
+  .kpi-val.gold{color:var(--gold)} .kpi-val.teal{color:var(--teal)} .kpi-val.coral{color:var(--coral)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+  .card-title{font-size:1rem;font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:.84rem}
+  th{text-align:left;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink4);padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+  th:nth-child(n+3),td:nth-child(n+3){text-align:right}
+  td{padding:13px 16px;border-bottom:1px solid var(--border);color:var(--ink2)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--paper)}
+  .mono{font-family:var(--mono)}
+  .num{font-weight:600;color:var(--ink)}
+  .pill{display:inline-block;font-size:.66rem;font-weight:700;padding:2px 9px;border-radius:var(--r-full);text-transform:capitalize}
+  .pill.paid{background:var(--teal-bg);color:var(--teal)}
+  .pill.due,.pill.not_paid,.pill.partial{background:var(--gold-bg);color:var(--gold)}
+  .pill.draft{background:var(--paper2);color:var(--ink4)}
+  .pill.overdue{background:var(--coral-bg);color:var(--coral)}
+  .empty{padding:48px 24px;text-align:center;color:var(--ink3)}
+  .empty h3{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .empty p{font-size:.86rem;margin-bottom:18px}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media(max-width:680px){ .t-hide{display:none} }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="top-in">
+    <a class="brand" href="/dashboard.html"><span class="brand-mark">م</span>Mumtaz</a>
+    <div class="top-right">
+      <a class="btn btn-ghost" href="/dashboard.html">← Portal</a>
+      <a class="btn btn-gold" id="erp-new" href="https://erp.mumtaz.digital/web#action=account.action_move_out_invoice_type" target="_blank">+ New Invoice</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="head-row">
+    <div>
+      <h1>Invoicing</h1>
+      <div class="sub">Your customer invoices, synced live from your ERP.</div>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis">
+    <div class="kpi"><div class="kpi-label">Loading…</div><div class="kpi-val"><span class="spin"></span></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Recent invoices</div>
+      <a class="btn btn-ghost" href="https://erp.mumtaz.digital/web#action=account.action_move_out_invoice_type" target="_blank">Open in ERP →</a>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Invoice</th><th>Customer</th>
+          <th class="t-hide">Date</th><th>Total</th>
+          <th class="t-hide">Outstanding</th><th>Status</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="6" class="empty"><span class="spin"></span> Loading invoices…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOKEN = localStorage.getItem('mumtaz_token');
+const H = { Authorization: 'Bearer ' + TOKEN };
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(n,cur){ return (cur||'AED')+' '+Number(n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function payLabel(s){ return ({paid:'Paid',not_paid:'Unpaid',partial:'Partial',in_payment:'In payment',reversed:'Reversed'}[s])||s; }
+
+if(!TOKEN){ location.href='/'; }
+
+(async function load(){
+  try{
+    const r = await fetch('/api/v1/tenant/invoices', {headers:H});
+    if(r.status===401){ localStorage.removeItem('mumtaz_token'); location.href='/'; return; }
+    const d = await r.json();
+    renderKpis(d);
+    renderRows(d);
+  }catch(e){
+    document.getElementById('rows').innerHTML = '<tr><td colspan="6" class="empty">Could not load invoices.</td></tr>';
+  }
+})();
+
+function renderKpis(d){
+  const s = d.summary||{}, cur = d.currency||'AED';
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Total invoiced</div><div class="kpi-val gold">${money(s.total,cur)}</div></div>
+    <div class="kpi"><div class="kpi-label">Collected</div><div class="kpi-val teal">${money(s.paid,cur)}</div></div>
+    <div class="kpi"><div class="kpi-label">Outstanding</div><div class="kpi-val ${s.due>0?'coral':''}">${money(s.due,cur)}</div></div>
+    <div class="kpi"><div class="kpi-label">Posted invoices</div><div class="kpi-val">${s.count||0}</div></div>`;
+}
+
+function renderRows(d){
+  const tb = document.getElementById('rows');
+  if(!d.provisioned){
+    tb.innerHTML = `<tr><td colspan="6"><div class="empty"><h3>ERP not set up yet</h3><p>Once your ERP workspace is provisioned, your invoices appear here automatically.</p><a class="btn btn-gold" href="/dashboard.html">Go to portal</a></div></td></tr>`; return;
+  }
+  if(!d.reachable){
+    tb.innerHTML = `<tr><td colspan="6"><div class="empty"><h3>ERP is starting up</h3><p>We couldn't reach your ERP just now. Try again shortly, or open it directly.</p><a class="btn btn-gold" href="https://erp.mumtaz.digital" target="_blank">Open ERP →</a></div></td></tr>`; return;
+  }
+  const inv = d.invoices||[];
+  if(!inv.length){
+    tb.innerHTML = `<tr><td colspan="6"><div class="empty"><h3>No invoices yet</h3><p>Create your first customer invoice in the ERP — it'll show up here.</p><a class="btn btn-gold" href="https://erp.mumtaz.digital/web#action=account.action_move_out_invoice_type" target="_blank">+ New Invoice</a></div></td></tr>`; return;
+  }
+  tb.innerHTML = inv.map(i=>{
+    const pay = i.state==='draft' ? 'draft' : (i.payment_state||'not_paid');
+    const label = i.state==='draft' ? 'Draft' : payLabel(i.payment_state);
+    return `<tr>
+      <td class="num mono">${esc(i.number)}</td>
+      <td>${esc(i.partner)}</td>
+      <td class="t-hide mono">${esc(i.date||'—')}</td>
+      <td class="num mono">${money(i.total,i.currency)}</td>
+      <td class="t-hide mono">${i.due>0?money(i.due,i.currency):'—'}</td>
+      <td><span class="pill ${esc(pay)}">${esc(label)}</span></td>
+    </tr>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
