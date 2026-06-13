@@ -53,6 +53,10 @@ async def _startup():
 # ── helpers ──────────────────────────────────────────────────────────
 def make_jwt(payload: dict) -> str:
     p = dict(payload); p["exp"] = int(time.time()) + JWT_EXP
+    # python-jose enforces RFC 7519: the "sub" claim MUST be a string. Our user
+    # ids are ints, so stringify here and convert back in current_user().
+    if "sub" in p and p["sub"] is not None:
+        p["sub"] = str(p["sub"])
     return jwt.encode(p, JWT_SECRET, algorithm=ALGO)
 
 def hash_pw(pw: str) -> str:
@@ -72,9 +76,17 @@ async def current_user(authorization: str = Header(None)) -> dict:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(401, "Missing Authorization header")
     try:
-        return jwt.decode(authorization.split(" ", 1)[1], JWT_SECRET, algorithms=[ALGO])
+        data = jwt.decode(authorization.split(" ", 1)[1], JWT_SECRET, algorithms=[ALGO])
     except Exception:
         raise HTTPException(401, "Invalid or expired token")
+    # "sub" is stored as a string in the token (RFC 7519 / python-jose); the rest
+    # of the code expects the numeric user id, so coerce it back to int.
+    if data.get("sub") is not None:
+        try:
+            data["sub"] = int(data["sub"])
+        except (TypeError, ValueError):
+            pass
+    return data
 
 async def require_admin(user: dict = Depends(current_user)) -> dict:
     if not user.get("is_super_admin"):
