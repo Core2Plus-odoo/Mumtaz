@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mumtaz — Control Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF8F4;--paper2:#F2EDE6;--surface:#FFFFFF;
+    --ink:#1C1917;--ink2:#44403C;--ink3:#78716C;--ink4:#A8A29E;
+    --gold:#B8862A;--gold2:#D4A84C;--gold-bg:#FDF6E4;--gold-border:#E8CC88;
+    --green:#0B7A64;--green-bg:#E6F7F3;--red:#C0402A;--red-bg:#FCECEA;--amber:#A86210;--amber-bg:#FAF1E0;
+    --blue:#1E4FA0;--blue-bg:#EDF2FC;--border:#E7E0D6;
+    --r:12px;--r-sm:8px;--r-full:9999px;--font:'Inter',system-ui,sans-serif;--mono:'DM Mono',monospace;
+    --shadow:0 1px 3px rgba(28,25,23,.06),0 6px 22px rgba(28,25,23,.05);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:14.5px}
+  button{font-family:var(--font);cursor:pointer;border:none}
+  input,select,textarea{font-family:var(--font);outline:none}
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:var(--mono)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .btn{padding:9px 16px;border-radius:var(--r-sm);font-weight:600;font-size:.85rem;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn-gold{background:var(--gold);color:#fff}.btn-gold:hover{background:var(--gold2)}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--ink2)}.btn-ghost:hover{border-color:var(--ink3);color:var(--ink)}
+  .btn-sm{padding:6px 11px;font-size:.78rem}
+
+  /* Login */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .lcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:36px;max-width:400px;width:100%}
+  .llogo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+  .mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700}
+  .fld{margin-bottom:14px}.fld label{display:block;font-size:.72rem;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:.9rem;background:var(--surface)}
+  .err{font-size:.82rem;color:var(--red);margin-top:8px}
+
+  /* Shell */
+  #app{display:none}
+  .shell{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+  aside{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 12px}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 14px}
+  .brand .nm{font-weight:700}.brand .sb{font-size:.66rem;color:var(--gold);font-weight:600}
+  .ucard{display:flex;align-items:center;gap:9px;background:var(--paper2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px;margin-bottom:14px}
+  .av{width:30px;height:30px;border-radius:8px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700}
+  .ucard .un{font-size:.82rem;font-weight:600;line-height:1.2}.ucard .ur{font-size:.66rem;color:var(--gold)}
+  .nsec{font-size:.64rem;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;padding:14px 10px 5px}
+  .nv{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r-sm);color:var(--ink2);font-size:.86rem;font-weight:500;cursor:pointer;border-left:2px solid transparent}
+  .nv:hover{background:var(--paper2)}.nv.active{background:var(--gold-bg);color:var(--gold);border-left-color:var(--gold)}
+  .foot{margin-top:auto;font-size:.7rem;color:var(--green);display:flex;align-items:center;gap:6px;padding:10px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pl 2s infinite}@keyframes pl{0%,100%{opacity:1}50%{opacity:.3}}
+  main{min-width:0}
+  .top{height:56px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:20}
+  .top .ttl{font-weight:700;font-size:1.05rem}
+  .top .rt{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:.82rem;color:var(--ink3)}
+  .content{padding:24px;max-width:1180px}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+  .kpi .l{font-size:.7rem;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em}
+  .kpi .v{font-size:1.7rem;font-weight:800;margin-top:6px}.kpi .s{font-size:.74rem;color:var(--ink3);margin-top:3px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-top:18px;overflow:hidden}
+  .card-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700}
+  .card-b{padding:8px 20px 16px}
+  table{width:100%;border-collapse:collapse;font-size:.84rem}
+  th{text-align:left;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink4);padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--ink2)}
+  tr:last-child td{border-bottom:none}tbody tr:hover td{background:var(--paper)}
+  .pill{display:inline-block;font-size:.66rem;font-weight:700;padding:2px 9px;border-radius:var(--r-full);text-transform:capitalize}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+  .toolbar input,.toolbar select{padding:8px 11px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:.84rem;background:var(--surface)}
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-top:18px}
+  .modcard{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border)}
+  .modcard:last-child{border-bottom:none}
+  .mic{width:36px;height:36px;border-radius:9px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+  .price-inp{width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:.82rem}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:140px;padding:14px 0}
+  .bars .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+  .bars .b i{width:60%;background:linear-gradient(180deg,var(--gold2),var(--gold));border-radius:4px 4px 0 0;min-height:3px}
+  .bars .b span{font-size:.66rem;color:var(--ink4)}
+
+  /* slide-over */
+  .ov{display:none;position:fixed;inset:0;background:rgba(28,25,23,.45);z-index:40}
+  .ov.open{display:block}
+  .so{position:fixed;top:0;right:-560px;width:540px;max-width:94vw;height:100vh;background:var(--surface);box-shadow:-10px 0 40px rgba(0,0,0,.18);z-index:50;transition:right .25s;overflow-y:auto}
+  .so.open{right:0}
+  .so-h{padding:20px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center}
+  .so-b{padding:18px 20px}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);padding:0 20px}
+  .tab{padding:11px 12px;font-size:.82rem;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;font-size:.85rem;padding:11px 20px;border-radius:var(--r-full);box-shadow:0 8px 30px rgba(0,0,0,.25);opacity:0;transition:.3s;z-index:99;pointer-events:none}
+  #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+  .empty{padding:40px;text-align:center;color:var(--ink4);font-size:.88rem}
+  @media(max-width:860px){.shell{grid-template-columns:1fr}aside{display:none}.kpis{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="lcard" onsubmit="return doLogin(event)">
+    <div class="llogo"><div class="mark">م</div><div><div class="nm" style="font-weight:700">Mumtaz Digital</div><div style="font-size:.7rem;color:var(--ink3)">Control Panel</div></div></div>
+    <div class="fld"><label>Email</label><input id="li-email" type="email" placeholder="you@company.com" required></div>
+    <div class="fld"><label>Password</label><input id="li-pw" type="password" placeholder="••••••••" required></div>
+    <button class="btn btn-gold" style="width:100%;justify-content:center" type="submit" id="li-btn">Sign In →</button>
+    <div class="err" id="li-err" hidden></div>
+  </form>
+</div>
+
+<div id="app"><div class="shell">
+  <aside>
+    <div class="brand"><div class="mark">م</div><div><div class="nm">Mumtaz</div><div class="sb">Control Panel</div></div></div>
+    <div class="ucard"><div class="av" id="u-av">U</div><div><div class="un" id="u-name">User</div><div class="ur" id="u-role">—</div></div></div>
+    <nav id="nav" style="flex:1"></nav>
+    <div class="foot"><span class="dot"></span> Platform Online</div>
+  </aside>
+  <main>
+    <div class="top"><div class="ttl" id="ptitle">Dashboard</div>
+      <div class="rt"><span id="clock"></span><button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button></div></div>
+    <div class="content" id="content"></div>
+  </main>
+</div></div>
+
+<div class="ov" id="ov" onclick="closeSO()"></div>
+<div class="so" id="so"></div>
+<div id="toast"></div>
+
+<script>
+const API='/api/v1';
+let TOKEN=localStorage.getItem('mumtaz_token');
+let USER=JSON.parse(localStorage.getItem('mumtaz_user')||'null');
+const isAdmin=()=>USER&&USER.is_super_admin===true;
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const usd=v=>'$'+Number(v||0).toLocaleString('en-US',{maximumFractionDigits:0});
+const fdate=d=>d?new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(window._t);window._t=setTimeout(()=>t.classList.remove('show'),2800);}
+function badge(s){const m={active:'green',trial:'amber',suspended:'red',provisioning:'blue',cancelled:'',business:'blue',org:'gold',org_sme:'',paid:'green',pending:'amber',starter:'',growth:'gold',enterprise:'blue'};
+  const col=m[(s||'').toLowerCase()];const c={green:'var(--green-bg);color:var(--green)',amber:'var(--amber-bg);color:var(--amber)',red:'var(--red-bg);color:var(--red)',blue:'var(--blue-bg);color:var(--blue)',gold:'var(--gold-bg);color:var(--gold)'}[col]||'var(--paper2);color:var(--ink3)';
+  return `<span class="pill" style="background:${c}">${esc(s)}</span>`;}
+
+async function api(path,opts={}){
+  const r=await fetch(API+path,{...opts,headers:{'Content-Type':'application/json','Authorization':TOKEN?'Bearer '+TOKEN:'',...(opts.headers||{})},body:opts.body?JSON.stringify(opts.body):undefined});
+  if(r.status===401){logout();throw 0;}
+  if(!r.ok){let e={};try{e=await r.json()}catch(_){} throw new Error(e.detail||('HTTP '+r.status));}
+  return r.json();
+}
+const gET=p=>api(p), pOST=(p,b)=>api(p,{method:'POST',body:b}), pUT=(p,b)=>api(p,{method:'PUT',body:b}), dEL=p=>api(p,{method:'DELETE'});
+
+/* auth */
+async function doLogin(e){
+  e.preventDefault();const b=document.getElementById('li-btn');const er=document.getElementById('li-err');er.hidden=true;b.disabled=true;b.textContent='Signing in…';
+  try{const d=await pOST('/auth/login',{email:document.getElementById('li-email').value.trim(),password:document.getElementById('li-pw').value});
+    TOKEN=d.access_token;USER=d.user;localStorage.setItem('mumtaz_token',TOKEN);localStorage.setItem('mumtaz_user',JSON.stringify(USER));init();
+  }catch(err){er.textContent=err.message||'Sign in failed';er.hidden=false;}
+  finally{b.disabled=false;b.textContent='Sign In →';}
+  return false;
+}
+function logout(){pOST('/auth/logout',{}).catch(()=>{});localStorage.clear();TOKEN=null;USER=null;document.getElementById('app').style.display='none';document.getElementById('login').style.display='flex';}
+
+/* nav */
+const NAV_ADMIN=[['OVERVIEW',[['dashboard','📊','Dashboard']]],
+ ['TENANTS',[['tenants','🏢','All Tenants'],['add','➕','Add Tenant'],['orgs','🏦','Organisations']]],
+ ['PLATFORM',[['catalogue','📦','Module Catalogue'],['billing','💳','Billing & Revenue']]],
+ ['INSIGHT',[['analytics','📈','Analytics'],['activity','📋','Activity Log']]],
+ ['CONFIG',[['settings','⚙️','Settings']]]];
+const NAV_TENANT=[['MY ACCOUNT',[['overview','🏠','Overview'],['mymods','📦','My Modules'],['mybill','💳','My Billing'],['myteam','👥','My Team']]],
+ ['INTEGRATIONS',[['erp','🔗','Open ERP'],['zaki','ذ','ZAKI AI CFO']]],
+ ['SETTINGS',[['acct','⚙️','Account']]]];
+const TITLES={dashboard:'Dashboard',tenants:'All Tenants',add:'Add Tenant',orgs:'Organisations',catalogue:'Module Catalogue',billing:'Billing & Revenue',analytics:'Analytics',activity:'Activity Log',settings:'Settings',overview:'Overview',mymods:'My Modules',mybill:'My Billing',myteam:'My Team',erp:'Open ERP',zaki:'ZAKI AI CFO',acct:'Account Settings',whitelabel:'White-Label',mynet:'My Network'};
+
+function buildNav(){
+  let nav=isAdmin()?NAV_ADMIN.slice():NAV_TENANT.slice();
+  if(!isAdmin() && USER.tenant_type==='org'){ nav=nav.concat([['ORGANISATION',[['whitelabel','🎨','White-Label'],['mynet','🌐','My Network']]]]); }
+  document.getElementById('nav').innerHTML=nav.map(([sec,items])=>`<div class="nsec">${sec}</div>`+items.map(([k,i,l])=>`<div class="nv" data-k="${k}" onclick="show('${k}')"><span>${i}</span>${l}</div>`).join('')).join('');
+}
+function show(k){
+  document.querySelectorAll('.nv').forEach(n=>n.classList.toggle('active',n.dataset.k===k));
+  document.getElementById('ptitle').textContent=TITLES[k]||k;
+  const F={dashboard:pDash,tenants:pTenants,add:pAdd,orgs:()=>pTenants('org'),catalogue:pCat,billing:pBill,analytics:pAnalytics,activity:pActivity,settings:pSettings,
+    overview:pOverview,mymods:pMyMods,mybill:pMyBill,myteam:pMyTeam,erp:pErp,zaki:pZaki,acct:pAcct,whitelabel:pWL,mynet:pNet};
+  (F[k]||(()=>setC('<div class="empty">Coming soon</div>')))();
+}
+function setC(h){document.getElementById('content').innerHTML=h;}
+
+/* ===== SUPER ADMIN ===== */
+async function pDash(){
+  setC('<div class="kpis"><div class="kpi"><div class="l">Loading…</div><div class="v"><span class="spin"></span></div></div></div>');
+  try{const o=await gET('/admin/overview');let g={growth:[]};try{g=await gET('/admin/analytics/growth')}catch(_){}
+    const paying=Object.entries(o.plans||{}).filter(([k])=>k!=='trial'&&k!=='starter').reduce((a,[,v])=>a+v,0);
+    const mx=Math.max(1,...g.growth.map(x=>x.new));
+    setC(`<div class="kpis">
+      <div class="kpi"><div class="l">MRR (USD)</div><div class="v" style="color:var(--gold)">${usd(o.mrr_usd)}</div><div class="s">${usd(o.arr_usd)} ARR</div></div>
+      <div class="kpi"><div class="l">Tenants</div><div class="v">${o.tenants.total}</div><div class="s">${o.tenants.active} active · ${o.tenants.trial} trial</div></div>
+      <div class="kpi"><div class="l">Users</div><div class="v">${o.users}</div><div class="s">${o.tenants.business} biz · ${o.tenants.org} org</div></div>
+      <div class="kpi"><div class="l">Active Modules</div><div class="v" style="color:var(--green)">${o.active_modules}</div></div></div>
+      <div class="grid2">
+        <div class="card"><div class="card-h">Tenant Growth</div><div class="card-b">
+          <div class="bars">${(g.growth.slice(-6)).map(x=>`<div class="b"><i style="height:${Math.round(x.new/mx*110)}px"></i><span>${x.month.slice(5)}</span></div>`).join('')||'<div class="empty">No data yet</div>'}</div></div></div>
+        <div class="card"><div class="card-h">Plans</div><div class="card-b">${Object.entries(o.plans||{}).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>${badge(k)}</span><b>${v}</b></div>`).join('')||'<div class="empty">—</div>'}</div></div>
+      </div>
+      <div class="card"><div class="card-h">Recent Tenants <button class="btn btn-ghost btn-sm" onclick="show('tenants')">View all</button></div>
+        <table><thead><tr><th>Name</th><th>Type</th><th>Plan</th><th>Status</th><th>MRR</th></tr></thead><tbody id="rt"></tbody></table></div>`);
+    const t=await gET('/admin/tenants?limit=5');
+    document.getElementById('rt').innerHTML=t.items.map(x=>`<tr style="cursor:pointer" onclick="openTenant(${x.id})"><td style="font-weight:600;color:var(--ink)">${esc(x.name)}</td><td>${badge(x.type)}</td><td>${badge(x.plan)}</td><td>${badge(x.status)}</td><td class="mono">${usd(x.mrr)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No tenants</td></tr>';
+  }catch(e){setC('<div class="empty">Could not load dashboard.</div>');}
+}
+let _tq={search:'',type:'',status:''};
+async function pTenants(forceType){
+  if(forceType)_tq.type=forceType;
+  setC(`<div class="toolbar">
+    <input id="tq" placeholder="Search…" value="${esc(_tq.search)}" oninput="_tq.search=this.value">
+    <select id="tt" onchange="_tq.type=this.value;loadTenants()"><option value="">All types</option><option value="business">Business</option><option value="org">Org</option><option value="org_sme">Org-SME</option></select>
+    <select id="ts" onchange="_tq.status=this.value;loadTenants()"><option value="">All status</option><option>active</option><option>trial</option><option>suspended</option><option>provisioning</option></select>
+    <button class="btn btn-ghost btn-sm" onclick="loadTenants()">Search</button>
+    <button class="btn btn-gold btn-sm" style="margin-left:auto" onclick="show('add')">+ Add Tenant</button></div>
+    <div class="card"><table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Plan</th><th>Status</th><th>Modules</th><th>MRR</th><th></th></tr></thead><tbody id="tb"><tr><td colspan="8" class="empty"><span class="spin"></span></td></tr></tbody></table></div>`);
+  document.getElementById('tt').value=_tq.type;document.getElementById('ts').value=_tq.status;
+  document.getElementById('tq').addEventListener('keydown',e=>{if(e.key==='Enter')loadTenants();});
+  loadTenants();
+}
+async function loadTenants(){
+  const q=`?search=${encodeURIComponent(_tq.search)}&type=${_tq.type}&status=${_tq.status}&limit=50`;
+  try{const d=await gET('/admin/tenants'+q);
+    document.getElementById('tb').innerHTML=d.items.map(x=>`<tr>
+      <td style="font-weight:600;color:var(--ink);cursor:pointer" onclick="openTenant(${x.id})">${esc(x.name)}</td>
+      <td>${badge(x.type)}</td><td>${esc(x.country)}</td><td>${badge(x.plan)}</td><td>${badge(x.status)}</td>
+      <td class="mono">${x.mod_count}</td><td class="mono">${usd(x.mrr)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="openTenant(${x.id})">View</button></td></tr>`).join('')||'<tr><td colspan="8" class="empty">No tenants</td></tr>';
+  }catch(e){document.getElementById('tb').innerHTML='<tr><td colspan="8" class="empty">Error</td></tr>';}
+}
+async function openTenant(id){
+  document.getElementById('ov').classList.add('open');document.getElementById('so').classList.add('open');
+  document.getElementById('so').innerHTML='<div class="so-b"><span class="spin"></span> Loading…</div>';
+  try{const d=await gET('/admin/tenants/'+id);const t=d.tenant;
+    document.getElementById('so').innerHTML=`<div class="so-h"><div class="av" style="width:42px;height:42px">${esc((t.name||'?')[0])}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:1.1rem">${esc(t.name)}</div><div style="margin-top:4px">${badge(t.type)} ${badge(t.status)} ${badge(t.plan)}</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="closeSO()">×</button></div>
+      <div style="padding:12px 20px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        ${t.status==='suspended'?`<button class="btn btn-gold btn-sm" onclick="tAct(${id},'activate')">Activate</button>`:`<button class="btn btn-ghost btn-sm" onclick="tAct(${id},'suspend')">Suspend</button>`}
+        <button class="btn btn-ghost btn-sm" onclick="provision(${id})">Provision Odoo</button>
+        <button class="btn btn-ghost btn-sm" onclick="impersonate(${id})">Impersonate</button>
+        <button class="btn btn-ghost btn-sm" onclick="odooLink(${id})">Open ERP ↗</button></div>
+      <div class="tabs"><div class="tab active" onclick="soTab(this,'ov')">Overview</div><div class="tab" onclick="soTab(this,'mods')">Modules</div><div class="tab" onclick="soTab(this,'usr')">Users</div><div class="tab" onclick="soTab(this,'act')">Activity</div></div>
+      <div class="so-b" id="sob"></div>`;
+    window._sod=d;soTab(document.querySelector('.tab.active'),'ov');
+  }catch(e){document.getElementById('so').innerHTML='<div class="so-b">Error loading tenant.</div>';}
+}
+function soTab(el,k){document.querySelectorAll('.so .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');const d=window._sod,t=d.tenant,b=document.getElementById('sob');
+  if(k==='ov')b.innerHTML=`<table><tbody>
+    ${[['Slug',t.slug],['Country',t.country],['Currency',t.currency],['Industry',t.industry],['Odoo DB',t.odoo_db||'—'],['MRR',usd(d.mrr_usd)],['Created',fdate(t.created_at)]].map(r=>`<tr><td style="color:var(--ink4)">${r[0]}</td><td style="font-weight:600;color:var(--ink)">${esc(r[1])}</td></tr>`).join('')}</tbody></table>`;
+  if(k==='mods')b.innerHTML=d.modules.map(m=>`<div class="modcard"><div class="mic">${esc(m.icon)}</div><div style="flex:1"><div style="font-weight:600">${esc(m.name)}</div><div style="font-size:.74rem;color:var(--ink3)">${m.is_free?'Free':usd(m.price_usd)+'/mo'} · ${esc(m.status)}</div></div>${m.is_free?'':`<button class="btn btn-ghost btn-sm" onclick="rmMod(${t.id},'${m.key}')">Remove</button>`}</div>`).join('')||'<div class="empty">No modules</div>';
+  if(k==='usr')b.innerHTML=`<table><tbody>${d.users.map(u=>`<tr><td style="font-weight:600;color:var(--ink)">${esc(u.name)}</td><td>${esc(u.email)}</td><td>${badge(u.role)}</td></tr>`).join('')||'<tr><td class="empty">No users</td></tr>'}</tbody></table>`;
+  if(k==='act')b.innerHTML=`<table><tbody>${d.activity.map(a=>`<tr><td>${esc(a.action)}</td><td style="color:var(--ink4)">${fdate(a.created_at)}</td></tr>`).join('')||'<tr><td class="empty">No activity</td></tr>'}</tbody></table>`;
+}
+function closeSO(){document.getElementById('ov').classList.remove('open');document.getElementById('so').classList.remove('open');}
+async function tAct(id,a){try{await pOST(`/admin/tenants/${id}/${a}`,{});toast('Tenant '+a+'d');openTenant(id);loadTenants&&loadTenants();}catch(e){toast(e.message);}}
+async function provision(id){try{await pOST(`/admin/tenants/${id}/provision-odoo`,{});toast('Odoo provisioning started');}catch(e){toast(e.message);}}
+async function odooLink(id){try{const d=await gET(`/admin/tenants/${id}/odoo-link`);window.open(d.url,'_blank');}catch(e){toast(e.message);}}
+async function rmMod(id,key){try{await dEL(`/admin/tenants/${id}/modules/${key}`);toast('Module removed');openTenant(id);}catch(e){toast(e.message);}}
+async function impersonate(id){try{const d=await pOST(`/admin/tenants/${id}/impersonate`,{});TOKEN=d.access_token;USER=d.user;localStorage.setItem('mumtaz_token',TOKEN);localStorage.setItem('mumtaz_user',JSON.stringify(USER));closeSO();init();toast('Now viewing as '+(d.user.tenant_name||'tenant'));}catch(e){toast(e.message);}}
+
+function pAdd(){
+  setC(`<div class="card" style="max-width:620px"><div class="card-h">New Tenant</div><div class="card-b">
+    <div class="fld"><label>Company name</label><input id="a-name"></div>
+    <div class="fld"><label>Type</label><select id="a-type"><option value="business">Business</option><option value="org">Organisation (white-label)</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fld"><label>Country</label><input id="a-country" value="UAE"></div><div class="fld"><label>Plan</label><select id="a-plan"><option>starter</option><option>growth</option><option>enterprise</option></select></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fld"><label>Owner name</label><input id="a-on"></div><div class="fld"><label>Owner email</label><input id="a-oe" type="email"></div></div>
+    <button class="btn btn-gold" onclick="createTenant()">Create Tenant</button> <span id="a-msg" style="font-size:.84rem;color:var(--green)"></span>
+  </div></div>`);
+}
+async function createTenant(){
+  try{const d=await pOST('/admin/tenants',{name:document.getElementById('a-name').value.trim(),type:document.getElementById('a-type').value,country:document.getElementById('a-country').value,plan:document.getElementById('a-plan').value,owner_name:document.getElementById('a-on').value,owner_email:document.getElementById('a-oe').value});
+    document.getElementById('a-msg').textContent='Created ✓';toast('Tenant created');setTimeout(()=>{show('tenants');openTenant(d.tenant.id);},600);
+  }catch(e){toast(e.message);}
+}
+async function pCat(){
+  setC('<div class="card"><div class="card-b"><span class="spin"></span> Loading…</div></div>');
+  try{const d=await gET('/admin/modules');
+    setC(`<div class="card"><div class="card-h">Module Catalogue <span style="font-size:.74rem;color:var(--ink3);font-weight:400">Edit a price to update it live</span></div><div class="card-b">
+    ${d.modules.map(m=>`<div class="modcard"><div class="mic">${esc(m.icon)}</div>
+      <div style="flex:1"><div style="font-weight:600">${esc(m.name)} ${m.is_free?badge('free'):''}</div><div style="font-size:.74rem;color:var(--ink3)">${esc(m.category)} · ${m.active_tenants} tenants · ${usd(m.monthly_revenue)}/mo</div></div>
+      ${m.is_free?'<span class="mono" style="color:var(--green)">FREE</span>':`$<input class="price-inp" type="number" value="${m.price_usd}" onchange="editPrice('${m.key}',this.value)">`}</div>`).join('')}
+    </div></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function editPrice(key,v){try{await pUT('/admin/modules/'+key,{price_usd:parseFloat(v)});toast('Price updated');}catch(e){toast(e.message);}}
+async function pBill(){
+  setC('<div class="card"><div class="card-b"><span class="spin"></span> Loading…</div></div>');
+  try{const mrr=await gET('/admin/billing/mrr');const inv=await gET('/admin/billing');
+    setC(`<div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><div class="l">MRR</div><div class="v" style="color:var(--gold)">${usd(mrr.total_mrr_usd)}</div></div>
+      <div class="kpi"><div class="l">ARR</div><div class="v">${usd(mrr.arr_usd)}</div></div>
+      <div class="kpi"><div class="l">Invoices</div><div class="v">${inv.total}</div></div></div>
+      <div class="card"><div class="card-h">Invoices <button class="btn btn-gold btn-sm" onclick="runBilling()">Run Monthly Billing</button></div>
+        <table><thead><tr><th>Ref</th><th>Tenant</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+        ${inv.items.map(i=>`<tr><td class="mono">${esc(i.invoice_ref||'—')}</td><td>${esc(i.tenant_name)}</td><td class="mono">${usd(i.amount_usd)}</td><td>${badge(i.status)}</td><td>${i.status!=='paid'?`<button class="btn btn-ghost btn-sm" onclick="markPaid(${i.id})">Mark paid</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No invoices yet</td></tr>'}
+        </tbody></table></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function runBilling(){if(!confirm('Generate invoices for this month for all active tenants?'))return;try{const d=await pOST('/admin/billing/run-monthly',{});toast(`${d.invoices_created} invoices · ${usd(d.total_usd)}`);pBill();}catch(e){toast(e.message);}}
+async function markPaid(id){try{await pUT(`/admin/billing/${id}/mark-paid`,{});toast('Marked paid');pBill();}catch(e){toast(e.message);}}
+async function pAnalytics(){
+  setC('<div class="card"><div class="card-b"><span class="spin"></span></div></div>');
+  try{const g=await gET('/admin/analytics/growth');const mx=Math.max(1,...g.growth.map(x=>x.cumulative));
+    setC(`<div class="card"><div class="card-h">Cumulative Tenants</div><div class="card-b"><div class="bars">${g.growth.slice(-12).map(x=>`<div class="b"><i style="height:${Math.round(x.cumulative/mx*110)}px"></i><span>${x.month.slice(2)}</span></div>`).join('')||'<div class="empty">No data</div>'}</div></div></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function pActivity(){
+  setC('<div class="card"><div class="card-b"><span class="spin"></span></div></div>');
+  try{const d=await gET('/admin/activity');
+    setC(`<div class="card"><table><thead><tr><th>Action</th><th>Tenant</th><th>User</th><th>When</th></tr></thead><tbody>
+      ${d.items.map(a=>`<tr><td>${esc(a.action)}</td><td>${esc(a.tenant_name||'—')}</td><td>${esc(a.user_name||'—')}</td><td style="color:var(--ink4)">${fdate(a.created_at)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No activity</td></tr>'}</tbody></table></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+function pSettings(){
+  setC(`<div class="card" style="max-width:520px"><div class="card-h">Change Password</div><div class="card-b">
+    <div class="fld"><label>Current password</label><input id="s-cur" type="password"></div>
+    <div class="fld"><label>New password</label><input id="s-new" type="password"></div>
+    <button class="btn btn-gold" onclick="changePw()">Update Password</button></div></div>`);
+}
+async function changePw(){try{await pOST('/auth/change-password',{current_password:document.getElementById('s-cur').value,new_password:document.getElementById('s-new').value});toast('Password updated');document.getElementById('s-cur').value='';document.getElementById('s-new').value='';}catch(e){toast(e.message);}}
+
+/* ===== TENANT ADMIN ===== */
+async function pOverview(){
+  try{const me=await gET('/tenant/me');const m=await gET('/tenant/modules');const t=me.tenant||{};
+    setC(`<div class="kpis"><div class="kpi"><div class="l">Plan</div><div class="v" style="font-size:1.2rem">${badge(t.plan)}</div></div>
+      <div class="kpi"><div class="l">Active Modules</div><div class="v">${m.active.length}</div></div>
+      <div class="kpi"><div class="l">Monthly Cost</div><div class="v" style="color:var(--gold)">${usd(m.mrr_usd)}</div></div>
+      <div class="kpi"><div class="l">Status</div><div class="v" style="font-size:1.2rem">${badge(t.status)}</div></div></div>
+      <div class="card"><div class="card-h">Quick access</div><div class="card-b" style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-gold" onclick="openErp()">Open ERP →</button><button class="btn btn-ghost" onclick="openZaki()">Open ZAKI →</button></div></div>
+      <div class="card"><div class="card-h">Your modules</div><div class="card-b">${m.active.map(x=>`<div class="modcard"><div class="mic">${esc(x.icon)}</div><div style="flex:1;font-weight:600">${esc(x.name)}</div>${x.is_free?badge('free'):`<span class="mono">${usd(x.price_usd)}/mo</span>`}</div>`).join('')}</div></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function pMyMods(){
+  try{const m=await gET('/tenant/modules');
+    setC(`<div class="card"><div class="card-h">Active</div><div class="card-b">${m.active.map(x=>`<div class="modcard"><div class="mic">${esc(x.icon)}</div><div style="flex:1"><div style="font-weight:600">${esc(x.name)}</div><div style="font-size:.74rem;color:var(--ink3)">${x.is_free?'Free':usd(x.price_usd)+'/mo'}</div></div>${x.is_core?badge('core'):`<button class="btn btn-ghost btn-sm" onclick="deact('${x.key}')">Remove</button>`}</div>`).join('')}</div></div>
+      <div class="card"><div class="card-h">Available</div><div class="card-b">${m.available.map(x=>`<div class="modcard"><div class="mic">${esc(x.icon)}</div><div style="flex:1"><div style="font-weight:600">${esc(x.name)}</div><div style="font-size:.74rem;color:var(--ink3)">${esc(x.description||'')}</div></div><span class="mono" style="margin-right:8px">${x.is_free?'Free':usd(x.price_usd)+'/mo'}</span><button class="btn btn-gold btn-sm" onclick="act('${x.key}')">+ Activate</button></div>`).join('')||'<div class="empty">All modules active</div>'}</div></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function act(k){try{await pOST(`/tenant/modules/${k}/activate`,{});toast('Activated — installing in your ERP');pMyMods();}catch(e){toast(e.message);}}
+async function deact(k){try{await dEL(`/tenant/modules/${k}`);toast('Removed');pMyMods();}catch(e){toast(e.message);}}
+async function pMyBill(){
+  try{const d=await gET('/tenant/billing');
+    setC(`<div class="card"><div class="card-h">Invoices</div><table><thead><tr><th>Ref</th><th>Period</th><th>Amount</th><th>Status</th></tr></thead><tbody>${d.items.map(i=>`<tr><td class="mono">${esc(i.invoice_ref||'—')}</td><td>${fdate(i.period_start)}</td><td class="mono">${usd(i.amount_usd)}</td><td>${badge(i.status)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No invoices yet</td></tr>'}</tbody></table></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function pMyTeam(){
+  try{const d=await gET('/tenant/users');
+    setC(`<div class="card"><div class="card-h">Team <button class="btn btn-gold btn-sm" onclick="invite()">+ Invite</button></div>
+      <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last login</th></tr></thead><tbody>${d.users.map(u=>`<tr><td style="font-weight:600;color:var(--ink)">${esc(u.name)}</td><td>${esc(u.email)}</td><td>${badge(u.role)}</td><td style="color:var(--ink4)">${u.last_login?fdate(u.last_login):'—'}</td></tr>`).join('')}</tbody></table></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function invite(){const name=prompt('Name?');if(!name)return;const email=prompt('Email?');if(!email)return;try{const d=await pOST('/tenant/users/invite',{name,email,role:'member'});toast('Invited · temp pw: '+d.temp_password);pMyTeam();}catch(e){toast(e.message);}}
+async function openErp(){try{const d=await gET('/tenant/odoo-link');window.open(d.url,'_blank');}catch(e){toast(e.message);}}
+async function openZaki(){try{const d=await gET('/tenant/zaki-link');window.open(d.url,'_blank');}catch(e){toast(e.message);}}
+function pErp(){setC(`<div class="card" style="max-width:520px"><div class="card-h">Open ERP</div><div class="card-b"><p style="color:var(--ink3);margin-bottom:14px">Launch your isolated Odoo workspace.</p><button class="btn btn-gold" onclick="openErp()">Open My ERP →</button></div></div>`);}
+function pZaki(){setC(`<div class="card" style="max-width:520px"><div class="card-h">ZAKI AI CFO</div><div class="card-b"><p style="color:var(--ink3);margin-bottom:14px">Your AI CFO — morning briefings, health score, board packs.</p><button class="btn btn-gold" onclick="openZaki()">Open ZAKI →</button></div></div>`);}
+function pAcct(){
+  setC(`<div class="card" style="max-width:520px"><div class="card-h">Company</div><div class="card-b">
+    <div class="fld"><label>Company name</label><input id="ac-name" value="${esc(USER.tenant_name||'')}"></div>
+    <div class="fld"><label>Industry</label><input id="ac-ind"></div>
+    <button class="btn btn-gold" onclick="saveAcct()">Save</button></div></div>
+    <div class="card" style="max-width:520px"><div class="card-h">Change Password</div><div class="card-b">
+    <div class="fld"><label>Current</label><input id="ac-cur" type="password"></div><div class="fld"><label>New</label><input id="ac-new" type="password"></div>
+    <button class="btn btn-ghost" onclick="changePw2()">Update</button></div></div>`);
+}
+async function saveAcct(){try{await pUT('/tenant/settings',{name:document.getElementById('ac-name').value,industry:document.getElementById('ac-ind').value});toast('Saved');}catch(e){toast(e.message);}}
+async function changePw2(){try{await pOST('/auth/change-password',{current_password:document.getElementById('ac-cur').value,new_password:document.getElementById('ac-new').value});toast('Password updated');}catch(e){toast(e.message);}}
+function pWL(){
+  setC(`<div class="card" style="max-width:560px"><div class="card-h">White-Label Branding</div><div class="card-b">
+    <div class="fld"><label>Brand name</label><input id="wl-name"></div>
+    <div class="fld"><label>Tagline</label><input id="wl-tag"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="fld"><label>Primary color</label><input id="wl-c1" value="#B8862A"></div><div class="fld"><label>Subdomain</label><input id="wl-sd" placeholder="yourbrand"></div></div>
+    <button class="btn btn-gold" onclick="saveWL()">Save Brand</button></div></div>`);
+}
+async function saveWL(){try{await pUT('/tenant/whitelabel',{wl_name:document.getElementById('wl-name').value,wl_tagline:document.getElementById('wl-tag').value,wl_primary_color:document.getElementById('wl-c1').value,wl_subdomain:document.getElementById('wl-sd').value});toast('Brand saved');}catch(e){toast(e.message);}}
+async function pNet(){
+  try{const d=await gET('/tenant/org-network');
+    setC(`<div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="l">SMEs</div><div class="v">${d.count}</div></div>
+      <div class="kpi"><div class="l">Active</div><div class="v" style="color:var(--green)">${d.smes.filter(x=>x.status==='active').length}</div></div>
+      <div class="kpi"><div class="l">Trial</div><div class="v" style="color:var(--amber)">${d.smes.filter(x=>x.status==='trial').length}</div></div></div>
+      <div class="card"><div class="card-h">SME Network <button class="btn btn-gold btn-sm" onclick="addSme()">+ Add SME</button></div>
+      <table><thead><tr><th>Name</th><th>Status</th><th>Country</th><th>Joined</th></tr></thead><tbody>${d.smes.map(x=>`<tr><td style="font-weight:600;color:var(--ink)">${esc(x.name)}</td><td>${badge(x.status)}</td><td>${esc(x.country)}</td><td style="color:var(--ink4)">${fdate(x.created_at)}</td></tr>`).join('')||'<tr><td colspan="4" class="empty">No SMEs yet</td></tr>'}</tbody></table></div>`);
+  }catch(e){setC('<div class="empty">Error</div>');}
+}
+async function addSme(){const name=prompt('SME company name?');if(!name)return;try{await pOST('/tenant/org-sme',{name,country:'UAE'});toast('SME added');pNet();}catch(e){toast(e.message);}}
+
+/* init */
+function init(){
+  if(!TOKEN||!USER){document.getElementById('app').style.display='none';document.getElementById('login').style.display='flex';return;}
+  document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';
+  const first=(USER.name||'U').split(' ');document.getElementById('u-av').textContent=(first.map(w=>w[0]).join('').slice(0,2)).toUpperCase();
+  document.getElementById('u-name').textContent=USER.name||'User';
+  document.getElementById('u-role').textContent=isAdmin()?'★ Super Admin':(USER.tenant_name||'Tenant');
+  buildNav();show(isAdmin()?'dashboard':'overview');
+  setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString();},1000);
+}
+init();
+</script>
+</body>
+</html>
