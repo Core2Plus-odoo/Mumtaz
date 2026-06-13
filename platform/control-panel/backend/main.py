@@ -39,7 +39,7 @@ ODOO_CONF = os.environ.get("ODOO_CONF", "/etc/odoo/odoo.conf")
 FREE_KEYS = ("einvoicing", "crm")
 # Core ERP every new tenant is provisioned with (mapped to Odoo Community apps
 # via module_catalogue.odoo_module). Billing still follows each module's price.
-CORE_ERP_KEYS = ("einvoicing", "crm", "accounting", "sales", "inventory", "hr_payroll", "projects")
+CORE_ERP_KEYS = ("crm", "sales", "accounting", "inventory", "hr_payroll", "projects")
 
 app = FastAPI(title="Mumtaz Control Panel", version="2.0")
 app.add_middleware(CORSMiddleware, allow_origins=CORS, allow_credentials=True,
