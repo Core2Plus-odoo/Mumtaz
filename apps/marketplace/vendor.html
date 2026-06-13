@@ -406,6 +406,7 @@ function renderApp(){
       <div class="vd-topbar">
         <div class="vd-page-title" id="vd-title">${PAGE_TITLES[currentPage]}</div>
         <div class="vd-topbar-right">
+          <button class="btn btn-outline btn-sm" onclick="openErpImport()">⬇ Import from ERP</button>
           <button class="btn btn-grad btn-sm" onclick="openAddListing()">+ Add Listing</button>
         </div>
       </div>
@@ -492,7 +493,12 @@ function pageDashboard(){
 function pageListings(){
   return `
   <div class="vd-card">
-    <div class="vd-card-title">My Product Listings <button class="btn btn-grad btn-sm" onclick="openAddListing()">+ Add Listing</button></div>
+    <div class="vd-card-title">My Product Listings
+      <span style="display:inline-flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="openErpImport()">⬇ Import from ERP</button>
+        <button class="btn btn-grad btn-sm" onclick="openAddListing()">+ Add Listing</button>
+      </span>
+    </div>
     <table class="vd-table">
       <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>MOQ</th><th>Views</th><th>Inquiries</th><th>Status</th><th></th></tr></thead>
       <tbody>
@@ -673,6 +679,102 @@ function submitListing(){
   if(!name){ showToast('Enter a product name'); return }
   closeAddListing()
   showToast('Listing submitted for review!')
+}
+
+// ── Import products from ERP (Odoo) ───────────────────────
+function authHeaders(){ return TOKEN ? {'Authorization':'Bearer '+TOKEN} : {} }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+
+let ERP_PRODUCTS = []
+
+async function openErpImport(){
+  let m = document.getElementById('erp-import-modal')
+  if(!m){
+    m = document.createElement('div')
+    m.id = 'erp-import-modal'; m.className = 'modal-bg'
+    document.body.appendChild(m)
+  }
+  m.innerHTML = `
+    <div class="modal" style="max-width:620px">
+      <div class="modal-title">Import from ERP</div>
+      <div class="modal-sub">Loading your product catalogue from Odoo…</div>
+      <div style="text-align:center;padding:32px 0;color:var(--ink4);font-size:1.6rem">⏳</div>
+    </div>`
+  m.classList.add('open')
+
+  try {
+    const res  = await fetch(API+'/erp/products', {headers: authHeaders()})
+    const data = await res.json()
+    if(!res.ok) throw new Error(data.detail || 'Failed to load ERP products')
+    if(!data.erp_enabled){
+      m.classList.remove('open')
+      showToast('Connect Mumtaz ERP to your workspace to import products.')
+      return
+    }
+    ERP_PRODUCTS = data.products || []
+    renderErpImport(m, data.error)
+  } catch(e){
+    m.classList.remove('open')
+    showToast('Could not reach ERP. Please try again shortly.')
+  }
+}
+
+function renderErpImport(m, error){
+  if(!ERP_PRODUCTS.length){
+    m.innerHTML = `
+      <div class="modal" style="max-width:620px">
+        <div class="modal-title">Import from ERP</div>
+        <div class="modal-sub">${error ? escapeHtml(error) : 'No sellable products found in your ERP yet. Mark products as “Can be Sold” in Odoo, then try again.'}</div>
+        <div class="modal-foot"><button class="btn btn-outline" onclick="closeErpImport()">Close</button></div>
+      </div>`
+    return
+  }
+  m.innerHTML = `
+    <div class="modal" style="max-width:620px">
+      <div class="modal-title">Import from ERP</div>
+      <div class="modal-sub">Select products from your Odoo catalogue to publish as marketplace listings.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.74rem;color:var(--ink4)">
+        <span>${ERP_PRODUCTS.length} product${ERP_PRODUCTS.length>1?'s':''} found</span>
+        <label style="cursor:pointer"><input type="checkbox" id="erp-all" checked onchange="document.querySelectorAll('.erp-pick').forEach(c=>c.checked=this.checked)"> Select all</label>
+      </div>
+      <div style="max-height:48vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r)">
+        ${ERP_PRODUCTS.map((p,i)=>`
+          <label style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer">
+            <input type="checkbox" class="erp-pick" value="${i}" checked>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.85rem;font-weight:500;color:var(--ink2)">${escapeHtml(p.name)}</div>
+              <div style="font-size:.72rem;color:var(--ink4);font-family:var(--font-mono)">${escapeHtml(p.sku||'—')} · ${escapeHtml(p.category)} · stock ${p.qty}</div>
+            </div>
+            <div style="font-size:.82rem;font-weight:600;color:var(--teal);font-family:var(--font-mono);white-space:nowrap">AED ${Number(p.price).toLocaleString()}/${escapeHtml(p.uom)}</div>
+          </label>`).join('')}
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" onclick="closeErpImport()">Cancel</button>
+        <button class="btn btn-grad" onclick="importSelectedErp()">Import selected →</button>
+      </div>
+    </div>`
+}
+
+function closeErpImport(){ const m=document.getElementById('erp-import-modal'); if(m) m.classList.remove('open') }
+
+function importSelectedErp(){
+  const picks = [...document.querySelectorAll('.erp-pick:checked')].map(c=>ERP_PRODUCTS[+c.value]).filter(Boolean)
+  if(!picks.length){ showToast('Select at least one product'); return }
+  let nextId = LISTINGS.reduce((mx,l)=>Math.max(mx, l.id||0), 0)
+  picks.forEach(p=>{
+    LISTINGS.push({
+      id: ++nextId,
+      name: p.name,
+      category: p.category,
+      price: `AED ${Number(p.price).toLocaleString()}/${p.uom}`,
+      moq: '1 '+p.uom,
+      status: 'pending',
+      views: 0, inquiries: 0,
+    })
+  })
+  closeErpImport()
+  if(currentPage!=='listings') navTo('listings'); else renderPage('listings')
+  showToast(`${picks.length} product${picks.length>1?'s':''} imported from ERP — pending review.`)
 }
 </script>
 </body>

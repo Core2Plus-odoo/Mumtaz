@@ -779,6 +779,80 @@ async def tenant_status(auth: dict = Depends(require_auth)):
 
     return {"status": rec["status"], "odoo_db": None, "error": rec["error_msg"]}
 
+# ── ERP (Odoo) product catalogue ─────────────────────────────────────
+def _user_tenant_and_products(email: str) -> tuple[str | None, list[str]]:
+    """Return (tenant_db, enabled_product_keys) for a user."""
+    import json as _json
+    db  = get_db()
+    row = db.execute(
+        "SELECT tenant_db, onboarding_json FROM users WHERE email = ?", (email,)
+    ).fetchone()
+    db.close()
+    if not row:
+        return None, []
+    products: list[str] = []
+    if row["onboarding_json"]:
+        try:
+            products = (_json.loads(row["onboarding_json"]) or {}).get("products", []) or []
+        except Exception:
+            products = []
+    return row["tenant_db"], products
+
+
+@app.get("/api/v1/erp/products")
+async def erp_products(auth: dict = Depends(require_auth)):
+    """
+    List the tenant's sellable products from their isolated Odoo ERP DB so a
+    vendor can import them as marketplace listings.
+
+    Returns erp_enabled=False (never an error) when the tenant has no
+    provisioned ERP DB or ERP is not part of their onboarding/plan. Every
+    query is scoped to the tenant's own Odoo DB — no cross-tenant access.
+    """
+    tenant_db, products = _user_tenant_and_products(auth["email"])
+
+    if not tenant_db or "erp" not in products:
+        return {"erp_enabled": False, "products": []}
+
+    try:
+        admin_uid = odoo_get_admin_uid(db=tenant_db)
+        if not admin_uid:
+            return {"erp_enabled": True, "products": [], "error": "ERP unavailable"}
+
+        obj  = _odoo_object()
+        rows = obj.execute_kw(
+            tenant_db, admin_uid, ODOO_PASS,
+            "product.product", "search_read",
+            [[["sale_ok", "=", True]]],
+            {
+                "fields": ["name", "default_code", "list_price",
+                           "qty_available", "uom_id", "categ_id",
+                           "description_sale"],
+                "limit": 200,
+                "order": "name asc",
+            },
+        )
+    except Exception as e:
+        _record_odoo_error("erp_products", e)
+        # Never surface internal errors to the client.
+        return {"erp_enabled": True, "products": [], "error": "Could not reach ERP"}
+
+    def _m2o(v):  # Odoo many2one comes back as [id, "name"] or False
+        return v[1] if isinstance(v, (list, tuple)) and len(v) == 2 else None
+
+    out = [{
+        "erp_id":      r.get("id"),
+        "name":        r.get("name") or "",
+        "sku":         r.get("default_code") or "",
+        "price":       r.get("list_price") or 0,
+        "uom":         _m2o(r.get("uom_id")) or "Unit",
+        "category":    _m2o(r.get("categ_id")) or "Uncategorised",
+        "qty":         r.get("qty_available") or 0,
+        "description": r.get("description_sale") or "",
+    } for r in rows]
+
+    return {"erp_enabled": True, "products": out}
+
 class ForgotReq(BaseModel):
     email: str
 
