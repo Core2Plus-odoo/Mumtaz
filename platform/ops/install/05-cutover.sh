@@ -69,12 +69,25 @@ systemctl is-active zaki || die "zaki failed — journalctl -u zaki -n 30"
 # 5. NGINX ------------------------------------------------------------
 log "Switching nginx for app/zaki/mumtaz (erp untouched)..."
 for d in app.mumtaz.digital zaki.mumtaz.digital mumtaz.digital; do
-  # disable any existing enabled config for this domain (kept in backup)
+  # Escape dots so the server_name match is exact and NOT a suffix match.
+  # (A naive ".*mumtaz.digital" pattern also matches app./zaki. and would
+  #  delete the symlinks we just created on the final iteration.)
+  d_re="$(printf '%s' "$d" | sed 's/[.[\*^$]/\\&/g')"
+  # disable any existing enabled config whose server_name lists THIS exact
+  # domain as a whole token (kept in backup). Bounded by space/semicolon so
+  # "mumtaz.digital" never matches "app.mumtaz.digital".
   find /etc/nginx/sites-enabled -maxdepth 1 -type l | while read -r ln; do
-    grep -q "server_name .*$d" "$ln" 2>/dev/null && rm -f "$ln" || true
+    if grep -qE "server_name[^;]*[[:space:]]${d_re}[[:space:];]" "$ln" 2>/dev/null; then
+      rm -f "$ln"
+    fi
   done
   cp "$P/ops/nginx/$d.conf" "/etc/nginx/sites-available/$d.conf"
   ln -sf "/etc/nginx/sites-available/$d.conf" "/etc/nginx/sites-enabled/$d.conf"
+  log "  enabled $d.conf"
+done
+# Sanity: all three must be linked before we reload.
+for d in app.mumtaz.digital zaki.mumtaz.digital mumtaz.digital; do
+  [ -L "/etc/nginx/sites-enabled/$d.conf" ] || die "sites-enabled/$d.conf was not created"
 done
 nginx -t || die "nginx config test failed — restore from $BK/nginx and re-run"
 systemctl reload nginx
