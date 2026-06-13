@@ -102,12 +102,29 @@
 <body>
 
 <div id="login">
-  <form class="lcard" onsubmit="return doLogin(event)">
+  <form class="lcard" id="login-form" onsubmit="return doLogin(event)">
     <div class="llogo"><div class="mark">م</div><div><div class="nm" style="font-weight:700">Mumtaz Digital</div><div style="font-size:.7rem;color:var(--ink3)">Control Panel</div></div></div>
     <div class="fld"><label>Email</label><input id="li-email" type="email" placeholder="you@company.com" required></div>
     <div class="fld"><label>Password</label><input id="li-pw" type="password" placeholder="••••••••" required></div>
     <button class="btn btn-gold" style="width:100%;justify-content:center" type="submit" id="li-btn">Sign In →</button>
     <div class="err" id="li-err" hidden></div>
+    <div style="text-align:center;font-size:.8rem;color:var(--ink3);margin-top:4px">New to Mumtaz? <a href="#" onclick="showAuth('signup');return false" style="color:var(--gold);font-weight:600;text-decoration:none">Create an account</a></div>
+  </form>
+  <form class="lcard" id="signup-form" style="display:none" onsubmit="return doSignup(event)">
+    <div class="llogo"><div class="mark">م</div><div><div class="nm" style="font-weight:700">Mumtaz Digital</div><div style="font-size:.7rem;color:var(--ink3)">Start your 14-day free trial</div></div></div>
+    <div class="fld"><label>Company name</label><input id="su-company" type="text" placeholder="Acme Trading LLC" required></div>
+    <div class="fld"><label>Your name</label><input id="su-name" type="text" placeholder="Full name" required></div>
+    <div class="fld"><label>Work email</label><input id="su-email" type="email" placeholder="you@company.com" required></div>
+    <div class="fld"><label>Password</label><input id="su-pw" type="password" placeholder="At least 8 characters" minlength="8" required></div>
+    <div style="display:flex;gap:8px">
+      <div class="fld" style="flex:1"><label>Country</label>
+        <select id="su-country"><option value="UAE">UAE</option><option value="KSA">KSA</option><option value="Pakistan">Pakistan</option><option value="Other">Other</option></select></div>
+      <div class="fld" style="flex:1"><label>Currency</label>
+        <select id="su-currency"><option value="AED">AED</option><option value="SAR">SAR</option><option value="PKR">PKR</option><option value="USD">USD</option></select></div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;justify-content:center" type="submit" id="su-btn">Create account →</button>
+    <div class="err" id="su-err" hidden></div>
+    <div style="text-align:center;font-size:.8rem;color:var(--ink3);margin-top:4px">Already have an account? <a href="#" onclick="showAuth('login');return false" style="color:var(--gold);font-weight:600;text-decoration:none">Sign in</a></div>
   </form>
 </div>
 
@@ -157,6 +174,24 @@ async function doLogin(e){
     TOKEN=d.access_token;USER=d.user;localStorage.setItem('mumtaz_token',TOKEN);localStorage.setItem('mumtaz_user',JSON.stringify(USER));init();
   }catch(err){er.textContent=err.message||'Sign in failed';er.hidden=false;}
   finally{b.disabled=false;b.textContent='Sign In →';}
+  return false;
+}
+function showAuth(which){
+  document.getElementById('login-form').style.display = which==='login'?'flex':'none';
+  document.getElementById('signup-form').style.display = which==='signup'?'flex':'none';
+}
+async function doSignup(e){
+  e.preventDefault();const b=document.getElementById('su-btn');const er=document.getElementById('su-err');er.hidden=true;b.disabled=true;b.textContent='Creating…';
+  try{const d=await pOST('/public/signup',{
+      company_name:document.getElementById('su-company').value.trim(),
+      name:document.getElementById('su-name').value.trim(),
+      email:document.getElementById('su-email').value.trim(),
+      password:document.getElementById('su-pw').value,
+      country:document.getElementById('su-country').value,
+      currency:document.getElementById('su-currency').value});
+    TOKEN=d.access_token;USER=d.user;localStorage.setItem('mumtaz_token',TOKEN);localStorage.setItem('mumtaz_user',JSON.stringify(USER));init();
+  }catch(err){er.textContent=err.message||'Could not create account';er.hidden=false;}
+  finally{b.disabled=false;b.textContent='Create account →';}
   return false;
 }
 function logout(){pOST('/auth/logout',{}).catch(()=>{});localStorage.clear();TOKEN=null;USER=null;document.getElementById('app').style.display='none';document.getElementById('login').style.display='flex';}
