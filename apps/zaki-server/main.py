@@ -853,6 +853,126 @@ async def erp_products(auth: dict = Depends(require_auth)):
 
     return {"erp_enabled": True, "products": out}
 
+
+# ── ERP → Marketplace listings (real Odoo records) ───────────────────
+def _erp_default_category(obj, db: str, uid: int, name: str = "General") -> int:
+    ids = obj.execute_kw(db, uid, ODOO_PASS, "mumtaz.marketplace.category", "search",
+                         [[["name", "=", name]]], {"limit": 1})
+    if ids:
+        return ids[0]
+    return obj.execute_kw(db, uid, ODOO_PASS, "mumtaz.marketplace.category", "create",
+                          [{"name": name, "sequence": 10}])
+
+
+@app.get("/api/v1/erp/listings")
+async def erp_listings(auth: dict = Depends(require_auth)):
+    """Return the tenant's existing marketplace listings from their Odoo DB."""
+    tenant_db, _ = _user_tenant_and_products(auth["email"])
+    if not tenant_db:
+        return {"enabled": False, "listings": []}
+    try:
+        uid = odoo_get_admin_uid(db=tenant_db)
+        if not uid:
+            return {"enabled": True, "listings": [], "error": "ERP unavailable"}
+        obj  = _odoo_object()
+        rows = obj.execute_kw(
+            tenant_db, uid, ODOO_PASS, "mumtaz.marketplace.listing", "search_read",
+            [[]],
+            {"fields": ["name", "category_id", "price", "currency_id", "state",
+                        "listing_type", "min_order_qty", "lead_time_days", "inquiry_count"],
+             "limit": 200, "order": "id desc"},
+        )
+    except Exception as e:
+        _record_odoo_error("erp_listings", e)
+        return {"enabled": True, "listings": [], "error": "Could not reach ERP"}
+
+    def _m2o(v):
+        return v[1] if isinstance(v, (list, tuple)) and len(v) == 2 else None
+
+    out = [{
+        "id":        r.get("id"),
+        "name":      r.get("name") or "",
+        "category":  _m2o(r.get("category_id")) or "Uncategorised",
+        "price":     r.get("price") or 0,
+        "currency":  _m2o(r.get("currency_id")) or "AED",
+        "state":     r.get("state") or "draft",
+        "type":      r.get("listing_type") or "product",
+        "moq":       r.get("min_order_qty") or 0,
+        "lead_days": r.get("lead_time_days") or 0,
+        "inquiries": r.get("inquiry_count") or 0,
+    } for r in rows]
+    return {"enabled": True, "listings": out}
+
+
+class ImportListingsReq(BaseModel):
+    product_ids: list[int]
+    moq: float = 1.0
+    lead_days: int = 7
+
+@app.post("/api/v1/erp/listings/import")
+async def erp_import_listings(req: ImportListingsReq, auth: dict = Depends(require_auth)):
+    """
+    Create marketplace listings (mumtaz.marketplace.listing) from selected
+    Odoo products. Tenant-scoped to the caller's Odoo DB; re-reads product
+    data server-side (never trusts client prices); dedupes by product
+    template so re-importing won't create duplicates.
+    """
+    tenant_db, products = _user_tenant_and_products(auth["email"])
+    if not tenant_db or "erp" not in products:
+        raise HTTPException(409, "ERP is not enabled for this account")
+    if not req.product_ids:
+        raise HTTPException(400, "No products selected")
+
+    try:
+        uid = odoo_get_admin_uid(db=tenant_db)
+        if not uid:
+            raise RuntimeError("no admin uid for tenant db")
+        obj   = _odoo_object()
+        prods = obj.execute_kw(
+            tenant_db, uid, ODOO_PASS, "product.product", "read",
+            [req.product_ids[:200]],
+            {"fields": ["name", "default_code", "list_price",
+                        "description_sale", "product_tmpl_id"]},
+        )
+        cat_id = _erp_default_category(obj, tenant_db, uid)
+
+        created, skipped = 0, 0
+        for p in prods:
+            tmpl    = p.get("product_tmpl_id")
+            tmpl_id = tmpl[0] if isinstance(tmpl, (list, tuple)) else None
+            if tmpl_id:
+                dup = obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.marketplace.listing",
+                                     "search", [[["product_tmpl_id", "=", tmpl_id]]], {"limit": 1})
+                if dup:
+                    skipped += 1
+                    continue
+            name = p.get("name") or "Product"
+            desc = p.get("description_sale") or name
+            vals = {
+                "name":              name,
+                "category_id":       cat_id,
+                "listing_type":      "product",
+                "state":             "draft",
+                "short_description": (desc[:120] if isinstance(desc, str) else name),
+                "description":       f"<p>{desc}</p>",
+                "price":             p.get("list_price") or 0.0,
+                "price_type":        "fixed",
+                "min_order_qty":     req.moq,
+                "lead_time_days":    req.lead_days,
+            }
+            if tmpl_id:
+                vals["product_tmpl_id"] = tmpl_id
+            obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.marketplace.listing", "create", [vals])
+            created += 1
+    except HTTPException:
+        raise
+    except Exception as e:
+        _record_odoo_error("erp_import_listings", e)
+        raise HTTPException(502, "Could not import products into the marketplace. Please try again.")
+
+    return {"ok": True, "created": created, "skipped": skipped}
+
+
 # ── Tenant app enable/disable (control-plane feature toggles) ─────────
 # Maps the portal's app cards to mumtaz.feature codes. Enabling an app
 # writes a force_on tenant override; disabling writes force_off. This is

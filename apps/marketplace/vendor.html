@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vendor Portal — Mumtaz Marketplace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:   #F5F3EF;
-  --paper2:  #EDEAE3;
-  --paper3:  #E0DDD6;
+  --paper:   #FAF8F4;
+  --paper2:  #F2EDE6;
+  --paper3:  #E7E0D6;
   --surface: #FFFFFF;
-  --ink:     #0C1118;
-  --ink2:    #1E2A3A;
-  --ink3:    #6B7A90;
-  --ink4:    #9BAAB8;
+  --ink:     #1C1917;
+  --ink2:    #44403C;
+  --ink3:    #78716C;
+  --ink4:    #A8A29E;
   --gold:        #B8862A;
   --gold2:       #D4A84C;
   --gold3:       #F0CC78;
@@ -36,14 +36,14 @@
   --amber2:      #E8A020;
   --amber-bg:    #FEF6E4;
   --amber-border:#F0CC80;
-  --border:  #E0DDD6;
+  --border:  #E7E0D6;
   --border2: #C8C4BC;
-  --font-serif: 'Instrument Serif', Georgia, serif;
-  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:  'DM Mono', 'Fira Code', monospace;
-  --shadow-sm: 0 1px 3px rgba(12,17,24,.06), 0 4px 16px rgba(12,17,24,.04);
-  --shadow:    0 2px 8px rgba(12,17,24,.08), 0 4px 24px rgba(12,17,24,.06);
-  --shadow-lg: 0 8px 40px rgba(12,17,24,.12), 0 2px 8px rgba(12,17,24,.04);
+  --font-serif: 'Inter', system-ui, sans-serif;
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:  'DM Mono', 'Courier New', monospace;
+  --shadow-sm: 0 1px 3px rgba(28,25,23,.06), 0 4px 16px rgba(28,25,23,.04);
+  --shadow:    0 2px 8px rgba(28,25,23,.08), 0 4px 24px rgba(28,25,23,.06);
+  --shadow-lg: 0 8px 40px rgba(28,25,23,.12), 0 2px 8px rgba(28,25,23,.04);
   --shadow-gold: 0 4px 20px rgba(184,134,42,.24);
   --r:10px;--r-md:14px;--r-lg:20px;--r-full:9999px;
   --tr:.2s cubic-bezier(.4,0,.2,1);
@@ -59,10 +59,10 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .auth-left{width:420px;flex-shrink:0;background:var(--ink);padding:48px 40px;display:flex;flex-direction:column;color:#fff;position:relative;overflow:hidden}
 .auth-left::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(184,134,42,.2) 0%,transparent 70%);pointer-events:none}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:56px;position:relative}
-.auth-logo-mark{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:1.1rem;color:#fff;box-shadow:var(--shadow-gold)}
+.auth-logo-mark{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);font-weight:700;font-size:1.2rem;color:#fff;box-shadow:var(--shadow-gold)}
 .auth-logo-name{font-size:1rem;font-weight:500;color:#fff}
 .auth-logo-sub{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:1px}
-.auth-left-title{font-family:var(--font-serif);font-size:1.9rem;font-weight:400;line-height:1.2;margin-bottom:12px;position:relative}
+.auth-left-title{font-family:var(--font-sans);font-size:1.9rem;font-weight:700;line-height:1.2;margin-bottom:12px;position:relative}
 .auth-left-title em{font-style:italic;color:var(--gold2)}
 .auth-left-sub{font-size:.88rem;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:40px;position:relative}
 .auth-left-perks{display:flex;flex-direction:column;gap:16px;flex:1;position:relative}
@@ -74,7 +74,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 
 .auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;background:var(--paper)}
 .auth-card{width:100%;max-width:400px}
-.auth-card-title{font-family:var(--font-serif);font-size:1.5rem;font-weight:400;margin-bottom:4px;color:var(--ink)}
+.auth-card-title{font-family:var(--font-sans);font-size:1.4rem;font-weight:700;margin-bottom:4px;color:var(--ink)}
 .auth-card-sub{font-size:.83rem;color:var(--ink3);margin-bottom:28px}
 .auth-tabs{display:flex;gap:2px;background:var(--paper2);border-radius:var(--r);padding:3px;margin-bottom:24px}
 .auth-tab{flex:1;padding:8px;border-radius:8px;font-size:.82rem;font-weight:500;color:var(--ink3);background:none;border:none;cursor:pointer;transition:all var(--tr)}
@@ -98,7 +98,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 /* Sidebar */
 .vd-sidebar{width:220px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
 .vd-brand{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
-.vd-brand-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-serif);font-size:.9rem;flex-shrink:0;box-shadow:var(--shadow-gold)}
+.vd-brand-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-sans);font-weight:700;font-size:1rem;flex-shrink:0;box-shadow:var(--shadow-gold)}
 .vd-brand-name{font-size:.82rem;font-weight:500;color:#fff}
 .vd-brand-sub{font-size:.62rem;color:rgba(255,255,255,.35)}
 .vd-nav{padding:10px 8px;flex:1}
@@ -119,7 +119,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 /* Main */
 .vd-main{flex:1;overflow-y:auto;background:var(--paper)}
 .vd-topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:10}
-.vd-page-title{font-family:var(--font-serif);font-size:1.05rem;font-weight:400;color:var(--ink)}
+.vd-page-title{font-family:var(--font-sans);font-size:1.05rem;font-weight:600;color:var(--ink)}
 .vd-topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .vd-content{padding:24px}
 
@@ -127,7 +127,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .vd-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .vd-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px 18px;box-shadow:var(--shadow-sm)}
 .vd-stat-label{font-size:.72rem;color:var(--ink4);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-.vd-stat-val{font-family:var(--font-serif);font-size:1.8rem;font-weight:400;color:var(--ink);margin-bottom:4px;line-height:1}
+.vd-stat-val{font-family:var(--font-sans);font-size:1.8rem;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1}
 .vd-stat-sub{font-size:.72rem;color:var(--ink4)}
 .vd-stat-sub.up{color:var(--teal)}
 .vd-stat-sub.down{color:var(--coral)}
@@ -161,7 +161,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .modal-bg{position:fixed;inset:0;background:rgba(12,17,24,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
 .modal{background:var(--surface);border-radius:var(--r-lg);padding:28px;width:100%;max-width:500px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
-.modal-title{font-family:var(--font-serif);font-size:1.1rem;font-weight:400;margin-bottom:4px;color:var(--ink)}
+.modal-title{font-family:var(--font-sans);font-size:1.15rem;font-weight:700;margin-bottom:4px;color:var(--ink)}
 .modal-sub{font-size:.8rem;color:var(--ink3);margin-bottom:18px;line-height:1.5}
 .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 
@@ -191,13 +191,13 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 <div id="auth-screen">
   <div class="auth-left">
     <div class="auth-logo">
-      <div class="auth-logo-mark">M</div>
+      <div class="auth-logo-mark">م</div>
       <div>
         <div class="auth-logo-name">Mumtaz Marketplace</div>
         <div class="auth-logo-sub">Vendor Portal</div>
       </div>
     </div>
-    <div class="auth-left-title">Grow your B2B sales<br>across <em>UAE & GCC</em></div>
+    <div class="auth-left-title">Grow your B2B sales<br>across <em>UAE, GCC &amp; Pakistan</em></div>
     <div class="auth-left-sub">Join thousands of verified suppliers reaching enterprise buyers on one platform.</div>
     <div class="auth-left-perks">
       <div class="auth-perk"><div class="auth-perk-icon">🏪</div><div class="auth-perk-text"><strong>Manage your storefront</strong><span>Update products, pricing, and MOQs in real time</span></div></div>
@@ -347,6 +347,7 @@ function bootVendor(){
     document.getElementById('auth-screen').style.display = 'none'
     document.getElementById('app').style.display = 'block'
     renderApp()
+    loadListings()   // replace demo rows with the tenant's real Odoo listings
   } catch(e){
     // Never leave a blank screen — fall back to the auth view.
     console.error('Vendor portal failed to render:', e)
@@ -387,7 +388,7 @@ function renderApp(){
   <div class="vd-wrap">
     <aside class="vd-sidebar">
       <div class="vd-brand">
-        <div class="vd-brand-mark">M</div>
+        <div class="vd-brand-mark">م</div>
         <div><div class="vd-brand-name">Mumtaz</div><div class="vd-brand-sub">Vendor Portal</div></div>
       </div>
       <nav class="vd-nav">
@@ -756,33 +757,74 @@ function renderErpImport(m, error){
             <div style="font-size:.82rem;font-weight:600;color:var(--teal);font-family:var(--font-mono);white-space:nowrap">AED ${Number(p.price).toLocaleString()}/${escapeHtml(p.uom)}</div>
           </label>`).join('')}
       </div>
-      <div class="modal-foot">
+      <div class="modal-foot" style="align-items:center">
+        <div style="display:flex;gap:14px;margin-right:auto;align-items:center">
+          <label style="font-size:.72rem;color:var(--ink3);display:flex;align-items:center;gap:6px">MOQ
+            <input id="erp-moq" type="number" min="1" value="1" style="width:62px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r);font-size:.82rem"></label>
+          <label style="font-size:.72rem;color:var(--ink3);display:flex;align-items:center;gap:6px">Lead (days)
+            <input id="erp-lead" type="number" min="0" value="7" style="width:62px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r);font-size:.82rem"></label>
+        </div>
         <button class="btn btn-outline" onclick="closeErpImport()">Cancel</button>
-        <button class="btn btn-grad" onclick="importSelectedErp()">Import selected →</button>
+        <button id="erp-import-btn" class="btn btn-grad" onclick="importSelectedErp()">Import selected →</button>
       </div>
     </div>`
 }
 
 function closeErpImport(){ const m=document.getElementById('erp-import-modal'); if(m) m.classList.remove('open') }
 
-function importSelectedErp(){
+async function importSelectedErp(){
   const picks = [...document.querySelectorAll('.erp-pick:checked')].map(c=>ERP_PRODUCTS[+c.value]).filter(Boolean)
   if(!picks.length){ showToast('Select at least one product'); return }
-  let nextId = LISTINGS.reduce((mx,l)=>Math.max(mx, l.id||0), 0)
-  picks.forEach(p=>{
-    LISTINGS.push({
-      id: ++nextId,
-      name: p.name,
-      category: p.category,
-      price: `AED ${Number(p.price).toLocaleString()}/${p.uom}`,
-      moq: '1 '+p.uom,
-      status: 'pending',
-      views: 0, inquiries: 0,
+  const moq  = parseFloat(document.getElementById('erp-moq')?.value) || 1
+  const lead = parseInt(document.getElementById('erp-lead')?.value, 10)
+  const btn  = document.getElementById('erp-import-btn')
+  if(btn){ btn.disabled = true; btn.textContent = 'Importing…' }
+  try {
+    const r = await fetch(API+'/erp/listings/import', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...authHeaders()},
+      body: JSON.stringify({
+        product_ids: picks.map(p=>p.erp_id).filter(Boolean),
+        moq,
+        lead_days: Number.isFinite(lead) ? lead : 7,
+      })
     })
-  })
-  closeErpImport()
-  if(currentPage!=='listings') navTo('listings'); else renderPage('listings')
-  showToast(`${picks.length} product${picks.length>1?'s':''} imported from ERP — pending review.`)
+    const d = await r.json()
+    if(!r.ok) throw new Error(d.detail || 'Import failed')
+    closeErpImport()
+    await loadListings()
+    if(currentPage!=='listings') navTo('listings'); else renderPage('listings')
+    showToast(`${d.created} product${d.created===1?'':'s'} imported${d.skipped?`, ${d.skipped} already listed`:''} — saved as draft.`)
+  } catch(e){
+    showToast(e.message || 'Import failed. Please try again.')
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Import selected →' }
+  }
+}
+
+// Pull the tenant's real marketplace listings from Odoo into the table.
+async function loadListings(){
+  if(!TOKEN) return
+  try {
+    const r = await fetch(API+'/erp/listings', {headers: authHeaders()})
+    if(!r.ok) return
+    const d = await r.json()
+    if(d.listings && d.listings.length){
+      LISTINGS.length = 0
+      d.listings.forEach(l=>LISTINGS.push({
+        id: l.id,
+        name: l.name,
+        category: l.category,
+        price: `${l.currency} ${Number(l.price).toLocaleString()}`,
+        moq: l.moq ? String(l.moq) : '—',
+        status: l.state==='published' ? 'active' : (l.state==='closed' ? 'closed' : 'pending'),
+        views: 0,
+        inquiries: l.inquiries || 0,
+      }))
+      if(currentPage==='listings') renderPage('listings')
+      if(currentPage==='dashboard') renderPage('dashboard')
+    }
+  } catch(e){ /* keep demo data on failure */ }
 }
 </script>
 </body>
