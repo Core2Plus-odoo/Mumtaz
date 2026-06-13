@@ -59,11 +59,6 @@ sync_site "$REPO/apps/portal/"      /var/www/app.mumtaz.digital    "app.mumtaz.d
 sync_site "$REPO/apps/marketplace/" /var/www/marketplace.mumtaz.digital "marketplace.mumtaz.digital"
 sync_site "$REPO/apps/zaki/static/" /var/www/zaki.mumtaz.digital   "zaki.mumtaz.digital"
 
-# Also serve the marketplace as a path under the apex domain so
-# https://mumtaz.digital/marketplace/ works without separate DNS/SSL.
-# (Runs after the website sync above so it isn't wiped by --delete.)
-sync_site "$REPO/apps/marketplace/" /var/www/mumtaz.digital/marketplace "mumtaz.digital/marketplace"
-
 # ── 3. Reload nginx ───────────────────────────────────────
 log "Reloading nginx..."
 nginx -t 2>&1 | tail -2
