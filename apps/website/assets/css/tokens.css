@@ -3,14 +3,16 @@
    Light-first. GCC + Pakistan branding.
    ================================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
 :root {
   /* ── Core Palette ─────────────────────────────────────────── */
-  --ink:          #0C1118;
-  --ink2:         #1E2A3A;
-  --ink3:         #6B7A90;
-  --paper:        #F5F3EF;
-  --paper2:       #EDEAE3;
-  --paper3:       #E0DDD6;
+  --ink:          #1C1917;
+  --ink2:         #44403C;
+  --ink3:         #78716C;
+  --paper:        #FAF8F4;
+  --paper2:       #F2EDE6;
+  --paper3:       #E7E0D6;
   --surface:      #FFFFFF;
 
   /* ── Gold (primary accent) ────────────────────────────────── */
@@ -19,11 +21,13 @@
   --gold3:        #F0CC78;
   --gold-bg:      #FDF6E4;
   --gold-border:  #E8CC88;
+  --gold-dark:    #8E641A;
 
   /* ── Teal (success) ───────────────────────────────────────── */
   --teal:         #0B7A64;
   --teal2:        #0EA882;
   --teal-bg:      #E6F7F3;
+  --teal-border:  #9FD9CC;
 
   /* ── Coral (danger) ───────────────────────────────────────── */
   --coral:        #C0402A;
@@ -34,8 +38,8 @@
   --blue-bg:      #EDF2FC;
 
   /* ── Font Stacks ──────────────────────────────────────────── */
-  --font-display: 'Instrument Serif', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
   --font-mono:    'DM Mono', 'Courier New', monospace;
 
   /* ── Gradients ────────────────────────────────────────────── */
@@ -67,6 +71,16 @@
   --fg3:          var(--ink3);
   --border-color: var(--paper3);
   --card-bg:      var(--surface);
+
+  /* ── Legacy aliases used by subpages ─────────────────────── */
+  --primary:      var(--gold);
+  --primary-h:    var(--gold2);
+  --text:         var(--ink);
+  --text-2:       var(--ink2);
+  --text-3:       var(--ink3);
+  --green:        var(--teal);
+  --border:       var(--paper3);
+  --surface-2:    var(--paper2);
 
   /* ── Transition ───────────────────────────────────────────── */
   --transition:   all .22s ease;

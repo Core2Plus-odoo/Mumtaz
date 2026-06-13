@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mumtaz Marketplace — UAE & GCC B2B</title>
+<title>Mumtaz Marketplace — UAE, GCC & Pakistan B2B</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:   #F5F3EF;
-  --paper2:  #EDEAE3;
-  --paper3:  #E0DDD6;
+  --paper:   #FAF8F4;
+  --paper2:  #F2EDE6;
+  --paper3:  #E7E0D6;
   --surface: #FFFFFF;
-  --ink:     #0C1118;
-  --ink2:    #1E2A3A;
-  --ink3:    #6B7A90;
-  --ink4:    #9BAAB8;
+  --ink:     #1C1917;
+  --ink2:    #44403C;
+  --ink3:    #78716C;
+  --ink4:    #A8A29E;
   --gold:        #B8862A;
   --gold2:       #D4A84C;
   --gold3:       #F0CC78;
@@ -31,21 +31,19 @@
   --coral-border:#F0B8B0;
   --blue:        #1E4FA0;
   --blue-bg:     #EDF2FC;
-  --amber:       #C8820A;
-  --border:  #E0DDD6;
+  --border:  #E7E0D6;
   --border2: #C8C4BC;
-  --font-serif: 'Instrument Serif', Georgia, serif;
-  --font-sans:  'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:  'DM Mono', 'Fira Code', monospace;
-  --shadow-sm: 0 1px 3px rgba(12,17,24,.06), 0 4px 16px rgba(12,17,24,.04);
-  --shadow:    0 2px 8px rgba(12,17,24,.08), 0 4px 24px rgba(12,17,24,.06);
-  --shadow-lg: 0 8px 40px rgba(12,17,24,.12), 0 2px 8px rgba(12,17,24,.04);
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:  'DM Mono', 'Courier New', monospace;
+  --shadow-sm: 0 1px 3px rgba(28,25,23,.06), 0 4px 16px rgba(28,25,23,.04);
+  --shadow:    0 2px 8px rgba(28,25,23,.08), 0 4px 24px rgba(28,25,23,.06);
+  --shadow-lg: 0 8px 40px rgba(28,25,23,.12), 0 2px 8px rgba(28,25,23,.04);
   --shadow-gold: 0 4px 20px rgba(184,134,42,.24);
   --r:10px;--r-md:14px;--r-lg:20px;--r-full:9999px;
-  --tr:.2s cubic-bezier(.4,0,.2,1);
+  --tr:.22s ease;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-sans);background:var(--paper);color:var(--ink)}
+body{font-family:var(--font-sans);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 button{font-family:var(--font-sans);cursor:pointer;border:none;outline:none;transition:all var(--tr)}
 input,select,textarea{font-family:var(--font-sans);outline:none}
@@ -54,7 +52,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .header{background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:50}
 .header-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:16px}
 .logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
-.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-serif);font-size:1rem;box-shadow:var(--shadow-gold)}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-sans);font-size:1.1rem;font-weight:700;box-shadow:var(--shadow-gold)}
 .logo-text{font-size:.95rem;font-weight:500;color:#fff}
 .logo-sub{font-size:.7rem;color:rgba(255,255,255,.4);font-weight:400}
 .header-search{flex:1;max-width:480px;display:flex;border:1px solid rgba(255,255,255,.12);border-radius:9px;overflow:hidden;background:rgba(255,255,255,.06)}
@@ -80,7 +78,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .hero{background:var(--ink);padding:72px 24px;text-align:center;color:#fff;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(184,134,42,.18) 0%, transparent 70%);pointer-events:none}
 .hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(184,134,42,.15);border:1px solid rgba(184,134,42,.3);border-radius:var(--r-full);padding:4px 14px;font-size:.75rem;font-weight:500;margin-bottom:20px;color:var(--gold3)}
-.hero h1{font-family:var(--font-serif);font-size:clamp(2rem,4vw,3rem);font-weight:400;line-height:1.15;margin-bottom:14px;color:#fff}
+.hero h1{font-family:var(--font-sans);font-size:clamp(2rem,4vw,3rem);font-weight:700;line-height:1.15;margin-bottom:14px;color:#fff}
 .hero h1 em{font-style:italic;color:var(--gold2)}
 .hero-sub{font-size:1rem;color:rgba(255,255,255,.6);margin-bottom:36px;max-width:540px;margin-left:auto;margin-right:auto;line-height:1.6}
 .hero-search{max-width:640px;margin:0 auto 32px;display:flex;background:#fff;border-radius:var(--r-md);overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3)}
@@ -90,11 +88,11 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .hero-search button:hover{background:linear-gradient(135deg,var(--gold-dark),var(--gold))}
 .hero-stats{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
 .hero-stat{color:rgba(255,255,255,.6);font-size:.83rem}
-.hero-stat strong{font-family:var(--font-serif);color:var(--gold2);font-size:1.3rem;font-weight:400;display:block;margin-bottom:2px}
+.hero-stat strong{font-family:var(--font-sans);color:var(--gold2);font-size:1.3rem;font-weight:700;display:block;margin-bottom:2px}
 
 /* ── Section ── */
 .section{max-width:1200px;margin:0 auto;padding:52px 24px}
-.section-title{font-family:var(--font-serif);font-size:1.5rem;font-weight:400;margin-bottom:6px;color:var(--ink)}
+.section-title{font-family:var(--font-sans);font-size:1.4rem;font-weight:700;margin-bottom:6px;color:var(--ink)}
 .section-sub{font-size:.88rem;color:var(--ink3);margin-bottom:24px;line-height:1.6}
 
 /* ── Categories ── */
@@ -123,7 +121,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 .hiw{background:var(--paper2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:64px 24px}
 .hiw-inner{max-width:1200px;margin:0 auto}
 .hiw-cols{display:grid;grid-template-columns:1fr 1fr;gap:48px}
-.hiw-col-title{font-family:var(--font-serif);font-size:1.1rem;font-weight:400;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.hiw-col-title{font-family:var(--font-sans);font-size:1rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--ink)}
 .hiw-steps{display:flex;flex-direction:column;gap:18px}
 .hiw-step{display:flex;gap:14px;align-items:flex-start}
 .hiw-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:.82rem;flex-shrink:0;box-shadow:var(--shadow-gold)}
@@ -133,7 +131,7 @@ input,select,textarea{font-family:var(--font-sans);outline:none}
 /* ── CTA banner ── */
 .cta-banner{background:var(--ink);color:#fff;padding:64px 24px;text-align:center;position:relative;overflow:hidden}
 .cta-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%, rgba(184,134,42,.15) 0%, transparent 70%);pointer-events:none}
-.cta-banner h2{font-family:var(--font-serif);font-size:clamp(1.5rem,3vw,2rem);font-weight:400;margin-bottom:10px}
+.cta-banner h2{font-family:var(--font-sans);font-size:clamp(1.5rem,3vw,2rem);font-weight:700;margin-bottom:10px}
 .cta-banner p{color:rgba(255,255,255,.6);margin-bottom:28px;font-size:.92rem;line-height:1.6}
 .cta-banner .btn-cta{display:inline-block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;padding:14px 32px;border-radius:var(--r);font-size:.92rem;font-weight:500;box-shadow:var(--shadow-gold);transition:all var(--tr)}
 .cta-banner .btn-cta:hover{background:linear-gradient(135deg,var(--gold-dark),var(--gold))}
@@ -148,7 +146,7 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 .modal-bg{position:fixed;inset:0;background:rgba(12,17,24,.5);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
 .modal{background:var(--surface);border-radius:var(--r-lg);padding:32px;width:100%;max-width:520px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
-.modal-title{font-family:var(--font-serif);font-size:1.2rem;font-weight:400;margin-bottom:4px;color:var(--ink)}
+.modal-title{font-family:var(--font-sans);font-size:1.1rem;font-weight:700;margin-bottom:4px;color:var(--ink)}
 .modal-sub{font-size:.82rem;color:var(--ink3);margin-bottom:20px;line-height:1.5}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:.72rem;font-weight:500;color:var(--ink3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
@@ -175,7 +173,7 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 <header class="header">
   <div class="header-inner">
     <div class="logo">
-      <div class="logo-mark">M</div>
+      <div class="logo-mark">م</div>
       <div>
         <div class="logo-text">Mumtaz</div>
         <div class="logo-sub">Marketplace</div>
@@ -203,9 +201,9 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 
 <!-- Hero -->
 <section class="hero">
-  <div class="hero-tag">🇦🇪 UAE & GCC Verified B2B Platform</div>
+  <div class="hero-tag">🇦🇪 🇵🇰 UAE, GCC & Pakistan Verified B2B Platform</div>
   <h1>Connect with Trusted<br><em>B2B Suppliers</em></h1>
-  <p class="hero-sub">Browse verified manufacturers, wholesalers, and service providers across the UAE, Saudi Arabia, and GCC region.</p>
+  <p class="hero-sub">Browse verified manufacturers, wholesalers, and service providers across the UAE, Saudi Arabia, GCC, and Pakistan.</p>
   <div class="hero-search">
     <select id="hero-cat">
       <option>All Categories</option>
@@ -293,7 +291,7 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
 <footer>
   <div class="footer-inner">
     <div class="logo" style="gap:9px">
-      <div class="logo-mark" style="width:28px;height:28px;font-size:.85rem">M</div>
+      <div class="logo-mark" style="width:28px;height:28px;font-size:.95rem">م</div>
       <div>
         <div style="font-size:.85rem;font-weight:500;color:var(--ink)">Mumtaz Marketplace</div>
         <div style="font-size:.7rem;color:var(--ink4)">© 2026 Mumtaz Digital</div>
@@ -443,7 +441,7 @@ function viewProfile(idx){
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
         <div class="supplier-logo" style="width:52px;height:52px;font-size:1.3rem">${s.init}</div>
         <div>
-          <div style="font-family:var(--font-serif);font-size:1.15rem;font-weight:400">${s.name}</div>
+          <div style="font-family:var(--font-sans);font-size:1.05rem;font-weight:600">${s.name}</div>
           <div style="font-size:.8rem;color:var(--ink3);margin-top:2px">${s.cat} · ${s.loc}</div>
           <div style="margin-top:5px">${s.verified?'<span class="verified">✓ KYB Verified</span>':''} <span class="rating" style="display:inline-flex;margin-left:6px"><span class="stars">★</span>${s.rating} <span style="color:var(--ink4);font-weight:400;margin-left:3px">(${s.reviews} reviews)</span></span></div>
         </div>

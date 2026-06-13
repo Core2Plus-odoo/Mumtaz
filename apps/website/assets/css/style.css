@@ -1,7 +1,10 @@
 /* ================================================================
    Mumtaz — Page Layout & Section Styles
-   tokens.css + components.css must be loaded first.
+   Imports tokens + components automatically for all subpages.
    ================================================================ */
+
+@import url('tokens.css');
+@import url('components.css');
 
 /* ── Hero ───────────────────────────────────────────────────────── */
 .hero {
