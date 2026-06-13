@@ -48,8 +48,20 @@ if grep -qE '^JWT_SECRET=\s*$' "$ENV_FILE"; then
   sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${SEC}|" "$ENV_FILE"
   log "Generated JWT_SECRET."
 fi
-set -a; . "$ENV_FILE"; set +a
-[ "${DB_PASS:-CHANGE_ME_STRONG}" != "CHANGE_ME_STRONG" ] || die "Set DB_PASS in $ENV_FILE first."
+
+# Load .env SAFELY — parse KEY=VALUE, never execute it (handles #, !, @, spaces).
+load_env() {
+  local k v
+  while IFS='=' read -r k v; do
+    k="${k#"${k%%[![:space:]]*}"}"          # ltrim key
+    [ -z "$k" ] && continue
+    case "$k" in \#*) continue ;; esac      # skip comment lines
+    export "$k=$v"
+  done < "$ENV_FILE"
+}
+load_env
+[ "${DB_PASS:-CHANGE_ME_STRONG}" != "CHANGE_ME_STRONG" ] || die "Set DB_PASS in $ENV_FILE first (no quotes, no inline comments)."
+[ "${SUPER_ADMIN_PASSWORD:-CHANGE_ME_STRONG}" != "CHANGE_ME_STRONG" ] || die "Set SUPER_ADMIN_PASSWORD in $ENV_FILE first."
 
 # --- 4. PostgreSQL role + database ----------------------------------
 log "Ensuring PostgreSQL role + database..."
