@@ -18,9 +18,9 @@ import json
 import logging
 import time
 
-import odoo
 from odoo import SUPERUSER_ID, api, http
 from odoo.http import request
+from odoo.modules.registry import Registry
 
 _logger = logging.getLogger(__name__)
 
@@ -53,11 +53,12 @@ class MumtazSSO(http.Controller):
             return request.redirect(LOGIN_URL)
 
         # Bind explicitly to the target DB — host-based dbfilter is ambiguous
-        # once multiple tenant databases match.
+        # once multiple tenant databases match. Use the low-level Registry
+        # (the odoo.registry() helper is blocked when list_db=False).
         try:
-            registry = odoo.registry(db)
+            registry = Registry(db)
         except Exception:
-            _logger.warning("Mumtaz SSO: unknown database %s", db)
+            _logger.warning("Mumtaz SSO: unknown database %s", db, exc_info=True)
             return request.redirect(LOGIN_URL)
 
         with registry.cursor() as cr:
