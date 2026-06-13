@@ -161,8 +161,10 @@ function badge(s){const m={active:'green',trial:'amber',suspended:'red',provisio
 
 async function api(path,opts={}){
   const r=await fetch(API+path,{...opts,headers:{'Content-Type':'application/json','Authorization':TOKEN?'Bearer '+TOKEN:'',...(opts.headers||{})},body:opts.body?JSON.stringify(opts.body):undefined});
-  if(r.status===401){logout();throw 0;}
-  if(!r.ok){let e={};try{e=await r.json()}catch(_){} throw new Error(e.detail||('HTTP '+r.status));}
+  // Only force-logout on 401 for AUTHENTICATED calls — never for /auth/* itself,
+  // otherwise a failed login or a 401 on logout recurses into an infinite loop.
+  if(r.status===401 && !path.startsWith('/auth/')){ logout(); throw new Error('Session expired — please sign in again.'); }
+  if(!r.ok){let e={};try{e=await r.json()}catch(_){} let d=e&&e.detail; if(Array.isArray(d)) d=d.map(x=>x.msg).join(', '); throw new Error(d||('HTTP '+r.status));}
   return r.json();
 }
 const gET=p=>api(p), pOST=(p,b)=>api(p,{method:'POST',body:b}), pUT=(p,b)=>api(p,{method:'PUT',body:b}), dEL=p=>api(p,{method:'DELETE'});
@@ -194,7 +196,7 @@ async function doSignup(e){
   finally{b.disabled=false;b.textContent='Create account →';}
   return false;
 }
-function logout(){pOST('/auth/logout',{}).catch(()=>{});localStorage.clear();TOKEN=null;USER=null;document.getElementById('app').style.display='none';document.getElementById('login').style.display='flex';}
+function logout(){if(TOKEN){pOST('/auth/logout',{}).catch(()=>{});}localStorage.clear();TOKEN=null;USER=null;document.getElementById('app').style.display='none';document.getElementById('login').style.display='flex';showAuth('login');}
 
 /* nav */
 const NAV_ADMIN=[['OVERVIEW',[['dashboard','📊','Dashboard']]],
