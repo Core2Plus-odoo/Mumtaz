@@ -6,10 +6,17 @@ Mumtaz Auth & AI API
 - Issues JWT used by all frontends
 """
 
-import os, json, re, time, sqlite3
+import os, json, re, time, sqlite3, logging, secrets as _secrets
 import xmlrpc.client
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone, timedelta
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger("mumtaz")
 
 from fastapi import FastAPI, HTTPException, Depends, Header, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,9 +35,19 @@ import settings_store as settings
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────
-SECRET      = os.environ.get("JWT_SECRET",        "change-me-in-production")
+_env_mode   = os.environ.get("ENVIRONMENT", "production").lower()
+
+_raw_secret = os.environ.get("JWT_SECRET", "")
+if not _raw_secret or _raw_secret in ("change-me-in-production", "dev-only-insecure-secret-not-for-production"):
+    if _env_mode != "development":
+        raise RuntimeError(
+            "[FATAL] JWT_SECRET is not set or uses the insecure default. "
+            "Generate a strong secret with: openssl rand -hex 64"
+        )
+    _raw_secret = "dev-only-insecure-secret-not-for-production"
+SECRET      = _raw_secret
 ALGO        = "HS256"
-TOKEN_DAYS  = 30
+TOKEN_HOURS = int(os.environ.get("TOKEN_HOURS", "24"))
 ANT_KEY     = os.environ.get("ANTHROPIC_API_KEY", "")
 ZAKI_MODEL  = os.environ.get("ZAKI_MODEL",         "claude-opus-4-7")
 DB_PATH     = os.environ.get("DB_PATH",            "/opt/zaki-server/users.db")
@@ -40,6 +57,12 @@ ODOO_DB     = os.environ.get("ODOO_DB",             "mumtaz")
 ODOO_ADMIN  = os.environ.get("ODOO_ADMIN_USER",     "admin")
 ODOO_PASS   = os.environ.get("ODOO_ADMIN_PASS",     "admin")
 ODOO_TIMEOUT = int(os.environ.get("ODOO_TIMEOUT",   "15"))
+
+if ODOO_PASS in ("admin", "password", "odoo", "") and _env_mode != "development":
+    raise RuntimeError(
+        "[FATAL] ODOO_ADMIN_PASS is set to a weak default. "
+        "Set a strong password in your .env file."
+    )
 
 def _hash_pw(password: str) -> str:
     return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt()).decode()
@@ -59,15 +82,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Mumtaz Auth & AI API", version="2.0.0", lifespan=lifespan)
 
-_cors_env = os.environ.get("CORS_ORIGINS", "")
-CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()] or ["*"]
+_cors_raw    = os.environ.get("CORS_ORIGINS", "")
+CORS_ORIGINS = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+if not CORS_ORIGINS:
+    if _env_mode != "development":
+        raise RuntimeError(
+            "[FATAL] CORS_ORIGINS is not set. "
+            "Set to a comma-separated list of allowed origins, e.g.: "
+            "https://mumtaz.digital,https://app.mumtaz.digital"
+        )
+    CORS_ORIGINS = ["http://localhost:3000", "http://localhost:8080",
+                    "http://localhost:5173", "http://127.0.0.1:3000"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 
 # ── SQLite (local cache + non-Odoo users) ─────────────────────────────
@@ -150,7 +182,7 @@ def init_db():
     cols = {r[1]: r for r in conn.execute("PRAGMA table_info(users)").fetchall()}
     need_rebuild = cols.get("password_hash") and cols["password_hash"][3]  # notnull flag
     if need_rebuild:
-        print("[init_db] old schema detected — rebuilding users table")
+        logger.warning("[init_db] old schema detected — rebuilding users table")
         conn.execute("ALTER TABLE users RENAME TO users_old")
         conn.execute(_USERS_DDL)
         try:
@@ -165,7 +197,7 @@ def init_db():
                 FROM users_old
             """)
         except Exception as e:
-            print(f"[init_db] data migration error: {e}")
+            logger.error("[init_db] data migration error: %s", e)
         conn.execute("DROP TABLE IF EXISTS users_old")
     else:
         # Add any columns missing from older nullable schemas
@@ -205,7 +237,8 @@ def make_token(user_id: int, email: str, extra: dict = None) -> str:
     payload = {
         "sub": str(user_id),
         "email": email,
-        "exp": int(time.time()) + 86400 * TOKEN_DAYS,
+        "exp": int(time.time()) + 3600 * TOKEN_HOURS,
+        "jti": _secrets.token_hex(8),
     }
     if extra:
         payload.update(extra)
@@ -247,7 +280,7 @@ def _record_odoo_error(where: str, exc: Exception) -> None:
     _odoo_last_error["at"]      = where
     _odoo_last_error["message"] = f"{type(exc).__name__}: {exc}"
     _odoo_last_error["ts"]      = int(time.time())
-    print(f"[Odoo] {where} error: {exc}")
+    logger.error("[Odoo] %s error: %s", where, exc)
 
 def _odoo_transport():
     return (_SafeTimeoutTransport(ODOO_TIMEOUT)
@@ -301,7 +334,7 @@ def odoo_create_user(name: str, email: str, password: str, db: str = None) -> in
     _db = db or ODOO_DB
     admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid:
-        print(f"[Odoo] cannot create user in {_db} — admin auth failed")
+        logger.error("[Odoo] cannot create user in %s — admin auth failed", _db)
         return None
     try:
         obj = _odoo_object()
@@ -364,7 +397,7 @@ def _odoo_create_saas_invoice(email: str, name: str | None, plan_key: str, db: s
     _db = db or ODOO_DB
     admin_uid = odoo_get_admin_uid(_db)
     if not admin_uid:
-        print(f"[Invoice] Odoo admin auth failed — cannot create invoice for {email}")
+        logger.error("[Invoice] Odoo admin auth failed — cannot create invoice for %s", email)
         return None
     try:
         obj = _odoo_object()
@@ -414,11 +447,11 @@ def _odoo_create_saas_invoice(email: str, name: str | None, plan_key: str, db: s
             })],
         }])
         obj.execute_kw(_db, admin_uid, ODOO_PASS, "account.move", "action_post", [[inv_id]])
-        print(f"[Invoice] #{inv_id} created → {email} {plan['name']} {plan['price']} {plan['currency']}")
+        logger.info("[Invoice] #%s created → %s %s %s %s", inv_id, email, plan['name'], plan['price'], plan['currency'])
         return inv_id
     except Exception as e:
         _record_odoo_error("create_saas_invoice", e)
-        print(f"[Invoice] Failed for {email}: {e}")
+        logger.error("[Invoice] Failed for %s: %s", email, e)
         return None
 
 def _make_tenant_code(company: str) -> str:
@@ -456,7 +489,7 @@ def odoo_create_tenant(company: str, admin_email: str, admin_name: str, db: str 
         )
         return tenant_id
     except Exception as e:
-        print(f"[Odoo] create tenant error in {_db}: {e}")
+        logger.error("[Odoo] create tenant error in %s: %s", _db, e)
         return None
 
 def odoo_read_tenant(tenant_id: int) -> dict:
@@ -514,7 +547,7 @@ def odoo_get_module_states() -> dict:
             for portal_id, odoo_name in MODULE_MAP.items()
         }
     except Exception as e:
-        print(f"[modules] get states error: {e}")
+        logger.error("[modules] get states error: %s", e)
         return {}
 
 def odoo_toggle_module(portal_id: str, install: bool) -> bool:
@@ -534,7 +567,7 @@ def odoo_toggle_module(portal_id: str, install: bool) -> bool:
         obj.execute_kw(ODOO_DB, admin_uid, ODOO_PASS, "ir.module.module", method, [ids])
         return True
     except Exception as e:
-        print(f"[modules] toggle error ({portal_id}, install={install}): {e}")
+        logger.error("[modules] toggle error (%s, install=%s): %s", portal_id, install, e)
         return False
 
 # ── Pydantic models ───────────────────────────────────────────────────
@@ -599,7 +632,7 @@ def _provision_tenant_bg(user_id: int, company: str, email: str,
                 (result["db_name"], ODOO_URL, company, email, result["error"])
             )
             db.commit()
-            print(f"[provision] FAILED for {email}: {result['error']}")
+            logger.error("[provision] FAILED for %s: %s", email, result['error'])
             return
 
         db_name = result["db_name"]
@@ -612,7 +645,7 @@ def _provision_tenant_bg(user_id: int, company: str, email: str,
         try:
             tenant_id = odoo_create_tenant(company, email, name, db=db_name)
         except Exception as exc:
-            print(f"[provision] mumtaz.tenant record skipped: {exc}")
+            logger.warning("[provision] mumtaz.tenant record skipped: %s", exc)
 
         # Record active tenant
         db.execute(
@@ -626,10 +659,10 @@ def _provision_tenant_bg(user_id: int, company: str, email: str,
             (db_name, uid, tenant_id, user_id)
         )
         db.commit()
-        print(f"[provision] SUCCESS for {email}: db={db_name}")
+        logger.info("[provision] SUCCESS for %s: db=%s", email, db_name)
 
     except Exception as exc:
-        print(f"[provision] EXCEPTION for {email}: {exc}")
+        logger.exception("[provision] EXCEPTION for %s", email)
         try:
             db.execute(
                 "INSERT OR REPLACE INTO tenants "
@@ -893,9 +926,9 @@ def login(req: LoginReq):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[login] unexpected error: {e}")
+        logger.exception("[login] unexpected error")
         db.close()
-        raise HTTPException(500, detail=f"Login error: {e}")
+        raise HTTPException(500, detail="An unexpected error occurred. Please try again.")
 
     if not row:
         db.close()
@@ -1534,7 +1567,7 @@ async def billing_webhook(request: Request, background_tasks: BackgroundTasks):
             user_name = row["name"] if row else None
             db.execute("UPDATE users SET plan=? WHERE email=?", (plan_key, email.lower()))
             db.commit(); db.close()
-            print(f"[billing] subscription {etype} → {email} = {plan_key}")
+            logger.info("[billing] subscription %s → %s = %s", etype, email, plan_key)
             background_tasks.add_task(_odoo_create_saas_invoice, email.lower(), user_name, plan_key)
     elif etype == "customer.subscription.deleted":
         email = billing_svc.email_from_event(obj)
@@ -1542,7 +1575,7 @@ async def billing_webhook(request: Request, background_tasks: BackgroundTasks):
             db = get_db()
             db.execute("UPDATE users SET plan='trial' WHERE email=?", (email.lower(),))
             db.commit(); db.close()
-            print(f"[billing] subscription cancelled → {email} dropped to trial")
+            logger.info("[billing] subscription cancelled → %s dropped to trial", email)
 
     return {"received": True}
 
@@ -1776,7 +1809,7 @@ async def get_dashboard(auth: dict = Depends(require_auth)):
                 for r in rows[:10]
             ]
         except Exception as e:
-            print(f"[dashboard] invoice fetch error: {e}")
+            logger.error("[dashboard] invoice fetch error: %s", e)
 
         try:
             uid_list = obj.execute_kw(
@@ -1786,7 +1819,7 @@ async def get_dashboard(auth: dict = Depends(require_auth)):
             users_data["active"] = len(uid_list)
             users_data["total"]  = len(uid_list)
         except Exception as e:
-            print(f"[dashboard] users fetch error: {e}")
+            logger.error("[dashboard] users fetch error: %s", e)
 
     # Pull plan from SQLite
     plan = auth.get("plan", "trial")
