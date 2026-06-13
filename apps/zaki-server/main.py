@@ -1159,9 +1159,13 @@ async def get_tenant_features(auth: dict = Depends(require_auth)):
     control plane. Fails open (everything enabled) when the ERP/control plane
     is not yet provisioned — never errors.
     """
+    plan      = _user_plan(auth["email"])
+    incl      = _plan_apps(plan)
+
     def _all_enabled(provisioned: bool):
-        return {"provisioned": provisioned, "apps": [
-            {"key": k, "code": s["code"], "name": s["name"], "area": s["area"], "enabled": True}
+        return {"provisioned": provisioned, "plan": plan, "apps": [
+            {"key": k, "code": s["code"], "name": s["name"], "area": s["area"],
+             "enabled": k in incl, "included": k in incl}
             for k, s in APP_FEATURES.items()
         ]}
 
@@ -1198,9 +1202,11 @@ async def get_tenant_features(auth: dict = Depends(require_auth)):
     for k, s in APP_FEATURES.items():
         fid = code_to_fid.get(s["code"])
         mode = modes.get(fid) if fid else None
+        included = k in incl
+        # An app is on only if its package includes it AND it isn't force_off.
         apps.append({"key": k, "code": s["code"], "name": s["name"], "area": s["area"],
-                     "enabled": mode != "force_off"})
-    return {"provisioned": True, "apps": apps}
+                     "included": included, "enabled": included and mode != "force_off"})
+    return {"provisioned": True, "plan": plan, "apps": apps}
 
 
 class FeatureToggleReq(BaseModel):
@@ -1214,9 +1220,14 @@ async def set_tenant_feature(req: FeatureToggleReq, auth: dict = Depends(require
     force_on / force_off override in their isolated Odoo control plane.
     Tenant-scoped; find-or-creates the tenant + feature records as needed.
     """
-    spec = next((s for s in APP_FEATURES.values() if s["code"] == req.code), None)
+    app_key = next((k for k, s in APP_FEATURES.items() if s["code"] == req.code), None)
+    spec    = APP_FEATURES.get(app_key) if app_key else None
     if not spec:
         raise HTTPException(400, "Unknown feature")
+
+    # Packages gate access: you can't enable an app your plan doesn't include.
+    if req.enabled and app_key not in _plan_apps(_user_plan(auth["email"])):
+        raise HTTPException(402, "Upgrade your package to enable this app")
 
     tenant_db, _ = _user_tenant_and_products(auth["email"])
     if not tenant_db:
@@ -1622,26 +1633,40 @@ PLANS = {
         "interval": "14-day trial",
         "features": ["All ERP modules", "1 ZAKI agent", "Up to 3 users", "Email support"],
         "limits": {"users": 3, "agents": 1, "modules": -1},
+        "apps": ["erp", "zaki"],
     },
     "starter": {
         "key": "starter", "name": "Starter", "price": 199, "currency": "AED",
         "interval": "month",
         "features": ["Core ERP modules", "1 ZAKI agent", "Up to 5 users", "Email support"],
         "limits": {"users": 5, "agents": 1, "modules": 4},
+        "apps": ["erp", "zaki"],
     },
     "growth": {
         "key": "growth", "name": "Growth", "price": 499, "currency": "AED",
         "interval": "month",
         "features": ["All ERP modules", "3 ZAKI agents", "B2B marketplace", "Up to 25 users", "Priority email support"],
         "limits": {"users": 25, "agents": 3, "modules": -1},
+        "apps": ["erp", "zaki", "marketplace"],
     },
     "scale": {
         "key": "scale", "name": "Scale", "price": 1499, "currency": "AED",
         "interval": "month",
         "features": ["Everything in Growth", "All ZAKI agents", "Up to 100 users", "Phone + Slack support", "Dedicated account manager"],
         "limits": {"users": 100, "agents": -1, "modules": -1},
+        "apps": ["erp", "zaki", "marketplace"],
     },
 }
+
+def _plan_apps(plan_key: str) -> set[str]:
+    """App keys included in a package (defaults to trial's set)."""
+    return set((PLANS.get(plan_key or "trial") or PLANS["trial"]).get("apps", []) or [])
+
+def _user_plan(email: str) -> str:
+    db  = get_db()
+    row = db.execute("SELECT plan FROM users WHERE email=?", (email,)).fetchone()
+    db.close()
+    return (row["plan"] if row and row["plan"] else "trial")
 
 @app.get("/api/v1/plans")
 async def list_plans():
@@ -2300,6 +2325,63 @@ def admin_set_tenant_feature(db_name: str, req: FeatureToggleReq,
         _record_odoo_error("admin_set_tenant_feature", e)
         raise HTTPException(502, "Could not update the tenant's app")
     return {"ok": True, "db_name": db_name, "code": req.code, "enabled": req.enabled}
+
+
+class PlanChangeReq(BaseModel):
+    plan: str
+
+@app.put("/api/v1/admin/tenants/{db_name}/plan")
+def admin_set_tenant_plan(db_name: str, req: PlanChangeReq,
+                          auth: dict = Depends(require_owner)):
+    """
+    Assign a package to a tenant. The package is the single lever: it sets the
+    billing plan AND re-applies the apps it includes (force_on included,
+    force_off excluded) in the tenant's Odoo control plane, with marketplace
+    group enforcement. Billing + apps stay in lock-step.
+    """
+    if req.plan not in PLANS:
+        raise HTTPException(400, f"Unknown plan '{req.plan}'")
+    if not _validate_tenant_db(db_name):
+        raise HTTPException(404, "Unknown tenant")
+
+    # 1. Billing: persist the plan on the tenant registry + its users.
+    conn = get_db()
+    conn.execute("UPDATE tenants SET plan=? WHERE db_name=?", (req.plan, db_name))
+    conn.execute("UPDATE users SET plan=? WHERE tenant_db=?", (req.plan, db_name))
+    conn.commit()
+    conn.close()
+
+    # 2. Apps: align overrides with the package's included apps.
+    included = _plan_apps(req.plan)
+    synced = {}
+    try:
+        uid = odoo_get_admin_uid(db=db_name)
+        if uid:
+            obj = _odoo_object()
+            tenant_id = _erp_find_tenant(obj, db_name, uid, create=True)
+            for key, spec in APP_FEATURES.items():
+                enabled = key in included
+                fid  = _erp_find_feature(obj, db_name, uid, spec, create=True)
+                mode = "force_on" if enabled else "force_off"
+                existing = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature",
+                                          "search",
+                                          [[["tenant_id", "=", tenant_id], ["feature_id", "=", fid]]],
+                                          {"limit": 1})
+                vals = {"override_mode": mode,
+                        "reason": f"Package '{req.plan}' applied by owner {auth.get('email')}."}
+                if existing:
+                    obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "write",
+                                   [existing, vals])
+                else:
+                    obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "create",
+                                   [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+                _enforce_marketplace_access(obj, db_name, uid, spec["code"], enabled)
+                synced[key] = enabled
+    except Exception as e:
+        # Plan is already saved in the registry; app sync is best-effort.
+        _record_odoo_error("admin_set_tenant_plan", e)
+
+    return {"ok": True, "db_name": db_name, "plan": req.plan, "apps": synced}
 
 
 @app.post("/api/v1/admin/sync-erp")

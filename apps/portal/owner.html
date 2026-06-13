@@ -63,6 +63,8 @@
   .app-dot.on{background:var(--gold);color:#fff;border-color:var(--gold)}
   .app-dot.off{background:var(--paper2);color:var(--ink4)}
   .app-dot.pending{opacity:.5;cursor:wait}
+  .plan-sel{font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--ink);background:var(--paper2);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;text-transform:capitalize}
+  .plan-sel:disabled{opacity:.5;cursor:wait}
   .muted{color:var(--ink4)}
   .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -126,7 +128,23 @@
 const TOKEN = localStorage.getItem('mumtaz_token');
 const H = { Authorization: 'Bearer ' + TOKEN };
 const APPS = [{key:'erp',code:'erp_access',label:'ERP'},{key:'zaki',code:'zaki_access',label:'ZAKI'},{key:'marketplace',code:'marketplace_access',label:'MKT'}];
+const PLAN_KEYS = ['trial','starter','growth','scale'];
 let TENANTS = [];
+
+async function setPlan(db, plan, el){
+  el.disabled = true;
+  try{
+    const r = await fetch(`/api/v1/admin/tenants/${encodeURIComponent(db)}/plan`, {
+      method:'PUT', headers:{...H,'Content-Type':'application/json'},
+      body: JSON.stringify({plan})
+    });
+    if(!r.ok) throw new Error('failed');
+    toast(`Package set to ${plan} — apps & billing updated`);
+    loadApps(db);      // app dots reflect the new package
+    loadOverview();    // MRR may change
+  }catch(e){ toast('Could not change package.'); }
+  finally{ el.disabled = false; }
+}
 
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(window._t); window._t=setTimeout(()=>t.classList.remove('show'),2600); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -176,7 +194,9 @@ async function loadTenants(){
     document.getElementById('rows').innerHTML = TENANTS.map(t=>`
       <tr data-db="${esc(t.db_name)}">
         <td class="t-co">${esc(t.company||t.db_name)}<div class="t-email">${esc(t.admin_email||'')}</div></td>
-        <td><span class="pill ${esc(t.plan)}">${esc(t.plan)}</span></td>
+        <td><select class="plan-sel" onchange="setPlan('${esc(t.db_name)}',this.value,this)">
+          ${PLAN_KEYS.map(p=>`<option value="${p}" ${t.plan===p?'selected':''}>${p}</option>`).join('')}
+        </select></td>
         <td><span class="pill ${esc(t.status)}">${esc(t.status)}</span></td>
         <td class="mono">${t.users}</td>
         <td class="t-hide mono">${money(t.mrr,d.currency)}</td>

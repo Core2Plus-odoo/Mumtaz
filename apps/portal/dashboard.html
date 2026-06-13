@@ -189,6 +189,13 @@
     .pc-switch input:checked + .pc-slider { background: var(--gold); }
     .pc-switch input:checked + .pc-slider::before { transform: translateX(18px); }
     .pc-switch input:disabled + .pc-slider { opacity: .5; cursor: wait; }
+    .pc-lock { font-size: 1rem; opacity: .55; }
+    .pc-upgrade {
+      align-self: flex-start; background: var(--gold-bg); color: var(--gold);
+      border: 1.5px solid var(--gold-border); font-size: .85rem; font-weight: 700;
+      padding: 8px 18px; border-radius: 100px; transition: opacity .15s;
+    }
+    .pc-upgrade:hover { opacity: .85; }
 
     #pf-toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -697,6 +704,8 @@
     /* ── App enable/disable (control-plane feature toggles) ── */
     const APP_FEATURE_CODE = { erp: 'erp_access', zaki: 'zaki_access', marketplace: 'marketplace_access' };
     let FEATURE_STATE = {};   // feature code -> enabled (default: enabled)
+    let FEATURE_INCL  = {};   // app key -> included in current package
+    let TENANT_PLAN   = '';   // current package key
 
     function pfToast(msg) {
       let t = document.getElementById('pf-toast');
@@ -712,7 +721,8 @@
         const r = await fetch('/api/v1/tenant/features', { headers: { Authorization: 'Bearer ' + token } });
         if (!r.ok) return;                       // fail-open: keep defaults (enabled)
         const d = await r.json();
-        (d.apps || []).forEach(a => { FEATURE_STATE[a.code] = a.enabled; });
+        TENANT_PLAN = d.plan || '';
+        (d.apps || []).forEach(a => { FEATURE_STATE[a.code] = a.enabled; FEATURE_INCL[a.key] = a.included; });
         renderProducts();
       } catch (e) { /* fail-open */ }
     }
@@ -782,26 +792,34 @@
         onboarding.products.map(key => {
           const p = PRODUCTS[key]; if (!p) return '';
           const code = APP_FEATURE_CODE[key];
-          // Apps are enabled by default; only an explicit force_off disables.
-          const enabled = code ? (FEATURE_STATE[code] !== false) : true;
-          const toggle = code ? `
+          // Package gates the app; within the package an explicit force_off disables it.
+          const included = code ? (FEATURE_INCL[key] !== false) : true;
+          const enabled  = included && (code ? (FEATURE_STATE[code] !== false) : true);
+          let topRight = '', footer;
+          if (code && !included) {
+            // Not in the tenant's package → upsell, no toggle.
+            topRight = `<span class="pc-lock" title="Not in your ${TENANT_PLAN || 'current'} package">🔒</span>`;
+            footer   = `<a class="pc-upgrade" href="/billing.html">Upgrade to enable →</a>`;
+          } else {
+            if (code) topRight = `
               <label class="pc-switch" title="${enabled ? 'Disable' : 'Enable'} ${p.name}">
                 <input type="checkbox" ${enabled ? 'checked' : ''}
                        onchange="toggleApp('${key}','${code}',this)">
                 <span class="pc-slider"></span>
-              </label>` : '';
-          const launch = enabled
-            ? `<a href="${p.launchUrl}" class="pc-launch">${p.launchLabel}</a>`
-            : `<a class="pc-launch" aria-disabled="true" onclick="return false">Disabled</a>`;
+              </label>`;
+            footer = enabled
+              ? `<a href="${p.launchUrl}" class="pc-launch">${p.launchLabel}</a>`
+              : `<a class="pc-launch" aria-disabled="true" onclick="return false">Disabled</a>`;
+          }
           return `
             <div class="product-card ${enabled ? '' : 'pc-card-disabled'}">
               <div class="pc-head">
                 <div class="pc-icon ${p.tone}">${p.icon}</div>
-                ${toggle}
+                ${topRight}
               </div>
               <div class="pc-name">${p.name}</div>
               <div class="pc-desc">${p.desc}</div>
-              ${launch}
+              ${footer}
             </div>`;
         }).join('') + '</div>';
     }
