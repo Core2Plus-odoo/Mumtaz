@@ -343,9 +343,17 @@ function showForgot(){
 }
 
 function bootVendor(){
-  document.getElementById('auth-screen').style.display = 'none'
-  document.getElementById('app').style.display = 'block'
-  renderApp()
+  try {
+    document.getElementById('auth-screen').style.display = 'none'
+    document.getElementById('app').style.display = 'block'
+    renderApp()
+  } catch(e){
+    // Never leave a blank screen — fall back to the auth view.
+    console.error('Vendor portal failed to render:', e)
+    document.getElementById('app').style.display = 'none'
+    document.getElementById('auth-screen').style.display = 'flex'
+    showToast('Could not load your dashboard. Please sign in again.')
+  }
 }
 
 function doLogout(){
