@@ -193,7 +193,85 @@ jobs:
         shell: python
 
   # ────────────────────────────────────────────────────────────────────
-  # 6. Deployment dry-run (Hostinger website)
+  # 6. Secrets scanning — TruffleHog
+  # Detects accidentally committed secrets, API keys, and credentials.
+  # ────────────────────────────────────────────────────────────────────
+  secrets-scan:
+    name: Secrets Scan (TruffleHog)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+  # ────────────────────────────────────────────────────────────────────
+  # 7. Python dependency audit — pip-audit
+  # Checks for known CVEs in zaki-server Python dependencies.
+  # ────────────────────────────────────────────────────────────────────
+  pip-audit:
+    name: Python Dependency Audit (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit zaki-server dependencies
+        run: pip-audit -r apps/zaki-server/requirements.txt --ignore-vuln GHSA-jfh8-c2jp-5f7m
+
+  # ────────────────────────────────────────────────────────────────────
+  # 8. Node.js dependency audit — npm audit
+  # Checks for known CVEs in zaki-ai Node dependencies.
+  # ────────────────────────────────────────────────────────────────────
+  npm-audit:
+    name: Node Dependency Audit (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install zaki-ai deps
+        working-directory: apps/zaki-ai
+        run: npm ci --ignore-scripts
+
+      - name: npm audit
+        working-directory: apps/zaki-ai
+        run: npm audit --audit-level=high
+
+  # ────────────────────────────────────────────────────────────────────
+  # 9. Dockerfile lint — hadolint
+  # Catches Dockerfile anti-patterns and security issues.
+  # ────────────────────────────────────────────────────────────────────
+  dockerfile-lint:
+    name: Dockerfile Lint (hadolint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: warning
+
+  # ────────────────────────────────────────────────────────────────────
+  # 10. Deployment dry-run (Hostinger website)
   # Validates that the website folder has the required entry points.
   # ────────────────────────────────────────────────────────────────────
   website-check:

@@ -12,6 +12,7 @@ The caller stores db_name in SQLite and updates tenant status to
 """
 
 import json
+import logging
 import os
 import re
 import secrets
@@ -19,6 +20,8 @@ import urllib.error
 import urllib.request
 import xmlrpc.client
 from typing import Optional
+
+logger = logging.getLogger("mumtaz.provisioning")
 
 ODOO_URL         = os.environ.get("ODOO_URL",         "http://localhost:8069")
 ODOO_MASTER_PASS = os.environ.get("ODOO_MASTER_PASS", "admin")
@@ -108,7 +111,7 @@ def install_addons(db_name: str, addons: list[str]) -> bool:
     """
     uid = _admin_uid(db_name)
     if not uid:
-        print(f"[provision] install_addons: auth failed for {db_name}")
+        logger.error("[provision] install_addons: auth failed for %s", db_name)
         return False
     obj = xmlrpc.client.ServerProxy(
         f"{ODOO_URL}/xmlrpc/2/object", allow_none=True
@@ -125,10 +128,10 @@ def install_addons(db_name: str, addons: list[str]) -> bool:
                 "ir.module.module", "button_immediate_install",
                 [module_ids],
             )
-        print(f"[provision] installed {len(module_ids or [])} addons in {db_name}")
+        logger.info("[provision] installed %d addons in %s", len(module_ids or []), db_name)
         return True
     except Exception as exc:
-        print(f"[provision] install_addons error for {db_name}: {exc}")
+        logger.error("[provision] install_addons error for %s: %s", db_name, exc)
         return False
 
 
@@ -143,11 +146,11 @@ def provision_tenant(company: str, admin_email: str) -> dict:
         {"ok": False, "db_name": "mt_acme_3a7f2b", "error": "reason"}
     """
     db_name = generate_db_name(company)
-    print(f"[provision] starting: company={company!r} db={db_name}")
+    logger.info("[provision] starting: company=%r db=%s", company, db_name)
 
     try:
         create_odoo_db(db_name, admin_email)
-        print(f"[provision] db created: {db_name}")
+        logger.info("[provision] db created: %s", db_name)
     except RuntimeError as exc:
         return {"ok": False, "db_name": db_name, "error": str(exc)}
 
@@ -155,6 +158,6 @@ def provision_tenant(company: str, admin_email: str) -> dict:
     try:
         install_addons(db_name, DEFAULT_ADDONS)
     except Exception as exc:
-        print(f"[provision] addon install skipped for {db_name}: {exc}")
+        logger.warning("[provision] addon install skipped for %s: %s", db_name, exc)
 
     return {"ok": True, "db_name": db_name, "error": None}

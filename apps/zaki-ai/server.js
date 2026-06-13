@@ -12,9 +12,23 @@ const zaki            = require('./agents/zaki');
 const app         = express();
 const PORT        = process.env.PORT || 3000;
 const ZAKI_SERVER = process.env.ZAKI_SERVER_URL || 'http://localhost:8002';
+const ENVIRONMENT = (process.env.ENVIRONMENT || 'production').toLowerCase();
+
+/* ── CORS ────────────────────────────────────────────────────────────
+ * Build an explicit allowlist from CORS_ORIGINS env var.
+ * Crashes at startup in production if not set — wildcards are banned. */
+const _corsRaw    = process.env.CORS_ORIGINS || '';
+const corsOrigins = _corsRaw.split(',').map(o => o.trim()).filter(Boolean);
+if (!corsOrigins.length) {
+  if (ENVIRONMENT !== 'development') {
+    console.error('[FATAL] CORS_ORIGINS is not set. Set to a comma-separated allowlist, e.g.:\n  CORS_ORIGINS=https://app.mumtaz.digital,https://zaki.mumtaz.digital');
+    process.exit(1);
+  }
+  corsOrigins.push('http://localhost:3000', 'http://localhost:8080', 'http://localhost:5173');
+}
 
 /* ── Middleware ─────────────────────────────────────────────────── */
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: corsOrigins, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -54,7 +68,7 @@ async function requireAuth(req, res, next) {
     next();
   } catch (err) {
     console.error('[Auth]', err.message);
-    res.status(503).json({ error: 'Auth service unavailable' });
+    res.status(503).json({ error: 'Auth service unavailable', code: 'AUTH_UNAVAILABLE' });
   }
 }
 
@@ -68,8 +82,8 @@ app.post('/auth/login', async (req, res) => {
     });
     const data = await r.json();
     res.status(r.status).json(data);
-  } catch (err) {
-    res.status(503).json({ error: 'Auth service unavailable' });
+  } catch (_err) {
+    res.status(503).json({ error: 'Auth service unavailable', code: 'AUTH_UNAVAILABLE' });
   }
 });
 
@@ -82,8 +96,8 @@ app.post('/auth/register', async (req, res) => {
     });
     const data = await r.json();
     res.status(r.status).json(data);
-  } catch (err) {
-    res.status(503).json({ error: 'Auth service unavailable' });
+  } catch (_err) {
+    res.status(503).json({ error: 'Auth service unavailable', code: 'AUTH_UNAVAILABLE' });
   }
 });
 
@@ -108,7 +122,7 @@ app.post('/auth/logout', (req, res) => {
 app.post('/erp/connect', requireAuth, async (req, res) => {
   const { odooUrl, db, email, password } = req.body;
   if (!odooUrl || !db || !email || !password) {
-    return res.status(400).json({ error: 'odooUrl, db, email, password required' });
+    return res.status(400).json({ error: 'odooUrl, db, email, password required', code: 'MISSING_FIELDS' });
   }
   const baseUrl = odooUrl.replace(/\/+$/, '');
   try {
@@ -116,7 +130,8 @@ app.post('/erp/connect', requireAuth, async (req, res) => {
     odooStore.set(req.userId, { baseUrl, db, sessionId, uid });
     res.json({ ok: true, name, uid, baseUrl, db });
   } catch (err) {
-    res.status(401).json({ error: err.message || 'Odoo connection failed' });
+    console.error('[ERP connect]', err.message);
+    res.status(401).json({ error: 'Odoo connection failed', code: 'ERP_AUTH_FAILED' });
   }
 });
 
@@ -142,7 +157,7 @@ function getOdooConn(req, res) {
 app.post('/api/chat', requireAuth, async (req, res) => {
   const { message, history = [] } = req.body;
   if (!message || !message.trim()) {
-    return res.status(400).json({ error: 'Message is required.' });
+    return res.status(400).json({ error: 'Message is required.', code: 'MISSING_MESSAGE' });
   }
 
   const sanitisedHistory = sanitiseHistory(history);
@@ -166,9 +181,9 @@ app.post('/api/chat', requireAuth, async (req, res) => {
   try {
     await zaki.chat({ message: message.trim(), history: sanitisedHistory, conn, writeSSE });
   } catch (err) {
-    console.error('[ZAKI] Chat error:', err);
+    console.error('[ZAKI] Chat error:', err.message);
     if (!res.writableEnded) {
-      writeSSE({ type: 'error', message: `Something went wrong: ${err.message}` });
+      writeSSE({ type: 'error', message: 'An error occurred. Please try again.' });
       writeSSE({ type: 'done' });
     }
   } finally {
@@ -215,7 +230,7 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
     res.json({ transactions });
   } catch (err) {
     console.error('[Dashboard]', err.message);
-    res.status(502).json({ error: err.message });
+    res.status(502).json({ error: 'Failed to fetch dashboard data', code: 'ERP_ERROR' });
   }
 });
 
@@ -232,7 +247,7 @@ app.get('/api/company', requireAuth, async (req, res) => {
     res.json(rows[0] || {});
   } catch (err) {
     console.error('[Company]', err.message);
-    res.status(502).json({ error: err.message });
+    res.status(502).json({ error: 'Failed to fetch company data', code: 'ERP_ERROR' });
   }
 });
 
@@ -310,14 +325,14 @@ app.get('/api/financials', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('[Financials]', err.message);
-    res.status(502).json({ error: err.message });
+    res.status(502).json({ error: 'Failed to fetch financial data', code: 'ERP_ERROR' });
   }
 });
 
 /* ── SEO / PageSpeed Analysis ───────────────────────────────────── */
 app.get('/api/seo', requireAuth, async (req, res) => {
   const { url } = req.query;
-  if (!url) return res.status(400).json({ error: 'URL required' });
+  if (!url) return res.status(400).json({ error: 'URL required', code: 'MISSING_URL' });
 
   const https = require('https');
 
@@ -359,7 +374,7 @@ app.get('/api/seo', requireAuth, async (req, res) => {
     res.json({ url, mobile: extract(mobile), desktop: extract(desktop) });
   } catch (err) {
     console.error('[SEO]', err.message);
-    res.status(502).json({ error: err.message });
+    res.status(502).json({ error: 'PageSpeed analysis failed', code: 'SEO_ERROR' });
   }
 });
 
@@ -397,7 +412,7 @@ app.use('/api/v1', async (req, res) => {
     else res.send(await upstream.text());
   } catch (err) {
     console.error('[proxy /api/v1]', err.message);
-    res.status(502).json({ detail: `zaki-server unreachable: ${err.message}` });
+    res.status(502).json({ error: 'Service unavailable', code: 'UPSTREAM_ERROR' });
   }
 });
 
@@ -424,8 +439,8 @@ function sanitiseHistory(raw) {
 
 /* ── Start ──────────────────────────────────────────────────────── */
 app.listen(PORT, () => {
-  console.log(`\n🟡 ZAKI AI — Mumtaz\n   http://localhost:${PORT}\n`);
+  console.log(`ZAKI AI — http://localhost:${PORT} [${ENVIRONMENT}]`);
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.warn('   ⚠️  ANTHROPIC_API_KEY not set in .env');
+    console.warn('[WARN] ANTHROPIC_API_KEY not set in .env');
   }
 });
