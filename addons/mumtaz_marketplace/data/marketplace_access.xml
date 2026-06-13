@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        On install/upgrade, align the Marketplace User group with the current
+        marketplace_access feature state: enabled by default, revoked only if
+        an explicit force_off tenant override exists. This keeps the Odoo-side
+        enforcement consistent with the portal/owner toggles.
+        (No noupdate wrapper → re-runs on every upgrade; idempotent.)
+    -->
+    <function model="mumtaz.marketplace.access" name="_sync_from_feature"/>
+</odoo>

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Gated on the Marketplace User group so the app can be enforced
+         on/off per tenant by granting/revoking that group. -->
     <menuitem id="menu_mumtaz_marketplace_root"
               name="Marketplace"
               parent="mumtaz_core.menu_mumtaz_root"
               sequence="25"
-              groups="base.group_user"/>
+              groups="mumtaz_marketplace.group_mumtaz_marketplace_user"/>
 
     <menuitem id="menu_mumtaz_marketplace_browse"
               name="Browse Listings"

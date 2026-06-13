@@ -18,6 +18,7 @@
         "views/purchase_integration_views.xml",
         "views/sale_integration_views.xml",
         "views/mumtaz_menus.xml",
+        "data/marketplace_access.xml",
     ],
     "assets": {
         "web.assets_backend": [

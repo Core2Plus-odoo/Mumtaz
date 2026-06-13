@@ -1056,6 +1056,19 @@ def _erp_find_tenant(obj, db: str, admin_uid: int, create: bool = False) -> int 
     return obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.tenant", "create",
         [{"name": db, "code": code, "database_name": db, "state": "active"}])
 
+def _enforce_marketplace_access(obj, db: str, admin_uid: int, code: str, enabled: bool) -> None:
+    """When the marketplace app is toggled, grant/revoke the Odoo Marketplace
+    User group so the change is enforced server-side (not just hidden in the
+    portal). Best-effort — never blocks the toggle if the addon is absent."""
+    if code != "marketplace_access":
+        return
+    try:
+        obj.execute_kw(db, admin_uid, ODOO_PASS,
+                       "mumtaz.marketplace.access", "set_access", [bool(enabled)])
+    except Exception as e:
+        _record_odoo_error("marketplace_access_sync", e)
+
+
 def _erp_find_feature(obj, db: str, admin_uid: int, spec: dict, create: bool = False) -> int | None:
     """Resolve (optionally create) a mumtaz.feature by code inside a tenant DB."""
     ids = obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.feature", "search",
@@ -1160,6 +1173,7 @@ async def set_tenant_feature(req: FeatureToggleReq, auth: dict = Depends(require
         else:
             obj.execute_kw(tenant_db, admin_uid, ODOO_PASS, "mumtaz.tenant.feature",
                            "create", [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+        _enforce_marketplace_access(obj, tenant_db, admin_uid, req.code, req.enabled)
     except HTTPException:
         raise
     except Exception as e:
@@ -2210,6 +2224,7 @@ def admin_set_tenant_feature(db_name: str, req: FeatureToggleReq,
         else:
             obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "create",
                            [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+        _enforce_marketplace_access(obj, db_name, uid, req.code, req.enabled)
     except HTTPException:
         raise
     except Exception as e:
