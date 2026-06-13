@@ -1111,6 +1111,18 @@ APP_FEATURES = {
     "marketplace": {"code": "marketplace_access", "name": "B2B Marketplace", "area": "marketplace"},
 }
 
+# ERP sub-modules — itemized inside the ERP app, gated per package. Each maps
+# to a mumtaz.feature (area "erp"); enforcement hides the module's Odoo menus
+# by revoking its user group (see mumtaz.erp.module.access). Accounting is the
+# backbone (powers the Invoicing console + tenant-revenue figures).
+ERP_MODULES = {
+    "accounting":    {"code": "erp_accounting",    "name": "Accounting & Invoicing", "area": "erp"},
+    "inventory":     {"code": "erp_inventory",     "name": "Inventory & Warehouse",  "area": "erp"},
+    "sales":         {"code": "erp_sales",         "name": "Sales & CRM",            "area": "erp"},
+    "hr":            {"code": "erp_hr",             "name": "HR & Payroll",          "area": "erp"},
+    "manufacturing": {"code": "erp_manufacturing", "name": "Manufacturing",          "area": "erp"},
+}
+
 def _erp_find_tenant(obj, db: str, admin_uid: int, create: bool = False) -> int | None:
     """Resolve (optionally create) the mumtaz.tenant record inside a tenant DB."""
     ids = obj.execute_kw(db, admin_uid, ODOO_PASS, "mumtaz.tenant", "search",
@@ -1136,6 +1148,17 @@ def _enforce_marketplace_access(obj, db: str, admin_uid: int, code: str, enabled
                        "mumtaz.marketplace.access", "set_access", [bool(enabled)])
     except Exception as e:
         _record_odoo_error("marketplace_access_sync", e)
+
+
+def _enforce_module_access(obj, db: str, admin_uid: int, module_key: str, enabled: bool) -> None:
+    """Show/hide an ERP module's Odoo menus by syncing its user group.
+    Best-effort — never blocks the toggle if the addon/group is absent."""
+    try:
+        obj.execute_kw(db, admin_uid, ODOO_PASS,
+                       "mumtaz.erp.module.access", "set_module_access",
+                       [module_key, bool(enabled)])
+    except Exception as e:
+        _record_odoo_error("module_access_sync", e)
 
 
 def _erp_find_feature(obj, db: str, admin_uid: int, spec: dict, create: bool = False) -> int | None:
@@ -1261,6 +1284,95 @@ async def set_tenant_feature(req: FeatureToggleReq, auth: dict = Depends(require
         raise HTTPException(502, "Could not update the app in your ERP. Please try again.")
 
     return {"ok": True, "code": req.code, "enabled": req.enabled}
+
+
+@app.get("/api/v1/tenant/modules")
+async def get_tenant_modules(auth: dict = Depends(require_auth)):
+    """ERP sub-modules for the caller's tenant, with package inclusion + state."""
+    plan = _user_plan(auth["email"])
+    incl = _plan_modules(plan)
+
+    def _all(provisioned):
+        return {"provisioned": provisioned, "plan": plan, "modules": [
+            {"key": k, "code": s["code"], "name": s["name"],
+             "included": k in incl, "enabled": k in incl}
+            for k, s in ERP_MODULES.items()]}
+
+    tenant_db, _ = _user_tenant_and_products(auth["email"])
+    if not tenant_db:
+        return _all(False)
+    try:
+        uid = odoo_get_admin_uid(db=tenant_db)
+        if not uid:
+            return _all(False)
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, tenant_db, uid, create=False)
+        if not tenant_id:
+            return _all(False)
+        codes = [s["code"] for s in ERP_MODULES.values()]
+        feats = obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.feature", "search_read",
+                               [[["code", "in", codes]]], {"fields": ["code"]})
+        c2f = {r["code"]: r["id"] for r in feats}
+        fids = list(c2f.values())
+        modes = {}
+        if fids:
+            ov = obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.tenant.feature", "search_read",
+                                [[["tenant_id", "=", tenant_id], ["feature_id", "in", fids]]],
+                                {"fields": ["feature_id", "override_mode"]})
+            modes = {r["feature_id"][0]: r["override_mode"] for r in ov}
+    except Exception as e:
+        _record_odoo_error("get_tenant_modules", e)
+        return _all(False)
+
+    mods = []
+    for k, s in ERP_MODULES.items():
+        fid = c2f.get(s["code"])
+        mode = modes.get(fid) if fid else None
+        included = k in incl
+        mods.append({"key": k, "code": s["code"], "name": s["name"],
+                     "included": included, "enabled": included and mode != "force_off"})
+    return {"provisioned": True, "plan": plan, "modules": mods}
+
+
+class ModuleToggleReq(BaseModel):
+    key: str
+    enabled: bool
+
+@app.put("/api/v1/tenant/modules")
+async def set_tenant_module(req: ModuleToggleReq, auth: dict = Depends(require_auth)):
+    """Enable/disable an ERP module for the caller's tenant (within their package)."""
+    spec = ERP_MODULES.get(req.key)
+    if not spec:
+        raise HTTPException(400, "Unknown module")
+    if req.enabled and req.key not in _plan_modules(_user_plan(auth["email"])):
+        raise HTTPException(402, "Upgrade your package to enable this module")
+
+    tenant_db, _ = _user_tenant_and_products(auth["email"])
+    if not tenant_db:
+        raise HTTPException(409, "ERP is not provisioned for this account yet")
+    try:
+        uid = odoo_get_admin_uid(db=tenant_db)
+        if not uid:
+            raise RuntimeError("no admin uid")
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, tenant_db, uid, create=True)
+        fid       = _erp_find_feature(obj, tenant_db, uid, spec, create=True)
+        mode      = "force_on" if req.enabled else "force_off"
+        existing  = obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.tenant.feature", "search",
+                                   [[["tenant_id", "=", tenant_id], ["feature_id", "=", fid]]], {"limit": 1})
+        vals = {"override_mode": mode, "reason": "Set from Mumtaz portal module toggle."}
+        if existing:
+            obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.tenant.feature", "write", [existing, vals])
+        else:
+            obj.execute_kw(tenant_db, uid, ODOO_PASS, "mumtaz.tenant.feature", "create",
+                           [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+        _enforce_module_access(obj, tenant_db, uid, req.key, req.enabled)
+    except HTTPException:
+        raise
+    except Exception as e:
+        _record_odoo_error("set_tenant_module", e)
+        raise HTTPException(502, "Could not update the module in your ERP. Please try again.")
+    return {"ok": True, "key": req.key, "enabled": req.enabled}
 
 class ForgotReq(BaseModel):
     email: str
@@ -1634,6 +1746,7 @@ PLANS = {
         "features": ["All ERP modules", "1 ZAKI agent", "Up to 3 users", "Email support"],
         "limits": {"users": 3, "agents": 1, "modules": -1},
         "apps": ["erp", "zaki"],
+        "erp_modules": ["accounting", "inventory"],
     },
     "starter": {
         "key": "starter", "name": "Starter", "price": 199, "currency": "AED",
@@ -1641,6 +1754,7 @@ PLANS = {
         "features": ["Core ERP modules", "1 ZAKI agent", "Up to 5 users", "Email support"],
         "limits": {"users": 5, "agents": 1, "modules": 4},
         "apps": ["erp", "zaki"],
+        "erp_modules": ["accounting", "inventory"],
     },
     "growth": {
         "key": "growth", "name": "Growth", "price": 499, "currency": "AED",
@@ -1648,6 +1762,7 @@ PLANS = {
         "features": ["All ERP modules", "3 ZAKI agents", "B2B marketplace", "Up to 25 users", "Priority email support"],
         "limits": {"users": 25, "agents": 3, "modules": -1},
         "apps": ["erp", "zaki", "marketplace"],
+        "erp_modules": ["accounting", "inventory", "sales", "hr"],
     },
     "scale": {
         "key": "scale", "name": "Scale", "price": 1499, "currency": "AED",
@@ -1655,12 +1770,17 @@ PLANS = {
         "features": ["Everything in Growth", "All ZAKI agents", "Up to 100 users", "Phone + Slack support", "Dedicated account manager"],
         "limits": {"users": 100, "agents": -1, "modules": -1},
         "apps": ["erp", "zaki", "marketplace"],
+        "erp_modules": ["accounting", "inventory", "sales", "hr", "manufacturing"],
     },
 }
 
 def _plan_apps(plan_key: str) -> set[str]:
     """App keys included in a package (defaults to trial's set)."""
     return set((PLANS.get(plan_key or "trial") or PLANS["trial"]).get("apps", []) or [])
+
+def _plan_modules(plan_key: str) -> set[str]:
+    """ERP module keys included in a package."""
+    return set((PLANS.get(plan_key or "trial") or PLANS["trial"]).get("erp_modules", []) or [])
 
 def _user_plan(email: str) -> str:
     db  = get_db()
@@ -2377,11 +2497,97 @@ def admin_set_tenant_plan(db_name: str, req: PlanChangeReq,
                                    [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
                 _enforce_marketplace_access(obj, db_name, uid, spec["code"], enabled)
                 synced[key] = enabled
+
+            # Align ERP sub-modules with the package too.
+            mods_incl = _plan_modules(req.plan)
+            for mkey, mspec in ERP_MODULES.items():
+                men  = mkey in mods_incl
+                mfid = _erp_find_feature(obj, db_name, uid, mspec, create=True)
+                mmode = "force_on" if men else "force_off"
+                mex = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "search",
+                                     [[["tenant_id", "=", tenant_id], ["feature_id", "=", mfid]]], {"limit": 1})
+                mvals = {"override_mode": mmode,
+                         "reason": f"Package '{req.plan}' applied by owner {auth.get('email')}."}
+                if mex:
+                    obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "write", [mex, mvals])
+                else:
+                    obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "create",
+                                   [{**mvals, "tenant_id": tenant_id, "feature_id": mfid}])
+                _enforce_module_access(obj, db_name, uid, mkey, men)
+                synced["module:" + mkey] = men
     except Exception as e:
         # Plan is already saved in the registry; app sync is best-effort.
         _record_odoo_error("admin_set_tenant_plan", e)
 
     return {"ok": True, "db_name": db_name, "plan": req.plan, "apps": synced}
+
+
+@app.get("/api/v1/admin/tenants/{db_name}/modules")
+def admin_get_tenant_modules(db_name: str, auth: dict = Depends(require_owner)):
+    """Read a tenant's ERP module enable/disable state (owner oversight)."""
+    if not _validate_tenant_db(db_name):
+        raise HTTPException(404, "Unknown tenant")
+    c2f, modes = {}, {}
+    try:
+        uid = odoo_get_admin_uid(db=db_name)
+        if not uid:
+            raise RuntimeError("no admin uid")
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, db_name, uid, create=False)
+        if tenant_id:
+            codes = [s["code"] for s in ERP_MODULES.values()]
+            feats = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.feature", "search_read",
+                                   [[["code", "in", codes]]], {"fields": ["code"]})
+            c2f = {r["code"]: r["id"] for r in feats}
+            fids = list(c2f.values())
+            if fids:
+                ov = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "search_read",
+                                    [[["tenant_id", "=", tenant_id], ["feature_id", "in", fids]]],
+                                    {"fields": ["feature_id", "override_mode"]})
+                modes = {r["feature_id"][0]: r["override_mode"] for r in ov}
+    except Exception as e:
+        _record_odoo_error("admin_get_tenant_modules", e)
+        raise HTTPException(502, "Could not read tenant modules")
+    mods = []
+    for k, s in ERP_MODULES.items():
+        fid = c2f.get(s["code"])
+        mode = modes.get(fid) if fid else None
+        mods.append({"key": k, "code": s["code"], "name": s["name"], "enabled": mode != "force_off"})
+    return {"db_name": db_name, "modules": mods}
+
+
+@app.put("/api/v1/admin/tenants/{db_name}/modules")
+def admin_set_tenant_module(db_name: str, req: ModuleToggleReq,
+                            auth: dict = Depends(require_owner)):
+    """Enable/disable an ERP module for a specific tenant (owner oversight)."""
+    spec = ERP_MODULES.get(req.key)
+    if not spec:
+        raise HTTPException(400, "Unknown module")
+    if not _validate_tenant_db(db_name):
+        raise HTTPException(404, "Unknown tenant")
+    try:
+        uid = odoo_get_admin_uid(db=db_name)
+        if not uid:
+            raise RuntimeError("no admin uid")
+        obj = _odoo_object()
+        tenant_id = _erp_find_tenant(obj, db_name, uid, create=True)
+        fid       = _erp_find_feature(obj, db_name, uid, spec, create=True)
+        mode      = "force_on" if req.enabled else "force_off"
+        existing  = obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "search",
+                                   [[["tenant_id", "=", tenant_id], ["feature_id", "=", fid]]], {"limit": 1})
+        vals = {"override_mode": mode, "reason": f"Module set by owner {auth.get('email')}."}
+        if existing:
+            obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "write", [existing, vals])
+        else:
+            obj.execute_kw(db_name, uid, ODOO_PASS, "mumtaz.tenant.feature", "create",
+                           [{**vals, "tenant_id": tenant_id, "feature_id": fid}])
+        _enforce_module_access(obj, db_name, uid, req.key, req.enabled)
+    except HTTPException:
+        raise
+    except Exception as e:
+        _record_odoo_error("admin_set_tenant_module", e)
+        raise HTTPException(502, "Could not update the tenant's module")
+    return {"ok": True, "db_name": db_name, "key": req.key, "enabled": req.enabled}
 
 
 @app.post("/api/v1/admin/sync-erp")

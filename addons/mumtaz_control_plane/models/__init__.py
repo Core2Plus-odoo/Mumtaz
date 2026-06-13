@@ -4,6 +4,7 @@ from . import subscription
 from . import tenant_feature
 from . import usage_metric
 from . import feature_access_service
+from . import erp_module_access
 from . import dashboard
 from . import subscription_lifecycle_policy
 from . import subscription_lifecycle_log

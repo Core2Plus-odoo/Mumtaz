@@ -39,5 +39,47 @@
             <field name="is_customer_visible" eval="True"/>
         </record>
 
+        <!-- ERP sub-modules (itemized inside the ERP app, gated per package) -->
+        <record id="feature_erp_accounting" model="mumtaz.feature">
+            <field name="name">Accounting &amp; Invoicing</field>
+            <field name="code">erp_accounting</field>
+            <field name="product_area">erp</field>
+            <field name="feature_type">toggle</field>
+            <field name="odoo_module_name">account</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+        <record id="feature_erp_inventory" model="mumtaz.feature">
+            <field name="name">Inventory &amp; Warehouse</field>
+            <field name="code">erp_inventory</field>
+            <field name="product_area">erp</field>
+            <field name="feature_type">toggle</field>
+            <field name="odoo_module_name">stock</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+        <record id="feature_erp_sales" model="mumtaz.feature">
+            <field name="name">Sales &amp; CRM</field>
+            <field name="code">erp_sales</field>
+            <field name="product_area">erp</field>
+            <field name="feature_type">toggle</field>
+            <field name="odoo_module_name">sale_management</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+        <record id="feature_erp_hr" model="mumtaz.feature">
+            <field name="name">HR &amp; Payroll</field>
+            <field name="code">erp_hr</field>
+            <field name="product_area">erp</field>
+            <field name="feature_type">toggle</field>
+            <field name="odoo_module_name">hr</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+        <record id="feature_erp_manufacturing" model="mumtaz.feature">
+            <field name="name">Manufacturing</field>
+            <field name="code">erp_manufacturing</field>
+            <field name="product_area">erp</field>
+            <field name="feature_type">toggle</field>
+            <field name="odoo_module_name">mrp</field>
+            <field name="is_customer_visible" eval="True"/>
+        </record>
+
     </data>
 </odoo>
