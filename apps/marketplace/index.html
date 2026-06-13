@@ -246,7 +246,7 @@ footer{background:var(--surface);border-top:1px solid var(--border);padding:32px
         <div class="section-title">Featured Suppliers</div>
         <div class="section-sub" style="margin-bottom:0">Verified businesses ready to quote.</div>
       </div>
-      <button class="btn btn-outline-dark btn-sm" onclick="showToast('Browse all coming soon')">View All →</button>
+      <button class="btn btn-outline-dark btn-sm" onclick="renderSuppliers(SUPPLIERS);document.getElementById('supplier-grid').scrollIntoView({behavior:'smooth',block:'nearest'})">View All →</button>
     </div>
     <div class="supplier-grid" id="supplier-grid"></div>
   </div>
