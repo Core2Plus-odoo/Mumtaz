@@ -37,6 +37,9 @@ CORS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.st
 ODOO_BIN  = os.environ.get("ODOO_BIN", "odoo")
 ODOO_CONF = os.environ.get("ODOO_CONF", "/etc/odoo/odoo.conf")
 FREE_KEYS = ("einvoicing", "crm")
+# Core ERP every new tenant is provisioned with (mapped to Odoo Community apps
+# via module_catalogue.odoo_module). Billing still follows each module's price.
+CORE_ERP_KEYS = ("einvoicing", "crm", "accounting", "sales", "inventory", "hr_payroll", "projects")
 
 app = FastAPI(title="Mumtaz Control Panel", version="2.0")
 app.add_middleware(CORSMiddleware, allow_origins=CORS, allow_credentials=True,
@@ -221,7 +224,7 @@ async def signup(req: SignupReq):
             (req.name or req.company_name).split(" ")[0], hash_pw(req.password))
         await c.execute("""INSERT INTO tenant_modules (tenant_id,module_id)
             SELECT $1,id FROM module_catalogue WHERE key = ANY($2::text[]) ON CONFLICT DO NOTHING""",
-            tid, list(FREE_KEYS))
+            tid, list(CORE_ERP_KEYS))
         await log(c, tid, uid, "tenant_signup", "tenant", tid)
         row = await user_with_tenant(c, req.email)
     u = public_user(row)
@@ -331,7 +334,7 @@ async def admin_create_tenant(req: TenantReq, user: dict = Depends(require_admin
         if req.add_free:
             await c.execute("""INSERT INTO tenant_modules (tenant_id,module_id)
                 SELECT $1,id FROM module_catalogue WHERE key=ANY($2::text[]) ON CONFLICT DO NOTHING""",
-                tid, list(FREE_KEYS))
+                tid, list(CORE_ERP_KEYS))
         await log(c, tid, user.get("sub"), "tenant_created", "tenant", tid)
         t = await c.fetchrow("SELECT * FROM tenants WHERE id=$1", tid)
     return {"tenant": dict(t)}
@@ -400,6 +403,66 @@ async def admin_provision(tid: int, _: dict = Depends(require_admin)):
     asyncio.create_task(_provision(tid))
     return {"status": "provisioning", "message": "Odoo DB creation started in background"}
 
+
+# ── Odoo module orchestration — install/uninstall apps in a tenant DB ─
+# Each tenant_modules toggle (admin or tenant) is mirrored into the tenant's
+# Odoo database here. Slow ops run in the background; a per-DB lock serialises
+# concurrent toggles so two Odoo CLI runs never hit the same DB at once.
+_odoo_locks: dict[str, asyncio.Lock] = {}
+
+def _odoo_lock(db: str) -> asyncio.Lock:
+    lk = _odoo_locks.get(db)
+    if lk is None:
+        lk = _odoo_locks[db] = asyncio.Lock()
+    return lk
+
+async def _odoo_run(db: str, args: list[str], stdin: bytes | None = None) -> bool:
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "sudo", "-u", "odoo", ODOO_BIN, *args, "-c", ODOO_CONF, "-d", db,
+            stdin=asyncio.subprocess.PIPE if stdin is not None else asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+        await proc.communicate(stdin)
+        return proc.returncode == 0
+    except Exception:
+        return False
+
+async def _odoo_install(db: str, modules: list[str]) -> bool:
+    if not modules:
+        return True
+    return await _odoo_run(db, ["-i", ",".join(modules), "--without-demo=all", "--stop-after-init"])
+
+async def _odoo_uninstall(db: str, modules: list[str]) -> bool:
+    if not modules:
+        return True
+    names = ",".join(repr(m) for m in modules)
+    script = ("m=env['ir.module.module'].search("
+              f"[('name','in',[{names}]),('state','=','installed')])\n"
+              "m and m.button_immediate_uninstall()\n"
+              "env.cr.commit()\n")
+    return await _odoo_run(db, ["shell", "--no-http"], stdin=script.encode())
+
+async def _sync_module_to_odoo(tid: int, key: str, install: bool):
+    """Background: install/uninstall a catalogue module in the tenant's Odoo DB."""
+    async with _pool.acquire() as c:
+        db = await c.fetchval("SELECT odoo_db FROM tenants WHERE id=$1", tid)
+        odoo_mod = await c.fetchval("SELECT odoo_module FROM module_catalogue WHERE key=$1", key)
+    # Skip if the tenant has no provisioned DB yet, or the module has no Odoo
+    # app mapping (provisioning will install whatever is active later).
+    if not db or not odoo_mod:
+        return
+    modules = [m.strip() for m in odoo_mod.split(",") if m.strip()]
+    async with _odoo_lock(db):
+        ok = await (_odoo_install(db, modules) if install else _odoo_uninstall(db, modules))
+    async with _pool.acquire() as c:
+        if install and not ok:
+            await c.execute(
+                "UPDATE tenant_modules SET status='failed' WHERE tenant_id=$1 AND "
+                "module_id=(SELECT id FROM module_catalogue WHERE key=$2)", tid, key)
+        verb = ("installed" if install else "uninstalled") if ok else \
+               ("install_failed" if install else "uninstall_failed")
+        await log(c, tid, None, f"odoo_module_{verb}", "module", key)
+
 @app.get("/api/v1/admin/tenants/{tid}/odoo-link")
 async def admin_odoo_link(tid: int, _: dict = Depends(require_admin)):
     async with _pool.acquire() as c:
@@ -456,6 +519,7 @@ async def admin_add_module(tid: int, body: dict, user: dict = Depends(require_ad
         await _add_module(c, tid, body.get("module_key", ""))
         mrr = await tenant_mrr(c, tid); await c.execute("UPDATE tenants SET mrr_usd=$1 WHERE id=$2", mrr, tid)
         await log(c, tid, user.get("sub"), "module_activated", "module", body.get("module_key"))
+    asyncio.create_task(_sync_module_to_odoo(tid, body.get("module_key", ""), install=True))
     return {"status": "ok", "mrr_usd": mrr}
 
 @app.delete("/api/v1/admin/tenants/{tid}/modules/{key}")
@@ -467,6 +531,7 @@ async def admin_del_module(tid: int, key: str, user: dict = Depends(require_admi
             module_id=(SELECT id FROM module_catalogue WHERE key=$2)""", tid, key)
         mrr = await tenant_mrr(c, tid); await c.execute("UPDATE tenants SET mrr_usd=$1 WHERE id=$2", mrr, tid)
         await log(c, tid, user.get("sub"), "module_deactivated", "module", key)
+    asyncio.create_task(_sync_module_to_odoo(tid, key, install=False))
     return {"status": "ok", "mrr_usd": mrr}
 
 
@@ -563,6 +628,7 @@ async def tenant_activate_module(key: str, user: dict = Depends(current_user)):
         await _add_module(c, tid, key)
         mrr = await tenant_mrr(c, tid); await c.execute("UPDATE tenants SET mrr_usd=$1 WHERE id=$2", mrr, tid)
         await log(c, tid, user.get("sub"), "module_activated", "module", key)
+    asyncio.create_task(_sync_module_to_odoo(tid, key, install=True))
     return {"status": "ok", "mrr_usd": mrr}
 
 @app.delete("/api/v1/tenant/modules/{key}")
@@ -575,6 +641,7 @@ async def tenant_deactivate_module(key: str, user: dict = Depends(current_user))
             module_id=(SELECT id FROM module_catalogue WHERE key=$2)""", tid, key)
         mrr = await tenant_mrr(c, tid); await c.execute("UPDATE tenants SET mrr_usd=$1 WHERE id=$2", mrr, tid)
         await log(c, tid, user.get("sub"), "module_deactivated", "module", key)
+    asyncio.create_task(_sync_module_to_odoo(tid, key, install=False))
     return {"status": "ok", "mrr_usd": mrr}
 
 @app.get("/api/v1/tenant/billing")
@@ -670,7 +737,7 @@ async def tenant_org_sme(req: OrgSmeReq, user: dict = Depends(current_user)):
                 sid, req.owner_email, req.owner_name or req.name, (req.owner_name or req.name).split(" ")[0],
                 hash_pw(_secrets.token_urlsafe(10)))
         await c.execute("""INSERT INTO tenant_modules (tenant_id,module_id)
-            SELECT $1,id FROM module_catalogue WHERE key=ANY($2::text[]) ON CONFLICT DO NOTHING""", sid, list(FREE_KEYS))
+            SELECT $1,id FROM module_catalogue WHERE key=ANY($2::text[]) ON CONFLICT DO NOTHING""", sid, list(CORE_ERP_KEYS))
         await log(c, tid, user.get("sub"), "org_sme_created", "tenant", sid)
     return {"status": "ok", "sme_id": sid}
 
