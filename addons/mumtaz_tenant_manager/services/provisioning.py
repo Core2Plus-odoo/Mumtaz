@@ -203,13 +203,117 @@ class DryRunProvisioner(BaseProvisioner):
 
 
 # ---------------------------------------------------------------------------
+# Real provisioner (gated — creates actual PostgreSQL databases)
+# ---------------------------------------------------------------------------
+
+class RealProvisioner(BaseProvisioner):
+    """
+    Creates a real, isolated tenant database via Odoo's db service, installs
+    the module bundle, configures the admin user and applies baseline settings.
+
+    Enabled only when the environment variable ``MUMTAZ_REAL_PROVISIONING=1``
+    is set (see ``get_provisioner``). Otherwise the safe ``DryRunProvisioner``
+    is used so the control plane never creates databases by accident.
+    """
+
+    def _create_database(self, tenant):
+        import odoo.service.db as db_service
+
+        db_name = tenant.database_name
+        if not db_name:
+            raise ValueError("Tenant has no database_name.")
+        if db_service.exp_db_exist(db_name):
+            raise ValueError("Database '%s' already exists." % db_name)
+        if not tenant.admin_password:
+            raise ValueError(
+                "An admin password is required to provision a real database."
+            )
+        login = tenant.admin_email or "admin"
+        # Creates the DB, installs base and creates the admin user in one step.
+        db_service.exp_create_database(
+            db_name, False, "en_US",
+            user_password=tenant.admin_password, login=login,
+        )
+
+    def _install_modules(self, tenant, modules):
+        if not modules:
+            return
+        import odoo
+        from odoo import api, SUPERUSER_ID
+
+        registry = odoo.modules.registry.Registry(tenant.database_name)
+        with registry.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            Module = env["ir.module.module"]
+            found = Module.search([("name", "in", modules)])
+            if set(modules) - set(found.mapped("name")):
+                Module.update_list()
+                found = Module.search([("name", "in", modules)])
+            to_install = found.filtered(
+                lambda m: m.state in ("uninstalled", "to install"))
+            if to_install:
+                to_install.button_immediate_install()
+
+    def _create_admin_user(self, tenant):
+        import odoo
+        from odoo import api, SUPERUSER_ID
+
+        registry = odoo.modules.registry.Registry(tenant.database_name)
+        with registry.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            admin = env.ref("base.user_admin", raise_if_not_found=False)
+            if not admin:
+                return
+            vals = {}
+            if tenant.admin_name:
+                vals["name"] = tenant.admin_name
+            if tenant.admin_email:
+                vals["login"] = tenant.admin_email
+                vals["email"] = tenant.admin_email
+            if vals:
+                admin.write(vals)
+
+    def _apply_settings(self, tenant):
+        import os
+        import odoo
+        from odoo import api, SUPERUSER_ID
+
+        registry = odoo.modules.registry.Registry(tenant.database_name)
+        with registry.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            company = env.ref("base.main_company", raise_if_not_found=False)
+            if company and tenant.name:
+                company.name = tenant.name
+            icp = env["ir.config_parameter"].sudo()
+            # Plant the SSO shared secret so the control-panel bridge works.
+            sso_secret = os.environ.get("ODOO_SSO_SECRET")
+            if sso_secret:
+                icp.set_param("mumtaz.sso_secret", sso_secret)
+            # Point web.base.url at the tenant's public address.
+            if tenant.subdomain:
+                base = (icp.get_param("mumtaz.erp_base_domain")
+                        or "erp.mumtaz.digital")
+                icp.set_param("web.base.url",
+                              "https://%s.%s" % (tenant.subdomain, base))
+
+
+# ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
 
-# Swap this for a concrete subclass once real provisioning is available.
+# Default to the safe dry-run provisioner.
 PROVISIONER_CLASS = DryRunProvisioner
 
 
 def get_provisioner(odoo_env=None) -> BaseProvisioner:
-    """Return the active provisioner instance."""
-    return PROVISIONER_CLASS(odoo_env=odoo_env)
+    """Return the active provisioner instance.
+
+    Real database creation is opt-in: set ``MUMTAZ_REAL_PROVISIONING=1`` in the
+    environment to switch from the dry-run simulation to actual provisioning.
+    """
+    import os
+
+    if os.environ.get("MUMTAZ_REAL_PROVISIONING") == "1":
+        _logger.info("[Provisioning] Real provisioner active.")
+        return RealProvisioner(odoo_env=odoo_env)
+    return DryRunProvisioner(odoo_env=odoo_env)
