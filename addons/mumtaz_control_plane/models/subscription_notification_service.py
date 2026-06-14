@@ -38,7 +38,9 @@ class MumtazSubscriptionNotificationService(models.AbstractModel):
         for group_xmlid in admin_groups:
             group = self.env.ref(group_xmlid, raise_if_not_found=False)
             if group:
-                partners |= group.users.mapped("partner_id")
+                # Odoo 19 renamed res.groups.users -> user_ids.
+                ufield = "user_ids" if "user_ids" in group._fields else "users"
+                partners |= group[ufield].mapped("partner_id")
 
         return partners.filtered(lambda p: p)
 

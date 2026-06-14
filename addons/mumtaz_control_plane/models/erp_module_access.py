@@ -30,16 +30,22 @@ class MumtazErpModuleAccess(models.AbstractModel):
         users = self.env["res.users"].sudo().search(
             [("share", "=", False), ("active", "=", True)]
         )
+        # Odoo 19 renamed res.users.groups_id -> group_ids; stay version-robust.
+        gfield = "group_ids" if "group_ids" in users._fields else "groups_id"
         sysgrp = self.env.ref("base.group_system", raise_if_not_found=False)
         if sysgrp:
-            users = users.filtered(lambda u: sysgrp not in u.groups_id)
+            users = users.filtered(lambda u: sysgrp not in u[gfield])
         if not users:
             return True
-        op = 4 if enabled else 3   # 4 = grant, 3 = revoke
         done = False
         for xmlid in xmlids:
             group = self.env.ref(xmlid, raise_if_not_found=False)
             if group:
-                group.sudo().write({"users": [(op, u.id) for u in users]})
+                # Odoo 19 renamed res.groups.users -> user_ids; use set ops.
+                ufield = "user_ids" if "user_ids" in group._fields else "users"
+                if enabled:
+                    group.sudo()[ufield] |= users
+                else:
+                    group.sudo()[ufield] -= users
                 done = True
         return done

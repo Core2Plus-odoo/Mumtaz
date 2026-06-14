@@ -25,10 +25,12 @@ class MumtazMarketplaceAccess(models.AbstractModel):
         )
         if not users:
             return True
+        # Odoo 19 renamed res.groups.users -> user_ids; stay version-robust.
+        ufield = "user_ids" if "user_ids" in group._fields else "users"
         if enabled:
-            group.sudo().users |= users
+            group.sudo()[ufield] |= users
         else:
-            group.sudo().users -= users
+            group.sudo()[ufield] -= users
         return True
 
     @api.model

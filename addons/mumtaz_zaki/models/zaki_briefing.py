@@ -57,10 +57,13 @@ class ZakiBriefingLog(models.Model):
         try:
             snap = self.env["zaki.connector"].with_company(cfg.company_id).get_snapshot()
             body = self._render_briefing_html(snap, cfg.company_id)
-            recipients = cfg.recipient_ids or self.env["res.users"].search([
+            users_model = self.env["res.users"]
+            # Odoo 19 renamed res.users.groups_id -> group_ids.
+            gfield = "group_ids" if "group_ids" in users_model._fields else "groups_id"
+            recipients = cfg.recipient_ids or users_model.search([
                 ("share", "=", False), ("active", "=", True),
                 ("company_id", "=", cfg.company_id.id),
-                ("groups_id", "in", [self.env.ref("account.group_account_manager").id]),
+                (gfield, "in", [self.env.ref("account.group_account_manager").id]),
             ])
             emails = recipients.mapped("email")
             emails = [e for e in emails if e]
