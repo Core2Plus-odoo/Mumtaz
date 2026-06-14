@@ -47,6 +47,11 @@ class ZakiBoardPack(models.TransientModel):
         })
         return self.env.ref("mumtaz_zaki.action_report_board_pack").report_action(wizard)
 
+    def action_print(self):
+        """Render the PDF for an already-populated wizard record."""
+        self.ensure_one()
+        return self.env.ref("mumtaz_zaki.action_report_board_pack").report_action(self)
+
     def get_top_overdue(self):
         """Called from QWeb template."""
         try:
