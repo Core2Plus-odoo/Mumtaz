@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tenant_form_subdomain" model="ir.ui.view">
+        <field name="name">mumtaz.tenant.form.subdomain</field>
+        <field name="model">mumtaz.tenant</field>
+        <field name="inherit_id" ref="mumtaz_tenant_manager.mumtaz_tenant_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Subdomain Routing">
+                    <group>
+                        <group string="Routing">
+                            <field name="subdomain" placeholder="acme"/>
+                            <field name="custom_domain" placeholder="erp.acmebank.com"/>
+                            <field name="database_name" readonly="1"/>
+                        </group>
+                        <group string="Public Address">
+                            <field name="erp_url" widget="url" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle me-1"/>
+                        Host-based database routing is additive and disabled by default.
+                        Set <code>MUMTAZ_DBFILTER_ROUTING=1</code> in the environment
+                        (plus wildcard DNS for <code>*.erp.mumtaz.digital</code> and an
+                        nginx pass-through) to activate per-subdomain database selection.
+                    </div>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>
