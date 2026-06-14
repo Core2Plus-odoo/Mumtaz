@@ -47,7 +47,6 @@ for move in rejected_moves:
         </field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="nextcall" eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
     </record>
@@ -82,7 +81,6 @@ for move in submitted_moves:
         </field>
         <field name="interval_number">4</field>
         <field name="interval_type">hours</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="nextcall" eval="(datetime.now() + timedelta(hours=4)).strftime('%Y-%m-%d %H:00:00')"/>
     </record>
