@@ -74,6 +74,9 @@
                             string="Provision Tenant"
                             class="oe_highlight"
                             invisible="state not in ('draft', 'provisioning')"/>
+                    <button name="action_queue_provisioning" type="object"
+                            string="Queue Provisioning"
+                            invisible="state not in ('draft', 'provisioning') or provision_queued"/>
                     <button name="action_mark_active" type="object"
                             string="Mark Active"
                             invisible="state != 'provisioning'"/>

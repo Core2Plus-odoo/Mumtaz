@@ -10,6 +10,7 @@
         "security/mumtaz_tenant_security.xml",
         "security/ir.model.access.csv",
         "data/mumtaz_bundle_data.xml",
+        "data/provision_queue_cron.xml",
         "views/mumtaz_module_bundle_views.xml",
         "views/mumtaz_tenant_views.xml",
         "views/provision_wizard_views.xml",
