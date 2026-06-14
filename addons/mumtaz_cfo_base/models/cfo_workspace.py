@@ -69,9 +69,7 @@ class MumtazCFOWorkspace(models.Model):
     subscription_grace_days_remaining = fields.Integer(compute="_compute_subscription_visibility")
     subscription_quota_summary = fields.Char(compute="_compute_subscription_visibility")
 
-    _constraints = [
-        models.Constraint("unique(company_id, code)", "Workspace code must be unique per company."),
-    ]
+    _sql_company_code_unique = models.Constraint("unique(company_id, code)", "Workspace code must be unique per company.")
 
     @api.depends("category_ids")
     def _compute_category_count(self):

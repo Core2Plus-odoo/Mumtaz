@@ -38,6 +38,4 @@ class MumtazFeature(models.Model):
     plan_feature_ids = fields.One2many("mumtaz.plan.feature", "feature_id", string="Plan Features")
     tenant_feature_ids = fields.One2many("mumtaz.tenant.feature", "feature_id", string="Tenant Overrides")
 
-    _constraints = [
-        models.Constraint("unique(code)", "Feature code must be unique."),
-    ]
+    _sql_code_unique = models.Constraint("unique(code)", "Feature code must be unique.")

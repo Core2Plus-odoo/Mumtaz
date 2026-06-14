@@ -11,9 +11,7 @@ class ResPartner(models.Model):
         help="Internal reference used by Mumtaz.",
     )
 
-    _constraints = [
-        models.Constraint("unique(x_mumtaz_code)", "Mumtaz Code must be unique."),
-    ]
+    _sql_mumtaz_code_unique = models.Constraint("unique(x_mumtaz_code)", "Mumtaz Code must be unique.")
 
     @api.model_create_multi
     def create(self, vals_list):

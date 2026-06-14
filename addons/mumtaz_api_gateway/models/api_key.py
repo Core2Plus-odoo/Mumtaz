@@ -33,9 +33,7 @@ class MumtazApiKey(models.Model):
     expires_at = fields.Datetime(tracking=True)
     last_used_at = fields.Datetime(readonly=True)
 
-    _constraints = [
-        models.Constraint("unique(key_prefix)", "API key prefix must be unique."),
-    ]
+    _sql_prefix_unique = models.Constraint("unique(key_prefix)", "API key prefix must be unique.")
 
     @api.model_create_multi
     def create(self, vals_list):

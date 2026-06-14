@@ -32,6 +32,4 @@ class MumtazSubscriptionNotificationLog(models.Model):
     )
     sent_at = fields.Datetime(default=fields.Datetime.now, required=True, index=True)
 
-    _constraints = [
-        models.Constraint("unique(subscription_id, event_code, dedupe_key)", "Duplicate notification event detected for the same subscription and dedupe key."),
-    ]
+    _sql_notification_log_unique = models.Constraint("unique(subscription_id, event_code, dedupe_key)", "Duplicate notification event detected for the same subscription and dedupe key.")

@@ -77,9 +77,7 @@ class MumtazOrganization(models.Model):
             rec.member_count = len(rec.signup_ids)
 
     # ── Constraints ───────────────────────────────────────────────────
-    _constraints = [
-        models.Constraint("unique(slug)", "Organisation slug must be unique."),
-    ]
+    _sql_slug_unique = models.Constraint("unique(slug)", "Organisation slug must be unique.")
 
     @api.constrains("slug")
     def _check_slug(self):

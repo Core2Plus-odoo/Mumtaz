@@ -14,7 +14,7 @@ _TTS_TIMEOUT = 30
 
 class MumtazVoiceController(http.Controller):
 
-    @http.route("/mumtaz/voice/query", type="json", auth="user", methods=["POST"], csrf=False)
+    @http.route("/mumtaz/voice/query", type="jsonrpc", auth="user", methods=["POST"], csrf=False)
     def voice_query(self, transcript, session_id=None, language="en", **kwargs):
         transcript = (transcript or "").strip()
         if not transcript:
@@ -43,7 +43,7 @@ class MumtazVoiceController(http.Controller):
             _logger.exception("Mumtaz Voice query failed: %s", exc)
             return {"error": str(exc)}
 
-    @http.route("/mumtaz/voice/tts", type="json", auth="user", methods=["POST"], csrf=False)
+    @http.route("/mumtaz/voice/tts", type="jsonrpc", auth="user", methods=["POST"], csrf=False)
     def voice_tts(self, text, language="en", **kwargs):
         text = (text or "").strip()[:4000]
         if not text:
@@ -72,7 +72,7 @@ class MumtazVoiceController(http.Controller):
             _logger.warning("Mumtaz TTS failed: %s", exc)
             return {"error": str(exc)}
 
-    @http.route("/mumtaz/voice/session/<int:session_id>/history", type="json", auth="user", methods=["GET"])
+    @http.route("/mumtaz/voice/session/<int:session_id>/history", type="jsonrpc", auth="user", methods=["GET"])
     def session_history(self, session_id, **kwargs):
         session = request.env["mumtaz.voice.session"].browse(session_id)
         if not session.exists():

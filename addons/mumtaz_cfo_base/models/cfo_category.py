@@ -33,9 +33,7 @@ class MumtazCFOCategory(models.Model):
         help="System categories are template categories used to initialize new workspaces.",
     )
 
-    _constraints = [
-        models.Constraint("unique(workspace_id, code)", "Category code must be unique within a workspace."),
-    ]
+    _sql_workspace_code_unique = models.Constraint("unique(workspace_id, code)", "Category code must be unique within a workspace.")
 
     @api.model_create_multi
     def create(self, vals_list):

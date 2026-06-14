@@ -160,10 +160,8 @@ class MumtazSmeProfile(models.Model):
             filled = sum(1 for f in scored_fields if rec[f])
             rec.profile_completeness = int(filled / total * 100) if total else 0
 
-    _constraints = [
-        models.Constraint("unique(company_id)", "Each company can only have one SME profile record."),
-        models.Constraint("unique(tenant_id, company_id)", "Each tenant can only have one SME profile per company."),
-    ]
+    _sql_company_unique = models.Constraint("unique(company_id)", "Each company can only have one SME profile record.")
+    _sql_tenant_company_unique = models.Constraint("unique(tenant_id, company_id)", "Each tenant can only have one SME profile per company.")
 
     @api.model_create_multi
     def create(self, vals_list):

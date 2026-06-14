@@ -24,6 +24,4 @@ class MumtazTenantFeature(models.Model):
     effective_to = fields.Datetime()
     granted_by = fields.Many2one("res.users", ondelete="set null")
 
-    _constraints = [
-        models.Constraint("unique(tenant_id, feature_id)", "A tenant can only have one override per feature."),
-    ]
+    _sql_tenant_feature_unique = models.Constraint("unique(tenant_id, feature_id)", "A tenant can only have one override per feature.")

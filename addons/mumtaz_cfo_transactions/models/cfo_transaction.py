@@ -48,9 +48,7 @@ class MumtazCFOTransaction(models.Model):
     review_reason = fields.Char()
     review_item_id = fields.Many2one("mumtaz.cfo.review.item", readonly=True, copy=False)
 
-    _constraints = [
-        models.Constraint("unique(batch_id, source_row_hash)", "A source row can only be imported once per batch."),
-    ]
+    _sql_batch_hash_unique = models.Constraint("unique(batch_id, source_row_hash)", "A source row can only be imported once per batch.")
 
     @api.depends("date", "description", "amount")
     def _compute_name(self):
