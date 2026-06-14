@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="board_pack_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <style>
+                            body { font-family: Arial, sans-serif; color: #333; font-size: 12px; }
+                            .zaki-header { background: #1a1a2e; color: #fff; padding: 18px 24px; margin-bottom: 20px; border-radius: 6px; }
+                            .zaki-header h1 { margin: 0; font-size: 20px; }
+                            .zaki-header p { margin: 4px 0 0; opacity: 0.7; font-size: 12px; }
+                            .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #666; margin: 18px 0 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                            .kpi-grid { display: flex; gap: 12px; margin-bottom: 4px; }
+                            .kpi-card { flex: 1; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px 14px; background: #fafafa; }
+                            .kpi-label { font-size: 10px; color: #888; margin-bottom: 4px; }
+                            .kpi-value { font-size: 18px; font-weight: bold; }
+                            .green { color: #27ae60; }
+                            .red { color: #e74c3c; }
+                            .neutral { color: #2c3e50; }
+                            table.overdue { width: 100%; border-collapse: collapse; font-size: 11px; }
+                            table.overdue th { background: #f0f0f0; padding: 5px 8px; text-align: left; }
+                            table.overdue td { padding: 4px 8px; border-bottom: 1px solid #f5f5f5; }
+                            .footer-note { margin-top: 24px; font-size: 10px; color: #aaa; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+                        </style>
+
+                        <div class="zaki-header">
+                            <h1>ZAKI Board Pack</h1>
+                            <p>
+                                <t t-esc="doc.company_id.name"/> ·
+                                <t t-esc="doc.report_date.strftime('%B %Y')"/>
+                            </p>
+                        </div>
+
+                        <!-- P&L -->
+                        <div class="section-title">📊 Profit &amp; Loss (Month to Date)</div>
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-label">Revenue</div>
+                                <div class="kpi-value green">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.monthly_revenue)"/>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Expenses</div>
+                                <div class="kpi-value red">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.monthly_expenses)"/>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Net Profit</div>
+                                <div t-attf-class="kpi-value {{ 'green' if doc.net_profit >= 0 else 'red' }}">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.net_profit)"/>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Net Margin</div>
+                                <div t-attf-class="kpi-value {{ 'green' if doc.net_margin >= 0 else 'red' }}">
+                                    <t t-esc="'{:.1f}%'.format(doc.net_margin)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cash -->
+                        <div class="section-title">💰 Cash &amp; Liquidity</div>
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-label">Cash &amp; Bank Balance</div>
+                                <div class="kpi-value neutral">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.cash)"/>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Cash Runway</div>
+                                <div class="kpi-value neutral">
+                                    <t t-if="doc.cash_runway >= 999">∞</t>
+                                    <t t-else=""><t t-esc="doc.cash_runway"/> days</t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AR -->
+                        <div class="section-title">📋 Accounts Receivable</div>
+                        <div class="kpi-grid" style="margin-bottom:12px">
+                            <div class="kpi-card">
+                                <div class="kpi-label">Total Receivables</div>
+                                <div class="kpi-value neutral">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.ar_total)"/>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">Overdue Receivables</div>
+                                <div t-attf-class="kpi-value {{ 'red' if doc.ar_overdue > 0 else 'green' }}">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.ar_overdue)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="overdue">
+                            <thead>
+                                <tr>
+                                    <th>Top Overdue Customers</th>
+                                    <th style="text-align:right">Amount</th>
+                                    <th style="text-align:right">Days Late</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="overdue_list" t-value="doc.get_top_overdue()"/>
+                                <t t-if="overdue_list">
+                                    <t t-foreach="overdue_list" t-as="row">
+                                        <tr>
+                                            <td><t t-esc="row['partner']"/></td>
+                                            <td style="text-align:right">
+                                                <t t-esc="doc.currency_id.symbol"/>
+                                                <t t-esc="'{:,.0f}'.format(row['amount'])"/>
+                                            </td>
+                                            <td style="text-align:right"><t t-esc="row['days_late']"/>d</td>
+                                        </tr>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <tr><td colspan="3" style="color:#888;font-style:italic">No overdue invoices — great!</td></tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Payroll & Pipeline -->
+                        <div class="section-title">📈 Payroll &amp; Pipeline</div>
+                        <div class="kpi-grid">
+                            <div class="kpi-card">
+                                <div class="kpi-label">Payroll MTD</div>
+                                <div class="kpi-value neutral">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.payroll)"/>
+                                    <span style="font-size:12px;color:#888"> (<t t-esc="'{:.1f}%'.format(doc.payroll_pct)"/> of revenue)</span>
+                                </div>
+                            </div>
+                            <div class="kpi-card">
+                                <div class="kpi-label">CRM Pipeline</div>
+                                <div class="kpi-value green">
+                                    <t t-esc="doc.currency_id.symbol"/><t t-esc="'{:,.0f}'.format(doc.pipeline)"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="footer-note">
+                            Generated by ZAKI AI CFO · Mumtaz ERP ·
+                            <t t-esc="doc.report_date.strftime('%d %b %Y %H:%M')"/>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

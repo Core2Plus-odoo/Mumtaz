@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         Briefing Config — Form
+         ===================================================================== -->
+    <record id="view_zaki_briefing_config_form" model="ir.ui.view">
+        <field name="name">zaki.briefing.config.form</field>
+        <field name="model">zaki.briefing.config</field>
+        <field name="arch" type="xml">
+            <form string="ZAKI Morning Briefing">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="company_id" readonly="id != False"/></h1>
+                    </div>
+                    <group string="Briefing Settings">
+                        <group>
+                            <field name="enabled"/>
+                            <field name="send_hour"
+                                   string="Send Hour (UTC 0–23)"
+                                   invisible="not enabled"/>
+                        </group>
+                        <group>
+                            <field name="recipient_ids"
+                                   widget="many2many_tags"
+                                   invisible="not enabled"
+                                   options="{'no_create': True}"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert" invisible="enabled">
+                        <p>Enable morning briefings to receive a daily email summary of financial KPIs from ZAKI.</p>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zaki_briefing_config_list" model="ir.ui.view">
+        <field name="name">zaki.briefing.config.list</field>
+        <field name="model">zaki.briefing.config</field>
+        <field name="arch" type="xml">
+            <list string="ZAKI Briefing Config">
+                <field name="company_id"/>
+                <field name="enabled" widget="boolean_toggle"/>
+                <field name="send_hour" string="Send At (UTC)"/>
+                <field name="recipient_ids" widget="many2many_tags"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =====================================================================
+         Briefing Log — List
+         ===================================================================== -->
+    <record id="view_zaki_briefing_log_list" model="ir.ui.view">
+        <field name="name">zaki.briefing.log.list</field>
+        <field name="model">zaki.briefing.log</field>
+        <field name="arch" type="xml">
+            <list string="ZAKI Briefing Log" decoration-danger="status == 'error'">
+                <field name="sent_at"/>
+                <field name="company_id"/>
+                <field name="recipient_count"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'sent'"
+                       decoration-danger="status == 'error'"/>
+                <field name="error_message" optional="show" invisible="status != 'error'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =====================================================================
+         Board Pack wizard form (used inside report action, hidden from nav)
+         ===================================================================== -->
+    <record id="view_zaki_board_pack_form" model="ir.ui.view">
+        <field name="name">zaki.board.pack.form</field>
+        <field name="model">zaki.board.pack</field>
+        <field name="arch" type="xml">
+            <form string="ZAKI Board Pack">
+                <footer>
+                    <button name="action_print" type="object"
+                            string="Download PDF" class="btn btn-primary"/>
+                    <button special="cancel" string="Close"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- =====================================================================
+         Actions
+         ===================================================================== -->
+    <record id="action_zaki_briefing_config" model="ir.actions.act_window">
+        <field name="name">Morning Briefing Config</field>
+        <field name="res_model">zaki.briefing.config</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_zaki_briefing_log" model="ir.actions.act_window">
+        <field name="name">Briefing History</field>
+        <field name="res_model">zaki.briefing.log</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="action_zaki_board_pack" model="ir.actions.server">
+        <field name="name">Generate Board Pack PDF</field>
+        <field name="model_id" ref="mumtaz_zaki.model_zaki_board_pack"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+
+    <!-- =====================================================================
+         Menus (under Accounting > ZAKI)
+         ===================================================================== -->
+    <menuitem id="menu_zaki_root"
+              name="ZAKI"
+              parent="account.menu_finance"
+              sequence="110"/>
+
+    <menuitem id="menu_zaki_board_pack"
+              name="Board Pack PDF"
+              parent="menu_zaki_root"
+              action="action_zaki_board_pack"
+              sequence="10"
+              groups="account.group_account_manager"/>
+
+    <menuitem id="menu_zaki_briefing_config"
+              name="Morning Briefing"
+              parent="menu_zaki_root"
+              action="action_zaki_briefing_config"
+              sequence="20"
+              groups="account.group_account_manager"/>
+
+    <menuitem id="menu_zaki_briefing_log"
+              name="Briefing History"
+              parent="menu_zaki_root"
+              action="action_zaki_briefing_log"
+              sequence="30"
+              groups="account.group_account_manager"/>
+
+</odoo>

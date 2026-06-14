@@ -139,18 +139,31 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6 o_setting_box" invisible="ai_provider != 'openai'">
+                                <!-- TTS Provider selector -->
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="tts_provider">TTS Provider</label>
+                                        <div class="text-muted small mb-1">
+                                            OpenAI TTS is fast and natural. ElevenLabs gives ultra-realistic voices.
+                                        </div>
+                                        <field name="tts_provider" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <!-- OpenAI TTS fields -->
+                                <div class="col-lg-6 o_setting_box" invisible="tts_provider != 'openai'">
                                     <div class="o_setting_left_pane"/>
                                     <div class="o_setting_right_pane">
                                         <label class="o_form_label fw-bold" for="tts_model">Voice Quality</label>
                                         <div class="text-muted small mb-1">
-                                            TTS-1 HD sounds more natural. Requires OpenAI.
+                                            TTS-1 HD sounds more natural but is slightly slower.
                                         </div>
                                         <field name="tts_model" class="w-100"/>
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6 o_setting_box" invisible="ai_provider != 'openai'">
+                                <div class="col-lg-6 o_setting_box" invisible="tts_provider != 'openai'">
                                     <div class="o_setting_left_pane"/>
                                     <div class="o_setting_right_pane">
                                         <label class="o_form_label fw-bold" for="tts_voice">Voice Character</label>
@@ -161,14 +174,38 @@
                                     </div>
                                 </div>
 
-                                <div class="col-12 o_setting_box" invisible="ai_provider == 'openai'">
+                                <!-- ElevenLabs TTS fields -->
+                                <div class="col-lg-6 o_setting_box" invisible="tts_provider != 'elevenlabs'">
                                     <div class="o_setting_left_pane"/>
                                     <div class="o_setting_right_pane">
-                                        <div class="alert alert-info mb-0 py-2 small">
-                                            <i class="fa fa-info-circle me-1"/>
-                                            Human-quality TTS requires <strong>OpenAI</strong>.
-                                            With Anthropic, the browser's built-in voice is used as fallback.
+                                        <label class="o_form_label fw-bold" for="elevenlabs_api_key">ElevenLabs API Key</label>
+                                        <div class="text-muted small mb-1">
+                                            Get your key from elevenlabs.io/app/speech-synthesis.
                                         </div>
+                                        <field name="elevenlabs_api_key" password="True"
+                                               placeholder="sk_…" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="tts_provider != 'elevenlabs'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="elevenlabs_voice_id">ElevenLabs Voice ID</label>
+                                        <div class="text-muted small mb-1">
+                                            Default: Rachel. Find voice IDs at elevenlabs.io/voice-library.
+                                        </div>
+                                        <field name="elevenlabs_voice_id" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box" invisible="tts_provider != 'elevenlabs'">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="elevenlabs_model">ElevenLabs Model</label>
+                                        <div class="text-muted small mb-1">
+                                            Multilingual v2 supports Arabic + English. Turbo v2.5 is lowest latency.
+                                        </div>
+                                        <field name="elevenlabs_model" class="w-100"/>
                                     </div>
                                 </div>
 

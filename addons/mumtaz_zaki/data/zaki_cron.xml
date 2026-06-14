@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="ir_cron_zaki_morning_briefing" model="ir.cron">
+        <field name="name">ZAKI: Send Morning Briefings</field>
+        <field name="model_id" ref="mumtaz_zaki.model_zaki_briefing_log"/>
+        <field name="state">code</field>
+        <field name="code">model._send_morning_briefings()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+        <field name="nextcall" eval="(datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%d %H:00:00')"/>
+    </record>
+
+</odoo>

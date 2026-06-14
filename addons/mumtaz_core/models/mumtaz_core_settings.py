@@ -58,6 +58,33 @@ class MumtazCoreSettings(models.Model):
     )
 
     # ── Voice & TTS ───────────────────────────────────────────────────────
+    tts_provider = fields.Selection(
+        [
+            ("openai", "OpenAI TTS"),
+            ("elevenlabs", "ElevenLabs"),
+        ],
+        string="TTS Provider", default="openai",
+        help="Provider for text-to-speech audio generation.",
+    )
+    elevenlabs_api_key = fields.Char(
+        string="ElevenLabs API Key",
+        groups="base.group_system",
+        help="API key for ElevenLabs TTS. Obtain from elevenlabs.io/app/speech-synthesis.",
+    )
+    elevenlabs_voice_id = fields.Char(
+        string="ElevenLabs Voice ID",
+        default="21m00Tcm4TlvDq8ikWAM",
+        help="ElevenLabs voice ID. Default: Rachel (21m00Tcm4TlvDq8ikWAM). "
+             "Find IDs at elevenlabs.io/voice-library.",
+    )
+    elevenlabs_model = fields.Selection(
+        [
+            ("eleven_multilingual_v2", "Multilingual v2 — best quality"),
+            ("eleven_monolingual_v1", "Monolingual v1 — English, faster"),
+            ("eleven_turbo_v2_5", "Turbo v2.5 — lowest latency"),
+        ],
+        string="ElevenLabs Model", default="eleven_multilingual_v2",
+    )
     voice_language = fields.Selection(
         [
             ("en-US", "English (US)"),

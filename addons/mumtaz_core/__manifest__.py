@@ -5,7 +5,7 @@
     "category": "Tools",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["base", "mail", "base_setup"],
+    "depends": ["base", "mail"],
     "data": [
         "security/mumtaz_core_security.xml",
         "security/mumtaz_core_rules.xml",
