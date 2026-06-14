@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class MumtazMarketplaceCategory(models.Model):
@@ -14,6 +14,7 @@ class MumtazMarketplaceCategory(models.Model):
     listing_count = fields.Integer(compute="_compute_listing_count")
     active = fields.Boolean(default=True)
 
+    @api.depends("id")
     def _compute_listing_count(self):
         for rec in self:
             rec.listing_count = self.env["mumtaz.marketplace.listing"].search_count(

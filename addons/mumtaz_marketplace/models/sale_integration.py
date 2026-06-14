@@ -9,6 +9,7 @@ class SaleOrder(models.Model):
         string="Market Demand Signals",
     )
 
+    @api.depends("order_line", "order_line.product_id")
     def _compute_marketplace_demand_count(self):
         Inquiry = self.env["mumtaz.marketplace.inquiry"].sudo()
         for order in self:

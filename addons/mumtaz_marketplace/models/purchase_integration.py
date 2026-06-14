@@ -9,6 +9,7 @@ class PurchaseOrder(models.Model):
         string="Marketplace Vendors",
     )
 
+    @api.depends("order_line", "order_line.product_id")
     def _compute_marketplace_alt_count(self):
         Listing = self.env["mumtaz.marketplace.listing"].sudo()
         for order in self:

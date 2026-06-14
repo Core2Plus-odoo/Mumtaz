@@ -20,10 +20,12 @@ class ProductTemplate(models.Model):
         store=False,
     )
 
+    @api.depends("marketplace_listing_ids")
     def _compute_marketplace_listing_count(self):
         for tmpl in self:
             tmpl.marketplace_listing_count = len(tmpl.marketplace_listing_ids)
 
+    @api.depends("marketplace_listing_ids", "marketplace_listing_ids.state")
     def _compute_marketplace_published(self):
         for tmpl in self:
             tmpl.marketplace_published = any(

@@ -25,8 +25,10 @@ class MumtazMarketplaceAccess(models.AbstractModel):
         )
         if not users:
             return True
-        op = 4 if enabled else 3   # 4 = link (grant), 3 = unlink (revoke)
-        group.sudo().write({"users": [(op, u.id) for u in users]})
+        if enabled:
+            group.sudo().users |= users
+        else:
+            group.sudo().users -= users
         return True
 
     @api.model
