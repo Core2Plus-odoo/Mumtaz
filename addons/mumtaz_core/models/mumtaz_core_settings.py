@@ -33,7 +33,7 @@ class MumtazCoreSettings(models.Model):
         default="none", required=True, string="AI Provider",
     )
     api_key = fields.Char(
-        string="API Key", password=True, groups="base.group_system",
+        string="API Key", groups="base.group_system",
         help="OpenAI or Anthropic API key depending on the selected provider.",
     )
     openai_model = fields.Selection(

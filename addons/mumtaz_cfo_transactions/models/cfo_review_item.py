@@ -15,7 +15,6 @@ class MumtazCFOReviewItem(models.Model):
         [("open", "Open"), ("resolved", "Resolved"), ("ignored", "Ignored")],
         default="open",
         required=True,
-        tracking=True,
     )
     notes = fields.Text()
 
