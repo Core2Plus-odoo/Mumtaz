@@ -17,8 +17,6 @@
 
     <!-- =====================================================================
          Scheduled Action: Auto-retry rejected e-invoices
-         Runs daily at 06:00 to resubmit invoices in 'rejected' status
-         (only if auto_submit is enabled in the company config).
          ===================================================================== -->
     <record id="ir_cron_mumtaz_einvoice_retry" model="ir.cron">
         <field name="name">Mumtaz E-Invoicing: Retry Rejected Submissions</field>
@@ -52,12 +50,10 @@ for move in rejected_moves:
         <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="nextcall" eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
-        <field name="priority">100</field>
     </record>
 
     <!-- =====================================================================
          Scheduled Action: Daily status sync from ZATCA
-         Checks submitted (not yet accepted/rejected) KSA invoices.
          ===================================================================== -->
     <record id="ir_cron_mumtaz_einvoice_status_sync" model="ir.cron">
         <field name="name">Mumtaz E-Invoicing: Sync Submission Status</field>
@@ -74,7 +70,7 @@ submitted_moves = env['account.move'].search([
     ('einvoice_submission_date', '!=', False),
 ])
 
-cutoff = _dt.now() - _td(hours=1)  # Only check if submitted > 1 hour ago
+cutoff = _dt.now() - _td(hours=1)
 
 for move in submitted_moves:
     if move.einvoice_submission_date and move.einvoice_submission_date &lt; cutoff:
@@ -83,15 +79,12 @@ for move in submitted_moves:
             'E-invoice status sync: %s has been in submitted state since %s',
             move.name, move.einvoice_submission_date
         )
-        # In a real implementation, call the authority API to check status.
-        # ZATCA provides a GET endpoint to poll for clearance status.
         </field>
         <field name="interval_number">4</field>
         <field name="interval_type">hours</field>
         <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="nextcall" eval="(datetime.now() + timedelta(hours=4)).strftime('%Y-%m-%d %H:00:00')"/>
-        <field name="priority">100</field>
     </record>
 
 </odoo>
