@@ -113,26 +113,6 @@
     </record>
 
     <!-- =====================================================================
-         List view: add einvoice_status column to invoice list
-         ===================================================================== -->
-    <record id="view_move_tree_einvoice_status" model="ir.ui.view">
-        <field name="name">account.move.tree.einvoice.status</field>
-        <field name="model">account.move</field>
-        <field name="inherit_id" ref="account.view_out_invoice_tree"/>
-        <field name="priority">20</field>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='amount_total']" position="after">
-                <field name="einvoice_status" optional="show" widget="badge"
-                       decoration-success="einvoice_status == 'accepted'"
-                       decoration-danger="einvoice_status in ('rejected', 'cancelled')"
-                       decoration-warning="einvoice_status == 'submitted'"
-                       decoration-info="einvoice_status == 'draft'"
-                       decoration-muted="einvoice_status == 'not_applicable'"/>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- =====================================================================
          Action: E-Invoice Submissions (filtered list of all submissions)
          ===================================================================== -->
     <record id="action_mumtaz_einvoice_submissions" model="ir.actions.act_window">
