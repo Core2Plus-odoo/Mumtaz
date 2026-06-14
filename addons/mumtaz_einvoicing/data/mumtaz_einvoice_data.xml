@@ -23,8 +23,6 @@
         <field name="model_id" ref="account.model_account_move"/>
         <field name="state">code</field>
         <field name="code">
-import logging
-_log = logging.getLogger('mumtaz_einvoicing.cron')
 configs = env['mumtaz.einvoice.config'].search([('auto_submit', '=', True)])
 auto_submit_company_ids = configs.mapped('company_id').ids
 rejected_moves = env['account.move'].search([
@@ -37,9 +35,8 @@ for move in rejected_moves:
     try:
         move.action_submit_einvoice()
         env.cr.commit()
-    except Exception as e:
+    except Exception:
         env.cr.rollback()
-        _log.warning('E-invoice retry failed for %s: %s', move.name, e)
         </field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
@@ -48,26 +45,23 @@ for move in rejected_moves:
     </record>
 
     <!-- =====================================================================
-         Scheduled Action: Daily status sync from ZATCA
+         Scheduled Action: Daily status sync — flag stale submitted invoices
          ===================================================================== -->
     <record id="ir_cron_mumtaz_einvoice_status_sync" model="ir.cron">
         <field name="name">Mumtaz E-Invoicing: Sync Submission Status</field>
         <field name="model_id" ref="account.model_account_move"/>
         <field name="state">code</field>
         <field name="code">
-import logging
-from datetime import timedelta as _td
-_log = logging.getLogger('mumtaz_einvoicing.cron')
-submitted_moves = env['account.move'].search([
+cutoff = datetime.now() - timedelta(hours=24)
+stale = env['account.move'].search([
     ('einvoice_status', '=', 'submitted'),
     ('state', '=', 'posted'),
     ('move_type', 'in', ['out_invoice', 'out_refund']),
     ('einvoice_submission_date', '!=', False),
+    ('einvoice_submission_date', '&lt;', cutoff),
 ])
-cutoff = datetime.now() - _td(hours=1)
-for move in submitted_moves:
-    if move.einvoice_submission_date and move.einvoice_submission_date &lt; cutoff:
-        _log.info('E-invoice status sync: %s submitted at %s', move.name, move.einvoice_submission_date)
+if stale:
+    stale.write({'einvoice_status': 'rejected'})
         </field>
         <field name="interval_number">4</field>
         <field name="interval_type">hours</field>
