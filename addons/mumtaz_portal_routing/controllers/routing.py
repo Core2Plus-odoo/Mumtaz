@@ -146,7 +146,7 @@ class MumtazPortalRouting(http.Controller):
 
     @http.route(
         "/mumtaz/api/org",
-        type="json",
+        type="jsonrpc",
         auth="public",
         methods=["GET"],
         csrf=False,

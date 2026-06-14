@@ -5,7 +5,7 @@
     'category': 'Mumtaz Platform',
     'author': 'Mumtaz',
     'license': 'LGPL-3',
-    'depends': ['account', 'base_setup'],
+    'depends': ['account'],
     'data': [
         'security/mumtaz_einvoice_security.xml',
         'security/ir.model.access.csv',

@@ -26,7 +26,7 @@ class OrgSignupController(http.Controller):
 
     @http.route(
         "/mumtaz/org/check",
-        type="json",
+        type="jsonrpc",
         auth="public",
         methods=["POST"],
         csrf=False,
@@ -48,7 +48,7 @@ class OrgSignupController(http.Controller):
 
     @http.route(
         "/mumtaz/org/signup",
-        type="json",
+        type="jsonrpc",
         auth="public",
         methods=["POST"],
         csrf=False,
