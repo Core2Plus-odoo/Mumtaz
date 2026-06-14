@@ -3,8 +3,6 @@ import logging
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
-from .stripe_client import StripeError
-
 _logger = logging.getLogger(__name__)
 
 
@@ -48,30 +46,22 @@ class MumtazTenant(models.Model):
         return self.stripe_customer_id
 
     def action_setup_payment_method(self):
-        """Create a SetupIntent and return its client_secret so a card can be
-        collected. Returns a notification carrying the client_secret; the
-        portal/JS layer uses it with Stripe.js to attach the card."""
+        """Open the Stripe Elements card-collection page in a new tab."""
         self.ensure_one()
         client = self.env["mumtaz.stripe.client"]
         if not client._is_configured():
             raise UserError(
                 "Stripe is not configured. Set STRIPE_SECRET_KEY in /opt/mumtaz/.env."
             )
-        try:
-            customer_id = self._ensure_stripe_customer()
-            intent = client.create_setup_intent(customer_id)
-        except StripeError as exc:
-            raise UserError(exc.user_message)
+        settings = self.env["mumtaz.stripe.settings"].sudo().get_singleton()
+        if not settings.publishable_key:
+            raise UserError(
+                "No Stripe publishable key set. Add it in Control Plane → Stripe Settings."
+            )
         return {
-            "type": "ir.actions.client",
-            "tag": "display_notification",
-            "params": {
-                "title": "Setup Intent Created",
-                "message": "Use the card-collection page to enter card details. "
-                           "Client secret: %s" % intent.get("client_secret", ""),
-                "type": "success",
-                "sticky": True,
-            },
+            "type": "ir.actions.act_url",
+            "url": "/mumtaz/stripe/card/%s" % self.id,
+            "target": "new",
         }
 
     def _set_default_payment_method(self, payment_method_id, card=None):
