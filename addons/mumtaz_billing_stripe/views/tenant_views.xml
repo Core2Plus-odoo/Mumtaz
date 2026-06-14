@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_tenant_form_stripe" model="ir.ui.view">
+        <field name="name">mumtaz.tenant.form.stripe</field>
+        <field name="model">mumtaz.tenant</field>
+        <field name="inherit_id" ref="mumtaz_tenant_manager.mumtaz_tenant_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Billing (Stripe)"
+                      groups="mumtaz_control_plane.group_mumtaz_billing_admin,mumtaz_control_plane.group_mumtaz_super_admin">
+                    <group>
+                        <group string="Payment Method">
+                            <field name="stripe_has_card"/>
+                            <field name="stripe_card_brand" readonly="1"
+                                   invisible="not stripe_has_card"/>
+                            <field name="stripe_card_last4" readonly="1"
+                                   invisible="not stripe_has_card"/>
+                            <button name="action_setup_payment_method" type="object"
+                                    string="Set Up Payment Method"
+                                    class="btn-primary"/>
+                        </group>
+                        <group string="Stripe References">
+                            <field name="stripe_customer_id" readonly="1"/>
+                            <field name="stripe_payment_method_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert" invisible="stripe_has_card">
+                        <i class="fa fa-info-circle me-1"/>
+                        No card on file. Click <strong>Set Up Payment Method</strong> to
+                        create a Stripe SetupIntent, then collect the card with the
+                        publishable key. Once saved, due subscriptions charge automatically.
+                    </div>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>

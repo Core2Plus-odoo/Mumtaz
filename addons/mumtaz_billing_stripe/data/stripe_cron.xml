@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="ir_cron_mumtaz_stripe_charge" model="ir.cron">
+        <field name="name">Mumtaz Stripe: Charge Due Subscriptions</field>
+        <field name="model_id" ref="mumtaz_control_plane.model_mumtaz_subscription"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_charge_due_subscriptions()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="nextcall" eval="(datetime.now() + timedelta(hours=1)).strftime('%Y-%m-%d 02:00:00')"/>
+    </record>
+
+</odoo>

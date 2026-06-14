@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_stripe_settings_billing,mumtaz.stripe.settings billing,model_mumtaz_stripe_settings,mumtaz_control_plane.group_mumtaz_billing_admin,1,1,1,0
+access_stripe_settings_super,mumtaz.stripe.settings super,model_mumtaz_stripe_settings,mumtaz_control_plane.group_mumtaz_super_admin,1,1,1,1
+access_stripe_event_billing,mumtaz.stripe.event billing,model_mumtaz_stripe_event,mumtaz_control_plane.group_mumtaz_billing_admin,1,0,0,0
+access_stripe_event_super,mumtaz.stripe.event super,model_mumtaz_stripe_event,mumtaz_control_plane.group_mumtaz_super_admin,1,1,1,1

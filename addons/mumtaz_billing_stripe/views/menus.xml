@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_mumtaz_stripe_settings"
+              name="Stripe Settings"
+              parent="mumtaz_control_plane.menu_mumtaz_control_plane_root"
+              action="action_stripe_settings"
+              sequence="120"
+              groups="mumtaz_control_plane.group_mumtaz_billing_admin,mumtaz_control_plane.group_mumtaz_super_admin"/>
+
+    <menuitem id="menu_mumtaz_stripe_events"
+              name="Stripe Events"
+              parent="mumtaz_control_plane.menu_mumtaz_control_plane_root"
+              action="action_stripe_event"
+              sequence="121"
+              groups="mumtaz_control_plane.group_mumtaz_billing_admin,mumtaz_control_plane.group_mumtaz_super_admin"/>
+
+</odoo>

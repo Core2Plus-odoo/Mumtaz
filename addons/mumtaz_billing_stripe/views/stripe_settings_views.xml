@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_stripe_settings_form" model="ir.ui.view">
+        <field name="name">mumtaz.stripe.settings.form</field>
+        <field name="model">mumtaz.stripe.settings</field>
+        <field name="arch" type="xml">
+            <form string="Stripe Billing Settings">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Stripe Billing</h1>
+                    </div>
+
+                    <div class="alert alert-success" role="alert" invisible="not configured">
+                        <i class="fa fa-check-circle me-1"/>
+                        Secret key detected in environment (STRIPE_SECRET_KEY).
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="configured">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        STRIPE_SECRET_KEY is not set in /opt/mumtaz/.env — charging is disabled.
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="webhook_configured">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        STRIPE_WEBHOOK_SECRET is not set — incoming webhooks will be rejected.
+                    </div>
+
+                    <group>
+                        <group string="Behaviour">
+                            <field name="auto_charge_enabled"/>
+                            <field name="statement_descriptor"/>
+                        </group>
+                        <group string="Public Config">
+                            <field name="publishable_key" placeholder="pk_live_…"/>
+                            <field name="configured" readonly="1"/>
+                            <field name="webhook_configured" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="text-muted small mt-2">
+                        Webhook endpoint: <code>https://&lt;host&gt;/mumtaz/stripe/webhook</code>.
+                        Secrets (secret key, webhook signing secret) are read from
+                        the environment only and are never stored in the database.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_stripe_settings" model="ir.actions.server">
+        <field name="name">Stripe Billing Settings</field>
+        <field name="model_id" ref="model_mumtaz_stripe_settings"/>
+        <field name="state">code</field>
+        <field name="code">action = model.get_singleton().action_open_settings()</field>
+    </record>
+
+</odoo>
