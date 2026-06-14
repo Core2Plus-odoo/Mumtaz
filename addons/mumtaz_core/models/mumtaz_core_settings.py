@@ -1,7 +1,13 @@
+import logging
+
 import requests
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError, UserError
+
+_logger = logging.getLogger(__name__)
+
+_PLATFORM_DEFAULT_URL = "https://app.mumtaz.digital"
 
 
 class MumtazCoreSettings(models.Model):
@@ -156,6 +162,24 @@ class MumtazCoreSettings(models.Model):
         help="Allow the AI to query sales order data.",
     )
 
+    # ── Platform Link (app.mumtaz.digital) ────────────────────────────────
+    platform_url = fields.Char(
+        string="Platform URL", default=_PLATFORM_DEFAULT_URL,
+        help="Base URL of the Mumtaz platform. Default: https://app.mumtaz.digital",
+    )
+    platform_token = fields.Char(
+        string="Platform Token", groups="base.group_system",
+        help="Bearer token issued by app.mumtaz.digital for this tenant. "
+             "Obtain from your dashboard under Settings → API Keys.",
+    )
+    platform_sync_status = fields.Selection(
+        [("never", "Never synced"), ("ok", "Synced"), ("error", "Error")],
+        string="Platform Sync Status", default="never", readonly=True, copy=False,
+    )
+    platform_last_sync = fields.Datetime(
+        string="Last Synced At", readonly=True, copy=False,
+    )
+
     # ── Computed stats ────────────────────────────────────────────────────
     log_count = fields.Integer(compute="_compute_log_count", string="Total Queries")
     error_count = fields.Integer(compute="_compute_log_count", string="Errors (30 days)")
@@ -193,6 +217,104 @@ class MumtazCoreSettings(models.Model):
                 raise ValidationError("Requests per minute limit must be greater than zero.")
             if record.conversation_history_depth < 0:
                 raise ValidationError("Conversation history depth cannot be negative.")
+
+    # ── Platform Sync ─────────────────────────────────────────────────────
+    def action_sync_from_platform(self):
+        """Pull credentials from app.mumtaz.digital and apply them locally."""
+        self.ensure_one()
+        if not self.platform_token:
+            raise UserError(
+                "No Platform Token configured. "
+                "Obtain it from app.mumtaz.digital under Settings → API Keys."
+            )
+        base = (self.platform_url or _PLATFORM_DEFAULT_URL).rstrip("/")
+        url = f"{base}/api/v1/tenant/{self.tenant_code}/credentials"
+        try:
+            resp = requests.get(
+                url,
+                headers={"Authorization": f"Bearer {self.platform_token}"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            payload = resp.json()
+            self.sudo()._apply_platform_credentials(payload)
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "Platform Sync Successful",
+                    "message": f"Credentials updated from {self.platform_url}",
+                    "type": "success",
+                    "sticky": False,
+                },
+            }
+        except requests.exceptions.Timeout:
+            self.sudo().write({
+                "platform_sync_status": "error",
+                "platform_last_sync": fields.Datetime.now(),
+            })
+            raise UserError("Platform sync timed out. Check that app.mumtaz.digital is reachable.")
+        except requests.exceptions.HTTPError as exc:
+            self.sudo().write({
+                "platform_sync_status": "error",
+                "platform_last_sync": fields.Datetime.now(),
+            })
+            raise UserError(f"Platform returned HTTP {exc.response.status_code}. Check your Platform Token.")
+        except Exception as exc:
+            self.sudo().write({
+                "platform_sync_status": "error",
+                "platform_last_sync": fields.Datetime.now(),
+            })
+            raise UserError("Platform sync failed. See server logs for details.")
+
+    def _apply_platform_credentials(self, creds):
+        """Write platform-provided credentials into this settings record."""
+        vals = {
+            "platform_sync_status": "ok",
+            "platform_last_sync": fields.Datetime.now(),
+        }
+        # AI provider + key
+        new_provider = creds.get("ai_provider")
+        if new_provider in ("openai", "anthropic", "none"):
+            vals["ai_provider"] = new_provider
+        if new_provider == "openai" and creds.get("openai_api_key"):
+            vals["api_key"] = creds["openai_api_key"]
+        elif new_provider == "anthropic" and creds.get("anthropic_api_key"):
+            vals["api_key"] = creds["anthropic_api_key"]
+        # Model selections
+        _str_fields = [
+            ("openai_model", "openai_model"),
+            ("anthropic_model", "anthropic_model"),
+            ("tts_provider", "tts_provider"),
+            ("tts_model", "tts_model"),
+            ("tts_voice", "tts_voice"),
+            ("elevenlabs_api_key", "elevenlabs_api_key"),
+            ("elevenlabs_voice_id", "elevenlabs_voice_id"),
+            ("elevenlabs_model", "elevenlabs_model"),
+        ]
+        for api_key, model_field in _str_fields:
+            v = creds.get(api_key)
+            if v is not None:
+                vals[model_field] = v
+        # Integer limits
+        for key in ("max_tokens_per_request", "requests_per_minute_limit", "conversation_history_depth"):
+            v = creds.get(key)
+            if isinstance(v, int) and v > 0:
+                vals[key] = v
+        self.write(vals)
+
+    @api.model
+    def _cron_sync_platform_credentials(self):
+        """Daily cron: sync credentials from app.mumtaz.digital for all active tenants."""
+        records = self.search([("active", "=", True), ("platform_token", "!=", False)])
+        for rec in records:
+            try:
+                rec.action_sync_from_platform()
+            except Exception as exc:
+                _logger.warning(
+                    "Mumtaz platform credential sync failed for company %s: %s",
+                    rec.company_id.name, exc,
+                )
 
     # ── Actions ───────────────────────────────────────────────────────────
     def action_test_connection(self):

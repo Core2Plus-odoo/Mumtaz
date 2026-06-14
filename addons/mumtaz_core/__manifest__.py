@@ -13,6 +13,7 @@
         "views/mumtaz_core_settings_views.xml",
         "views/mumtaz_res_config_settings_views.xml",
         "data/mumtaz_core_data.xml",
+        "data/mumtaz_platform_sync_cron.xml",
     ],
     "installable": True,
     "auto_install": False,

@@ -8,10 +8,15 @@
         <field name="arch" type="xml">
             <form string="Mumtaz AI Settings" class="o_base_settings">
                 <header>
+                    <button name="action_sync_from_platform"
+                            string="Sync from Platform"
+                            type="object"
+                            class="btn btn-primary"
+                            invisible="not platform_token"/>
                     <button name="action_test_connection"
                             string="Test API Connection"
                             type="object"
-                            class="btn btn-primary"
+                            class="btn btn-secondary"
                             invisible="ai_provider == 'none' or not api_key"/>
                     <button name="action_view_logs"
                             string="View Logs"
@@ -51,6 +56,77 @@
                     </div>
 
                     <div class="o_setting_container">
+
+                        <!-- ══ SECTION 0: Platform Connection ═════════ -->
+                        <div class="o_settings_section mb-4">
+                            <div class="o_section_header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                                <i class="fa fa-link text-primary fa-lg"/>
+                                <h4 class="mb-0">Platform Connection</h4>
+                            </div>
+
+                            <!-- Sync status banners -->
+                            <div class="alert alert-success d-flex align-items-center gap-2 mb-3 py-2"
+                                 invisible="platform_sync_status != 'ok'">
+                                <i class="fa fa-check-circle"/>
+                                <span>Credentials synced from
+                                    <field name="platform_url" readonly="1" class="oe_inline fw-bold"/>
+                                    — last updated
+                                    <field name="platform_last_sync" readonly="1" class="oe_inline"/>.
+                                </span>
+                            </div>
+                            <div class="alert alert-danger d-flex align-items-center gap-2 mb-3 py-2"
+                                 invisible="platform_sync_status != 'error'">
+                                <i class="fa fa-exclamation-circle"/>
+                                Last sync failed. Check your Platform Token and retry.
+                            </div>
+                            <div class="alert alert-info d-flex align-items-center gap-2 mb-3 py-2"
+                                 invisible="platform_sync_status != 'never'">
+                                <i class="fa fa-info-circle"/>
+                                Enter your Platform Token below and click <strong>Sync from Platform</strong>
+                                to load credentials automatically.
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="platform_url">Platform URL</label>
+                                        <div class="text-muted small mb-1">
+                                            Default: https://app.mumtaz.digital
+                                        </div>
+                                        <field name="platform_url" class="w-100"
+                                               placeholder="https://app.mumtaz.digital"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <label class="o_form_label fw-bold" for="platform_token">Platform Token</label>
+                                        <div class="text-muted small mb-1">
+                                            Obtain from app.mumtaz.digital → Settings → API Keys.
+                                        </div>
+                                        <field name="platform_token" password="True"
+                                               placeholder="mzt_…" class="w-100"/>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 o_setting_box">
+                                    <div class="o_setting_left_pane"/>
+                                    <div class="o_setting_right_pane">
+                                        <button name="action_sync_from_platform"
+                                                string="Sync from Platform"
+                                                type="object"
+                                                class="btn btn-primary"
+                                                invisible="not platform_token"/>
+                                        <span class="text-muted small ms-3"
+                                              invisible="not platform_token">
+                                            Credentials sync automatically every 24 hours.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- ══ SECTION 1: AI Provider ══════════════════ -->
                         <div class="o_settings_section mb-4">
