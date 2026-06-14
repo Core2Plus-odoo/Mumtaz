@@ -150,7 +150,6 @@ class MumtazOnboardingChecklist(models.Model):
             vals.setdefault("company_id", self.env.company.id)
         return super().create(vals_list)
 
-    _sql_constraints = [
-        ("mumtaz_onboarding_company_unique", "unique(company_id)",
-         "Each company can only have one onboarding checklist."),
+    _constraints = [
+        models.Constraint("unique(company_id)", "Each company can only have one onboarding checklist."),
     ]

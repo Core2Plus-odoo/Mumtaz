@@ -42,8 +42,8 @@ class MumtazPlan(models.Model):
     comparison_quota_gain = fields.Integer(compute="_compute_comparison_metrics")
     comparison_summary = fields.Char(compute="_compute_comparison_metrics")
 
-    _sql_constraints = [
-        ("mumtaz_plan_code_unique", "unique(code)", "Plan code must be unique."),
+    _constraints = [
+        models.Constraint("unique(code)", "Plan code must be unique."),
     ]
 
     @api.depends_context("current_plan_id")
@@ -108,10 +108,6 @@ class MumtazPlanFeature(models.Model):
         required=True,
     )
 
-    _sql_constraints = [
-        (
-            "mumtaz_plan_feature_unique",
-            "unique(plan_id, feature_id)",
-            "Each plan/feature pair must be unique.",
-        ),
+    _constraints = [
+        models.Constraint("unique(plan_id, feature_id)", "Each plan/feature pair must be unique."),
     ]

@@ -179,6 +179,6 @@ class LeadScraperSource(models.Model):
                 clean[key] = value
         return clean
 
-    _sql_constraints = [
-        ("lead_scraper_source_name_unique", "unique(name)", "Source name must be unique."),
+    _constraints = [
+        models.Constraint("unique(name)", "Source name must be unique."),
     ]

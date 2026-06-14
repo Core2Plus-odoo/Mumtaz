@@ -81,7 +81,6 @@ class MumtazMarketplaceListing(models.Model):
     marketplace_feature_enabled = fields.Boolean(compute="_compute_marketplace_feature_access")
     marketplace_feature_note = fields.Char(compute="_compute_marketplace_feature_access")
 
-    @api.depends("id")
     def _compute_inquiry_count(self):
         for rec in self:
             rec.inquiry_count = self.env["mumtaz.marketplace.inquiry"].search_count(

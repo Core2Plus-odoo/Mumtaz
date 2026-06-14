@@ -146,11 +146,9 @@ class MumtazCoreSettings(models.Model):
             ))
 
     # ── Constraints ───────────────────────────────────────────────────────
-    _sql_constraints = [
-        ("mumtaz_core_settings_company_unique", "unique(company_id)",
-         "Each company can only have one Mumtaz settings record."),
-        ("mumtaz_core_settings_tenant_code_unique", "unique(tenant_code)",
-         "Tenant Code must be unique across all companies."),
+    _constraints = [
+        models.Constraint("unique(company_id)", "Each company can only have one Mumtaz settings record."),
+        models.Constraint("unique(tenant_code)", "Tenant Code must be unique across all companies."),
     ]
 
     @api.model_create_multi

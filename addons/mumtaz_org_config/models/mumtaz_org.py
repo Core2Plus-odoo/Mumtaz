@@ -85,9 +85,8 @@ class MumtazOrg(models.Model):
             rec.subdomain_url = f"https://{rec.slug}.mumtaz.digital" if rec.slug else ""
 
     # ── Constraints ───────────────────────────────────────────────────────
-    _sql_constraints = [
-        ("mumtaz_org_slug_unique", "unique(slug)",
-         "Each organisation must have a unique URL slug."),
+    _constraints = [
+        models.Constraint("unique(slug)", "Each organisation must have a unique URL slug."),
     ]
 
     @api.constrains("slug")

@@ -34,10 +34,6 @@ class MumtazUsageMetric(models.Model):
             else:
                 rec.utilization_pct = 0.0
 
-    _sql_constraints = [
-        (
-            "mumtaz_usage_metric_unique",
-            "unique(tenant_id, feature_id, metric_code, period_start, period_end)",
-            "Usage metric row must be unique for tenant/feature/code/period.",
-        ),
+    _constraints = [
+        models.Constraint("unique(tenant_id, feature_id, metric_code, period_start, period_end)", "Usage metric row must be unique for tenant/feature/code/period."),
     ]

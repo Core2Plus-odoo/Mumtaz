@@ -69,12 +69,8 @@ class MumtazCFOWorkspace(models.Model):
     subscription_grace_days_remaining = fields.Integer(compute="_compute_subscription_visibility")
     subscription_quota_summary = fields.Char(compute="_compute_subscription_visibility")
 
-    _sql_constraints = [
-        (
-            "mumtaz_cfo_workspace_company_code_unique",
-            "unique(company_id, code)",
-            "Workspace code must be unique per company.",
-        ),
+    _constraints = [
+        models.Constraint("unique(company_id, code)", "Workspace code must be unique per company."),
     ]
 
     @api.depends("category_ids")

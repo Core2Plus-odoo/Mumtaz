@@ -74,7 +74,6 @@ class MumtazBrand(models.Model):
         string="Companies",
         help="Companies operating under this brand configuration.",
     )
-    _sql_constraints = [
-        ("mumtaz_brand_name_unique", "unique(brand_name)",
-         "Brand name must be unique across the platform."),
+    _constraints = [
+        models.Constraint("unique(brand_name)", "Brand name must be unique across the platform."),
     ]

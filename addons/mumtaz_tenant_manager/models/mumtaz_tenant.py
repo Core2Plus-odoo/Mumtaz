@@ -112,9 +112,9 @@ class MumtazTenant(models.Model):
     )
 
     # ── Constraints ───────────────────────────────────────────────────────
-    _sql_constraints = [
-        ("mumtaz_tenant_code_unique", "unique(code)", "Tenant code must be unique."),
-        ("mumtaz_tenant_db_unique", "unique(database_name)", "Database name must be unique."),
+    _constraints = [
+        models.Constraint("unique(code)", "Tenant code must be unique."),
+        models.Constraint("unique(database_name)", "Database name must be unique."),
     ]
 
     # ── Computed / Auto-fill ──────────────────────────────────────────────

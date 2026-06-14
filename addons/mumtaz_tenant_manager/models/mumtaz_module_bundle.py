@@ -62,6 +62,6 @@ class MumtazModuleBundle(models.Model):
             return []
         return [m.strip() for m in self.optional_modules.replace(",", " ").split() if m.strip()]
 
-    _sql_constraints = [
-        ("mumtaz_bundle_code_unique", "unique(code)", "Bundle code must be unique."),
+    _constraints = [
+        models.Constraint("unique(code)", "Bundle code must be unique."),
     ]
