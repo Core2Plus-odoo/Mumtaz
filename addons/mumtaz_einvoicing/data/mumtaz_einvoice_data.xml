@@ -51,7 +51,7 @@ for move in rejected_moves:
         <field name="interval_type">days</field>
         <field name="numbercall">-1</field>
         <field name="active">True</field>
-        <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
+        <field name="nextcall" eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
         <field name="priority">100</field>
     </record>
 
@@ -65,6 +65,8 @@ for move in rejected_moves:
         <field name="state">code</field>
         <field name="code">
 # Check status of invoices stuck in 'submitted' state.
+from datetime import datetime as _dt, timedelta as _td
+
 submitted_moves = env['account.move'].search([
     ('einvoice_status', '=', 'submitted'),
     ('state', '=', 'posted'),
@@ -72,8 +74,7 @@ submitted_moves = env['account.move'].search([
     ('einvoice_submission_date', '!=', False),
 ])
 
-from datetime import timedelta as td
-cutoff = DateTime.now() - td(hours=1)  # Only check if submitted > 1 hour ago
+cutoff = _dt.now() - _td(hours=1)  # Only check if submitted > 1 hour ago
 
 for move in submitted_moves:
     if move.einvoice_submission_date and move.einvoice_submission_date &lt; cutoff:
@@ -89,7 +90,7 @@ for move in submitted_moves:
         <field name="interval_type">hours</field>
         <field name="numbercall">-1</field>
         <field name="active">True</field>
-        <field name="nextcall" eval="(DateTime.now() + timedelta(hours=4)).strftime('%Y-%m-%d %H:00:00')"/>
+        <field name="nextcall" eval="(datetime.now() + timedelta(hours=4)).strftime('%Y-%m-%d %H:00:00')"/>
         <field name="priority">100</field>
     </record>
 

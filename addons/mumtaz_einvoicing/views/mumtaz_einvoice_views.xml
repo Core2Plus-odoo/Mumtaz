@@ -18,7 +18,7 @@
                     type="object"
                     class="oe_stat_button"
                     icon="fa-file-text-o"
-                    attrs="{'invisible': [('move_type', 'not in', ['out_invoice', 'out_refund'])]}"
+                    invisible="move_type not in ['out_invoice', 'out_refund']"
                     groups="account.group_account_user">
                     <div class="o_field_widget o_stat_info">
                         <span class="o_stat_value">
@@ -37,7 +37,7 @@
             <!-- E-Invoice statusbar above the invoice header -->
             <xpath expr="//sheet" position="before">
                 <div class="o_mumtaz_einvoice_statusbar"
-                     attrs="{'invisible': [('move_type', 'not in', ['out_invoice', 'out_refund'])]}">
+                     invisible="move_type not in ['out_invoice', 'out_refund']">
                     <field name="einvoice_status"
                            widget="statusbar"
                            statusbar_visible="draft,submitted,accepted"
@@ -51,7 +51,7 @@
             <xpath expr="//page[@name='other_info']" position="inside">
                 <separator string="E-Invoicing"/>
                 <group name="einvoice_main" string="E-Invoice Details"
-                       attrs="{'invisible': [('move_type', 'not in', ['out_invoice', 'out_refund'])]}">
+                       invisible="move_type not in ['out_invoice', 'out_refund']">
                     <group name="einvoice_left">
                         <field name="einvoice_country_type" readonly="1"/>
                         <field name="einvoice_status" readonly="1"/>
@@ -66,43 +66,43 @@
 
                 <!-- QR Code image -->
                 <group name="einvoice_qr" string="QR Code"
-                       attrs="{'invisible': ['|', ('einvoice_qr_code', '=', False), ('move_type', 'not in', ['out_invoice', 'out_refund'])]}">
+                       invisible="not einvoice_qr_code or move_type not in ['out_invoice', 'out_refund']">
                     <field name="einvoice_qr_code" string="QR String (TLV)" readonly="1"/>
                     <field name="einvoice_qr_image" widget="image" readonly="1"
-                           attrs="{'invisible': [('einvoice_qr_image', '=', False)]}"
+                           invisible="not einvoice_qr_image"
                            options="{'size': [128, 128]}"/>
                 </group>
 
-                <!-- XML payload (collapsed by default) -->
+                <!-- XML payload -->
                 <group name="einvoice_xml" string="XML Payload"
-                       attrs="{'invisible': ['|', ('einvoice_xml_payload', '=', False), ('move_type', 'not in', ['out_invoice', 'out_refund'])]}">
+                       invisible="not einvoice_xml_payload or move_type not in ['out_invoice', 'out_refund']">
                     <field name="einvoice_xml_payload" widget="text" readonly="1" nolabel="1"
                            options="{'rows': 8}"/>
                 </group>
 
                 <!-- Validation errors -->
                 <group name="einvoice_errors" string="Validation Errors"
-                       attrs="{'invisible': ['|', ('einvoice_validation_errors', '=', False), ('move_type', 'not in', ['out_invoice', 'out_refund'])]}">
+                       invisible="not einvoice_validation_errors or move_type not in ['out_invoice', 'out_refund']">
                     <field name="einvoice_validation_errors" widget="text" readonly="1" nolabel="1"
                            options="{'rows': 4}"/>
                 </group>
 
                 <!-- Action buttons -->
                 <group name="einvoice_actions" string="Actions"
-                       attrs="{'invisible': [('move_type', 'not in', ['out_invoice', 'out_refund'])]}">
+                       invisible="move_type not in ['out_invoice', 'out_refund']">
                     <div class="o_mumtaz_einvoice_buttons">
                         <button name="action_submit_einvoice"
                                 type="object"
                                 string="Submit E-Invoice"
                                 class="btn btn-primary"
-                                attrs="{'invisible': ['|', ('state', '!=', 'posted'), ('einvoice_status', 'in', ['submitted', 'accepted', 'cancelled'])]}"
+                                invisible="state != 'posted' or einvoice_status in ['submitted', 'accepted', 'cancelled']"
                                 groups="account.group_account_user"
                                 confirm="Submit this invoice to the tax authority? This action cannot be undone."/>
                         <button name="action_cancel_einvoice"
                                 type="object"
                                 string="Cancel E-Invoice"
                                 class="btn btn-danger"
-                                attrs="{'invisible': [('einvoice_status', 'not in', ['submitted', 'accepted', 'draft'])]}"
+                                invisible="einvoice_status not in ['submitted', 'accepted', 'draft']"
                                 groups="account.group_account_manager"
                                 confirm="Are you sure you want to cancel the e-invoice submission? This may trigger a cancellation request to the authority."/>
                     </div>

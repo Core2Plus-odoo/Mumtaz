@@ -150,7 +150,6 @@ class MumtazEInvoiceConfig(models.Model):
 
     fbr_password = fields.Char(
         string='FBR Password',
-        password=True,
         help='Password for the FBR integration portal.',
         groups='account.group_account_manager',
     )

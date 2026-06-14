@@ -16,9 +16,9 @@
                        decoration-warning="country_type == 'pakistan'"/>
                 <field name="tax_registration_number" optional="show"/>
                 <field name="zatca_environment" optional="show"
-                       attrs="{'invisible': [('country_type', '!=', 'ksa')]}"/>
+                       invisible="country_type != 'ksa'"/>
                 <field name="fbr_environment" optional="show"
-                       attrs="{'invisible': [('country_type', '!=', 'pakistan')]}"/>
+                       invisible="country_type != 'pakistan'"/>
                 <field name="auto_submit" optional="show"/>
             </list>
         </field>
@@ -50,7 +50,7 @@
                     <group string="General Settings" name="general_settings">
                         <group name="general_left">
                             <field name="company_id"
-                                   attrs="{'readonly': [('id', '!=', False)]}"
+                                   readonly="id != False"
                                    options="{'no_create': True, 'no_open': True}"/>
                             <field name="tax_registration_number"
                                    placeholder="e.g. 100123456789003 (UAE TRN)"/>
@@ -66,7 +66,7 @@
 
                     <!-- UAE FTA Settings -->
                     <group string="UAE FTA Settings" name="uae_settings"
-                           attrs="{'invisible': [('country_type', '!=', 'uae')]}">
+                           invisible="country_type != 'uae'">
                         <div class="alert alert-info" role="alert">
                             <p>
                                 <strong>UAE FTA E-Invoicing:</strong>
@@ -84,9 +84,9 @@
 
                     <!-- KSA ZATCA Settings -->
                     <group string="KSA ZATCA Phase 2 Settings" name="ksa_settings"
-                           attrs="{'invisible': [('country_type', '!=', 'ksa')]}">
+                           invisible="country_type != 'ksa'">
                         <div class="alert alert-warning" role="alert"
-                             attrs="{'invisible': [('zatca_environment', '!=', 'production')]}">
+                             invisible="zatca_environment != 'production'">
                             <strong>Production Mode:</strong>
                             Invoices will be submitted to ZATCA in real-time.
                             Ensure your certificate and private key are correctly configured.
@@ -155,9 +155,9 @@
 
                     <!-- Pakistan FBR Settings -->
                     <group string="Pakistan FBR Settings" name="pak_settings"
-                           attrs="{'invisible': [('country_type', '!=', 'pakistan')]}">
+                           invisible="country_type != 'pakistan'">
                         <div class="alert alert-warning" role="alert"
-                             attrs="{'invisible': [('fbr_environment', '!=', 'production')]}">
+                             invisible="fbr_environment != 'production'">
                             <strong>Production Mode:</strong>
                             Invoices will be submitted to FBR in real-time.
                         </div>
@@ -170,7 +170,7 @@
                         </group>
                         <group name="pak_right" groups="account.group_account_manager">
                             <field name="fbr_username" placeholder="FBR portal username"/>
-                            <field name="fbr_password" password="True"/>
+                            <field name="fbr_password" widget="password"/>
                         </group>
                         <div name="pak_actions" class="o_mumtaz_config_actions">
                             <button name="action_test_fbr_connection"
@@ -183,7 +183,7 @@
 
                     <!-- Not Configured Warning -->
                     <div class="alert alert-danger" role="alert"
-                         attrs="{'invisible': [('country_type', '!=', False)]}">
+                         invisible="country_type != False">
                         <p>
                             <strong>Country Not Supported:</strong>
                             The company's country is not currently supported for automated

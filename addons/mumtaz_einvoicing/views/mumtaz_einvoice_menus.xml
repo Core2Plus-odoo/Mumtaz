@@ -8,8 +8,7 @@
         id="menu_einvoice_root"
         name="E-Invoicing"
         parent="account.menu_finance"
-        sequence="100"
-        web_icon="mumtaz_einvoicing,static/src/css/einvoice.css"/>
+        sequence="100"/>
 
     <!-- =====================================================================
          Sub-menu: Submissions
