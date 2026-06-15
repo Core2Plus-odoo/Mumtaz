@@ -21,6 +21,12 @@
               action="action_mumtaz_my_listings"
               sequence="20"/>
 
+    <menuitem id="menu_mumtaz_marketplace_products"
+              name="Products"
+              parent="menu_mumtaz_marketplace_root"
+              action="mumtaz_marketplace.action_mumtaz_marketplace_products"
+              sequence="25"/>
+
     <menuitem id="menu_mumtaz_marketplace_inquiries"
               name="Inquiries"
               parent="menu_mumtaz_marketplace_root"

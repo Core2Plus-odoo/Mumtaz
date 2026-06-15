@@ -1,12 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <record id="view_mumtaz_marketplace_listing_kanban" model="ir.ui.view">
+        <field name="name">mumtaz.marketplace.listing.kanban</field>
+        <field name="model">mumtaz.marketplace.listing</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name"/>
+                <field name="short_description"/>
+                <field name="category_id"/>
+                <field name="listing_type"/>
+                <field name="price"/>
+                <field name="price_type"/>
+                <field name="currency_id"/>
+                <field name="state"/>
+                <field name="product_tmpl_id"/>
+                <field name="company_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <div class="d-flex align-items-center mb-2">
+                                <img t-if="record.product_tmpl_id.raw_value"
+                                     t-att-src="'/web/image/product.template/' + record.product_tmpl_id.raw_value + '/image_128'"
+                                     class="rounded me-2 o_image_40_cover"/>
+                                <span t-else=""
+                                      class="rounded me-2 o_image_40_cover bg-200 d-flex align-items-center justify-content-center flex-shrink-0">
+                                    <i t-if="record.listing_type.raw_value == 'product'" class="fa fa-cube text-muted"/>
+                                    <i t-elif="record.listing_type.raw_value == 'service'" class="fa fa-cogs text-muted"/>
+                                    <i t-else="" class="fa fa-handshake-o text-muted"/>
+                                </span>
+                                <div class="overflow-hidden">
+                                    <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                    <div class="text-muted small"><field name="category_id"/></div>
+                                </div>
+                            </div>
+                            <div class="text-muted small mb-2" style="min-height:2.5em">
+                                <field name="short_description"/>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span t-if="record.price_type.raw_value == 'fixed' or record.price_type.raw_value == 'from'"
+                                      class="fw-bold">
+                                    <field name="price" widget="monetary"/>
+                                </span>
+                                <span t-elif="record.price_type.raw_value == 'free'" class="text-success small fw-bold">Free</span>
+                                <span t-else="" class="text-muted small">Negotiable</span>
+                                <field name="state" widget="badge"
+                                       decoration-success="state == 'published'"
+                                       decoration-warning="state == 'draft'"
+                                       decoration-muted="state == 'closed'"/>
+                            </div>
+                            <div t-if="record.product_tmpl_id.raw_value" class="mt-1">
+                                <span class="badge text-bg-info small">
+                                    <i class="fa fa-link me-1"/>
+                                    <t t-esc="record.product_tmpl_id.value"/>
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <record id="view_mumtaz_marketplace_listing_list" model="ir.ui.view">
         <field name="name">mumtaz.marketplace.listing.list</field>
         <field name="model">mumtaz.marketplace.listing</field>
         <field name="arch" type="xml">
             <list string="Marketplace Listings">
                 <field name="name"/>
+                <field name="product_tmpl_id" optional="show" string="Product"/>
                 <field name="category_id"/>
                 <field name="listing_type"/>
                 <field name="price_type"/>
@@ -97,10 +159,13 @@
         <field name="arch" type="xml">
             <search string="Marketplace Listings">
                 <field name="name"/>
+                <field name="product_tmpl_id" string="Product"/>
                 <filter string="Published" name="published"
                         domain="[('state','=','published')]"/>
                 <filter string="Draft" name="draft"
                         domain="[('state','=','draft')]"/>
+                <filter string="Has Product" name="has_product"
+                        domain="[('product_tmpl_id','!=',False)]"/>
                 <filter string="Category" name="group_category"
                         context="{'group_by': 'category_id'}"/>
                 <filter string="Type" name="group_type"
@@ -112,7 +177,7 @@
     <record id="action_mumtaz_marketplace_listings" model="ir.actions.act_window">
         <field name="name">Marketplace</field>
         <field name="res_model">mumtaz.marketplace.listing</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="context">{"search_default_published": 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
