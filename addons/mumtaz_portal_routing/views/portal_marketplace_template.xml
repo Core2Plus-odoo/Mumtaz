@@ -107,6 +107,67 @@
                 </div>
             </t>
 
+            <!-- Products section -->
+            <t t-if="featured_products">
+                <div class="mzp-section">
+                    <div class="mzp-section-header">
+                        <h2 class="mzp-section-title">Products</h2>
+                        <a href="/web#action=mumtaz_marketplace.action_mumtaz_marketplace_products"
+                           class="mzp-section-link">View all →</a>
+                    </div>
+                    <div class="mzp-product-grid">
+                        <t t-foreach="featured_products" t-as="prod">
+                            <a t-att-href="'/web#id=%d&amp;model=mumtaz.marketplace.listing&amp;view_type=form' % prod.id"
+                               class="mzp-product-card">
+                                <div class="mzp-product-image">
+                                    <t t-if="prod.product_tmpl_id">
+                                        <img t-att-src="'/web/image/product.template/%d/image_256' % prod.product_tmpl_id.id"
+                                             class="mzp-product-img" alt=""/>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="mzp-product-img-placeholder">
+                                            <i class="fa fa-cube fa-2x"/>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="mzp-product-body">
+                                    <t t-if="prod.category_id">
+                                        <div class="mzp-product-category">
+                                            <t t-esc="prod.category_id.name"/>
+                                        </div>
+                                    </t>
+                                    <h3 class="mzp-product-name">
+                                        <t t-esc="prod.name"/>
+                                    </h3>
+                                    <t t-if="prod.short_description">
+                                        <p class="mzp-product-desc">
+                                            <t t-esc="prod.short_description"/>
+                                        </p>
+                                    </t>
+                                    <div class="mzp-product-footer">
+                                        <span class="mzp-product-price">
+                                            <t t-if="prod.price_type == 'free'">Free</t>
+                                            <t t-elif="prod.price_type == 'negotiable'">Negotiable</t>
+                                            <t t-elif="prod.price_type == 'from'">
+                                                From <t t-esc="'%.0f' % (prod.price or 0)"/>
+                                                <t t-if="prod.currency_id"> <t t-esc="prod.currency_id.symbol"/></t>
+                                            </t>
+                                            <t t-else="">
+                                                <t t-esc="'%.0f' % (prod.price or 0)"/>
+                                                <t t-if="prod.currency_id"> <t t-esc="prod.currency_id.symbol"/></t>
+                                            </t>
+                                        </span>
+                                        <span class="mzp-product-seller">
+                                            <t t-esc="prod.company_id.name"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
             <!-- Quick actions -->
             <div class="mzp-section">
                 <h2 class="mzp-section-title">Quick Actions</h2>

@@ -487,6 +487,7 @@ class MumtazPortalRouting(http.Controller):
         total_listings = 0
         my_listings = 0
         featured_listings = []
+        featured_products = []
         inquiry_count = 0
         new_inquiry_count = 0
         categories = []
@@ -511,6 +512,11 @@ class MumtazPortalRouting(http.Controller):
                 [('state', '=', 'published')],
                 order='create_date desc',
                 limit=6,
+            )
+            featured_products = Listing.search(
+                [('state', '=', 'published'), ('listing_type', '=', 'product')],
+                order='published_date desc',
+                limit=8,
             )
             product_count = Listing.search_count([
                 ('state', '=', 'published'),
@@ -554,6 +560,7 @@ class MumtazPortalRouting(http.Controller):
             'my_listings': my_listings,
             'my_draft_listings': my_draft_listings,
             'featured_listings': featured_listings,
+            'featured_products': featured_products,
             'inquiry_count': inquiry_count,
             'new_inquiry_count': new_inquiry_count,
             'recent_inquiries': recent_inquiries,
