@@ -50,11 +50,12 @@ class MumtazStripeCard(http.Controller):
         html = self._render_card_page(
             tenant=tenant, pk=pk,
             client_secret=intent.get("client_secret", ""),
+            csrf_token=request.csrf_token(),
         )
         return request.make_response(html, headers=[("Content-Type", "text/html")])
 
     @http.route("/mumtaz/stripe/card/confirm", type="http", auth="user",
-                methods=["POST"], csrf=False)
+                methods=["POST"])
     def card_confirm(self, tenant_id=None, setup_intent_id=None, **kwargs):
         if not _user_allowed():
             return Response(json.dumps({"error": "forbidden"}), status=403,
@@ -105,7 +106,7 @@ class MumtazStripeCard(http.Controller):
 {escape(message)}</div>
 </body></html>"""
 
-    def _render_card_page(self, tenant, pk, client_secret):
+    def _render_card_page(self, tenant, pk, client_secret, csrf_token=""):
         from markupsafe import escape
         return f"""<!DOCTYPE html>
 <html><head>
@@ -137,6 +138,7 @@ class MumtazStripeCard(http.Controller):
   var stripe = Stripe({json.dumps(pk)});
   var clientSecret = {json.dumps(client_secret)};
   var tenantId = {json.dumps(str(tenant.id))};
+  var csrfToken = {json.dumps(csrf_token)};
   var elements = stripe.elements();
   var card = elements.create('card');
   card.mount('#card-element');
@@ -156,6 +158,7 @@ class MumtazStripeCard(http.Controller):
         var body = new URLSearchParams();
         body.append('tenant_id', tenantId);
         body.append('setup_intent_id', si.id);
+        body.append('csrf_token', csrfToken);
         fetch('/mumtaz/stripe/card/confirm', {{ method:'POST', body: body }})
           .then(function(r) {{ return r.json(); }})
           .then(function(data) {{

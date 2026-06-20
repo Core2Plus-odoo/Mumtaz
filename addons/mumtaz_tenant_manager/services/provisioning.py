@@ -229,11 +229,17 @@ class RealProvisioner(BaseProvisioner):
                 "An admin password is required to provision a real database."
             )
         login = tenant.admin_email or "admin"
+        password = tenant.admin_password
         # Creates the DB, installs base and creates the admin user in one step.
         db_service.exp_create_database(
             db_name, False, "en_US",
-            user_password=tenant.admin_password, login=login,
+            user_password=password, login=login,
         )
+        # Clear the password immediately after use so it is never left on the
+        # control-plane record if the provisioner crashes in a later step.
+        tenant.write({"admin_password": False})
+        if self.env and hasattr(self.env, "cr"):
+            self.env.cr.commit()
 
     def _install_modules(self, tenant, modules):
         if not modules:

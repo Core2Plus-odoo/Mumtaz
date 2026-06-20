@@ -222,8 +222,8 @@ class MumtazPortalRouting(http.Controller):
             SmeProfile = env['mumtaz.sme.profile'].sudo()
             sme_count = SmeProfile.search_count([])
             recent_smes = SmeProfile.search([], order='create_date desc', limit=5)
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Subscriptions
         subscription_count = 0
@@ -234,15 +234,15 @@ class MumtazPortalRouting(http.Controller):
             subscription_count = Sub.search_count([])
             active_subs = Sub.search_count([('status', '=', 'active')])
             overdue_subs = Sub.search_count([('status', '=', 'past_due')])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Plans
         plan_count = 0
         try:
             plan_count = env['mumtaz.plan'].sudo().search_count([])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Platform logs (last 24h errors)
         error_count = 0
@@ -253,15 +253,15 @@ class MumtazPortalRouting(http.Controller):
                 ('level', '=', 'error'),
                 ('create_date', '>=', cutoff.strftime('%Y-%m-%d %H:%M:%S')),
             ])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Features & tenant features
         feature_count = 0
         try:
             feature_count = env['mumtaz.feature'].sudo().search_count([])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         ctx = self._base_ctx('admin')
         ctx.update({
@@ -318,8 +318,8 @@ class MumtazPortalRouting(http.Controller):
                 order='create_date desc',
                 limit=8,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Lead scraper
         last_scraper_job = None
@@ -332,8 +332,8 @@ class MumtazPortalRouting(http.Controller):
             scraper_job_count = ScraperJob.search_count([])
             scraper_source_count = env['lead.scraper.source'].sudo().search_count([('active', '=', True)])
             total_scraped_records = env['lead.scraper.record'].sudo().search_count([])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Lead nurture campaigns
         campaign_count = 0
@@ -349,8 +349,8 @@ class MumtazPortalRouting(http.Controller):
             nurturing_leads = NurtureLead.search_count([('nurture_stage', '=', 'nurturing')])
             qualified_leads = NurtureLead.search_count([('nurture_stage', '=', 'qualified')])
             converted_leads = NurtureLead.search_count([('nurture_stage', '=', 'converted')])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Marketplace listings
         listing_count = 0
@@ -358,8 +358,8 @@ class MumtazPortalRouting(http.Controller):
             listing_count = env['mumtaz.marketplace.listing'].sudo().search_count(
                 [('state', '=', 'published')]
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         # Nurture logs (recent activity)
         recent_nurture_logs = []
@@ -367,8 +367,8 @@ class MumtazPortalRouting(http.Controller):
             recent_nurture_logs = env['lead.nurture.log'].sudo().search(
                 [], order='timestamp desc', limit=5
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         ctx = self._base_ctx('erp')
         ctx.update({
@@ -448,8 +448,8 @@ class MumtazPortalRouting(http.Controller):
                 [('company_id', '=', company_id)],
                 order='create_date desc', limit=5,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         ctx = self._base_ctx('zaki')
         ctx.update({
@@ -529,8 +529,8 @@ class MumtazPortalRouting(http.Controller):
                 ('state', '=', 'published'),
                 ('listing_type', '=', 'partnership'),
             ])
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         try:
             Inquiry = env['mumtaz.marketplace.inquiry'].sudo()
@@ -544,14 +544,14 @@ class MumtazPortalRouting(http.Controller):
                 order='create_date desc',
                 limit=5,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         try:
             Category = env['mumtaz.marketplace.category'].sudo()
             categories = Category.search([('active', '=', True)], order='sequence')
-        except Exception:
-            pass
+        except Exception as exc:
+            _logger.debug("Optional module data unavailable: %s", exc)
 
         ctx = self._base_ctx('marketplace')
         ctx.update({

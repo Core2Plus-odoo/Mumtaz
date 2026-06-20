@@ -60,7 +60,7 @@ class MumtazTenantProvisioning(models.Model):
                 tenant.write({
                     "state": "active",
                     "provisioned_on": datetime.datetime.utcnow(),
-                    "admin_password": False,
+                    # admin_password already cleared by RealProvisioner._create_database
                 })
                 tenant.message_post(body=_("Background provisioning completed."))
             else:
