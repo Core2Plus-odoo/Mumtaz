@@ -106,10 +106,11 @@ class ZakiBriefingLog(models.Model):
         date_str = fields.Date.today().strftime("%A, %d %B %Y")
         net_color = "#27ae60" if net >= 0 else "#e74c3c"
 
+        from markupsafe import escape as _esc
         overdue_rows = "".join(
-            f"<tr><td style='padding:4px 8px'>{r['partner']}</td>"
-            f"<td style='padding:4px 8px;text-align:right'>{cur}{r['amount']:,.0f}</td>"
-            f"<td style='padding:4px 8px;text-align:right'>{r['days_late']}d</td></tr>"
+            f"<tr><td style='padding:4px 8px'>{_esc(r['partner'])}</td>"
+            f"<td style='padding:4px 8px;text-align:right'>{_esc(cur)}{r['amount']:,.0f}</td>"
+            f"<td style='padding:4px 8px;text-align:right'>{int(r['days_late'])}d</td></tr>"
             for r in top_overdue
         ) if top_overdue else "<tr><td colspan='3' style='padding:4px 8px;color:#888'>No overdue invoices</td></tr>"
 

@@ -5,15 +5,18 @@ from odoo.http import request, Response
 
 
 class MumtazRoutingProbe(http.Controller):
-    """Lightweight, secret-free host→tenant resolver. Useful for health checks
-    and nginx auth_request. Returns whether the host maps to an active tenant;
-    it deliberately does NOT expose the database name."""
+    """Lightweight host→tenant resolver for nginx auth_request health checks.
+
+    Uses only the request Host header (set by nginx). Deliberately returns
+    minimal information — no tenant state, no database names.
+    """
 
     @http.route("/mumtaz/routing/whoami", type="http", auth="public",
                 methods=["GET"], csrf=False, save_session=False)
     def whoami(self, **kwargs):
-        host = (request.httprequest.headers.get("X-Forwarded-Host")
-                or request.httprequest.host or "")
+        # Use only the actual Host header; never trust client-supplied
+        # X-Forwarded-Host as it can be spoofed to enumerate tenants.
+        host = request.httprequest.host or ""
         tenant = request.env["mumtaz.tenant"].sudo()._resolve_for_host(host)
         if not tenant:
             return Response(
@@ -24,7 +27,6 @@ class MumtazRoutingProbe(http.Controller):
             json.dumps({
                 "resolved": True,
                 "subdomain": tenant.subdomain or "",
-                "state": tenant.state,
             }),
             content_type="application/json",
         )

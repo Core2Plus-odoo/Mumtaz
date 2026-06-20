@@ -139,7 +139,7 @@ class MumtazPortalRouting(http.Controller):
         tenant = env["mumtaz.tenant"].search([("subdomain", "=", slug)], limit=1)
         if tenant and tenant.company_id:
             return tenant.company_id
-        company = env["res.company"].search([("name", "ilike", slug)], limit=1)
+        company = env["res.company"].search([("name", "=", slug)], limit=1)
         return company or None
 
     # ── Slug → company JSON endpoint ─────────────────────────────────── #
@@ -163,7 +163,6 @@ class MumtazPortalRouting(http.Controller):
         return {
             "slug": slug,
             "company": {
-                "id":   company.id,
                 "name": company.name,
                 "logo": f"/web/image/res.company/{company.id}/logo" if company.logo else None,
             },

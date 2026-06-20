@@ -70,10 +70,20 @@ class MumtazStripeWebhook(http.Controller):
     def _subscription_from_meta(self, obj):
         meta = obj.get("metadata") or {}
         sub_id = meta.get("subscription_id")
+        customer_id = obj.get("customer")
         Sub = request.env["mumtaz.subscription"].sudo()
         if sub_id:
             sub = Sub.browse(int(sub_id))
             if sub.exists():
+                # Cross-validate: subscription must belong to the same Stripe customer
+                # as the payment object to prevent metadata injection.
+                if customer_id and sub.tenant_id.stripe_customer_id != customer_id:
+                    _logger.warning(
+                        "Webhook metadata mismatch: sub %s has customer %s but "
+                        "payload customer is %s — ignoring",
+                        sub_id, sub.tenant_id.stripe_customer_id, customer_id,
+                    )
+                    return Sub
                 return sub
         return Sub
 

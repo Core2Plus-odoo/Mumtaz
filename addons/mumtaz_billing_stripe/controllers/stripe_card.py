@@ -35,8 +35,7 @@ class MumtazStripeCard(http.Controller):
         pk = settings.publishable_key or ""
         if not client._is_configured() or not pk:
             return request.make_response(self._render_error(
-                "Stripe is not fully configured. Set STRIPE_SECRET_KEY in "
-                "/opt/mumtaz/.env and a publishable key in Stripe Settings."
+                "Billing is not configured. Please contact support."
             ), headers=[("Content-Type", "text/html")])
 
         try:
@@ -67,6 +66,15 @@ class MumtazStripeCard(http.Controller):
         client = request.env["mumtaz.stripe.client"].sudo()
         try:
             si = client._request("GET", f"setup_intents/{setup_intent_id}")
+            # Verify the setup intent belongs to this tenant's Stripe customer.
+            tenant_customer = tenant.sudo().stripe_customer_id
+            if not tenant_customer or si.get("customer") != tenant_customer:
+                _logger.warning(
+                    "card_confirm: setup intent customer mismatch for tenant %s",
+                    tenant_id,
+                )
+                return Response(json.dumps({"error": "forbidden"}), status=403,
+                                content_type="application/json")
             pm_id = si.get("payment_method")
             if not pm_id:
                 return Response(json.dumps({"error": "no payment method"}),
