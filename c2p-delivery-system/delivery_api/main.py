@@ -31,6 +31,7 @@ from store import EngagementStore
 from knowledge import KnowledgeService
 from sync import writeback
 from odoo import get_client
+import odoo as odoo_mod
 import industry
 import llm
 import policy
@@ -53,6 +54,29 @@ MODEL = llm.DEFAULT_MODEL  # the model is config, owned by llm.py
 store = tenancy.StoreProxy(EngagementStore())
 control = tenancy.ControlStore()
 ks = KnowledgeService(store)
+
+
+# ── Encrypted Odoo connection (used by every agent) ──────────────────────
+def _odoo_settings() -> dict:
+    try:
+        return store.get_setting("odoo_connection") or {}
+    except Exception:
+        return {}
+
+
+def _odoo_conn_for(db):
+    """Resolver for odoo.OdooClient: encrypted store first, then env. The API
+    key is decrypted only here, in memory, at call time."""
+    s = _odoo_settings()
+    url = s.get("url") or os.environ.get("ODOO_URL")
+    user = s.get("user") or os.environ.get("ODOO_USER")
+    pw = tenancy.dec_secret(s["key_enc"]) if s.get("key_enc") else os.environ.get("ODOO_PASSWORD")
+    if url and user and pw:
+        return (url, user, pw)
+    return None
+
+
+odoo_mod.CONN_PROVIDER = _odoo_conn_for
 app = FastAPI(title="C2P Agency OS API", version="1.2.0")
 
 # The frontends are static HTML served by Nginx; allow them to call this API.
@@ -308,6 +332,51 @@ def developer(eng_id: str, body: m.DeveloperIn):
 # --------------------------------------------------------------------------- #
 # Odoo bridge (introspection + sync to system of record)
 # --------------------------------------------------------------------------- #
+@app.get("/odoo/connection")
+def get_odoo_connection():
+    """The Odoo connection the agents use. The API key is NEVER returned —
+    only whether one is stored and whether encryption is active."""
+    s = _odoo_settings()
+    return {
+        "url": s.get("url") or os.environ.get("ODOO_URL", ""),
+        "user": s.get("user") or os.environ.get("ODOO_USER", ""),
+        "db": s.get("db") or os.environ.get("C2P_CRM_DB", ""),
+        "has_key": bool(s.get("key_enc")) or bool(os.environ.get("ODOO_PASSWORD")),
+        "encrypted": tenancy.encryption_active(),
+    }
+
+
+@app.post("/odoo/connection")
+def set_odoo_connection(body: dict):
+    """Save the Odoo connection. The API key is encrypted at rest (Fernet when
+    C2P_SECRET_KEY is set)."""
+    s = _odoo_settings()
+    for k in ("url", "user", "db"):
+        if body.get(k) is not None:
+            s[k] = body.get(k)
+    if body.get("api_key"):
+        s["key_enc"] = tenancy.enc_secret(body["api_key"])
+    store.save_setting("odoo_connection", s)
+    try:
+        get_client.cache_clear()           # rebuild clients with the new creds
+    except Exception:
+        pass
+    return {"ok": True, "has_key": bool(s.get("key_enc")), "encrypted": tenancy.encryption_active()}
+
+
+@app.post("/odoo/connection/test")
+def test_odoo_connection(body: dict | None = None):
+    s = _odoo_settings()
+    db = (body or {}).get("db") or s.get("db") or os.environ.get("C2P_CRM_DB")
+    if not db:
+        raise HTTPException(status_code=400, detail="No database set")
+    try:
+        mods = get_client(db).installed_modules()
+        return {"ok": True, "db": db, "modules": len(mods)}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+
+
 @app.get("/odoo/{db}/modules")
 def odoo_modules(db: str):
     try:

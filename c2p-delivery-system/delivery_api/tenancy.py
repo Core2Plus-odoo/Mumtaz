@@ -111,6 +111,12 @@ def _fernet():
         return None
 
 
+def encryption_active() -> bool:
+    """True when a real Fernet key is configured (C2P_SECRET_KEY + cryptography);
+    otherwise secrets are only base64-obfuscated."""
+    return _fernet() is not None
+
+
 def enc_secret(v: str) -> str:
     f = _fernet()
     if f:

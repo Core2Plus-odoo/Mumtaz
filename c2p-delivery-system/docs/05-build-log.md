@@ -292,6 +292,18 @@ and an onboarding wizard flow. The platform is otherwise complete and sellable.
 All 7 phases now have a working spine; this is the platform layer that makes it
 sellable.
 
+### Add-on: secure Odoo Connection panel ✅
+- A console **Odoo Connection** view (Grounding) to set the instance URL, DB, bot
+  user and **API key** — the key is **encrypted at rest** via `tenancy.enc_secret`
+  (Fernet when `C2P_SECRET_KEY` is set, else base64) and **never returned** by the
+  API (GET exposes only url/user/db + has_key + encrypted flag).
+- `odoo.OdooClient` resolves creds through `odoo.CONN_PROVIDER` (set in main to
+  read the encrypted store, falling back to env), so **every agent** uses the
+  stored connection; `get_client.cache_clear()` on save.
+- Endpoints: `GET/POST /odoo/connection`, `POST /odoo/connection/test`
+  (authenticates + returns installed-module count). Encryption status badge in
+  the UI nudges setting `C2P_SECRET_KEY`.
+
 ### Add-on: agents manage the Odoo implementation ✅
 Decisions: **gated Odoo writes**; deploy to a **staging branch first**.
 - **Config-Apply agent** (`config` prompt) — turns requirements + live installed

@@ -22,14 +22,28 @@ ODOO_URL = os.getenv("ODOO_URL", "http://localhost:8069")
 ODOO_USER = os.getenv("ODOO_USER", "admin")
 ODOO_PASSWORD = os.getenv("ODOO_PASSWORD", "admin")
 
+# A resolver set by the app: given a db, returns (url, user, password) from the
+# encrypted Odoo Connection store, or None to fall back to the env defaults.
+CONN_PROVIDER = None
+
 
 class OdooClient:
-    def __init__(self, db: str, url: str = ODOO_URL,
-                 user: str = ODOO_USER, password: str = ODOO_PASSWORD):
+    def __init__(self, db: str, url: Optional[str] = None,
+                 user: Optional[str] = None, password: Optional[str] = None):
+        if (url is None or user is None or password is None) and CONN_PROVIDER:
+            try:
+                conn = CONN_PROVIDER(db)
+            except Exception:
+                conn = None
+            if conn:
+                cu, cs, cp = conn
+                url = url or cu
+                user = user or cs
+                password = password or cp
         self.db = db
-        self.url = url.rstrip("/")
-        self.user = user
-        self.password = password
+        self.url = (url or ODOO_URL).rstrip("/")
+        self.user = user or ODOO_USER
+        self.password = password or ODOO_PASSWORD
         self._common = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/common")
         self._models = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
         self._uid: Optional[int] = None
