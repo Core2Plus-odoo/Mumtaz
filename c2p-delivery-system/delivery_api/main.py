@@ -24,7 +24,7 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import models as m
-from models import Account, Communication, Engagement
+from models import Account, Communication, Engagement, Lead
 from prompts import PROMPTS, MAX_TOKENS
 from store import EngagementStore
 from knowledge import KnowledgeService
@@ -312,6 +312,93 @@ def sync_lead(eng_id: str):
     eng.crm_lead_id = lead_id
     store.save(eng)
     return {"crm_lead_id": lead_id}
+
+
+# --------------------------------------------------------------------------- #
+# Leads CRM — top of funnel (prospector results / inbound / manual → convert)
+# --------------------------------------------------------------------------- #
+def _lead(lead_id: str) -> Lead:
+    lead = store.get_lead(lead_id)
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return lead
+
+
+@app.post("/leads", response_model=Lead)
+def create_lead(body: m.LeadIn):
+    return store.add_lead(Lead(**body.model_dump()))
+
+
+@app.get("/leads")
+def list_leads(status: str | None = None, limit: int = 200):
+    return [l.model_dump() for l in store.list_leads(status, limit=limit)]
+
+
+@app.get("/leads/{lead_id}", response_model=Lead)
+def get_lead(lead_id: str):
+    return _lead(lead_id)
+
+
+@app.post("/leads/{lead_id}/update", response_model=Lead)
+def update_lead(lead_id: str, body: m.LeadUpdateIn):
+    lead = _lead(lead_id)
+    if body.status:
+        lead.status = body.status
+    if body.notes is not None:
+        lead.notes = body.notes
+    return store.update_lead(lead)
+
+
+@app.post("/leads/bulk")
+def bulk_leads(body: m.LeadsBulkIn):
+    """Save a batch of Prospector results as leads."""
+    created = 0
+    for p in body.prospects:
+        fit = p.get("fit_score")
+        store.add_lead(Lead(
+            name=p.get("name") or p.get("company") or "Unknown",
+            industry=p.get("industry"), country=p.get("country"),
+            source="prospector", fit_score=int(fit) if fit not in (None, "") else None,
+            signals=p.get("signals") or [], email=p.get("contact_hint")))
+        created += 1
+    return {"created": created}
+
+
+@app.post("/leads/{lead_id}/convert")
+def convert_lead(lead_id: str, body: dict | None = None):
+    """Convert a lead into an Account (the start of an engagement relationship)."""
+    lead = _lead(lead_id)
+    body = body or {}
+    acc = Account(name=lead.name, industry=lead.industry, country=lead.country,
+                  odoo_db=body.get("odoo_db"))
+    store.create_account(acc)
+    lead.account_id = acc.id
+    lead.status = "converted"
+    store.update_lead(lead)
+    return {"account": acc.model_dump(), "lead_id": lead.id}
+
+
+@app.post("/leads/{lead_id}/sync")
+def sync_lead_to_odoo(lead_id: str, body: dict | None = None):
+    """Push the lead into Odoo CRM (crm.lead). DB from body.odoo_db or C2P_CRM_DB."""
+    lead = _lead(lead_id)
+    db = (body or {}).get("odoo_db") or os.environ.get("C2P_CRM_DB")
+    if not db:
+        raise HTTPException(status_code=400,
+                            detail="No Odoo DB (set body.odoo_db or C2P_CRM_DB)")
+    try:
+        vals = {}
+        if lead.email:
+            vals["email_from"] = lead.email
+        if lead.contact_name:
+            vals["contact_name"] = lead.contact_name
+        lid = get_client(db).create_lead(name=lead.name, partner_name=lead.name,
+                                         description=lead.notes or "", **vals)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+    lead.crm_lead_id = lid
+    store.update_lead(lead)
+    return {"crm_lead_id": lid}
 
 
 # --------------------------------------------------------------------------- #

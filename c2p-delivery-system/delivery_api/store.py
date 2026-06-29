@@ -14,7 +14,8 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
 
-from models import Account, Approval, Communication, Engagement, KnowledgeEntry
+from models import (Account, Approval, Communication, Engagement, KnowledgeEntry,
+                    Lead)
 
 DB_PATH = os.getenv("C2P_STORE", "delivery.db")
 
@@ -92,6 +93,24 @@ CREATE TABLE IF NOT EXISTS communications (
   created_at    TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_comms_account ON communications(account_id);
+CREATE TABLE IF NOT EXISTS leads (
+  id           TEXT PRIMARY KEY,
+  name         TEXT NOT NULL,
+  contact_name TEXT,
+  email        TEXT,
+  phone        TEXT,
+  industry     TEXT,
+  country      TEXT,
+  source       TEXT,
+  fit_score    INTEGER,
+  signals      TEXT NOT NULL DEFAULT '[]',
+  status       TEXT,
+  account_id   TEXT,
+  crm_lead_id  INTEGER,
+  notes        TEXT,
+  created_at   TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_leads_status ON leads(status);
 CREATE TABLE IF NOT EXISTS agent_runs (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   task          TEXT,
@@ -240,6 +259,59 @@ class EngagementStore:
             r = c.execute("SELECT * FROM accounts WHERE name LIKE ? ORDER BY created_at LIMIT 1",
                           (f"%{name}%",)).fetchone()
             return self._to_account(r) if r else None
+
+    # ── Leads ────────────────────────────────────────────────────────────
+    def _to_lead(self, r: sqlite3.Row) -> Lead:
+        return Lead(
+            id=r["id"], name=r["name"], contact_name=r["contact_name"],
+            email=r["email"], phone=r["phone"], industry=r["industry"],
+            country=r["country"], source=r["source"] or "manual",
+            fit_score=r["fit_score"], signals=json.loads(r["signals"] or "[]"),
+            status=r["status"] or "new", account_id=r["account_id"],
+            crm_lead_id=r["crm_lead_id"], notes=r["notes"], created_at=r["created_at"] or "",
+        )
+
+    def add_lead(self, lead: Lead) -> Lead:
+        with self._conn() as c:
+            c.execute(
+                """INSERT INTO leads
+                   (id, name, contact_name, email, phone, industry, country, source,
+                    fit_score, signals, status, account_id, crm_lead_id, notes, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (lead.id, lead.name, lead.contact_name, lead.email, lead.phone,
+                 lead.industry, lead.country, lead.source, lead.fit_score,
+                 json.dumps(lead.signals), lead.status, lead.account_id,
+                 lead.crm_lead_id, lead.notes, lead.created_at),
+            )
+        return lead
+
+    def get_lead(self, lead_id: str) -> Optional[Lead]:
+        with self._conn() as c:
+            r = c.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
+            return self._to_lead(r) if r else None
+
+    def list_leads(self, status: Optional[str] = None, limit: int = 200) -> list[Lead]:
+        q = "SELECT * FROM leads"
+        args: list = []
+        if status:
+            q += " WHERE status=?"
+            args.append(status)
+        q += " ORDER BY created_at DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            return [self._to_lead(r) for r in c.execute(q, args).fetchall()]
+
+    def update_lead(self, lead: Lead) -> Lead:
+        with self._conn() as c:
+            c.execute(
+                """UPDATE leads SET name=?, contact_name=?, email=?, phone=?, industry=?,
+                   country=?, source=?, fit_score=?, signals=?, status=?, account_id=?,
+                   crm_lead_id=?, notes=? WHERE id=?""",
+                (lead.name, lead.contact_name, lead.email, lead.phone, lead.industry,
+                 lead.country, lead.source, lead.fit_score, json.dumps(lead.signals),
+                 lead.status, lead.account_id, lead.crm_lead_id, lead.notes, lead.id),
+            )
+        return lead
 
     # ── Communications ───────────────────────────────────────────────────
     def _to_comm(self, r: sqlite3.Row) -> Communication:

@@ -101,6 +101,46 @@ class ResearchIn(BaseModel):
     web_search: Optional[bool] = None      # override the global default
 
 
+# ── Leads CRM ─────────────────────────────────────────────────────────────
+class Lead(BaseModel):
+    id: str = Field(default_factory=lambda: "lead_" + uuid.uuid4().hex[:12])
+    name: str
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    industry: Optional[str] = None
+    country: Optional[str] = None
+    source: str = "manual"                 # prospector | inbound | manual
+    fit_score: Optional[int] = None
+    signals: list[str] = Field(default_factory=list)
+    status: str = "new"                    # new|contacted|qualified|converted|disqualified
+    account_id: Optional[str] = None       # set when converted
+    crm_lead_id: Optional[int] = None      # Odoo crm.lead, once pushed
+    notes: Optional[str] = None
+    created_at: str = Field(default_factory=_now)
+
+
+class LeadIn(BaseModel):
+    name: str
+    contact_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    industry: Optional[str] = None
+    country: Optional[str] = None
+    source: str = "manual"
+    fit_score: Optional[int] = None
+    signals: list[str] = Field(default_factory=list)
+
+
+class LeadUpdateIn(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class LeadsBulkIn(BaseModel):
+    prospects: list[dict] = Field(default_factory=list)
+
+
 # ── Phase 5: Communications ───────────────────────────────────────────────
 class Communication(BaseModel):
     id: str = Field(default_factory=lambda: "com_" + uuid.uuid4().hex[:12])

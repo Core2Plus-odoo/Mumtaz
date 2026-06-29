@@ -225,5 +225,17 @@ the per-account **Knowledge** entries.
 **Acceptance**: the cockpit shows pipeline + approvals + KPIs across all
 accounts; the Supervisor briefing generates from the live snapshot.
 
+### Add-on: Leads CRM ✅
+- `Lead` model + store (leads table) with source (prospector/inbound/manual),
+  fit score, signals, status (new→contacted→qualified→converted/disqualified),
+  account link, Odoo crm.lead id.
+- Endpoints: `POST/GET /leads`, `GET /leads/{id}`, `POST /leads/{id}/update`
+  (status/notes), `POST /leads/bulk` (save Prospector results), `POST
+  /leads/{id}/convert` (→ Account), `POST /leads/{id}/sync` (→ Odoo crm.lead;
+  db from body or `C2P_CRM_DB`).
+- Console **Leads CRM** view: prospector runner (ICP → ranked prospects → Save
+  all as leads), leads table with inline status, Convert-to-account, and
+  push-to-Odoo. Tests: CRUD + bulk + convert.
+
 **Next:** Phase 7 — multi-tenant product (tenant isolation, real auth/roles,
 per-tenant config + white-label, onboarding, billing/metering, security).

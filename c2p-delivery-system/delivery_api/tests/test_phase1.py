@@ -375,3 +375,32 @@ def test_metrics_and_supervisor(monkeypatch, tmp_path):
         "headline": "1 proposal awaiting send", "priorities": [], "risks": []})
     br = c.post("/supervisor/brief").json()
     assert br["briefing"]["headline"] and br["metrics"]["pipeline_value_aed"] == 150000
+
+
+# ── Leads CRM ─────────────────────────────────────────────────────────────
+def test_leads_crud_bulk_and_convert(tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "leads.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+    c = TestClient(main_mod.app)
+
+    # bulk from prospector-shaped data
+    c.post("/leads/bulk", json={"prospects": [
+        {"name": "Acme Mfg", "industry": "Manufacturing", "fit_score": 88, "signals": ["growth"]},
+        {"name": "Beta Trading", "industry": "Distribution", "fit_score": 71}]})
+    leads = c.get("/leads").json()
+    assert len(leads) == 2 and leads[0]["source"] == "prospector"
+
+    lid = leads[0]["id"]
+    c.post(f"/leads/{lid}/update", json={"status": "qualified", "notes": "warm"})
+    assert c.get(f"/leads/{lid}").json()["status"] == "qualified"
+
+    conv = c.post(f"/leads/{lid}/convert", json={}).json()
+    assert conv["account"]["name"] == "Acme Mfg"
+    assert c.get(f"/leads/{lid}").json()["status"] == "converted"
+    assert any(a["name"] == "Acme Mfg" for a in c.get("/accounts").json())

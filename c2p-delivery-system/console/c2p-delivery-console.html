@@ -468,6 +468,7 @@ function renderNav(){
     html+=`<button class="nav-item ${activeView===s.id?'active':''}" onclick="goView('${s.id}')"><span class="ni-ico">${s.ico}</span><span class="ni-name">${s.name}</span>${cnt||st}</button>`;
   });
   html+=`<div class="nav-sec">Clients</div>
+    <button class="nav-item ${activeView==='leads'?'active':''}" onclick="goView('leads')"><span class="ni-ico">⊕</span><span class="ni-name">Leads CRM</span></button>
     <button class="nav-item ${activeView==='accounts'?'active':''}" onclick="goView('accounts')"><span class="ni-ico">◍</span><span class="ni-name">Accounts</span></button>
     <button class="nav-item ${activeView==='comms'?'active':''}" onclick="goView('comms')"><span class="ni-ico">✉</span><span class="ni-name">Communications</span></button>
     <button class="nav-item ${activeView==='approvals'?'active':''}" onclick="goView('approvals')"><span class="ni-ico">✓</span><span class="ni-name">Approvals</span>${approvalsBadge()}</button>`;
@@ -502,6 +503,7 @@ function renderView(){
   if(activeView==='cockpit')return renderCockpit(c);
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
+  if(activeView==='leads')return renderLeads(c);
   if(activeView==='accounts')return renderAccounts(c);
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
@@ -866,6 +868,50 @@ async function odooFields(){
       </tbody></table></div>`;
   }catch(e){el.innerHTML=`<div class="err"><b>Lookup failed.</b> ${esc(e.message)}</div>`;}
 }
+
+/* ---------- leads CRM ---------- */
+let lastProspects=[];
+async function renderLeads(c){
+  c.innerHTML=`<div class="view">
+    <div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Prospecting</h2><p>Find ICP-fit companies and save them as leads.</p></div></div>
+      <div class="panel-body">
+        <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="pr_ind" placeholder="Manufacturing"></div>
+          <div class="input-block"><label>Country</label><input type="text" id="pr_country" value="UAE"></div></div>
+        <div class="input-grid"><div class="input-block"><label>Size band</label><input type="text" id="pr_size" placeholder="20-500 employees"></div>
+          <div class="input-block"><label>Signals</label><input type="text" id="pr_sig" placeholder="ERP modernisation, growth"></div></div>
+        <button class="btn primary sm" onclick="runProspector()">Find prospects</button>
+        <div id="prResult" style="margin-top:14px"></div></div></div>
+    <div class="panel"><div class="panel-head"><div><h2>Leads</h2></div><div class="run-area"><button class="btn ghost sm" onclick="newLeadModal()">+ New lead</button><button class="btn ghost sm" onclick="loadLeads()">↻</button></div></div>
+      <div class="panel-body" id="leadsList"><div class="skel" style="height:120px"></div></div></div></div>`;
+  loadLeads();
+}
+async function runProspector(){
+  const r=document.getElementById('prResult');r.innerHTML=`<div class="skel" style="height:90px"></div>`;
+  try{
+    const out=await api("POST","/prospect",{industry:val('pr_ind')||null,country:val('pr_country')||'UAE',size_band:val('pr_size')||null,signals:val('pr_sig')||null,max_results:10});
+    lastProspects=out.prospects||[];
+    if(!lastProspects.length){r.innerHTML=`<div class="placeholder">No prospects returned.</div>`;return;}
+    r.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="hint">${lastProspects.length} prospects${out.search_notes?' · '+esc(out.search_notes):''}</span><button class="btn primary sm" onclick="saveProspects()">Save all as leads</button></div>`+lastProspects.map(p=>`<div class="odoo-rec"><div class="ic" style="background:var(--charcoal)">${esc((p.name||'?')[0])}</div><div class="nm"><b>${esc(p.name)}</b> · <span style="color:var(--muted)">${esc(p.industry||'')} · ${esc(p.country||'')}</span><div style="font-size:12px;color:var(--muted-2)">${esc((p.signals||[]).join(', '))}</div></div><span class="pend">fit ${esc(p.fit_score||'')}</span></div>`).join('');
+  }catch(e){r.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function saveProspects(){if(!lastProspects.length)return;try{const r=await api("POST","/leads/bulk",{prospects:lastProspects});toast(r.created+' leads saved','ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
+async function loadLeads(){
+  try{const items=await api("GET","/leads?limit=200");const l=document.getElementById('leadsList');if(!l)return;
+    if(!items.length){l.innerHTML=`<div class="placeholder">No leads yet — run the prospector or add one.</div>`;return;}
+    l.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>Company</th><th>Industry</th><th class="num">Fit</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${items.map(x=>`<tr>
+      <td><b>${esc(x.name)}</b>${x.crm_lead_id?` <span class="chip" style="font-size:9px">Odoo #${esc(x.crm_lead_id)}</span>`:''}</td>
+      <td style="color:var(--muted)">${esc(x.industry||'')}</td><td class="num">${x.fit_score??''}</td>
+      <td style="color:var(--muted);font-size:11px">${esc(x.source||'')}</td>
+      <td><select onchange="setLeadStatus('${x.id}',this.value)" style="padding:4px 6px;font-size:11px">${['new','contacted','qualified','converted','disqualified'].map(s=>`<option value="${s}" ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td style="white-space:nowrap">${x.account_id?'<span class="pend">→ account</span>':`<button class="btn sm" onclick="convertLead('${x.id}')">Convert</button>`} <button class="btn sm" onclick="pushLead('${x.id}')" title="Push to Odoo CRM">⇪ Odoo</button></td></tr>`).join('')}</tbody></table></div>`;
+  }catch(e){const l=document.getElementById('leadsList');if(l)l.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function setLeadStatus(id,status){try{await api("POST",`/leads/${id}/update`,{status});}catch(e){toast('Failed: '+e.message,'bad');}}
+async function convertLead(id){try{const r=await api("POST",`/leads/${id}/convert`,{});toast('Converted to account: '+((r.account&&r.account.name)||''),'ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
+async function pushLead(id){const db=prompt('Odoo DB to push this lead into:',(eng&&eng.odoo_db)||'');if(db===null)return;try{const r=await api("POST",`/leads/${id}/sync`,db?{odoo_db:db}:{});toast('Pushed to Odoo · crm.lead #'+r.crm_lead_id,'ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
+function newLeadModal(){const mb=document.createElement('div');mb.className='modal-bg';mb.id='leadModal';mb.innerHTML=`<div class="modal" onclick="event.stopPropagation()"><div class="modal-h"><h3>New lead</h3></div><div class="modal-b"><div class="input-block"><label>Company</label><input type="text" id="nl_name" style="width:100%"></div><div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="nl_ind" style="width:100%"></div><div class="input-block"><label>Country</label><input type="text" id="nl_country" value="UAE" style="width:100%"></div></div><div class="input-block"><label>Email</label><input type="text" id="nl_email" style="width:100%"></div></div><div class="modal-f"><button class="btn ghost" onclick="closeLeadModal()">Cancel</button><button class="btn primary" onclick="submitLead()">Create</button></div></div>`;mb.onclick=closeLeadModal;document.body.appendChild(mb);setTimeout(()=>document.getElementById('nl_name').focus(),0);}
+function closeLeadModal(){const m=document.getElementById('leadModal');if(m)m.remove();}
+async function submitLead(){const name=val('nl_name');if(!name){focus('nl_name');return;}try{await api("POST","/leads",{name,industry:val('nl_ind')||null,country:val('nl_country')||null,email:val('nl_email')||null});closeLeadModal();toast('Lead created','ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
 
 /* ---------- accounts (clients) ---------- */
 async function renderAccounts(c){
