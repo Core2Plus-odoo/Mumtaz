@@ -822,6 +822,79 @@ def update_task(eng_id: str, task_id: int, body: dict):
 
 
 # --------------------------------------------------------------------------- #
+# Autopilot — the super-agent that runs the whole engagement, one step at a
+# time, chaining the specialists and pausing at approval gates.
+# --------------------------------------------------------------------------- #
+def _eng_approvals(eng_id: str, action_type: str | None = None):
+    return [a for a in store.list_approvals(None, limit=500)
+            if a.engagement_id == eng_id
+            and (action_type is None or a.action_type == action_type)]
+
+
+def _autopilot_decide(eng: Engagement):
+    """Decide the single next step from the engagement state, or None if done."""
+    st = eng.stages
+    if not st.get("presales"):
+        return ("presales", None)
+    if not st.get("proposal"):
+        return ("proposal", None)
+    if not st.get("project"):
+        return ("project", None)
+    cands = [c.get("requirement") for c in (st.get("presales") or {}).get("candidate_requirements") or []]
+    analysed = " || ".join((f.get("requirement_summary") or "")
+                           for f in (st.get("functional") or [])).lower()
+    for req in cands:
+        if req and req.lower()[:40] not in analysed:
+            return ("functional", req)
+    customs = [f for f in (st.get("functional") or []) if f.get("verdict") == "custom"]
+    if customs and not st.get("developer"):
+        return ("developer", None)
+    if eng.odoo_db and not _eng_approvals(eng.id, "config_apply"):
+        return ("config", None)
+    if st.get("developer") and not _eng_approvals(eng.id, "code_deploy"):
+        return ("deploy", None)
+    return None
+
+
+@app.post("/engagements/{eng_id}/autopilot/step")
+def autopilot_step(eng_id: str):
+    """Run the next pipeline step. The console calls this in a loop until the
+    status is done / blocked (approval) / needs_input / error."""
+    eng = _engagement(eng_id)
+    dec = _autopilot_decide(eng)
+    if not dec:
+        return {"status": "done", "ran": None}
+    kind, arg = dec
+    if kind == "presales":
+        return {"status": "needs_input", "ran": "presales"}
+    try:
+        if kind == "proposal":
+            proposal(eng_id, m.ProposalIn())
+        elif kind == "project":
+            project(eng_id, m.ProjectIn())
+        elif kind == "functional":
+            functional(eng_id, m.FunctionalIn(requirement=arg or "Requirement",
+                                              industry=_industry_for(eng)))
+        elif kind == "developer":
+            developer(eng_id, m.DeveloperIn())
+        elif kind == "config":
+            r = config_apply(eng_id, {})
+            if r.get("approval"):
+                return {"status": "blocked", "ran": "config", "approval": r["approval"]}
+            return {"status": "running", "ran": "config"}
+        elif kind == "deploy":
+            r = deploy_module(eng_id, {})
+            if r.get("approval"):
+                return {"status": "blocked", "ran": "deploy", "approval": r["approval"]}
+            return {"status": "running", "ran": "deploy"}
+    except HTTPException as exc:
+        return {"status": "error", "ran": kind, "error": str(exc.detail)}
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "ran": kind, "error": str(exc)}
+    return {"status": "running", "ran": kind}
+
+
+# --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")

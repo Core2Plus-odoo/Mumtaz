@@ -335,3 +335,24 @@ Decisions: **gated Odoo writes**; deploy to a **staging branch first**.
   (bot API key) / `C2P_CRM_DB` in `.env`, and link engagements to the DB, so
   functional reads live modules and writes hit the real Odoo. Test added for the
   gated config-apply path.
+
+### Super agent: Autopilot orchestrator ✅
+One super-agent that runs the whole engagement pipeline, chaining every
+specialist and pausing only at approval gates, with a live run log.
+- **Backend** (`main.py`): `_autopilot_decide(eng)` inspects stage state and
+  returns the next step — presales → proposal → project → functional (one per
+  outstanding candidate requirement) → developer (when any requirement is
+  `custom`) → config (when the engagement has an Odoo DB) → deploy (when a
+  module was built). `POST /engagements/{id}/autopilot/step` runs that single
+  step and reports `status`: `running` (ran a specialist), `needs_input`
+  (presales requires operator input), `blocked` (hit a `config_apply` /
+  `code_deploy` approval gate, returns the approval), `done` (nothing left),
+  or `error`. Stepwise so the orchestrator always stops cleanly at gates and
+  the operator stays in control.
+- **Console** (Overview hero): **🤖 Run Autopilot** button drives a loop that
+  calls `/autopilot/step` until `done` / `needs_input` / `blocked` / `error`,
+  refetching the engagement between steps and streaming each result into a
+  colour-coded, monospace **Autopilot run log** (with a Stop control). Approval
+  gates link straight to the Approvals view.
+- Honours the same policy/gate layer as manual runs — Autopilot never bypasses
+  an approval; it surfaces it and waits.

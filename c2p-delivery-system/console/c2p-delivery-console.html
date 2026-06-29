@@ -87,6 +87,15 @@
   .btn.dark:hover{background:#000}
   .btn.ghost{background:transparent}
   .btn.sm{padding:6px 10px;font-size:11.5px}
+  .ap-log{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px;line-height:1.5;max-height:340px;overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .ap-row{padding:3px 0;color:var(--charcoal);border-bottom:1px dashed transparent}
+  .ap-row.head{font-weight:700;color:var(--deep-teal)}
+  .ap-row.ok{color:var(--charcoal)}
+  .ap-row.done{color:#1f9d6b;font-weight:600}
+  .ap-row.warn{color:#b9770a}
+  .ap-row.bad{color:var(--rust)}
+  .ap-row.muted{color:var(--muted-2);font-style:italic}
+  .ap-row a{color:var(--deep-teal);text-decoration:underline}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .btn.copied{border-color:var(--green);color:var(--green)}
 
@@ -558,8 +567,15 @@ function renderOverview(c){
         <div class="co">${esc(eng.company)}</div>
         <div class="meta"><span>${eng.id}</span>${eng.odoo_db?`<span style="color:var(--amber)">⛁ ${esc(eng.odoo_db)}</span>`:'<span>No Odoo DB</span>'}<span>${doneCount()}/${STAGES.length} stages</span></div>
         <div class="ov-steps">${steps}</div>
-        ${next?`<div style="margin-top:14px"><button class="btn primary" onclick="goView('${next.id}')">Continue → ${next.name}</button></div>`:`<div style="margin-top:14px"><span class="badge b-done">Pipeline complete</span></div>`}
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          ${next?`<button class="btn primary" onclick="goView('${next.id}')">Continue → ${next.name}</button>`:`<span class="badge b-done">Pipeline complete</span>`}
+          <button class="btn dark" id="autopilotBtn" onclick="runAutopilot()">🤖 Run Autopilot</button>
+        </div>
       </div>
+    </div>
+    <div class="panel" id="autopilotPanel" style="display:none">
+      <div class="panel-head"><div><h2>🤖 Autopilot run log</h2><p>The orchestrator chains every specialist and pauses only at approval gates.</p></div><button class="btn sm" onclick="stopAutopilot()" id="autopilotStop" style="display:none">Stop</button></div>
+      <div class="panel-body"><div id="autopilotLog" class="ap-log"></div></div>
     </div>
     ${kpiHtml}
     <div class="two-col">
@@ -593,6 +609,46 @@ function activitySummary(){
   if(eng.stages?.developer)items.push(['Developer',(eng.stages.developer.files||[]).length+' files generated']);
   if(!items.length)return `<div class="placeholder" style="padding:18px 0">Nothing run yet. Start with Presales.</div>`;
   return items.map(([s,t])=>`<div class="odoo-rec"><div class="ic" style="background:var(--deep-teal)">✓</div><div class="nm"><b>${s}</b> · <span style="color:var(--muted)">${esc(t)}</span></div></div>`).join('');
+}
+let _apStop=false;
+const AP_LABEL={presales:'Pre-sales qualification',proposal:'Proposal & pricing',project:'Project plan',functional:'Functional analysis',developer:'Developer build',config:'Odoo configuration',deploy:'Module deploy'};
+function apLog(html,cls){
+  const el=document.getElementById('autopilotLog'); if(!el)return;
+  const row=document.createElement('div'); row.className='ap-row '+(cls||''); row.innerHTML=html; el.appendChild(row); el.scrollTop=el.scrollHeight;
+}
+function stopAutopilot(){_apStop=true;apLog('⏹ Stop requested — finishing current step…','warn');}
+async function runAutopilot(){
+  const btn=document.getElementById('autopilotBtn'); const panel=document.getElementById('autopilotPanel'); const stop=document.getElementById('autopilotStop');
+  if(panel)panel.style.display='block'; if(stop)stop.style.display='inline-flex';
+  if(btn){btn.disabled=true;btn.textContent='🤖 Autopilot running…';}
+  _apStop=false;
+  document.getElementById('autopilotLog').innerHTML='';
+  apLog('🚀 Autopilot engaged for <b>'+esc(eng.company)+'</b>','head');
+  let guard=0;
+  try{
+    while(guard++<25){
+      if(_apStop){apLog('⏹ Stopped by operator.','warn');break;}
+      let r;
+      try{ r=await api("POST",`/engagements/${eng.id}/autopilot/step`); }
+      catch(e){ apLog('✕ Step call failed: '+esc(e.message),'bad'); break; }
+      const label=AP_LABEL[r.ran]||r.ran||'';
+      if(r.status==='done'){ apLog('✓ Pipeline complete — nothing left to run.','done'); break; }
+      if(r.status==='needs_input'){ apLog('⏸ <b>'+esc(label)+'</b> needs your input — run it from its stage tab, then re-launch Autopilot.','warn'); break; }
+      if(r.status==='blocked'){ apLog('🔒 <b>'+esc(label)+'</b> hit an approval gate. Review it in <a href="#" onclick="goView(\'approvals\');return false">Approvals</a>.','warn'); break; }
+      if(r.status==='error'){ apLog('✕ <b>'+esc(label)+'</b> errored: '+esc(r.error||''),'bad'); break; }
+      apLog('▸ Ran <b>'+esc(label)+'</b> · '+esc(r.status),'ok');
+      // refresh engagement state between steps
+      try{ const fresh=await api("GET",`/engagements/${eng.id}`); if(fresh&&fresh.id){eng=fresh;} }catch(_){}
+    }
+    if(guard>=25)apLog('⚠ Reached step limit — re-launch to continue.','warn');
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='🤖 Run Autopilot';}
+    if(stop)stop.style.display='none';
+    // refresh lists/state silently but keep the run log on screen
+    try{ engagements=await api("GET","/engagements"); }catch(_){}
+    try{ if(typeof refreshSidebar==='function')refreshSidebar(); }catch(_){}
+    apLog('— end of run. Switch tabs to see updated stage state. —','muted');
+  }
 }
 function recentList(){
   if(!engagements.length)return '';
