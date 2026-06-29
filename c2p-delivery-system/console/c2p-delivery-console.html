@@ -784,6 +784,11 @@ const RENDER={
         <div class="sec"><h3>Dependencies</h3><ul class="clean">${(o.raid?.dependencies||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
       </div>
       <div class="sec"><h3>Governance</h3><div class="card">${esc(o.governance?.cadence)} · ${esc(o.governance?.steering)} · ${esc(o.governance?.reporting)}</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn sm" onclick="dispatchEngagement()">PM: delegate the work</button>
+        <button class="btn primary sm" onclick="configEngagement()" title="Generate + apply an Odoo config recipe (gated)">Configure Odoo from requirements (gated)</button>
+      </div>
+      <div id="dispatchOut" style="margin-top:12px"></div>
     </div>`;},
 
   functional(el,o){const v=VERDICTS[o.verdict]||VERDICTS.custom;lastFunctional=o;
@@ -1108,6 +1113,24 @@ async function decideApproval(id,decision){
 
 /* ---------- gated deploy (Phase 4) ---------- */
 async function deployModule(){if(!eng)return;try{const r=await api("POST",`/engagements/${eng.id}/deploy`,{});if(r.approval){toast('Deploy queued for your approval in the Cockpit','ok');refreshApprovalsCount();}else{toast('Module deployed ('+(r.result&&r.result.mode||'')+')','ok');}}catch(e){toast('Failed: '+e.message,'bad');}}
+
+/* ---------- implementation: config-apply + PM dispatch ---------- */
+async function configEngagement(){
+  if(!eng)return;
+  if(!eng.odoo_db){toast('Link an Odoo DB to this engagement first','bad');return;}
+  try{const r=await api("POST",`/engagements/${eng.id}/config`,{});
+    const ops=(r.recipe&&r.recipe.operations||[]).length;
+    if(r.approval){toast(`Odoo config recipe (${ops} ops) queued for approval`,'ok');refreshApprovalsCount();}
+    else{toast(`Config applied (${(r.result&&r.result.applied)||0}/${(r.result&&r.result.total)||0})`,'ok');}
+  }catch(e){toast('Failed: '+e.message,'bad');}
+}
+async function dispatchEngagement(){
+  if(!eng)return;const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:80px"></div>`;
+  try{const o=await api("POST",`/engagements/${eng.id}/dispatch`,{});
+    const rows=(o.assignments||[]).map(a=>`<div class="req-row"><span class="pri pri-${esc(a.priority)}">${esc(a.priority)}</span><span class="rq-text">${esc(a.item)}</span><span class="chip">${esc(a.assign_to)}</span><span class="eff ${a.autonomy==='approval'?'eff-High':'eff-Low'}">${esc(a.autonomy)}</span></div>`).join('');
+    if(host)host.innerHTML=`<div class="sec"><h3>PM delegation</h3>${rows||'<div class="hint">No assignments.</div>'}${o.sequence_notes?`<div class="callout" style="margin-top:8px">${esc(o.sequence_notes)}</div>`:''}${(o.owner_decisions||[]).length?`<div class="set-h" style="margin-top:10px">Needs you</div><ul class="clean warn">${o.owner_decisions.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>`;
+  }catch(e){if(host)host.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
 
 /* ---------- branded proposal (Phase 3) ---------- */
 function previewProposal(){if(!eng)return;window.open(API_BASE+'/engagements/'+eng.id+'/proposal/preview','_blank');}

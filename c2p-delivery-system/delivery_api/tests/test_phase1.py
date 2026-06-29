@@ -313,6 +313,44 @@ def test_deploy_is_gated(tmp_path):
     assert dec["status"] == "approved" and dec["result"]["module"] == "c2p_demo"
 
 
+# ── Implementation: config-apply (gated) ──────────────────────────────────
+def test_config_apply_is_gated(monkeypatch, tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "cfg.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+
+    # Stub the config agent + the Odoo client so no real Odoo is touched.
+    monkeypatch.setattr(main_mod, "run_agent", lambda *a, **k: {
+        "summary": "Baseline UAE setup",
+        "operations": [{"label": "VAT 5%", "model": "account.tax", "method": "create",
+                        "values": {"name": "VAT 5%", "amount": 5.0}}],
+        "manual_steps": [], "risks": []})
+
+    class _FakeOdoo:
+        def execute(self, model, method, *a, **k):
+            return 101 if method == "create" else True
+        def message_post(self, *a, **k):
+            return True
+    monkeypatch.setattr(main_mod, "get_client", lambda db: _FakeOdoo())
+
+    c = TestClient(main_mod.app)
+    eng = c.post("/engagements", json={"company": "Acme", "odoo_db": "Acme_DB"}).json()
+
+    r = c.post(f"/engagements/{eng['id']}/config", json={}).json()
+    assert r["approval"] and r["approval"]["action_type"] == "config_apply"
+    assert len(r["recipe"]["operations"]) == 1
+
+    dec = c.post(f"/approvals/{r['approval']['id']}/decide",
+                 json={"decision": "approved"}).json()
+    assert dec["status"] == "approved"
+    assert dec["result"]["applied"] == 1 and dec["result"]["results"][0]["id"] == 101
+
+
 # ── Phase 5: communications (triage + sensitivity gating) ─────────────────
 def test_comms_inbound_routes_and_gates(monkeypatch, tmp_path):
     pytest.importorskip("fastapi")

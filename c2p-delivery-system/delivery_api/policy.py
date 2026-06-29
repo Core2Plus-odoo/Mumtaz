@@ -33,6 +33,7 @@ AUTONOMY: dict[str, str] = {
     "contract_commitment": "approval",
     "code_deploy": "approval",
     "client_comms_sensitive": "approval",
+    "config_apply": "approval",        # writing config to the client's Odoo
 }
 
 

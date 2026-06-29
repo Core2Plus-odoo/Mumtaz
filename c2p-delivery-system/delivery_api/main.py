@@ -603,6 +603,58 @@ def deploy_module(eng_id: str, body: dict | None = None):
 
 
 # --------------------------------------------------------------------------- #
+# Implementation in Odoo — config-apply (gated) + PM dispatch
+# --------------------------------------------------------------------------- #
+@app.post("/engagements/{eng_id}/config")
+def config_apply(eng_id: str, body: dict | None = None):
+    """Generate an Odoo config recipe from the requirements and apply it — GATED.
+    Configures the client's live Odoo (master data, tax, stages, …) via the API."""
+    eng = _engagement(eng_id)
+    if not eng.odoo_db:
+        raise HTTPException(status_code=400, detail="Link an Odoo DB to this engagement first")
+    body = body or {}
+    modules = _maybe_modules(eng, None)
+    fns = [f.get("requirement_summary") for f in (eng.stages.get("functional") or [])]
+    cands = [c.get("requirement") for c in ((eng.stages.get("presales") or {}).get("candidate_requirements") or [])]
+    reqs = body.get("requirement") or json.dumps(fns or cands or ["Baseline GCC setup"], indent=2)
+    content = (
+        f"Engagement: {eng.company}\nOdoo version: {body.get('odoo_version', 'v17')}\n"
+        f"Installed modules: {modules}\nRequirements to configure:\n{reqs}\n\n"
+        "Produce the Odoo configuration recipe JSON."
+        + industry.playbook_block(_industry_for(eng))
+        + ks.context_block(eng.account_id, "configuration")
+    )
+    out = run_agent("config", content, account_id=eng.account_id, engagement_id=eng.id)
+    payload = {"engagement_id": eng.id, "operations": out.get("operations") or [],
+               "summary": out.get("summary")}
+    appr = policy.gate(store, "config_apply", payload, requester_agent="config",
+                       account_id=eng.account_id, engagement_id=eng.id)
+    if appr is None:
+        return {"recipe": out, "approval": None,
+                "result": _execute_config_apply(payload, eng.account_id)}
+    return {"recipe": out, "approval": appr.model_dump()}
+
+
+@app.post("/engagements/{eng_id}/dispatch")
+def dispatch(eng_id: str):
+    """The Delivery Lead/PM allocates each requirement to the right capability
+    (config / functional / developer / manual) with autonomy + priority."""
+    eng = _engagement(eng_id)
+    state = {
+        "company": eng.company,
+        "odoo_db": eng.odoo_db,
+        "candidate_requirements": (eng.stages.get("presales") or {}).get("candidate_requirements") or [],
+        "functional": [{"requirement": f.get("requirement_summary"), "verdict": f.get("verdict")}
+                       for f in (eng.stages.get("functional") or [])],
+        "has_proposal": bool(eng.stages.get("proposal")),
+        "has_project": bool(eng.stages.get("project")),
+    }
+    content = (f"Engagement state:\n{json.dumps(state, indent=2)}\n\n"
+               "As the Delivery Lead, allocate the work and return the JSON.")
+    return run_agent("dispatch", content, account_id=eng.account_id, engagement_id=eng.id)
+
+
+# --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")
@@ -706,6 +758,52 @@ def _execute_deploy(payload: dict, account_id: str | None = None) -> dict:
     return res
 
 
+def _execute_config_apply(payload: dict, account_id: str | None = None) -> dict:
+    """Apply the config recipe to the engagement's Odoo via the API (create/write
+    only — safe, gated). Returns per-operation results."""
+    eng = store.get(payload.get("engagement_id"))
+    db = eng.odoo_db if eng else None
+    if not db:
+        return {"error": "engagement has no odoo_db linked"}
+    c = get_client(db)
+    results = []
+    for op in payload.get("operations") or []:
+        label, model = op.get("label"), op.get("model")
+        method = (op.get("method") or "create").lower()
+        vals = op.get("values") or {}
+        try:
+            if not model:
+                raise ValueError("missing model")
+            if method == "create":
+                rid = c.execute(model, "create", vals)
+                results.append({"label": label, "model": model, "id": rid, "ok": True})
+            elif method == "write":
+                ids = c.execute(model, "search", op.get("domain") or [])
+                if ids:
+                    c.execute(model, "write", ids, vals)
+                    results.append({"label": label, "model": model, "ids": ids, "ok": True})
+                else:
+                    results.append({"label": label, "model": model, "ok": False,
+                                    "error": "no records matched domain"})
+            else:
+                results.append({"label": label, "ok": False,
+                                "error": f"method '{method}' not allowed"})
+        except Exception as exc:  # noqa: BLE001
+            results.append({"label": label, "model": model, "ok": False, "error": str(exc)})
+    applied = sum(1 for r in results if r.get("ok"))
+    try:
+        if eng and eng.crm_lead_id:
+            c.message_post("crm.lead", eng.crm_lead_id,
+                           f"C2P applied {applied}/{len(results)} Odoo config operations.")
+    except Exception:
+        pass
+    aid = account_id or (eng.account_id if eng else None)
+    if aid:
+        ks.write_entry(aid, "deliverable", {"type": "config_apply", "results": results},
+                       title="Odoo config applied", learned_by="config", tags=["config"])
+    return {"applied": applied, "total": len(results), "results": results}
+
+
 def _execute_action(appr) -> dict:
     """Run a gated action once a human approves it. Returns a result dict."""
     action, payload = appr.action_type, appr.payload or {}
@@ -713,6 +811,8 @@ def _execute_action(appr) -> dict:
         return _execute_proposal_send(payload, account_id=appr.account_id)
     if action == "code_deploy":
         return _execute_deploy(payload, account_id=appr.account_id)
+    if action == "config_apply":
+        return _execute_config_apply(payload, account_id=appr.account_id)
     if action == "client_comms_sensitive":
         msg = payload.get("message") or {}
         res = channels.send(payload.get("channel", "email"), payload.get("to", ""),

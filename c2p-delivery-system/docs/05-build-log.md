@@ -291,3 +291,24 @@ and an onboarding wizard flow. The platform is otherwise complete and sellable.
 
 All 7 phases now have a working spine; this is the platform layer that makes it
 sellable.
+
+### Add-on: agents manage the Odoo implementation ✅
+Decisions: **gated Odoo writes**; deploy to a **staging branch first**.
+- **Config-Apply agent** (`config` prompt) — turns requirements + live installed
+  modules + industry playbook into an Odoo **configuration recipe** (create/write
+  ops on real models: tax/`l10n_ae`, products, CRM stages, analytic tags, …).
+  `POST /engagements/{id}/config` runs it and creates a **`config_apply`**
+  approval; on approve, `_execute_config_apply` applies it to the client's Odoo
+  via the API (create/write only, per-op results, chatter + knowledge log).
+- **PM dispatcher** (`dispatch` prompt) — `POST /engagements/{id}/dispatch`: the
+  Delivery Lead allocates each requirement to config / functional / developer /
+  manual, with autonomy + priority + sequence (full liberty over who does what).
+- **Console** — Project output gains **PM: delegate the work** (shows the
+  delegation) and **Configure Odoo from requirements (gated)**.
+- **Live deploy to Odoo.sh staging**: set `C2P_ADDONS_DIR` + `C2P_DEPLOY_LIVE=1`
+  + `C2P_DEPLOY_BRANCH=staging` in `.env`; approved modules push to the staging
+  branch for a test build before production.
+- Odoo connection: set `ODOO_URL` / `ODOO_USER` (bot email) / `ODOO_PASSWORD`
+  (bot API key) / `C2P_CRM_DB` in `.env`, and link engagements to the DB, so
+  functional reads live modules and writes hit the real Odoo. Test added for the
+  gated config-apply path.
