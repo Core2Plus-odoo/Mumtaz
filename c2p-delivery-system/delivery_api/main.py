@@ -723,6 +723,45 @@ def dispatch(eng_id: str):
     return run_agent("dispatch", content, account_id=eng.account_id, engagement_id=eng.id)
 
 
+@app.post("/engagements/{eng_id}/pm")
+def project_manager(eng_id: str):
+    """The Project Manager owns the whole project — assembles full scope (stages,
+    requirements, plan, approvals, Odoo tasks) and reports status + next actions."""
+    eng = _engagement(eng_id)
+    pending = [a for a in store.list_approvals(None, limit=300)
+               if a.engagement_id == eng.id and a.status == "pending"]
+    open_tasks = None
+    if eng.odoo_db and eng.project_id:
+        try:
+            open_tasks = get_client(eng.odoo_db).execute(
+                "project.task", "search_count", [("project_id", "=", eng.project_id)])
+        except Exception:
+            open_tasks = None
+    prop = eng.stages.get("proposal") or {}
+    scope = {
+        "company": eng.company, "odoo_db": eng.odoo_db,
+        "stages_done": [s for s in m.STAGES
+                        if (eng.stages.get(s) if not isinstance(eng.stages.get(s), list)
+                            else eng.stages.get(s))],
+        "candidate_requirements": (eng.stages.get("presales") or {}).get("candidate_requirements") or [],
+        "functional": [{"req": f.get("requirement_summary"), "verdict": f.get("verdict")}
+                       for f in (eng.stages.get("functional") or [])],
+        "proposal": {"value_aed": (prop.get("commercial") or {}).get("estimate_aed"),
+                     "phases": [p.get("name") for p in (prop.get("phases") or [])]},
+        "project_plan": [{"phase": p.get("name"), "weeks": p.get("weeks")}
+                         for p in ((eng.stages.get("project") or {}).get("phases") or [])],
+        "developer_module": (eng.stages.get("developer") or {}).get("module_technical_name"),
+        "pending_approvals": [{"action": a.action_type, "requester": a.requester_agent}
+                              for a in pending],
+        "odoo_open_tasks": open_tasks,
+    }
+    content = (f"Full project scope:\n{json.dumps(scope, indent=2)}\n\n"
+               "As the Project Manager, assess status and produce the management report JSON."
+               + ks.context_block(eng.account_id, "project status"))
+    out = run_agent("pm", content, account_id=eng.account_id, engagement_id=eng.id)
+    return {"report": out, "scope": scope}
+
+
 # --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #

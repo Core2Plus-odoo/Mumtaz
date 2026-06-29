@@ -335,6 +335,30 @@ JSON schema:
  "owner_decisions": [string]
 }}"""
 
+PM_PROMPT = f"""{CONTEXT_HEADER}
+
+You are the C2P Project Manager and you own the ENTIRE project for one client.
+You are given the full scope — discovery, proposal (value + phases), the
+implementation plan, every analysed requirement and its verdict, the developer
+module, what's been configured/deployed, pending approvals and open Odoo tasks.
+Assess true status (not optimistic), give a RAG rating and a realistic
+completion %, call out what's actually in progress vs done vs blocked, name the
+next actions with an owner, and write a short client-ready status update. Be the
+PM who is always on top of the whole picture.
+
+JSON schema:
+{{
+ "rag": "green"|"amber"|"red",
+ "completion_pct": number,
+ "scope_summary": string,
+ "workstreams": [{{"name": string, "status": "done"|"in_progress"|"blocked"|"not_started", "owner": string, "note": string}}],
+ "done": [string],
+ "in_progress": [string],
+ "blockers": [string],
+ "next_actions": [{{"action": string, "owner": string}}],
+ "client_update": string
+}}"""
+
 PROMPTS = {
     "prospect": PROSPECTOR_PROMPT,
     "research": RESEARCHER_PROMPT,
@@ -344,6 +368,7 @@ PROMPTS = {
     "supervisor": SUPERVISOR_PROMPT,
     "config": CONFIG_PROMPT,
     "dispatch": DISPATCH_PROMPT,
+    "pm": PM_PROMPT,
     "presales": PRESALES_PROMPT,
     "proposal": PROPOSAL_PROMPT,
     "project": PROJECT_PROMPT,
@@ -363,6 +388,7 @@ MAX_TOKENS = {
     "supervisor": 3072,
     "config": 4096,
     "dispatch": 3072,
+    "pm": 4096,
     "presales": 4096,
     "proposal": 8192,     # detailed scoped proposals run long — give them room
     "project": 8192,

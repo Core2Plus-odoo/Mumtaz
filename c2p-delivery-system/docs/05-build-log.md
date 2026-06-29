@@ -292,6 +292,17 @@ and an onboarding wizard flow. The platform is otherwise complete and sellable.
 All 7 phases now have a working spine; this is the platform layer that makes it
 sellable.
 
+### Add-on: Project Manager (owns the whole project) ✅
+- **`pm` agent** + `POST /engagements/{id}/pm` — assembles the FULL scope (stages
+  done, candidate requirements, functional verdicts, proposal value + phases,
+  project plan, developer module, pending approvals for the engagement, open
+  Odoo `project.task` count) and returns a management report: RAG, completion %,
+  workstreams (status/owner), in-progress/blockers, next actions (with owner),
+  and a client-ready status update.
+- **Console Project Manager view** (top nav): the PM persona, "Assess project
+  status" → the live report, a Scope panel (stage completion + Odoo link), and a
+  Manage panel (Delegate, Configure Odoo, Generate dossier, Open approvals).
+
 ### Add-on: secure Odoo Connection panel ✅
 - A console **Odoo Connection** view (Grounding) to set the instance URL, DB, bot
   user and **API key** — the key is **encrypted at rest** via `tenancy.enc_secret`

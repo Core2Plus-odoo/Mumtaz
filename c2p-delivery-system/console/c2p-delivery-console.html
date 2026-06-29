@@ -469,6 +469,7 @@ function renderNav(){
   const nav=document.getElementById('nav');
   let html=`<button class="nav-item ${activeView==='cockpit'?'active':''}" onclick="goView('cockpit')"><span class="ni-ico">◉</span><span class="ni-name">Agency Cockpit</span></button>`;
   html+=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
+  html+=`<button class="nav-item ${activeView==='pm'?'active':''}" onclick="goView('pm')"><span class="ni-ico">◑</span><span class="ni-name">Project Manager</span></button>`;
   let lastGroup="";
   STAGES.forEach(s=>{
     if(s.group!==lastGroup){html+=`<div class="nav-sec">${s.group}</div>`;lastGroup=s.group;}
@@ -512,6 +513,7 @@ function toggleSidebar(open){document.getElementById('sidebar').classList.toggle
 function renderView(){
   const c=document.getElementById('content');
   if(activeView==='cockpit')return renderCockpit(c);
+  if(activeView==='pm')return renderPM(c);
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
   if(activeView==='leads')return renderLeads(c);
@@ -1015,6 +1017,48 @@ function newAccountModal(){
 }
 function closeAccModal(){const m=document.getElementById('accModal');if(m)m.remove();}
 async function submitAccount(){const name=val('na_name');if(!name){focus('na_name');return;}try{await api("POST","/accounts",{name,industry:val('na_ind')||null,country:val('na_country')||null,odoo_db:val('na_db')||null});closeAccModal();toast('Account created','ok');renderAccounts(document.getElementById('content'));}catch(e){toast('Create failed: '+e.message,'bad');}}
+
+/* ---------- project manager (per-engagement) ---------- */
+function renderPM(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">Select an engagement for the Project Manager to own.</div></div></div></div>`;return;}
+  c.innerHTML=`<div class="view">
+    <div class="panel" style="margin-bottom:16px"><div class="panel-head">
+      <div><div class="persona"><span class="pavatar">PM</span><div><div class="pname">Project Manager</div><div class="prole">owns the whole project</div></div></div>
+        <h2 style="margin-top:11px">${esc(eng.company)}</h2><p>Full scope and live status — discovery → proposal → plan → build → deploy.</p></div>
+      <div class="run-area"><button class="btn primary sm" onclick="runPM()">Assess project status</button></div></div>
+      <div class="panel-body"><div id="pmReport"><div class="placeholder">Click "Assess project status" for a live PM read — RAG, completion %, blockers and next actions across the whole project.</div></div></div></div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><div><h2>Scope</h2></div></div><div class="panel-body" id="pmScope"></div></div>
+      <div class="panel"><div class="panel-head"><div><h2>Manage</h2></div></div><div class="panel-body">
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+          <button class="btn sm" onclick="dispatchEngagement()">Delegate the work</button>
+          <button class="btn sm" onclick="configEngagement()">Configure Odoo (gated)</button>
+          <button class="btn sm" onclick="openDossier()">Generate project dossier</button>
+          <button class="btn sm" onclick="goView('approvals')">Open approvals</button>
+        </div><div id="dispatchOut" style="margin-top:10px"></div></div></div>
+    </div></div>`;
+  renderPMScope();
+}
+function renderPMScope(){
+  const el=document.getElementById('pmScope');if(!el)return;
+  el.innerHTML=STAGES.map(s=>`<div class="odoo-rec"><div class="ic" style="background:${stageDone(s.id)?'var(--green)':'var(--line)'};color:#fff">${stageDone(s.id)?'✓':'·'}</div><div class="nm">${s.name}</div><span class="pend">${stageDone(s.id)?'done':'pending'}</span></div>`).join('')
+    +`<div class="odoo-rec"><div class="ic" style="background:${eng.odoo_db?'var(--deep-teal)':'var(--line)'};color:#fff">⛁</div><div class="nm">Odoo</div><span class="pend">${eng.odoo_db?esc(eng.odoo_db):'not linked'}</span></div>`;
+}
+async function runPM(){
+  const r=document.getElementById('pmReport');if(r)r.innerHTML=`<div class="skel" style="height:150px"></div>`;
+  try{
+    const o=await api("POST",`/engagements/${eng.id}/pm`,{});const rp=o.report||{};
+    const rag=(rp.rag||'amber').toLowerCase();const ragc=rag==='green'?'var(--green)':rag==='red'?'var(--rust)':'var(--amber)';
+    r.innerHTML=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap"><span class="badge" style="background:${ragc}">${esc(rag)}</span><span style="font-family:var(--display);font-weight:600;font-size:22px">${esc(rp.completion_pct||0)}%</span><span style="color:var(--muted);flex:1;min-width:200px">${esc(rp.scope_summary||'')}</span></div>
+      <div class="two-col">
+        <div class="sec"><h3>In progress</h3><ul class="clean">${(rp.in_progress||[]).map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="hint">—</li>'}</ul></div>
+        <div class="sec"><h3>Blockers</h3><ul class="clean warn">${(rp.blockers||[]).map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="hint">none</li>'}</ul></div>
+      </div>
+      <div class="sec"><h3>Workstreams</h3>${(rp.workstreams||[]).map(w=>`<div class="req-row"><span class="rq-text"><b>${esc(w.name)}</b>${w.note?' · '+esc(w.note):''}</span>${w.owner?`<span class="chip">${esc(w.owner)}</span>`:''}<span class="eff ${w.status==='blocked'?'eff-High':w.status==='done'?'eff-Low':'eff-Medium'}">${esc(w.status)}</span></div>`).join('')||'<div class="hint">—</div>'}</div>
+      <div class="sec"><h3>Next actions</h3>${(rp.next_actions||[]).map(a=>`<div class="req-row"><span class="rq-text">${esc(a.action)}</span>${a.owner?`<span class="chip">${esc(a.owner)}</span>`:''}</div>`).join('')||'<div class="hint">—</div>'}</div>
+      ${rp.client_update?`<div class="callout"><b>Client update.</b> ${esc(rp.client_update)}</div>`:''}`;
+  }catch(e){if(r)r.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
 
 /* ---------- agency cockpit (Phase 6) ---------- */
 async function renderCockpit(c){
