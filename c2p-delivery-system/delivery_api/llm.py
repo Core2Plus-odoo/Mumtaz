@@ -65,11 +65,17 @@ def model_for(task: str) -> str:
 
 
 def _extract_json(text: str) -> dict:
-    """Pull the JSON object out of the reply, tolerating fences/stray prose."""
-    a, b = text.find("{"), text.rfind("}")
+    """Pull the JSON object out of the reply, tolerating ```json fences and
+    stray prose by slicing between the first '{' and the last '}'."""
+    t = (text or "").strip()
+    if t.startswith("```"):
+        t = t.strip("`")
+        if t[:4].lower() == "json":
+            t = t[4:]
+    a, b = t.find("{"), t.rfind("}")
     if a < 0 or b <= a:
         raise ValueError("no JSON object in model response")
-    return json.loads(text[a:b + 1])
+    return json.loads(t[a:b + 1])
 
 
 def _complete(task: str, system: str, user: str, max_tokens: int,
@@ -119,7 +125,17 @@ def run_json(task: str, system: str, user: str, max_tokens: int = 2048,
     err: Optional[str] = None
     try:
         meta = _complete(task, system, user, max_tokens, web_search)
-        out = _extract_json(meta["text"])
+        try:
+            out = _extract_json(meta["text"])
+        except (ValueError, json.JSONDecodeError):
+            # Self-heal: one strict retry with more room (covers a truncated or
+            # prose-wrapped first reply).
+            meta = _complete(
+                task, system,
+                user + "\n\nIMPORTANT: Return ONLY one complete, valid JSON "
+                       "object — no prose, no markdown fences, not truncated.",
+                min(max(max_tokens, 4096) * 2, 8192), web_search)
+            out = _extract_json(meta["text"])
         return out
     except Exception as exc:  # noqa: BLE001 - logged below, re-raised
         err = f"{type(exc).__name__}: {exc}"
