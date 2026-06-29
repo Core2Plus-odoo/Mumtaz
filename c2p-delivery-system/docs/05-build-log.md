@@ -124,5 +124,32 @@ cd /opt/mumtaz/c2p-delivery-system/delivery_api
 (dry-run) and is logged; reject → nothing sends; every decision is attributed
 and audited. Verified by tests + headless cockpit render.
 
-**Next:** Phase 3 — branded proposals (render the proposal agent's JSON to a
-branded PDF; proposal send is gated; on approve, attach to the Odoo quotation).
+## Phase 3 — Branded proposals ✅
+
+**Shipped**
+- **`proposal_render.py`** — turns the proposal agent's JSON into a client-ready,
+  in-brand document. `brand(store)` pulls the tenant's saved branding (white-label)
+  over C2P defaults; `render_html()` builds a branded cover + sections (summary,
+  scope, phases, effort table + total, commercial, timeline, assumptions, success
+  criteria); `to_pdf()` uses WeasyPrint if available, else returns None (caller
+  attaches HTML) so PDF is optional, never a hard dependency.
+- **Preview** — `GET /engagements/{id}/proposal/preview` returns the branded HTML
+  for in-browser preview / print-to-PDF.
+- **Gated send** — `POST /engagements/{id}/proposal/send` creates a
+  `proposal_send` approval. On approve, `_execute_proposal_send` renders the
+  proposal, ensures the Odoo quotation (creates `sale.order` from the lead's
+  partner if needed), **attaches the PDF/HTML to the quotation**, logs to chatter,
+  optionally emails the client (gated channel), and writes a `deliverable`
+  knowledge entry. `odoo.attach_bytes` added for binary attachments.
+- **Console** — proposal output gains **Preview branded proposal** + **Issue
+  proposal to client (needs approval)**; proposal approvals show a **Preview**
+  button in the cockpit.
+- Tests: branded render (in-brand, AED total) + gated send→approve→execute.
+
+**Acceptance**: proposal renders in-brand (verified by headless render); send is
+gated; an approved proposal attaches to the Odoo quotation + logs to chatter and
+the account's knowledge.
+
+**Next:** Phase 4 — delivery in the loop (functional auto-reads live Odoo
+modules/schema; custom verdict → developer module; **deploy is gated**; on approve
+push to the account's addons repo for Odoo.sh to build).

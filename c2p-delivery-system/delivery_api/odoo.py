@@ -98,6 +98,15 @@ class OdooClient:
         """Log a note to a record's chatter (canonical comms log in Odoo)."""
         return self.execute(res_model, "message_post", [res_id], body=body)
 
+    def attach_bytes(self, res_model: str, res_id: int, name: str,
+                     data: bytes, mimetype: str) -> int:
+        """Attach a binary document (e.g. a proposal PDF) to a record."""
+        datas = base64.b64encode(data).decode()
+        return self.execute("ir.attachment", "create", {
+            "name": name, "res_model": res_model, "res_id": res_id,
+            "datas": datas, "mimetype": mimetype,
+        })
+
     def attach_json(self, res_model: str, res_id: int, name: str, obj: Any) -> int:
         """Upsert a JSON attachment on a record (deletes a same-named one first
         so re-running a stage replaces rather than piles up)."""

@@ -20,7 +20,7 @@ import json
 import os
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import models as m
@@ -34,6 +34,7 @@ import industry
 import llm
 import policy
 import channels
+import proposal_render
 
 from datetime import datetime, timezone
 
@@ -427,6 +428,39 @@ def infra_recommend(body: m.InfraIn):
 
 
 # --------------------------------------------------------------------------- #
+# Phase 3 — Branded proposals
+# --------------------------------------------------------------------------- #
+@app.get("/engagements/{eng_id}/proposal/preview")
+def proposal_preview(eng_id: str):
+    """Render the proposal JSON into the branded proposal HTML (for in-browser
+    preview / print-to-PDF). Behind the console login gate."""
+    eng = _engagement(eng_id)
+    prop = eng.stages.get("proposal")
+    if not prop:
+        raise HTTPException(status_code=400, detail="Run the proposal stage first")
+    html = proposal_render.render_html(
+        prop, eng.company, proposal_render.brand(store), date_str=_now_iso()[:10])
+    return Response(content=html, media_type="text/html")
+
+
+@app.post("/engagements/{eng_id}/proposal/send")
+def proposal_send(eng_id: str, body: dict | None = None):
+    """Issue the branded proposal to the client — GATED. Creates an approval;
+    on approve it attaches the PDF to the Odoo quotation and optionally emails."""
+    eng = _engagement(eng_id)
+    if not eng.stages.get("proposal"):
+        raise HTTPException(status_code=400, detail="Run the proposal stage first")
+    body = body or {}
+    payload = {"engagement_id": eng.id, "company": eng.company,
+               "email": bool(body.get("email")), "to": body.get("to")}
+    appr = policy.gate(store, "proposal_send", payload, requester_agent="proposal",
+                       account_id=eng.account_id, engagement_id=eng.id)
+    if appr is None:                       # policy set to auto → run now
+        return {"approval": None, "result": _execute_proposal_send(payload, eng.account_id)}
+    return {"approval": appr.model_dump()}
+
+
+# --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")
@@ -459,9 +493,58 @@ def outreach(account_id: str, body: m.OutreachIn):
     return {"draft": out, "approval": approval.model_dump() if approval else None}
 
 
+def _execute_proposal_send(payload: dict, account_id: str | None = None) -> dict:
+    """Render the branded proposal, attach it to the Odoo quotation, optionally
+    email the client, and log it. Shared by the gated-approve path and the
+    (rare) auto path."""
+    eng = store.get(payload.get("engagement_id"))
+    prop = (eng.stages.get("proposal") if eng else None) or {}
+    b = proposal_render.brand(store)
+    company = eng.company if eng else payload.get("company", "")
+    html = proposal_render.render_html(
+        prop, company, b, date_str=_now_iso()[:10])
+    pdf = proposal_render.to_pdf(html)
+    result = {"rendered": True, "pdf": bool(pdf)}
+    if eng and eng.odoo_db:
+        try:
+            c = get_client(eng.odoo_db)
+            so_id = eng.sale_order_id
+            if not so_id and eng.crm_lead_id:
+                pid = c.partner_of_lead(eng.crm_lead_id)
+                if pid:
+                    so_id = c.create_quotation(pid, note=prop.get("solution_summary", ""))
+                    eng.sale_order_id = so_id
+                    store.save(eng)
+            if so_id:
+                if pdf:
+                    c.attach_bytes("sale.order", so_id, f"Proposal - {company}.pdf",
+                                   pdf, "application/pdf")
+                else:
+                    c.attach_bytes("sale.order", so_id, f"Proposal - {company}.html",
+                                   html.encode("utf-8"), "text/html")
+                c.message_post("sale.order", so_id, "C2P proposal issued to the client.")
+                result["sale_order_id"] = so_id
+        except Exception as exc:  # noqa: BLE001
+            result["odoo_error"] = str(exc)
+    if payload.get("email") and payload.get("to"):
+        result["email"] = channels.send(
+            "email", payload["to"], f"Proposal — {b['name']}",
+            "Please find our Odoo solution proposal attached.")
+    aid = account_id or (eng.account_id if eng else None)
+    if aid:
+        ks.write_entry(aid, "deliverable",
+                       {"type": "proposal", "company": company,
+                        "sale_order_id": result.get("sale_order_id")},
+                       title="Proposal issued", learned_by="owner",
+                       tags=["proposal", "sent"])
+    return result
+
+
 def _execute_action(appr) -> dict:
     """Run a gated action once a human approves it. Returns a result dict."""
     action, payload = appr.action_type, appr.payload or {}
+    if action == "proposal_send":
+        return _execute_proposal_send(payload, account_id=appr.account_id)
     if action == "outreach_send":
         msg = payload.get("message") or {}
         res = channels.send(payload.get("channel", "email"), payload.get("to", ""),

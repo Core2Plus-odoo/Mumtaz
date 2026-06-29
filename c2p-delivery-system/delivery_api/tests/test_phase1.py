@@ -233,3 +233,45 @@ def test_endpoints_outreach_and_approval_flow(monkeypatch, tmp_path):
     # Deciding again is rejected.
     again = c.post(f"/approvals/{apr_id}/decide", json={"decision": "approved"})
     assert again.status_code == 400
+
+
+# ── Phase 3: branded proposals ────────────────────────────────────────────
+def test_proposal_render_in_brand():
+    import proposal_render as pr
+
+    class _S:
+        def get_setting(self, k):
+            return {}
+
+    b = pr.brand(_S())
+    html = pr.render_html(
+        {"solution_summary": "Deploy Odoo MRP.",
+         "commercial": {"estimate_aed": 184000, "pricing_model": "Fixed"}},
+        "Acme Manufacturing", b, date_str="2026-06-29")
+    assert "AED 184,000" in html and "Acme Manufacturing" in html and "C2P" in html
+
+
+def test_proposal_send_is_gated(tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "ep3.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+    c = TestClient(main_mod.app)
+
+    eng = c.post("/engagements", json={"company": "Acme"}).json()
+    e = main_mod.store.get(eng["id"])
+    e.stages["proposal"] = {"solution_summary": "x", "commercial": {"estimate_aed": 1000}}
+    main_mod.store.save(e)
+
+    pv = c.get(f"/engagements/{eng['id']}/proposal/preview")
+    assert pv.status_code == 200 and "Acme" in pv.text
+
+    r = c.post(f"/engagements/{eng['id']}/proposal/send", json={}).json()
+    assert r["approval"] and r["approval"]["action_type"] == "proposal_send"
+    apr = r["approval"]["id"]
+    dec = c.post(f"/approvals/{apr}/decide", json={"decision": "approved"}).json()
+    assert dec["status"] == "approved" and dec["result"]["rendered"] is True

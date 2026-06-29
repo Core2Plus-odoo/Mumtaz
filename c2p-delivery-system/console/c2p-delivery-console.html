@@ -750,6 +750,10 @@ const RENDER={
       <div class="two-col">
         <div class="sec"><h3>Assumptions</h3><ul class="clean">${(o.assumptions||[]).map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>
         <div class="sec"><h3>Success criteria</h3><ul class="clean">${(o.success_criteria||[]).map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+        <button class="btn sm" onclick="previewProposal()">📄 Preview branded proposal</button>
+        <button class="btn primary sm" onclick="sendProposal()">Issue proposal to client (needs approval)</button>
       </div></div>`;},
 
   project(el,o){
@@ -939,6 +943,7 @@ function renderApprovalCard(a){
     <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px">
       <span class="chip">${esc(a.action_type)}</span>
       <span style="font-size:12px;color:var(--muted)">from ${esc(a.requester_agent||'agent')}${p.company?' · '+esc(p.company):''}${p.channel?' · '+esc(p.channel):''}${p.to?' → '+esc(p.to):''}</span>
+      ${a.action_type==='proposal_send'&&p.engagement_id?`<button class="btn sm" style="margin-left:auto" onclick="window.open(API_BASE+'/engagements/${esc(p.engagement_id)}/proposal/preview','_blank')">Preview</button>`:''}
     </div>
     ${isOutreach?`${msg.subject!==undefined?`<input type="text" id="sub_${a.id}" value="${esc(msg.subject||'')}" style="width:100%;margin-bottom:8px" placeholder="Subject">`:''}
       <textarea id="body_${a.id}" rows="5" style="width:100%">${esc(msg.body||'')}</textarea>`
@@ -965,6 +970,10 @@ async function decideApproval(id,decision){
     renderApprovals(document.getElementById('content'));
   }catch(e){toast('Decision failed: '+e.message,'bad');}
 }
+
+/* ---------- branded proposal (Phase 3) ---------- */
+function previewProposal(){if(!eng)return;window.open(API_BASE+'/engagements/'+eng.id+'/proposal/preview','_blank');}
+async function sendProposal(){if(!eng)return;try{const r=await api("POST",`/engagements/${eng.id}/proposal/send`,{});if(r.approval){toast('Proposal queued for your approval in the Cockpit','ok');refreshApprovalsCount();}else{toast('Proposal issued to client','ok');}}catch(e){toast('Failed: '+e.message,'bad');}}
 
 /* ---------- agent activity log ---------- */
 function fmtTime(s){try{return new Date(s).toLocaleString();}catch(e){return s||'';}}
