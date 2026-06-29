@@ -321,9 +321,9 @@ MAX_TOKENS = {
     "outreach": 2560,
     "comms": 2560,
     "supervisor": 3072,
-    "presales": 3072,
-    "proposal": 4096,
-    "project": 4096,
-    "functional": 3072,
+    "presales": 4096,
+    "proposal": 8192,     # detailed scoped proposals run long — give them room
+    "project": 8192,
+    "functional": 4096,
     "developer": 8192,
 }
