@@ -101,6 +101,50 @@ class ResearchIn(BaseModel):
     web_search: Optional[bool] = None      # override the global default
 
 
+# ── Phase 7: Multi-tenant control plane ───────────────────────────────────
+class Tenant(BaseModel):
+    id: str = Field(default_factory=lambda: "ten_" + uuid.uuid4().hex[:12])
+    name: str
+    slug: str
+    edition: str = "delivery"              # delivery | growth | agency
+    status: str = "active"                 # active | past_due | suspended
+    stripe_customer_id: Optional[str] = None
+    stripe_subscription_id: Optional[str] = None
+    created_at: str = Field(default_factory=_now)
+    config: dict[str, Any] = Field(default_factory=dict)   # non-secret config
+
+
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: "usr_" + uuid.uuid4().hex[:12])
+    tenant_id: str
+    email: str
+    role: str = "owner"                    # owner | admin | member
+    created_at: str = Field(default_factory=_now)
+
+
+class SignupIn(BaseModel):
+    company: str
+    email: str
+    password: str
+    edition: str = "delivery"
+
+
+class LoginIn(BaseModel):
+    email: str
+    password: str
+
+
+class TenantConfigIn(BaseModel):
+    config: dict[str, Any] = Field(default_factory=dict)   # merged into tenant.config
+    secrets: dict[str, str] = Field(default_factory=dict)  # encrypted at rest
+
+
+class CheckoutIn(BaseModel):
+    edition: str = "growth"
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
 # ── Leads CRM ─────────────────────────────────────────────────────────────
 class Lead(BaseModel):
     id: str = Field(default_factory=lambda: "lead_" + uuid.uuid4().hex[:12])

@@ -20,11 +20,12 @@ import json
 import os
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 import models as m
-from models import Account, Communication, Engagement, Lead
+from models import Account, Communication, Engagement, Lead, Tenant, User
 from prompts import PROMPTS, MAX_TOKENS
 from store import EngagementStore
 from knowledge import KnowledgeService
@@ -36,6 +37,8 @@ import policy
 import channels
 import proposal_render
 import deploy as deployer
+import tenancy
+import stripe_billing
 
 from datetime import datetime, timezone
 
@@ -45,9 +48,12 @@ def _now_iso() -> str:
 
 MODEL = llm.DEFAULT_MODEL  # the model is config, owned by llm.py
 
-store = EngagementStore()
+# Store is a proxy: the single default store normally; the per-tenant store when
+# MULTITENANT is on (set by the middleware below). Call sites are unchanged.
+store = tenancy.StoreProxy(EngagementStore())
+control = tenancy.ControlStore()
 ks = KnowledgeService(store)
-app = FastAPI(title="C2P Agency OS API", version="1.1.0")
+app = FastAPI(title="C2P Agency OS API", version="1.2.0")
 
 # The frontends are static HTML served by Nginx; allow them to call this API.
 app.add_middleware(
@@ -56,6 +62,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def _tenant_mw(request: Request, call_next):
+    """MULTITENANT on → require a JWT on non-public routes and route the request
+    to its tenant's store. Off → no-op (single-tenant, nginx basic-auth)."""
+    if not tenancy.MULTITENANT:
+        return await call_next(request)
+    path = request.url.path
+    if path in tenancy.PUBLIC_PATHS:
+        return await call_next(request)
+    auth = request.headers.get("Authorization", "")
+    claims = tenancy.read_jwt(auth[7:] if auth.startswith("Bearer ") else "")
+    if not claims:
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    tenancy.set_current_store(tenancy.tenant_store(claims["tenant_id"]))
+    request.state.claims = claims
+    try:
+        return await call_next(request)
+    finally:
+        tenancy.reset_current_store()
 
 
 # --------------------------------------------------------------------------- #
@@ -450,8 +477,9 @@ def add_knowledge(account_id: str, body: m.KnowledgeIn):
 
 
 @app.post("/prospect")
-def prospect(body: m.ProspectIn):
+def prospect(body: m.ProspectIn, request: Request):
     """ICP in → ranked prospect list out. Web-search grounded when available."""
+    _require_edition(request, "prospect")
     icp = body.icp or (
         f"Industry: {body.industry or 'manufacturing / distribution / retail'}; "
         f"Country: {body.country}; Size: {body.size_band or '20-500 employees'}; "
@@ -573,9 +601,10 @@ def deploy_module(eng_id: str, body: dict | None = None):
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")
-def outreach(account_id: str, body: m.OutreachIn):
+def outreach(account_id: str, body: m.OutreachIn, request: Request):
     """Draft a personalised outreach sequence (auto). Actually SENDING the first
     touch is gated — this also creates a pending Approval for the send."""
+    _require_edition(request, "outreach")
     acc = _account(account_id)
     content = (
         f"Prospect company: {acc.name}\nCountry: {acc.country or 'UAE/GCC'}\n"
@@ -754,9 +783,10 @@ def decide_approval(approval_id: str, body: m.ApprovalDecisionIn):
 # Phase 5 — Communications (inbound triage + sensitivity-gated outbound)
 # --------------------------------------------------------------------------- #
 @app.post("/comms/inbound")
-def comms_inbound(body: m.CommsInboundIn):
+def comms_inbound(body: m.CommsInboundIn, request: Request):
     """Triage an inbound message to the right account, draft a reply, and either
     send it (auto, routine) or queue it for approval (scope/money/commitment)."""
+    _require_edition(request, "comms")
     acc = store.get_account(body.account_id) if body.account_id else None
     ctx = ks.context_block(acc.id, body.subject or body.body[:80]) if acc else ""
     content = (
@@ -874,8 +904,9 @@ def metrics():
 
 
 @app.post("/supervisor/brief")
-def supervisor_brief():
+def supervisor_brief(request: Request):
     """Daily 'what needs you today' briefing from the agency snapshot."""
+    _require_edition(request, "supervisor")
     mx = _compute_metrics()
     approvals = store.list_approvals("pending", limit=20)
     comms = store.list_comms(limit=10)
@@ -913,7 +944,160 @@ def save_branding(body: dict):
     return {"ok": True}
 
 
+# --------------------------------------------------------------------------- #
+# Phase 7 — Multi-tenant: auth, per-tenant config, Stripe billing (gated on
+# MULTITENANT=1; when off these still load but signup/login refuse).
+# --------------------------------------------------------------------------- #
+def _claims(request: Request):
+    return getattr(request.state, "claims", None)
+
+
+_FEATURE_EDITION = {"prospect": "growth", "outreach": "growth",
+                    "proposal_send": "growth", "comms": "agency",
+                    "supervisor": "agency"}
+
+
+def _require_edition(request: Request, feature: str):
+    if not tenancy.MULTITENANT:
+        return
+    cl = _claims(request)
+    t = control.get_tenant(cl["tenant_id"]) if cl else None
+    need = _FEATURE_EDITION.get(feature, "delivery")
+    have = t.edition if t else "delivery"
+    if tenancy.EDITION_RANK.get(have, 1) < tenancy.EDITION_RANK.get(need, 1):
+        raise HTTPException(status_code=402, detail=f"Requires the {need.title()} edition")
+
+
+@app.post("/auth/signup")
+def auth_signup(body: m.SignupIn):
+    if not tenancy.MULTITENANT:
+        raise HTTPException(status_code=400, detail="Multi-tenant mode is off")
+    if control.get_user_by_email(body.email):
+        raise HTTPException(status_code=409, detail="Email already registered")
+    slug = base = tenancy.slugify(body.company)
+    i = 1
+    while control.get_tenant_by_slug(slug):
+        i += 1
+        slug = f"{base}-{i}"
+    edition = body.edition if body.edition in tenancy.EDITION_RANK else "delivery"
+    t = Tenant(name=body.company, slug=slug, edition=edition)
+    if stripe_billing.configured():
+        try:
+            t.stripe_customer_id = stripe_billing.create_customer(body.company, body.email).get("id")
+        except Exception:
+            pass
+    control.create_tenant(t)
+    u = User(tenant_id=t.id, email=body.email, role="owner")
+    control.create_user(u, tenancy.hash_password(body.password))
+    token = tenancy.make_jwt({"tenant_id": t.id, "user_id": u.id,
+                              "email": u.email, "role": u.role})
+    return {"token": token, "tenant": t.model_dump()}
+
+
+@app.post("/auth/login")
+def auth_login(body: m.LoginIn):
+    if not tenancy.MULTITENANT:
+        raise HTTPException(status_code=400, detail="Multi-tenant mode is off")
+    rec = control.get_user_by_email(body.email)
+    if not rec or not tenancy.verify_password(body.password, rec[1]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    u = rec[0]
+    t = control.get_tenant(u.tenant_id)
+    token = tenancy.make_jwt({"tenant_id": u.tenant_id, "user_id": u.id,
+                              "email": u.email, "role": u.role})
+    return {"token": token, "tenant": t.model_dump() if t else None}
+
+
+@app.get("/auth/me")
+def auth_me(request: Request):
+    cl = _claims(request)
+    if not cl:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    t = control.get_tenant(cl["tenant_id"])
+    return {"user": {"email": cl.get("email"), "role": cl.get("role")},
+            "tenant": t.model_dump() if t else None}
+
+
+@app.get("/tenant")
+def get_tenant(request: Request):
+    cl = _claims(request)
+    if not cl:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    t = control.get_tenant(cl["tenant_id"])
+    if not t:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    usage = {"engagements": len(store.list()),
+             "agent_runs": len(store.list_runs(limit=100000)),
+             "pending_approvals": store.count_approvals("pending"),
+             "leads": len(store.list_leads(limit=100000))}
+    return {"tenant": t.model_dump(), "usage": usage}
+
+
+@app.put("/tenant/config")
+def put_tenant_config(request: Request, body: m.TenantConfigIn):
+    cl = _claims(request)
+    if not cl:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    t = control.get_tenant(cl["tenant_id"])
+    if not t:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    if body.config:
+        t.config = {**t.config, **body.config}
+    control.update_tenant(t, secrets=body.secrets or None)
+    return {"ok": True, "tenant": t.model_dump()}
+
+
+@app.post("/billing/checkout")
+def billing_checkout(request: Request, body: m.CheckoutIn):
+    cl = _claims(request)
+    if not cl:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if not stripe_billing.configured():
+        raise HTTPException(status_code=400, detail="Stripe not configured")
+    price = stripe_billing.price_for(body.edition)
+    if not price:
+        raise HTTPException(status_code=400, detail=f"No Stripe price for {body.edition}")
+    t = control.get_tenant(cl["tenant_id"])
+    if not t.stripe_customer_id:
+        t.stripe_customer_id = stripe_billing.create_customer(t.name, cl.get("email", "")).get("id")
+        control.update_tenant(t)
+    sess = stripe_billing.create_checkout_session(
+        t.stripe_customer_id, price,
+        body.success_url or "https://delivery.mumtaz.digital/?billing=success",
+        body.cancel_url or "https://delivery.mumtaz.digital/?billing=cancel")
+    return {"checkout_url": sess.get("url")}
+
+
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    raw = await request.body()
+    event = stripe_billing.verify_webhook(raw, request.headers.get("Stripe-Signature", ""))
+    if event is None:
+        return JSONResponse({"detail": "invalid signature"}, status_code=400)
+    etype = event.get("type")
+    obj = (event.get("data") or {}).get("object") or {}
+    cust = obj.get("customer")
+    if cust:
+        t = control.get_tenant_by_customer(cust)
+        if t:
+            if etype in ("checkout.session.completed", "customer.subscription.created",
+                         "customer.subscription.updated"):
+                t.status = "active"
+                sub = obj.get("subscription") or (obj.get("id") if etype != "checkout.session.completed" else None)
+                if sub:
+                    t.stripe_subscription_id = sub
+                control.update_tenant(t)
+            elif etype == "customer.subscription.deleted":
+                t.status = "suspended"
+                control.update_tenant(t)
+            elif etype == "invoice.payment_failed":
+                t.status = "past_due"
+                control.update_tenant(t)
+    return {"ok": True}
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "model": MODEL, "stages": m.STAGES,
-            "agents": list(PROMPTS.keys()), "web_search": llm.WEB_SEARCH_ENABLED}
+            "agents": list(PROMPTS.keys()), "web_search": llm.WEB_SEARCH_ENABLED,
+            "multitenant": tenancy.MULTITENANT, "stripe": stripe_billing.configured()}

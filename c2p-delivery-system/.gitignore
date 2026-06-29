@@ -2,8 +2,12 @@
 delivery_api/.env
 .htpasswd
 delivery_api/delivery.db
+delivery_api/control.db
+delivery_api/tenants/
+*.db
 delivery_api/.venv/
 .venv/
 web/
 __pycache__/
 *.pyc
+.pytest_cache/

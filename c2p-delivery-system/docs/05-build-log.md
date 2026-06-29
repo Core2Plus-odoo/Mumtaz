@@ -237,5 +237,43 @@ accounts; the Supervisor briefing generates from the live snapshot.
   all as leads), leads table with inline status, Convert-to-account, and
   push-to-Odoo. Tests: CRUD + bulk + convert.
 
-**Next:** Phase 7 — multi-tenant product (tenant isolation, real auth/roles,
-per-tenant config + white-label, onboarding, billing/metering, security).
+## Phase 7 — Multi-tenant product (foundation) ✅ (additive, default OFF)
+
+Decisions: **additive auth (default OFF)** so the live console is untouched;
+**separate SQLite DB per tenant** (strong isolation) + shared control DB;
+**full Stripe billing**.
+
+**Shipped**
+- **`tenancy.py`** control plane — `ControlStore` (tenants + users), stdlib
+  **pbkdf2** password hashing, stdlib **HS256 JWT**, optional **Fernet** secret
+  encryption (`C2P_SECRET_KEY`), per-tenant store registry (one SQLite file per
+  tenant under `C2P_TENANT_DIR`), and a **`StoreProxy`** that routes every
+  `store.*` call to the current tenant's DB (or the default when off).
+- **Middleware** — when `MULTITENANT=1`, non-public routes require a JWT and are
+  routed to the tenant's store; OFF = no-op (single store, nginx basic-auth).
+- **Auth** — `POST /auth/signup` (creates tenant + owner + Stripe customer + JWT),
+  `POST /auth/login`, `GET /auth/me`.
+- **Per-tenant config** — `GET /tenant` (incl. usage), `PUT /tenant/config`
+  (merge config + encrypt secrets: AI key, Odoo password, channel tokens).
+- **Stripe billing** (`stripe_billing.py`) — customer + Checkout Session
+  (subscription) + signed webhook → updates tenant edition/status.
+- **Edition gating** — `delivery < growth < agency`; prospect/outreach/proposal
+  send need Growth, comms/supervisor need Agency (enforced only when on).
+- **Isolation** verified by tests: two tenants' data never crosses; proxy routing;
+  password/JWT; signup→login→me end-to-end.
+
+**Defaults & safety**
+- `MULTITENANT` defaults **off** → zero change to the running console.
+- Secrets only in env / encrypted per-tenant config; `control.db`, `tenants/`,
+  `*.db` are git-ignored.
+
+**To switch on (later)**: set `MULTITENANT=1`, `C2P_JWT_SECRET`, `C2P_SECRET_KEY`,
+`STRIPE_SECRET_KEY` + `STRIPE_PRICE_DELIVERY/GROWTH/AGENCY` +
+`STRIPE_WEBHOOK_SECRET` in `.env`, restart, and point the console at the login.
+
+**Remaining for full Phase 7 (next sub-steps)**: console onboarding/login UI
+(sign up → connect Odoo → set brand → set policy), per-tenant AI key/Odoo/channel
+wiring into the agents (read from tenant secrets), and a billing/edition screen.
+
+All 7 phases now have a working spine; this is the platform layer that makes it
+sellable.

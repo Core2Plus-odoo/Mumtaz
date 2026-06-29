@@ -404,3 +404,89 @@ def test_leads_crud_bulk_and_convert(tmp_path):
     assert conv["account"]["name"] == "Acme Mfg"
     assert c.get(f"/leads/{lid}").json()["status"] == "converted"
     assert any(a["name"] == "Acme Mfg" for a in c.get("/accounts").json())
+
+
+# ── Phase 7: multi-tenant control plane ───────────────────────────────────
+def test_password_and_jwt(monkeypatch):
+    import tenancy as tn
+    h = tn.hash_password("s3cret")
+    assert tn.verify_password("s3cret", h) and not tn.verify_password("nope", h)
+    monkeypatch.setattr(tn, "JWT_SECRET", "testsecret")
+    tok = tn.make_jwt({"tenant_id": "t1", "email": "a@b.com"})
+    cl = tn.read_jwt(tok)
+    assert cl["tenant_id"] == "t1" and cl["email"] == "a@b.com"
+    assert tn.read_jwt("garbage") is None
+
+
+def test_control_store_and_per_tenant_isolation(tmp_path, monkeypatch):
+    import tenancy as tn
+    from models import Account, Tenant, User
+    ctrl = tn.ControlStore(path=str(tmp_path / "control.db"))
+    t = Tenant(name="Acme Agency", slug="acme")
+    ctrl.create_tenant(t)
+    ctrl.create_user(User(tenant_id=t.id, email="o@acme.com"), tn.hash_password("pw"))
+    assert ctrl.get_tenant_by_slug("acme").id == t.id
+    rec = ctrl.get_user_by_email("o@acme.com")
+    assert rec and tn.verify_password("pw", rec[1])
+    ctrl.update_tenant(t, secrets={"anthropic_key": "sk-xyz"})
+    assert ctrl.get_secrets(t.id)["anthropic_key"] == "sk-xyz"   # enc/dec round-trip
+
+    monkeypatch.setattr(tn, "TENANT_DIR", str(tmp_path / "tenants"))
+    tn._tenant_stores.clear()
+    s1, s2 = tn.tenant_store("ten_1"), tn.tenant_store("ten_2")
+    s1.create_account(Account(name="A1"))
+    assert len(s1.list_accounts()) == 1 and len(s2.list_accounts()) == 0  # isolated
+
+
+def test_store_proxy_routes(tmp_path):
+    import tenancy as tn
+    from store import EngagementStore
+    from models import Account
+    proxy = tn.StoreProxy(EngagementStore(path=str(tmp_path / "def.db")))
+    proxy.create_account(Account(name="Default Co"))
+    assert len(proxy.list_accounts()) == 1
+    other = EngagementStore(path=str(tmp_path / "other.db"))
+    tn.set_current_store(other)
+    try:
+        assert len(proxy.list_accounts()) == 0          # routes to current tenant
+        proxy.create_account(Account(name="Tenant Co"))
+        assert len(proxy.list_accounts()) == 1
+    finally:
+        tn.reset_current_store()
+    assert len(proxy.list_accounts()) == 1              # back to default
+
+
+def test_multitenant_signup_login_isolation(tmp_path, monkeypatch):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+    import tenancy as tn
+    from store import EngagementStore
+    import main as main_mod
+
+    monkeypatch.setattr(tn, "MULTITENANT", True)
+    monkeypatch.setattr(tn, "JWT_SECRET", "tsecret")
+    monkeypatch.setattr(tn, "TENANT_DIR", str(tmp_path / "tenants"))
+    tn._tenant_stores.clear()
+    monkeypatch.setattr(main_mod, "control", tn.ControlStore(path=str(tmp_path / "control.db")))
+    proxy = tn.StoreProxy(EngagementStore(path=str(tmp_path / "default.db")))
+    monkeypatch.setattr(main_mod, "store", proxy)
+    main_mod.ks.store = proxy
+
+    c = TestClient(main_mod.app)
+    assert c.get("/health").json()["multitenant"] is True
+    assert c.get("/leads").status_code == 401                      # gated
+
+    s = c.post("/auth/signup", json={"company": "Acme Agency", "email": "o@acme.com",
+                                     "password": "pw", "edition": "agency"}).json()
+    H = {"Authorization": "Bearer " + s["token"]}
+    c.post("/leads", json={"name": "Lead A"}, headers=H)
+    assert len(c.get("/leads", headers=H).json()) == 1
+
+    s2 = c.post("/auth/signup", json={"company": "Beta Agency", "email": "o@beta.com",
+                                      "password": "pw"}).json()
+    H2 = {"Authorization": "Bearer " + s2["token"]}
+    assert len(c.get("/leads", headers=H2).json()) == 0            # tenant-isolated
+
+    assert c.post("/auth/login", json={"email": "o@acme.com", "password": "pw"}).status_code == 200
+    assert c.get("/auth/me", headers=H).json()["user"]["email"] == "o@acme.com"
