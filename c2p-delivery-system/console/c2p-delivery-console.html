@@ -94,6 +94,10 @@
   .panel-head h2{font-family:var(--display);font-weight:600;font-size:18px;color:var(--charcoal);letter-spacing:-.3px}
   .panel-head p{font-size:13px;color:var(--muted);margin-top:3px;max-width:560px}
   .panel-head .run-area{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .persona{display:inline-flex;align-items:center;gap:9px}
+  .pavatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--deep-teal));color:#04201f;font-family:var(--display);font-weight:700;font-size:11px;display:grid;place-items:center;flex:none}
+  .pname{font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--charcoal);line-height:1.1}
+  .prole{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted-2)}
   .panel-body{padding:20px}
   .input-block{margin-bottom:18px}
   .input-block label{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px}
@@ -309,15 +313,25 @@ let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
 let odooModules = null, odooModFilter = "";
 
 const STAGES = [
-  {id:"presales",  name:"Presales",  ico:"◎", group:"Win the work",  desc:"Qualify the opportunity and turn discovery into candidate requirements."},
-  {id:"proposal",  name:"Proposal",  ico:"◧", group:"Win the work",  desc:"Turn discovery into a scoped, costed proposal."},
-  {id:"project",   name:"Project",   ico:"◳", group:"Win the work",  desc:"Turn the won proposal into an Odoo implementation plan."},
-  {id:"functional",name:"Functional",ico:"◮", group:"Do the work",   desc:"Analyse a requirement against standard Odoo and assign a verdict."},
-  {id:"developer", name:"Developer", ico:"◆", group:"Do the work",   desc:"Build an installable module from a Custom-verdict spec."},
+  {id:"presales",  name:"Presales",  ico:"◎", group:"Win the work",  persona:"Presales Consultant", doc:"Discovery & Qualification Brief", desc:"Qualify the opportunity and turn discovery into candidate requirements."},
+  {id:"proposal",  name:"Proposal",  ico:"◧", group:"Win the work",  persona:"Solution Architect",  doc:"Solution Proposal",            desc:"Turn discovery into a scoped, costed proposal."},
+  {id:"project",   name:"Project",   ico:"◳", group:"Win the work",  persona:"Delivery Lead",       doc:"Implementation Plan",          desc:"Turn the won proposal into an Odoo implementation plan."},
+  {id:"functional",name:"Functional",ico:"◮", group:"Do the work",   persona:"Functional Consultant",doc:"Functional Specification",     desc:"Analyse a requirement against standard Odoo and assign a verdict."},
+  {id:"developer", name:"Developer", ico:"◆", group:"Do the work",   persona:"Odoo Developer",      doc:"Technical Build Note",         desc:"Build an installable module from a Custom-verdict spec."},
 ];
 const VERDICTS={standard:{label:"Standard",color:"#1f9d6b"},configurable:{label:"Configurable",color:"#00B3B3"},studio:{label:"Studio",color:"#c98a1e"},custom:{label:"Custom build",color:"#c2492f"}};
 const LADDER=["standard","configurable","studio","custom"];
 const LNAME={standard:"Config",configurable:"Workflows",studio:"Studio",custom:"Module"};
+
+/* Branding for generated documents — swap these for your real brand assets. */
+const BRAND={
+  name:"C2P Consultants",
+  tagline:"Odoo Delivery",
+  mark:"C2",
+  accent:"#00B3B3", accentDark:"#008080", ink:"#23282b",
+  contact:"core2plus.com",
+  confidential:"Confidential — prepared for the named client only.",
+};
 
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function aed(n){try{return "AED "+Number(n).toLocaleString("en-AE");}catch(e){return "AED "+n;}}
@@ -440,7 +454,7 @@ function renderTopbar(){
   prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';
   actions.innerHTML=`
     <button class="btn ghost sm" onclick="exportEngagement()" title="Download engagement JSON">⤓ Export</button>
-    <button class="btn ghost sm" onclick="window.print()" title="Print / save as PDF">⎙ Report</button>`;
+    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Generate Document</button>`;
 }
 function goView(v){activeView=v;toggleSidebar(false);renderNav();renderTopbar();renderView();window.scrollTo({top:0,behavior:'smooth'});}
 function toggleSidebar(open){document.getElementById('sidebar').classList.toggle('open',open);document.getElementById('scrim').classList.toggle('open',open);}
@@ -530,7 +544,8 @@ function exportEngagement(){
 function renderStageView(c){
   const s=STAGES.find(x=>x.id===activeView);
   c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head" id="panelHead"></div><div class="panel-body" id="panelBody"></div></div></div>`;
-  document.getElementById('panelHead').innerHTML=`<div><h2>${s.name}</h2><p>${s.desc}</p></div><div class="run-area" id="runArea"></div>`;
+  const persona=`<div class="persona"><span class="pavatar">${esc(s.persona.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><div><div class="pname">${esc(s.persona)}</div><div class="prole">on this engagement</div></div></div>`;
+  document.getElementById('panelHead').innerHTML=`<div>${persona}<h2 style="margin-top:11px">${s.name}</h2><p>${s.desc}</p></div><div class="run-area" id="runArea">${stageDone(activeView)?`<button class="btn ghost sm" onclick="openDoc('${activeView}')" title="Branded document">📄 Document</button>`:''}</div>`;
   const body=document.getElementById('panelBody');
   if(!eng){body.innerHTML=`<div class="placeholder">Start or select an engagement to begin.</div>`;document.getElementById('runArea').innerHTML='';return;}
   INPUTS[activeView](body);
@@ -804,6 +819,113 @@ async function odooFields(){
       </tbody></table></div>`;
   }catch(e){el.innerHTML=`<div class="err"><b>Lookup failed.</b> ${esc(e.message)}</div>`;}
 }
+
+/* ---------- branded document generator ---------- */
+function _dt(){try{return new Date(eng.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}catch(e){return '';}}
+function docList(arr){return `<ul>${(arr||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;}
+function docCss(){return `
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Segoe UI',sans-serif;color:${BRAND.ink};font-size:11.5px;line-height:1.6}
+  h1,h2,h3{font-family:'Space Grotesk','Segoe UI',sans-serif;letter-spacing:-.2px}
+  .page{padding:34mm 22mm 26mm;position:relative;min-height:100vh}
+  .cover{display:flex;flex-direction:column;justify-content:center;min-height:86vh;page-break-after:always}
+  .mark{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${BRAND.accent},${BRAND.accentDark});color:#04201f;font-family:'Space Grotesk';font-weight:700;font-size:22px}
+  .cover .kicker{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${BRAND.accentDark};margin:26px 0 10px}
+  .cover h1{font-size:38px;line-height:1.1;margin-bottom:8px}
+  .cover .co{font-size:19px;color:#555;margin-top:18px}
+  .cover .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:#888;margin-top:28px;display:flex;flex-direction:column;gap:4px}
+  .cover .by{margin-top:auto;padding-top:30px;font-size:12px;color:#666}
+  .cover .by b{color:${BRAND.ink}}
+  .sec{page-break-before:always}
+  .sec-head{border-bottom:2px solid ${BRAND.accent};padding-bottom:9px;margin-bottom:16px}
+  .sec-head .role{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${BRAND.accentDark}}
+  .sec-head h2{font-size:22px;margin-top:5px}
+  h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:#888;margin:18px 0 8px;font-family:'JetBrains Mono',monospace}
+  p{margin-bottom:8px}
+  ul{margin:0 0 8px 18px}li{margin-bottom:4px}
+  .two{display:flex;gap:24px}.two>div{flex:1}
+  table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:11px}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid #e6e9e8}
+  th{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#999}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tr.tot td{border-top:2px solid #ccc;font-weight:700}
+  .pill{display:inline-block;font-family:'Space Grotesk';font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#fff;padding:4px 11px;border-radius:6px}
+  .box{background:#f7f8f7;border:1px solid #e6e9e8;border-left:3px solid ${BRAND.accent};border-radius:8px;padding:12px 15px;margin:8px 0}
+  .kpi-row{display:flex;gap:12px;margin:10px 0 4px}
+  .kpi{flex:1;border:1px solid #e6e9e8;border-radius:9px;padding:11px 13px}
+  .kpi .k{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.6px;text-transform:uppercase;color:#999}
+  .kpi .v{font-family:'Space Grotesk';font-weight:600;font-size:18px;margin-top:5px}
+  .foot{position:fixed;bottom:10mm;left:22mm;right:22mm;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#aaa;border-top:1px solid #eee;padding-top:6px}
+  @page{size:A4;margin:0}
+  @media print{.foot{position:fixed}}
+`;}
+function docHead(o){const r=(o.recommendation||'').toLowerCase();const col=r==='pursue'?'#1f9d6b':r==='pass'?'#c2492f':'#c98a1e';
+  return `<div class="sec-head"><div class="role">Presales Consultant · Discovery</div><h2>Discovery &amp; Qualification Brief</h2></div>
+  <div class="kpi-row"><div class="kpi"><div class="k">Recommendation</div><div class="v"><span class="pill" style="background:${col}">${esc(o.recommendation||'—')}</span></div></div>
+  <div class="kpi"><div class="k">ICP Fit</div><div class="v">${esc(o.icp_fit?.score??'—')}/100</div></div>
+  <div class="kpi"><div class="k">Profile</div><div class="v" style="font-size:13px">${esc(o.company_profile?.industry||'')}</div></div></div>
+  <div class="box">${esc(o.icp_fit?.rationale||'')}</div>
+  <div class="two"><div><h3>Pains</h3>${docList(o.discovery?.pains)}</div><div><h3>Goals</h3>${docList(o.discovery?.goals)}</div></div>
+  <h3>Candidate requirements</h3><table><thead><tr><th>Priority</th><th>Requirement</th></tr></thead><tbody>${(o.candidate_requirements||[]).map(c=>`<tr><td>${esc(c.priority)}</td><td>${esc(c.requirement)}</td></tr>`).join('')}</tbody></table>
+  <h3>Modules in scope</h3><p>${(o.modules_in_scope||[]).map(esc).join(' · ')||'—'}</p>
+  ${(o.red_flags||[]).length?`<h3>Red flags</h3>${docList(o.red_flags)}`:''}
+  <div class="box"><b>Next action.</b> ${esc(o.next_action||'')}</div>`;}
+function docProp(o){const total=(o.effort_estimate||[]).reduce((s,r)=>s+(+r.man_days||0),0);
+  return `<div class="sec-head"><div class="role">Solution Architect · Proposal</div><h2>Solution Proposal</h2></div>
+  <div class="box">${esc(o.solution_summary||'')}</div>
+  <div class="two"><div><h3>In scope</h3>${docList(o.in_scope)}</div><div><h3>Out of scope</h3>${docList(o.out_of_scope)}</div></div>
+  <h3>Phases</h3>${(o.phases||[]).map(p=>`<p><b>${esc(p.name)}</b></p>${docList(p.deliverables)}`).join('')}
+  <h3>Effort estimate</h3><table><thead><tr><th>Workstream</th><th>Role</th><th class="n">Man-days</th></tr></thead><tbody>${(o.effort_estimate||[]).map(r=>`<tr><td>${esc(r.workstream)}</td><td>${esc(r.role)}</td><td class="n">${esc(r.man_days)}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td></td><td class="n">${total}</td></tr></tbody></table>
+  <h3>Commercial</h3><div class="box"><span style="font-family:'Space Grotesk';font-weight:700;font-size:18px">${esc(aed(o.commercial?.estimate_aed))}</span> · ${esc(o.commercial?.pricing_model||'')}<br><span style="color:#777">${esc(o.commercial?.vat_note||'')} — ${esc(o.commercial?.licensing_note||'')}</span></div>
+  <div class="two"><div><h3>Assumptions</h3>${docList(o.assumptions)}</div><div><h3>Success criteria</h3>${docList(o.success_criteria)}</div></div>`;}
+function docProj(o){return `<div class="sec-head"><div class="role">Delivery Lead · Implementation</div><h2>Implementation Plan</h2></div>
+  <p style="font-size:14px;font-family:'Space Grotesk';font-weight:600">${esc(o.project_name||'')}</p>
+  ${(o.phases||[]).map(p=>`<h3>${esc(p.name)} · ${esc(p.weeks)} wks</h3><p style="color:#777">${esc(p.milestone||'')}</p><table><tbody>${(p.tasks||[]).map(t=>`<tr><td>${esc(t.name)}</td><td style="color:#888">${esc(t.workstream||'')}</td><td style="color:#888">${esc(t.owner_role||'')}</td></tr>`).join('')}</tbody></table>`).join('')}
+  <div class="two"><div><h3>Risks</h3>${docList(o.raid?.risks)}</div><div><h3>Dependencies</h3>${docList(o.raid?.dependencies)}</div></div>
+  <h3>Governance</h3><div class="box">${esc(o.governance?.cadence||'')} · ${esc(o.governance?.steering||'')} · ${esc(o.governance?.reporting||'')}</div>`;}
+function docFunc(arr){return `<div class="sec-head"><div class="role">Functional Consultant · Specification</div><h2>Functional Specifications</h2></div>
+  ${(arr||[]).map((o,i)=>{const v=VERDICTS[o.verdict]||VERDICTS.custom;return `${i?'<hr style="border:none;border-top:1px solid #eee;margin:18px 0">':''}
+    <p><span class="pill" style="background:${v.color}">${v.label}</span> &nbsp; <b>${esc(o.requirement_summary||'')}</b></p>
+    <p style="color:#777">${esc(o.verdict_rationale||'')}</p>
+    <h3>Gap analysis</h3><p>${esc(o.gap_analysis||'')}</p>
+    <h3>Solution options</h3><table><thead><tr><th>Tier</th><th>Option</th><th>Effort</th></tr></thead><tbody>${(o.solution_options||[]).map(op=>`<tr><td>${esc(op.tier)}</td><td>${esc(op.label)}${op.recommended?' — <b style="color:'+BRAND.accentDark+'">recommended</b>':''}<br><span style="color:#888">${esc(op.approach||'')}</span></td><td>${esc(op.effort)}</td></tr>`).join('')}</tbody></table>`;}).join('')}`;}
+function docDev(o){return `<div class="sec-head"><div class="role">Odoo Developer · Build</div><h2>Technical Build Note</h2></div>
+  <div class="box"><b style="font-family:'JetBrains Mono',monospace">${esc(o.module_technical_name||'')}</b> · v${esc((o.target_version||'').replace(/^v/i,''))} · ${(o.files||[]).length} files<br><span style="color:#777">${esc(o.summary||'')}</span></div>
+  <h3>Depends</h3><p>${(o.depends||[]).map(esc).join(' · ')||'—'}</p>
+  <h3>Files</h3>${docList((o.files||[]).map(f=>f.path))}
+  ${(o.install_steps||[]).length?`<h3>Install</h3>${docList(o.install_steps)}`:''}`;}
+const DOCB={presales:docHead,proposal:docProp,project:docProj,developer:docDev};
+function buildDossierHTML(e,only){
+  const inc=(only&&only.length)?only:STAGES.map(s=>s.id).filter(id=>stageDone(id));
+  const secs=inc.map(id=>{
+    if(id==='functional')return `<div class="sec"><div class="page">${docFunc(e.stages.functional)}</div></div>`;
+    const b=DOCB[id];const data=e.stages[id];if(!b||!data)return '';
+    return `<div class="sec"><div class="page">${b(data)}</div></div>`;
+  }).join('');
+  const single=only&&only.length===1;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(e.company)} — ${single?esc(STAGES.find(s=>s.id===only[0]).doc):'Engagement Dossier'}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>${docCss()}</style></head><body>
+  ${single?'':`<div class="cover"><div class="page" style="display:flex;flex-direction:column;min-height:88vh">
+    <div class="mark">${esc(BRAND.mark)}</div>
+    <div class="kicker">${esc(BRAND.name)} · ${esc(BRAND.tagline)}</div>
+    <h1>Engagement<br>Dossier</h1>
+    <div class="co">${esc(e.company)}</div>
+    <div class="meta"><span>Engagement ${esc(e.id)}</span>${e.odoo_db?`<span>Odoo · ${esc(e.odoo_db)}</span>`:''}<span>${_dt()}</span></div>
+    <div class="by">Prepared by <b>${esc(BRAND.name)}</b> · ${esc(BRAND.contact)}</div>
+  </div></div>`}
+  ${secs||`<div class="page"><p>No completed stages to document yet.</p></div>`}
+  <div class="foot"><span>${esc(BRAND.name)} · ${esc(e.company)}</span><span>${esc(BRAND.confidential)}</span></div>
+  </body></html>`;
+}
+function _openDoc(html){
+  const w=window.open('','_blank');
+  if(!w){toast('Allow pop-ups to generate the document','bad');return;}
+  w.document.open();w.document.write(html);w.document.close();w.focus();
+  setTimeout(()=>{try{w.print();}catch(e){}},700);
+}
+function openDossier(){if(!eng)return;if(!doneCount()){toast('Run at least one stage first','bad');return;}_openDoc(buildDossierHTML(eng));toast('Document generated — use your browser’s Save as PDF','ok');}
+function openDoc(stage){if(!eng||!stageDone(stage))return;_openDoc(buildDossierHTML(eng,[stage]));}
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{
