@@ -1,0 +1,9 @@
+# secrets & local state — never commit
+delivery_api/.env
+.htpasswd
+delivery_api/delivery.db
+delivery_api/.venv/
+.venv/
+web/
+__pycache__/
+*.pyc

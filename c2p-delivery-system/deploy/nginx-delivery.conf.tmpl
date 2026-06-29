@@ -1,0 +1,32 @@
+server {
+    listen 80;
+    server_name __SERVER_NAME__;
+
+    # One login protects everything (console + API).
+    auth_basic           "C2P Delivery";
+    auth_basic_user_file __HTPASSWD__;
+
+    # Let certbot's HTTP-01 challenge through the login gate, otherwise
+    # auth_basic returns 401 on /.well-known/... and TLS issuance fails.
+    location ^~ /.well-known/acme-challenge/ {
+        auth_basic off;
+        allow all;
+        default_type "text/plain";
+        try_files $uri =404;
+    }
+
+    # The console (static HTML).
+    root  __WEB_DIR__;
+    index index.html;
+    location / {
+        try_files $uri /index.html;
+    }
+
+    # The API, same-origin under /api/ (the console calls /api/...).
+    location /api/ {
+        proxy_pass         http://127.0.0.1:8800/;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_read_timeout 300s;   # agent calls can take a while
+    }
+}
