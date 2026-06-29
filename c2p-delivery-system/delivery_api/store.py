@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS engagements (
   created_at    TEXT,
   stages        TEXT NOT NULL DEFAULT '{}'
 );
+CREATE TABLE IF NOT EXISTS app_settings (
+  key   TEXT PRIMARY KEY,
+  value TEXT
+);
 """
 
 
@@ -67,6 +71,20 @@ class EngagementStore:
                      project_id=excluded.project_id, stages=excluded.stages""",
                 (eng.id, eng.company, eng.odoo_db, eng.crm_lead_id, eng.sale_order_id,
                  eng.project_id, eng.created_at, json.dumps(eng.stages)),
+            )
+
+    # ── App settings (e.g. branding) ─────────────────────────────────────
+    def get_setting(self, key: str) -> dict:
+        with self._conn() as c:
+            r = c.execute("SELECT value FROM app_settings WHERE key=?", (key,)).fetchone()
+            return json.loads(r["value"]) if r and r["value"] else {}
+
+    def save_setting(self, key: str, data: dict) -> None:
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO app_settings(key,value) VALUES(?,?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, json.dumps(data)),
             )
 
     def get(self, eng_id: str) -> Optional[Engagement]:

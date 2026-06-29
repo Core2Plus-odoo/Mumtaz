@@ -99,6 +99,9 @@
   .pavatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--deep-teal));color:#04201f;font-family:var(--display);font-weight:700;font-size:11px;display:grid;place-items:center;flex:none}
   .pname{font-family:var(--display);font-weight:600;font-size:12.5px;color:var(--charcoal);line-height:1.1}
   .prole{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted-2)}
+  .set-h{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted-2);margin:4px 0 11px;padding-bottom:6px;border-bottom:1px solid var(--line-soft)}
+  .logo-slot{border-radius:10px;padding:16px;display:flex;align-items:center;justify-content:center;min-height:74px}
+  input[type=color]{border:1px solid var(--line);border-radius:9px;background:var(--surface);cursor:pointer}
   .panel-body{padding:20px}
   .input-block{margin-bottom:18px}
   .input-block label{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px}
@@ -339,7 +342,23 @@ const BRAND={
   address:"Ajman Free Zone, UAE · Trade Licence 34241",
   confidential:"Confidential — prepared for the named client only.",
 };
-function logoSVG(c){return `<svg viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants" style="height:100%;width:auto"><text x="0" y="54" font-family="'DM Sans',sans-serif" font-weight="700" font-size="56" fill="${c}">C2P</text><text x="3" y="80" font-family="'DM Sans',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="${c}">Consultants</text><g fill="none" stroke="#00B3B3" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g></svg>`;}
+function logoSVG(c){return `<svg viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants" style="height:100%;width:auto"><text x="0" y="54" font-family="'DM Sans',sans-serif" font-weight="700" font-size="56" fill="${c}">C2P</text><text x="3" y="80" font-family="'DM Sans',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="${c}">Consultants</text><g fill="none" stroke="${BRAND.accent||'#00B3B3'}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g></svg>`;}
+const DEFAULT_BRAND=JSON.parse(JSON.stringify(BRAND));
+/* light = for dark backgrounds (sidebar); dark = for light backgrounds (documents). */
+function brandMark(ctx){
+  const logo=ctx==='light'?BRAND.logoLight:BRAND.logoDark;
+  if(logo)return `<img src="${logo}" alt="${esc(BRAND.name||'logo')}" style="height:100%;width:auto;display:block;max-width:200px">`;
+  return logoSVG(ctx==='light'?'#fff':(BRAND.ink||'#2E2E2E'));
+}
+function applyBranding(){
+  const r=document.documentElement.style;
+  if(BRAND.accent)r.setProperty('--teal',BRAND.accent);
+  if(BRAND.accentDark)r.setProperty('--deep-teal',BRAND.accentDark);
+  if(BRAND.ink)r.setProperty('--charcoal',BRAND.ink);
+  const b=document.querySelector('.sb-brand');if(b)b.innerHTML=`<span style="display:block;height:34px">${brandMark('light')}</span>`;
+  const strap=document.querySelector('.sb-strap');if(strap)strap.innerHTML=`<b>Delivery Console</b><span>${esc(BRAND.tagline||'')}</span>`;
+  try{document.title='Delivery Console · '+(BRAND.name||'C2P');}catch(e){}
+}
 
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function aed(n){try{return "AED "+Number(n).toLocaleString("en-AE");}catch(e){return "AED "+n;}}
@@ -447,6 +466,8 @@ function renderNav(){
   });
   html+=`<div class="nav-sec">Grounding</div>
     <button class="nav-item ${activeView==='odoo'?'active':''}" onclick="goView('odoo')"><span class="ni-ico">⛁</span><span class="ni-name">Odoo Explorer</span></button>`;
+  html+=`<div class="nav-sec">Admin</div>
+    <button class="nav-item ${activeView==='settings'?'active':''}" onclick="goView('settings')"><span class="ni-ico">⚙</span><span class="ni-name">Branding &amp; Settings</span></button>`;
   nav.innerHTML=html;
 }
 function renderTopbar(){
@@ -472,6 +493,7 @@ function renderView(){
   const c=document.getElementById('content');
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
+  if(activeView==='settings')return renderSettings(c);
   return renderStageView(c);
 }
 
@@ -828,6 +850,65 @@ async function odooFields(){
   }catch(e){el.innerHTML=`<div class="err"><b>Lookup failed.</b> ${esc(e.message)}</div>`;}
 }
 
+/* ---------- branding admin panel ---------- */
+function brandPreview(){return `
+  <div style="border:1px solid var(--line);border-radius:11px;overflow:hidden">
+    <div style="background:#fff;padding:18px 20px">
+      <div style="height:40px;margin-bottom:8px">${brandMark('dark')}</div>
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${BRAND.accentDark||'#008080'}">${esc(BRAND.tagline||'')}</div>
+      <div style="font-family:var(--display);font-weight:600;font-size:20px;margin-top:6px;color:${BRAND.ink||'#2E2E2E'}">Engagement Dossier</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">${esc(BRAND.legal||BRAND.name||'')}<br>${esc(BRAND.address||'')}<br>${esc(BRAND.contact||'')}</div>
+    </div>
+    <div style="background:var(--ink);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+      <span style="display:block;height:26px">${brandMark('light')}</span>
+      <span style="display:flex;gap:6px">
+        <span style="width:18px;height:18px;border-radius:5px;background:${BRAND.accent}"></span>
+        <span style="width:18px;height:18px;border-radius:5px;background:${BRAND.accentDark}"></span>
+        <span style="width:18px;height:18px;border-radius:5px;background:${BRAND.ink}"></span>
+      </span>
+    </div>
+  </div>`;}
+function renderSettings(c){
+  const v=k=>esc(BRAND[k]||'');
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>Branding &amp; Settings</h2><p>Control how the console and every generated document are branded. Saved on the server, applied for all users.</p></div>
+      <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to C2P</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
+    <div class="panel-body"><div class="two-col">
+      <div>
+        <h3 class="set-h">Identity</h3>
+        <div class="input-block"><label>Company name</label><input type="text" id="s_name" value="${v('name')}" oninput="brandField('name',this.value)"></div>
+        <div class="input-block"><label>Legal entity</label><input type="text" id="s_legal" value="${v('legal')}" oninput="brandField('legal',this.value)"></div>
+        <div class="input-block"><label>Tagline</label><input type="text" id="s_tag" value="${v('tagline')}" oninput="brandField('tagline',this.value)"></div>
+        <h3 class="set-h">Colours</h3>
+        <div class="input-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="input-block"><label>Primary</label><input type="color" id="s_accent" value="${BRAND.accent||'#00B3B3'}" oninput="brandField('accent',this.value)" style="width:100%;height:42px;padding:3px"></div>
+          <div class="input-block"><label>Deep</label><input type="color" id="s_ad" value="${BRAND.accentDark||'#008080'}" oninput="brandField('accentDark',this.value)" style="width:100%;height:42px;padding:3px"></div>
+          <div class="input-block"><label>Ink / text</label><input type="color" id="s_ink" value="${BRAND.ink||'#2E2E2E'}" oninput="brandField('ink',this.value)" style="width:100%;height:42px;padding:3px"></div>
+        </div>
+        <h3 class="set-h">Document details</h3>
+        <div class="input-block"><label>Contact line</label><input type="text" id="s_contact" value="${v('contact')}" oninput="brandField('contact',this.value)"></div>
+        <div class="input-block"><label>Address / licence line</label><input type="text" id="s_addr" value="${v('address')}" oninput="brandField('address',this.value)"></div>
+        <div class="input-block"><label>Confidential footer</label><input type="text" id="s_conf" value="${v('confidential')}" oninput="brandField('confidential',this.value)"></div>
+      </div>
+      <div>
+        <h3 class="set-h">Logo — light (shown on the dark sidebar)</h3>
+        <div class="logo-slot" style="background:var(--ink)">${BRAND.logoLight?`<img src="${BRAND.logoLight}" style="max-height:46px;max-width:190px">`:`<span style="height:36px;display:block">${logoSVG('#fff')}</span>`}</div>
+        <div style="display:flex;gap:8px;margin:9px 0 20px"><label class="btn sm" style="cursor:pointer">Upload logo<input type="file" accept="image/*" hidden onchange="loadLogo('logoLight',this)"></label>${BRAND.logoLight?`<button class="btn ghost sm" onclick="clearLogo('logoLight')">Remove</button>`:''}</div>
+        <h3 class="set-h">Logo — dark (shown on documents / light bg)</h3>
+        <div class="logo-slot" style="background:#fff;border:1px solid var(--line)">${BRAND.logoDark?`<img src="${BRAND.logoDark}" style="max-height:46px;max-width:190px">`:`<span style="height:36px;display:block">${logoSVG(BRAND.ink||'#2E2E2E')}</span>`}</div>
+        <div style="display:flex;gap:8px;margin:9px 0 20px"><label class="btn sm" style="cursor:pointer">Upload logo<input type="file" accept="image/*" hidden onchange="loadLogo('logoDark',this)"></label>${BRAND.logoDark?`<button class="btn ghost sm" onclick="clearLogo('logoDark')">Remove</button>`:''}</div>
+        <div class="hint" style="margin:-12px 0 18px">PNG or SVG, ideally transparent. Light logo = white/pale artwork; dark logo = full-colour for white pages.</div>
+        <h3 class="set-h">Live preview</h3>
+        <div id="brandPreview">${brandPreview()}</div>
+      </div>
+    </div></div></div></div>`;
+}
+function brandField(k,val){BRAND[k]=val;if(k==='accent'||k==='accentDark'||k==='ink')applyBranding();const p=document.getElementById('brandPreview');if(p)p.innerHTML=brandPreview();}
+function loadLogo(which,input){const f=input.files&&input.files[0];if(!f)return;if(f.size>1500000){toast('Logo too large (max ~1.5 MB) — use a smaller PNG/SVG','bad');return;}const rd=new FileReader();rd.onload=()=>{BRAND[which]=rd.result;applyBranding();renderSettings(document.getElementById('content'));toast('Logo loaded — click Save to apply','info');};rd.readAsDataURL(f);}
+function clearLogo(which){BRAND[which]='';applyBranding();renderSettings(document.getElementById('content'));}
+async function saveBranding(){try{await api("POST","/branding",BRAND);applyBranding();renderTopbar();toast('Branding saved — applied for everyone','ok');}catch(e){toast('Save failed: '+e.message,'bad');}}
+function resetBranding(){Object.assign(BRAND,JSON.parse(JSON.stringify(DEFAULT_BRAND)));BRAND.logoLight='';BRAND.logoDark='';applyBranding();renderSettings(document.getElementById('content'));toast('Reset to C2P defaults — click Save to apply','info');}
+
 /* ---------- branded document generator ---------- */
 function _dt(){try{return new Date(eng.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}catch(e){return '';}}
 function docList(arr){return `<ul>${(arr||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;}
@@ -916,7 +997,7 @@ function buildDossierHTML(e,only){
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>${docCss()}</style></head><body>
   ${single?'':`<div class="cover"><div class="page" style="display:flex;flex-direction:column;min-height:88vh">
-    <div style="height:50px;margin-bottom:6px">${logoSVG(BRAND.ink)}</div>
+    <div style="height:50px;margin-bottom:6px">${brandMark('dark')}</div>
     <div class="kicker">${esc(BRAND.tagline)} · ERP &amp; Business Consulting</div>
     <h1>Engagement<br>Dossier</h1>
     <div class="co">${esc(e.company)}</div>
@@ -945,6 +1026,8 @@ document.addEventListener('keydown',e=>{
 /* ---------- boot ---------- */
 (async function boot(){
   renderApiChip();pingHealth();
+  try{const b=await api("GET","/branding");if(b&&typeof b==='object'&&!Array.isArray(b))Object.assign(BRAND,b);}catch(e){}
+  applyBranding();
   await loadEngagements();
   const last=localStorage.getItem("c2p_last");
   if(last&&engagements.some(e=>e.id===last)){try{eng=await api("GET","/engagements/"+last);}catch(e){}}

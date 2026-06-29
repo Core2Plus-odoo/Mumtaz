@@ -271,6 +271,23 @@ def sync_lead(eng_id: str):
     return {"crm_lead_id": lead_id}
 
 
+@app.get("/branding")
+def get_branding():
+    """Return the operator's saved branding (logo, colours, contact). Empty
+    dict means the console falls back to its built-in C2P defaults."""
+    return store.get_setting("branding")
+
+
+@app.post("/branding")
+def save_branding(body: dict):
+    """Persist branding from the admin panel. Behind the console's login gate;
+    stores logo data-URIs, colours and company details in SQLite."""
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Expected a JSON object")
+    store.save_setting("branding", body)
+    return {"ok": True}
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "model": MODEL, "stages": m.STAGES}
