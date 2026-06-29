@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
     --charcoal:#2E2E2E;--ink:#23282b;--ink-2:#2b3136;--teal:#00B3B3;--deep-teal:#008080;
@@ -98,6 +99,12 @@
   .input-block label{display:block;font-size:12.5px;font-weight:600;margin-bottom:7px}
   .input-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
   .hint{font-size:12px;color:var(--muted-2);font-style:italic;margin-top:4px}
+  .dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:11px 13px;font-size:12.5px;color:var(--muted);background:var(--paper);margin-top:9px;transition:border-color .15s,background .15s}
+  .dropzone.drag{border-color:var(--teal);background:rgba(0,179,179,.06)}
+  .dz-cta{display:inline-flex;align-items:center;gap:6px}
+  .linkbtn{background:none;border:none;color:var(--deep-teal);font-weight:600;cursor:pointer;font-size:12.5px;padding:0;text-decoration:underline}
+  .dz-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .dz-file{font-family:var(--mono);font-size:10.5px;background:rgba(0,179,179,.1);border:1px solid rgba(0,179,179,.25);color:var(--deep-teal);padding:3px 8px;border-radius:6px;display:inline-flex;gap:6px;align-items:center}
 
   .out{animation:rise .3s ease both}
   @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -527,6 +534,9 @@ function renderStageView(c){
   const body=document.getElementById('panelBody');
   if(!eng){body.innerHTML=`<div class="placeholder">Start or select an engagement to begin.</div>`;document.getElementById('runArea').innerHTML='';return;}
   INPUTS[activeView](body);
+  if(activeView==='presales')attachDropzone('ps_notes','ps_drop','ps_file','ps_files');
+  if(activeView==='functional')attachDropzone('fn_req','fn_drop','fn_file','fn_files');
+  if(activeView==='developer'&&document.getElementById('dv_spec'))attachDropzone('dv_spec','dv_drop','dv_file','dv_files');
   renderRunBtn();
   const out=eng.stages?eng.stages[activeView]:null;
   const outEl=document.createElement('div');outEl.id="stageOut";body.appendChild(outEl);
@@ -542,7 +552,10 @@ function renderRunBtn(){
 const INPUTS={
   presales(b){b.innerHTML=`
     <div class="input-block"><label>Discovery notes</label>
-      <textarea id="ps_notes" rows="5" placeholder="Call summary, pains, current systems, goals…">${esc(eng.stages?.presales?._notes||'')}</textarea></div>
+      <textarea id="ps_notes" rows="5" placeholder="Call summary, pains, current systems, goals…">${esc(eng.stages?.presales?._notes||'')}</textarea>
+      <div class="dropzone" id="ps_drop"><input type="file" id="ps_file" multiple accept=".pdf,.txt,.md,.csv,.json,.log,.html,.htm" hidden>
+        <span class="dz-cta">📎 Drop a call transcript, RFP or PDF here, or <button type="button" class="linkbtn" onclick="document.getElementById('ps_file').click()">browse files</button> — its text is added to the notes above.</span>
+        <div class="dz-files" id="ps_files"></div></div></div>
     <div class="input-grid">
       <div class="input-block"><label>Country</label><input type="text" id="ps_country" value="UAE"></div>
       <div class="input-block"><label>Industry</label><input type="text" id="ps_industry" placeholder="Manufacturing"></div>
@@ -557,7 +570,10 @@ const INPUTS={
       ${ok?'<div class="hint">Reads the approved proposal automatically.</div>':'<div class="hint">Run the proposal first.</div>'}</div>`;},
   functional(b){b.innerHTML=`
     <div class="input-block"><label>Requirement</label>
-      <textarea id="fn_req" rows="3" placeholder="Describe the requirement in the client's words…"></textarea></div>
+      <textarea id="fn_req" rows="3" placeholder="Describe the requirement in the client's words…"></textarea>
+      <div class="dropzone" id="fn_drop"><input type="file" id="fn_file" multiple accept=".pdf,.txt,.md,.csv,.json,.log,.html,.htm" hidden>
+        <span class="dz-cta">📎 Drop a requirements doc or PDF, or <button type="button" class="linkbtn" onclick="document.getElementById('fn_file').click()">browse files</button>.</span>
+        <div class="dz-files" id="fn_files"></div></div></div>
     <div class="input-grid">
       <div class="input-block"><label>Odoo version</label>
         <select id="fn_ver"><option>v19</option><option>v18</option><option selected>v17</option><option>v16</option></select></div>
@@ -572,7 +588,10 @@ const INPUTS={
       <div class="input-block"><label>Module name (optional)</label><input type="text" id="dv_name" placeholder="mumtaz_xxx"></div>
     </div>
     <div class="input-block"><label>Spec source</label>
-      ${custom.length?`<div class="hint">Builds from the latest Custom-verdict requirement: “${esc((custom[custom.length-1].requirement_summary||'').slice(0,80))}”.</div>`:`<textarea id="dv_spec" rows="3" placeholder="No Custom verdict yet — paste a spec here, or run a Custom requirement in Functional first."></textarea>`}</div>`;}
+      ${custom.length?`<div class="hint">Builds from the latest Custom-verdict requirement: “${esc((custom[custom.length-1].requirement_summary||'').slice(0,80))}”.</div>`:`<textarea id="dv_spec" rows="3" placeholder="No Custom verdict yet — paste a spec here, or run a Custom requirement in Functional first."></textarea>
+      <div class="dropzone" id="dv_drop"><input type="file" id="dv_file" multiple accept=".pdf,.txt,.md,.csv,.json,.log,.html,.htm" hidden>
+        <span class="dz-cta">📎 Drop a spec document or PDF, or <button type="button" class="linkbtn" onclick="document.getElementById('dv_file').click()">browse files</button>.</span>
+        <div class="dz-files" id="dv_files"></div></div>`}</div>`;}
 };
 
 /* ---------- run ---------- */
@@ -602,6 +621,40 @@ async function runStage(){
 }
 function val(id){const e=document.getElementById(id);return e?e.value.trim():"";}
 function focus(id){const e=document.getElementById(id);if(e)e.focus();}
+
+/* ---------- document upload (client-side text extraction) ---------- */
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+async function extractText(file){
+  const name=(file.name||'').toLowerCase();
+  if(name.endsWith('.pdf')){
+    if(typeof pdfjsLib==='undefined')throw new Error('PDF reader still loading — try again');
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const pages=[];
+    for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const tc=await page.getTextContent();pages.push(tc.items.map(i=>i.str).join(' '));}
+    return pages.join('\n\n');
+  }
+  return await file.text();   // txt, md, csv, json, log, html
+}
+function attachDropzone(taId,dzId,inputId,filesId){
+  const dz=document.getElementById(dzId),inp=document.getElementById(inputId),ta=document.getElementById(taId),fl=document.getElementById(filesId);
+  if(!dz||dz._wired)return; dz._wired=true;
+  const handle=async(files)=>{
+    for(const f of files){
+      try{
+        const txt=(await extractText(f)).trim();
+        if(!txt){toast('No text found in '+f.name,'bad');continue;}
+        ta.value+=(ta.value.trim()?'\n\n':'')+`--- ${f.name} ---\n`+txt;
+        const tag=document.createElement('span');tag.className='dz-file';tag.textContent='📄 '+f.name;fl.appendChild(tag);
+        toast('Imported '+f.name+' · '+txt.length.toLocaleString()+' chars','ok');
+      }catch(e){toast('Could not read '+f.name+': '+e.message,'bad');}
+    }
+  };
+  inp.addEventListener('change',e=>{handle(e.target.files);e.target.value='';});
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+  ['dragleave'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+  dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');handle(e.dataTransfer.files);});
+}
 
 /* ---------- renderers (unchanged output design) ---------- */
 const RENDER={
