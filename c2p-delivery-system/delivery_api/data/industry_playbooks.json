@@ -1,0 +1,156 @@
+{
+  "manufacturing": {
+    "name": "Manufacturing",
+    "aliases": ["manufacturer", "factory", "production", "fabrication", "industrial", "furniture", "cabinet", "joinery", "metal", "plastics", "engineering"],
+    "key_processes": ["Quote-to-order", "BoM & routing definition", "MRP & production scheduling", "Work-order execution & shop-floor", "Quality control", "Raw-material & WIP inventory", "Costing (standard/average) & margin", "Maintenance of machines"],
+    "common_pains": ["No real-time shop-floor / WIP visibility", "Manual quotation-to-production hand-off", "Spreadsheet costing that drifts from actuals", "Stock-outs of raw materials vs overstock", "No traceability from finished good back to batch/lot", "Poor on-time-in-full delivery"],
+    "odoo_modules": {
+      "core": ["mrp", "stock", "sale_management", "purchase", "account"],
+      "recommended": ["mrp_account_enterprise", "quality_control", "maintenance", "stock_landed_costs", "mrp_plm", "hr_timesheet"],
+      "optional": ["mrp_subcontracting", "repair", "barcode", "iot", "product_expiry", "sale_project"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT, KSA ZATCA e-invoicing (l10n_sa_edi), AED multi-currency, WPS payroll if HR in scope, 9% UAE corporate tax awareness",
+    "typical_kpis": ["On-time-in-full %", "Manufacturing lead time", "WIP value", "Scrap/rework %", "Capacity utilisation", "Gross margin per SKU"],
+    "common_customizations": ["Approval workflow on quotations above a threshold", "Quotation-linked manufacturing orders", "Batch/lot traceability reports", "Shop-floor tablet work-order view", "Custom production costing dashboard"]
+  },
+  "trading_distribution": {
+    "name": "Trading & Distribution",
+    "aliases": ["distributor", "wholesale", "trading", "import export", "supplier", "stockist", "b2b distribution", "spare parts trading"],
+    "key_processes": ["Procurement & supplier management", "Landed-cost import handling", "Multi-warehouse inventory", "Price lists & customer-specific pricing", "Sales order to delivery", "Backorder & replenishment", "Receivables & credit control"],
+    "common_pains": ["Inaccurate landed costs eroding margin", "Stock-outs and dead stock at the same time", "Manual customer-specific pricing", "Poor credit-limit control", "No multi-warehouse visibility", "Slow order-to-cash"],
+    "odoo_modules": {
+      "core": ["sale_management", "purchase", "stock", "account"],
+      "recommended": ["stock_landed_costs", "purchase_requisition", "sale_loyalty", "delivery", "account_credit_control", "crm"],
+      "optional": ["stock_dropshipping", "barcode", "product_expiry", "sale_subscription", "website_sale"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT, ZATCA e-invoicing for KSA, AED + multi-currency for imports, customs/duty handling via landed costs",
+    "typical_kpis": ["Inventory turnover", "Gross margin after landed cost", "Order fill rate", "DSO (days sales outstanding)", "Dead-stock %", "Fulfilment lead time"],
+    "common_customizations": ["Automated customer price-list tiers", "Credit-limit hold on sales orders", "Landed-cost allocation by volume/weight", "Salesman commission scheme", "Multi-warehouse replenishment rules"]
+  },
+  "retail": {
+    "name": "Retail & E-commerce",
+    "aliases": ["retailer", "shop", "store", "pos", "point of sale", "ecommerce", "e-commerce", "online store", "boutique", "showroom", "omnichannel"],
+    "key_processes": ["In-store POS sales", "Online storefront & fulfilment", "Inventory across stores & web", "Promotions & loyalty", "Cash & shift management", "Returns & exchanges", "Replenishment"],
+    "common_pains": ["Disconnected POS, web and back-office stock", "No single customer view across channels", "Manual promotions and loyalty", "Shrinkage and unreconciled cash", "Stock-outs of fast movers"],
+    "odoo_modules": {
+      "core": ["point_of_sale", "stock", "sale_management", "account"],
+      "recommended": ["website_sale", "loyalty", "pos_loyalty", "stock_barcode", "purchase"],
+      "optional": ["pos_restaurant", "sale_gift_card", "website_sale_wishlist", "delivery", "marketing_automation"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT inclusive pricing for retail, ZATCA-compliant POS invoices in KSA, AED, Arabic receipts",
+    "typical_kpis": ["Sales per store / per sqm", "Basket size & conversion", "Stock turnover", "Shrinkage %", "Online vs in-store mix", "Repeat-customer rate"],
+    "common_customizations": ["Unified omnichannel stock", "Custom loyalty tiers & promotions", "POS shift/cash reconciliation report", "Click-and-collect flow", "Arabic/bilingual receipts"]
+  },
+  "fmcg": {
+    "name": "FMCG & Consumer Goods Distribution",
+    "aliases": ["fmcg", "consumer goods", "fast moving", "food distribution", "beverage distribution", "van sales", "route sales", "merchandising"],
+    "key_processes": ["Van/route sales & pre-sales", "Promotions & trade spend", "Batch/expiry-managed inventory", "Secondary distribution", "Demand planning & replenishment", "Returns of expired stock"],
+    "common_pains": ["Expiry write-offs and FEFO not enforced", "No control on trade promotions/spend", "Van-sales reconciliation gaps", "Forecasting accuracy", "Long order-to-cash with many small orders"],
+    "odoo_modules": {
+      "core": ["sale_management", "purchase", "stock", "account"],
+      "recommended": ["product_expiry", "stock_landed_costs", "sale_loyalty", "crm", "delivery"],
+      "optional": ["mrp", "barcode", "sale_subscription", "marketing_automation"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT, ZATCA KSA, AED, FEFO/expiry for food safety, halal batch tracking where relevant",
+    "typical_kpis": ["Expiry write-off %", "On-shelf availability", "Route productivity", "Trade-spend ROI", "Forecast accuracy", "Order fill rate"],
+    "common_customizations": ["Van-sales / route settlement", "Promotion & trade-spend tracking", "FEFO picking enforcement", "Distributor claim management", "Mobile pre-sales capture"]
+  },
+  "food_beverage": {
+    "name": "Food & Beverage / Restaurants",
+    "aliases": ["restaurant", "cafe", "catering", "cloud kitchen", "central kitchen", "food", "bakery", "qsr", "hospitality", "f&b"],
+    "key_processes": ["POS ordering (dine-in/takeaway/delivery)", "Central-kitchen production & BoM", "Recipe & portion costing", "Ingredient inventory & expiry", "Procurement of perishables", "Multi-outlet consolidation"],
+    "common_pains": ["No recipe-level food costing", "Wastage and expiry losses", "Disconnected delivery-aggregator orders", "Multi-outlet stock visibility", "Cash control across outlets"],
+    "odoo_modules": {
+      "core": ["pos_restaurant", "point_of_sale", "stock", "account"],
+      "recommended": ["mrp", "product_expiry", "purchase", "sale_management"],
+      "optional": ["website_sale", "loyalty", "hr", "maintenance"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT, ZATCA KSA POS compliance, AED, Arabic menus/receipts, municipality food-safety traceability",
+    "typical_kpis": ["Food cost %", "Wastage %", "Average ticket", "Table turnover", "Outlet profitability", "Delivery vs dine-in mix"],
+    "common_customizations": ["Recipe/portion costing", "Central-kitchen production to outlets", "Aggregator (Talabat/Deliveroo) order integration", "Outlet-wise P&L dashboard"]
+  },
+  "construction_contracting": {
+    "name": "Construction & Contracting",
+    "aliases": ["construction", "contractor", "contracting", "civil", "mep", "fit-out", "fitout", "engineering procurement", "epc", "interiors", "build"],
+    "key_processes": ["Tender/BOQ estimation", "Project budgeting & cost control", "Subcontractor management", "Progress (milestone) billing & retention", "Procurement to site", "Timesheets & labour cost", "Variation orders"],
+    "common_pains": ["Budget vs actual cost overruns", "Manual progress billing & retention tracking", "No project profitability visibility", "Subcontractor & material reconciliation", "Cash-flow gaps on long projects"],
+    "odoo_modules": {
+      "core": ["project", "sale_management", "purchase", "account", "hr_timesheet"],
+      "recommended": ["sale_project", "account_analytic", "purchase_requisition", "stock", "documents"],
+      "optional": ["helpdesk", "sign", "maintenance", "fleet"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT on progress invoices, ZATCA KSA, AED, retention & advance-payment handling, WPS payroll for labour",
+    "typical_kpis": ["Budget vs actual variance", "Project gross margin", "Cash collection vs progress", "Retention outstanding", "Labour productivity", "Variation recovery"],
+    "common_customizations": ["BOQ estimation & tender pricing", "Progress/milestone billing with retention", "Advance-payment recovery schedule", "Subcontractor work-order & payment certificates", "Project P&L with committed cost"]
+  },
+  "healthcare": {
+    "name": "Healthcare (Clinics & Pharmacy)",
+    "aliases": ["clinic", "hospital", "medical", "pharmacy", "dental", "polyclinic", "diagnostic", "lab", "healthcare", "wellness"],
+    "key_processes": ["Patient appointments & scheduling", "Pharmacy POS & dispensing", "Inventory of drugs (batch/expiry)", "Insurance claim handling", "Procurement of medical supplies", "Billing & receivables"],
+    "common_pains": ["Drug expiry and stock control", "Insurance claim leakage", "Appointment no-shows", "Disconnected pharmacy and clinic billing", "Regulatory traceability"],
+    "odoo_modules": {
+      "core": ["appointment", "point_of_sale", "stock", "account"],
+      "recommended": ["product_expiry", "purchase", "sale_management", "calendar", "documents"],
+      "optional": ["hr", "website_appointment", "sign", "helpdesk"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT (healthcare exemptions where applicable), ZATCA KSA, AED, DHA/DOH/MOH compliance awareness, insurance (e-claim) context",
+    "typical_kpis": ["Appointment utilisation", "No-show rate", "Claim rejection %", "Drug expiry write-off", "Revenue per patient", "Inventory turnover"],
+    "common_customizations": ["Insurance claim & approval workflow", "Patient record link to billing", "Drug batch/expiry dispensing (FEFO)", "Doctor commission/payout", "Regulatory traceability reports"]
+  },
+  "professional_services": {
+    "name": "Professional & Consulting Services",
+    "aliases": ["consulting", "agency", "services", "professional services", "advisory", "audit firm", "law firm", "it services", "marketing agency", "architects"],
+    "key_processes": ["Lead-to-proposal", "Project & resource planning", "Timesheets & billable utilisation", "Time & material / fixed-fee billing", "Expense recharge", "Retainers & subscriptions"],
+    "common_pains": ["Low billable utilisation visibility", "Revenue leakage on unbilled time", "Manual timesheet-to-invoice", "Project scope creep", "Cash flow on retainers"],
+    "odoo_modules": {
+      "core": ["project", "sale_management", "hr_timesheet", "account"],
+      "recommended": ["sale_timesheet", "sale_project", "hr_expense", "sign", "crm"],
+      "optional": ["sale_subscription", "helpdesk", "documents", "appointment"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT on services, ZATCA KSA, AED, reverse-charge on imported services, WPS payroll",
+    "typical_kpis": ["Billable utilisation %", "Realisation rate", "Revenue per consultant", "Unbilled WIP", "Project margin", "Retainer renewal rate"],
+    "common_customizations": ["Timesheet-to-invoice automation", "Retainer & milestone billing", "Utilisation dashboard", "Expense recharge to client", "Proposal/SOW generation"]
+  },
+  "automotive": {
+    "name": "Automotive (Workshop & Spare Parts)",
+    "aliases": ["automotive", "garage", "workshop", "car service", "spare parts", "auto parts", "vehicle", "tyres", "fleet service"],
+    "key_processes": ["Job-card / repair orders", "Spare-parts inventory & sales", "Labour & service costing", "Vehicle history", "Procurement of parts", "Warranty & insurance jobs"],
+    "common_pains": ["No vehicle service history", "Parts stock-outs vs dead stock", "Manual job-card costing", "Warranty/insurance reconciliation", "Technician productivity"],
+    "odoo_modules": {
+      "core": ["repair", "stock", "sale_management", "account"],
+      "recommended": ["point_of_sale", "purchase", "fleet", "hr_timesheet"],
+      "optional": ["barcode", "website_sale", "helpdesk", "crm"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT, ZATCA KSA, AED, insurance-job invoicing context",
+    "typical_kpis": ["Bay/technician utilisation", "Parts vs labour margin", "Average repair order value", "Parts turnover", "Comeback/rework rate"],
+    "common_customizations": ["Job-card with parts + labour costing", "Vehicle service-history record", "Insurance/warranty claim flow", "Technician productivity report"]
+  },
+  "logistics": {
+    "name": "Logistics & 3PL",
+    "aliases": ["logistics", "freight", "forwarding", "3pl", "warehouse", "transport", "shipping", "courier", "supply chain", "distribution centre"],
+    "key_processes": ["Inbound/outbound warehouse ops", "Order fulfilment & dispatch", "Fleet & delivery management", "Freight & forwarding jobs", "Billing per shipment/service", "Procurement of services"],
+    "common_pains": ["No real-time warehouse visibility", "Manual freight job costing", "Fleet utilisation & cost control", "Per-client billing complexity", "Delivery proof & exceptions"],
+    "odoo_modules": {
+      "core": ["stock", "sale_management", "purchase", "account"],
+      "recommended": ["delivery", "fleet", "barcode", "stock_landed_costs", "project"],
+      "optional": ["website_sale", "helpdesk", "hr_timesheet", "iot"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT, ZATCA KSA, AED + multi-currency for international freight, customs context",
+    "typical_kpis": ["On-time delivery %", "Warehouse throughput", "Fleet utilisation", "Cost per shipment", "Order accuracy", "Revenue per client"],
+    "common_customizations": ["Freight job costing", "Per-client rate cards & billing", "Proof-of-delivery capture", "Fleet cost & maintenance tracking", "WMS picking optimisation"]
+  },
+  "real_estate": {
+    "name": "Real Estate & Property Management",
+    "aliases": ["real estate", "property", "property management", "leasing", "facilities", "developer", "landlord", "owners association", "fm"],
+    "key_processes": ["Lease & tenancy management", "Recurring rent invoicing", "Facilities & maintenance requests", "Service-charge billing", "Procurement of FM services", "Property & unit accounting"],
+    "common_pains": ["Manual recurring rent & renewals", "Maintenance request backlog", "Service-charge reconciliation", "No unit-level profitability", "Collections & arrears"],
+    "odoo_modules": {
+      "core": ["account", "sale_subscription", "maintenance", "project"],
+      "recommended": ["sale_management", "purchase", "documents", "helpdesk"],
+      "optional": ["sign", "website", "fleet", "hr"]
+    },
+    "gcc_localization": "l10n_ae / l10n_sa, 5% VAT on commercial leases (residential often exempt), ZATCA KSA, AED, Ejari/RERA context in UAE",
+    "typical_kpis": ["Occupancy rate", "Rent collection %", "Arrears outstanding", "Maintenance SLA", "Service-charge recovery", "Unit-level NOI"],
+    "common_customizations": ["Lease contract & auto-renewal billing", "Service-charge apportionment", "Maintenance/FM request portal", "Tenant statement & arrears report", "Property/unit P&L"]
+  }
+}

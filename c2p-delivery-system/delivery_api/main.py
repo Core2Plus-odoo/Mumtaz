@@ -30,6 +30,7 @@ from store import EngagementStore
 from knowledge import KnowledgeService
 from sync import writeback
 from odoo import get_client
+import industry
 import llm
 
 MODEL = llm.DEFAULT_MODEL  # the model is config, owned by llm.py
@@ -101,6 +102,22 @@ def _maybe_modules(eng: Engagement, override: str | None) -> str:
     return "Not specified"
 
 
+def _industry_for(eng: Engagement, override: str | None = None) -> str | None:
+    """Resolve the engagement's industry from an override, the presales profile,
+    or the linked account — so later stages still get the playbook."""
+    if override:
+        return override
+    pre = eng.stages.get("presales") or {}
+    ind = (pre.get("company_profile") or {}).get("industry")
+    if ind:
+        return ind
+    if eng.account_id:
+        acc = store.get_account(eng.account_id)
+        if acc and acc.industry:
+            return acc.industry
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # Engagement lifecycle
 # --------------------------------------------------------------------------- #
@@ -129,6 +146,7 @@ def presales(eng_id: str, body: m.PresalesIn):
         f"Company: {eng.company}\nCountry: {body.country}\n"
         f"Industry: {body.industry or 'Unknown'}\n\n"
         f"Discovery notes:\n{body.notes}\n\nQualify and return the JSON."
+        + industry.playbook_block(body.industry)
         + ks.context_block(eng.account_id, body.industry or eng.company)
     )
     out = run_agent("presales", content, account_id=eng.account_id, engagement_id=eng.id)
@@ -158,8 +176,10 @@ def proposal(eng_id: str, body: m.ProposalIn):
         f"Presales / discovery output:\n{_prior(eng, 'presales')}\n\n"
         f"Extra direction: {body.instructions or 'none'}\n\n"
         "Produce the scoped proposal JSON."
+        + industry.playbook_block(_industry_for(eng))
+        + ks.context_block(eng.account_id, "proposal scope modules")
     )
-    out = run_agent("proposal", content)
+    out = run_agent("proposal", content, account_id=eng.account_id, engagement_id=eng.id)
     eng.stages["proposal"] = out
     return _commit(eng, "proposal", out)
 
@@ -175,8 +195,9 @@ def project(eng_id: str, body: m.ProjectIn):
         f"Approved proposal output:\n{_prior(eng, 'proposal')}\n\n"
         f"Extra direction: {body.instructions or 'none'}\n\n"
         "Produce the implementation plan JSON."
+        + industry.playbook_block(_industry_for(eng))
     )
-    out = run_agent("project", content)
+    out = run_agent("project", content, account_id=eng.account_id, engagement_id=eng.id)
     eng.stages["project"] = out
     return _commit(eng, "project", out)
 
@@ -193,6 +214,7 @@ def functional(eng_id: str, body: m.FunctionalIn):
         f"- Odoo version: {body.odoo_version}\n- Country/region: {body.country}\n"
         f"- Industry: {body.industry or 'Not specified'}\n"
         f"- Installed modules: {modules}\n\nAnalyse and return the JSON."
+        + industry.playbook_block(body.industry or _industry_for(eng))
         + ks.context_block(eng.account_id, body.requirement)
     )
     out = run_agent("functional", content, account_id=eng.account_id, engagement_id=eng.id)
@@ -394,6 +416,20 @@ def infra_recommend(body: m.InfraIn):
             learned_by="sysadmin",
         )
     return out
+
+
+@app.get("/industries")
+def industries():
+    """The industry playbook library agents use to ground scope and modules."""
+    return industry.list_industries()
+
+
+@app.get("/industries/{key}")
+def industry_detail(key: str):
+    p = industry.get(key)
+    if not p:
+        raise HTTPException(status_code=404, detail="Industry not found")
+    return p
 
 
 @app.get("/runs")

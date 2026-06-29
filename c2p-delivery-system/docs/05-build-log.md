@@ -75,5 +75,19 @@ cd /opt/mumtaz/c2p-delivery-system/delivery_api
 - Loads the account knowledge slice when `account_id` is given and writes an
   `infra_recommendation` knowledge entry back.
 
+### Add-on: Industry playbook library ✅
+- `data/industry_playbooks.json` — 11 GCC-relevant industries (manufacturing,
+  trading/distribution, retail/e-commerce, FMCG, food & beverage, construction/
+  contracting, healthcare, professional services, automotive, logistics/3PL,
+  real estate). Each: key processes, common pains, **required Odoo modules
+  (core/recommended/optional)**, GCC localisation (VAT/ZATCA/WPS), KPIs, and
+  common customizations. Open, portable JSON — owned deterministic knowledge.
+- `industry.py`: `match_industry`, `playbook_block`, `list_industries`, `get`.
+- Wired into **presales, proposal, project, functional** — each injects the
+  matched industry playbook so proposals name the right modules and project
+  plans are grounded. Industry resolves from the request, the presales profile,
+  or the linked account.
+- Endpoints: `GET /industries`, `GET /industries/{key}`. Tests added.
+
 **Next:** Phase 2 — outreach + the approval layer (no client-facing send exists
 until the approval gate does).

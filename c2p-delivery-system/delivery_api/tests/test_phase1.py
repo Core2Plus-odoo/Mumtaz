@@ -10,7 +10,25 @@ import pytest
 from models import Account, Engagement, KnowledgeEntry
 from store import EngagementStore
 from knowledge import KnowledgeService
+import industry
 import llm
+
+
+# ── Industry playbook library ─────────────────────────────────────────────
+def test_industry_matching():
+    assert industry.match_industry("furniture manufacturer / cabinet maker") == "manufacturing"
+    assert industry.match_industry("wholesale distribution") == "trading_distribution"
+    assert industry.match_industry("chain of restaurants") == "food_beverage"
+    assert industry.match_industry("MEP contracting") == "construction_contracting"
+    assert industry.match_industry("") is None
+    assert industry.match_industry("something unrelated zzz") is None
+
+
+def test_industry_playbook_block_has_modules():
+    block = industry.playbook_block("manufacturing")
+    assert "INDUSTRY PLAYBOOK" in block and "mrp" in block
+    assert industry.playbook_block(None) == ""
+    assert len(industry.list_industries()) >= 10
 
 
 @pytest.fixture()
