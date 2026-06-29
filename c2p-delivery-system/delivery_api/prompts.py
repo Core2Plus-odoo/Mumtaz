@@ -311,17 +311,19 @@ PROMPTS = {
     "developer": DEVELOPER_PROMPT,
 }
 
-# Larger budget for the code-generating developer stage.
+# Output budgets. Headroom matters: stages that consume the industry playbook +
+# client knowledge + prior-stage output produce longer JSON, and a truncated
+# reply fails to parse. Keep these generous; the developer stage gets the most.
 MAX_TOKENS = {
-    "prospect": 3072,
-    "research": 3072,
-    "sysadmin": 2048,
-    "outreach": 2048,
-    "comms": 2048,
-    "supervisor": 2048,
-    "presales": 2048,
-    "proposal": 3072,
-    "project": 3072,
-    "functional": 2048,
-    "developer": 4096,
+    "prospect": 4096,
+    "research": 4096,
+    "sysadmin": 3072,
+    "outreach": 2560,
+    "comms": 2560,
+    "supervisor": 3072,
+    "presales": 3072,
+    "proposal": 4096,
+    "project": 4096,
+    "functional": 3072,
+    "developer": 8192,
 }
