@@ -6,7 +6,7 @@
 <title>C2P · Delivery Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
@@ -17,7 +17,7 @@
     --code-bg:#1e2429;--code-line:#2c343b;--code-text:#d7dde2;--code-gutter:#5b6670;
     --shadow:0 1px 2px rgba(35,40,43,.04),0 8px 24px rgba(35,40,43,.06);
     --shadow-lg:0 12px 40px rgba(35,40,43,.16);
-    --display:'Space Grotesk',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+    --display:'Fraunces',Georgia,serif;--body:'DM Sans',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
     --sb:248px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -28,10 +28,11 @@
   /* ---------- app shell ---------- */
   .app{display:grid;grid-template-columns:var(--sb) 1fr;min-height:100vh}
   .sidebar{background:linear-gradient(180deg,var(--ink),var(--ink-2));color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
-  .sb-brand{display:flex;align-items:center;gap:11px;padding:18px 18px 16px}
-  .mark{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,var(--teal),var(--deep-teal));font-family:var(--display);font-weight:700;font-size:15px;color:#04201f}
-  .sb-brand .name{font-family:var(--display);font-weight:600;font-size:15px}
-  .sb-brand .sub{font-size:10.5px;color:rgba(255,255,255,.45);letter-spacing:.2px}
+  .sb-brand{padding:18px 18px 4px}
+  .sb-logo{height:34px;width:auto;display:block}
+  .sb-strap{padding:0 18px 14px;display:flex;flex-direction:column;gap:1px}
+  .sb-strap b{font-family:var(--body);font-weight:600;font-size:13px;color:#fff}
+  .sb-strap span{font-family:var(--mono);font-size:9px;letter-spacing:.6px;color:var(--teal);text-transform:none}
 
   .sb-eng{margin:4px 12px 10px;padding:11px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:11px}
   .sb-eng .lbl{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
@@ -264,9 +265,14 @@
     <!-- ===== sidebar ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sb-brand">
-        <div class="mark">C2</div>
-        <div><div class="name">Delivery Console</div><div class="sub">C2P CONSULTANTS</div></div>
+        <svg class="sb-logo" viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants">
+          <text x="0" y="54" font-family="'DM Sans',sans-serif" font-weight="700" font-size="56" fill="#fff">C2P</text>
+          <text x="3" y="80" font-family="'DM Sans',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="#fff">Consultants</text>
+          <g fill="none" stroke="#00B3B3" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g>
+        </svg>
       </div>
+      <div class="sb-strap"><b>Delivery Console</b><span>Beyond the Core.</span></div>
       <div class="sb-eng">
         <div class="lbl">Engagement</div>
         <select id="engSelect" onchange="selectEngagement(this.value)"></select>
@@ -323,15 +329,17 @@ const VERDICTS={standard:{label:"Standard",color:"#1f9d6b"},configurable:{label:
 const LADDER=["standard","configurable","studio","custom"];
 const LNAME={standard:"Config",configurable:"Workflows",studio:"Studio",custom:"Module"};
 
-/* Branding for generated documents — swap these for your real brand assets. */
+/* C2P Consultants brand — used in the console and generated documents. */
 const BRAND={
   name:"C2P Consultants",
-  tagline:"Odoo Delivery",
-  mark:"C2",
-  accent:"#00B3B3", accentDark:"#008080", ink:"#23282b",
-  contact:"core2plus.com",
+  legal:"C2P Consultants FZC LLC",
+  tagline:"Beyond the Core.",
+  accent:"#00B3B3", accentDark:"#008080", ink:"#2E2E2E",
+  contact:"core2plus.com · info@core2plus.com · +971 58 128 2057",
+  address:"Ajman Free Zone, UAE · Trade Licence 34241",
   confidential:"Confidential — prepared for the named client only.",
 };
+function logoSVG(c){return `<svg viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants" style="height:100%;width:auto"><text x="0" y="54" font-family="'DM Sans',sans-serif" font-weight="700" font-size="56" fill="${c}">C2P</text><text x="3" y="80" font-family="'DM Sans',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="${c}">Consultants</text><g fill="none" stroke="#00B3B3" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g></svg>`;}
 
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function aed(n){try{return "AED "+Number(n).toLocaleString("en-AE");}catch(e){return "AED "+n;}}
@@ -825,11 +833,12 @@ function _dt(){try{return new Date(eng.created_at).toLocaleDateString('en-GB',{d
 function docList(arr){return `<ul>${(arr||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;}
 function docCss(){return `
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter','Segoe UI',sans-serif;color:${BRAND.ink};font-size:11.5px;line-height:1.6}
-  h1,h2,h3{font-family:'Space Grotesk','Segoe UI',sans-serif;letter-spacing:-.2px}
+  body{font-family:'DM Sans','Segoe UI',sans-serif;color:${BRAND.ink};font-size:11.5px;line-height:1.6}
+  h1,h2{font-family:'Fraunces',Georgia,serif;letter-spacing:-.2px}
+  h3{letter-spacing:-.2px}
   .page{padding:34mm 22mm 26mm;position:relative;min-height:100vh}
   .cover{display:flex;flex-direction:column;justify-content:center;min-height:86vh;page-break-after:always}
-  .mark{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${BRAND.accent},${BRAND.accentDark});color:#04201f;font-family:'Space Grotesk';font-weight:700;font-size:22px}
+  .mark{width:54px;height:54px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${BRAND.accent},${BRAND.accentDark});color:#04201f;font-family:'Fraunces',serif;font-weight:700;font-size:22px}
   .cover .kicker{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:${BRAND.accentDark};margin:26px 0 10px}
   .cover h1{font-size:38px;line-height:1.1;margin-bottom:8px}
   .cover .co{font-size:19px;color:#555;margin-top:18px}
@@ -849,12 +858,12 @@ function docCss(){return `
   th{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#999}
   td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   tr.tot td{border-top:2px solid #ccc;font-weight:700}
-  .pill{display:inline-block;font-family:'Space Grotesk';font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#fff;padding:4px 11px;border-radius:6px}
+  .pill{display:inline-block;font-family:'Fraunces',serif;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#fff;padding:4px 11px;border-radius:6px}
   .box{background:#f7f8f7;border:1px solid #e6e9e8;border-left:3px solid ${BRAND.accent};border-radius:8px;padding:12px 15px;margin:8px 0}
   .kpi-row{display:flex;gap:12px;margin:10px 0 4px}
   .kpi{flex:1;border:1px solid #e6e9e8;border-radius:9px;padding:11px 13px}
   .kpi .k{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.6px;text-transform:uppercase;color:#999}
-  .kpi .v{font-family:'Space Grotesk';font-weight:600;font-size:18px;margin-top:5px}
+  .kpi .v{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin-top:5px}
   .foot{position:fixed;bottom:10mm;left:22mm;right:22mm;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#aaa;border-top:1px solid #eee;padding-top:6px}
   @page{size:A4;margin:0}
   @media print{.foot{position:fixed}}
@@ -876,10 +885,10 @@ function docProp(o){const total=(o.effort_estimate||[]).reduce((s,r)=>s+(+r.man_
   <div class="two"><div><h3>In scope</h3>${docList(o.in_scope)}</div><div><h3>Out of scope</h3>${docList(o.out_of_scope)}</div></div>
   <h3>Phases</h3>${(o.phases||[]).map(p=>`<p><b>${esc(p.name)}</b></p>${docList(p.deliverables)}`).join('')}
   <h3>Effort estimate</h3><table><thead><tr><th>Workstream</th><th>Role</th><th class="n">Man-days</th></tr></thead><tbody>${(o.effort_estimate||[]).map(r=>`<tr><td>${esc(r.workstream)}</td><td>${esc(r.role)}</td><td class="n">${esc(r.man_days)}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td></td><td class="n">${total}</td></tr></tbody></table>
-  <h3>Commercial</h3><div class="box"><span style="font-family:'Space Grotesk';font-weight:700;font-size:18px">${esc(aed(o.commercial?.estimate_aed))}</span> · ${esc(o.commercial?.pricing_model||'')}<br><span style="color:#777">${esc(o.commercial?.vat_note||'')} — ${esc(o.commercial?.licensing_note||'')}</span></div>
+  <h3>Commercial</h3><div class="box"><span style="font-family:'Fraunces',serif;font-weight:700;font-size:18px">${esc(aed(o.commercial?.estimate_aed))}</span> · ${esc(o.commercial?.pricing_model||'')}<br><span style="color:#777">${esc(o.commercial?.vat_note||'')} — ${esc(o.commercial?.licensing_note||'')}</span></div>
   <div class="two"><div><h3>Assumptions</h3>${docList(o.assumptions)}</div><div><h3>Success criteria</h3>${docList(o.success_criteria)}</div></div>`;}
 function docProj(o){return `<div class="sec-head"><div class="role">Delivery Lead · Implementation</div><h2>Implementation Plan</h2></div>
-  <p style="font-size:14px;font-family:'Space Grotesk';font-weight:600">${esc(o.project_name||'')}</p>
+  <p style="font-size:14px;font-family:'Fraunces',serif;font-weight:600">${esc(o.project_name||'')}</p>
   ${(o.phases||[]).map(p=>`<h3>${esc(p.name)} · ${esc(p.weeks)} wks</h3><p style="color:#777">${esc(p.milestone||'')}</p><table><tbody>${(p.tasks||[]).map(t=>`<tr><td>${esc(t.name)}</td><td style="color:#888">${esc(t.workstream||'')}</td><td style="color:#888">${esc(t.owner_role||'')}</td></tr>`).join('')}</tbody></table>`).join('')}
   <div class="two"><div><h3>Risks</h3>${docList(o.raid?.risks)}</div><div><h3>Dependencies</h3>${docList(o.raid?.dependencies)}</div></div>
   <h3>Governance</h3><div class="box">${esc(o.governance?.cadence||'')} · ${esc(o.governance?.steering||'')} · ${esc(o.governance?.reporting||'')}</div>`;}
@@ -904,15 +913,15 @@ function buildDossierHTML(e,only){
   }).join('');
   const single=only&&only.length===1;
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(e.company)} — ${single?esc(STAGES.find(s=>s.id===only[0]).doc):'Engagement Dossier'}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>${docCss()}</style></head><body>
   ${single?'':`<div class="cover"><div class="page" style="display:flex;flex-direction:column;min-height:88vh">
-    <div class="mark">${esc(BRAND.mark)}</div>
-    <div class="kicker">${esc(BRAND.name)} · ${esc(BRAND.tagline)}</div>
+    <div style="height:50px;margin-bottom:6px">${logoSVG(BRAND.ink)}</div>
+    <div class="kicker">${esc(BRAND.tagline)} · ERP &amp; Business Consulting</div>
     <h1>Engagement<br>Dossier</h1>
     <div class="co">${esc(e.company)}</div>
     <div class="meta"><span>Engagement ${esc(e.id)}</span>${e.odoo_db?`<span>Odoo · ${esc(e.odoo_db)}</span>`:''}<span>${_dt()}</span></div>
-    <div class="by">Prepared by <b>${esc(BRAND.name)}</b> · ${esc(BRAND.contact)}</div>
+    <div class="by">Prepared by <b>${esc(BRAND.legal)}</b><br>${esc(BRAND.address)}<br>${esc(BRAND.contact)}</div>
   </div></div>`}
   ${secs||`<div class="page"><p>No completed stages to document yet.</p></div>`}
   <div class="foot"><span>${esc(BRAND.name)} · ${esc(e.company)}</span><span>${esc(BRAND.confidential)}</span></div>
