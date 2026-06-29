@@ -10,63 +10,87 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --charcoal:#2E2E2E;--ink:#23282b;--teal:#00B3B3;--deep-teal:#008080;
+    --charcoal:#2E2E2E;--ink:#23282b;--ink-2:#2b3136;--teal:#00B3B3;--deep-teal:#008080;
     --paper:#F7F8F7;--surface:#fff;--line:#E2E6E5;--line-soft:#EDF0EF;
-    --muted:#6c7470;--muted-2:#9aa19d;--green:#1f9d6b;--amber:#c98a1e;--rust:#c2492f;--purple:#534AB7;
+    --muted:#6c7470;--muted-2:#9aa19d;--green:#1f9d6b;--amber:#c98a1e;--rust:#c2492f;--purple:#534AB7;--blue:#2f6fc2;
     --code-bg:#1e2429;--code-line:#2c343b;--code-text:#d7dde2;--code-gutter:#5b6670;
     --shadow:0 1px 2px rgba(35,40,43,.04),0 8px 24px rgba(35,40,43,.06);
+    --shadow-lg:0 12px 40px rgba(35,40,43,.16);
     --display:'Space Grotesk',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+    --sb:248px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:var(--body);color:var(--charcoal);background:var(--paper);-webkit-font-smoothing:antialiased;line-height:1.5;min-height:100vh}
   ::selection{background:rgba(0,179,179,.18)}
+  a{color:inherit}
 
-  header{display:flex;align-items:center;gap:14px;padding:13px 22px;background:var(--ink);color:#fff}
-  .mark{width:32px;height:32px;border-radius:8px;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,var(--teal),var(--deep-teal));font-family:var(--display);font-weight:700;font-size:14px;color:#04201f}
-  .brand .name{font-family:var(--display);font-weight:600;font-size:15px}
-  .brand .sub{font-size:11px;color:rgba(255,255,255,.5)}
-  .hspace{flex:1}
-  .api-chip{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.14);padding:5px 10px;border-radius:999px;cursor:pointer}
-  .api-dot{width:7px;height:7px;border-radius:50%;background:var(--muted-2)}
-  .api-dot.ok{background:var(--green)}.api-dot.bad{background:var(--rust)}
-  .api-input{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:4px 7px;width:200px;outline:none}
+  /* ---------- app shell ---------- */
+  .app{display:grid;grid-template-columns:var(--sb) 1fr;min-height:100vh}
+  .sidebar{background:linear-gradient(180deg,var(--ink),var(--ink-2));color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .sb-brand{display:flex;align-items:center;gap:11px;padding:18px 18px 16px}
+  .mark{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;background:linear-gradient(135deg,var(--teal),var(--deep-teal));font-family:var(--display);font-weight:700;font-size:15px;color:#04201f}
+  .sb-brand .name{font-family:var(--display);font-weight:600;font-size:15px}
+  .sb-brand .sub{font-size:10.5px;color:rgba(255,255,255,.45);letter-spacing:.2px}
 
-  /* engagement bar */
-  .engbar{display:flex;align-items:center;gap:12px;padding:12px 22px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .eng-active{display:flex;align-items:center;gap:10px}
-  .eng-co{font-family:var(--display);font-weight:600;font-size:15px;color:var(--charcoal)}
-  .eng-id{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
-  .eng-db{font-family:var(--mono);font-size:11px;background:rgba(201,138,30,.13);color:var(--amber);padding:3px 8px;border-radius:6px}
+  .sb-eng{margin:4px 12px 10px;padding:11px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:11px}
+  .sb-eng .lbl{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:6px}
+  .sb-eng select{width:100%;font-family:var(--body);font-size:12.5px;color:#fff;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 9px;outline:none}
+  .sb-eng select option{color:#1a1a1a}
+  .sb-eng .row{display:flex;gap:7px;margin-top:8px}
+  .sb-eng .db{font-family:var(--mono);font-size:10px;color:var(--amber);background:rgba(201,138,30,.16);border:1px solid rgba(201,138,30,.3);padding:3px 7px;border-radius:6px}
+  .sb-eng .nodb{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4)}
+
+  .nav{flex:1;overflow-y:auto;padding:6px 10px}
+  .nav-sec{font-family:var(--mono);font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.32);padding:12px 10px 6px}
+  .nav-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;color:rgba(255,255,255,.72);font-family:var(--body);font-size:13.5px;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;position:relative}
+  .nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+  .nav-item.active{background:rgba(0,179,179,.16);color:#fff}
+  .nav-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--teal)}
+  .ni-ico{width:18px;text-align:center;flex:none;opacity:.9}
+  .ni-name{flex:1}
+  .ni-st{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.2);flex:none;display:grid;place-items:center;font-size:10px;color:#fff}
+  .ni-st.done{background:var(--green);border-color:var(--green)}
+  .ni-st.running{border-color:var(--teal);border-top-color:transparent;animation:spin .7s linear infinite}
+  .ni-count{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.55);background:rgba(255,255,255,.08);padding:1px 6px;border-radius:20px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .sb-foot{padding:11px 14px;border-top:1px solid rgba(255,255,255,.08)}
+  .api-chip{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:rgba(255,255,255,.6);cursor:pointer}
+  .api-dot{width:8px;height:8px;border-radius:50%;background:var(--muted-2);flex:none}
+  .api-dot.ok{background:var(--green);box-shadow:0 0 0 3px rgba(31,157,107,.18)}.api-dot.bad{background:var(--rust);box-shadow:0 0 0 3px rgba(194,73,47,.18)}
+  .api-input{font-family:var(--mono);font-size:10.5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;border-radius:6px;padding:4px 7px;width:100%;outline:none}
+
+  /* ---------- main ---------- */
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 26px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+  .tb-title{font-family:var(--display);font-weight:600;font-size:17px;color:var(--charcoal);letter-spacing:-.3px}
+  .tb-sub{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+  .tb-prog{display:flex;align-items:center;gap:9px;margin-left:6px}
+  .tb-bar{width:130px;height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+  .tb-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--deep-teal));border-radius:6px;transition:width .4s ease}
+  .tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .menu-btn{display:none}
+
+  .content{padding:22px 26px 60px;max-width:1120px;width:100%}
   select,input[type=text],textarea{font-family:var(--body);font-size:13.5px;color:var(--charcoal);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none;transition:border-color .15s,box-shadow .15s}
   select:focus,input:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,179,179,.12)}
   textarea{font-family:var(--mono);font-size:12.5px;line-height:1.55;resize:vertical;width:100%}
-  .btn{font-family:var(--body);font-weight:600;font-size:12.5px;border-radius:9px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--charcoal);display:inline-flex;align-items:center;gap:7px;transition:border-color .12s,background .12s}
+  .btn{font-family:var(--body);font-weight:600;font-size:12.5px;border-radius:9px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--charcoal);display:inline-flex;align-items:center;gap:7px;transition:border-color .12s,background .12s,transform .06s}
   .btn:hover{border-color:var(--teal)}
+  .btn:active{transform:translateY(1px)}
   .btn.primary{background:linear-gradient(135deg,var(--teal),var(--deep-teal));color:#04201f;border:none}
   .btn.primary:hover{filter:brightness(1.05)}
   .btn.dark{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:6px 10px;font-size:11.5px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .btn.copied{border-color:var(--green);color:var(--green)}
 
-  /* pipeline rail */
-  .rail{display:flex;gap:8px;padding:16px 22px 0;flex-wrap:wrap}
-  .stage-chip{flex:1;min-width:130px;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:border-color .12s,box-shadow .12s}
-  .stage-chip:hover{border-color:var(--teal)}
-  .stage-chip.active{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,179,179,.1)}
-  .chip-status{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:11px;color:#fff}
-  .chip-status.done{background:var(--green);border-color:var(--green)}
-  .chip-status.running{border-color:var(--teal);border-top-color:transparent;animation:spin .7s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .chip-meta .c-name{font-family:var(--display);font-weight:600;font-size:13.5px;color:var(--charcoal)}
-  .chip-meta .c-kind{font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase}
-  .kind-win{color:var(--deep-teal)}.kind-build{color:var(--purple)}
-
-  /* stage panel */
-  .panel-wrap{padding:18px 22px 40px;max-width:1000px}
+  /* panel */
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
   .panel-head{padding:18px 20px;border-bottom:1px solid var(--line-soft);display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
   .panel-head h2{font-family:var(--display);font-weight:600;font-size:18px;color:var(--charcoal);letter-spacing:-.3px}
-  .panel-head p{font-size:13px;color:var(--muted);margin-top:3px;max-width:520px}
+  .panel-head p{font-size:13px;color:var(--muted);margin-top:3px;max-width:560px}
   .panel-head .run-area{margin-left:auto;display:flex;align-items:center;gap:10px}
   .panel-body{padding:20px}
   .input-block{margin-bottom:18px}
@@ -76,8 +100,9 @@
 
   .out{animation:rise .3s ease both}
   @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  @media(prefers-reduced-motion:reduce){.out{animation:none}}
-  .placeholder{color:var(--muted-2);font-size:13.5px;text-align:center;padding:36px 0}
+  @media(prefers-reduced-motion:reduce){.out,.view{animation:none}}
+  .view{animation:rise .25s ease both}
+  .placeholder{color:var(--muted-2);font-size:13.5px;text-align:center;padding:40px 0}
 
   .badge{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.3px;text-transform:uppercase;color:#fff;padding:6px 12px;border-radius:8px}
   .b-pursue,.b-done{background:var(--green)}.b-nurture{background:var(--amber)}.b-pass{background:var(--rust)}
@@ -109,6 +134,36 @@
 
   .callout{background:linear-gradient(180deg,rgba(0,179,179,.05),rgba(0,179,179,.02));border:1px solid rgba(0,179,179,.22);border-radius:11px;padding:13px 16px;font-size:13.5px}
   .callout b{color:var(--deep-teal)}
+
+  /* ---------- overview ---------- */
+  .ov-hero{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:18px}
+  @media(max-width:640px){.ov-hero{grid-template-columns:1fr;text-align:center;justify-items:center}}
+  .ring{--p:0;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--teal) calc(var(--p)*1%),var(--line) 0);position:relative}
+  .ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--surface)}
+  .ring .rv{position:relative;text-align:center}
+  .ring .rv b{font-family:var(--display);font-size:24px;color:var(--charcoal);display:block;line-height:1}
+  .ring .rv span{font-family:var(--mono);font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted-2)}
+  .ov-hero .co{font-family:var(--display);font-weight:600;font-size:22px;color:var(--charcoal);letter-spacing:-.4px}
+  .ov-hero .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted-2);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+  .ov-steps{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}
+  .ov-step{flex:1;min-width:92px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--paper)}
+  .ov-step .n{font-family:var(--display);font-weight:600;font-size:12.5px}
+  .ov-step .s{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;margin-top:3px}
+  .ov-step.done{border-color:rgba(31,157,107,.4);background:rgba(31,157,107,.05)} .ov-step.done .s{color:var(--green)}
+  .ov-step.idle .s{color:var(--muted-2)}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:13px;margin-bottom:18px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow)}
+  .kpi .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted-2)}
+  .kpi .v{font-family:var(--display);font-weight:600;font-size:22px;color:var(--charcoal);margin-top:7px;line-height:1.1}
+  .kpi .d{font-size:11.5px;color:var(--muted);margin-top:4px}
+  .kpi.accent{border-left:3px solid var(--teal)}
+
+  .odoo-rec{display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line-soft);border-radius:10px;margin-bottom:8px;background:var(--paper)}
+  .odoo-rec .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none;color:#fff;font-size:13px}
+  .odoo-rec .nm{flex:1;font-size:13px}
+  .odoo-rec .id{font-family:var(--mono);font-size:11px;color:var(--deep-teal);background:rgba(0,179,179,.1);padding:3px 8px;border-radius:6px}
+  .odoo-rec .pend{font-family:var(--mono);font-size:10.5px;color:var(--muted-2)}
 
   /* verdict ladder (functional) */
   .verdict-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
@@ -152,34 +207,105 @@
   .err{background:rgba(194,73,47,.05);border:1px solid rgba(194,73,47,.3);border-radius:11px;padding:13px 16px;font-size:13px;color:var(--charcoal)}
   .err b{color:var(--rust)}
   .spinner-sm{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .7s linear infinite}
+  .skel{background:linear-gradient(90deg,var(--line-soft) 25%,#f1f4f3 37%,var(--line-soft) 63%);background-size:400% 100%;animation:sh 1.3s ease infinite;border-radius:8px}
+  @keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+  /* odoo explorer */
+  .ox-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.ox-grid{grid-template-columns:1fr}}
+  .modlist{display:flex;flex-wrap:wrap;gap:6px;max-height:300px;overflow:auto;padding:4px}
+
+  /* toast */
+  .toasts{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:9px;max-width:340px}
+  .toast{background:var(--ink);color:#fff;border-radius:10px;padding:12px 15px;font-size:13px;box-shadow:var(--shadow-lg);display:flex;gap:10px;align-items:flex-start;animation:rise .2s ease both;border-left:3px solid var(--teal)}
+  .toast.ok{border-left-color:var(--green)}.toast.bad{border-left-color:var(--rust)}.toast.info{border-left-color:var(--blue)}
+  .toast .tx{flex:1;line-height:1.45}
+
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(20,24,26,.5);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:150;animation:rise .15s ease both;padding:20px}
+  .modal{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:440px;overflow:hidden}
+  .modal-h{padding:18px 20px 0}
+  .modal-h h3{font-family:var(--display);font-weight:600;font-size:18px}
+  .modal-h p{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .modal-b{padding:16px 20px 20px}
+  .modal-b .input-block{margin-bottom:13px}
+  .modal-f{display:flex;justify-content:flex-end;gap:9px;padding:0 20px 18px}
+
+  /* responsive sidebar */
+  @media(max-width:860px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:fixed;left:0;top:0;width:var(--sb);z-index:100;transform:translateX(-100%);transition:transform .22s ease}
+    .sidebar.open{transform:none}
+    .menu-btn{display:inline-flex}
+    .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:90;display:none}
+    .scrim.open{display:block}
+  }
+  @media print{
+    .sidebar,.topbar .tb-actions,.menu-btn,.run-area,.toasts{display:none!important}
+    .app{grid-template-columns:1fr}.content{max-width:none;padding:0}
+    .panel,.kpi,.ov-hero{box-shadow:none}
+  }
 </style>
 </head>
 <body>
-  <header>
-    <div class="mark">C2</div>
-    <div class="brand"><div class="name">Delivery Console</div><div class="sub">C2P Consultants · presales → developer</div></div>
-    <div class="hspace"></div>
-    <div class="api-chip" onclick="editApi()" id="apiChip"><span class="api-dot" id="apiDot"></span><span id="apiLabel">delivery-api</span></div>
-  </header>
+  <div class="app">
+    <!-- ===== sidebar ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="mark">C2</div>
+        <div><div class="name">Delivery Console</div><div class="sub">C2P CONSULTANTS</div></div>
+      </div>
+      <div class="sb-eng">
+        <div class="lbl">Engagement</div>
+        <select id="engSelect" onchange="selectEngagement(this.value)"></select>
+        <div class="row">
+          <button class="btn primary sm" style="flex:1" onclick="openNewEng()">+ New engagement</button>
+          <button class="btn sm ghost" onclick="loadEngagements(true)" title="Refresh" style="border-color:rgba(255,255,255,.16);color:rgba(255,255,255,.7)">↻</button>
+        </div>
+        <div id="engDb" style="margin-top:8px"></div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sb-foot">
+        <div class="api-chip" id="apiChip" onclick="editApi()"><span class="api-dot" id="apiDot"></span><span id="apiLabel">delivery-api</span></div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim" onclick="toggleSidebar(false)"></div>
 
-  <div class="engbar" id="engbar"></div>
-  <div class="rail" id="rail"></div>
-  <div class="panel-wrap"><div class="panel"><div class="panel-head" id="panelHead"></div><div class="panel-body" id="panelBody"></div></div></div>
+    <!-- ===== main ===== -->
+    <div class="main">
+      <div class="topbar">
+        <button class="btn ghost sm menu-btn" onclick="toggleSidebar(true)">☰</button>
+        <div>
+          <div class="tb-title" id="tbTitle">Delivery Console</div>
+          <div class="tb-sub" id="tbSub">No engagement selected</div>
+        </div>
+        <div class="tb-prog" id="tbProg" style="display:none">
+          <div class="tb-bar"><i id="tbBar" style="width:0%"></i></div>
+          <span class="tb-sub" id="tbPct">0%</span>
+        </div>
+        <div class="tb-actions" id="tbActions"></div>
+      </div>
+      <div class="content" id="content"></div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
 
 <script>
-let API_BASE = "/api";   // same-origin behind Nginx in production; editable via the chip
-let engagements = [];     // [{id, company, stages:[...]}]
-let eng = null;           // full current engagement {id, company, odoo_db, stages:{}}
-let activeStage = "presales";
+let API_BASE = localStorage.getItem("c2p_api") || "/api";
+let engagements = [];
+let eng = null;
+let activeView = "overview";          // 'overview' | stage id | 'odoo'
 let running = null;
 let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
+let odooModules = null, odooModFilter = "";
 
 const STAGES = [
-  {id:"presales",  name:"Presales",  kind:"win",   desc:"Qualify the opportunity and turn discovery into candidate requirements."},
-  {id:"proposal",  name:"Proposal",  kind:"win",   desc:"Turn discovery into a scoped, costed proposal."},
-  {id:"project",   name:"Project",   kind:"win",   desc:"Turn the won proposal into an Odoo implementation plan."},
-  {id:"functional",name:"Functional",kind:"build", desc:"Analyse a requirement against standard Odoo and assign a verdict."},
-  {id:"developer", name:"Developer", kind:"build", desc:"Build an installable module from a Custom-verdict spec."},
+  {id:"presales",  name:"Presales",  ico:"◎", group:"Win the work",  desc:"Qualify the opportunity and turn discovery into candidate requirements."},
+  {id:"proposal",  name:"Proposal",  ico:"◧", group:"Win the work",  desc:"Turn discovery into a scoped, costed proposal."},
+  {id:"project",   name:"Project",   ico:"◳", group:"Win the work",  desc:"Turn the won proposal into an Odoo implementation plan."},
+  {id:"functional",name:"Functional",ico:"◮", group:"Do the work",   desc:"Analyse a requirement against standard Odoo and assign a verdict."},
+  {id:"developer", name:"Developer", ico:"◆", group:"Do the work",   desc:"Build an installable module from a Custom-verdict spec."},
 ];
 const VERDICTS={standard:{label:"Standard",color:"#1f9d6b"},configurable:{label:"Configurable",color:"#00B3B3"},studio:{label:"Studio",color:"#c98a1e"},custom:{label:"Custom build",color:"#c2492f"}};
 const LADDER=["standard","configurable","studio","custom"];
@@ -188,6 +314,15 @@ const LNAME={standard:"Config",configurable:"Workflows",studio:"Studio",custom:"
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function aed(n){try{return "AED "+Number(n).toLocaleString("en-AE");}catch(e){return "AED "+n;}}
 
+/* ---------- toast ---------- */
+function toast(msg,type){
+  const wrap=document.getElementById('toasts');
+  const t=document.createElement('div');t.className='toast '+(type||'');
+  t.innerHTML=`<span style="flex:none">${type==='ok'?'✓':type==='bad'?'!':'›'}</span><span class="tx">${esc(msg)}</span>`;
+  wrap.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},type==='bad'?5200:3200);
+}
+
+/* ---------- api ---------- */
 async function api(method, path, body){
   const opt={method,headers:{"Content-Type":"application/json"}};
   if(body) opt.body=JSON.stringify(body);
@@ -195,86 +330,211 @@ async function api(method, path, body){
   if(!res.ok){let d;try{d=(await res.json()).detail;}catch(e){d=res.statusText;}throw new Error(d||("HTTP "+res.status));}
   return res.json();
 }
-
 async function pingHealth(){
   const dot=document.getElementById('apiDot');
-  try{const h=await api("GET","/health");dot.className="api-dot ok";document.getElementById('apiLabel').textContent="delivery-api · "+(h.model||"ok");}
-  catch(e){dot.className="api-dot bad";document.getElementById('apiLabel').textContent="delivery-api · offline";}
+  try{const h=await api("GET","/health");dot.className="api-dot ok";document.getElementById('apiLabel').textContent=(h.model||"online");}
+  catch(e){dot.className="api-dot bad";document.getElementById('apiLabel').textContent="offline";}
 }
 function editApi(){
   const chip=document.getElementById('apiChip');
   chip.innerHTML=`<input class="api-input" id="apiEdit" value="${esc(API_BASE)}">`;
   const inp=document.getElementById('apiEdit');inp.focus();inp.select();
-  const save=()=>{API_BASE=inp.value.trim().replace(/\/$/,"");renderApiChip();pingHealth();loadEngagements();};
+  const save=()=>{API_BASE=inp.value.trim().replace(/\/$/,"");localStorage.setItem("c2p_api",API_BASE);renderApiChip();pingHealth();loadEngagements();};
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')save();});
   inp.addEventListener('blur',save);
 }
 function renderApiChip(){document.getElementById('apiChip').innerHTML=`<span class="api-dot" id="apiDot"></span><span id="apiLabel">delivery-api</span>`;}
 
-async function loadEngagements(){
-  try{engagements=await api("GET","/engagements");}catch(e){engagements=[];}
-  renderEngBar();
+/* ---------- engagements ---------- */
+async function loadEngagements(notify){
+  try{engagements=await api("GET","/engagements");if(notify)toast("Engagements refreshed","info");}
+  catch(e){engagements=[];if(notify)toast("Could not reach delivery-api","bad");}
+  renderEngSelect();
 }
-function renderEngBar(){
-  const bar=document.getElementById('engbar');
-  const opts=engagements.map(e=>`<option value="${e.id}" ${eng&&eng.id===e.id?'selected':''}>${esc(e.company)} · ${e.id}</option>`).join('');
-  bar.innerHTML=`
-    <select onchange="selectEngagement(this.value)" style="min-width:240px">
-      <option value="">${engagements.length?'Select an engagement…':'No engagements yet'}</option>${opts}
-    </select>
-    <span style="color:var(--muted-2);font-size:12px">or</span>
-    <input type="text" id="newCo" placeholder="Company name" style="width:170px">
-    <input type="text" id="newDb" placeholder="Odoo DB (optional)" style="width:150px">
-    <button class="btn primary" onclick="createEngagement()">Start engagement</button>
-    ${eng?`<div class="eng-active" style="margin-left:auto"><span class="eng-co">${esc(eng.company)}</span>${eng.odoo_db?`<span class="eng-db">${esc(eng.odoo_db)}</span>`:''}<span class="eng-id">${eng.id}</span></div>`:''}
-  `;
-}
-async function createEngagement(){
-  const co=document.getElementById('newCo').value.trim();
-  if(!co){document.getElementById('newCo').focus();return;}
-  const db=document.getElementById('newDb').value.trim()||null;
-  try{const e=await api("POST","/engagements",{company:co,odoo_db:db});eng={...e,stages:e.stages||{}};await loadEngagements();renderAll();}
-  catch(err){alert("Could not create engagement: "+err.message+"\n\nIs delivery-api running and reachable at "+API_BASE+"?");}
+function renderEngSelect(){
+  const sel=document.getElementById('engSelect');
+  const opts=engagements.map(e=>`<option value="${e.id}" ${eng&&eng.id===e.id?'selected':''}>${esc(e.company)}</option>`).join('');
+  sel.innerHTML=`<option value="">${engagements.length?'Select…':'None yet'}</option>${opts}`;
 }
 async function selectEngagement(id){
-  if(!id){eng=null;renderAll();return;}
-  try{eng=await api("GET","/engagements/"+id);}catch(e){return;}
+  if(!id){eng=null;localStorage.removeItem("c2p_last");renderAll();return;}
+  try{eng=await api("GET","/engagements/"+id);localStorage.setItem("c2p_last",id);}
+  catch(e){toast("Could not load engagement","bad");return;}
+  if(activeView==='odoo')odooModules=null;
   renderAll();
 }
+async function createEngagement(co,db){
+  try{
+    const e=await api("POST","/engagements",{company:co,odoo_db:db||null});
+    eng={...e,stages:e.stages||{}};localStorage.setItem("c2p_last",eng.id);
+    await loadEngagements();activeView='presales';renderAll();
+    toast("Engagement created — start with Presales","ok");
+  }catch(err){toast("Could not create: "+err.message,"bad");}
+}
 
+/* ---------- new-engagement modal ---------- */
+function openNewEng(){
+  const m=document.createElement('div');m.className='modal-bg';m.id='engModal';
+  m.innerHTML=`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-h"><h3>New engagement</h3><p>The shared deal that threads all five stages.</p></div>
+    <div class="modal-b">
+      <div class="input-block"><label>Company name</label><input type="text" id="m_co" placeholder="e.g. Gulf Closets" style="width:100%"></div>
+      <div class="input-block"><label>Odoo database <span style="color:var(--muted-2);font-weight:400">(optional — enables live read + write-back)</span></label><input type="text" id="m_db" placeholder="e.g. Mumtaz_ERP" style="width:100%"></div>
+    </div>
+    <div class="modal-f"><button class="btn ghost" onclick="closeNewEng()">Cancel</button><button class="btn primary" onclick="submitNewEng()">Create</button></div>
+  </div>`;
+  m.onclick=closeNewEng;document.body.appendChild(m);
+  setTimeout(()=>{const i=document.getElementById('m_co');i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter')submitNewEng();});},0);
+}
+function closeNewEng(){const m=document.getElementById('engModal');if(m)m.remove();}
+function submitNewEng(){const co=val('m_co');if(!co){focus('m_co');return;}const db=val('m_db');closeNewEng();createEngagement(co,db);}
+
+/* ---------- progress ---------- */
 function stageDone(id){
   if(!eng||!eng.stages) return false;
   const v=eng.stages[id];
   return id==="functional" ? Array.isArray(v)&&v.length>0 : !!v;
 }
-function renderRail(){
-  document.getElementById('rail').innerHTML=STAGES.map(s=>{
-    const done=stageDone(s.id), run=running===s.id;
-    const status=run?`<div class="chip-status running"></div>`:done?`<div class="chip-status done">✓</div>`:`<div class="chip-status"></div>`;
-    return `<div class="stage-chip ${activeStage===s.id?'active':''}" onclick="goStage('${s.id}')">
-      ${status}<div class="chip-meta"><div class="c-name">${s.name}</div><div class="c-kind kind-${s.kind}">${s.kind==='win'?'win the work':'do the work'}</div></div></div>`;
-  }).join('');
+function doneCount(){return STAGES.filter(s=>stageDone(s.id)).length;}
+
+/* ---------- shell render ---------- */
+function renderAll(){renderEngSelect();renderEngDb();renderNav();renderTopbar();renderView();}
+function renderEngDb(){
+  const el=document.getElementById('engDb');
+  if(!eng){el.innerHTML='';return;}
+  el.innerHTML=eng.odoo_db?`<span class="db">⛁ ${esc(eng.odoo_db)}</span>`:`<span class="nodb">No Odoo DB linked</span>`;
 }
-function goStage(id){activeStage=id;renderRail();renderPanel();}
+function renderNav(){
+  const nav=document.getElementById('nav');
+  let html=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
+  let lastGroup="";
+  STAGES.forEach(s=>{
+    if(s.group!==lastGroup){html+=`<div class="nav-sec">${s.group}</div>`;lastGroup=s.group;}
+    const done=stageDone(s.id),run=running===s.id;
+    const st=run?`<span class="ni-st running"></span>`:done?`<span class="ni-st done">✓</span>`:`<span class="ni-st"></span>`;
+    const cnt=s.id==='functional'&&Array.isArray(eng?.stages?.functional)&&eng.stages.functional.length?`<span class="ni-count">${eng.stages.functional.length}</span>`:'';
+    html+=`<button class="nav-item ${activeView===s.id?'active':''}" onclick="goView('${s.id}')"><span class="ni-ico">${s.ico}</span><span class="ni-name">${s.name}</span>${cnt||st}</button>`;
+  });
+  html+=`<div class="nav-sec">Grounding</div>
+    <button class="nav-item ${activeView==='odoo'?'active':''}" onclick="goView('odoo')"><span class="ni-ico">⛁</span><span class="ni-name">Odoo Explorer</span></button>`;
+  nav.innerHTML=html;
+}
+function renderTopbar(){
+  const title=document.getElementById('tbTitle'),sub=document.getElementById('tbSub');
+  const prog=document.getElementById('tbProg'),actions=document.getElementById('tbActions');
+  if(!eng){
+    title.textContent="Delivery Console";sub.textContent="Select or create an engagement to begin";
+    prog.style.display='none';actions.innerHTML='';return;
+  }
+  title.textContent=eng.company;
+  sub.innerHTML=`${eng.id}${eng.odoo_db?' · '+esc(eng.odoo_db):''}${eng.created_at?' · '+new Date(eng.created_at).toLocaleDateString():''}`;
+  const pct=Math.round(doneCount()/STAGES.length*100);
+  prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';
+  actions.innerHTML=`
+    <button class="btn ghost sm" onclick="exportEngagement()" title="Download engagement JSON">⤓ Export</button>
+    <button class="btn ghost sm" onclick="window.print()" title="Print / save as PDF">⎙ Report</button>`;
+}
+function goView(v){activeView=v;toggleSidebar(false);renderNav();renderTopbar();renderView();window.scrollTo({top:0,behavior:'smooth'});}
+function toggleSidebar(open){document.getElementById('sidebar').classList.toggle('open',open);document.getElementById('scrim').classList.toggle('open',open);}
 
-function renderAll(){renderEngBar();renderRail();renderPanel();}
+/* ---------- view dispatch ---------- */
+function renderView(){
+  const c=document.getElementById('content');
+  if(activeView==='overview')return renderOverview(c);
+  if(activeView==='odoo')return renderOdoo(c);
+  return renderStageView(c);
+}
 
-function renderPanel(){
-  const s=STAGES.find(x=>x.id===activeStage);
+/* ---------- overview ---------- */
+function renderOverview(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">No engagement selected.<br><br><button class="btn primary" onclick="openNewEng()">+ New engagement</button></div></div></div>${recentList()}</div>`;return;}
+  const pct=Math.round(doneCount()/STAGES.length*100);
+  const ps=eng.stages?.presales, pr=eng.stages?.proposal, fns=eng.stages?.functional||[], dv=eng.stages?.developer;
+  const mandays=pr?(pr.effort_estimate||[]).reduce((s,r)=>s+(+r.man_days||0),0):null;
+  const customCount=fns.filter(f=>f.verdict==='custom').length;
+  const steps=STAGES.map(s=>`<div class="ov-step ${stageDone(s.id)?'done':'idle'}"><div class="n">${s.name}</div><div class="s">${stageDone(s.id)?'Complete':'Pending'}</div></div>`).join('');
+  const kpis=[
+    ps?{k:"ICP Fit",v:(ps.icp_fit?.score??'—')+'<span style="font-size:13px;color:var(--muted-2)">/100</span>',d:ps.recommendation?('Recommendation: '+ps.recommendation):'',a:true}:null,
+    pr?{k:"Proposal Value",v:pr.commercial?.estimate_aed?aed(pr.commercial.estimate_aed):'—',d:pr.commercial?.pricing_model||'',a:true}:null,
+    mandays!=null?{k:"Effort",v:mandays+'<span style="font-size:13px;color:var(--muted-2)"> md</span>',d:'Across '+(pr.phases?.length||0)+' phases'}:null,
+    fns.length?{k:"Requirements",v:fns.length,d:customCount+' need custom build'}:null,
+    dv?{k:"Module Files",v:(dv.files||[]).length,d:esc(dv.module_technical_name||'')}:null,
+  ].filter(Boolean);
+  const kpiHtml=kpis.length?`<div class="kpis">${kpis.map(k=>`<div class="kpi ${k.a?'accent':''}"><div class="k">${k.k}</div><div class="v">${k.v}</div>${k.d?`<div class="d">${esc(k.d)}</div>`:''}</div>`).join('')}</div>`:'';
+  const next=STAGES.find(s=>!stageDone(s.id));
+  c.innerHTML=`<div class="view">
+    <div class="ov-hero">
+      <div class="ring" style="--p:${pct}"><div class="rv"><b>${pct}%</b><span>complete</span></div></div>
+      <div>
+        <div class="co">${esc(eng.company)}</div>
+        <div class="meta"><span>${eng.id}</span>${eng.odoo_db?`<span style="color:var(--amber)">⛁ ${esc(eng.odoo_db)}</span>`:'<span>No Odoo DB</span>'}<span>${doneCount()}/${STAGES.length} stages</span></div>
+        <div class="ov-steps">${steps}</div>
+        ${next?`<div style="margin-top:14px"><button class="btn primary" onclick="goView('${next.id}')">Continue → ${next.name}</button></div>`:`<div style="margin-top:14px"><span class="badge b-done">Pipeline complete</span></div>`}
+      </div>
+    </div>
+    ${kpiHtml}
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><div><h2>Odoo records</h2><p>System-of-record links created as stages complete.</p></div></div>
+        <div class="panel-body">${odooRecords()}</div></div>
+      <div class="panel"><div class="panel-head"><div><h2>Activity</h2><p>What each completed stage produced.</p></div></div>
+        <div class="panel-body">${activitySummary()}</div></div>
+    </div>
+  </div>`;
+}
+function odooRecords(){
+  if(!eng.odoo_db) return `<div class="placeholder" style="padding:18px 0">This engagement has no Odoo DB, so nothing is written back.<br>Create one with a DB to enable live sync.</div>`;
+  const rows=[
+    {ic:'◎',c:'#1f9d6b',nm:'CRM Lead',id:eng.crm_lead_id},
+    {ic:'◧',c:'#534AB7',nm:'Sale Order',id:eng.sale_order_id},
+    {ic:'◳',c:'#2f6fc2',nm:'Project',id:eng.project_id},
+  ].map(r=>`<div class="odoo-rec"><div class="ic" style="background:${r.c}">${r.ic}</div><div class="nm">${r.nm}</div>${r.id?`<span class="id">#${r.id}</span>`:`<span class="pend">not yet</span>`}</div>`).join('');
+  const canSync=stageDone('presales')&&!eng.crm_lead_id;
+  return rows+(canSync?`<button class="btn sm" style="margin-top:6px" onclick="syncLead()">Push CRM lead to Odoo now</button>`:'');
+}
+async function syncLead(){
+  try{const r=await api("POST",`/engagements/${eng.id}/sync/lead`);eng.crm_lead_id=r.crm_lead_id;toast("CRM lead created in Odoo · #"+r.crm_lead_id,"ok");renderView();}
+  catch(e){toast("Sync failed: "+e.message,"bad");}
+}
+function activitySummary(){
+  const items=[];
+  if(eng.stages?.presales)items.push(['Presales','Qualified — '+(eng.stages.presales.recommendation||'')+' · '+((eng.stages.presales.candidate_requirements||[]).length)+' candidate requirements']);
+  if(eng.stages?.proposal)items.push(['Proposal','Scoped — '+(eng.stages.proposal.commercial?.estimate_aed?aed(eng.stages.proposal.commercial.estimate_aed):'priced')]);
+  if(eng.stages?.project)items.push(['Project',(eng.stages.project.project_name||'Plan')+' — '+((eng.stages.project.phases||[]).length)+' phases']);
+  if((eng.stages?.functional||[]).length)items.push(['Functional',eng.stages.functional.length+' requirement(s) analysed']);
+  if(eng.stages?.developer)items.push(['Developer',(eng.stages.developer.files||[]).length+' files generated']);
+  if(!items.length)return `<div class="placeholder" style="padding:18px 0">Nothing run yet. Start with Presales.</div>`;
+  return items.map(([s,t])=>`<div class="odoo-rec"><div class="ic" style="background:var(--deep-teal)">✓</div><div class="nm"><b>${s}</b> · <span style="color:var(--muted)">${esc(t)}</span></div></div>`).join('');
+}
+function recentList(){
+  if(!engagements.length)return '';
+  return `<div class="panel" style="margin-top:16px"><div class="panel-head"><div><h2>Recent engagements</h2></div></div><div class="panel-body">${
+    engagements.slice(0,8).map(e=>`<div class="odoo-rec" style="cursor:pointer" onclick="selectEngagement('${e.id}')"><div class="ic" style="background:var(--charcoal)">${esc((e.company||'?')[0].toUpperCase())}</div><div class="nm">${esc(e.company)}</div><span class="pend">${(e.stages||[]).length} stage(s)</span></div>`).join('')
+  }</div></div>`;
+}
+function exportEngagement(){
+  if(!eng)return;
+  const blob=new Blob([JSON.stringify(eng,null,2)],{type:"application/json"});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(eng.company||'engagement').replace(/\s+/g,'_')+'_'+eng.id+'.json';a.click();URL.revokeObjectURL(a.href);
+  toast("Engagement exported","ok");
+}
+
+/* ---------- stage view ---------- */
+function renderStageView(c){
+  const s=STAGES.find(x=>x.id===activeView);
+  c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head" id="panelHead"></div><div class="panel-body" id="panelBody"></div></div></div>`;
   document.getElementById('panelHead').innerHTML=`<div><h2>${s.name}</h2><p>${s.desc}</p></div><div class="run-area" id="runArea"></div>`;
   const body=document.getElementById('panelBody');
   if(!eng){body.innerHTML=`<div class="placeholder">Start or select an engagement to begin.</div>`;document.getElementById('runArea').innerHTML='';return;}
-  INPUTS[activeStage](body);
+  INPUTS[activeView](body);
   renderRunBtn();
-  const out=eng.stages?eng.stages[activeStage]:null;
+  const out=eng.stages?eng.stages[activeView]:null;
   const outEl=document.createElement('div');outEl.id="stageOut";body.appendChild(outEl);
-  if(out){ if(activeStage==='functional'){RENDER.functional(outEl,out[out.length-1]);} else {RENDER[activeStage](outEl,out);} }
+  if(out){ if(activeView==='functional'){RENDER.functional(outEl,out[out.length-1]);} else {RENDER[activeView](outEl,out);} }
 }
-
 function renderRunBtn(){
-  const area=document.getElementById('runArea');
-  const run=running===activeStage;
-  area.innerHTML=`<button class="btn primary" id="runBtn" onclick="runStage()" ${run?'disabled':''}>${run?'<span class="spinner-sm"></span> Running…':'Run '+STAGES.find(x=>x.id===activeStage).name}</button>`;
+  const area=document.getElementById('runArea');if(!area)return;
+  const run=running===activeView;
+  area.innerHTML=`<button class="btn primary" id="runBtn" onclick="runStage()" ${run?'disabled':''}>${run?'<span class="spinner-sm"></span> Running…':'Run '+STAGES.find(x=>x.id===activeView).name}</button>`;
 }
 
 /* ---------- stage inputs ---------- */
@@ -317,30 +577,32 @@ const INPUTS={
 /* ---------- run ---------- */
 async function runStage(){
   if(running) return;
-  const stage=activeStage;let body={};
+  const stage=activeView;let body={};
   if(stage==='presales'){const n=val('ps_notes');if(!n){focus('ps_notes');return;}body={notes:n,country:val('ps_country')||'UAE',industry:val('ps_industry')||null};}
   if(stage==='proposal'){body={instructions:val('pr_instr')||null};}
   if(stage==='project'){body={instructions:val('pj_instr')||null};}
   if(stage==='functional'){const r=val('fn_req');if(!r){focus('fn_req');return;}body={requirement:r,odoo_version:val('fn_ver'),country:val('fn_country')||'UAE'};}
   if(stage==='developer'){body={target_version:val('dv_ver'),module_name:val('dv_name')||null};const sp=val('dv_spec');if(sp)body.spec=sp;}
-  running=stage;renderRail();renderRunBtn();
+  running=stage;renderNav();renderRunBtn();
   try{
     const out=await api("POST",`/engagements/${eng.id}/${stage}`,body);
     if(!eng.stages)eng.stages={};
     if(stage==='functional'){eng.stages.functional=eng.stages.functional||[];eng.stages.functional.push(out);lastFunctional=out;}
     else eng.stages[stage]=out;
     if(stage==='presales')eng.stages.presales._notes=body.notes;
-    running=null;renderRail();renderRunBtn();
-    RENDER[stage](document.getElementById('stageOut'), stage==='functional'?out:out);
+    running=null;renderNav();renderTopbar();renderRunBtn();
+    RENDER[stage](document.getElementById('stageOut'), out);
+    toast(STAGES.find(x=>x.id===stage).name+" complete","ok");
   }catch(err){
-    running=null;renderRail();renderRunBtn();
-    document.getElementById('stageOut').innerHTML=`<div class="err"><b>That stage didn't complete.</b> ${esc(err.message)}<br><br>Check that delivery-api is running at ${esc(API_BASE)} and the model key is set.</div>`;
+    running=null;renderNav();renderRunBtn();
+    document.getElementById('stageOut').innerHTML=`<div class="err"><b>That stage didn't complete.</b> ${esc(err.message)}<br><br>Check that delivery-api is running and the model key is set.</div>`;
+    toast("Stage failed: "+err.message,"bad");
   }
 }
 function val(id){const e=document.getElementById(id);return e?e.value.trim():"";}
 function focus(id){const e=document.getElementById(id);if(e)e.focus();}
 
-/* ---------- renderers ---------- */
+/* ---------- renderers (unchanged output design) ---------- */
 const RENDER={
   presales(el,o){const r=o.recommendation||'nurture';
     el.innerHTML=`<div class="out">
@@ -357,7 +619,7 @@ const RENDER={
       </div>
       <div class="sec"><h3>Candidate requirements</h3>${(o.candidate_requirements||[]).map((c,i)=>`
         <div class="req-row"><span class="pri pri-${esc(c.priority)}">${esc(c.priority)}</span><span class="rq-text">${esc(c.requirement)}</span>
-        <button class="btn" onclick="toFunctional(${i})">Analyse →</button></div>`).join('')}</div>
+        <button class="btn sm" onclick="toFunctional(${i})">Analyse →</button></div>`).join('')}</div>
       <div class="sec"><h3>Modules in scope</h3><div class="chips">${(o.modules_in_scope||[]).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div></div>
       ${(o.red_flags||[]).length?`<div class="sec"><h3>Red flags</h3><ul class="clean warn">${o.red_flags.map(f=>`<li>${esc(f)}</li>`).join('')}</ul></div>`:''}
       <div class="callout"><b>Next action.</b> ${esc(o.next_action)}</div>
@@ -408,7 +670,7 @@ const RENDER={
         <div class="chips" style="margin-top:9px">${(o.standard_capability?.modules||[]).map(m=>`<span class="chip">${esc(m.name)}${m.version_note?' · '+esc(m.version_note):''}</span>`).join('')}</div></div></div>
       <div class="sec"><h3>Gap analysis</h3><div class="card">${esc(o.gap_analysis)}</div></div>
       <div class="sec"><h3>Solution options</h3>${opts}</div>
-      ${o.verdict==='custom'?`<div class="callout" style="border-style:dashed;border-color:var(--rust);background:rgba(194,73,47,.04)"><b style="color:var(--rust)">Custom build required.</b> <button class="btn dark" style="margin-left:8px" onclick="goStage('developer')">Build in Developer →</button></div>`:''}
+      ${o.verdict==='custom'?`<div class="callout" style="border-style:dashed;border-color:var(--rust);background:rgba(194,73,47,.04)"><b style="color:var(--rust)">Custom build required.</b> <button class="btn dark sm" style="margin-left:8px" onclick="goView('developer')">Build in Developer →</button></div>`:''}
     </div>`;},
 
   developer(el,o){devObj=o;devFiles=o.files||[];devActive=0;
@@ -419,7 +681,7 @@ const RENDER={
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto">${devFiles.length} files</span></div>
         <div style="font-size:13px;color:var(--muted);margin-top:9px">${esc(o.summary)}</div>
         <div class="chips" style="margin-top:9px">${(o.depends||[]).map(d=>`<span class="chip">${esc(d)}</span>`).join('')}</div></div></div>
-      <div class="wb"><div class="wb-bar"><span class="t">Files</span><button class="btn dark" style="margin-left:auto" onclick="devZip()">Download .zip</button></div>
+      <div class="wb"><div class="wb-bar"><span class="t">Files</span><button class="btn dark sm" style="margin-left:auto" onclick="devZip()">Download .zip</button></div>
         <div class="wb-body"><div class="flist" id="flist"></div>
           <div class="cpane"><div class="chead"><span class="cpath" id="cpath"></span><button class="cbtn" id="cCopy" onclick="devCopy()">Copy</button></div>
           <div class="cscroll"><div class="cblock"><div class="gutter" id="gutter"></div><div class="code" id="code"></div></div></div></div></div></div>
@@ -430,7 +692,7 @@ const RENDER={
 
 function toFunctional(i){
   const o=eng.stages.presales;const req=o.candidate_requirements[i].requirement;
-  goStage('functional');
+  goView('functional');
   setTimeout(()=>{const t=document.getElementById('fn_req');if(t){t.value=req;t.focus();}},0);
 }
 
@@ -440,10 +702,69 @@ function extOf(p){const m=p.split('.').pop().toLowerCase();return ['py','xml','c
 function devList(){document.getElementById('flist').innerHTML=devFiles.map((f,i)=>{const e=extOf(f.path);return `<button class="fitem ${i===devActive?'on':''}" onclick="devShow(${i})"><span class="fext ${EXTC[e]||'e-txt'}">${e}</span><span>${esc(f.path.split('/').pop())}</span></button>`;}).join('');}
 function devShow(i){devActive=i;const f=devFiles[i];document.getElementById('cpath').textContent=f.path;const lines=(f.content||'').split('\n');document.getElementById('gutter').innerHTML=lines.map((_,n)=>`<span>${n+1}</span>`).join('');document.getElementById('code').textContent=f.content;devList();}
 function devCopy(){navigator.clipboard.writeText(devFiles[devActive].content).then(()=>{const b=document.getElementById('cCopy');b.textContent="Copied ✓";b.classList.add('copied');setTimeout(()=>{b.textContent="Copy";b.classList.remove('copied');},1400);});}
-async function devZip(){if(typeof JSZip==='undefined')return;const z=new JSZip();devFiles.forEach(f=>z.file(f.path,f.content));const blob=await z.generateAsync({type:"blob"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(devObj.module_technical_name||"module")+".zip";a.click();URL.revokeObjectURL(a.href);}
+async function devZip(){if(typeof JSZip==='undefined')return;const z=new JSZip();devFiles.forEach(f=>z.file(f.path,f.content));const blob=await z.generateAsync({type:"blob"});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(devObj.module_technical_name||"module")+".zip";a.click();URL.revokeObjectURL(a.href);toast("Module .zip downloaded","ok");}
 
-/* boot */
-renderApiChip();pingHealth();loadEngagements();renderAll();
+/* ---------- odoo explorer ---------- */
+function renderOdoo(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">Select an engagement first.</div></div></div></div>`;return;}
+  if(!eng.odoo_db){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head"><div><h2>Odoo Explorer</h2><p>Live introspection of the tenant database.</p></div></div><div class="panel-body"><div class="placeholder">This engagement has no Odoo DB.<br>Create an engagement with a database to browse its modules and schema.</div></div></div></div>`;return;}
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>Odoo Explorer</h2><p>Live introspection of <b style="font-family:var(--mono);color:var(--deep-teal)">${esc(eng.odoo_db)}</b> — the same grounding the agents use.</p></div></div>
+    <div class="panel-body">
+      <div class="ox-grid">
+        <div>
+          <div class="sec"><h3>Installed modules</h3>
+            <input type="text" id="ox_modf" placeholder="Filter modules…" style="width:100%;margin-bottom:9px" oninput="odooFilter(this.value)">
+            <div id="ox_mods"><div class="skel" style="height:120px"></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="sec"><h3>Inspect model schema</h3>
+            <div style="display:flex;gap:8px;margin-bottom:9px"><input type="text" id="ox_model" placeholder="model e.g. crm.lead" value="crm.lead" style="flex:1"><button class="btn primary sm" onclick="odooFields()">Inspect</button></div>
+            <div id="ox_fields"><div class="hint">Enter a technical model name and inspect its live field schema.</div></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>`;
+  if(odooModules)renderModules();else loadOdooModules();
+}
+async function loadOdooModules(){
+  try{const r=await api("GET",`/odoo/${encodeURIComponent(eng.odoo_db)}/modules`);odooModules=r.installed||[];renderModules();}
+  catch(e){const el=document.getElementById('ox_mods');if(el)el.innerHTML=`<div class="err"><b>Could not reach Odoo.</b> ${esc(e.message)}</div>`;}
+}
+function renderModules(){
+  const el=document.getElementById('ox_mods');if(!el)return;
+  const list=(odooModules||[]).filter(m=>m.toLowerCase().includes(odooModFilter.toLowerCase()));
+  el.innerHTML=`<div style="font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-bottom:7px">${list.length} of ${(odooModules||[]).length} modules</div><div class="modlist">${list.map(m=>`<span class="chip">${esc(m)}</span>`).join('')||'<span class="hint">No match.</span>'}</div>`;
+}
+function odooFilter(v){odooModFilter=v;renderModules();}
+async function odooFields(){
+  const model=val('ox_model');if(!model)return;
+  const el=document.getElementById('ox_fields');el.innerHTML=`<div class="skel" style="height:100px"></div>`;
+  try{
+    const r=await api("GET",`/odoo/${encodeURIComponent(eng.odoo_db)}/fields/${encodeURIComponent(model)}`);
+    const f=(r.fields||[]).sort((a,b)=>a.name.localeCompare(b.name));
+    el.innerHTML=`<div style="font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-bottom:7px">${f.length} fields on ${esc(model)}</div>
+      <div style="max-height:340px;overflow:auto"><table><thead><tr><th>Field</th><th>Label</th><th>Type</th><th>Req</th></tr></thead><tbody>
+      ${f.map(x=>`<tr><td style="font-family:var(--mono);font-size:11.5px;color:var(--deep-teal)">${esc(x.name)}</td><td>${esc(x.field_description)}</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(x.ttype)}</td><td>${x.required?'<span style="color:var(--rust)">●</span>':''}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }catch(e){el.innerHTML=`<div class="err"><b>Lookup failed.</b> ${esc(e.message)}</div>`;}
+}
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){const b=document.getElementById('runBtn');if(b&&!b.disabled){e.preventDefault();runStage();}}
+  if(e.key==='Escape')closeNewEng();
+});
+
+/* ---------- boot ---------- */
+(async function boot(){
+  renderApiChip();pingHealth();
+  await loadEngagements();
+  const last=localStorage.getItem("c2p_last");
+  if(last&&engagements.some(e=>e.id===last)){try{eng=await api("GET","/engagements/"+last);}catch(e){}}
+  renderAll();
+})();
 </script>
 </body>
 </html>
