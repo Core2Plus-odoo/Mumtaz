@@ -101,6 +101,21 @@ class ResearchIn(BaseModel):
     web_search: Optional[bool] = None      # override the global default
 
 
+class InfraIn(BaseModel):
+    """Inputs for the System Administrator (Infrastructure Advisor) agent."""
+    account_id: Optional[str] = None
+    company: Optional[str] = None
+    users: Optional[int] = None
+    budget_band: Optional[str] = None      # lean | mid | enterprise
+    data_residency: Optional[str] = None   # e.g. "UAE", "KSA (ZATCA)", "none"
+    in_house_it: Optional[bool] = None
+    customization: Optional[str] = None    # none | config | studio | custom modules
+    integrations: Optional[str] = None
+    uptime_need: Optional[str] = None      # standard | high
+    compliance: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class PresalesIn(BaseModel):
     notes: str = Field(..., description="Raw discovery notes / call summary / lead context")
     country: Optional[str] = "UAE"

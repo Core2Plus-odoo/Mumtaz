@@ -66,5 +66,14 @@ cd /opt/mumtaz/c2p-delivery-system/delivery_api
 /opt/mumtaz/c2p-delivery-system/delivery_api/.venv/bin/python -m pytest -q
 ```
 
+### Add-on: System Administrator (Infrastructure Advisor) agent ✅
+- New agent `sysadmin` (`prompts.py`) + `POST /infra/recommend` (`InfraIn`).
+- Chooses the Odoo hosting/deployment topology — **Odoo Online / Odoo.sh /
+  self-hosted VPS (e.g. Hostinger, Community or Enterprise) / on-prem** — and the
+  edition, with rationale, alternatives-and-why-not, cost band, data-residency
+  fit, ops burden, migration path, and revisit triggers.
+- Loads the account knowledge slice when `account_id` is given and writes an
+  `infra_recommendation` knowledge entry back.
+
 **Next:** Phase 2 — outreach + the approval layer (no client-facing send exists
 until the approval gate does).

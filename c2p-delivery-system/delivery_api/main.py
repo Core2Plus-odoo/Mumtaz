@@ -367,6 +367,35 @@ def research(account_id: str, body: m.ResearchIn):
     return out
 
 
+@app.post("/infra/recommend")
+def infra_recommend(body: m.InfraIn):
+    """System Administrator agent: choose the Odoo hosting/deployment topology
+    (Odoo Online / Odoo.sh / self-hosted VPS / on-prem; Community vs Enterprise)."""
+    acc = _account(body.account_id) if body.account_id else None
+    content = (
+        "Client infrastructure inputs:\n"
+        f"- Company: {body.company or (acc.name if acc else 'Unknown')}\n"
+        f"- Odoo users: {body.users if body.users is not None else 'unknown'}\n"
+        f"- Budget band: {body.budget_band or 'unknown'}\n"
+        f"- Data residency / compliance: {body.data_residency or body.compliance or 'not specified'}\n"
+        f"- In-house IT capability: {body.in_house_it}\n"
+        f"- Customisation depth: {body.customization or 'unknown'}\n"
+        f"- Integrations: {body.integrations or 'none stated'}\n"
+        f"- Uptime need: {body.uptime_need or 'standard'}\n"
+        f"- Notes: {body.notes or '-'}\n\n"
+        "Recommend the platform and edition. Return the JSON."
+        + ks.context_block(body.account_id, "infrastructure hosting deployment platform")
+    )
+    out = run_agent("sysadmin", content, account_id=body.account_id)
+    if body.account_id:
+        ks.write_entry(
+            body.account_id, "infra_recommendation", out,
+            title=f"Infrastructure recommendation — {out.get('recommended_platform', 'n/a')}",
+            learned_by="sysadmin",
+        )
+    return out
+
+
 @app.get("/runs")
 def list_runs(limit: int = 50):
     """Owned dataset: recent agent runs (labels, models, tokens, latency)."""
