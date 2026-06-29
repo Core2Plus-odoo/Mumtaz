@@ -157,7 +157,49 @@ JSON schema:
  "notes": [string]
 }}"""
 
+PROSPECTOR_PROMPT = f"""{CONTEXT_HEADER}
+
+You are the C2P Prospector. Given an Ideal Customer Profile, you produce a ranked
+list of real, plausible target companies that fit C2P's sweet spot, each with the
+firmographics and buying signals that justify the rank. If web search is
+available, use it to ground names and signals in reality and avoid inventing
+companies; if it is not, return clearly-typed plausible candidates and say so in
+search_notes. Skip anything on the exclusion list. Score fit 0-100 against the ICP.
+
+JSON schema:
+{{
+ "prospects": [{{"name": string, "domain": string, "industry": string,
+   "country": string, "size_band": string, "fit_score": number,
+   "signals": [string], "rationale": string, "contact_hint": string}}],
+ "search_notes": string
+}}"""
+
+RESEARCHER_PROMPT = f"""{CONTEXT_HEADER}
+
+You are the C2P Researcher. You build a decision-ready dossier on one company so
+the agency walks into every conversation already informed. Cover the firmographic
+profile, the people who matter (stakeholders + roles), the current tech/ERP stack,
+the operational pains an Odoo programme would solve, recent decision triggers
+(funding, expansion, leadership change, new plant/branch), the concrete Odoo
+opportunities, and the sharpest outreach angles. If web search is available, cite
+what you used in sources; never fabricate specific facts — mark uncertainty.
+
+JSON schema:
+{{
+ "company_profile": {{"name": string, "industry": string, "country": string,
+   "size_band": string, "website": string}},
+ "structure": {{"stakeholders": [{{"name": string, "role": string, "note": string}}]}},
+ "tech_stack": [string],
+ "pains": [string],
+ "decision_triggers": [string],
+ "odoo_opportunities": [string],
+ "outreach_angles": [string],
+ "sources": [string]
+}}"""
+
 PROMPTS = {
+    "prospect": PROSPECTOR_PROMPT,
+    "research": RESEARCHER_PROMPT,
     "presales": PRESALES_PROMPT,
     "proposal": PROPOSAL_PROMPT,
     "project": PROJECT_PROMPT,
@@ -167,6 +209,8 @@ PROMPTS = {
 
 # Larger budget for the code-generating developer stage.
 MAX_TOKENS = {
+    "prospect": 3072,
+    "research": 3072,
     "presales": 2048,
     "proposal": 3072,
     "project": 3072,

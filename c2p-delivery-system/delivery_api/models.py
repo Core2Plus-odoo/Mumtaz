@@ -24,6 +24,7 @@ class Engagement(BaseModel):
     id: str = Field(default_factory=lambda: "eng_" + uuid.uuid4().hex[:12])
     company: str
     odoo_db: Optional[str] = None          # which tenant DB this engagement targets
+    account_id: Optional[str] = None       # the Account this engagement belongs to
     crm_lead_id: Optional[int] = None      # linked Odoo records, once synced
     sale_order_id: Optional[int] = None
     project_id: Optional[int] = None
@@ -35,6 +36,69 @@ class Engagement(BaseModel):
 class CreateEngagement(BaseModel):
     company: str
     odoo_db: Optional[str] = None
+    account_id: Optional[str] = None
+
+
+# ── Phase 1: Accounts + client knowledge ──────────────────────────────────
+class Account(BaseModel):
+    """A client, 1:1 with an Odoo partner. Owns the knowledge base that every
+    client-touching agent reads before acting and writes back to after."""
+    id: str = Field(default_factory=lambda: "acc_" + uuid.uuid4().hex[:12])
+    name: str
+    partner_id: Optional[int] = None       # Odoo res.partner id (system of record)
+    odoo_db: Optional[str] = None
+    industry: Optional[str] = None
+    country: Optional[str] = None
+    created_at: str = Field(default_factory=_now)
+    profile: dict[str, Any] = Field(default_factory=dict)
+
+
+class CreateAccount(BaseModel):
+    name: str
+    odoo_db: Optional[str] = None
+    partner_id: Optional[int] = None
+    industry: Optional[str] = None
+    country: Optional[str] = None
+
+
+class KnowledgeEntry(BaseModel):
+    """One owned, labelled fact about an account. `content` may be text or a
+    structured dict. `kind` keeps entries retrievable by topic."""
+    id: str = Field(default_factory=lambda: "kn_" + uuid.uuid4().hex[:12])
+    account_id: str
+    kind: str = "learning"                 # company_profile|stakeholder|requirement|
+                                           # decision|risk|research_dossier|communication|learning
+    title: str = ""
+    content: Any = ""
+    learned_by: str = "human"              # agent name or 'human'
+    created_at: str = Field(default_factory=_now)
+    tags: list[str] = Field(default_factory=list)
+
+
+class KnowledgeIn(BaseModel):
+    kind: str = "learning"
+    title: str = ""
+    content: Any = ""
+    learned_by: str = "human"
+    tags: list[str] = Field(default_factory=list)
+
+
+class ProspectIn(BaseModel):
+    """ICP definition for the Prospector agent."""
+    icp: Optional[str] = Field(None, description="Free-text ICP override")
+    industry: Optional[str] = None
+    country: Optional[str] = "UAE"
+    size_band: Optional[str] = None
+    signals: Optional[str] = Field(None, description="Buying signals to look for")
+    exclude: list[str] = Field(default_factory=list)
+    max_results: int = 10
+
+
+class ResearchIn(BaseModel):
+    """Deep-research request for the Researcher agent (writes a dossier)."""
+    company: Optional[str] = None          # defaults to the account name
+    focus: Optional[str] = None
+    web_search: Optional[bool] = None      # override the global default
 
 
 class PresalesIn(BaseModel):

@@ -20,22 +20,23 @@ import json
 import os
 from typing import Any
 
-from anthropic import Anthropic
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 import models as m
-from models import Engagement
+from models import Account, Engagement
 from prompts import PROMPTS, MAX_TOKENS
 from store import EngagementStore
+from knowledge import KnowledgeService
 from sync import writeback
 from odoo import get_client
+import llm
 
-MODEL = os.getenv("C2P_MODEL", "claude-sonnet-4-6")  # set to your current model id
+MODEL = llm.DEFAULT_MODEL  # the model is config, owned by llm.py
 
-client = Anthropic()  # reads ANTHROPIC_API_KEY from the environment
 store = EngagementStore()
-app = FastAPI(title="C2P delivery-api", version="1.0.0")
+ks = KnowledgeService(store)
+app = FastAPI(title="C2P Agency OS API", version="1.1.0")
 
 # The frontends are static HTML served by Nginx; allow them to call this API.
 app.add_middleware(
@@ -47,37 +48,24 @@ app.add_middleware(
 
 
 # --------------------------------------------------------------------------- #
-# Agent runner
+# Agent runner — every agent call routes through the llm abstraction, which
+# logs the run as owned data (see llm.run_json + store.log_run).
 # --------------------------------------------------------------------------- #
-def _extract_json(text: str) -> dict:
-    """Pull the JSON object out of the model's reply, tolerating code fences or
-    stray prose by slicing between the first '{' and the last '}'."""
-    a, b = text.find("{"), text.rfind("}")
-    if a < 0 or b <= a:
-        raise ValueError("no JSON object in response")
-    return json.loads(text[a:b + 1])
-
-
-def run_agent(stage: str, user_content: str) -> dict:
-    """Call the Claude API with the stage's system prompt and return parsed JSON."""
+def run_agent(stage: str, user_content: str, web_search: bool = False,
+              account_id: str | None = None, engagement_id: str | None = None) -> dict:
     try:
-        resp = client.messages.create(
-            model=MODEL,
-            max_tokens=MAX_TOKENS.get(stage, 2048),
-            system=PROMPTS[stage],
-            messages=[{"role": "user", "content": user_content}],
+        return llm.run_json(
+            stage, PROMPTS[stage], user_content,
+            max_tokens=MAX_TOKENS.get(stage, 2048), web_search=web_search,
+            store=store, account_id=account_id, engagement_id=engagement_id,
         )
-    except Exception as exc:  # network / API errors
-        raise HTTPException(status_code=502, detail=f"Model call failed: {exc}")
-
-    raw = "".join(b.text for b in resp.content if b.type == "text").strip()
-    try:
-        return _extract_json(raw)
     except (ValueError, json.JSONDecodeError):
         raise HTTPException(
             status_code=502,
             detail="Agent returned non-JSON output. Narrow the scope and retry.",
         )
+    except Exception as exc:  # network / provider errors
+        raise HTTPException(status_code=502, detail=f"Model call failed: {exc}")
 
 
 def _engagement(eng_id: str) -> Engagement:
@@ -118,7 +106,7 @@ def _maybe_modules(eng: Engagement, override: str | None) -> str:
 # --------------------------------------------------------------------------- #
 @app.post("/engagements", response_model=Engagement)
 def create_engagement(body: m.CreateEngagement):
-    return store.create(body.company, body.odoo_db)
+    return store.create(body.company, body.odoo_db, account_id=body.account_id)
 
 
 @app.get("/engagements/{eng_id}", response_model=Engagement)
@@ -141,10 +129,22 @@ def presales(eng_id: str, body: m.PresalesIn):
         f"Company: {eng.company}\nCountry: {body.country}\n"
         f"Industry: {body.industry or 'Unknown'}\n\n"
         f"Discovery notes:\n{body.notes}\n\nQualify and return the JSON."
+        + ks.context_block(eng.account_id, body.industry or eng.company)
     )
-    out = run_agent("presales", content)
+    out = run_agent("presales", content, account_id=eng.account_id, engagement_id=eng.id)
     eng.stages["presales"] = out
-    return _commit(eng, "presales", out)
+    result = _commit(eng, "presales", out)
+    # Compound the account's knowledge with what qualification learned.
+    if eng.account_id:
+        ks.write_entry(
+            eng.account_id, "qualification",
+            {"recommendation": out.get("recommendation"),
+             "icp_fit": out.get("icp_fit"),
+             "candidate_requirements": out.get("candidate_requirements"),
+             "modules_in_scope": out.get("modules_in_scope")},
+            title=f"Presales qualification — {eng.company}", learned_by="presales",
+        )
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -193,11 +193,22 @@ def functional(eng_id: str, body: m.FunctionalIn):
         f"- Odoo version: {body.odoo_version}\n- Country/region: {body.country}\n"
         f"- Industry: {body.industry or 'Not specified'}\n"
         f"- Installed modules: {modules}\n\nAnalyse and return the JSON."
+        + ks.context_block(eng.account_id, body.requirement)
     )
-    out = run_agent("functional", content)
+    out = run_agent("functional", content, account_id=eng.account_id, engagement_id=eng.id)
     # Keep a list of analysed requirements rather than overwriting.
     eng.stages.setdefault("functional", []).append(out)
-    return _commit(eng, "functional", out)
+    result = _commit(eng, "functional", out)
+    if eng.account_id:
+        ks.write_entry(
+            eng.account_id, "requirement",
+            {"requirement": out.get("requirement_summary"),
+             "verdict": out.get("verdict"),
+             "recommended_path": out.get("recommended_path")},
+            title=f"Requirement — {(out.get('requirement_summary') or '')[:60]}",
+            learned_by="functional",
+        )
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -271,6 +282,97 @@ def sync_lead(eng_id: str):
     return {"crm_lead_id": lead_id}
 
 
+# --------------------------------------------------------------------------- #
+# Phase 1 — Accounts + client knowledge + top-of-funnel agents
+# --------------------------------------------------------------------------- #
+def _account(account_id: str) -> Account:
+    acc = store.get_account(account_id)
+    if not acc:
+        raise HTTPException(status_code=404, detail="Account not found")
+    return acc
+
+
+@app.post("/accounts", response_model=Account)
+def create_account(body: m.CreateAccount):
+    if body.partner_id:
+        existing = store.get_account_by_partner(body.partner_id)
+        if existing:
+            return existing
+    acc = Account(name=body.name, odoo_db=body.odoo_db, partner_id=body.partner_id,
+                  industry=body.industry, country=body.country)
+    return store.create_account(acc)
+
+
+@app.get("/accounts")
+def list_accounts():
+    return store.list_accounts()
+
+
+@app.get("/accounts/{account_id}", response_model=Account)
+def get_account(account_id: str):
+    return _account(account_id)
+
+
+@app.get("/accounts/{account_id}/knowledge")
+def get_knowledge(account_id: str, kind: str | None = None,
+                  q: str | None = None, limit: int = 100):
+    _account(account_id)
+    entries = (store.search_knowledge(account_id, q, limit=limit)
+               if q else store.list_knowledge(account_id, kind=kind, limit=limit))
+    return [e.model_dump() for e in entries]
+
+
+@app.post("/accounts/{account_id}/knowledge")
+def add_knowledge(account_id: str, body: m.KnowledgeIn):
+    _account(account_id)
+    entry = ks.write_entry(account_id, body.kind, body.content, title=body.title,
+                           learned_by=body.learned_by, tags=body.tags)
+    return entry.model_dump()
+
+
+@app.post("/prospect")
+def prospect(body: m.ProspectIn):
+    """ICP in → ranked prospect list out. Web-search grounded when available."""
+    icp = body.icp or (
+        f"Industry: {body.industry or 'manufacturing / distribution / retail'}; "
+        f"Country: {body.country}; Size: {body.size_band or '20-500 employees'}; "
+        f"Signals: {body.signals or 'ERP modernisation, growth, multi-entity, compliance'}"
+    )
+    content = (
+        f"Ideal Customer Profile:\n{icp}\n\n"
+        f"Exclude: {', '.join(body.exclude) or 'none'}\n"
+        f"Return up to {body.max_results} ranked prospects as JSON."
+    )
+    return run_agent("prospect", content, web_search=True)
+
+
+@app.post("/accounts/{account_id}/research")
+def research(account_id: str, body: m.ResearchIn):
+    """Deep-research a company and write the dossier into its knowledge base."""
+    acc = _account(account_id)
+    company = body.company or acc.name
+    web = llm.WEB_SEARCH_ENABLED if body.web_search is None else body.web_search
+    content = (
+        f"Company to research: {company}\nCountry: {acc.country or 'UAE/GCC'}\n"
+        f"Industry: {acc.industry or 'unknown'}\nFocus: {body.focus or 'full dossier'}\n\n"
+        "Build the dossier JSON."
+    )
+    out = run_agent("research", content, web_search=web, account_id=account_id)
+    ks.write_entry(account_id, "research_dossier", out,
+                   title=f"Research dossier — {company}", learned_by="research",
+                   tags=["research"])
+    profile = out.get("company_profile") or {}
+    if profile:
+        store.update_account_profile(account_id, {**acc.profile, **profile})
+    return out
+
+
+@app.get("/runs")
+def list_runs(limit: int = 50):
+    """Owned dataset: recent agent runs (labels, models, tokens, latency)."""
+    return store.list_runs(limit=limit)
+
+
 @app.get("/branding")
 def get_branding():
     """Return the operator's saved branding (logo, colours, contact). Empty
@@ -290,4 +392,5 @@ def save_branding(body: dict):
 
 @app.get("/health")
 def health():
-    return {"ok": True, "model": MODEL, "stages": m.STAGES}
+    return {"ok": True, "model": MODEL, "stages": m.STAGES,
+            "agents": list(PROMPTS.keys()), "web_search": llm.WEB_SEARCH_ENABLED}
