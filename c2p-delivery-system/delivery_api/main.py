@@ -35,6 +35,7 @@ import llm
 import policy
 import channels
 import proposal_render
+import deploy as deployer
 
 from datetime import datetime, timezone
 
@@ -461,6 +462,27 @@ def proposal_send(eng_id: str, body: dict | None = None):
 
 
 # --------------------------------------------------------------------------- #
+# Phase 4 — Gated deploy of a generated module
+# --------------------------------------------------------------------------- #
+@app.post("/engagements/{eng_id}/deploy")
+def deploy_module(eng_id: str, body: dict | None = None):
+    """Deploy the developer stage's module to the account's addons repo — GATED.
+    On approve it writes the module (staged, or git-pushed when configured)."""
+    eng = _engagement(eng_id)
+    dev = eng.stages.get("developer")
+    if not dev or not dev.get("files"):
+        raise HTTPException(status_code=400,
+                            detail="Run the developer stage first (Custom verdict).")
+    payload = {"engagement_id": eng.id, "module": dev.get("module_technical_name"),
+               "files_count": len(dev.get("files") or [])}
+    appr = policy.gate(store, "code_deploy", payload, requester_agent="developer",
+                       account_id=eng.account_id, engagement_id=eng.id)
+    if appr is None:
+        return {"approval": None, "result": _execute_deploy(payload, eng.account_id)}
+    return {"approval": appr.model_dump()}
+
+
+# --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")
@@ -540,11 +562,36 @@ def _execute_proposal_send(payload: dict, account_id: str | None = None) -> dict
     return result
 
 
+def _execute_deploy(payload: dict, account_id: str | None = None) -> dict:
+    """Write the generated module to the account's addons repo (staged by
+    default; live git push when configured). Logs the deploy."""
+    eng = store.get(payload.get("engagement_id"))
+    dev = (eng.stages.get("developer") if eng else None) or {}
+    res = deployer.deploy_module(dev)
+    aid = account_id or (eng.account_id if eng else None)
+    if aid:
+        ks.write_entry(aid, "deliverable",
+                       {"type": "module_deploy", "module": res.get("module"),
+                        "mode": res.get("mode"), "pushed": res.get("pushed")},
+                       title=f"Module deployed — {res.get('module')}",
+                       learned_by="developer", tags=["deploy"])
+    try:
+        if eng and eng.odoo_db and eng.crm_lead_id:
+            get_client(eng.odoo_db).message_post(
+                "crm.lead", eng.crm_lead_id,
+                f"C2P module '{res.get('module')}' deployed ({res.get('mode')}).")
+    except Exception:
+        pass
+    return res
+
+
 def _execute_action(appr) -> dict:
     """Run a gated action once a human approves it. Returns a result dict."""
     action, payload = appr.action_type, appr.payload or {}
     if action == "proposal_send":
         return _execute_proposal_send(payload, account_id=appr.account_id)
+    if action == "code_deploy":
+        return _execute_deploy(payload, account_id=appr.account_id)
     if action == "outreach_send":
         msg = payload.get("message") or {}
         res = channels.send(payload.get("channel", "email"), payload.get("to", ""),

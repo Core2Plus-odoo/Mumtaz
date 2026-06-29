@@ -793,7 +793,7 @@ const RENDER={
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto">${devFiles.length} files</span></div>
         <div style="font-size:13px;color:var(--muted);margin-top:9px">${esc(o.summary)}</div>
         <div class="chips" style="margin-top:9px">${(o.depends||[]).map(d=>`<span class="chip">${esc(d)}</span>`).join('')}</div></div></div>
-      <div class="wb"><div class="wb-bar"><span class="t">Files</span><button class="btn dark sm" style="margin-left:auto" onclick="devZip()">Download .zip</button></div>
+      <div class="wb"><div class="wb-bar"><span class="t">Files</span><button class="btn primary sm" style="margin-left:auto" onclick="deployModule()">Deploy to addons repo (needs approval)</button><button class="btn dark sm" onclick="devZip()">Download .zip</button></div>
         <div class="wb-body"><div class="flist" id="flist"></div>
           <div class="cpane"><div class="chead"><span class="cpath" id="cpath"></span><button class="cbtn" id="cCopy" onclick="devCopy()">Copy</button></div>
           <div class="cscroll"><div class="cblock"><div class="gutter" id="gutter"></div><div class="code" id="code"></div></div></div></div></div></div>
@@ -970,6 +970,9 @@ async function decideApproval(id,decision){
     renderApprovals(document.getElementById('content'));
   }catch(e){toast('Decision failed: '+e.message,'bad');}
 }
+
+/* ---------- gated deploy (Phase 4) ---------- */
+async function deployModule(){if(!eng)return;try{const r=await api("POST",`/engagements/${eng.id}/deploy`,{});if(r.approval){toast('Deploy queued for your approval in the Cockpit','ok');refreshApprovalsCount();}else{toast('Module deployed ('+(r.result&&r.result.mode||'')+')','ok');}}catch(e){toast('Failed: '+e.message,'bad');}}
 
 /* ---------- branded proposal (Phase 3) ---------- */
 function previewProposal(){if(!eng)return;window.open(API_BASE+'/engagements/'+eng.id+'/proposal/preview','_blank');}

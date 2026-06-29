@@ -150,6 +150,32 @@ and audited. Verified by tests + headless cockpit render.
 gated; an approved proposal attaches to the Odoo quotation + logs to chatter and
 the account's knowledge.
 
-**Next:** Phase 4 — delivery in the loop (functional auto-reads live Odoo
-modules/schema; custom verdict → developer module; **deploy is gated**; on approve
-push to the account's addons repo for Odoo.sh to build).
+## Phase 4 — Delivery in the loop ✅
+
+**Shipped**
+- **Live grounding** (already from Phase 1): the functional agent auto-reads the
+  account's live installed modules via `odoo.py` (`_maybe_modules`) before
+  analysing, alongside the industry playbook — so verdicts reflect the real
+  tenant. (Schema is also available on demand via the Odoo Explorer endpoints.)
+- **`deploy.py`** — writes a generated module to the account's addons repo.
+  **Staged by default** (writes to a staging dir, nothing pushed); **live git
+  add/commit/push** when `C2P_ADDONS_DIR` + `C2P_DEPLOY_LIVE=1` are set, so
+  Odoo.sh builds it. Path-traversal-safe file writes.
+- **Gated deploy** — `POST /engagements/{id}/deploy` creates a `code_deploy`
+  approval. On approve, `_execute_deploy` writes/pushes the module, logs a
+  `deliverable` knowledge entry and Odoo chatter note.
+- **Console** — the developer output gains **Deploy to addons repo (needs
+  approval)**; deploy approvals appear in the cockpit like any other.
+- Tests: staged deploy + traversal guard; gated deploy→approve→execute.
+
+**Decisions**
+- Deploy is **staged by default** — no repo/creds means the module is written to
+  a staging directory and reported; configure `C2P_ADDONS_DIR` (a checked-out
+  addons repo with push rights) + `C2P_DEPLOY_LIVE=1` to push for real.
+
+**Acceptance**: functional reflects live modules; a Custom requirement produces a
+module (developer stage); deploying it requires approval; on approve it's written
+to the addons repo (pushed when live).
+
+**Next:** Phase 5 — communications (inbound triage to the right account/agent;
+outbound replies gated by sensitivity; all comms logged to chatter + knowledge).

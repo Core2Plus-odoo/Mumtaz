@@ -275,3 +275,39 @@ def test_proposal_send_is_gated(tmp_path):
     apr = r["approval"]["id"]
     dec = c.post(f"/approvals/{apr}/decide", json={"decision": "approved"}).json()
     assert dec["status"] == "approved" and dec["result"]["rendered"] is True
+
+
+# ── Phase 4: gated deploy ─────────────────────────────────────────────────
+def test_deploy_module_staged_and_traversal_safe():
+    import deploy as dep
+    out = {"module_technical_name": "c2p_quote_approval", "files": [
+        {"path": "__manifest__.py", "content": "{}"},
+        {"path": "models/m.py", "content": "# x"},
+        {"path": "../evil.py", "content": "x"}]}  # escape attempt
+    r = dep.deploy_module(out)
+    assert r["mode"] == "staged" and r["files"] == 2 and r["pushed"] is False
+    assert "../evil.py" in r["skipped"]
+
+
+def test_deploy_is_gated(tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "ep4.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+    c = TestClient(main_mod.app)
+
+    eng = c.post("/engagements", json={"company": "Acme"}).json()
+    e = main_mod.store.get(eng["id"])
+    e.stages["developer"] = {"module_technical_name": "c2p_demo",
+                             "files": [{"path": "__manifest__.py", "content": "{}"}]}
+    main_mod.store.save(e)
+
+    r = c.post(f"/engagements/{eng['id']}/deploy", json={}).json()
+    assert r["approval"] and r["approval"]["action_type"] == "code_deploy"
+    dec = c.post(f"/approvals/{r['approval']['id']}/decide",
+                 json={"decision": "approved"}).json()
+    assert dec["status"] == "approved" and dec["result"]["module"] == "c2p_demo"
