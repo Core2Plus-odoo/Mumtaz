@@ -89,5 +89,40 @@ cd /opt/mumtaz/c2p-delivery-system/delivery_api
   or the linked account.
 - Endpoints: `GET /industries`, `GET /industries/{key}`. Tests added.
 
-**Next:** Phase 2 — outreach + the approval layer (no client-facing send exists
-until the approval gate does).
+## Phase 2 — Outreach + the approval layer ✅
+
+**Shipped**
+- **Approval model + queue** (`models.Approval`, `store` approvals table): payload,
+  requester agent, status, decided_by/at, reason, result. Endpoints
+  `GET /approvals`, `GET /approvals/count`, `POST /approvals/{id}/decide`.
+- **Autonomy policy** (`policy.py`): `action → level` map (auto | approval), with
+  a per-tenant override in `app_settings('autonomy')`. `gate()` creates a pending
+  Approval for any gated action and withholds it until a human decides. Client-
+  facing/money/code actions are gated; internal reasoning runs auto.
+- **Outreach (SDR) agent** (`outreach` prompt, `POST /accounts/{id}/outreach`):
+  drafts a personalised email/WhatsApp/LinkedIn sequence (auto). **Sending the
+  first touch is gated** — it creates a pending Approval.
+- **Channel adapters** (`channels.py`): one `send()` for email (SMTP) + WhatsApp
+  (Meta Cloud) + LinkedIn, **dry-run by default** (logs, nothing leaves) and
+  live when provider creds are set in the env. On approve, the send runs and is
+  logged to the account knowledge + Odoo chatter (`odoo.message_post`, best-effort).
+- **Decision capture as owned data**: approve/edit/reject + the human's edited
+  payload are stored on the Approval — the correction signal for future evals.
+- **Cockpit UI**: new **Accounts** view (list/create, per-account Research /
+  Outreach / Infra-advisor, knowledge browser) and **Approvals** queue
+  (edit message, Approve & send / Reject + reason, pending badge in the nav).
+- Tests added: policy gating, settings override, decide round-trip, channels
+  dry-run, and an end-to-end outreach→approval→decide→send endpoint test.
+
+**Decisions**
+- Sends **dry-run by default** — no provider creds, nothing actually leaves;
+  set `SMTP_*` / `WHATSAPP_*` in `.env` to go live, call sites unchanged.
+- Gated actions today: `outreach_send` (others — `proposal_send`, `code_deploy`,
+  etc. — are policy-listed and wire in as their phases land).
+
+**Acceptance**: an outreach send creates an approval; approve → it "sends"
+(dry-run) and is logged; reject → nothing sends; every decision is attributed
+and audited. Verified by tests + headless cockpit render.
+
+**Next:** Phase 3 — branded proposals (render the proposal agent's JSON to a
+branded PDF; proposal send is gated; on approve, attach to the Odoo quotation).

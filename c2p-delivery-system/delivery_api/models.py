@@ -101,6 +101,39 @@ class ResearchIn(BaseModel):
     web_search: Optional[bool] = None      # override the global default
 
 
+# ── Phase 2: Approvals + outreach ─────────────────────────────────────────
+class Approval(BaseModel):
+    """A gated action waiting on a human. The decision (approve/edit/reject),
+    the reason, and any human edit to the payload are captured as owned data —
+    the most valuable correction signal C2P keeps."""
+    id: str = Field(default_factory=lambda: "apr_" + uuid.uuid4().hex[:12])
+    action_type: str                       # e.g. outreach_send, proposal_send
+    payload: dict[str, Any] = Field(default_factory=dict)
+    requester_agent: str = ""
+    account_id: Optional[str] = None
+    engagement_id: Optional[str] = None
+    status: str = "pending"                # pending | approved | rejected | edited
+    decided_by: Optional[str] = None
+    decided_at: Optional[str] = None
+    reason: Optional[str] = None
+    result: Optional[dict] = None          # what executing the action produced
+    created_at: str = Field(default_factory=_now)
+
+
+class ApprovalDecisionIn(BaseModel):
+    decision: str                          # approved | rejected | edited
+    reason: Optional[str] = None
+    edited_payload: Optional[dict] = None  # the human's correction (owned data)
+    decided_by: str = "owner"
+
+
+class OutreachIn(BaseModel):
+    contact_name: Optional[str] = None
+    channel: str = "email"                 # email | whatsapp | linkedin
+    angle: Optional[str] = None
+    auto_queue_send: bool = True           # also create the gated send approval
+
+
 class InfraIn(BaseModel):
     """Inputs for the System Administrator (Infrastructure Advisor) agent."""
     account_id: Optional[str] = None

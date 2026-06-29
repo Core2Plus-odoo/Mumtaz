@@ -32,6 +32,14 @@ from sync import writeback
 from odoo import get_client
 import industry
 import llm
+import policy
+import channels
+
+from datetime import datetime, timezone
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 MODEL = llm.DEFAULT_MODEL  # the model is config, owned by llm.py
 
@@ -416,6 +424,102 @@ def infra_recommend(body: m.InfraIn):
             learned_by="sysadmin",
         )
     return out
+
+
+# --------------------------------------------------------------------------- #
+# Phase 2 — Outreach (SDR) + the approval layer
+# --------------------------------------------------------------------------- #
+@app.post("/accounts/{account_id}/outreach")
+def outreach(account_id: str, body: m.OutreachIn):
+    """Draft a personalised outreach sequence (auto). Actually SENDING the first
+    touch is gated — this also creates a pending Approval for the send."""
+    acc = _account(account_id)
+    content = (
+        f"Prospect company: {acc.name}\nCountry: {acc.country or 'UAE/GCC'}\n"
+        f"Industry: {acc.industry or 'unknown'}\nChannel: {body.channel}\n"
+        f"Contact: {body.contact_name or 'the right decision-maker'}\n"
+        f"Angle: {body.angle or 'open a conversation about an Odoo outcome'}\n\n"
+        "Write the outreach sequence JSON."
+        + industry.playbook_block(acc.industry)
+        + ks.context_block(account_id, body.angle or acc.industry or acc.name)
+    )
+    out = run_agent("outreach", content, account_id=account_id)
+    ks.write_entry(account_id, "communication", out,
+                   title=f"Outreach draft ({body.channel})", learned_by="outreach",
+                   tags=["outreach", "draft"])
+    approval = None
+    if body.auto_queue_send:
+        first = (out.get("sequence") or [{}])[0]
+        approval = policy.gate(
+            store, "outreach_send",
+            {"channel": body.channel, "to": body.contact_name or acc.name,
+             "account_id": account_id, "company": acc.name, "message": first},
+            requester_agent="outreach", account_id=account_id,
+        )
+    return {"draft": out, "approval": approval.model_dump() if approval else None}
+
+
+def _execute_action(appr) -> dict:
+    """Run a gated action once a human approves it. Returns a result dict."""
+    action, payload = appr.action_type, appr.payload or {}
+    if action == "outreach_send":
+        msg = payload.get("message") or {}
+        res = channels.send(payload.get("channel", "email"), payload.get("to", ""),
+                            msg.get("subject", "C2P Consultants"), msg.get("body", ""))
+        if appr.account_id:
+            ks.write_entry(appr.account_id, "communication",
+                           {"channel": payload.get("channel"), "to": payload.get("to"),
+                            "message": msg, "send_result": res},
+                           title="Outreach sent", learned_by="owner",
+                           tags=["outreach", "sent"])
+        # Best-effort chatter log if we have an Odoo lead for the account.
+        try:
+            acc = store.get_account(appr.account_id) if appr.account_id else None
+            if acc and acc.odoo_db and acc.partner_id:
+                get_client(acc.odoo_db).message_post(
+                    "res.partner", acc.partner_id,
+                    f"C2P outreach ({payload.get('channel')}): {msg.get('subject','')}")
+        except Exception:
+            pass
+        return res
+    return {"note": "no executor registered", "action": action}
+
+
+@app.get("/approvals")
+def list_approvals(status: str | None = "pending", limit: int = 100):
+    return [a.model_dump() for a in store.list_approvals(status, limit=limit)]
+
+
+@app.get("/approvals/count")
+def approvals_count():
+    return {"pending": store.count_approvals("pending")}
+
+
+@app.post("/approvals/{approval_id}/decide")
+def decide_approval(approval_id: str, body: m.ApprovalDecisionIn):
+    appr = store.get_approval(approval_id)
+    if not appr:
+        raise HTTPException(status_code=404, detail="Approval not found")
+    if appr.status != "pending":
+        raise HTTPException(status_code=400, detail=f"Already {appr.status}")
+    if body.decision not in ("approved", "rejected", "edited"):
+        raise HTTPException(status_code=400, detail="decision must be approved|rejected|edited")
+
+    # Capture the human's edit as owned correction data.
+    if body.decision == "edited" and body.edited_payload is not None:
+        appr.payload = body.edited_payload
+
+    result = None
+    if body.decision in ("approved", "edited"):
+        result = _execute_action(appr)
+
+    appr.status = body.decision
+    appr.decided_by = body.decided_by
+    appr.decided_at = _now_iso()
+    appr.reason = body.reason
+    appr.result = result
+    store.update_approval(appr)
+    return appr.model_dump()
 
 
 @app.get("/industries")

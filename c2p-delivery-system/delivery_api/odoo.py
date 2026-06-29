@@ -94,6 +94,10 @@ class OdooClient:
         name = rec[0].get("partner_name") or "Customer"
         return self.execute("res.partner", "create", {"name": name, "is_company": True})
 
+    def message_post(self, res_model: str, res_id: int, body: str) -> Any:
+        """Log a note to a record's chatter (canonical comms log in Odoo)."""
+        return self.execute(res_model, "message_post", [res_id], body=body)
+
     def attach_json(self, res_model: str, res_id: int, name: str, obj: Any) -> int:
         """Upsert a JSON attachment on a record (deletes a same-named one first
         so re-running a stage replaces rather than piles up)."""

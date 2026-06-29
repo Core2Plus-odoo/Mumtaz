@@ -7,11 +7,51 @@ import tempfile
 
 import pytest
 
-from models import Account, Engagement, KnowledgeEntry
+from models import Account, Approval, Engagement, KnowledgeEntry
 from store import EngagementStore
 from knowledge import KnowledgeService
 import industry
+import policy
+import channels
 import llm
+
+
+# ── Phase 2: approval layer + autonomy policy + channels ──────────────────
+def test_autonomy_policy_gates_sends(store):
+    # Internal reasoning runs auto (no approval object).
+    assert policy.gate(store, "research", {}, "research") is None
+    assert policy.gate(store, "presales", {}, "presales") is None
+    # Client-facing send is gated → a pending approval is created.
+    appr = policy.gate(store, "outreach_send", {"to": "x"}, "outreach", account_id="acc1")
+    assert appr is not None and appr.status == "pending"
+    assert store.count_approvals("pending") == 1
+
+
+def test_autonomy_override_via_settings(store):
+    store.save_setting("autonomy", {"research": "approval"})
+    appr = policy.gate(store, "research", {}, "research")
+    assert appr is not None and appr.action_type == "research"
+
+
+def test_approval_decide_round_trip(store):
+    appr = policy.gate(store, "outreach_send",
+                       {"channel": "email", "to": "ceo@acme.com",
+                        "message": {"subject": "Hi", "body": "Hello"}},
+                       "outreach", account_id="acc1")
+    got = store.get_approval(appr.id)
+    assert got.status == "pending"
+    # Approve + execute path mirrors the endpoint logic.
+    got.payload["message"]["body"] = "Edited hello"   # human correction captured
+    got.status = "edited"
+    store.update_approval(got)
+    assert store.get_approval(appr.id).payload["message"]["body"] == "Edited hello"
+    assert store.count_approvals("pending") == 0
+
+
+def test_channels_dry_run_by_default():
+    r = channels.send("email", "a@b.com", "Subject", "Body")
+    assert r["mode"] == "dry-run" and r["sent"] is False
+    assert channels.send("whatsapp", "+9715", "", "hi")["channel"] == "whatsapp"
 
 
 # ── Industry playbook library ─────────────────────────────────────────────
@@ -151,3 +191,45 @@ def test_endpoints_account_research_knowledge(monkeypatch, tmp_path):
     assert pr["prospects"][0]["fit_score"] == 90
 
     assert c.get("/health").json()["agents"][:2] == ["prospect", "research"]
+
+
+def test_endpoints_outreach_and_approval_flow(monkeypatch, tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "ep2.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+
+    monkeypatch.setattr(main_mod, "run_agent", lambda *a, **k: {
+        "channel": "email",
+        "sequence": [{"step": 1, "when": "day 0", "subject": "Quick idea for Acme",
+                      "body": "Hi — short note about an Odoo outcome.", "purpose": "open"}],
+        "personalisation_notes": "stub",
+    })
+
+    c = TestClient(main_mod.app)
+    acc = c.post("/accounts", json={"name": "Acme", "industry": "Manufacturing"}).json()
+
+    # Drafting is auto; the send is gated → an approval appears.
+    res = c.post(f"/accounts/{acc['id']}/outreach", json={"channel": "email"}).json()
+    assert res["draft"]["sequence"][0]["subject"].startswith("Quick idea")
+    assert res["approval"] and res["approval"]["status"] == "pending"
+    apr_id = res["approval"]["id"]
+
+    assert c.get("/approvals/count").json()["pending"] == 1
+    queue = c.get("/approvals").json()
+    assert any(a["id"] == apr_id for a in queue)
+
+    # Approve → executes the send (dry-run) and clears the queue.
+    decided = c.post(f"/approvals/{apr_id}/decide",
+                     json={"decision": "approved", "decided_by": "owner"}).json()
+    assert decided["status"] == "approved"
+    assert decided["result"]["channel"] == "email"
+    assert c.get("/approvals/count").json()["pending"] == 0
+
+    # Deciding again is rejected.
+    again = c.post(f"/approvals/{apr_id}/decide", json={"decision": "approved"})
+    assert again.status_code == 400

@@ -14,7 +14,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
 
-from models import Account, Engagement, KnowledgeEntry
+from models import Account, Approval, Engagement, KnowledgeEntry
 
 DB_PATH = os.getenv("C2P_STORE", "delivery.db")
 
@@ -61,6 +61,21 @@ CREATE TABLE IF NOT EXISTS knowledge_entries (
   searchable TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_knowledge_account ON knowledge_entries(account_id);
+CREATE TABLE IF NOT EXISTS approvals (
+  id            TEXT PRIMARY KEY,
+  action_type   TEXT,
+  payload       TEXT,
+  requester_agent TEXT,
+  account_id    TEXT,
+  engagement_id TEXT,
+  status        TEXT,
+  decided_by    TEXT,
+  decided_at    TEXT,
+  reason        TEXT,
+  result        TEXT,
+  created_at    TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_approvals_status ON approvals(status);
 CREATE TABLE IF NOT EXISTS agent_runs (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   task          TEXT,
@@ -261,6 +276,63 @@ class EngagementStore:
                 scored.append((hits, r))
         scored.sort(key=lambda x: x[0], reverse=True)
         return [self._to_knowledge(r) for _, r in scored[:limit]]
+
+    # ── Approvals (the gate) ─────────────────────────────────────────────
+    def _to_approval(self, r: sqlite3.Row) -> Approval:
+        return Approval(
+            id=r["id"], action_type=r["action_type"],
+            payload=json.loads(r["payload"] or "{}"),
+            requester_agent=r["requester_agent"] or "",
+            account_id=r["account_id"], engagement_id=r["engagement_id"],
+            status=r["status"] or "pending", decided_by=r["decided_by"],
+            decided_at=r["decided_at"], reason=r["reason"],
+            result=json.loads(r["result"]) if r["result"] else None,
+            created_at=r["created_at"] or "",
+        )
+
+    def create_approval(self, a: Approval) -> Approval:
+        with self._conn() as c:
+            c.execute(
+                """INSERT INTO approvals
+                   (id, action_type, payload, requester_agent, account_id, engagement_id,
+                    status, decided_by, decided_at, reason, result, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (a.id, a.action_type, json.dumps(a.payload), a.requester_agent,
+                 a.account_id, a.engagement_id, a.status, a.decided_by, a.decided_at,
+                 a.reason, json.dumps(a.result) if a.result is not None else None,
+                 a.created_at),
+            )
+        return a
+
+    def get_approval(self, approval_id: str) -> Optional[Approval]:
+        with self._conn() as c:
+            r = c.execute("SELECT * FROM approvals WHERE id=?", (approval_id,)).fetchone()
+            return self._to_approval(r) if r else None
+
+    def list_approvals(self, status: Optional[str] = None, limit: int = 100) -> list[Approval]:
+        q = "SELECT * FROM approvals"
+        args: list = []
+        if status:
+            q += " WHERE status=?"
+            args.append(status)
+        q += " ORDER BY created_at DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            return [self._to_approval(r) for r in c.execute(q, args).fetchall()]
+
+    def update_approval(self, a: Approval) -> Approval:
+        with self._conn() as c:
+            c.execute(
+                """UPDATE approvals SET payload=?, status=?, decided_by=?, decided_at=?,
+                   reason=?, result=? WHERE id=?""",
+                (json.dumps(a.payload), a.status, a.decided_by, a.decided_at, a.reason,
+                 json.dumps(a.result) if a.result is not None else None, a.id),
+            )
+        return a
+
+    def count_approvals(self, status: str = "pending") -> int:
+        with self._conn() as c:
+            return c.execute("SELECT COUNT(*) FROM approvals WHERE status=?", (status,)).fetchone()[0]
 
     # ── Owned dataset: every agent run ───────────────────────────────────
     def log_run(self, d: dict) -> None:
