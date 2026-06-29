@@ -255,6 +255,12 @@
   .auth-tab{flex:1;text-align:center;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);background:var(--paper)}
   .auth-tab.on{background:rgba(0,179,179,.1);color:var(--deep-teal)}
 
+  /* execution board */
+  .exec-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
+  .exec-col{min-width:230px;flex:1;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:10px}
+  .exec-col-h{font-weight:600;font-size:13px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .exec-card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:8px}
+
   /* responsive sidebar */
   @media(max-width:860px){
     .app{grid-template-columns:1fr}
@@ -470,6 +476,7 @@ function renderNav(){
   let html=`<button class="nav-item ${activeView==='cockpit'?'active':''}" onclick="goView('cockpit')"><span class="ni-ico">◉</span><span class="ni-name">Agency Cockpit</span></button>`;
   html+=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
   html+=`<button class="nav-item ${activeView==='pm'?'active':''}" onclick="goView('pm')"><span class="ni-ico">◑</span><span class="ni-name">Project Manager</span></button>`;
+  html+=`<button class="nav-item ${activeView==='execution'?'active':''}" onclick="goView('execution')"><span class="ni-ico">▤</span><span class="ni-name">Execution</span></button>`;
   let lastGroup="";
   STAGES.forEach(s=>{
     if(s.group!==lastGroup){html+=`<div class="nav-sec">${s.group}</div>`;lastGroup=s.group;}
@@ -514,6 +521,7 @@ function renderView(){
   const c=document.getElementById('content');
   if(activeView==='cockpit')return renderCockpit(c);
   if(activeView==='pm')return renderPM(c);
+  if(activeView==='execution')return renderExecution(c);
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
   if(activeView==='leads')return renderLeads(c);
@@ -1017,6 +1025,36 @@ function newAccountModal(){
 }
 function closeAccModal(){const m=document.getElementById('accModal');if(m)m.remove();}
 async function submitAccount(){const name=val('na_name');if(!name){focus('na_name');return;}try{await api("POST","/accounts",{name,industry:val('na_ind')||null,country:val('na_country')||null,odoo_db:val('na_db')||null});closeAccModal();toast('Account created','ok');renderAccounts(document.getElementById('content'));}catch(e){toast('Create failed: '+e.message,'bad');}}
+
+/* ---------- project execution board (live Odoo tasks) ---------- */
+let execStages=[];
+async function renderExecution(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">Select an engagement.</div></div></div></div>`;return;}
+  c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head"><div><h2>Project Execution</h2><p>Live Odoo tasks for ${esc(eng.company)} — work the board; changes write straight to Odoo.</p></div>
+    <div class="run-area"><input type="text" id="exNew" placeholder="New task…" style="width:170px"><button class="btn primary sm" onclick="addExecTask()">+ Add</button><button class="btn ghost sm" onclick="loadExec()">↻</button></div></div>
+    <div class="panel-body" id="exBody"><div class="skel" style="height:160px"></div></div></div></div>`;
+  loadExec();
+}
+function stageOptions(sel){return execStages.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${esc(s.name)}</option>`).join('');}
+function execCard(t){const ks=t.kanban_state||'normal';const kc=ks==='done'?'var(--green)':ks==='blocked'?'var(--rust)':'var(--muted-2)';const sid=t.stage_id&&t.stage_id[0];
+  return `<div class="exec-card"><div style="font-size:13px;font-weight:500;margin-bottom:7px">${esc(t.name)}</div>
+    <div style="display:flex;gap:6px;align-items:center"><span title="${esc(ks)}" style="width:8px;height:8px;border-radius:50%;background:${kc};flex:none"></span>
+      <select onchange="moveExec(${t.id},this.value)" style="flex:1;padding:3px 5px;font-size:11px">${stageOptions(sid)}</select>
+      <button class="btn sm" style="padding:3px 7px" onclick="doneExec(${t.id})" title="Mark done">✓</button></div></div>`;
+}
+async function loadExec(){
+  const b=document.getElementById('exBody');if(!b)return;b.innerHTML=`<div class="skel" style="height:160px"></div>`;
+  try{const r=await api("GET",`/engagements/${eng.id}/tasks`);
+    if(!r.linked){b.innerHTML=`<div class="placeholder">No Odoo DB linked. Set the Odoo Connection and this engagement's DB, then run Project to create tasks.</div>`;return;}
+    if(!r.project_id){b.innerHTML=`<div class="placeholder">No Odoo project yet — run the Project stage to create the project + tasks in Odoo.</div>`;return;}
+    execStages=r.stages||[];
+    const byStage={};execStages.forEach(s=>byStage[s.id]=[]);(r.tasks||[]).forEach(t=>{const sid=t.stage_id&&t.stage_id[0];(byStage[sid]=byStage[sid]||[]).push(t);});
+    b.innerHTML=`<div class="exec-board">${execStages.map(s=>`<div class="exec-col"><div class="exec-col-h"><span>${esc(s.name)}</span><span class="ni-count">${(byStage[s.id]||[]).length}</span></div>${(byStage[s.id]||[]).map(execCard).join('')||'<div class="hint" style="padding:6px">—</div>'}</div>`).join('')}</div>`;
+  }catch(e){b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function moveExec(id,stage){try{await api("POST",`/engagements/${eng.id}/tasks/${id}`,{stage_id:parseInt(stage)});toast('Task moved','ok');}catch(e){toast('Failed: '+e.message,'bad');}}
+async function doneExec(id){try{await api("POST",`/engagements/${eng.id}/tasks/${id}`,{kanban_state:'done'});toast('Marked done','ok');loadExec();}catch(e){toast('Failed: '+e.message,'bad');}}
+async function addExecTask(){const name=val('exNew');if(!name)return;try{await api("POST",`/engagements/${eng.id}/tasks`,{name});toast('Task added in Odoo','ok');const n=document.getElementById('exNew');if(n)n.value='';loadExec();}catch(e){toast('Failed: '+e.message,'bad');}}
 
 /* ---------- project manager (per-engagement) ---------- */
 function renderPM(c){

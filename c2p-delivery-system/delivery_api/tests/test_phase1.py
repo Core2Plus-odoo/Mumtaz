@@ -351,6 +351,45 @@ def test_config_apply_is_gated(monkeypatch, tmp_path):
     assert dec["result"]["applied"] == 1 and dec["result"]["results"][0]["id"] == 101
 
 
+# ── Project execution: live Odoo task board ───────────────────────────────
+def test_execution_task_board(monkeypatch, tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "exec.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+
+    class _FakeOdoo:
+        def execute(self, model, method, *a, **k):
+            if model == "project.task.type" and method == "search_read":
+                return [{"id": 1, "name": "To Do", "fold": False}]
+            if model == "project.task" and method == "search_read":
+                return [{"id": 11, "name": "T1", "stage_id": [1, "To Do"],
+                         "kanban_state": "normal"}]
+            return True
+        def create_task(self, pid, name, **v):
+            return 99
+    monkeypatch.setattr(main_mod, "get_client", lambda db: _FakeOdoo())
+
+    c = TestClient(main_mod.app)
+    eng = c.post("/engagements", json={"company": "Acme", "odoo_db": "Acme_DB"}).json()
+    e = main_mod.store.get(eng["id"])
+    e.project_id = 9
+    main_mod.store.save(e)
+
+    r = c.get(f"/engagements/{eng['id']}/tasks").json()
+    assert r["linked"] and len(r["tasks"]) == 1 and len(r["stages"]) == 1
+    assert c.post(f"/engagements/{eng['id']}/tasks", json={"name": "New"}).json()["task_id"] == 99
+    assert c.post(f"/engagements/{eng['id']}/tasks/11", json={"kanban_state": "done"}).json()["ok"]
+
+    # Unlinked engagement reports linked:false rather than erroring.
+    eng2 = c.post("/engagements", json={"company": "NoOdoo"}).json()
+    assert c.get(f"/engagements/{eng2['id']}/tasks").json()["linked"] is False
+
+
 # ── Phase 5: communications (triage + sensitivity gating) ─────────────────
 def test_comms_inbound_routes_and_gates(monkeypatch, tmp_path):
     pytest.importorskip("fastapi")

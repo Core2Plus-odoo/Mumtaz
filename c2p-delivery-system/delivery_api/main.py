@@ -763,6 +763,65 @@ def project_manager(eng_id: str):
 
 
 # --------------------------------------------------------------------------- #
+# Project execution — live Odoo task board (human actions, not gated)
+# --------------------------------------------------------------------------- #
+@app.get("/engagements/{eng_id}/tasks")
+def list_tasks(eng_id: str):
+    """The engagement's Odoo project tasks + stages, for the execution board."""
+    eng = _engagement(eng_id)
+    if not eng.odoo_db:
+        return {"linked": False, "project_id": None, "tasks": [], "stages": []}
+    try:
+        c = get_client(eng.odoo_db)
+        stages = c.execute("project.task.type", "search_read", [],
+                           fields=["name", "fold"], limit=50)
+        tasks = []
+        if eng.project_id:
+            tasks = c.execute("project.task", "search_read",
+                              [("project_id", "=", eng.project_id)],
+                              fields=["name", "stage_id", "kanban_state", "date_deadline"],
+                              limit=300)
+        return {"linked": True, "project_id": eng.project_id, "tasks": tasks, "stages": stages}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+
+
+@app.post("/engagements/{eng_id}/tasks")
+def create_task(eng_id: str, body: dict):
+    eng = _engagement(eng_id)
+    if not eng.odoo_db or not eng.project_id:
+        raise HTTPException(status_code=400, detail="No linked Odoo project (run Project first)")
+    name = (body or {}).get("name")
+    if not name:
+        raise HTTPException(status_code=400, detail="name required")
+    try:
+        tid = get_client(eng.odoo_db).create_task(eng.project_id, name)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+    return {"task_id": tid}
+
+
+@app.post("/engagements/{eng_id}/tasks/{task_id}")
+def update_task(eng_id: str, task_id: int, body: dict):
+    """Move a task's stage or set its kanban state (done/blocked/normal)."""
+    eng = _engagement(eng_id)
+    if not eng.odoo_db:
+        raise HTTPException(status_code=400, detail="No Odoo DB linked")
+    vals = {}
+    if "stage_id" in body:
+        vals["stage_id"] = body["stage_id"]
+    if "kanban_state" in body:
+        vals["kanban_state"] = body["kanban_state"]
+    if not vals:
+        raise HTTPException(status_code=400, detail="nothing to update")
+    try:
+        get_client(eng.odoo_db).execute("project.task", "write", [task_id], vals)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+    return {"ok": True}
+
+
+# --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")

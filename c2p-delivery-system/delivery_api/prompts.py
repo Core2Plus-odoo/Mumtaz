@@ -139,7 +139,8 @@ HARD RULES:
 2. VERSION-CORRECT VIEW SYNTAX. v17/v18/v19: inline attributes —
    invisible="state != 'draft'", readonly=..., required=...; list root tag is
    <list>; NEVER attrs="{{...}}" or states=.... v16: attrs="{{'invisible':[...]}}"
-   and the <tree> tag.
+   and the <tree> tag. NEVER use target="inline" on ir.actions.act_window — it
+   was removed in v18/v19; for res.config.settings actions omit target entirely.
 3. __manifest__.py: name, version "<MAJOR>.0.1.0.0", category, summary,
    author "C2P Consultants", website "https://www.core2plus.com",
    license "LGPL-3", minimal correct depends, data ordered (security CSV first).
