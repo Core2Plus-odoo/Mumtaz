@@ -271,9 +271,23 @@ Decisions: **additive auth (default OFF)** so the live console is untouched;
 `STRIPE_SECRET_KEY` + `STRIPE_PRICE_DELIVERY/GROWTH/AGENCY` +
 `STRIPE_WEBHOOK_SECRET` in `.env`, restart, and point the console at the login.
 
-**Remaining for full Phase 7 (next sub-steps)**: console onboarding/login UI
-(sign up → connect Odoo → set brand → set policy), per-tenant AI key/Odoo/channel
-wiring into the agents (read from tenant secrets), and a billing/edition screen.
+### Phase 7 — onboarding UI + per-tenant keys ✅
+- **Login/Signup gate** (console): when `/health` reports `multitenant: true` and
+  there's no token, a branded login/sign-up card gates the app; the JWT is stored
+  and sent as `Authorization: Bearer` on every call; 401 → back to login. Off =
+  no gate (single-tenant unchanged).
+- **Per-tenant AI key**: middleware loads the tenant's decrypted secrets into a
+  context; `llm._anthropic()` uses the tenant's own `anthropic_key` (cached per
+  key) when present, else the env key — so each tenant bills/iso­lates their own
+  model account.
+- **Workspace panel** (Settings, multi-tenant only): set the tenant's Anthropic
+  key + Odoo URL/user/password (secrets encrypted via `PUT /tenant/config`),
+  shows the plan badge, and **Upgrade** buttons → Stripe Checkout.
+- **Sidebar**: tenant name + edition + **Sign out**.
+
+Remaining niceties (optional): per-tenant Odoo creds wired into `get_client`
+(today the AI key is per-tenant; Odoo still uses env/shared unless extended),
+and an onboarding wizard flow. The platform is otherwise complete and sellable.
 
 All 7 phases now have a working spine; this is the platform layer that makes it
 sellable.

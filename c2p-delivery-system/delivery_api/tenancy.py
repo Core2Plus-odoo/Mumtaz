@@ -226,6 +226,23 @@ class ControlStore:
 # ── per-tenant store registry + proxy ─────────────────────────────────────
 _tenant_stores: dict[str, object] = {}
 _current = contextvars.ContextVar("current_store", default=None)
+_current_secrets: contextvars.ContextVar = contextvars.ContextVar("current_secrets", default={})
+
+
+def set_current_secrets(s: dict) -> None:
+    _current_secrets.set(s or {})
+
+
+def reset_current_secrets() -> None:
+    _current_secrets.set({})
+
+
+def current_secret(name: str) -> Optional[str]:
+    """The current tenant's decrypted secret (e.g. 'anthropic_key'), or None."""
+    try:
+        return (_current_secrets.get() or {}).get(name) or None
+    except Exception:
+        return None
 
 
 def tenant_store(tenant_id: str):

@@ -28,16 +28,33 @@ DEFAULT_MODEL = os.getenv("C2P_MODEL", "claude-sonnet-4-6")
 WEB_SEARCH_ENABLED = os.getenv("C2P_WEB_SEARCH", "1") == "1"
 
 _client = None
+_clients_by_key: dict = {}
 
 
 class LLMError(Exception):
     """Raised for provider/transport failures (mapped to HTTP 502 upstream)."""
 
 
+def _tenant_key() -> Optional[str]:
+    """The current tenant's own Anthropic key, if multi-tenant context set one."""
+    try:
+        import tenancy
+        return tenancy.current_secret("anthropic_key")
+    except Exception:
+        return None
+
+
 def _anthropic():
+    """Default client (env key) — or the current tenant's own key when present,
+    so each tenant bills against and isolates their own model account."""
+    from anthropic import Anthropic
+    key = _tenant_key()
+    if key:
+        if key not in _clients_by_key:
+            _clients_by_key[key] = Anthropic(api_key=key)
+        return _clients_by_key[key]
     global _client
     if _client is None:
-        from anthropic import Anthropic
         _client = Anthropic()  # reads ANTHROPIC_API_KEY from the environment
     return _client
 

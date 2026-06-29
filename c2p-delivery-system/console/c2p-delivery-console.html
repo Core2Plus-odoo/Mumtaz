@@ -248,6 +248,13 @@
   .modal-b .input-block{margin-bottom:13px}
   .modal-f{display:flex;justify-content:flex-end;gap:9px;padding:0 20px 18px}
 
+  /* auth gate */
+  .auth-gate{position:fixed;inset:0;background:var(--paper);display:grid;place-items:center;z-index:300;padding:20px}
+  .auth-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);width:100%;max-width:400px;padding:28px}
+  .auth-tabs{display:flex;gap:6px;margin-bottom:18px}
+  .auth-tab{flex:1;text-align:center;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);background:var(--paper)}
+  .auth-tab.on{background:rgba(0,179,179,.1);color:var(--deep-teal)}
+
   /* responsive sidebar */
   @media(max-width:860px){
     .app{grid-template-columns:1fr}
@@ -322,6 +329,7 @@ let running = null;
 let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
 let odooModules = null, odooModFilter = "";
 let pendingCount = 0, approvalPayloads = {}, accountsCache = [];
+let multitenant = false, authToken = localStorage.getItem("c2p_token") || "", currentTenant = null;
 
 const STAGES = [
   {id:"presales",  name:"Presales",  ico:"◎", group:"Win the work",  persona:"Presales Consultant", doc:"Discovery & Qualification Brief", desc:"Qualify the opportunity and turn discovery into candidate requirements."},
@@ -376,8 +384,10 @@ function toast(msg,type){
 /* ---------- api ---------- */
 async function api(method, path, body){
   const opt={method,headers:{"Content-Type":"application/json"}};
+  if(authToken) opt.headers["Authorization"]="Bearer "+authToken;
   if(body) opt.body=JSON.stringify(body);
   const res=await fetch(API_BASE+path,opt);
+  if(res.status===401 && multitenant && !path.startsWith('/auth')){ logout(); throw new Error("Please log in"); }
   if(!res.ok){let d;try{d=(await res.json()).detail;}catch(e){d=res.statusText;}throw new Error(d||("HTTP "+res.status));}
   return res.json();
 }
@@ -1146,7 +1156,7 @@ function brandPreview(){return `
   </div>`;}
 function renderSettings(c){
   const v=k=>esc(BRAND[k]||'');
-  c.innerHTML=`<div class="view"><div class="panel">
+  c.innerHTML=`<div class="view">`+workspacePanel()+`<div class="panel">
     <div class="panel-head"><div><h2>Branding &amp; Settings</h2><p>Control how the console and every generated document are branded. Saved on the server, applied for all users.</p></div>
       <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to C2P</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
     <div class="panel-body"><div class="two-col">
@@ -1299,11 +1309,75 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeNewEng();
 });
 
+/* ---------- multi-tenant auth (Phase 7; only active when MULTITENANT on) ---------- */
+function showAuth(mode){
+  mode=mode||'login';
+  let el=document.getElementById('authGate');
+  if(!el){el=document.createElement('div');el.id='authGate';el.className='auth-gate';document.body.appendChild(el);}
+  el.innerHTML=`<div class="auth-card">
+    <div style="height:32px;margin-bottom:6px">${brandMark('dark')}</div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--deep-teal);margin-bottom:18px">${esc(BRAND.tagline||'Delivery Console')}</div>
+    <div class="auth-tabs"><div class="auth-tab ${mode==='login'?'on':''}" onclick="showAuth('login')">Log in</div><div class="auth-tab ${mode==='signup'?'on':''}" onclick="showAuth('signup')">Sign up</div></div>
+    ${mode==='signup'?`<div class="input-block"><label>Agency name</label><input type="text" id="au_company" style="width:100%"></div>`:''}
+    <div class="input-block"><label>Email</label><input type="text" id="au_email" style="width:100%"></div>
+    <div class="input-block"><label>Password</label><input type="password" id="au_pw" style="width:100%"></div>
+    ${mode==='signup'?`<div class="input-block"><label>Plan</label><select id="au_edition" style="width:100%"><option value="delivery">Delivery</option><option value="growth">Growth</option><option value="agency">Agency</option></select></div>`:''}
+    <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" onclick="doAuth('${mode}')">${mode==='signup'?'Create workspace':'Log in'}</button>
+    <div id="au_err" class="hint" style="color:var(--rust);margin-top:10px"></div></div>`;
+  setTimeout(()=>{const f=document.getElementById(mode==='signup'?'au_company':'au_email');if(f)f.focus();const pw=document.getElementById('au_pw');if(pw)pw.addEventListener('keydown',e=>{if(e.key==='Enter')doAuth(mode);});},0);
+}
+async function doAuth(mode){
+  const err=document.getElementById('au_err');err.textContent='';
+  const email=val('au_email'),pw=val('au_pw');
+  if(!email||!pw){err.textContent='Email and password are required';return;}
+  try{
+    let r;
+    if(mode==='signup'){const company=val('au_company');if(!company){err.textContent='Agency name is required';return;}r=await api("POST","/auth/signup",{company,email,password:pw,edition:document.getElementById('au_edition').value});}
+    else{r=await api("POST","/auth/login",{email,password:pw});}
+    if(r&&r.token){localStorage.setItem('c2p_token',r.token);authToken=r.token;location.reload();}
+    else err.textContent='Unexpected response';
+  }catch(e){err.textContent=e.message;}
+}
+function logout(){localStorage.removeItem('c2p_token');authToken='';location.reload();}
+function renderTenantFoot(){
+  if(!multitenant||!currentTenant)return;
+  const foot=document.querySelector('.sb-foot');if(!foot)return;
+  foot.insertAdjacentHTML('afterbegin',`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:11px;font-weight:600;color:var(--charcoal)">${esc(currentTenant.name)} · <span style="color:var(--deep-teal);text-transform:capitalize">${esc(currentTenant.edition)}</span></span><button class="btn ghost sm" onclick="logout()" style="padding:3px 8px;font-size:10px">Sign out</button></div>`);
+}
+function workspacePanel(){
+  if(!multitenant)return '';
+  const t=currentTenant||{},cfg=t.config||{};
+  return `<div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Workspace</h2><p>Your tenant's own AI key and Odoo connection — secrets are encrypted on the server.</p></div><div class="run-area"><span class="chip" style="text-transform:capitalize">${esc(t.edition||'delivery')} plan</span></div></div>
+    <div class="panel-body">
+      <div class="input-block"><label>Anthropic API key</label><input type="password" id="ws_key" placeholder="sk-ant-… (leave blank to keep current)"></div>
+      <div class="input-grid"><div class="input-block"><label>Odoo URL</label><input type="text" id="ws_ourl" value="${esc(cfg.odoo_url||'')}"></div>
+        <div class="input-block"><label>Odoo user</label><input type="text" id="ws_ouser" value="${esc(cfg.odoo_user||'')}"></div></div>
+      <div class="input-block"><label>Odoo password / API key</label><input type="password" id="ws_opw" placeholder="(leave blank to keep current)"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" onclick="saveWorkspace()">Save workspace</button>
+        ${t.edition==='delivery'?`<button class="btn sm" onclick="upgradePlan('growth')">Upgrade to Growth</button>`:''}
+        ${t.edition!=='agency'?`<button class="btn sm" onclick="upgradePlan('agency')">Upgrade to Agency</button>`:''}</div>
+    </div></div>`;
+}
+async function saveWorkspace(){
+  const config={};const ou=val('ws_ourl'),us=val('ws_ouser');if(ou)config.odoo_url=ou;if(us)config.odoo_user=us;
+  const secrets={};const k=val('ws_key');if(k)secrets.anthropic_key=k;const op=val('ws_opw');if(op)secrets.odoo_password=op;
+  try{await api("PUT","/tenant/config",{config,secrets});toast('Workspace saved','ok');}catch(e){toast('Failed: '+e.message,'bad');}
+}
+async function upgradePlan(edition){try{const r=await api("POST","/billing/checkout",{edition});if(r.checkout_url)window.location.href=r.checkout_url;else toast('Checkout unavailable — Stripe not configured','bad');}catch(e){toast('Failed: '+e.message,'bad');}}
+
 /* ---------- boot ---------- */
 (async function boot(){
-  renderApiChip();pingHealth();
+  renderApiChip();
+  let h=null; try{h=await fetch(API_BASE+"/health").then(r=>r.ok?r.json():null);}catch(e){}
+  multitenant=!!(h&&h.multitenant);
+  if(multitenant){
+    if(!authToken){ showAuth('login'); return; }
+    try{const me=await api("GET","/auth/me"); currentTenant=me.tenant; }catch(e){ logout(); return; }
+  }
+  pingHealth();
   try{const b=await api("GET","/branding");if(b&&typeof b==='object'&&!Array.isArray(b))Object.assign(BRAND,b);}catch(e){}
   applyBranding();
+  renderTenantFoot();
   await loadEngagements();
   const last=localStorage.getItem("c2p_last");
   if(last&&engagements.some(e=>e.id===last)){try{eng=await api("GET","/engagements/"+last);}catch(e){}}

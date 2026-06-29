@@ -78,11 +78,16 @@ async def _tenant_mw(request: Request, call_next):
     if not claims:
         return JSONResponse({"detail": "Unauthorized"}, status_code=401)
     tenancy.set_current_store(tenancy.tenant_store(claims["tenant_id"]))
+    try:
+        tenancy.set_current_secrets(control.get_secrets(claims["tenant_id"]))
+    except Exception:
+        tenancy.set_current_secrets({})
     request.state.claims = claims
     try:
         return await call_next(request)
     finally:
         tenancy.reset_current_store()
+        tenancy.reset_current_secrets()
 
 
 # --------------------------------------------------------------------------- #
