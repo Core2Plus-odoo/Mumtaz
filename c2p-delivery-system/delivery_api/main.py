@@ -24,7 +24,7 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import models as m
-from models import Account, Engagement
+from models import Account, Communication, Engagement
 from prompts import PROMPTS, MAX_TOKENS
 from store import EngagementStore
 from knowledge import KnowledgeService
@@ -592,6 +592,17 @@ def _execute_action(appr) -> dict:
         return _execute_proposal_send(payload, account_id=appr.account_id)
     if action == "code_deploy":
         return _execute_deploy(payload, account_id=appr.account_id)
+    if action == "client_comms_sensitive":
+        msg = payload.get("message") or {}
+        res = channels.send(payload.get("channel", "email"), payload.get("to", ""),
+                            msg.get("subject", "C2P Consultants"), msg.get("body", ""))
+        if appr.account_id:
+            ks.write_entry(appr.account_id, "communication",
+                           {"direction": "outbound", "to": payload.get("to"),
+                            "message": msg, "send_result": res},
+                           title="Reply sent (approved)", learned_by="owner",
+                           tags=["outbound", "sent"])
+        return res
     if action == "outreach_send":
         msg = payload.get("message") or {}
         res = channels.send(payload.get("channel", "email"), payload.get("to", ""),
@@ -650,6 +661,73 @@ def decide_approval(approval_id: str, body: m.ApprovalDecisionIn):
     appr.result = result
     store.update_approval(appr)
     return appr.model_dump()
+
+
+# --------------------------------------------------------------------------- #
+# Phase 5 — Communications (inbound triage + sensitivity-gated outbound)
+# --------------------------------------------------------------------------- #
+@app.post("/comms/inbound")
+def comms_inbound(body: m.CommsInboundIn):
+    """Triage an inbound message to the right account, draft a reply, and either
+    send it (auto, routine) or queue it for approval (scope/money/commitment)."""
+    acc = store.get_account(body.account_id) if body.account_id else None
+    ctx = ks.context_block(acc.id, body.subject or body.body[:80]) if acc else ""
+    content = (
+        f"Inbound {body.channel} message:\nFrom: {body.from_party}\n"
+        f"Subject: {body.subject}\n\n{body.body}\n\nTriage and draft a reply. Return the JSON."
+        + ctx
+    )
+    out = run_agent("comms", content, account_id=acc.id if acc else None)
+
+    if not acc and out.get("matched_company"):
+        acc = store.find_account_by_name(out["matched_company"])
+    aid = acc.id if acc else None
+
+    store.add_comm(Communication(
+        account_id=aid, direction="inbound", channel=body.channel,
+        from_party=body.from_party, subject=body.subject, body=body.body, status="received"))
+    if aid:
+        ks.write_entry(aid, "communication",
+                       {"direction": "inbound", "from": body.from_party,
+                        "subject": body.subject, "intent": out.get("intent")},
+                       title=f"Inbound: {body.subject or out.get('intent', 'message')}",
+                       learned_by="comms", tags=["inbound"])
+
+    reply = out.get("suggested_reply") or {}
+    sensitivity = (out.get("sensitivity") or "auto").lower()
+    result = {"triage": out, "account_id": aid}
+
+    if sensitivity == "approval":
+        appr = policy.gate(
+            store, "client_comms_sensitive",
+            {"channel": body.channel, "to": body.from_party, "account_id": aid,
+             "message": reply, "in_reply_to": body.subject},
+            requester_agent="comms", account_id=aid)
+        store.add_comm(Communication(
+            account_id=aid, direction="outbound", channel=body.channel,
+            to_party=body.from_party, subject=reply.get("subject", ""),
+            body=reply.get("body", ""), status="drafted", sensitivity="approval",
+            approval_id=appr.id if appr else None))
+        result["approval"] = appr.model_dump() if appr else None
+    else:
+        send = channels.send(body.channel, body.from_party,
+                             reply.get("subject", "C2P Consultants"), reply.get("body", ""))
+        store.add_comm(Communication(
+            account_id=aid, direction="outbound", channel=body.channel,
+            to_party=body.from_party, subject=reply.get("subject", ""),
+            body=reply.get("body", ""), status="sent", sensitivity="auto"))
+        if aid:
+            ks.write_entry(aid, "communication",
+                           {"direction": "outbound", "to": body.from_party,
+                            "subject": reply.get("subject"), "auto": True, "send_result": send},
+                           title="Auto reply sent", learned_by="comms", tags=["outbound"])
+        result["sent"] = send
+    return result
+
+
+@app.get("/comms")
+def list_comms(account_id: str | None = None, limit: int = 100):
+    return [c.model_dump() for c in store.list_comms(account_id, limit=limit)]
 
 
 @app.get("/industries")

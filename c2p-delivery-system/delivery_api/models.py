@@ -101,6 +101,31 @@ class ResearchIn(BaseModel):
     web_search: Optional[bool] = None      # override the global default
 
 
+# ── Phase 5: Communications ───────────────────────────────────────────────
+class Communication(BaseModel):
+    id: str = Field(default_factory=lambda: "com_" + uuid.uuid4().hex[:12])
+    account_id: Optional[str] = None
+    engagement_id: Optional[str] = None
+    direction: str = "inbound"             # inbound | outbound
+    channel: str = "email"                 # email | whatsapp
+    from_party: str = ""
+    to_party: str = ""
+    subject: str = ""
+    body: str = ""
+    status: str = "received"               # received | drafted | sent | escalated
+    sensitivity: str = "auto"              # auto | approval
+    approval_id: Optional[str] = None
+    created_at: str = Field(default_factory=_now)
+
+
+class CommsInboundIn(BaseModel):
+    channel: str = "email"
+    from_party: str = ""
+    subject: str = ""
+    body: str
+    account_id: Optional[str] = None
+
+
 # ── Phase 2: Approvals + outreach ─────────────────────────────────────────
 class Approval(BaseModel):
     """A gated action waiting on a human. The decision (approve/edit/reject),

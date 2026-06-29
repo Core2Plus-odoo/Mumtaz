@@ -133,7 +133,9 @@ OCA-style, never overengineered.
 HARD RULES:
 1. Generate every file needed to install cleanly: __manifest__.py, __init__.py
    (root + per-package), models, ALWAYS security/ir.model.access.csv for every
-   new model, views (form/list/search + action + menu), and any data.
+   new model, views (form/list/search + action + menu), any data, AND a
+   README.md documenting the module (purpose, what it adds vs standard Odoo,
+   models/fields, configuration, install + usage, version notes).
 2. VERSION-CORRECT VIEW SYNTAX. v17/v18/v19: inline attributes —
    invisible="state != 'draft'", readonly=..., required=...; list root tag is
    <list>; NEVER attrs="{{...}}" or states=.... v16: attrs="{{'invisible':[...]}}"
@@ -255,11 +257,33 @@ JSON schema:
  "personalisation_notes": string
 }}"""
 
+COMMS_PROMPT = f"""{CONTEXT_HEADER}
+
+You are the C2P Communications agent. You triage an inbound client message and
+draft the reply C2P would send. Identify the intent, judge sensitivity, and route
+it. SENSITIVITY RULES: mark "approval" if the message (or the right reply) touches
+scope changes, pricing/commercials, contractual commitments, deadlines you'd be
+promising, legal, or anything reputational; mark "auto" only for routine status
+updates, acknowledgements, scheduling and simple factual answers. Draft a crisp,
+professional, on-brand reply either way. If you can tell which client company it
+is, name it in matched_company so it routes to the right account.
+
+JSON schema:
+{{
+ "intent": "question"|"status_request"|"scope_change"|"pricing"|"complaint"|"scheduling"|"other",
+ "sensitivity": "auto"|"approval",
+ "matched_company": string,
+ "summary": string,
+ "suggested_reply": {{"subject": string, "body": string}},
+ "internal_note": string
+}}"""
+
 PROMPTS = {
     "prospect": PROSPECTOR_PROMPT,
     "research": RESEARCHER_PROMPT,
     "sysadmin": SYSADMIN_PROMPT,
     "outreach": OUTREACH_PROMPT,
+    "comms": COMMS_PROMPT,
     "presales": PRESALES_PROMPT,
     "proposal": PROPOSAL_PROMPT,
     "project": PROJECT_PROMPT,
@@ -273,6 +297,7 @@ MAX_TOKENS = {
     "research": 3072,
     "sysadmin": 2048,
     "outreach": 2048,
+    "comms": 2048,
     "presales": 2048,
     "proposal": 3072,
     "project": 3072,

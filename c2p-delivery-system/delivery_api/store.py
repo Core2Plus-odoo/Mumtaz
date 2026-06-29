@@ -14,7 +14,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
 
-from models import Account, Approval, Engagement, KnowledgeEntry
+from models import Account, Approval, Communication, Engagement, KnowledgeEntry
 
 DB_PATH = os.getenv("C2P_STORE", "delivery.db")
 
@@ -76,6 +76,22 @@ CREATE TABLE IF NOT EXISTS approvals (
   created_at    TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_approvals_status ON approvals(status);
+CREATE TABLE IF NOT EXISTS communications (
+  id            TEXT PRIMARY KEY,
+  account_id    TEXT,
+  engagement_id TEXT,
+  direction     TEXT,
+  channel       TEXT,
+  from_party    TEXT,
+  to_party      TEXT,
+  subject       TEXT,
+  body          TEXT,
+  status        TEXT,
+  sensitivity   TEXT,
+  approval_id   TEXT,
+  created_at    TEXT
+);
+CREATE INDEX IF NOT EXISTS ix_comms_account ON communications(account_id);
 CREATE TABLE IF NOT EXISTS agent_runs (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   task          TEXT,
@@ -216,6 +232,49 @@ class EngagementStore:
                 "SELECT id, name, industry, country, partner_id FROM accounts ORDER BY created_at DESC"
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def find_account_by_name(self, name: str) -> Optional[Account]:
+        if not name:
+            return None
+        with self._conn() as c:
+            r = c.execute("SELECT * FROM accounts WHERE name LIKE ? ORDER BY created_at LIMIT 1",
+                          (f"%{name}%",)).fetchone()
+            return self._to_account(r) if r else None
+
+    # ── Communications ───────────────────────────────────────────────────
+    def _to_comm(self, r: sqlite3.Row) -> Communication:
+        return Communication(
+            id=r["id"], account_id=r["account_id"], engagement_id=r["engagement_id"],
+            direction=r["direction"] or "inbound", channel=r["channel"] or "email",
+            from_party=r["from_party"] or "", to_party=r["to_party"] or "",
+            subject=r["subject"] or "", body=r["body"] or "",
+            status=r["status"] or "received", sensitivity=r["sensitivity"] or "auto",
+            approval_id=r["approval_id"], created_at=r["created_at"] or "",
+        )
+
+    def add_comm(self, com: Communication) -> Communication:
+        with self._conn() as c:
+            c.execute(
+                """INSERT INTO communications
+                   (id, account_id, engagement_id, direction, channel, from_party, to_party,
+                    subject, body, status, sensitivity, approval_id, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (com.id, com.account_id, com.engagement_id, com.direction, com.channel,
+                 com.from_party, com.to_party, com.subject, com.body, com.status,
+                 com.sensitivity, com.approval_id, com.created_at),
+            )
+        return com
+
+    def list_comms(self, account_id: Optional[str] = None, limit: int = 100) -> list[Communication]:
+        q = "SELECT * FROM communications"
+        args: list = []
+        if account_id:
+            q += " WHERE account_id=?"
+            args.append(account_id)
+        q += " ORDER BY created_at DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as c:
+            return [self._to_comm(r) for r in c.execute(q, args).fetchall()]
 
     # ── Client knowledge ─────────────────────────────────────────────────
     def _to_knowledge(self, r: sqlite3.Row) -> KnowledgeEntry:

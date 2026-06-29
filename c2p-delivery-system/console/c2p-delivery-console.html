@@ -468,6 +468,7 @@ function renderNav(){
   });
   html+=`<div class="nav-sec">Clients</div>
     <button class="nav-item ${activeView==='accounts'?'active':''}" onclick="goView('accounts')"><span class="ni-ico">◍</span><span class="ni-name">Accounts</span></button>
+    <button class="nav-item ${activeView==='comms'?'active':''}" onclick="goView('comms')"><span class="ni-ico">✉</span><span class="ni-name">Communications</span></button>
     <button class="nav-item ${activeView==='approvals'?'active':''}" onclick="goView('approvals')"><span class="ni-ico">✓</span><span class="ni-name">Approvals</span>${approvalsBadge()}</button>`;
   html+=`<div class="nav-sec">Grounding</div>
     <button class="nav-item ${activeView==='odoo'?'active':''}" onclick="goView('odoo')"><span class="ni-ico">⛁</span><span class="ni-name">Odoo Explorer</span></button>`;
@@ -500,6 +501,7 @@ function renderView(){
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
   if(activeView==='accounts')return renderAccounts(c);
+  if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
   if(activeView==='activity')return renderActivity(c);
   if(activeView==='settings')return renderSettings(c);
@@ -918,6 +920,41 @@ function newAccountModal(){
 }
 function closeAccModal(){const m=document.getElementById('accModal');if(m)m.remove();}
 async function submitAccount(){const name=val('na_name');if(!name){focus('na_name');return;}try{await api("POST","/accounts",{name,industry:val('na_ind')||null,country:val('na_country')||null,odoo_db:val('na_db')||null});closeAccModal();toast('Account created','ok');renderAccounts(document.getElementById('content'));}catch(e){toast('Create failed: '+e.message,'bad');}}
+
+/* ---------- communications (Phase 5) ---------- */
+async function renderComms(c){
+  c.innerHTML=`<div class="view">
+    <div class="panel"><div class="panel-head"><div><h2>Communications</h2><p>Inbound messages are triaged to the right account and answered — routine replies auto-send; anything touching scope, money or commitments is queued for your approval.</p></div></div>
+      <div class="panel-body">
+        <div class="input-grid"><div class="input-block"><label>Channel</label><select id="ci_ch"><option value="email">Email</option><option value="whatsapp">WhatsApp</option></select></div>
+          <div class="input-block"><label>From</label><input type="text" id="ci_from" placeholder="ceo@client.com"></div></div>
+        <div class="input-block"><label>Subject</label><input type="text" id="ci_sub" placeholder="Re: project"></div>
+        <div class="input-block"><label>Inbound message</label><textarea id="ci_body" rows="4" placeholder="Paste an inbound client message…"></textarea></div>
+        <button class="btn primary sm" onclick="submitInbound()">Triage &amp; draft reply</button>
+        <div id="ciResult" style="margin-top:14px"></div>
+      </div></div>
+    <div class="panel" style="margin-top:16px"><div class="panel-head"><div><h2>Recent communications</h2></div><div class="run-area"><button class="btn ghost sm" onclick="renderComms(document.getElementById('content'))">↻ Refresh</button></div></div>
+      <div class="panel-body" id="commsList"><div class="skel" style="height:100px"></div></div></div></div>`;
+  loadComms();
+}
+async function loadComms(){
+  try{const items=await api("GET","/comms?limit=50");const l=document.getElementById('commsList');if(!l)return;
+    if(!items.length){l.innerHTML=`<div class="placeholder">No communications yet — triage an inbound message above.</div>`;return;}
+    l.innerHTML=items.map(x=>`<div class="odoo-rec"><div class="ic" style="background:${x.direction==='inbound'?'#2f6fc2':'var(--deep-teal)'}">${x.direction==='inbound'?'↙':'↗'}</div><div class="nm"><b>${esc(x.subject||x.direction)}</b> · <span style="color:var(--muted)">${esc(x.direction==='inbound'?x.from_party:x.to_party)}</span></div><span class="pend">${esc(x.status)}${x.sensitivity==='approval'?' · gated':''}</span></div>`).join('');
+  }catch(e){const l=document.getElementById('commsList');if(l)l.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function submitInbound(){
+  const body=val('ci_body');if(!body){focus('ci_body');return;}
+  const r=document.getElementById('ciResult');r.innerHTML=`<div class="skel" style="height:90px"></div>`;
+  try{
+    const out=await api("POST","/comms/inbound",{channel:document.getElementById('ci_ch').value,from_party:val('ci_from'),subject:val('ci_sub'),body});
+    const t=out.triage||{},rep=t.suggested_reply||{};
+    r.innerHTML=`<div class="callout"><b>${esc(t.intent||'message')}</b> · sensitivity: <b style="color:${t.sensitivity==='approval'?'var(--amber)':'var(--green)'}">${esc(t.sensitivity||'auto')}</b>${t.matched_company?` · matched: ${esc(t.matched_company)}`:''}<br><span style="color:var(--muted)">${esc(t.summary||'')}</span></div>
+      <div class="card" style="margin-top:10px"><div style="font-weight:600;margin-bottom:4px">${esc(rep.subject||'')}</div><div style="white-space:pre-wrap;font-size:13px">${esc(rep.body||'')}</div></div>
+      <div class="hint" style="margin-top:8px">${out.approval?'Queued for your approval in the Cockpit (scope/money/commitment).':'Auto-sent (routine) and logged.'}</div>`;
+    refreshApprovalsCount();loadComms();
+  }catch(e){r.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
 
 /* ---------- approvals cockpit ---------- */
 function approvalsBadge(){return pendingCount?`<span class="ni-count" style="background:var(--amber);color:#fff">${pendingCount}</span>`:'';}

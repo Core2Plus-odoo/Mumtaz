@@ -311,3 +311,38 @@ def test_deploy_is_gated(tmp_path):
     dec = c.post(f"/approvals/{r['approval']['id']}/decide",
                  json={"decision": "approved"}).json()
     assert dec["status"] == "approved" and dec["result"]["module"] == "c2p_demo"
+
+
+# ── Phase 5: communications (triage + sensitivity gating) ─────────────────
+def test_comms_inbound_routes_and_gates(monkeypatch, tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "ep5.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+
+    # Routine status question → auto; scope/pricing → approval. Stub by intent.
+    def fake(stage, content, **k):
+        sensitive = "price" in content.lower() or "scope" in content.lower()
+        return {"intent": "pricing" if sensitive else "status_request",
+                "sensitivity": "approval" if sensitive else "auto",
+                "matched_company": "Acme",
+                "summary": "stub", "internal_note": "",
+                "suggested_reply": {"subject": "Re", "body": "Thanks — here's an update."}}
+    monkeypatch.setattr(main_mod, "run_agent", fake)
+
+    c = TestClient(main_mod.app)
+    c.post("/accounts", json={"name": "Acme"})  # so matched_company routes
+
+    routine = c.post("/comms/inbound", json={"from_party": "x@acme.com",
+              "subject": "status?", "body": "Any update on go-live timing?"}).json()
+    assert routine.get("sent") and routine["account_id"]  # auto-sent + routed to Acme
+
+    sensitive = c.post("/comms/inbound", json={"from_party": "x@acme.com",
+              "subject": "pricing", "body": "Can you change the scope and price?"}).json()
+    assert sensitive["approval"] and sensitive["approval"]["action_type"] == "client_comms_sensitive"
+
+    assert len(c.get("/comms").json()) >= 3  # 2 inbound + at least 1 outbound logged

@@ -177,5 +177,36 @@ the account's knowledge.
 module (developer stage); deploying it requires approval; on approve it's written
 to the addons repo (pushed when live).
 
-**Next:** Phase 5 — communications (inbound triage to the right account/agent;
-outbound replies gated by sensitivity; all comms logged to chatter + knowledge).
+## Phase 5 — Communications ✅
+
+**Shipped**
+- **`Communication` model + store** (inbound/outbound, channel, parties, status,
+  sensitivity, approval link). `store.find_account_by_name` for routing.
+- **Comms agent** (`comms` prompt): triages an inbound message — intent,
+  sensitivity (approval for scope/money/commitment/legal; auto for routine),
+  matched company for routing, and a drafted reply.
+- **Inbound** — `POST /comms/inbound`: routes to the right account (by id or the
+  agent's matched_company), logs the inbound, then **auto-sends routine replies**
+  (dry-run channel) or **queues sensitive ones for approval**
+  (`client_comms_sensitive`). Everything logged to the account knowledge.
+- **Outbound on approve** — `_execute_action` handles `client_comms_sensitive`
+  (send + log). `GET /comms` lists communications.
+- **Console** — new **Communications** view: paste an inbound message → see the
+  triage (intent, sensitivity, matched account, drafted reply) and whether it
+  auto-sent or was queued; plus a recent-comms list.
+- **Developer docs** — the developer agent now always ships a `README.md`
+  (technical documentation) inside the generated module.
+- Tests: routing + auto-vs-gated sensitivity + comms logging.
+
+**Acceptance**: an inbound message routes to the correct account; outbound
+touching scope/money is gated; all comms are logged on the account (and to Odoo
+chatter on send). Verified by tests.
+
+**Where functional/developer work + docs live**: the Functional and Developer
+stage views (analysis, verdict, gap, options / module, files, install steps),
+the per-stage **📄 Document** (branded Functional Specification / Technical Build
+Note), the full **Generate Document** dossier, the **Agent Activity** log, and
+the per-account **Knowledge** entries.
+
+**Next:** Phase 6 — Supervisor agent (daily "what needs you today" briefing) +
+Agency Cockpit (pipeline across accounts, approvals, knowledge) + metrics.
