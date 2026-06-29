@@ -346,3 +346,32 @@ def test_comms_inbound_routes_and_gates(monkeypatch, tmp_path):
     assert sensitive["approval"] and sensitive["approval"]["action_type"] == "client_comms_sensitive"
 
     assert len(c.get("/comms").json()) >= 3  # 2 inbound + at least 1 outbound logged
+
+
+# ── Phase 6: cockpit metrics + supervisor briefing ────────────────────────
+def test_metrics_and_supervisor(monkeypatch, tmp_path):
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+
+    os.environ["C2P_STORE"] = str(tmp_path / "ep6.db")
+    import importlib
+    import main as main_mod
+    importlib.reload(main_mod)
+    c = TestClient(main_mod.app)
+
+    eng = c.post("/engagements", json={"company": "Acme"}).json()
+    e = main_mod.store.get(eng["id"])
+    e.stages["proposal"] = {"commercial": {"estimate_aed": 150000}}
+    e.stages["project"] = {"project_name": "Acme rollout"}
+    main_mod.store.save(e)
+
+    mx = c.get("/metrics").json()
+    assert mx["pipeline_value_aed"] == 150000 and mx["engagements"] == 1
+    assert mx["with_proposal"] == 1 and mx["win_rate"] == 100
+    assert mx["by_stage"]["proposal"] == 1 and mx["by_stage"]["project"] == 1
+
+    monkeypatch.setattr(main_mod, "run_agent", lambda *a, **k: {
+        "headline": "1 proposal awaiting send", "priorities": [], "risks": []})
+    br = c.post("/supervisor/brief").json()
+    assert br["briefing"]["headline"] and br["metrics"]["pipeline_value_aed"] == 150000

@@ -208,5 +208,22 @@ the per-stage **📄 Document** (branded Functional Specification / Technical Bu
 Note), the full **Generate Document** dossier, the **Agent Activity** log, and
 the per-account **Knowledge** entries.
 
-**Next:** Phase 6 — Supervisor agent (daily "what needs you today" briefing) +
-Agency Cockpit (pipeline across accounts, approvals, knowledge) + metrics.
+## Phase 6 — Supervisor + Agency Cockpit + metrics ✅
+
+**Shipped**
+- **Metrics** — `GET /metrics`: accounts, engagements, pipeline value (Σ proposal
+  estimate_aed), by-stage counts, win rate (to-project / with-proposal), pending
+  approvals, communications, agent runs.
+- **Supervisor agent** (`supervisor` prompt) — `POST /supervisor/brief`: builds
+  an agency snapshot (metrics + pending approvals + recent comms) and produces a
+  "what needs you today" briefing (headline, prioritised actions, risks).
+- **Agency Cockpit** (console) — agency-wide top-nav view: KPI cards, the daily
+  briefing (generate on demand), pipeline-by-stage, and a pending-approvals panel
+  linking to the queue.
+- Tests: metrics computation + supervisor briefing.
+
+**Acceptance**: the cockpit shows pipeline + approvals + KPIs across all
+accounts; the Supervisor briefing generates from the live snapshot.
+
+**Next:** Phase 7 — multi-tenant product (tenant isolation, real auth/roles,
+per-tenant config + white-label, onboarding, billing/metering, security).

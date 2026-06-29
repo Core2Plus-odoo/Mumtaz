@@ -744,6 +744,65 @@ def industry_detail(key: str):
     return p
 
 
+# --------------------------------------------------------------------------- #
+# Phase 6 — Supervisor + Agency Cockpit metrics
+# --------------------------------------------------------------------------- #
+def _compute_metrics() -> dict:
+    engs = [e for e in (store.get(x["id"]) for x in store.list()) if e]
+    by_stage = {s: 0 for s in m.STAGES}
+    pipeline = 0.0
+    with_proposal = won_or_planned = 0
+    for e in engs:
+        for s in m.STAGES:
+            v = e.stages.get(s)
+            if (isinstance(v, list) and v) or (not isinstance(v, list) and v):
+                by_stage[s] += 1
+        prop = e.stages.get("proposal")
+        if prop:
+            with_proposal += 1
+            try:
+                pipeline += float((prop.get("commercial") or {}).get("estimate_aed") or 0)
+            except Exception:
+                pass
+        if e.stages.get("project"):
+            won_or_planned += 1
+    return {
+        "accounts": len(store.list_accounts()),
+        "engagements": len(engs),
+        "pipeline_value_aed": round(pipeline),
+        "by_stage": by_stage,
+        "with_proposal": with_proposal,
+        "won_or_planned": won_or_planned,
+        "win_rate": round(won_or_planned / with_proposal * 100) if with_proposal else 0,
+        "pending_approvals": store.count_approvals("pending"),
+        "communications": len(store.list_comms(limit=1000)),
+        "agent_runs": len(store.list_runs(limit=1000)),
+    }
+
+
+@app.get("/metrics")
+def metrics():
+    """Agency metrics for the cockpit (pipeline value, by-stage, win rate, …)."""
+    return _compute_metrics()
+
+
+@app.post("/supervisor/brief")
+def supervisor_brief():
+    """Daily 'what needs you today' briefing from the agency snapshot."""
+    mx = _compute_metrics()
+    approvals = store.list_approvals("pending", limit=20)
+    comms = store.list_comms(limit=10)
+    snap = json.dumps({
+        "metrics": mx,
+        "pending_approvals": [{"action": a.action_type, "requester": a.requester_agent,
+                               "to": (a.payload or {}).get("to")} for a in approvals],
+        "recent_comms": [{"direction": c.direction, "subject": c.subject,
+                          "status": c.status} for c in comms],
+    }, indent=2)
+    out = run_agent("supervisor", f"Agency snapshot:\n{snap}\n\nProduce today's owner briefing JSON.")
+    return {"briefing": out, "metrics": mx}
+
+
 @app.get("/runs")
 def list_runs(limit: int = 50):
     """Owned dataset: recent agent runs (labels, models, tokens, latency)."""

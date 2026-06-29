@@ -457,7 +457,8 @@ function renderEngDb(){
 }
 function renderNav(){
   const nav=document.getElementById('nav');
-  let html=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
+  let html=`<button class="nav-item ${activeView==='cockpit'?'active':''}" onclick="goView('cockpit')"><span class="ni-ico">◉</span><span class="ni-name">Agency Cockpit</span></button>`;
+  html+=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
   let lastGroup="";
   STAGES.forEach(s=>{
     if(s.group!==lastGroup){html+=`<div class="nav-sec">${s.group}</div>`;lastGroup=s.group;}
@@ -498,6 +499,7 @@ function toggleSidebar(open){document.getElementById('sidebar').classList.toggle
 /* ---------- view dispatch ---------- */
 function renderView(){
   const c=document.getElementById('content');
+  if(activeView==='cockpit')return renderCockpit(c);
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
   if(activeView==='accounts')return renderAccounts(c);
@@ -920,6 +922,46 @@ function newAccountModal(){
 }
 function closeAccModal(){const m=document.getElementById('accModal');if(m)m.remove();}
 async function submitAccount(){const name=val('na_name');if(!name){focus('na_name');return;}try{await api("POST","/accounts",{name,industry:val('na_ind')||null,country:val('na_country')||null,odoo_db:val('na_db')||null});closeAccModal();toast('Account created','ok');renderAccounts(document.getElementById('content'));}catch(e){toast('Create failed: '+e.message,'bad');}}
+
+/* ---------- agency cockpit (Phase 6) ---------- */
+async function renderCockpit(c){
+  c.innerHTML=`<div class="view">
+    <div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Agency Cockpit</h2><p>The whole agency at a glance — pipeline, approvals, and your daily briefing.</p></div>
+      <div class="run-area"><button class="btn primary sm" onclick="generateBriefing()">Generate today's briefing</button></div></div>
+      <div class="panel-body"><div id="ckKpis"><div class="skel" style="height:90px"></div></div><div id="ckBrief" style="margin-top:14px"></div></div></div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><div><h2>Pipeline by stage</h2></div></div><div class="panel-body" id="ckPipe"><div class="skel" style="height:120px"></div></div></div>
+      <div class="panel"><div class="panel-head"><div><h2>Pending approvals</h2></div><div class="run-area"><button class="btn ghost sm" onclick="goView('approvals')">Open queue →</button></div></div><div class="panel-body" id="ckApr"><div class="skel" style="height:120px"></div></div></div>
+    </div></div>`;
+  loadCockpit();
+}
+async function loadCockpit(){
+  try{
+    const mx=await api("GET","/metrics");
+    const kpis=[
+      {k:'Pipeline value',v:'AED '+Number(mx.pipeline_value_aed||0).toLocaleString(),a:true},
+      {k:'Accounts',v:mx.accounts||0},
+      {k:'Engagements',v:mx.engagements||0},
+      {k:'Win rate',v:(mx.win_rate||0)+'%',d:(mx.won_or_planned||0)+'/'+(mx.with_proposal||0)+' to project'},
+      {k:'Pending approvals',v:mx.pending_approvals||0,a:(mx.pending_approvals||0)>0},
+      {k:'Agent runs',v:mx.agent_runs||0},
+    ];
+    document.getElementById('ckKpis').innerHTML=`<div class="kpis">${kpis.map(k=>`<div class="kpi ${k.a?'accent':''}"><div class="k">${esc(k.k)}</div><div class="v">${esc(k.v)}</div>${k.d?`<div class="d">${esc(k.d)}</div>`:''}</div>`).join('')}</div>`;
+    const order=['presales','proposal','project','functional','developer'],names={presales:'Presales',proposal:'Proposal',project:'Project',functional:'Functional',developer:'Developer'};
+    document.getElementById('ckPipe').innerHTML=order.map(s=>`<div class="odoo-rec"><div class="nm">${names[s]}</div><span class="pend">${(mx.by_stage&&mx.by_stage[s])||0} engagement(s)</span></div>`).join('');
+    const apr=await api("GET","/approvals?status=pending");pendingCount=apr.length;renderNav();
+    document.getElementById('ckApr').innerHTML=apr.length?apr.slice(0,8).map(a=>`<div class="odoo-rec"><div class="ic" style="background:var(--amber);color:#fff">!</div><div class="nm"><b>${esc(a.action_type)}</b> · <span style="color:var(--muted)">${esc(a.requester_agent||'')}${(a.payload&&a.payload.to)?' → '+esc(a.payload.to):''}</span></div></div>`).join(''):'<div class="placeholder">Queue is clear.</div>';
+  }catch(e){const k=document.getElementById('ckKpis');if(k)k.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function generateBriefing(){
+  const b=document.getElementById('ckBrief');if(b)b.innerHTML=`<div class="skel" style="height:120px"></div>`;
+  try{
+    const r=await api("POST","/supervisor/brief",{});const br=r.briefing||{};
+    b.innerHTML=`<div class="callout"><b>${esc(br.headline||'Today')}</b></div>
+      ${(br.priorities||[]).map(p=>`<div class="card" style="margin-top:8px"><b>${esc(p.title||'')}</b><div style="font-size:13px;color:var(--muted);margin:4px 0">${esc(p.why||'')}</div><div style="font-size:13px"><b>Action:</b> ${esc(p.action||'')}</div></div>`).join('')}
+      ${(br.risks||[]).length?`<div class="set-h" style="margin-top:12px">Risks</div><ul class="clean warn">${br.risks.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}`;
+  }catch(e){if(b)b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
 
 /* ---------- communications (Phase 5) ---------- */
 async function renderComms(c){

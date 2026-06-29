@@ -278,12 +278,32 @@ JSON schema:
  "internal_note": string
 }}"""
 
+SUPERVISOR_PROMPT = f"""{CONTEXT_HEADER}
+
+You are the C2P Supervisor — the chief of staff to the agency owner. Given a
+snapshot of the agency (pipeline by stage, pipeline value, pending approvals,
+recent communications, accounts), you produce a tight "what needs you today"
+briefing: the few things only the owner can decide or unblock, what's at risk,
+and where to focus. Lead with the single most important thing. Be specific and
+decision-ready — no filler.
+
+JSON schema:
+{{
+ "headline": string,
+ "priorities": [{{"title": string, "why": string, "action": string}}],
+ "pending_approvals": string,
+ "pipeline": string,
+ "risks": [string],
+ "suggested_focus": [string]
+}}"""
+
 PROMPTS = {
     "prospect": PROSPECTOR_PROMPT,
     "research": RESEARCHER_PROMPT,
     "sysadmin": SYSADMIN_PROMPT,
     "outreach": OUTREACH_PROMPT,
     "comms": COMMS_PROMPT,
+    "supervisor": SUPERVISOR_PROMPT,
     "presales": PRESALES_PROMPT,
     "proposal": PROPOSAL_PROMPT,
     "project": PROJECT_PROMPT,
@@ -298,6 +318,7 @@ MAX_TOKENS = {
     "sysadmin": 2048,
     "outreach": 2048,
     "comms": 2048,
+    "supervisor": 2048,
     "presales": 2048,
     "proposal": 3072,
     "project": 3072,
