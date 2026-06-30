@@ -464,6 +464,83 @@
   .chip,.eff,.badge,.pri{display:inline-flex;align-items:center;line-height:1;white-space:nowrap}
   .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center}
   .panel-body{padding:20px 22px}
+
+  /* ===================================================================== *
+   * C2P BOLD BRANDED THEME (v4) — teal-forward, gradient, colourful tiles  *
+   * Appended last; overrides the base look without touching view markup.  *
+   * ===================================================================== */
+  :root{
+    --teal:#00B6B6;--deep-teal:#017A7A;--teal-ink:#04403f;
+    --grad-hero:linear-gradient(120deg,#00C0C0 0%,#008C8C 55%,#066E6E 100%);
+    --grad-ink:linear-gradient(135deg,#21343A,#121A1E);
+    --grad-soft:linear-gradient(180deg,#EEFBFB,#FFFFFF 70%);
+    --tint:rgba(0,182,182,.08);--tint-2:rgba(0,182,182,.14);
+    --line:#E4EEEE;--line-soft:#EEF6F6;
+  }
+  body{background:
+    radial-gradient(1100px 560px at 100% -8%,rgba(0,182,182,.10),transparent 58%),
+    radial-gradient(820px 460px at -6% 4%,rgba(0,140,140,.07),transparent 55%),
+    #F1F6F7 !important;background-attachment:fixed}
+
+  /* top accent strip */
+  .main{position:relative}
+  .main::before{content:"";position:fixed;top:0;left:var(--sb);right:0;height:3px;background:var(--grad-hero);z-index:30}
+  @media(max-width:860px){.main::before{left:0}}
+
+  /* sidebar — soft teal wash, vivid active pill */
+  .sidebar{background:linear-gradient(180deg,#E9F8F8,#F4FAFA 45%,#EFF7F7);border-right:1px solid var(--line)}
+  .sb-strap span{color:var(--deep-teal);font-weight:600}
+  .sb-eng{background:linear-gradient(180deg,#FFFFFF,#F1FbFb);border-color:rgba(0,182,182,.22);box-shadow:0 4px 14px -8px rgba(0,140,140,.3)}
+  .nav-sec{color:var(--deep-teal);opacity:.65}
+  .nav-item{border-radius:10px}
+  .nav-item:hover{background:var(--tint-2);color:var(--teal-ink)}
+  .nav-item.active{background:var(--grad-hero);color:#fff;font-weight:600;box-shadow:0 8px 20px -8px rgba(0,140,140,.6)}
+  .nav-item.active::before{display:none}
+  .nav-item.active .ni-ico{opacity:1;color:#fff}
+  .nav-item.active .ni-count{background:rgba(255,255,255,.28);color:#fff}
+  .nav-item.active .ni-st{border-color:rgba(255,255,255,.7)}
+
+  /* topbar — frosted teal */
+  .topbar{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(238,251,251,.82));backdrop-filter:saturate(1.7) blur(12px);-webkit-backdrop-filter:saturate(1.7) blur(12px);border-bottom:1px solid var(--line)}
+  .tb-bar i{background:var(--grad-hero)}
+
+  /* panels — branded headers + tinted border */
+  .panel{border:1px solid var(--line);box-shadow:0 2px 6px rgba(8,80,80,.05),0 10px 30px -16px rgba(8,80,80,.18)}
+  .panel-head{background:linear-gradient(180deg,var(--tint),transparent);border-bottom:1px solid var(--line-soft)}
+  .panel-head h2{color:var(--teal-ink)}
+
+  /* hero — gradient wash + glowing ring */
+  .ov-hero{background:linear-gradient(125deg,#E6FAFA 0%,#FFFFFF 60%);border:1px solid rgba(0,182,182,.22);box-shadow:0 14px 40px -18px rgba(0,140,140,.35)}
+  .ring{filter:drop-shadow(0 6px 16px rgba(0,182,182,.3))}
+  .ring{background:conic-gradient(var(--teal) calc(var(--p)*1%),#dfeeee 0)}
+  .ov-step.done{border-color:rgba(0,182,182,.4);background:var(--tint)}
+  .ov-step.done .s{color:var(--deep-teal)}
+
+  /* KPIs — colourful stat tiles */
+  .kpi{border:1px solid var(--line);border-radius:15px;background:#fff;position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--grad-hero);opacity:.9}
+  .kpi.accent::after{display:none}
+  .kpi.accent{background:var(--grad-hero);border:none;color:#fff;box-shadow:0 14px 30px -14px rgba(0,140,140,.6)}
+  .kpi.accent::before{display:none}
+  .kpi.accent .k{color:rgba(255,255,255,.82)}
+  .kpi.accent .v{color:#fff}
+  .kpi.accent .d{color:rgba(255,255,255,.9)}
+
+  /* buttons & accents */
+  .btn.primary{background:var(--grad-hero);border-color:transparent;box-shadow:0 2px 6px rgba(0,140,140,.22),0 10px 22px -8px rgba(0,182,182,.55)}
+  .btn.dark{background:var(--grad-ink);border-color:transparent}
+  .chip{background:var(--tint-2);border:1px solid rgba(0,182,182,.28);color:var(--deep-teal);font-weight:600}
+  .callout{background:linear-gradient(180deg,rgba(0,182,182,.07),rgba(0,182,182,.02));border:1px solid rgba(0,182,182,.24)}
+  .callout b{color:var(--deep-teal)}
+  .pavatar{background:var(--grad-hero);color:#fff;box-shadow:0 0 0 3px rgba(0,182,182,.16)}
+  .prole{color:var(--deep-teal);opacity:.7}
+  .badge{box-shadow:var(--shadow-xs)}
+  .odoo-rec{background:linear-gradient(180deg,#fff,#fafdfd);border-color:var(--line-soft)}
+  .doc-ic{background:var(--tint-2);color:var(--deep-teal)}
+  .sb-eng .db{background:var(--tint-2);border-color:rgba(0,182,182,.3);color:var(--deep-teal)}
+  ul.clean li::before{background:var(--teal)}
+  .sec h3::after{background:linear-gradient(90deg,rgba(0,182,182,.25),transparent)}
+  ::selection{background:rgba(0,182,182,.24)}
 </style>
 </head>
 <body>

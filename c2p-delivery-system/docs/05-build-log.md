@@ -540,3 +540,15 @@ config all local; only novel prose/code needs credit. Console renders the plan
 - **Interactive**: each authored document opens an inline **Preview & refine**
   drawer — an instructions box regenerates the document with the operator's
   direction (interact with the docwriter agent), plus a one-click PDF.
+
+### UI revamp — bold branded, teal-forward (v4) ✅
+A comprehensive theme layer (appended CSS, no view markup changed) gives the
+console a distinctive, on-brand identity:
+- Teal gradient top strip; frosted teal topbar.
+- Soft teal-washed sidebar with a vivid gradient active-nav pill (white text).
+- Gradient hero wash + glowing progress ring.
+- Colourful stat tiles — accent KPIs are full teal-gradient (white text), others
+  carry a teal top-accent bar.
+- Teal-tinted panel headers, gradient buttons, bolder chips/callouts, gradient
+  persona avatars. Verified across Overview and the Business Analyst view; all
+  other views inherit it automatically.
