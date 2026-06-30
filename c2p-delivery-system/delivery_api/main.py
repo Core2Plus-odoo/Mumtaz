@@ -1641,12 +1641,14 @@ def _autopilot_decide(eng: Engagement):
     st = eng.stages
     if not st.get("presales"):
         return ("presales", None)
-    # The Business Analyst gathers requirements before scoping/pricing.
-    if not st.get("ba_discovery"):
-        return ("ba_discovery", None)
-    if not st.get("ba_requirements"):
-        return ("ba_requirements", None)
+    # The Business Analyst gathers requirements before scoping/pricing — but only
+    # if we haven't already proposed. For an engagement that already has a
+    # proposal, BA discovery is moot; don't dead-end Autopilot on it.
     if not st.get("proposal"):
+        if not st.get("ba_discovery"):
+            return ("ba_discovery", None)
+        if not st.get("ba_requirements"):
+            return ("ba_requirements", None)
         return ("proposal", None)
     if not st.get("project"):
         return ("project", None)
