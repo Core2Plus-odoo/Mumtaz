@@ -112,6 +112,9 @@
   .rfi-input{margin-top:10px;display:flex;gap:8px;align-items:flex-start}
   .rfi-input textarea{flex:1;resize:vertical;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px}
   .rfi-answer{margin-top:9px;font-size:12.5px;color:var(--charcoal);background:rgba(0,179,179,.06);border-left:3px solid var(--deep-teal);padding:8px 11px;border-radius:6px}
+  .ba-area{border:1px solid var(--line);border-radius:9px;padding:8px 12px;margin-bottom:7px;background:#fff}
+  .ba-area summary{cursor:pointer;font-size:13px}
+  .ba-area ul{margin-top:7px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .btn.copied{border-color:var(--green);color:var(--green)}
 
@@ -502,6 +505,7 @@ function renderNav(){
   let html=`<button class="nav-item ${activeView==='cockpit'?'active':''}" onclick="goView('cockpit')"><span class="ni-ico">◉</span><span class="ni-name">Agency Cockpit</span></button>`;
   html+=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
   html+=`<button class="nav-item ${activeView==='pm'?'active':''}" onclick="goView('pm')"><span class="ni-ico">◑</span><span class="ni-name">Project Manager</span></button>`;
+  html+=`<button class="nav-item ${activeView==='ba'?'active':''}" onclick="goView('ba')"><span class="ni-ico">◈</span><span class="ni-name">Business Analyst</span></button>`;
   html+=`<button class="nav-item ${activeView==='execution'?'active':''}" onclick="goView('execution')"><span class="ni-ico">▤</span><span class="ni-name">Execution</span></button>`;
   html+=`<button class="nav-item ${activeView==='documents'?'active':''}" onclick="goView('documents')"><span class="ni-ico">▧</span><span class="ni-name">Documents</span></button>`;
   html+=`<button class="nav-item ${activeView==='clarify'?'active':''}" onclick="goView('clarify')"><span class="ni-ico">❔</span><span class="ni-name">Client Q&amp;A</span>${clarifyBadge()}</button>`;
@@ -549,6 +553,7 @@ function renderView(){
   const c=document.getElementById('content');
   if(activeView==='cockpit')return renderCockpit(c);
   if(activeView==='pm')return renderPM(c);
+  if(activeView==='ba')return renderBA(c);
   if(activeView==='execution')return renderExecution(c);
   if(activeView==='documents')return renderDocuments(c);
   if(activeView==='clarify')return renderClarify(c);
@@ -632,7 +637,7 @@ function activitySummary(){
   return items.map(([s,t])=>`<div class="odoo-rec"><div class="ic" style="background:var(--deep-teal)">✓</div><div class="nm"><b>${s}</b> · <span style="color:var(--muted)">${esc(t)}</span></div></div>`).join('');
 }
 let _apStop=false;
-const AP_LABEL={presales:'Pre-sales qualification',proposal:'Proposal & pricing',project:'Project plan',functional:'Functional analysis',developer:'Developer build',document:'Document authoring',config:'Odoo configuration',deploy:'Module deploy'};
+const AP_LABEL={presales:'Pre-sales qualification',ba_discovery:'BA discovery plan',ba_requirements:'BA requirements catalog',proposal:'Proposal & pricing',project:'Project plan',functional:'Functional analysis',developer:'Developer build',document:'Document authoring',config:'Odoo configuration',deploy:'Module deploy'};
 function apReview(rv){
   if(!rv||rv.score==null)return '';
   const col=rv.score>=85?'#1f9d6b':rv.score>=70?'#b9770a':'var(--rust)';
@@ -664,7 +669,8 @@ async function runAutopilot(){
       if(r.status==='blocked'){ apLog('🔒 <b>'+esc(label)+'</b> hit an approval gate. Review it in <a href="#" onclick="goView(\'approvals\');return false">Approvals</a>.','warn'); break; }
       if(r.status==='error'){ apLog('✕ <b>'+esc(label)+'</b> errored: '+esc(r.error||''),'bad'); break; }
       const dname=r.doc_name?(' — '+esc(r.doc_name)):'';
-      apLog('▸ Ran <b>'+esc(label)+'</b>'+dname+apReview(r.review),'ok');
+      const qp=r.questions_pushed?` · ${r.questions_pushed} questions queued for client`:'';
+      apLog('▸ Ran <b>'+esc(label)+'</b>'+dname+qp+apReview(r.review),'ok');
       // refresh engagement state between steps
       try{ const fresh=await api("GET",`/engagements/${eng.id}`); if(fresh&&fresh.id){eng=fresh;} }catch(_){}
     }
@@ -1244,6 +1250,7 @@ function renderPM(c){
       <div class="panel"><div class="panel-head"><div><h2>Scope</h2></div></div><div class="panel-body" id="pmScope"></div></div>
       <div class="panel"><div class="panel-head"><div><h2>Manage</h2></div></div><div class="panel-body">
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+          <button class="btn sm" onclick="goView('ba')">Gather requirements (BA)</button>
           <button class="btn sm" onclick="dispatchEngagement()">Delegate the work</button>
           <button class="btn sm" onclick="configEngagement()">Configure Odoo (gated)</button>
           <button class="btn sm" onclick="openDossier()">Generate project dossier</button>
@@ -1251,6 +1258,81 @@ function renderPM(c){
         </div><div id="dispatchOut" style="margin-top:10px"></div></div></div>
     </div></div>`;
   renderPMScope();
+}
+/* ---------- business analyst (requirements gathering) ---------- */
+const MOSCOW={M:'Must',S:'Should',C:'Could',W:'Won’t'};
+const FITCOL={standard:'var(--green)',configurable:'var(--deep-teal)',studio:'var(--amber)',custom:'var(--rust)',unknown:'var(--muted-2)'};
+function renderBA(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">Select an engagement.</div></div></div></div>`;return;}
+  const hasDisc=!!eng.stages?.ba_discovery, hasReq=!!eng.stages?.ba_requirements;
+  c.innerHTML=`<div class="view">
+    <div class="panel" style="margin-bottom:16px"><div class="panel-head">
+      <div><div class="persona"><span class="pavatar">BA</span><div><div class="pname">Business Analyst</div><div class="prole">requirements gathering & analysis</div></div></div>
+        <h2 style="margin-top:11px">${esc(eng.company)}</h2><p>Plan discovery (what to gather and ask the client), then compile the structured requirements catalog the whole delivery team builds from.</p></div>
+      <div class="run-area">
+        <button class="btn ${hasDisc?'sm':'primary sm'}" onclick="runBADiscovery(this)">${hasDisc?'Re-run discovery':'Plan discovery'}</button>
+        <button class="btn ${hasReq?'sm':'dark sm'}" onclick="runBARequirements(this)">${hasReq?'Re-compile requirements':'Compile requirements'}</button>
+      </div></div>
+      <div class="panel-body" id="baBody"><div class="placeholder">The BA plans a thorough discovery across every relevant business area, pushes the client questions into <b>Client Q&amp;A</b>, then compiles a MoSCoW-prioritised requirements catalog with Odoo-fit on every line — which feeds Proposal, Project and Functional automatically.</div></div></div>
+  </div>`;
+  renderBAOut();
+}
+function renderBAOut(){
+  const b=document.getElementById('baBody');if(!b)return;
+  const disc=eng.stages?.ba_discovery, req=eng.stages?.ba_requirements;
+  if(!disc&&!req){return;}
+  let h='';
+  if(req){
+    const frs=req.functional_requirements||[];
+    const counts={};frs.forEach(r=>{counts[r.odoo_fit]=(counts[r.odoo_fit]||0)+1;});
+    h+=`<div class="sec"><h3>Requirements catalog · ${frs.length} requirements</h3>
+      ${req.summary?`<div class="callout" style="margin-bottom:10px">${esc(req.summary)}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${Object.keys(counts).map(k=>`<span class="chip" style="background:${FITCOL[k]||'var(--muted-2)'};color:#fff">${counts[k]} ${esc(k)}</span>`).join('')}</div>
+      ${frs.map(r=>`<div class="req-row"><span class="rq-text"><b>${esc(r.id||'')}</b> ${esc(r.requirement||'')}${r.area?` <span style="color:var(--muted-2)">· ${esc(r.area)}</span>`:''}</span>
+        <span class="chip" title="MoSCoW">${esc(MOSCOW[r.priority]||r.priority||'')}</span>
+        <span class="eff" style="background:${FITCOL[r.odoo_fit]||'var(--muted-2)'};color:#fff">${esc(r.odoo_fit||'')}</span></div>`).join('')||'<div class="hint">—</div>'}</div>`;
+    if((req.integrations||[]).length||(req.data_objects||[]).length){
+      h+=`<div class="two-col">
+        <div class="sec"><h3>Integrations</h3>${(req.integrations||[]).map(i=>`<div class="req-row"><span class="rq-text">${esc(i.system||'')} <span style="color:var(--muted-2)">${esc(i.direction||'')}</span>${i.note?' · '+esc(i.note):''}</span></div>`).join('')||'<div class="hint">—</div>'}</div>
+        <div class="sec"><h3>Data objects</h3><ul class="clean">${(req.data_objects||[]).map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="hint">—</li>'}</ul></div></div>`;
+    }
+    if((req.process_maps||[]).length){
+      h+=`<div class="sec"><h3>Process maps (current → future)</h3>${(req.process_maps||[]).map(p=>`<div class="req-row" style="flex-direction:column;align-items:flex-start;gap:3px"><b>${esc(p.process||'')}</b><span style="color:var(--muted);font-size:12px">Now: ${esc(p.current_state||'—')}</span><span style="color:var(--deep-teal);font-size:12px">Future: ${esc(p.future_state||'—')}</span></div>`).join('')}</div>`;
+    }
+    if((req.open_questions||[]).length){
+      h+=`<div class="sec"><h3>Open questions</h3><ul class="clean warn">${(req.open_questions||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+        <button class="btn sm" style="margin-top:6px" onclick="goView('clarify')">Take to Client Q&amp;A →</button></div>`;
+    }
+  }
+  if(disc){
+    h+=`<div class="sec" style="margin-top:6px"><h3>Discovery plan</h3>${disc.summary?`<div style="color:var(--muted);margin-bottom:8px">${esc(disc.summary)}</div>`:''}
+      ${(disc.process_areas||[]).map(a=>`<details class="ba-area"><summary><b>${esc(a.area||'')}</b> <span style="color:var(--muted-2)">${(a.questions||[]).length} questions</span></summary>
+        <ul class="clean">${(a.questions||[]).map(q=>`<li>${esc(q)}</li>`).join('')}</ul></details>`).join('')||'<div class="hint">—</div>'}
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:8px">
+        <div><h3>Stakeholders</h3><ul class="clean">${(disc.stakeholders_to_interview||[]).map(s=>`<li>${esc(s.role||'')}</li>`).join('')||'<li class="hint">—</li>'}</ul></div>
+        <div><h3>Documents to request</h3><ul class="clean">${(disc.documents_to_request||[]).map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="hint">—</li>'}</ul></div>
+      </div></div>`;
+  }
+  b.innerHTML=h;
+}
+async function runBADiscovery(btn){
+  if(btn){btn.disabled=true;btn.textContent='Planning…';}
+  const b=document.getElementById('baBody');if(b)b.innerHTML=`<div class="skel" style="height:200px"></div>`;
+  try{const r=await api("POST",`/engagements/${eng.id}/ba/discovery`,{});
+    eng.stages=eng.stages||{};eng.stages.ba_discovery=r.discovery;
+    toast(`Discovery planned · ${r.questions_pushed||0} questions queued for the client`,'ok');
+    try{const f=await api("GET",`/engagements/${eng.id}`);if(f&&f.id)eng=f;}catch(_){}
+    renderView();
+  }catch(e){toast('Failed: '+e.message,'bad');renderView();}
+}
+async function runBARequirements(btn){
+  if(btn){btn.disabled=true;btn.textContent='Compiling…';}
+  const b=document.getElementById('baBody');if(b)b.innerHTML=`<div class="skel" style="height:200px"></div>`;
+  try{const r=await api("POST",`/engagements/${eng.id}/ba/requirements`,{});
+    eng.stages=eng.stages||{};eng.stages.ba_requirements=r;
+    toast(`Requirements catalog compiled · ${(r.functional_requirements||[]).length} requirements`,'ok');
+    renderView();
+  }catch(e){toast('Failed: '+e.message,'bad');renderView();}
 }
 function renderPMScope(){
   const el=document.getElementById('pmScope');if(!el)return;

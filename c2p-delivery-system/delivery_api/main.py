@@ -245,6 +245,79 @@ def presales(eng_id: str, body: m.PresalesIn):
 
 
 # --------------------------------------------------------------------------- #
+# Business Analyst — deep requirements gathering. Plans discovery (what to ask /
+# collect) and compiles the structured requirements catalog the delivery teams
+# build from. The PM stays the client-facing owner; the BA does the elicitation.
+# --------------------------------------------------------------------------- #
+def _ba_requirements_block(eng: Engagement) -> str:
+    """The BA's requirements catalog, rendered for injection into a later stage."""
+    ba = eng.stages.get("ba_requirements")
+    if not ba:
+        return ""
+    return ("\n\nBUSINESS ANALYST REQUIREMENTS CATALOG (authoritative requirements "
+            "baseline):\n" + json.dumps(ba, indent=2)[:6000])
+
+
+@app.post("/engagements/{eng_id}/ba/discovery")
+def ba_discovery(eng_id: str, body: dict | None = None):
+    """The BA produces a structured discovery / elicitation plan and (optionally)
+    pushes its client-facing questions into the Q&A RFI for the PM to ask."""
+    eng = _engagement(eng_id)
+    body = body or {}
+    content = (
+        f"Client: {eng.company}\nIndustry: {_industry_for(eng) or 'unknown'}\n\n"
+        f"What is known so far:\n{_doc_source(eng)}\n\n"
+        f"Extra direction: {body.get('instructions') or 'none'}\n\n"
+        "Produce the discovery plan JSON."
+        + industry.playbook_block(_industry_for(eng))
+    )
+    out = run_agent("ba_discovery", content, account_id=eng.account_id, engagement_id=eng.id)
+    eng.stages["ba_discovery"] = out
+    store.save(eng)
+    pushed = 0
+    if body.get("push_to_qa", True):
+        items = []
+        for pa in (out.get("process_areas") or []):
+            for q in (pa.get("questions") or [])[:6]:
+                items.append({"question": q, "theme": pa.get("area"),
+                              "why_it_matters": pa.get("why"), "waiting_agent": "functional",
+                              "blocks": "medium"})
+        for q in (out.get("key_decisions_for_client") or []):
+            items.append({"question": q, "theme": "Key decision",
+                          "waiting_agent": "project", "blocks": "high"})
+        pushed = _merge_questions_into_rfi(eng, items)
+    return {"discovery": out, "questions_pushed": pushed}
+
+
+@app.post("/engagements/{eng_id}/ba/requirements")
+def ba_requirements(eng_id: str, body: dict | None = None):
+    """The BA compiles the structured requirements catalog from everything known
+    — discovery, client answers, documents, prior stages and the playbook."""
+    eng = _engagement(eng_id)
+    body = body or {}
+    content = (
+        f"Client: {eng.company}\nIndustry: {_industry_for(eng) or 'unknown'}\n\n"
+        f"All gathered information:\n{_doc_source(eng)}\n\n"
+        f"Discovery plan:\n{json.dumps(eng.stages.get('ba_discovery') or {}, indent=2)[:4000]}\n\n"
+        f"Extra direction: {body.get('instructions') or 'none'}\n\n"
+        "Compile the requirements catalog JSON."
+        + industry.playbook_block(_industry_for(eng))
+        + ks.context_block(eng.account_id, "requirements scope modules")
+        + _client_answers_block(eng)
+    )
+    out = run_agent("ba", content, account_id=eng.account_id, engagement_id=eng.id)
+    eng.stages["ba_requirements"] = out
+    store.save(eng)
+    if eng.account_id:
+        ks.write_entry(
+            eng.account_id, "requirements_catalog",
+            {"scope_areas": out.get("scope_areas"),
+             "functional_requirements": out.get("functional_requirements")},
+            title=f"Requirements catalog — {eng.company}", learned_by="ba")
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # Stage 2 — Proposal (consumes presales)
 # --------------------------------------------------------------------------- #
 @app.post("/engagements/{eng_id}/proposal")
@@ -257,6 +330,7 @@ def proposal(eng_id: str, body: m.ProposalIn):
         "Produce the scoped proposal JSON."
         + industry.playbook_block(_industry_for(eng))
         + ks.context_block(eng.account_id, "proposal scope modules")
+        + _ba_requirements_block(eng)
         + _client_answers_block(eng)
     )
     out = run_agent("proposal", content, account_id=eng.account_id, engagement_id=eng.id)
@@ -276,6 +350,7 @@ def project(eng_id: str, body: m.ProjectIn):
         f"Extra direction: {body.instructions or 'none'}\n\n"
         "Produce the implementation plan JSON."
         + industry.playbook_block(_industry_for(eng))
+        + _ba_requirements_block(eng)
         + _client_answers_block(eng)
     )
     out = run_agent("project", content, account_id=eng.account_id, engagement_id=eng.id)
@@ -297,6 +372,7 @@ def functional(eng_id: str, body: m.FunctionalIn):
         f"- Installed modules: {modules}\n\nAnalyse and return the JSON."
         + industry.playbook_block(body.industry or _industry_for(eng))
         + ks.context_block(eng.account_id, body.requirement)
+        + _ba_requirements_block(eng)
         + _client_answers_block(eng)
     )
     out = run_agent("functional", content, account_id=eng.account_id, engagement_id=eng.id)
@@ -977,7 +1053,7 @@ DOC_TYPES = {
 
 def _doc_source(eng: Engagement) -> str:
     parts = []
-    for s in ("presales", "proposal", "project"):
+    for s in ("presales", "ba_requirements", "proposal", "project"):
         if eng.stages.get(s):
             parts.append(f"### {s} output\n{json.dumps(eng.stages[s], indent=2)}")
     fns = eng.stages.get("functional") or []
@@ -1059,6 +1135,29 @@ def _client_answers_block(eng: Engagement) -> str:
         f"- Q: {q.get('question')}\n  Client answer: {q.get('answer')}" for q in answered)
     return ("\n\nCLIENT-CONFIRMED ANSWERS (authoritative — these supersede any "
             "assumption):\n" + lines)
+
+
+def _merge_questions_into_rfi(eng: Engagement, items: list[dict]) -> int:
+    """Add new open questions to the engagement's RFI, deduplicated by text.
+    Returns how many were actually added. Caller persists the engagement."""
+    rec = eng.stages.get("clarifications") or {"summary": None, "questions": []}
+    qs = rec.get("questions") or []
+    seen = {(q.get("question") or "").strip().lower()[:80] for q in qs}
+    added = 0
+    for it in items:
+        q = (it.get("question") or "").strip()
+        key = q.lower()[:80]
+        if not q or key in seen:
+            continue
+        qs.append({**it, "question": q, "status": "open", "answer": None})
+        seen.add(key)
+        added += 1
+    for i, q in enumerate(qs, 1):
+        q["id"] = f"q{i}"
+    rec["questions"] = qs
+    eng.stages["clarifications"] = rec
+    store.save(eng)
+    return added
 
 
 @app.post("/engagements/{eng_id}/clarifications/compile")
@@ -1146,11 +1245,21 @@ def _autopilot_decide(eng: Engagement):
     st = eng.stages
     if not st.get("presales"):
         return ("presales", None)
+    # The Business Analyst gathers requirements before scoping/pricing.
+    if not st.get("ba_discovery"):
+        return ("ba_discovery", None)
+    if not st.get("ba_requirements"):
+        return ("ba_requirements", None)
     if not st.get("proposal"):
         return ("proposal", None)
     if not st.get("project"):
         return ("project", None)
-    cands = [c.get("requirement") for c in (st.get("presales") or {}).get("candidate_requirements") or []]
+    # Functional analysis works the BA's requirement catalog when present,
+    # else the presales candidate requirements.
+    ba_reqs = [r.get("requirement")
+               for r in (st.get("ba_requirements") or {}).get("functional_requirements") or []]
+    cands = ba_reqs or [c.get("requirement")
+                        for c in (st.get("presales") or {}).get("candidate_requirements") or []]
     analysed = " || ".join((f.get("requirement_summary") or "")
                            for f in (st.get("functional") or [])).lower()
     for req in cands:
@@ -1192,7 +1301,14 @@ def autopilot_step(eng_id: str):
     if kind == "presales":
         return {"status": "needs_input", "ran": "presales"}
     try:
-        if kind in ("proposal", "project", "functional", "developer"):
+        if kind == "ba_discovery":
+            r = ba_discovery(eng_id, {})
+            return {"status": "running", "ran": "ba_discovery",
+                    "questions_pushed": r.get("questions_pushed", 0)}
+        elif kind == "ba_requirements":
+            ba_requirements(eng_id, {})
+            return {"status": "running", "ran": "ba_requirements"}
+        elif kind in ("proposal", "project", "functional", "developer"):
             _out, reviews = _run_with_qa(kind, eng_id, arg)
             last = reviews[-1] if reviews else None
             return {"status": "running", "ran": kind,

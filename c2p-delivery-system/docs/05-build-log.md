@@ -382,3 +382,25 @@ and check in with the client.
   (`…/clarifications/answer`), which flow back into every later stage via
   `_client_answers_block` (and account knowledge), so agents work from confirmed
   answers, not assumptions. Console **Client Q&A** view with an open-items badge.
+
+### Business Analyst — deep requirements gathering ✅
+A dedicated BA agent does the elicitation; the PM stays the client-facing owner.
+- **Discovery** (`ba_discovery` agent, `POST …/ba/discovery`) — plans a thorough,
+  industry-aware discovery across every relevant business area: questions to ask,
+  data to collect, stakeholders to interview, documents to request, integrations
+  and NFRs to scope. Its client-facing questions are auto-pushed into the
+  **Client Q&A** RFI (`_merge_questions_into_rfi`) so the PM can ask them.
+- **Requirements catalog** (`ba` agent, `POST …/ba/requirements`) — synthesises
+  discovery + client answers + documents + prior stages + playbook into a
+  MoSCoW-prioritised functional requirements catalog with an Odoo-fit verdict on
+  every line, plus NFRs, data objects, integrations, process maps (current→future),
+  open questions, assumptions and risks. Written back to account knowledge.
+- The catalog becomes the authoritative requirements baseline: injected into
+  Proposal, Project and Functional (`_ba_requirements_block`) and into the
+  document source. Autopilot now runs BA discovery + requirements right after
+  presales, and Functional analysis works the BA's requirement list when present
+  (falling back to presales candidates).
+- **Console**: new **Business Analyst** view (catalog with fit/MoSCoW badges,
+  integrations, data objects, process maps, discovery plan); reachable from the
+  PM's Manage panel ("Gather requirements"). Autopilot log shows BA steps and how
+  many questions were queued for the client.
