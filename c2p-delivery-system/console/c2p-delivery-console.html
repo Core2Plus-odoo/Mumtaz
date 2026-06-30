@@ -1786,11 +1786,26 @@ async function deployModule(){if(!eng)return;try{const r=await api("POST",`/enga
 async function configEngagement(){
   if(!eng)return;
   if(!eng.odoo_db){toast('Link an Odoo DB to this engagement first','bad');return;}
+  const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:90px"></div>`;
   try{const r=await api("POST",`/engagements/${eng.id}/config`,{});
-    const ops=(r.recipe&&r.recipe.operations||[]).length;
+    const rec=r.recipe||{}, ops=(rec.operations||[]).length;
     if(r.approval){toast(`Odoo config recipe (${ops} ops) queued for approval`,'ok');refreshApprovalsCount();}
-    else{toast(`Config applied (${(r.result&&r.result.applied)||0}/${(r.result&&r.result.total)||0})`,'ok');}
-  }catch(e){toast('Failed: '+e.message,'bad');}
+    else if((r.result||{}).mode==='plan'){toast('Configuration plan generated locally (no API)','ok');}
+    else{toast(`Config applied (${(r.result&&r.result.applied)||0})`,'ok');}
+    if(host){
+      const baseline=(rec.baseline||[]).map(s=>`<li>${esc(s)}</li>`).join('');
+      const plan=(rec.plan||[]).map(a=>`<div class="req-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+        <div style="display:flex;gap:8px;align-items:center;width:100%"><b>${esc(a.area)}</b>${(a.modules||[]).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>
+        <ul class="clean" style="margin:0">${(a.steps||[]).map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`).join('');
+      const opsList=(rec.operations||[]).map(o=>`<div class="req-row"><span class="chip">${esc(o.method||'')}</span><span class="rq-text">${esc(o.label||o.model||'')}</span></div>`).join('');
+      host.innerHTML=`<div class="sec"><h3>⚙ Odoo configuration${(r.result||{}).mode==='plan'?' · plan · no API':''}</h3>
+        ${rec.summary?`<div class="callout" style="margin-bottom:8px">${esc(rec.summary)}</div>`:''}
+        ${baseline?`<div class="set-h">GCC baseline</div><ul class="clean">${baseline}</ul>`:''}
+        ${plan?`<div class="set-h" style="margin-top:8px">By area</div>${plan}`:''}
+        ${opsList?`<div class="set-h" style="margin-top:8px">Operations (gated)</div>${opsList}`:''}
+        ${r.approval?`<button class="btn dark sm" style="margin-top:8px" onclick="goView('approvals')">Review &amp; approve →</button>`:''}</div>`;
+    }
+  }catch(e){if(host)host.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 async function estimateEngagement(){
   if(!eng)return;const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:90px"></div>`;

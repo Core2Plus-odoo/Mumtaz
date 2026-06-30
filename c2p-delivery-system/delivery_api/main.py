@@ -41,6 +41,7 @@ import odoo_knowledge
 import pm_knowledge
 import finance_knowledge
 import doc_templates
+import config_knowledge
 import llm
 import policy
 import channels
@@ -1009,9 +1010,23 @@ def config_apply(eng_id: str, body: dict | None = None):
         + industry.playbook_block(_industry_for(eng))
         + ks.context_block(eng.account_id, "configuration")
     )
-    out = run_agent("config", content, account_id=eng.account_id, engagement_id=eng.id)
-    payload = {"engagement_id": eng.id, "operations": out.get("operations") or [],
-               "summary": out.get("summary")}
+    try:
+        out = run_agent("config", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        # API down: produce a local configuration PLAN (no auto-executable ops),
+        # so the pipeline completes; live writes stay a deliberate gated action.
+        if LOCAL_INTELLIGENCE:
+            out = config_knowledge.build_plan(eng, modules)
+        else:
+            raise
+    eng.stages["config"] = out                      # persist the recipe/plan
+    store.save(eng)
+    ops = out.get("operations") or []
+    if not ops:                                     # local plan — nothing to auto-apply
+        return {"recipe": out, "approval": None,
+                "result": {"mode": "plan", "applied": 0,
+                           "note": "Configuration plan generated (no live writes)."}}
+    payload = {"engagement_id": eng.id, "operations": ops, "summary": out.get("summary")}
     appr = policy.gate(store, "config_apply", payload, requester_agent="config",
                        account_id=eng.account_id, engagement_id=eng.id)
     if appr is None:
@@ -1716,7 +1731,7 @@ def _autopilot_decide(eng: Engagement):
     for dk in doc_plan:
         if dk not in docs:
             return ("document", dk)
-    if eng.odoo_db and not _eng_approvals(eng.id, "config_apply"):
+    if eng.odoo_db and not st.get("config") and not _eng_approvals(eng.id, "config_apply"):
         return ("config", None)
     if st.get("developer") and not _eng_approvals(eng.id, "code_deploy"):
         return ("deploy", None)

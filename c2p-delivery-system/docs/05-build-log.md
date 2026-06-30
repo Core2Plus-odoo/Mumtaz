@@ -518,3 +518,14 @@ reasons from C2P house knowledge instead of generic training:
   (which previously could silently drop a save). The store also ensures its
   directory exists and logs the absolute DB path on startup so it can be located
   and backed up.
+
+### Local Odoo configuration plan — full offline pipeline ✅
+`config_knowledge.py` turns the classified requirements into an actionable Odoo
+configuration PLAN (GCC baseline + per-area setup steps + module list) with no
+API. `config_apply` falls back to it when the model is unavailable and persists
+the recipe/plan to `stages.config`; Autopilot tracks config completion by the
+stored stage (no approval loop). Local plans carry no auto-executable operations
+— live Odoo writes stay a deliberate gated action. With this, a full Autopilot
+run completes END-TO-END with zero API: classification, estimate, documents and
+config all local; only novel prose/code needs credit. Console renders the plan
+(baseline, by-area steps, gated ops) in the PM view.
