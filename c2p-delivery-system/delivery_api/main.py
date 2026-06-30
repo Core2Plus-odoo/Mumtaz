@@ -19,7 +19,6 @@ from __future__ import annotations
 import json
 import os
 from contextvars import ContextVar
-from typing import Any
 
 # When set (by the Delivery Director self-correct loop), run_agent appends this
 # critique to the next specialist call so it produces a stronger revision.
@@ -661,7 +660,7 @@ def sync_lead(eng_id: str):
             description=json.dumps(pre.get("discovery", {}), indent=2),
         )
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc))
     eng.crm_lead_id = lead_id
     store.save(eng)
     return {"crm_lead_id": lead_id}
@@ -748,7 +747,7 @@ def sync_lead_to_odoo(lead_id: str, body: dict | None = None):
         lid = get_client(db).create_lead(name=lead.name, partner_name=lead.name,
                                          description=lead.notes or "", **vals)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc))
     lead.crm_lead_id = lid
     store.update_lead(lead)
     return {"crm_lead_id": lid}
@@ -1172,7 +1171,7 @@ def list_tasks(eng_id: str):
                               limit=300)
         return {"linked": True, "project_id": eng.project_id, "tasks": tasks, "stages": stages}
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc))
 
 
 @app.post("/engagements/{eng_id}/tasks")
@@ -1186,7 +1185,7 @@ def create_task(eng_id: str, body: dict):
     try:
         tid = get_client(eng.odoo_db).create_task(eng.project_id, name)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc))
     return {"task_id": tid}
 
 
@@ -1206,7 +1205,7 @@ def update_task(eng_id: str, task_id: int, body: dict):
     try:
         get_client(eng.odoo_db).execute("project.task", "write", [task_id], vals)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc))
     return {"ok": True}
 
 

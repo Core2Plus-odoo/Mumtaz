@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 _log = logging.getLogger("c2p.channels")
 
