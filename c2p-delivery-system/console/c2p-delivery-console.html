@@ -541,6 +541,58 @@
   ul.clean li::before{background:var(--teal)}
   .sec h3::after{background:linear-gradient(90deg,rgba(0,182,182,.25),transparent)}
   ::selection{background:rgba(0,182,182,.24)}
+
+  /* ===================================================================== *
+   * C2P VIBRANT + SEGMENTED (v5) — multi-hue metric tiles, clearer zones   *
+   * ===================================================================== */
+  :root{
+    --teal:#04C4C4;--deep-teal:#018A8A;
+    --indigo:#5B6CF0;--violet:#9163FB;--amber:#F4A52A;--emerald:#12C08C;--cyan:#0BB8DC;
+    --grad-hero:linear-gradient(120deg,#06D0D0 0%,#019A9A 52%,#0A7E7E 100%);
+    --line:#E2EEF0;
+  }
+  body{background:
+    radial-gradient(1000px 520px at 100% -6%,rgba(6,208,208,.13),transparent 56%),
+    radial-gradient(760px 440px at -4% 2%,rgba(91,108,240,.08),transparent 52%),
+    radial-gradient(680px 520px at 60% 110%,rgba(145,99,251,.06),transparent 55%),
+    #EFF5F6 !important;background-attachment:fixed}
+
+  /* ---- vibrant multi-hue metric tiles ---- */
+  .kpis{gap:14px;margin-bottom:22px}
+  .kpis .kpi{color:#fff;border:none;border-radius:16px;--muted-2:rgba(255,255,255,.72);
+    box-shadow:0 12px 26px -14px rgba(8,40,60,.45)}
+  .kpis .kpi::before{display:none}
+  .kpis .kpi .k{color:rgba(255,255,255,.85)}
+  .kpis .kpi .v{color:#fff}
+  .kpis .kpi .d{color:rgba(255,255,255,.92)}
+  .kpis .kpi:nth-child(6n+1){background:linear-gradient(135deg,#06CFCF,#018484)}
+  .kpis .kpi:nth-child(6n+2){background:linear-gradient(135deg,#6678F4,#3A42C8)}
+  .kpis .kpi:nth-child(6n+3){background:linear-gradient(135deg,#9E72FC,#6D28D9)}
+  .kpis .kpi:nth-child(6n+4){background:linear-gradient(135deg,#F4A92E,#DB7B07)}
+  .kpis .kpi:nth-child(6n+5){background:linear-gradient(135deg,#16C792,#048A66)}
+  .kpis .kpi:nth-child(6n+6){background:linear-gradient(135deg,#10BEE0,#0E7C98)}
+  .kpis .kpi:hover{transform:translateY(-3px);box-shadow:0 20px 38px -14px rgba(8,40,60,.5)}
+
+  /* ---- clearer segments ---- */
+  .nav-sec{border-top:1px solid rgba(2,138,138,.14);margin-top:10px;padding:16px 10px 6px;font-weight:700}
+  .content{padding-top:18px}
+  .panel{border-radius:18px}
+  .panel+.panel,.two-col,.kpis,.ov-hero{margin-top:0}
+  .two-col{gap:16px;margin-top:18px}
+  .ov-hero{border-radius:20px;margin-bottom:20px}
+  .sec h3{font-weight:700;color:var(--deep-teal);opacity:.95}
+  /* segment label helper for grouped sections */
+  .seg-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--deep-teal);opacity:.7;margin:22px 2px 10px}
+
+  /* ---- brighter, more modern accents ---- */
+  .btn.primary{background:var(--grad-hero);box-shadow:0 2px 8px rgba(1,138,138,.28),0 12px 24px -8px rgba(6,208,208,.6)}
+  .nav-item.active{background:var(--grad-hero);box-shadow:0 10px 22px -8px rgba(1,154,154,.65)}
+  .tb-bar i{background:var(--grad-hero)}
+  .ring{background:conic-gradient(var(--teal) calc(var(--p)*1%),#deeeee 0)}
+  .pavatar{background:var(--grad-hero)}
+  .badge.b-done,.badge.b-pursue{background:linear-gradient(135deg,#16C792,#048A66)}
+  .chip{background:rgba(4,196,196,.13);border-color:rgba(4,196,196,.32)}
+  .ov-step.done{background:linear-gradient(180deg,rgba(4,196,196,.1),rgba(4,196,196,.03))}
 </style>
 </head>
 <body>
