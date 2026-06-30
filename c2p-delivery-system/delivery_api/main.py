@@ -416,6 +416,29 @@ def project(eng_id: str, body: m.ProjectIn):
 # --------------------------------------------------------------------------- #
 # Stage 4 — Functional (per requirement; grounded by Odoo if a db is set)
 # --------------------------------------------------------------------------- #
+def _deferred_functional(requirement: str, reason: str = "") -> dict:
+    """A flagged placeholder used when a requirement can't be auto-classified and
+    the model is unavailable — keeps the pipeline flowing instead of hard-failing."""
+    return {
+        "requirement_summary": (requirement or "")[:240],
+        "verdict": "configurable",
+        "verdict_rationale": "Deferred — not matched by built-in knowledge and the "
+                             "model was unavailable. Provisional; needs a consultant "
+                             "or an LLM pass to confirm.",
+        "standard_capability": {"available": True, "modules": [],
+                                "description": "To be confirmed."},
+        "gap_analysis": "Pending analysis.",
+        "solution_options": [],
+        "technical_design": None,
+        "risks": ["Provisional — confirm classification before committing scope."],
+        "gcc_considerations": "",
+        "recommended_path": "Re-run this requirement when the model is available, "
+                            "or have a consultant classify it.",
+        "handoff_to_dev": False,
+        "source": "deferred", "deferred": True,
+    }
+
+
 @app.post("/engagements/{eng_id}/functional")
 def functional(eng_id: str, body: m.FunctionalIn):
     eng = _engagement(eng_id)
@@ -443,13 +466,17 @@ def functional(eng_id: str, body: m.FunctionalIn):
         try:
             out = run_agent("functional", content,
                             account_id=eng.account_id, engagement_id=eng.id)
-        except HTTPException:
+        except HTTPException as exc:
             # API unavailable (no credits / rate limit): fall back to built-in
-            # knowledge so the agency keeps working, even on a weaker match.
-            if LOCAL_INTELLIGENCE and local["result"]:
+            # knowledge so the agency keeps working. Use the best local match if
+            # there is one; otherwise defer the requirement (flagged) rather than
+            # hard-failing — so Autopilot/PM-delivery never halt on one item.
+            if not LOCAL_INTELLIGENCE:
+                raise
+            if local["result"]:
                 out = {**local["result"], "source": "knowledge-base-fallback"}
             else:
-                raise
+                out = _deferred_functional(body.requirement, str(exc.detail))
     # Chartered-accountant enrichment: attach IFRS/tax/compliance treatment for
     # any finance requirement — built-in knowledge, no API call.
     try:

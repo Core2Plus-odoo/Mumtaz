@@ -806,9 +806,9 @@ async function runAutopilot(){
   _apStop=false;
   document.getElementById('autopilotLog').innerHTML='';
   apLog('🚀 Autopilot engaged for <b>'+esc(eng.company)+'</b>','head');
-  let guard=0;
+  let guard=0, consecErr=0;
   try{
-    while(guard++<25){
+    while(guard++<40){
       if(_apStop){apLog('⏹ Stopped by operator.','warn');break;}
       let r;
       try{ r=await api("POST",`/engagements/${eng.id}/autopilot/step`); }
@@ -817,14 +817,23 @@ async function runAutopilot(){
       if(r.status==='done'){ apLog('✓ Pipeline complete — nothing left to run.','done'); break; }
       if(r.status==='needs_input'){ apLog('⏸ <b>'+esc(label)+'</b> needs your input — run it from its stage tab, then re-launch Autopilot.','warn'); break; }
       if(r.status==='blocked'){ apLog('🔒 <b>'+esc(label)+'</b> hit an approval gate. Review it in <a href="#" onclick="goView(\'approvals\');return false">Approvals</a>.','warn'); break; }
-      if(r.status==='error'){ apLog('✕ <b>'+esc(label)+'</b> errored: '+esc(r.error||''),'bad'); break; }
+      if(r.status==='error'){
+        consecErr++;
+        const rl=/rate.?limit|429|tokens per minute|credit balance|too low/i.test(r.error||'');
+        apLog('✕ <b>'+esc(label)+'</b> — '+esc((r.error||'').slice(0,170)),'bad');
+        if(rl){apLog('⛔ The model API is unavailable (no credit / rate-limited). Local stages still run; generative stages (writing, code) need API credit — add it at console.anthropic.com/settings/billing.','warn');break;}
+        if(consecErr>=3){apLog('⛔ Too many consecutive failures — stopping. Check Agent Activity.','warn');break;}
+        try{ const fresh=await api("GET",`/engagements/${eng.id}`); if(fresh&&fresh.id){eng=fresh;} }catch(_){}
+        continue;   // skip this step, keep the run going
+      }
+      consecErr=0;
       const dname=r.doc_name?(' — '+esc(r.doc_name)):'';
       const qp=r.questions_pushed?` · ${r.questions_pushed} questions queued for client`:'';
       apLog('▸ Ran <b>'+esc(label)+'</b>'+dname+qp+apReview(r.review),'ok');
       // refresh engagement state between steps
       try{ const fresh=await api("GET",`/engagements/${eng.id}`); if(fresh&&fresh.id){eng=fresh;} }catch(_){}
     }
-    if(guard>=25)apLog('⚠ Reached step limit — re-launch to continue.','warn');
+    if(guard>=40)apLog('⚠ Reached step limit — re-launch to continue.','warn');
   } finally {
     if(btn){btn.disabled=false;btn.textContent='🤖 Run Autopilot';}
     if(stop)stop.style.display='none';
