@@ -457,6 +457,28 @@ def set_odoo_connection(body: dict):
     return {"ok": True, "has_key": bool(s.get("key_enc")), "encrypted": tenancy.encryption_active()}
 
 
+def _friendly_odoo_error(exc: Exception, db: str | None = None) -> str:
+    """Turn a raw XML-RPC fault / socket error into a short, actionable message."""
+    msg = str(exc)
+    low = msg.lower()
+    if "does not exist" in low and "database" in low:
+        return (f"Database “{db}” does not exist on this Odoo server. On Odoo.sh the "
+                "database name matches your instance subdomain and changes on every "
+                "rebuild — copy the current name from the Odoo.sh branch (or the host "
+                "in your instance URL) and try again.")
+    if "access denied" in low or "authenticate" in low or "invalid" in low and "login" in low:
+        return ("The server and database were reached, but the bot user or API key was "
+                "rejected. Check the Bot user email and the API key / password.")
+    if any(k in low for k in ("name or service not known", "failed to resolve",
+                              "connection refused", "timed out", "no route to host",
+                              "ssl", "certificate")):
+        return ("Could not reach the Odoo server at that URL. Check the Odoo URL "
+                "(include https://) and that the instance is online.")
+    if "list index out of range" in low or "missing" in low:
+        return f"Odoo rejected the request: {msg[:200]}"
+    return f"Odoo error: {msg[:300]}"
+
+
 @app.post("/odoo/connection/test")
 def test_odoo_connection(body: dict | None = None):
     s = _odoo_settings()
@@ -467,7 +489,7 @@ def test_odoo_connection(body: dict | None = None):
         mods = get_client(db).installed_modules()
         return {"ok": True, "db": db, "modules": len(mods)}
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc, db))
 
 
 @app.get("/odoo/{db}/modules")
@@ -475,7 +497,7 @@ def odoo_modules(db: str):
     try:
         return {"db": db, "installed": get_client(db).installed_modules()}
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc, db))
 
 
 @app.get("/odoo/{db}/fields/{model}")
@@ -483,7 +505,7 @@ def odoo_fields(db: str, model: str):
     try:
         return {"db": db, "model": model, "fields": get_client(db).fields_of(model)}
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Odoo error: {exc}")
+        raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc, db))
 
 
 @app.post("/engagements/{eng_id}/sync/lead")
