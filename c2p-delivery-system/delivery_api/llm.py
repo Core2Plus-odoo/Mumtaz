@@ -29,6 +29,8 @@ DEFAULT_MODEL = os.getenv("C2P_MODEL", "claude-sonnet-4-6")
 MAX_OUTPUT_TOKENS = int(os.getenv("C2P_MAX_OUTPUT_TOKENS", "0") or "0")
 # Retries for transient provider errors (429 rate limit / 5xx / overloaded).
 LLM_RETRIES = int(os.getenv("C2P_LLM_RETRIES", "5") or "5")
+# Cache the system prompt (90% cheaper on repeated input). On by default.
+PROMPT_CACHE = os.getenv("C2P_PROMPT_CACHE", "1") == "1"
 # Web search is Anthropic's server-side tool; off-switch for accounts/models
 # that don't have it enabled (the agent then reasons without live grounding).
 WEB_SEARCH_ENABLED = os.getenv("C2P_WEB_SEARCH", "1") == "1"
@@ -117,8 +119,13 @@ def _complete(task: str, system: str, user: str, max_tokens: int,
     if MAX_OUTPUT_TOKENS > 0:
         max_tokens = min(max_tokens, MAX_OUTPUT_TOKENS)
 
+    # Cache the (stable) system prompt so repeated calls for the same agent only
+    # pay full price for it once — big saving across a delivery run's many calls.
+    system_block = ([{"type": "text", "text": system,
+                      "cache_control": {"type": "ephemeral"}}]
+                    if PROMPT_CACHE else system)
     kwargs: dict[str, Any] = dict(
-        model=model, max_tokens=max_tokens, system=system,
+        model=model, max_tokens=max_tokens, system=system_block,
         messages=[{"role": "user", "content": user}],
     )
     if web_search and WEB_SEARCH_ENABLED:
