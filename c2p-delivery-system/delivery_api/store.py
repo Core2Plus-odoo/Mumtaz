@@ -133,13 +133,28 @@ CREATE TABLE IF NOT EXISTS agent_runs (
 class EngagementStore:
     def __init__(self, path: str = DB_PATH):
         self.path = path
+        d = os.path.dirname(os.path.abspath(path))
+        if d and not os.path.isdir(d):
+            os.makedirs(d, exist_ok=True)
         with self._conn() as c:
             c.executescript(_DDL)
             self._migrate(c)
+        import logging
+        logging.getLogger("c2p.store").info(
+            "engagement store at %s", os.path.abspath(path))
 
     def _conn(self) -> sqlite3.Connection:
-        c = sqlite3.connect(self.path)
+        # timeout + WAL + busy_timeout so concurrent writes (the autopilot /
+        # delivery loop fires many in quick succession) WAIT instead of failing
+        # with "database is locked" — which would silently drop a save.
+        c = sqlite3.connect(self.path, timeout=30)
         c.row_factory = sqlite3.Row
+        try:
+            c.execute("PRAGMA journal_mode=WAL")
+            c.execute("PRAGMA busy_timeout=30000")
+            c.execute("PRAGMA synchronous=NORMAL")
+        except Exception:
+            pass
         return c
 
     def _migrate(self, c: sqlite3.Connection) -> None:

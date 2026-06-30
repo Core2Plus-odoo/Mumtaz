@@ -504,3 +504,17 @@ reasons from C2P house knowledge instead of generic training:
 - `prompts.py` augments functional, ba, ba_discovery, developer, proposal,
   project, config, dispatch and presales with the relevant digests. Prompt
   caching makes this near-free after the first call. Toggle `C2P_EMBED_KNOWLEDGE`.
+
+### Local document generation + durable persistence ✅
+- **`doc_templates.py`**: assembles BRD / FRS / Charter / SOW / Tech-Design /
+  Status documents from the structured engagement data (BA catalog, PM estimate,
+  functional analyses incl. finance treatment) with NO API. `author_document`
+  uses the docwriter agent when the API is available and falls back to the
+  templater when it isn't — so a full Autopilot run completes end-to-end offline
+  (templated prose, upgraded to LLM prose when credits exist).
+- **Persistence hardening** (`store.py`): SQLite now runs in WAL mode with a
+  30s busy timeout and synchronous=NORMAL, so the rapid concurrent writes from
+  the autopilot/delivery loop WAIT instead of failing with "database is locked"
+  (which previously could silently drop a save). The store also ensures its
+  directory exists and logs the absolute DB path on startup so it can be located
+  and backed up.

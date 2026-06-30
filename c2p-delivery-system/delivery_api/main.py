@@ -40,6 +40,7 @@ import industry
 import odoo_knowledge
 import pm_knowledge
 import finance_knowledge
+import doc_templates
 import llm
 import policy
 import channels
@@ -1511,7 +1512,15 @@ def author_document(eng_id: str, doc_key: str, body: dict | None = None):
         "Write the full document JSON."
         + industry.playbook_block(_industry_for(eng))
     )
-    out = run_agent("docwriter", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("docwriter", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        # API unavailable: assemble the document from structured data — no API,
+        # so a full Autopilot run still completes (templated prose, not LLM prose).
+        if LOCAL_INTELLIGENCE:
+            out = doc_templates.build(doc_key, eng)
+        else:
+            raise
     out["doc_key"] = doc_key
     out.setdefault("doc_type", name)
     review = _review_output(f"document:{doc_key}", out, eng)
