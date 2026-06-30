@@ -1036,7 +1036,7 @@ async function renderOdooConn(c){
     <div class="panel-head"><div><h2>Odoo Connection</h2><p>The instance credentials every agent uses to read and write Odoo. The API key is encrypted on the server and never shown again.</p></div><div class="run-area" id="ocStatus"></div></div>
     <div class="panel-body">
       <div class="input-grid"><div class="input-block"><label>Odoo URL</label><input type="text" id="oc_url" placeholder="https://yourco.odoo.com"></div>
-        <div class="input-block"><label>Database</label><input type="text" id="oc_db" placeholder="production database name"></div></div>
+        <div class="input-block"><label>Database <button class="btn ghost sm" style="float:right;padding:1px 8px;font-size:11px" onclick="detectOdooDb()">⌖ Detect</button></label><input type="text" id="oc_db" placeholder="production database name"></div></div>
       <div class="input-grid"><div class="input-block"><label>Bot user (email)</label><input type="text" id="oc_user" placeholder="bot@core2plus.com"></div>
         <div class="input-block"><label>API key / password</label><input type="password" id="oc_key" placeholder="API key / password"></div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" onclick="saveOdooConn()">Save (encrypted)</button><button class="btn sm" onclick="testOdooConn()">Test connection</button></div>
@@ -1053,6 +1053,23 @@ async function renderOdooConn(c){
 async function saveOdooConn(){
   const b={url:val('oc_url'),user:val('oc_user'),db:val('oc_db')};const k=val('oc_key');if(k)b.api_key=k;
   try{const r=await api("POST","/odoo/connection",b);toast(r.encrypted?'Saved & encrypted':'Saved (set C2P_SECRET_KEY to encrypt)','ok');renderOdooConn(document.getElementById('content'));}catch(e){toast('Failed: '+e.message,'bad');}
+}
+async function detectOdooDb(){
+  const r=document.getElementById('oc_result');
+  const url=val('oc_url');
+  if(!url){r.innerHTML=`<span style="color:var(--rust)">Enter the Odoo URL first — paste the address you log in at.</span>`;return;}
+  r.textContent='Detecting database…';
+  try{
+    const o=await api("POST","/odoo/connection/detect-db",{url});
+    const cands=o.candidates||[];
+    if(o.best){document.getElementById('oc_db').value=o.best;}
+    const lbl={connected:'✓ connects',exists_bad_creds:'exists — check user/key',not_found:'not on this server',error:'error',unverified:'guess (save creds to verify)'};
+    const list=cands.map(c=>{const col=c.status==='connected'?'var(--green)':c.status==='exists_bad_creds'?'var(--amber)':c.status==='not_found'?'var(--rust)':'var(--muted)';
+      return `<div style="display:flex;gap:8px;align-items:center;margin-top:4px"><code style="font-size:11.5px">${esc(c.db)}</code><span style="color:${col};font-size:11.5px">${lbl[c.status]||c.status}</span>${c.db!==val('oc_db')?`<button class="btn ghost sm" style="padding:1px 7px;font-size:11px" onclick="document.getElementById('oc_db').value='${esc(c.db)}'">use</button>`:'<span class="chip">selected</span>'}</div>`;}).join('');
+    const hint=o.best?(cands.find(c=>c.db===o.best&&c.status==='connected')?`<span style="color:var(--green)">Filled in <b>${esc(o.best)}</b> — it connects. Save, then Test.</span>`:`<span style="color:var(--amber)">Best guess <b>${esc(o.best)}</b> filled in. ${o.listed?'':'Server hid its database list, so this is derived from the URL host. '}Save your credentials and Detect again to verify.</span>`)
+      :`<span style="color:var(--rust)">Couldn’t determine the database. The server hides its list — copy the exact name from your Odoo.sh branch / instance URL.</span>`;
+    r.innerHTML=hint+(list?`<div style="margin-top:8px">${list}</div>`:'');
+  }catch(e){r.innerHTML=`<span style="color:var(--rust)">✗ ${esc(e.message)}</span>`;}
 }
 async function testOdooConn(){
   const r=document.getElementById('oc_result');r.textContent='Testing…';

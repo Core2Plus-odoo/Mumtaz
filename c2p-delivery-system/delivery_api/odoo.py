@@ -137,6 +137,14 @@ class OdooClient:
         })
 
 
+def list_databases(url: str) -> list[str]:
+    """Ask the server which databases it serves (the `db` XML-RPC service).
+    Often disabled on Odoo.sh / hardened instances — caller handles failure."""
+    proxy = xmlrpc.client.ServerProxy(f"{url.rstrip('/')}/xmlrpc/2/db", allow_none=True)
+    dbs = proxy.list()
+    return list(dbs) if isinstance(dbs, (list, tuple)) else []
+
+
 @lru_cache(maxsize=16)
 def get_client(db: str) -> OdooClient:
     """Cached client per tenant DB. Cache is keyed by db only; credentials come

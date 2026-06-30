@@ -492,6 +492,62 @@ def test_odoo_connection(body: dict | None = None):
         raise HTTPException(status_code=502, detail=_friendly_odoo_error(exc, db))
 
 
+@app.post("/odoo/connection/detect-db")
+def detect_odoo_db(body: dict | None = None):
+    """Work out the right database name for the configured/entered URL: ask the
+    server's db list when allowed, derive it from the URL host (Odoo.sh: the DB
+    equals the instance subdomain), and verify each candidate with the saved
+    credentials so we can point the operator at the one that actually connects."""
+    from urllib.parse import urlparse
+    s = _odoo_settings()
+    body = body or {}
+    url = body.get("url") or s.get("url") or os.environ.get("ODOO_URL")
+    if not url:
+        raise HTTPException(status_code=400, detail="Set the Odoo URL first")
+    user = body.get("user") or s.get("user") or os.environ.get("ODOO_USER")
+    key = None
+    if s.get("key_enc"):
+        try:
+            key = tenancy.dec_secret(s["key_enc"])
+        except Exception:
+            key = None
+    key = key or os.environ.get("ODOO_PASSWORD")
+
+    candidates: list[str] = []
+    listed = False
+    try:
+        dbs = odoo_mod.list_databases(url)
+        if dbs:
+            listed = True
+            candidates.extend(dbs)
+    except Exception:
+        pass
+    host = urlparse(url if "://" in url else "https://" + url).hostname or ""
+    label = host.split(".")[0] if host else ""
+    if label and label not in candidates:
+        candidates.append(label)
+    seen: set[str] = set()
+    candidates = [c for c in candidates if not (c in seen or seen.add(c))]
+
+    results = []
+    best = None
+    for db in candidates[:10]:
+        status = "unverified"
+        if user and key:
+            try:
+                odoo_mod.OdooClient(db, url=url, user=user, password=key).uid
+                status = "connected"
+                best = best or db
+            except PermissionError:
+                status = "exists_bad_creds"   # right DB, wrong user/key
+                best = best or db
+            except Exception as exc:
+                status = ("not_found" if "does not exist" in str(exc).lower() else "error")
+        results.append({"db": db, "status": status})
+    return {"listed": listed, "candidates": results,
+            "best": best or (candidates[0] if candidates else None)}
+
+
 @app.get("/odoo/{db}/modules")
 def odoo_modules(db: str):
     try:
