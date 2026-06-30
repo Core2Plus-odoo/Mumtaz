@@ -134,6 +134,13 @@ td.n,th.n{{text-align:right}}tr.tot td{{border-top:2px solid #ccc;font-weight:70
 </body></html>"""
 
 
+def _is_num(s: str) -> bool:
+    """True for cells that read as numbers/amounts/durations (for right-align)."""
+    import re
+    return bool(re.match(r"^\s*(aed\s*)?[-+]?[\d,]+(\.\d+)?\s*"
+                         r"(md|%|wks?|w|days?|aed)?\s*$", (s or "").strip(), re.I))
+
+
 def _inline_md(s: str) -> str:
     """Escape, then apply inline Markdown: **bold**, `code`, [text](url)."""
     import re
@@ -165,8 +172,19 @@ def _md_to_html(md: str) -> str:
             while i < n and lines[i].strip().startswith("|"):
                 rows.append([c.strip() for c in lines[i].strip().strip("|").split("|")])
                 i += 1
-            th = "".join(f"<th>{_inline_md(c)}</th>" for c in header)
-            trs = "".join("<tr>" + "".join(f"<td>{_inline_md(c)}</td>" for c in r) + "</tr>" for r in rows)
+            ncol = len(header)
+            # right-align a column when most of its data cells are numeric
+            numcol = []
+            for c in range(ncol):
+                vals = [r[c] for r in rows if c < len(r) and r[c]]
+                numcol.append(bool(vals) and sum(_is_num(v) for v in vals) >= len(vals) * 0.6)
+            th = "".join(f'<th{" class=num" if numcol[c] else ""}>{_inline_md(h)}</th>'
+                         for c, h in enumerate(header))
+            trs = "".join(
+                "<tr>" + "".join(
+                    f'<td{" class=num" if (c < ncol and numcol[c]) else ""}>{_inline_md(cell)}</td>'
+                    for c, cell in enumerate(r)) + "</tr>"
+                for r in rows)
             html.append(f"<table><thead><tr>{th}</tr></thead><tbody>{trs}</tbody></table>")
             continue
         # headings
@@ -234,11 +252,14 @@ h1,h2,h4{{font-family:'Fraunces',Georgia,serif}}
 .body ul,.body ol{{margin:0 0 9px 20px}}.body li{{margin-bottom:4px}}
 .body code{{font-family:'JetBrains Mono',monospace;background:#f1f3f2;padding:1px 5px;border-radius:4px;font-size:11px}}
 .exec{{background:#f7f8f7;border:1px solid #e6e9e8;border-left:3px solid {accent};border-radius:8px;padding:14px 17px;margin:6px 0 18px}}
-table{{width:100%;border-collapse:collapse;margin:6px 0 11px}}
-th,td{{text-align:left;padding:7px 9px;border-bottom:1px solid #e6e9e8;font-size:11px;vertical-align:top}}
-th{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#999;background:#fafbfb}}
+table{{width:100%;border-collapse:collapse;margin:8px 0 12px;table-layout:auto}}
+th,td{{text-align:left;padding:7px 10px;border-bottom:1px solid #e6e9e8;font-size:11px;vertical-align:top;word-break:break-word;overflow-wrap:anywhere}}
+th{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#888;background:#fafbfb;border-bottom:1.5px solid #e0e3e2}}
+td.num,th.num{{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}}
+tbody tr:nth-child(even){{background:#fcfcfd}}
+.body ul,.body ol{{padding-left:18px}}.body li{{padding-left:2px}}
 .foot{{position:fixed;bottom:10mm;left:22mm;right:22mm;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#aaa;border-top:1px solid #eee;padding-top:6px}}
-@page{{size:A4;margin:0}}
+@page{{size:A4;margin:0;@bottom-right{{content:"Page " counter(page) " of " counter(pages);font-family:'JetBrains Mono',monospace;font-size:8px;color:#bbb;margin:0 22mm 8mm 0}}}}
 </style></head><body>
 <div class="cover"><div class="page" style="min-height:86vh;display:flex;flex-direction:column">
   <div style="height:46px">{_logo(b)}</div>

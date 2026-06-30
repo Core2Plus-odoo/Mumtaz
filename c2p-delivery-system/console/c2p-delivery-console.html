@@ -104,6 +104,9 @@
   .doc-name{font-weight:600;font-size:13.5px}
   .doc-sub{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
   .doc-actions{display:flex;gap:6px;flex:none}
+  .doc-frame{width:100%;height:70vh;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow-xs)}
+  .doc-refine{display:flex;gap:8px;margin-bottom:12px}
+  .doc-refine input{flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:13px}
   .rfi-card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fff}
   .rfi-card.answered{background:var(--paper);border-style:dashed}
   .rfi-top{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
@@ -1390,18 +1393,37 @@ async function loadDocs(){
         <div class="doc-meta"><div class="doc-name">${esc(d.name)}</div>
           <div class="doc-sub">${d.authored?'Authored':'Not yet authored'} ${d.authored?qaBadge(d.qa):''}</div></div>
         <div class="doc-actions">
-          <button class="btn ${d.authored?'sm':'primary sm'}" onclick="authorDoc('${d.key}',this)">${d.authored?'Re-author':'Author'}</button>
-          ${d.authored?`<button class="btn dark sm" onclick="previewDoc('${d.key}')">Open</button>`:''}
-        </div></div>`).join('')}</div>`;
+          ${d.authored
+            ? `<button class="btn primary sm" onclick="pdfDoc('${d.key}')">⬇ PDF</button><button class="btn sm" onclick="openDoc('${d.key}',this)">Preview</button>`
+            : `<button class="btn primary sm" onclick="authorDoc('${d.key}',null,this)">Author</button>`}
+        </div></div>`).join('')}</div>
+      <div id="docDrawer"></div>`;
   }catch(e){b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
-async function authorDoc(key,btn){
+async function authorDoc(key,instructions,btn){
   if(btn){btn.disabled=true;btn.textContent='Writing…';}
-  try{await api("POST",`/engagements/${eng.id}/document/${key}`,{});toast('Document authored & QA-scored','ok');loadDocs();}
+  try{await api("POST",`/engagements/${eng.id}/document/${key}`,instructions?{instructions}:{});
+    toast('Document generated','ok');loadDocs();if(instructions)openDoc(key);}
   catch(e){toast('Failed: '+e.message,'bad');if(btn){btn.disabled=false;btn.textContent='Author';}}
 }
-function previewDoc(key){
-  window.open(API_BASE+`/engagements/${eng.id}/document/${key}/preview`,'_blank');
+function pdfDoc(key){ window.open(API_BASE+`/engagements/${eng.id}/document/${key}/pdf`,'_blank'); }
+function openDoc(key,btn){
+  const dr=document.getElementById('docDrawer');if(!dr)return;
+  const url=API_BASE+`/engagements/${eng.id}/document/${key}/preview`;
+  dr.innerHTML=`<div class="panel" style="margin-top:14px"><div class="panel-head">
+    <div><h2 style="font-size:15px">Preview &amp; refine</h2><p>Interact with the agent: give a direction and regenerate.</p></div>
+    <div class="run-area"><button class="btn primary sm" onclick="pdfDoc('${key}')">⬇ PDF</button><button class="btn ghost sm" onclick="document.getElementById('docDrawer').innerHTML=''">Close</button></div></div>
+    <div class="panel-body">
+      <div class="doc-refine"><input type="text" id="doc_instr_${key}" placeholder="e.g. add a risk register section; make the tone more executive; expand the pricing rationale">
+        <button class="btn dark sm" onclick="refineDoc('${key}')">↻ Regenerate with this</button></div>
+      <iframe class="doc-frame" src="${url}" title="document preview"></iframe>
+    </div></div>`;
+  dr.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+async function refineDoc(key){
+  const v=document.getElementById('doc_instr_'+key);const instr=v?v.value.trim():'';
+  if(!instr){toast('Type a direction first','bad');return;}
+  await authorDoc(key,instr,null);
 }
 
 /* ---------- client Q&A / RFI loop (PM compiles, client answers) ---------- */
@@ -1836,7 +1858,7 @@ async function dispatchEngagement(){
 }
 
 /* ---------- branded proposal (Phase 3) ---------- */
-function previewProposal(){if(!eng)return;window.open(API_BASE+'/engagements/'+eng.id+'/proposal/preview','_blank');}
+function previewProposal(){if(!eng)return;window.open(API_BASE+'/engagements/'+eng.id+'/proposal/pdf','_blank');}
 async function sendProposal(){if(!eng)return;try{const r=await api("POST",`/engagements/${eng.id}/proposal/send`,{});if(r.approval){toast('Proposal queued for your approval in the Cockpit','ok');refreshApprovalsCount();}else{toast('Proposal issued to client','ok');}}catch(e){toast('Failed: '+e.message,'bad');}}
 
 /* ---------- agent activity log ---------- */

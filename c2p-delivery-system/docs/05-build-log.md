@@ -529,3 +529,14 @@ stored stage (no approval loop). Local plans carry no auto-executable operations
 run completes END-TO-END with zero API: classification, estimate, documents and
 config all local; only novel prose/code needs credit. Console renders the plan
 (baseline, by-area steps, gated ops) in the PM view.
+
+### Documents: PDF by default, aligned, interactive ✅
+- **PDF by default**: `/document/{key}/pdf` and `/proposal/pdf` return a real PDF
+  via WeasyPrint when installed, else the branded HTML that auto-opens the print
+  dialog (Save as PDF) — so a PDF is one click either way. Console doc cards lead
+  with **⬇ PDF**.
+- **Alignment**: numeric table columns auto right-align (tabular figures), zebra
+  rows, word-wrap safety, heavier header rule, and a "Page x of y" running footer.
+- **Interactive**: each authored document opens an inline **Preview & refine**
+  drawer — an instructions box regenerates the document with the operator's
+  direction (interact with the docwriter agent), plus a one-click PDF.

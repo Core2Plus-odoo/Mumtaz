@@ -950,6 +950,17 @@ def proposal_preview(eng_id: str):
     return Response(content=html, media_type="text/html")
 
 
+@app.get("/engagements/{eng_id}/proposal/pdf")
+def proposal_pdf(eng_id: str):
+    eng = _engagement(eng_id)
+    prop = eng.stages.get("proposal")
+    if not prop:
+        raise HTTPException(status_code=400, detail="Run the proposal stage first")
+    html = proposal_render.render_html(
+        prop, eng.company, proposal_render.brand(store), date_str=_now_iso()[:10])
+    return _pdf_response(html, f"proposal-{eng.company}.pdf".replace(" ", "_"))
+
+
 @app.post("/engagements/{eng_id}/proposal/send")
 def proposal_send(eng_id: str, body: dict | None = None):
     """Issue the branded proposal to the client — GATED. Creates an approval;
@@ -1556,15 +1567,39 @@ def list_documents(eng_id: str):
         for k, v in DOC_TYPES.items()]}
 
 
-@app.get("/engagements/{eng_id}/document/{doc_key}/preview")
-def document_preview(eng_id: str, doc_key: str):
-    eng = _engagement(eng_id)
+def _pdf_response(html: str, filename: str) -> Response:
+    """Return a real PDF when WeasyPrint is available; otherwise return the
+    branded HTML that auto-opens the browser print dialog (Save as PDF). Either
+    way the operator gets a PDF — by default, no extra clicks."""
+    pdf = proposal_render.to_pdf(html)
+    if pdf:
+        return Response(content=pdf, media_type="application/pdf",
+                        headers={"Content-Disposition": f'inline; filename="{filename}"'})
+    inj = html.replace(
+        "</body>",
+        "<script>window.addEventListener('load',function(){setTimeout(function(){"
+        "window.print();},350);});</script></body>")
+    return Response(content=inj, media_type="text/html")
+
+
+def _doc_html(eng: Engagement, doc_key: str) -> str:
     doc = (eng.stages.get("documents") or {}).get(doc_key)
     if not doc:
         raise HTTPException(status_code=400, detail="Author this document first")
-    html = proposal_render.render_document_html(
+    return proposal_render.render_document_html(
         doc, eng.company, proposal_render.brand(store), date_str=_now_iso()[:10])
-    return Response(content=html, media_type="text/html")
+
+
+@app.get("/engagements/{eng_id}/document/{doc_key}/preview")
+def document_preview(eng_id: str, doc_key: str):
+    return Response(content=_doc_html(_engagement(eng_id), doc_key), media_type="text/html")
+
+
+@app.get("/engagements/{eng_id}/document/{doc_key}/pdf")
+def document_pdf(eng_id: str, doc_key: str):
+    eng = _engagement(eng_id)
+    fname = f"{doc_key}-{eng.company}.pdf".replace(" ", "_")
+    return _pdf_response(_doc_html(eng, doc_key), fname)
 
 
 # --------------------------------------------------------------------------- #
