@@ -37,6 +37,7 @@ from sync import writeback
 from odoo import get_client
 import odoo as odoo_mod
 import industry
+import odoo_knowledge
 import llm
 import policy
 import channels
@@ -410,17 +411,36 @@ def project(eng_id: str, body: m.ProjectIn):
 def functional(eng_id: str, body: m.FunctionalIn):
     eng = _engagement(eng_id)
     modules = _maybe_modules(eng, body.installed_modules)
-    content = (
-        f"Requirement:\n{body.requirement}\n\nContext:\n"
-        f"- Odoo version: {body.odoo_version}\n- Country/region: {body.country}\n"
-        f"- Industry: {body.industry or 'Not specified'}\n"
-        f"- Installed modules: {modules}\n\nAnalyse and return the JSON."
-        + industry.playbook_block(body.industry or _industry_for(eng))
-        + ks.context_block(eng.account_id, body.requirement)
-        + _ba_requirements_block(eng)
-        + _client_answers_block(eng)
-    )
-    out = run_agent("functional", content, account_id=eng.account_id, engagement_id=eng.id)
+
+    # Built-in Odoo intelligence first: clear-cut requirements are classified
+    # from curated knowledge with NO API call. Only novel/ambiguous ones, or a
+    # low-confidence match, fall through to the model.
+    local = odoo_knowledge.classify(
+        body.requirement, body.industry or _industry_for(eng), modules)
+    out = None
+    if LOCAL_INTELLIGENCE and local["result"] and local["confidence"] >= LOCAL_CONFIDENCE:
+        out = local["result"]
+    else:
+        content = (
+            f"Requirement:\n{body.requirement}\n\nContext:\n"
+            f"- Odoo version: {body.odoo_version}\n- Country/region: {body.country}\n"
+            f"- Industry: {body.industry or 'Not specified'}\n"
+            f"- Installed modules: {modules}\n\nAnalyse and return the JSON."
+            + industry.playbook_block(body.industry or _industry_for(eng))
+            + ks.context_block(eng.account_id, body.requirement)
+            + _ba_requirements_block(eng)
+            + _client_answers_block(eng)
+        )
+        try:
+            out = run_agent("functional", content,
+                            account_id=eng.account_id, engagement_id=eng.id)
+        except HTTPException:
+            # API unavailable (no credits / rate limit): fall back to built-in
+            # knowledge so the agency keeps working, even on a weaker match.
+            if LOCAL_INTELLIGENCE and local["result"]:
+                out = {**local["result"], "source": "knowledge-base-fallback"}
+            else:
+                raise
     # Keep a list of analysed requirements rather than overwriting.
     eng.stages.setdefault("functional", []).append(out)
     result = _commit(eng, "functional", out)
@@ -1106,6 +1126,7 @@ def pm_deliver_step(eng_id: str):
             return {"status": "error", "ran": "functional", "package": nxt["id"],
                     "error": str(exc.detail), "progress": _deliver_progress(plan)}
         verdict = (out or {}).get("verdict")
+        local = str((out or {}).get("source", "")).startswith("knowledge-base")
         last = reviews[-1] if reviews else None
         eng = _engagement(eng_id)                       # functional appended + saved
         plan = eng.stages.get("delivery_plan") or plan
@@ -1115,7 +1136,7 @@ def pm_deliver_step(eng_id: str):
                 p["functional_verdict"] = verdict
         store.save(eng)
         return {"status": "running", "ran": "functional", "package": nxt["id"],
-                "requirement": nxt["requirement"], "verdict": verdict,
+                "requirement": nxt["requirement"], "verdict": verdict, "local": local,
                 "review": ({"score": last.get("score"), "verdict": last.get("verdict"),
                             "revisions": max(0, len(reviews) - 1)} if last else None),
                 "progress": _deliver_progress(plan)}
@@ -1215,6 +1236,9 @@ def update_task(eng_id: str, task_id: int, body: dict):
 # --------------------------------------------------------------------------- #
 QA_BAR = int(os.getenv("C2P_QA_BAR", "75"))
 QA_MAX_REVISIONS = int(os.getenv("C2P_QA_MAX_REVISIONS", "1"))
+# Built-in Odoo intelligence: resolve clear requirements locally (no API call).
+LOCAL_INTELLIGENCE = os.getenv("C2P_LOCAL_INTELLIGENCE", "1") == "1"
+LOCAL_CONFIDENCE = float(os.getenv("C2P_LOCAL_CONFIDENCE", "0.8"))
 # Set C2P_QA_ENABLED=0 to skip the Director review pass — roughly halves model
 # calls (no review, no auto-revision), useful on a tight token/credit budget.
 QA_ENABLED = os.getenv("C2P_QA_ENABLED", "1") == "1"

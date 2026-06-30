@@ -1518,7 +1518,8 @@ async function runPMDelivery(){
       consecErr=0; ranAny=true;
       if(r.ran==='functional'){
         const vc=r.verdict==='custom';
-        pmDelLog(`▸ Functional executed <b>${esc(r.package||'')}</b> — ${esc((r.requirement||'').slice(0,60))} · <b>${esc(r.verdict||'')}</b>${apReview(r.review)}`,vc?'warn':'ok');
+        const loc=r.local?' <span style="color:#3fd9d9">⚡ local · no API</span>':'';
+        pmDelLog(`▸ Functional executed <b>${esc(r.package||'')}</b> — ${esc((r.requirement||'').slice(0,60))} · <b>${esc(r.verdict||'')}</b>${loc}${apReview(r.review)}`,vc?'warn':'ok');
       } else if(r.ran==='developer'){
         pmDelLog('🔧 Technical build executed'+apReview(r.review),'ok');
       }

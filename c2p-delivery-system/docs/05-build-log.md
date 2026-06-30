@@ -460,3 +460,20 @@ A branded single-admin login replaces the nginx Basic-Auth popup.
   stored and sent as a Bearer header, 401 → re-login, Sign-out in the sidebar.
 - **Deploy**: `deploy/enable-admin-login.sh` sets the env (hashing the password,
   minting a JWT secret), strips the nginx Basic-Auth directives, and restarts.
+
+### Built-in Odoo intelligence — local-first, less API-dependent ✅
+The functional stage (the biggest call driver) now resolves routine requirements
+from CURATED KNOWLEDGE with no API call.
+- **`odoo_knowledge.py`**: a curated Odoo capability map (v17–v19) + ~30
+  classification rules (CRM, Sales, Inventory, Purchase, Accounting/UAE VAT,
+  multi-company, ZATCA, MRP, HR, Project, POS, eCommerce, loyalty incl. the
+  tiered-loyalty=custom case, integrations=custom, approvals, reporting, …).
+  `classify()` returns a full functional-stage object + a confidence.
+- **Local-first wiring**: when confidence ≥ `C2P_LOCAL_CONFIDENCE` (0.8) the
+  functional verdict/modules/options/risks come from knowledge — zero tokens.
+  Ambiguous/novel requirements fall through to the model; and if the API is
+  unavailable (no credits / rate-limited) it falls back to the built-in match so
+  the agency keeps working. Toggle with `C2P_LOCAL_INTELLIGENCE`.
+- On a real 30-requirement catalog ~70% classified locally — a matching cut in
+  functional API calls (on top of cheap-model routing, QA toggle and prompt
+  caching). The delivery log marks locally-resolved tasks "⚡ local · no API".
