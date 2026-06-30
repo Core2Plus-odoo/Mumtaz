@@ -419,3 +419,17 @@ The Project Manager no longer just reports/recommends — it owns delivery end t
   + QA), and a run log. Reachable alongside the BA ("Gather requirements") and the
   existing Delegate/Configure actions — so the PM is the single owner who gathers
   (BA), organises, and executes through Functional and Technical.
+
+### Design system v2 — professional polish pass ✅
+A cohesive global polish layer (appended, so it refines without restructuring views):
+- **Depth & elevation**: a layered shadow scale (xs/md/lg), softer hairline borders,
+  an ambient teal/violet gradient app background.
+- **Motion**: tactile button lift + gradient accents, hover lifts on KPIs/cards/doc
+  cards, smoother nav transitions — all disabled under prefers-reduced-motion.
+- **Focus & a11y**: visible focus rings on every control.
+- **Sidebar/topbar**: subtle gradient sidebar, translucent blurred sticky topbar,
+  glowing active-nav accent.
+- **Run logs**: redesigned as a dark terminal (cyan/green/amber rows) for the
+  Autopilot and PM delivery feeds.
+- **Detail**: KPI gradient top-accents + tabular numerals, progress-ring glow,
+  refined chips/badges, custom scrollbars, elevated glass toasts.

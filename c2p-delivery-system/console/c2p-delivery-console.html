@@ -303,6 +303,142 @@
     .app{grid-template-columns:1fr}.content{max-width:none;padding:0}
     .panel,.kpi,.ov-hero{box-shadow:none}
   }
+
+  /* ============================================================= *
+   * C2P design system v2 — depth, rhythm, motion & focus polish   *
+   * Appended last so it refines the base without restructuring.   *
+   * ============================================================= */
+  :root{
+    --line:#E9EBEF;--line-soft:#F1F3F6;--paper:#F4F6F8;
+    --shadow-xs:0 1px 2px rgba(17,24,39,.05);
+    --shadow:0 1px 2px rgba(17,24,39,.04),0 2px 6px rgba(17,24,39,.05);
+    --shadow-md:0 4px 12px rgba(17,24,39,.07),0 2px 4px rgba(17,24,39,.04);
+    --shadow-lg:0 24px 60px -12px rgba(17,24,39,.22),0 8px 24px -8px rgba(17,24,39,.12);
+    --ring:0 0 0 3px rgba(0,179,179,.20);
+    --grad-teal:linear-gradient(135deg,#00C2C2,#008080);
+    --grad-ink:linear-gradient(135deg,#272B31,#15181C);
+    --r-sm:9px;--r:13px;--r-lg:16px;
+  }
+  body{background:
+    radial-gradient(1200px 600px at 100% -10%,rgba(0,179,179,.05),transparent 60%),
+    radial-gradient(900px 500px at -5% 0%,rgba(83,74,183,.04),transparent 55%),
+    var(--paper);
+    background-attachment:fixed;letter-spacing:-.05px}
+
+  /* sidebar — quiet depth + crisper brand */
+  .sidebar{background:linear-gradient(180deg,#FCFCFD,#F7F8FA 60%,#F4F5F8);border-right:1px solid var(--line);box-shadow:1px 0 0 rgba(17,24,39,.02)}
+  .sb-strap b{letter-spacing:-.2px}
+  .nav-item{transition:background .14s ease,color .14s ease,transform .14s ease}
+  .nav-item:hover{transform:translateX(1px)}
+  .nav-item.active{background:linear-gradient(90deg,rgba(0,179,179,.14),rgba(0,179,179,.06))}
+  .nav-item.active::before{box-shadow:0 0 10px rgba(0,179,179,.5)}
+  .ni-count{box-shadow:inset 0 0 0 1px rgba(17,24,39,.04)}
+  .sb-eng{box-shadow:var(--shadow-xs)}
+
+  /* topbar — translucent, blurred, sticky */
+  .topbar{background:rgba(255,255,255,.78);backdrop-filter:saturate(1.6) blur(12px);-webkit-backdrop-filter:saturate(1.6) blur(12px);border-bottom:1px solid var(--line)}
+  .tb-title{letter-spacing:-.4px}
+
+  /* buttons — tactile lift + gradient accents + focus rings */
+  .btn{border-radius:10px;transition:transform .12s ease,box-shadow .14s ease,background .14s ease,border-color .14s ease}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+  .btn:active{transform:translateY(0);box-shadow:var(--shadow-xs)}
+  .btn.primary{background:var(--grad-teal);border-color:transparent;box-shadow:0 1px 2px rgba(0,128,128,.18),0 6px 16px -6px rgba(0,179,179,.5)}
+  .btn.primary:hover{background:var(--grad-teal);filter:brightness(1.04);box-shadow:0 2px 4px rgba(0,128,128,.2),0 10px 22px -6px rgba(0,179,179,.55)}
+  .btn.dark{background:var(--grad-ink);border-color:transparent}
+  .btn.dark:hover{background:var(--grad-ink);filter:brightness(1.12)}
+  .btn.sm{border-radius:8px}
+  :focus-visible{outline:none;box-shadow:var(--ring);border-radius:8px}
+  .btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{box-shadow:var(--ring)}
+
+  /* panels & surfaces — softer, layered, gently interactive */
+  .panel{border-radius:var(--r-lg);box-shadow:var(--shadow);border-color:var(--line)}
+  .panel-head h2{letter-spacing:-.4px}
+  .kpi,.doc-card,.req-row,.odoo-rec,.rfi-card,.ov-step,.exec-card{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+  .kpi{border-radius:var(--r)}
+  .kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+  .doc-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:rgba(0,179,179,.35)}
+  .req-row:hover{border-color:var(--line);box-shadow:var(--shadow-xs)}
+  .ov-hero{border-radius:var(--r-lg);box-shadow:var(--shadow)}
+  .ov-step.done{box-shadow:inset 0 0 0 1px rgba(31,157,107,.12)}
+
+  /* chips & badges — crisper edges */
+  .chip{border-radius:8px;font-weight:500}
+  .badge{box-shadow:var(--shadow-xs)}
+  .eff{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;letter-spacing:.3px}
+
+  /* personas — ring + readable initials */
+  .pavatar{box-shadow:0 0 0 3px rgba(0,179,179,.12);color:#fff}
+
+  /* run logs — terminal feel */
+  .ap-log{background:#0E1622;border-color:#0E1622;color:#cdd6e0;border-radius:var(--r);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .ap-row{border-bottom-color:rgba(255,255,255,.04)}
+  .ap-row.ok{color:#cdd6e0}
+  .ap-row.head{color:#3fd9d9}
+  .ap-row.muted{color:#6b7686}
+  .ap-row a{color:#3fd9d9}
+  .ap-log b{color:#fff}
+
+  /* refined scrollbars */
+  *{scrollbar-width:thin;scrollbar-color:#cfd4dc transparent}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#cfd4dc;border-radius:8px;border:3px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:#b6bcc6;background-clip:content-box}
+  .ap-log::-webkit-scrollbar-thumb{background:#2a3646;background-clip:content-box}
+
+  /* inputs — slightly softer */
+  select,input[type=text],input[type=password],textarea{border-radius:10px}
+  .callout{border-radius:var(--r)}
+
+  /* run-log row colors tuned for the dark terminal */
+  .ap-row.warn{color:#f3b53f}
+  .ap-row.bad{color:#ff8c70}
+  .ap-row.done{color:#3ddc97;font-weight:600}
+
+  /* progress ring — soft glow */
+  .ring{filter:drop-shadow(0 4px 14px rgba(0,179,179,.18))}
+  .ring .rv b{letter-spacing:-1px}
+  .tb-bar i{box-shadow:0 0 8px rgba(0,179,179,.45)}
+
+  /* KPI — hairline top accent + tighter numerals */
+  .kpi{position:relative;overflow:hidden}
+  .kpi.accent{border-left:none}
+  .kpi.accent::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--grad-teal)}
+  .kpi .v{font-variant-numeric:tabular-nums;letter-spacing:-.6px}
+
+  /* tables — zebra-free hover, tabular figures */
+  tbody tr{transition:background .12s ease}
+  tbody tr:hover{background:rgba(0,179,179,.025)}
+  td.num,th.num{font-variant-numeric:tabular-nums}
+
+  /* empty states — give them presence */
+  .placeholder{color:var(--muted);font-size:14px;line-height:1.6;padding:48px 24px;max-width:520px;margin:0 auto}
+
+  /* toasts — elevated glass cards */
+  .toast{box-shadow:var(--shadow-lg)!important;border-radius:12px!important;backdrop-filter:blur(8px)}
+
+  /* section headers — a touch more architectural */
+  .sec h3,.set-h{position:relative}
+
+  /* persona avatar text must read on the gradient */
+  .pavatar{text-shadow:0 1px 1px rgba(0,0,0,.25)}
+
+  /* selection + links */
+  ::selection{background:rgba(0,179,179,.22)}
+  .linkbtn:hover{color:var(--teal)}
+
+  /* the engagement <select> in the sidebar — crisper */
+  .sb-eng select{transition:border-color .15s,box-shadow .15s}
+  .sb-eng select:hover{border-color:#D7DAE0}
+
+  /* dropzone hover lift */
+  .dropzone{transition:border-color .15s,background .15s,box-shadow .15s}
+  .dropzone:hover{box-shadow:var(--shadow-xs)}
+
+  @media(prefers-reduced-motion:reduce){
+    .btn,.nav-item,.kpi,.doc-card,.req-row,.odoo-rec{transition:none!important}
+    .btn:hover,.kpi:hover,.doc-card:hover,.nav-item:hover{transform:none!important}
+  }
 </style>
 </head>
 <body>
