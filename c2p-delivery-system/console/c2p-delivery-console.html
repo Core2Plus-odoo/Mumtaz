@@ -1273,8 +1273,73 @@ function renderPM(c){
           <button class="btn sm" onclick="openDossier()">Generate project dossier</button>
           <button class="btn sm" onclick="goView('approvals')">Open approvals</button>
         </div><div id="dispatchOut" style="margin-top:10px"></div></div></div>
-    </div></div>`;
+    </div>
+    <div class="panel" style="margin-top:16px"><div class="panel-head">
+      <div><h2>Deliver the requirements</h2><p>The PM organises every requirement and drives Functional + Technical to complete each one — Director QA on every step.</p></div>
+      <div class="run-area"><button class="btn dark sm" id="pmDelBtn" onclick="runPMDelivery()">▶ Organise &amp; deliver</button><button class="btn ghost sm" id="pmDelStop" style="display:none" onclick="stopPMDelivery()">Stop</button></div></div>
+      <div class="panel-body"><div id="pmDelBoard"><div class="placeholder">Click <b>Organise &amp; deliver</b>: the PM builds a sequenced delivery plan from the requirements catalog, then runs Functional analysis on each one and a Technical build for anything custom — pausing nowhere except real approval gates.</div></div>
+        <div id="pmDelLog" class="ap-log" style="margin-top:12px;display:none"></div></div></div>
+  </div>`;
   renderPMScope();
+  loadDelivery();
+}
+let _pmDelStop=false;
+function stopPMDelivery(){_pmDelStop=true;}
+async function loadDelivery(){
+  try{const plan=await api("GET",`/engagements/${eng.id}/pm/deliver`);if((plan.packages||[]).length)renderDeliveryBoard(plan);}catch(_){}
+}
+function delStatusChip(p){
+  const s=p.status, v=p.functional_verdict;
+  if(s==='done'){const vc=v==='custom'?'var(--rust)':v?'var(--green)':'var(--green)';return `<span class="eff" style="background:${vc};color:#fff">${v?esc(v):'done'}</span>`;}
+  if(s==='error')return `<span class="eff" style="background:var(--rust);color:#fff">error</span>`;
+  if(s==='in_progress')return `<span class="ni-st running"></span>`;
+  return `<span class="eff" style="background:var(--line);color:var(--muted)">pending</span>`;
+}
+function renderDeliveryBoard(plan){
+  const el=document.getElementById('pmDelBoard');if(!el)return;
+  const pkgs=plan.packages||[];const pr=_delProgress(pkgs);
+  el.innerHTML=`${plan.summary?`<div class="callout" style="margin-bottom:10px"><b>Plan.</b> ${esc(plan.summary)}</div>`:''}
+    <div style="margin-bottom:8px;color:var(--muted);font-size:12.5px">${pr.done}/${pr.total} requirements delivered${plan.build&&plan.build.needed?` · build ${esc(plan.build.status||'pending')}`:''}</div>
+    ${pkgs.map(p=>`<div class="req-row"><span class="rq-text"><b>${esc(p.id||'')}</b> ${esc(p.requirement||'')}${p.area?` <span style="color:var(--muted-2)">· ${esc(p.area)}</span>`:''}</span>
+      <span class="chip">${esc(p.assigned_to||'functional')}</span>${delStatusChip(p)}</div>`).join('')||'<div class="hint">—</div>'}`;
+}
+function _delProgress(pkgs){return {done:pkgs.filter(p=>p.status==='done').length,total:pkgs.length};}
+function pmDelLog(html,cls){const el=document.getElementById('pmDelLog');if(!el)return;el.style.display='block';const r=document.createElement('div');r.className='ap-row '+(cls||'');r.innerHTML=html;el.appendChild(r);el.scrollTop=el.scrollHeight;}
+async function runPMDelivery(){
+  const btn=document.getElementById('pmDelBtn'),stop=document.getElementById('pmDelStop');
+  if(btn){btn.disabled=true;btn.textContent='Delivering…';}if(stop)stop.style.display='inline-flex';
+  _pmDelStop=false;
+  const logEl=document.getElementById('pmDelLog');if(logEl){logEl.innerHTML='';logEl.style.display='block';}
+  try{
+    pmDelLog('🗂 PM organising the requirements…','head');
+    let plan;
+    try{plan=await api("POST",`/engagements/${eng.id}/pm/deliver/plan`,{});}
+    catch(e){pmDelLog('✕ '+esc(e.message),'bad');return;}
+    renderDeliveryBoard(plan);
+    pmDelLog('▸ '+esc(plan.summary||'Plan ready'),'ok');
+    let guard=0;
+    while(guard++<40){
+      if(_pmDelStop){pmDelLog('⏹ Stopped.','warn');break;}
+      let r;
+      try{r=await api("POST",`/engagements/${eng.id}/pm/deliver/step`,{});}
+      catch(e){pmDelLog('✕ Step failed: '+esc(e.message),'bad');break;}
+      if(r.status==='done'){pmDelLog('✓ All requirements delivered.','done');break;}
+      if(r.status==='error'){pmDelLog('✕ '+esc(r.ran)+' errored: '+esc(r.error||''),'bad');break;}
+      if(r.ran==='functional'){
+        const vc=r.verdict==='custom'?'bad':'ok';
+        pmDelLog(`▸ Functional <b>${esc(r.package||'')}</b> — ${esc((r.requirement||'').slice(0,60))} · <b>${esc(r.verdict||'')}</b>${apReview(r.review)}`,vc==='bad'?'warn':'ok');
+      } else if(r.ran==='developer'){
+        pmDelLog('🔧 Technical build complete'+apReview(r.review),'ok');
+      }
+      // refresh board
+      try{const fresh=await api("GET",`/engagements/${eng.id}/pm/deliver`);renderDeliveryBoard(fresh);}catch(_){}
+    }
+    if(guard>=40)pmDelLog('⚠ Step limit reached — re-launch to continue.','warn');
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='▶ Organise & deliver';}
+    if(stop)stop.style.display='none';
+    try{const f=await api("GET",`/engagements/${eng.id}`);if(f&&f.id)eng=f;}catch(_){}
+  }
 }
 /* ---------- business analyst (requirements gathering) ---------- */
 const MOSCOW={M:'Must',S:'Should',C:'Could',W:'Won’t'};

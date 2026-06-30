@@ -934,6 +934,143 @@ def project_manager(eng_id: str):
 
 
 # --------------------------------------------------------------------------- #
+# PM delivery orchestrator — the Project Manager takes the requirements,
+# organises them into a delivery plan, and drives Functional + Technical to
+# complete each one (with Director QA on every step).
+# --------------------------------------------------------------------------- #
+def _delivery_packages(eng: Engagement) -> list[dict]:
+    """Build work packages from the BA requirements catalog (preferred) or the
+    presales candidate requirements."""
+    pkgs: list[dict] = []
+    ba = (eng.stages.get("ba_requirements") or {}).get("functional_requirements") or []
+    if ba:
+        for r in ba:
+            fit = r.get("odoo_fit")
+            pkgs.append({
+                "id": r.get("id") or f"WP-{len(pkgs) + 1}",
+                "requirement": r.get("requirement"), "area": r.get("area"),
+                "priority": r.get("priority"), "odoo_fit": fit,
+                "assigned_to": "technical" if fit in ("custom", "studio") else "functional",
+                "status": "pending"})
+    else:
+        for c in (eng.stages.get("presales") or {}).get("candidate_requirements") or []:
+            req = c.get("requirement") if isinstance(c, dict) else c
+            if req:
+                pkgs.append({"id": f"WP-{len(pkgs) + 1}", "requirement": req,
+                             "assigned_to": "functional", "status": "pending"})
+    return pkgs
+
+
+def _deliver_progress(plan: dict) -> dict:
+    pkgs = plan.get("packages") or []
+    done = len([p for p in pkgs if p.get("status") == "done"])
+    return {"done": done, "total": len(pkgs), "build": plan.get("build")}
+
+
+@app.post("/engagements/{eng_id}/pm/deliver/plan")
+def pm_deliver_plan(eng_id: str):
+    """The PM organises every requirement into a sequenced delivery plan."""
+    eng = _engagement(eng_id)
+    pkgs = _delivery_packages(eng)
+    if not pkgs:
+        raise HTTPException(status_code=400,
+                            detail="No requirements yet — run the Business Analyst "
+                                   "(or at least Presales) first.")
+    organization = None
+    try:
+        state = {"company": eng.company,
+                 "requirements": [{"id": p["id"], "requirement": p["requirement"],
+                                   "area": p.get("area"), "odoo_fit": p.get("odoo_fit")}
+                                  for p in pkgs]}
+        organization = run_agent(
+            "dispatch",
+            f"Engagement state:\n{json.dumps(state, indent=2)}\n\n"
+            "As the Delivery Lead/PM, organise these requirements into a sequenced "
+            "delivery plan (who does what, in what order) and return the JSON.",
+            account_id=eng.account_id, engagement_id=eng.id)
+    except Exception:
+        organization = None
+    customs = len([p for p in pkgs if p.get("odoo_fit") in ("custom", "studio")])
+    summary = (f"{len(pkgs)} requirements organised — {len(pkgs) - customs} via "
+               f"Functional/config, {customs} need a Technical build.")
+    plan = {"summary": summary, "packages": pkgs, "organization": organization,
+            "build": {"needed": None, "status": "pending"}, "created_at": _now_iso()}
+    eng.stages["delivery_plan"] = plan
+    store.save(eng)
+    return plan
+
+
+@app.post("/engagements/{eng_id}/pm/deliver/step")
+def pm_deliver_step(eng_id: str):
+    """Execute the next item of the delivery plan: Functional analysis for the
+    next pending requirement, then a Technical build once all customs are known.
+    The console loops this until done. Director QA runs on every step."""
+    eng = _engagement(eng_id)
+    plan = eng.stages.get("delivery_plan")
+    if not plan:
+        raise HTTPException(status_code=400, detail="Organise the delivery plan first")
+    pkgs = plan.get("packages") or []
+
+    nxt = next((p for p in pkgs if p.get("status") == "pending"), None)
+    if nxt:
+        try:
+            out, reviews = _run_with_qa("functional", eng_id, nxt["requirement"])
+        except HTTPException as exc:
+            eng = _engagement(eng_id)
+            plan = eng.stages.get("delivery_plan") or plan
+            for p in plan.get("packages") or []:
+                if p.get("id") == nxt["id"]:
+                    p["status"] = "error"
+                    p["error"] = str(exc.detail)
+            store.save(eng)
+            return {"status": "error", "ran": "functional", "package": nxt["id"],
+                    "error": str(exc.detail), "progress": _deliver_progress(plan)}
+        verdict = (out or {}).get("verdict")
+        last = reviews[-1] if reviews else None
+        eng = _engagement(eng_id)                       # functional appended + saved
+        plan = eng.stages.get("delivery_plan") or plan
+        for p in plan.get("packages") or []:
+            if p.get("id") == nxt["id"]:
+                p["status"] = "done"
+                p["functional_verdict"] = verdict
+        store.save(eng)
+        return {"status": "running", "ran": "functional", "package": nxt["id"],
+                "requirement": nxt["requirement"], "verdict": verdict,
+                "review": ({"score": last.get("score"), "verdict": last.get("verdict"),
+                            "revisions": max(0, len(reviews) - 1)} if last else None),
+                "progress": _deliver_progress(plan)}
+
+    # all functional done — build once if anything came back custom
+    customs = [p for p in pkgs if p.get("functional_verdict") == "custom"]
+    plan["build"]["needed"] = bool(customs)
+    if customs and not eng.stages.get("developer"):
+        try:
+            _out, reviews = _run_with_qa("developer", eng_id, None)
+        except HTTPException as exc:
+            return {"status": "error", "ran": "developer",
+                    "error": str(exc.detail), "progress": _deliver_progress(plan)}
+        last = reviews[-1] if reviews else None
+        eng = _engagement(eng_id)
+        plan = eng.stages.get("delivery_plan") or plan
+        plan["build"] = {"needed": True, "status": "done"}
+        store.save(eng)
+        return {"status": "running", "ran": "developer",
+                "review": ({"score": last.get("score"), "verdict": last.get("verdict"),
+                            "revisions": max(0, len(reviews) - 1)} if last else None),
+                "progress": _deliver_progress(plan)}
+
+    plan["build"]["status"] = "done"
+    store.save(eng)
+    return {"status": "done", "progress": _deliver_progress(plan)}
+
+
+@app.get("/engagements/{eng_id}/pm/deliver")
+def pm_deliver_get(eng_id: str):
+    eng = _engagement(eng_id)
+    return eng.stages.get("delivery_plan") or {"packages": [], "summary": None}
+
+
+# --------------------------------------------------------------------------- #
 # Project execution — live Odoo task board (human actions, not gated)
 # --------------------------------------------------------------------------- #
 @app.get("/engagements/{eng_id}/tasks")

@@ -404,3 +404,18 @@ A dedicated BA agent does the elicitation; the PM stays the client-facing owner.
   integrations, data objects, process maps, discovery plan); reachable from the
   PM's Manage panel ("Gather requirements"). Autopilot log shows BA steps and how
   many questions were queued for the client.
+
+### PM delivery orchestrator — the PM gets it done ✅
+The Project Manager no longer just reports/recommends — it owns delivery end to end.
+- **Organise** (`POST …/pm/deliver/plan`) — builds a sequenced delivery plan of
+  work packages from the BA requirements catalog (or presales candidates); the
+  dispatch agent annotates who-does-what/order. Stored in `stages.delivery_plan`.
+- **Deliver** (`POST …/pm/deliver/step`, looped by the console) — runs Functional
+  analysis on each requirement, then a Technical build for anything that comes back
+  custom, with Director QA + self-heal on every step. Tracks per-package status
+  (pending → done, with the functional verdict) and overall progress.
+- **Console**: a "Deliver the requirements" panel in the Project Manager view with
+  an Organise & deliver button, a live per-requirement board (assignment + verdict
+  + QA), and a run log. Reachable alongside the BA ("Gather requirements") and the
+  existing Delegate/Configure actions — so the PM is the single owner who gathers
+  (BA), organises, and executes through Functional and Technical.
