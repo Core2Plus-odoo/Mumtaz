@@ -23,6 +23,12 @@ _log = logging.getLogger("c2p.llm")
 
 PROVIDER = os.getenv("C2P_LLM_PROVIDER", "anthropic")
 DEFAULT_MODEL = os.getenv("C2P_MODEL", "claude-sonnet-4-6")
+# Hard ceiling on output tokens per request. Set this BELOW your Anthropic
+# per-minute output limit so a single call never exceeds it (e.g. 3500 on a
+# 4,000 tok/min trial tier). 0 = no cap (use once you're on a higher tier).
+MAX_OUTPUT_TOKENS = int(os.getenv("C2P_MAX_OUTPUT_TOKENS", "0") or "0")
+# Retries for transient provider errors (429 rate limit / 5xx / overloaded).
+LLM_RETRIES = int(os.getenv("C2P_LLM_RETRIES", "5") or "5")
 # Web search is Anthropic's server-side tool; off-switch for accounts/models
 # that don't have it enabled (the agent then reasons without live grounding).
 WEB_SEARCH_ENABLED = os.getenv("C2P_WEB_SEARCH", "1") == "1"
@@ -78,12 +84,38 @@ def _extract_json(text: str) -> dict:
     return json.loads(t[a:b + 1])
 
 
+def _retry_after(exc) -> Optional[float]:
+    """Honour a Retry-After header (seconds) on a rate-limit error, if present."""
+    resp = getattr(exc, "response", None)
+    if resp is None:
+        return None
+    try:
+        ra = resp.headers.get("retry-after")
+        return float(ra) if ra is not None else None
+    except Exception:
+        return None
+
+
+def _is_retryable(exc) -> bool:
+    status = getattr(exc, "status_code", None)
+    if status in (429, 500, 502, 503, 529):
+        return True
+    name = type(exc).__name__
+    return name in ("RateLimitError", "InternalServerError", "APIConnectionError",
+                    "APITimeoutError", "OverloadedError", "APIStatusError")
+
+
 def _complete(task: str, system: str, user: str, max_tokens: int,
               web_search: bool) -> dict:
-    """Provider-agnostic single completion. Returns text + usage metadata."""
+    """Provider-agnostic single completion. Returns text + usage metadata.
+    Retries transient provider errors (429 rate limit / 5xx / overloaded) with
+    exponential backoff, honouring Retry-After."""
     model = model_for(task)
     if PROVIDER != "anthropic":
         raise LLMError(f"Unsupported C2P_LLM_PROVIDER '{PROVIDER}'")
+
+    if MAX_OUTPUT_TOKENS > 0:
+        max_tokens = min(max_tokens, MAX_OUTPUT_TOKENS)
 
     kwargs: dict[str, Any] = dict(
         model=model, max_tokens=max_tokens, system=system,
@@ -96,7 +128,20 @@ def _complete(task: str, system: str, user: str, max_tokens: int,
             "max_uses": 5,
         }]
 
-    resp = _anthropic().messages.create(**kwargs)
+    for attempt in range(LLM_RETRIES + 1):
+        try:
+            resp = _anthropic().messages.create(**kwargs)
+            break
+        except Exception as exc:  # noqa: BLE001
+            if not _is_retryable(exc) or attempt >= LLM_RETRIES:
+                raise
+            wait = _retry_after(exc)
+            if wait is None:
+                wait = min(2 ** attempt, 30)
+            _log.warning("LLM %s on task=%s (attempt %d/%d) — retrying in %.0fs",
+                         type(exc).__name__, task, attempt + 1, LLM_RETRIES, wait)
+            time.sleep(wait)
+
     text = "".join(
         b.text for b in resp.content if getattr(b, "type", None) == "text"
     ).strip()

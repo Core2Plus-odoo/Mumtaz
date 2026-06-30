@@ -672,6 +672,7 @@ function renderNav(){
     <button class="nav-item ${activeView==='approvals'?'active':''}" onclick="goView('approvals')"><span class="ni-ico">✓</span><span class="ni-name">Approvals</span>${approvalsBadge()}</button>`;
   html+=`<div class="nav-sec">Grounding</div>
     <button class="nav-item ${activeView==='odooconn'?'active':''}" onclick="goView('odooconn')"><span class="ni-ico">🔒</span><span class="ni-name">Odoo Connection</span></button>
+    <button class="nav-item ${activeView==='githubconn'?'active':''}" onclick="goView('githubconn')"><span class="ni-ico">⎇</span><span class="ni-name">GitHub Repo</span></button>
     <button class="nav-item ${activeView==='odoo'?'active':''}" onclick="goView('odoo')"><span class="ni-ico">⛁</span><span class="ni-name">Odoo Explorer</span></button>`;
   html+=`<div class="nav-sec">Admin</div>
     <button class="nav-item ${activeView==='activity'?'active':''}" onclick="goView('activity')"><span class="ni-ico">◷</span><span class="ni-name">Agent Activity</span></button>
@@ -710,6 +711,7 @@ function renderView(){
   if(activeView==='leads')return renderLeads(c);
   if(activeView==='accounts')return renderAccounts(c);
   if(activeView==='odooconn')return renderOdooConn(c);
+  if(activeView==='githubconn')return renderGithubConn(c);
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
   if(activeView==='activity')return renderActivity(c);
@@ -1222,6 +1224,38 @@ async function detectOdooDb(){
 async function testOdooConn(){
   const r=document.getElementById('oc_result');r.textContent='Testing…';
   try{const o=await api("POST","/odoo/connection/test",{db:val('oc_db')||undefined});r.innerHTML=`<span style="color:var(--green)">✓ Connected to ${esc(o.db)} — ${o.modules} installed modules.</span>`;}
+  catch(e){r.innerHTML=`<span style="color:var(--rust)">✗ ${esc(e.message)}</span>`;}
+}
+
+/* ---------- GitHub repo connection ---------- */
+async function renderGithubConn(c){
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>GitHub Addons Repository</h2><p>Where the Developer agent pushes generated Odoo modules. Odoo.sh builds them automatically from this repo + branch. The token is encrypted on the server and never shown again.</p></div><div class="run-area" id="ghStatus"></div></div>
+    <div class="panel-body">
+      <div class="input-grid"><div class="input-block"><label>Repository URL</label><input type="text" id="gh_repo" placeholder="https://github.com/core2plus-odoo/aabaan"></div>
+        <div class="input-block"><label>Branch</label><input type="text" id="gh_branch" placeholder="staging"></div></div>
+      <div class="input-grid"><div class="input-block"><label>Subfolder (optional)</label><input type="text" id="gh_subdir" placeholder="addons (leave blank for repo root)"></div>
+        <div class="input-block"><label>Access token (PAT)</label><input type="password" id="gh_token" placeholder="ghp_… / fine-grained token with Contents: write"></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" onclick="saveGithubConn()">Save (encrypted)</button><button class="btn sm" onclick="testGithubConn()">Test connection</button></div>
+      <div id="gh_result" class="hint" style="margin-top:10px"></div>
+      <div class="hint" style="margin-top:6px">On approve of a <b>code_deploy</b>, the module is committed to this branch. Use a <b>staging</b> branch first so Odoo.sh test-builds before production. Token scopes: classic PAT <code>repo</code>, or a fine-grained token with <b>Contents: Read &amp; write</b> on this repo.</div>
+    </div></div></div>`;
+  try{const s=await api("GET","/github/connection");
+    document.getElementById('gh_repo').value=s.repo||'';document.getElementById('gh_branch').value=s.branch||'';document.getElementById('gh_subdir').value=s.subdir||'';
+    if(s.has_token)document.getElementById('gh_token').placeholder='•••••••• (saved — leave blank to keep)';
+    const st=document.getElementById('ghStatus');
+    st.innerHTML=s.configured?`<span class="chip" style="background:rgba(31,157,107,.12);color:var(--green);border-color:rgba(31,157,107,.3)">✓ Configured</span>`:(s.encrypted?`<span class="chip">🔒 Encrypted at rest</span>`:`<span class="chip" style="background:rgba(201,138,30,.14);color:var(--amber);border-color:rgba(201,138,30,.3)">⚠ Set C2P_SECRET_KEY to encrypt</span>`);
+  }catch(e){}
+}
+async function saveGithubConn(){
+  const b={repo:val('gh_repo'),branch:val('gh_branch')||'main',subdir:val('gh_subdir')};const t=val('gh_token');if(t)b.token=t;
+  try{const r=await api("POST","/github/connection",b);toast(r.encrypted?'Saved & encrypted':'Saved (set C2P_SECRET_KEY to encrypt)','ok');renderGithubConn(document.getElementById('content'));}
+  catch(e){toast('Failed: '+e.message,'bad');}
+}
+async function testGithubConn(){
+  const r=document.getElementById('gh_result');r.textContent='Testing…';
+  try{const o=await api("POST","/github/connection/test",{});
+    r.innerHTML=`<span style="color:var(--green)">✓ Connected to ${esc(o.repo)} — ${(o.branches||[]).length} branch(es): ${esc((o.branches||[]).slice(0,8).join(', '))}</span>`;}
   catch(e){r.innerHTML=`<span style="color:var(--rust)">✗ ${esc(e.message)}</span>`;}
 }
 

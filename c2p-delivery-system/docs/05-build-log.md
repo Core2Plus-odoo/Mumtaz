@@ -433,3 +433,17 @@ A cohesive global polish layer (appended, so it refines without restructuring vi
   Autopilot and PM delivery feeds.
 - **Detail**: KPI gradient top-accents + tabular numerals, progress-ring glow,
   refined chips/badges, custom scrollbars, elevated glass toasts.
+
+### Resilience + GitHub repo connection ✅
+- **Rate-limit resilience** (`llm.py`): every model call now retries transient
+  provider errors (429 / 5xx / overloaded) with exponential backoff honouring
+  Retry-After. New `C2P_MAX_OUTPUT_TOKENS` caps per-request output so a single
+  call can't exceed a low per-minute tier (set it below your Anthropic OTPM
+  limit; 0 = no cap). `C2P_LLM_RETRIES` tunes attempts.
+- **GitHub addons repo** (`github.py` + panel): a secure, encrypted connection
+  (repo URL, branch, optional subdir, PAT) used by the Developer agent. On an
+  approved `code_deploy`, `_execute_deploy` clones the branch, writes the module,
+  commits and pushes — Odoo.sh then builds it. The token is encrypted at rest,
+  never returned, and scrubbed from every error message. New console **GitHub
+  Repo** panel with Save/Test (lists remote branches). Falls back to the staged
+  on-disk/env-git path when no GitHub connection is set.

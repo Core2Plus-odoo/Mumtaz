@@ -43,6 +43,7 @@ import policy
 import channels
 import proposal_render
 import deploy as deployer
+import github as github_mod
 import tenancy
 import stripe_billing
 
@@ -82,6 +83,28 @@ def _odoo_conn_for(db):
 
 
 odoo_mod.CONN_PROVIDER = _odoo_conn_for
+
+
+def _github_settings() -> dict:
+    try:
+        return store.get_setting("github_connection") or {}
+    except Exception:
+        return {}
+
+
+def _github_conn():
+    """Resolver for github.push_module: encrypted store first, then env. The
+    token is decrypted only here, at call time."""
+    s = _github_settings()
+    repo = s.get("repo") or os.environ.get("C2P_GH_REPO")
+    token = (tenancy.dec_secret(s["token_enc"]) if s.get("token_enc")
+             else os.environ.get("C2P_GH_TOKEN"))
+    return {"repo": repo, "branch": s.get("branch") or os.environ.get("C2P_GH_BRANCH") or "main",
+            "subdir": s.get("subdir") or os.environ.get("C2P_GH_SUBDIR") or "",
+            "token": token}
+
+
+github_mod.CONN_PROVIDER = _github_conn
 app = FastAPI(title="C2P Agency OS API", version="1.2.0")
 
 # The frontends are static HTML served by Nginx; allow them to call this API.
@@ -560,6 +583,41 @@ def detect_odoo_db(body: dict | None = None):
         results.append({"db": db, "status": status})
     return {"listed": listed, "candidates": results,
             "best": best or (candidates[0] if candidates else None)}
+
+
+# --------------------------------------------------------------------------- #
+# GitHub addons repo — where the Developer agent pushes generated modules
+# (Odoo.sh then builds them). Token encrypted at rest, never returned.
+# --------------------------------------------------------------------------- #
+@app.get("/github/connection")
+def get_github_connection():
+    s = _github_settings()
+    return {"repo": s.get("repo") or "", "branch": s.get("branch") or "main",
+            "subdir": s.get("subdir") or "",
+            "has_token": bool(s.get("token_enc")),
+            "encrypted": tenancy.encryption_active(),
+            "configured": github_mod.configured()}
+
+
+@app.post("/github/connection")
+def set_github_connection(body: dict):
+    s = _github_settings()
+    for k in ("repo", "branch", "subdir"):
+        if body.get(k) is not None:
+            s[k] = body.get(k)
+    if body.get("token"):
+        s["token_enc"] = tenancy.enc_secret(body["token"])
+    store.save_setting("github_connection", s)
+    return {"ok": True, "has_token": bool(s.get("token_enc")),
+            "encrypted": tenancy.encryption_active()}
+
+
+@app.post("/github/connection/test")
+def test_github_connection(body: dict | None = None):
+    try:
+        return github_mod.test_connection()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=str(exc))
 
 
 @app.get("/odoo/{db}/modules")
@@ -1652,7 +1710,18 @@ def _execute_deploy(payload: dict, account_id: str | None = None) -> dict:
     default; live git push when configured). Logs the deploy."""
     eng = store.get(payload.get("engagement_id"))
     dev = (eng.stages.get("developer") if eng else None) or {}
-    res = deployer.deploy_module(dev)
+    name = deployer._slug(dev.get("module_technical_name") or "module")
+    if github_mod.configured():                 # push straight to the GitHub repo
+        try:
+            res = github_mod.push_module(
+                name, dev.get("files") or [],
+                message=f"Deploy module {name} ({payload.get('engagement_id')})")
+            res["mode"] = "github"
+        except Exception as exc:  # noqa: BLE001 - surface, don't crash
+            res = {"module": name, "mode": "github", "pushed": False,
+                   "error": str(exc)}
+    else:                                        # staged on disk / env git push
+        res = deployer.deploy_module(dev)
     aid = account_id or (eng.account_id if eng else None)
     if aid:
         ks.write_entry(aid, "deliverable",
