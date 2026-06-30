@@ -96,6 +96,22 @@
   .ap-row.bad{color:var(--rust)}
   .ap-row.muted{color:var(--muted-2);font-style:italic}
   .ap-row a{color:var(--deep-teal);text-decoration:underline}
+  .doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .doc-card{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
+  .doc-card.on{border-color:var(--deep-teal);background:linear-gradient(0deg,rgba(0,179,179,.03),rgba(0,179,179,.03)),#fff}
+  .doc-ic{width:38px;height:38px;border-radius:9px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--deep-teal);flex:none}
+  .doc-meta{flex:1;min-width:0}
+  .doc-name{font-weight:600;font-size:13.5px}
+  .doc-sub{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .doc-actions{display:flex;gap:6px;flex:none}
+  .rfi-card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;background:#fff}
+  .rfi-card.answered{background:var(--paper);border-style:dashed}
+  .rfi-top{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+  .rfi-q{font-weight:600;font-size:13.5px;line-height:1.45}
+  .rfi-why{font-size:12px;color:var(--muted);margin-top:6px}
+  .rfi-input{margin-top:10px;display:flex;gap:8px;align-items:flex-start}
+  .rfi-input textarea{flex:1;resize:vertical;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12.5px}
+  .rfi-answer{margin-top:9px;font-size:12.5px;color:var(--charcoal);background:rgba(0,179,179,.06);border-left:3px solid var(--deep-teal);padding:8px 11px;border-radius:6px}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .btn.copied{border-color:var(--green);color:var(--green)}
 
@@ -344,6 +360,7 @@ let running = null;
 let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
 let odooModules = null, odooModFilter = "";
 let pendingCount = 0, approvalPayloads = {}, accountsCache = [];
+let clarifyOpen = 0;
 let multitenant = false, authToken = localStorage.getItem("c2p_token") || "", currentTenant = null;
 
 const STAGES = [
@@ -486,6 +503,8 @@ function renderNav(){
   html+=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
   html+=`<button class="nav-item ${activeView==='pm'?'active':''}" onclick="goView('pm')"><span class="ni-ico">◑</span><span class="ni-name">Project Manager</span></button>`;
   html+=`<button class="nav-item ${activeView==='execution'?'active':''}" onclick="goView('execution')"><span class="ni-ico">▤</span><span class="ni-name">Execution</span></button>`;
+  html+=`<button class="nav-item ${activeView==='documents'?'active':''}" onclick="goView('documents')"><span class="ni-ico">▧</span><span class="ni-name">Documents</span></button>`;
+  html+=`<button class="nav-item ${activeView==='clarify'?'active':''}" onclick="goView('clarify')"><span class="ni-ico">❔</span><span class="ni-name">Client Q&amp;A</span>${clarifyBadge()}</button>`;
   let lastGroup="";
   STAGES.forEach(s=>{
     if(s.group!==lastGroup){html+=`<div class="nav-sec">${s.group}</div>`;lastGroup=s.group;}
@@ -531,6 +550,8 @@ function renderView(){
   if(activeView==='cockpit')return renderCockpit(c);
   if(activeView==='pm')return renderPM(c);
   if(activeView==='execution')return renderExecution(c);
+  if(activeView==='documents')return renderDocuments(c);
+  if(activeView==='clarify')return renderClarify(c);
   if(activeView==='overview')return renderOverview(c);
   if(activeView==='odoo')return renderOdoo(c);
   if(activeView==='leads')return renderLeads(c);
@@ -611,7 +632,13 @@ function activitySummary(){
   return items.map(([s,t])=>`<div class="odoo-rec"><div class="ic" style="background:var(--deep-teal)">✓</div><div class="nm"><b>${s}</b> · <span style="color:var(--muted)">${esc(t)}</span></div></div>`).join('');
 }
 let _apStop=false;
-const AP_LABEL={presales:'Pre-sales qualification',proposal:'Proposal & pricing',project:'Project plan',functional:'Functional analysis',developer:'Developer build',config:'Odoo configuration',deploy:'Module deploy'};
+const AP_LABEL={presales:'Pre-sales qualification',proposal:'Proposal & pricing',project:'Project plan',functional:'Functional analysis',developer:'Developer build',document:'Document authoring',config:'Odoo configuration',deploy:'Module deploy'};
+function apReview(rv){
+  if(!rv||rv.score==null)return '';
+  const col=rv.score>=85?'#1f9d6b':rv.score>=70?'#b9770a':'var(--rust)';
+  const rev=rv.revisions?` · revised ${rv.revisions}×`:'';
+  return ` <span style="color:${col};font-weight:600">QA ${rv.score}</span>${rev}`;
+}
 function apLog(html,cls){
   const el=document.getElementById('autopilotLog'); if(!el)return;
   const row=document.createElement('div'); row.className='ap-row '+(cls||''); row.innerHTML=html; el.appendChild(row); el.scrollTop=el.scrollHeight;
@@ -636,7 +663,8 @@ async function runAutopilot(){
       if(r.status==='needs_input'){ apLog('⏸ <b>'+esc(label)+'</b> needs your input — run it from its stage tab, then re-launch Autopilot.','warn'); break; }
       if(r.status==='blocked'){ apLog('🔒 <b>'+esc(label)+'</b> hit an approval gate. Review it in <a href="#" onclick="goView(\'approvals\');return false">Approvals</a>.','warn'); break; }
       if(r.status==='error'){ apLog('✕ <b>'+esc(label)+'</b> errored: '+esc(r.error||''),'bad'); break; }
-      apLog('▸ Ran <b>'+esc(label)+'</b> · '+esc(r.status),'ok');
+      const dname=r.doc_name?(' — '+esc(r.doc_name)):'';
+      apLog('▸ Ran <b>'+esc(label)+'</b>'+dname+apReview(r.review),'ok');
       // refresh engagement state between steps
       try{ const fresh=await api("GET",`/engagements/${eng.id}`); if(fresh&&fresh.id){eng=fresh;} }catch(_){}
     }
@@ -1111,6 +1139,97 @@ async function loadExec(){
 async function moveExec(id,stage){try{await api("POST",`/engagements/${eng.id}/tasks/${id}`,{stage_id:parseInt(stage)});toast('Task moved','ok');}catch(e){toast('Failed: '+e.message,'bad');}}
 async function doneExec(id){try{await api("POST",`/engagements/${eng.id}/tasks/${id}`,{kanban_state:'done'});toast('Marked done','ok');loadExec();}catch(e){toast('Failed: '+e.message,'bad');}}
 async function addExecTask(){const name=val('exNew');if(!name)return;try{await api("POST",`/engagements/${eng.id}/tasks`,{name});toast('Task added in Odoo','ok');const n=document.getElementById('exNew');if(n)n.value='';loadExec();}catch(e){toast('Failed: '+e.message,'bad');}}
+
+/* ---------- deliverable documents (agents author them) ---------- */
+function qaBadge(qa){
+  if(!qa||qa.score==null)return '';
+  const s=qa.score, col=s>=85?'var(--green)':s>=70?'var(--amber)':'var(--rust)';
+  return `<span class="chip" style="background:${col};color:#fff">QA ${s}</span>`;
+}
+async function renderDocuments(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">Select an engagement.</div></div></div></div>`;return;}
+  c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head"><div><h2>Deliverable Documents</h2><p>The Functional, PM and Technical agents author real, branded client documents from the engagement's work — then the Delivery Director QA-scores each one.</p></div>
+    <div class="run-area"><button class="btn ghost sm" onclick="loadDocs()">↻</button></div></div>
+    <div class="panel-body" id="docBody"><div class="skel" style="height:200px"></div></div></div></div>`;
+  loadDocs();
+}
+async function loadDocs(){
+  const b=document.getElementById('docBody');if(!b)return;b.innerHTML=`<div class="skel" style="height:200px"></div>`;
+  try{const r=await api("GET",`/engagements/${eng.id}/documents`);
+    b.innerHTML=`<div class="doc-grid">${(r.catalog||[]).map(d=>`
+      <div class="doc-card ${d.authored?'on':''}">
+        <div class="doc-ic">▧</div>
+        <div class="doc-meta"><div class="doc-name">${esc(d.name)}</div>
+          <div class="doc-sub">${d.authored?'Authored':'Not yet authored'} ${d.authored?qaBadge(d.qa):''}</div></div>
+        <div class="doc-actions">
+          <button class="btn ${d.authored?'sm':'primary sm'}" onclick="authorDoc('${d.key}',this)">${d.authored?'Re-author':'Author'}</button>
+          ${d.authored?`<button class="btn dark sm" onclick="previewDoc('${d.key}')">Open</button>`:''}
+        </div></div>`).join('')}</div>`;
+  }catch(e){b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function authorDoc(key,btn){
+  if(btn){btn.disabled=true;btn.textContent='Writing…';}
+  try{await api("POST",`/engagements/${eng.id}/document/${key}`,{});toast('Document authored & QA-scored','ok');loadDocs();}
+  catch(e){toast('Failed: '+e.message,'bad');if(btn){btn.disabled=false;btn.textContent='Author';}}
+}
+function previewDoc(key){
+  window.open(API_BASE+`/engagements/${eng.id}/document/${key}/preview`,'_blank');
+}
+
+/* ---------- client Q&A / RFI loop (PM compiles, client answers) ---------- */
+function clarifyBadge(){return clarifyOpen?`<span class="ni-count" style="background:var(--amber);color:#fff">${clarifyOpen}</span>`:'';}
+async function renderClarify(c){
+  if(!eng){c.innerHTML=`<div class="view"><div class="panel"><div class="panel-body"><div class="placeholder">Select an engagement.</div></div></div></div>`;return;}
+  c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head"><div>
+      <div class="persona"><span class="pavatar">PM</span><div><div class="pname">Client Q&amp;A</div><div class="prole">the PM compiles what to ask the client</div></div></div>
+      <h2 style="margin-top:11px">Request for Information</h2><p>The agents surface open questions; the Project Manager consolidates them into one client-ready list. Record the client's answers and every agent works from them.</p></div>
+    <div class="run-area"><button class="btn primary sm" onclick="compileRFI(this)">Compile questions for client</button></div></div>
+    <div class="panel-body" id="rfiBody"><div class="skel" style="height:180px"></div></div></div></div>`;
+  loadRFI();
+}
+async function loadRFI(){
+  const b=document.getElementById('rfiBody');if(!b)return;
+  try{const r=await api("GET",`/engagements/${eng.id}/clarifications`);renderRFI(r);}
+  catch(e){b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+function renderRFI(r){
+  const b=document.getElementById('rfiBody');if(!b)return;
+  const qs=r.questions||[];
+  clarifyOpen=qs.filter(q=>q.status!=='answered').length;renderNav();
+  if(!qs.length){b.innerHTML=`<div class="placeholder">No questions compiled yet. Run the stages, then click <b>Compile questions for client</b> — the PM gathers every open item the agents need answered.</div>`;return;}
+  const blocksRank={high:0,medium:1,low:2};
+  const sorted=[...qs].sort((a,b)=>(a.status==='answered')-(b.status==='answered')||(blocksRank[a.blocks]??3)-(blocksRank[b.blocks]??3));
+  b.innerHTML=(r.summary?`<div class="callout" style="margin-bottom:12px"><b>PM summary.</b> ${esc(r.summary)}</div>`:'')
+    +`<div style="margin-bottom:10px;color:var(--muted);font-size:12.5px">${clarifyOpen} open · ${qs.length-clarifyOpen} answered</div>`
+    +sorted.map(q=>{
+      const ans=q.status==='answered';
+      const bc=q.blocks==='high'?'var(--rust)':q.blocks==='medium'?'var(--amber)':'var(--muted-2)';
+      return `<div class="rfi-card ${ans?'answered':''}">
+        <div class="rfi-top"><span class="rfi-q">${esc(q.question)}</span>
+          <span style="display:flex;gap:6px;align-items:center;flex:none">
+            ${q.waiting_agent?`<span class="chip">${esc(q.waiting_agent)}</span>`:''}
+            <span class="eff" style="background:${bc};color:#fff">${esc(q.blocks||'')}</span></span></div>
+        ${q.theme||q.why_it_matters?`<div class="rfi-why">${esc(q.theme?('['+q.theme+'] '):'')}${esc(q.why_it_matters||'')}</div>`:''}
+        ${ans
+          ? `<div class="rfi-answer"><b>Client answer.</b> ${esc(q.answer)}</div>`
+          : `<div class="rfi-input"><textarea id="ans_${q.id}" rows="2" placeholder="${esc(q.suggested_default?('Suggested: '+q.suggested_default):'Record the client’s answer…')}"></textarea>
+             <button class="btn primary sm" onclick="answerRFI('${q.id}')">Save answer</button></div>`}
+      </div>`;
+    }).join('');
+}
+async function compileRFI(btn){
+  if(btn){btn.disabled=true;btn.textContent='Compiling…';}
+  const b=document.getElementById('rfiBody');if(b)b.innerHTML=`<div class="skel" style="height:180px"></div>`;
+  try{const r=await api("POST",`/engagements/${eng.id}/clarifications/compile`,{});renderRFI(r);toast('PM compiled the client RFI','ok');}
+  catch(e){toast('Failed: '+e.message,'bad');loadRFI();}
+  finally{if(btn){btn.disabled=false;btn.textContent='Compile questions for client';}}
+}
+async function answerRFI(id){
+  const t=document.getElementById('ans_'+id);const answer=t?t.value.trim():'';
+  if(!answer){toast('Type the answer first','bad');return;}
+  try{const r=await api("POST",`/engagements/${eng.id}/clarifications/answer`,{id,answer});renderRFI(r);toast('Answer recorded — agents will use it','ok');}
+  catch(e){toast('Failed: '+e.message,'bad');}
+}
 
 /* ---------- project manager (per-engagement) ---------- */
 function renderPM(c){

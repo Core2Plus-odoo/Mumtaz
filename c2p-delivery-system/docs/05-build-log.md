@@ -356,3 +356,29 @@ specialist and pausing only at approval gates, with a live run log.
   gates link straight to the Approvals view.
 - Honours the same policy/gate layer as manual runs — Autopilot never bypasses
   an approval; it surfaces it and waits.
+
+### Super agents II: Delivery Director QA + self-authoring documents + client Q&A ✅
+Three layers that make the agency supervise itself, write its own deliverables,
+and check in with the client.
+- **Delivery Director (QA brain)** — a `director` agent scores every specialist's
+  output (specificity / completeness / correctness / grounding / risk) against a
+  house bar (`C2P_QA_BAR`, default 75). `_run_with_qa` runs a specialist, scores
+  it, and if it misses the bar re-runs it ONCE (`C2P_QA_MAX_REVISIONS`) with the
+  Director's critique injected via a `_qa_feedback` contextvar. Autopilot now
+  reports each step's QA score and revision count in the live run log.
+- **Self-healing developer** — generated modules pass `_validate_module_files`
+  (manifest present, Python compiles, XML well-formed) before QA; build errors
+  force a revision with the errors fed back to the developer agent.
+- **Self-authored documents** — a `docwriter` agent produces real, branded client
+  deliverables (BRD, FRS, Gap-Fit, Project Charter, Status Report, Technical
+  Design, SOW) from the engagement's stage outputs; the Director QA-scores each.
+  `proposal_render.render_document_html` renders them in-brand (with a tiny
+  dependency-free Markdown→HTML converter). Console **Documents** view: author /
+  re-author / open, with QA badges. Autopilot auto-authors BRD/FRS/Charter/Tech
+  Design as their inputs become available.
+- **Client Q&A loop (PM-compiled RFI)** — agents surface open questions; the
+  `clarifier` (PM) consolidates them into one deduplicated, client-ready RFI
+  (`POST …/clarifications/compile`). The PM/client records answers
+  (`…/clarifications/answer`), which flow back into every later stage via
+  `_client_answers_block` (and account knowledge), so agents work from confirmed
+  answers, not assumptions. Console **Client Q&A** view with an open-items badge.

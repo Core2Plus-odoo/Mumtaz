@@ -18,7 +18,12 @@ from __future__ import annotations
 
 import json
 import os
+from contextvars import ContextVar
 from typing import Any
+
+# When set (by the Delivery Director self-correct loop), run_agent appends this
+# critique to the next specialist call so it produces a stronger revision.
+_qa_feedback: ContextVar[str | None] = ContextVar("_qa_feedback", default=None)
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -120,6 +125,14 @@ async def _tenant_mw(request: Request, call_next):
 # --------------------------------------------------------------------------- #
 def run_agent(stage: str, user_content: str, web_search: bool = False,
               account_id: str | None = None, engagement_id: str | None = None) -> dict:
+    fb = _qa_feedback.get()
+    if fb:
+        user_content = (
+            user_content
+            + "\n\n--- QUALITY REVISION (Delivery Director) ---\n"
+            + "A prior attempt did not clear the house quality bar. Produce a "
+            + "stronger version that fixes these gaps specifically:\n" + fb
+        )
     try:
         return llm.run_json(
             stage, PROMPTS[stage], user_content,
@@ -244,6 +257,7 @@ def proposal(eng_id: str, body: m.ProposalIn):
         "Produce the scoped proposal JSON."
         + industry.playbook_block(_industry_for(eng))
         + ks.context_block(eng.account_id, "proposal scope modules")
+        + _client_answers_block(eng)
     )
     out = run_agent("proposal", content, account_id=eng.account_id, engagement_id=eng.id)
     eng.stages["proposal"] = out
@@ -262,6 +276,7 @@ def project(eng_id: str, body: m.ProjectIn):
         f"Extra direction: {body.instructions or 'none'}\n\n"
         "Produce the implementation plan JSON."
         + industry.playbook_block(_industry_for(eng))
+        + _client_answers_block(eng)
     )
     out = run_agent("project", content, account_id=eng.account_id, engagement_id=eng.id)
     eng.stages["project"] = out
@@ -282,6 +297,7 @@ def functional(eng_id: str, body: m.FunctionalIn):
         f"- Installed modules: {modules}\n\nAnalyse and return the JSON."
         + industry.playbook_block(body.industry or _industry_for(eng))
         + ks.context_block(eng.account_id, body.requirement)
+        + _client_answers_block(eng)
     )
     out = run_agent("functional", content, account_id=eng.account_id, engagement_id=eng.id)
     # Keep a list of analysed requirements rather than overwriting.
@@ -323,6 +339,7 @@ def developer(eng_id: str, body: m.DeveloperIn):
         f"Category: {body.category or '(infer)'}\n"
         f"Include unit tests: {'yes' if body.include_tests else 'no'}\n\n"
         f"Spec:\n{spec}\n\nReturn the module JSON."
+        + _client_answers_block(eng)
     )
     out = run_agent("developer", content)
     eng.stages["developer"] = out
@@ -822,6 +839,299 @@ def update_task(eng_id: str, task_id: int, body: dict):
 
 
 # --------------------------------------------------------------------------- #
+# Delivery Director — the QA brain. Scores every specialist's output against the
+# house bar and drives an auto-revision loop so weak stages get re-run.
+# --------------------------------------------------------------------------- #
+QA_BAR = int(os.getenv("C2P_QA_BAR", "75"))
+QA_MAX_REVISIONS = int(os.getenv("C2P_QA_MAX_REVISIONS", "1"))
+
+
+def _review_output(stage: str, out: dict, eng: Engagement) -> dict | None:
+    """Run the Delivery Director over a specialist's output; returns the review."""
+    content = (
+        f"Specialist stage under review: {stage}\n"
+        f"Client: {eng.company}\nIndustry: {_industry_for(eng) or 'unknown'}\n"
+        f"Quality bar to clear: {QA_BAR}/100\n\n"
+        f"Output to review (JSON):\n{json.dumps(out, indent=2)[:12000]}\n\n"
+        "Review it and return the JSON."
+    )
+    try:
+        return run_agent("director", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        return None
+
+
+def _store_review(eng: Engagement, stage: str, review: dict) -> None:
+    eng.stages.setdefault("_reviews", {}).setdefault(stage, []).append(
+        {"score": review.get("score"), "verdict": review.get("verdict"),
+         "gaps": review.get("gaps"), "at": _now_iso()})
+
+
+def _validate_module_files(files) -> list[str]:
+    """Structural pre-flight on a generated Odoo module: a manifest exists,
+    Python compiles, XML is well-formed. Returns human-readable errors (empty=ok)."""
+    import ast
+    import xml.etree.ElementTree as ET
+    errs: list[str] = []
+    files = files or []
+    if not any((f.get("path") or "").endswith("__manifest__.py") for f in files):
+        errs.append("Module is missing an __manifest__.py file.")
+    for f in files:
+        path = f.get("path") or ""
+        content = f.get("content") or ""
+        lang = (f.get("language") or "").lower()
+        if path.endswith(".py") or lang == "py":
+            try:
+                ast.parse(content)
+            except SyntaxError as e:
+                errs.append(f"Python syntax error in {path}: {e.msg} (line {e.lineno}).")
+        elif path.endswith(".xml") or lang == "xml":
+            try:
+                ET.fromstring(content)
+            except Exception as e:  # noqa: BLE001
+                errs.append(f"XML is not well-formed in {path}: {e}.")
+    return errs[:8]
+
+
+def _stage_output(eng: Engagement, kind: str):
+    if kind == "functional":
+        lst = eng.stages.get("functional") or []
+        return lst[-1] if lst else None
+    return eng.stages.get(kind)
+
+
+def _run_specialist(kind: str, eng_id: str, arg: str | None) -> None:
+    if kind == "proposal":
+        proposal(eng_id, m.ProposalIn())
+    elif kind == "project":
+        project(eng_id, m.ProjectIn())
+    elif kind == "functional":
+        functional(eng_id, m.FunctionalIn(requirement=arg or "Requirement",
+                                          industry=_industry_for(_engagement(eng_id))))
+    elif kind == "developer":
+        developer(eng_id, m.DeveloperIn())
+
+
+def _run_with_qa(kind: str, eng_id: str, arg: str | None):
+    """Run a specialist, have the Director score it (+ structural validation for
+    developer modules), and auto-revise up to the cap if it misses the bar.
+    Returns (final_output, reviews)."""
+    reviews: list[dict] = []
+    out = None
+    feedback = ""
+    for attempt in range(QA_MAX_REVISIONS + 1):
+        if attempt == 0:
+            _run_specialist(kind, eng_id, arg)
+        else:
+            if kind == "functional":            # replace, don't append, on revise
+                e = _engagement(eng_id)
+                lst = e.stages.get("functional") or []
+                if lst:
+                    lst.pop()
+                    store.save(e)
+            tok = _qa_feedback.set(feedback)
+            try:
+                _run_specialist(kind, eng_id, arg)
+            finally:
+                _qa_feedback.reset(tok)
+        eng = _engagement(eng_id)
+        out = _stage_output(eng, kind)
+        if not out:
+            break
+        struct = _validate_module_files(out.get("files")) if kind == "developer" else []
+        review = _review_output(kind, out, eng)
+        if not review:
+            break
+        if struct:                              # build errors force a revision
+            review["verdict"] = "revise"
+            review["score"] = min(review.get("score") or 0, 55)
+            review["gaps"] = (review.get("gaps") or []) + struct
+            review["feedback"] = ((review.get("feedback") or "")
+                                  + "\nFix these build/validation errors:\n- "
+                                  + "\n- ".join(struct))
+        reviews.append(review)
+        _store_review(eng, kind, review)
+        store.save(eng)
+        if (review.get("verdict") == "revise" and (review.get("score") or 0) < QA_BAR
+                and attempt < QA_MAX_REVISIONS):
+            feedback = review.get("feedback") or ""
+            continue
+        break
+    return out, reviews
+
+
+# --------------------------------------------------------------------------- #
+# Deliverable documents — Functional / PM / Technical author real, branded
+# documents (BRD, FRS, Gap-Fit, Charter, Status Report, Tech Design, SOW).
+# --------------------------------------------------------------------------- #
+DOC_TYPES = {
+    "brd": "Business Requirements Document",
+    "frs": "Functional Specification Document (FRS)",
+    "gapfit": "Gap-Fit Analysis",
+    "charter": "Project Charter",
+    "status": "Project Status Report",
+    "techdesign": "Technical Design Document",
+    "sow": "Statement of Work",
+}
+
+
+def _doc_source(eng: Engagement) -> str:
+    parts = []
+    for s in ("presales", "proposal", "project"):
+        if eng.stages.get(s):
+            parts.append(f"### {s} output\n{json.dumps(eng.stages[s], indent=2)}")
+    fns = eng.stages.get("functional") or []
+    if fns:
+        parts.append(f"### functional analyses\n{json.dumps(fns, indent=2)}")
+    dev = eng.stages.get("developer")
+    if dev:
+        d = {k: v for k, v in dev.items() if k != "files"}   # summary, not full code
+        parts.append(f"### developer module summary\n{json.dumps(d, indent=2)}")
+    answered = [q for q in ((eng.stages.get("clarifications") or {}).get("questions") or [])
+                if q.get("status") == "answered"]
+    if answered:
+        parts.append("### client answers\n" + json.dumps(
+            [{"q": q.get("question"), "a": q.get("answer")} for q in answered], indent=2))
+    return "\n\n".join(parts)[:16000] or "(no stage outputs yet)"
+
+
+@app.post("/engagements/{eng_id}/document/{doc_key}")
+def author_document(eng_id: str, doc_key: str, body: dict | None = None):
+    """An agent authors a formal client deliverable from the engagement's stage
+    outputs, then the Director QA-scores it. Stored on the engagement."""
+    eng = _engagement(eng_id)
+    name = DOC_TYPES.get(doc_key)
+    if not name:
+        raise HTTPException(status_code=400, detail="Unknown document type")
+    body = body or {}
+    content = (
+        f"Author this document: {name}\n"
+        f"Client: {eng.company}\nIndustry: {_industry_for(eng) or 'unknown'}\n"
+        f"Extra direction: {body.get('instructions') or 'none'}\n\n"
+        f"Source material (engagement stage outputs):\n{_doc_source(eng)}\n\n"
+        "Write the full document JSON."
+        + industry.playbook_block(_industry_for(eng))
+    )
+    out = run_agent("docwriter", content, account_id=eng.account_id, engagement_id=eng.id)
+    out["doc_key"] = doc_key
+    out.setdefault("doc_type", name)
+    review = _review_output(f"document:{doc_key}", out, eng)
+    if review:
+        out["_qa"] = {"score": review.get("score"), "verdict": review.get("verdict")}
+    eng.stages.setdefault("documents", {})[doc_key] = out
+    store.save(eng)
+    return out
+
+
+@app.get("/engagements/{eng_id}/documents")
+def list_documents(eng_id: str):
+    eng = _engagement(eng_id)
+    authored = eng.stages.get("documents") or {}
+    return {"catalog": [
+        {"key": k, "name": v, "authored": k in authored,
+         "qa": (authored.get(k) or {}).get("_qa")}
+        for k, v in DOC_TYPES.items()]}
+
+
+@app.get("/engagements/{eng_id}/document/{doc_key}/preview")
+def document_preview(eng_id: str, doc_key: str):
+    eng = _engagement(eng_id)
+    doc = (eng.stages.get("documents") or {}).get(doc_key)
+    if not doc:
+        raise HTTPException(status_code=400, detail="Author this document first")
+    html = proposal_render.render_document_html(
+        doc, eng.company, proposal_render.brand(store), date_str=_now_iso()[:10])
+    return Response(content=html, media_type="text/html")
+
+
+# --------------------------------------------------------------------------- #
+# Client Q&A loop — agents raise open questions; the PM compiles them into one
+# client-ready RFI; the client's answers flow back to the agents.
+# --------------------------------------------------------------------------- #
+def _client_answers_block(eng: Engagement) -> str:
+    """Answered clarifications, rendered for injection into a specialist's prompt
+    so the agent works from the client's confirmed answers, not assumptions."""
+    qs = (eng.stages.get("clarifications") or {}).get("questions") or []
+    answered = [q for q in qs if q.get("status") == "answered" and q.get("answer")]
+    if not answered:
+        return ""
+    lines = "\n".join(
+        f"- Q: {q.get('question')}\n  Client answer: {q.get('answer')}" for q in answered)
+    return ("\n\nCLIENT-CONFIRMED ANSWERS (authoritative — these supersede any "
+            "assumption):\n" + lines)
+
+
+@app.post("/engagements/{eng_id}/clarifications/compile")
+def compile_clarifications(eng_id: str):
+    """The PM scans every stage's output and compiles a single, deduplicated,
+    client-ready RFI — preserving any questions the client already answered."""
+    eng = _engagement(eng_id)
+    existing = eng.stages.get("clarifications") or {}
+    answered = [q for q in (existing.get("questions") or []) if q.get("status") == "answered"]
+    prior = "\n".join(f"- {q.get('question')} => {q.get('answer')}" for q in answered) or "(none yet)"
+    content = (
+        f"Client: {eng.company}\nIndustry: {_industry_for(eng) or 'unknown'}\n\n"
+        f"Engagement stage outputs:\n{_doc_source(eng)}\n\n"
+        f"Questions the client has ALREADY answered (never ask these again):\n{prior}\n\n"
+        "Compile the consolidated client RFI JSON."
+    )
+    out = run_agent("clarifier", content, account_id=eng.account_id, engagement_id=eng.id)
+    qs: list[dict] = []
+    seen: set[str] = set()
+    for q in answered:                               # keep answered items
+        qs.append(q)
+        seen.add((q.get("question") or "").strip().lower()[:80])
+    for q in (out.get("questions") or []):           # add new open items
+        key = (q.get("question") or "").strip().lower()[:80]
+        if key and key not in seen:
+            q["status"] = "open"
+            q["answer"] = None
+            qs.append(q)
+            seen.add(key)
+    for i, q in enumerate(qs, 1):                    # stable sequential ids
+        q["id"] = f"q{i}"
+    rec = {"summary": out.get("summary"), "questions": qs, "compiled_at": _now_iso()}
+    eng.stages["clarifications"] = rec
+    store.save(eng)
+    return rec
+
+
+@app.get("/engagements/{eng_id}/clarifications")
+def get_clarifications(eng_id: str):
+    eng = _engagement(eng_id)
+    return eng.stages.get("clarifications") or {"summary": None, "questions": []}
+
+
+@app.post("/engagements/{eng_id}/clarifications/answer")
+def answer_clarification(eng_id: str, body: dict):
+    """Record the client's (or PM's) answer to one RFI question and feed it back
+    into the account knowledge so every agent works from it."""
+    eng = _engagement(eng_id)
+    rec = eng.stages.get("clarifications") or {"questions": []}
+    qid = (body or {}).get("id")
+    ans = (body or {}).get("answer")
+    if not qid or ans is None:
+        raise HTTPException(status_code=400, detail="id and answer are required")
+    hit = None
+    for q in rec.get("questions") or []:
+        if q.get("id") == qid:
+            q["status"] = "answered"
+            q["answer"] = ans
+            q["answered_at"] = _now_iso()
+            hit = q
+    if not hit:
+        raise HTTPException(status_code=404, detail="Question not found")
+    eng.stages["clarifications"] = rec
+    store.save(eng)
+    if eng.account_id:
+        ks.write_entry(
+            eng.account_id, "client_answer",
+            {"question": hit.get("question"), "answer": ans},
+            title=f"Client answer — {(hit.get('question') or '')[:50]}", learned_by="pm")
+    return rec
+
+
+# --------------------------------------------------------------------------- #
 # Autopilot — the super-agent that runs the whole engagement, one step at a
 # time, chaining the specialists and pausing at approval gates.
 # --------------------------------------------------------------------------- #
@@ -849,6 +1159,20 @@ def _autopilot_decide(eng: Engagement):
     customs = [f for f in (st.get("functional") or []) if f.get("verdict") == "custom"]
     if customs and not st.get("developer"):
         return ("developer", None)
+    # The agency authors its own deliverable documents once the inputs exist.
+    docs = st.get("documents") or {}
+    doc_plan = []
+    if st.get("proposal"):
+        doc_plan.append("brd")
+    if st.get("functional"):
+        doc_plan.append("frs")
+    if st.get("project"):
+        doc_plan.append("charter")
+    if st.get("developer"):
+        doc_plan.append("techdesign")
+    for dk in doc_plan:
+        if dk not in docs:
+            return ("document", dk)
     if eng.odoo_db and not _eng_approvals(eng.id, "config_apply"):
         return ("config", None)
     if st.get("developer") and not _eng_approvals(eng.id, "code_deploy"):
@@ -868,15 +1192,18 @@ def autopilot_step(eng_id: str):
     if kind == "presales":
         return {"status": "needs_input", "ran": "presales"}
     try:
-        if kind == "proposal":
-            proposal(eng_id, m.ProposalIn())
-        elif kind == "project":
-            project(eng_id, m.ProjectIn())
-        elif kind == "functional":
-            functional(eng_id, m.FunctionalIn(requirement=arg or "Requirement",
-                                              industry=_industry_for(eng)))
-        elif kind == "developer":
-            developer(eng_id, m.DeveloperIn())
+        if kind in ("proposal", "project", "functional", "developer"):
+            _out, reviews = _run_with_qa(kind, eng_id, arg)
+            last = reviews[-1] if reviews else None
+            return {"status": "running", "ran": kind,
+                    "review": ({"score": last.get("score"),
+                                "verdict": last.get("verdict"),
+                                "revisions": max(0, len(reviews) - 1)} if last else None)}
+        elif kind == "document":
+            doc = author_document(eng_id, arg, {})
+            return {"status": "running", "ran": "document", "doc": arg,
+                    "doc_name": DOC_TYPES.get(arg, arg),
+                    "review": doc.get("_qa")}
         elif kind == "config":
             r = config_apply(eng_id, {})
             if r.get("approval"):
