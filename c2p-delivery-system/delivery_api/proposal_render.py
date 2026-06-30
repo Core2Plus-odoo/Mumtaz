@@ -219,9 +219,10 @@ def render_document_html(doc: dict, company: str, b: dict, date_str: str = "") -
     d = doc or {}
     accent, accent_dark, ink = b["accent"], b["accentDark"], b["ink"]
     sections = "".join(
-        f"<div class='dsec'><div class='sec-head'><h2>{escape(str(s.get('heading','')))}</h2></div>"
+        f"<div class='dsec'><div class='sec-head'><span class='secnum'>{i:02d}</span>"
+        f"<h2>{escape(str(s.get('heading','')))}</h2></div>"
         f"<div class='body'>{_md_to_html(s.get('body_markdown',''))}</div></div>"
-        for s in (d.get("sections") or [])
+        for i, s in enumerate((d.get("sections") or []), 1)
     )
     title = escape(str(d.get("title") or d.get("doc_type") or "Deliverable"))
     subtitle = escape(str(d.get("subtitle") or ""))
@@ -235,23 +236,33 @@ def render_document_html(doc: dict, company: str, b: dict, date_str: str = "") -
 *{{box-sizing:border-box;margin:0;padding:0}}
 body{{font-family:'DM Sans','Segoe UI',sans-serif;color:{ink};font-size:12px;line-height:1.62}}
 h1,h2,h4{{font-family:'Fraunces',Georgia,serif}}
-.page{{padding:30mm 22mm 24mm;position:relative}}
-.cover{{min-height:84vh;display:flex;flex-direction:column;page-break-after:always}}
-.kicker{{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:{accent_dark};margin:26px 0 10px}}
-.cover h1{{font-size:38px;line-height:1.06}}
-.cover .sub{{font-size:16px;color:#555;margin-top:14px}}
-.cover .co{{font-size:19px;color:#333;margin-top:20px;font-weight:600}}
-.cover .meta{{font-size:11px;color:#888;margin-top:24px;line-height:1.7}}
-.cover .by{{margin-top:auto;font-size:12px;color:#666}}.cover .by b{{color:{ink}}}
-.sec-head{{border-bottom:2px solid {accent};padding-bottom:7px;margin:0 0 12px}}
-.sec-head h2{{font-size:18px}}
-.dsec{{margin:0 0 20px;page-break-inside:avoid}}
-.body h3{{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#888;margin:14px 0 6px;font-family:'JetBrains Mono',monospace}}
-.body h4{{font-size:13px;margin:12px 0 5px}}
-.body p{{margin:0 0 9px}}
-.body ul,.body ol{{margin:0 0 9px 20px}}.body li{{margin-bottom:4px}}
+.page{{padding:24mm 22mm 22mm;position:relative}}
+/* cover */
+.cover-page{{min-height:97vh;display:flex;flex-direction:column;page-break-after:always}}
+.cv-top{{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:16px;border-bottom:1px solid #ededed}}
+.cv-tag{{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:2.5px;text-transform:uppercase;color:{accent_dark};padding-bottom:4px}}
+.cv-mid{{flex:1;display:flex;flex-direction:column;justify-content:center}}
+.cv-accent{{width:56px;height:4px;background:{accent};border-radius:3px;margin-bottom:22px}}
+.kicker{{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3.5px;text-transform:uppercase;color:{accent_dark};margin-bottom:16px}}
+.cover-page h1{{font-size:44px;line-height:1.04;letter-spacing:-.6px;color:{ink}}}
+.cv-mid .sub{{font-size:16px;color:#666;margin-top:16px;font-weight:500}}
+.cv-mid .co{{font-size:14px;color:#444;margin-top:30px}}
+.cv-bot{{border-top:1px solid #ededed;padding-top:16px}}
+.cv-meta{{display:flex;gap:38px;margin-bottom:14px}}
+.cv-meta div{{font-size:11.5px;color:#333}}
+.cv-meta span{{display:block;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#aaa;margin-bottom:4px}}
+.cv-conf{{font-size:9.5px;color:#9a9a9a;line-height:1.7}}
+/* body */
+.sec-head{{display:flex;align-items:baseline;gap:10px;border-bottom:1.5px solid {accent};padding-bottom:7px;margin:0 0 13px}}
+.sec-head h2{{font-size:17px;letter-spacing:-.2px}}
+.sec-head .secnum{{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:{accent_dark}}}
+.dsec{{margin:0 0 22px;page-break-inside:avoid}}
+.body h3{{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:#999;margin:15px 0 7px;font-family:'JetBrains Mono',monospace}}
+.body h4{{font-size:13px;margin:13px 0 5px;color:{ink}}}
+.body p{{margin:0 0 9px;text-align:justify}}
+.body ul,.body ol{{margin:0 0 10px 0;padding-left:18px}}.body li{{margin-bottom:5px;padding-left:3px}}
 .body code{{font-family:'JetBrains Mono',monospace;background:#f1f3f2;padding:1px 5px;border-radius:4px;font-size:11px}}
-.exec{{background:#f7f8f7;border:1px solid #e6e9e8;border-left:3px solid {accent};border-radius:8px;padding:14px 17px;margin:6px 0 18px}}
+.exec{{background:#f8f9f9;border:1px solid #e9ebeb;border-left:3px solid {accent};border-radius:8px;padding:15px 18px;margin:4px 0 20px;font-size:12px;line-height:1.7}}
 table{{width:100%;border-collapse:collapse;margin:8px 0 12px;table-layout:auto}}
 th,td{{text-align:left;padding:7px 10px;border-bottom:1px solid #e6e9e8;font-size:11px;vertical-align:top;word-break:break-word;overflow-wrap:anywhere}}
 th{{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#888;background:#fafbfb;border-bottom:1.5px solid #e0e3e2}}
@@ -261,17 +272,26 @@ tbody tr:nth-child(even){{background:#fcfcfd}}
 .foot{{position:fixed;bottom:10mm;left:22mm;right:22mm;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#aaa;border-top:1px solid #eee;padding-top:6px}}
 @page{{size:A4;margin:0;@bottom-right{{content:"Page " counter(page) " of " counter(pages);font-family:'JetBrains Mono',monospace;font-size:8px;color:#bbb;margin:0 22mm 8mm 0}}}}
 </style></head><body>
-<div class="cover"><div class="page" style="min-height:86vh;display:flex;flex-direction:column">
-  <div style="height:46px">{_logo(b)}</div>
-  <div class="kicker">{escape(b['tagline'])} · {doc_type}</div>
-  <h1>{title}</h1>
-  {f'<div class="sub">{subtitle}</div>' if subtitle else ''}
-  <div class="co">{prepared_for}</div>
-  <div class="meta">{escape(date_str)} · Version {escape(str(d.get('version') or '1.0'))}<br>Prepared by <b>{escape(b['legal'])}</b><br>{escape(b['address'])}<br>{escape(b['contact'])}</div>
-  <div class="by">{escape(b['confidential'])}</div>
-</div></div>
+<div class="page cover-page">
+  <div class="cv-top"><div style="height:44px">{_logo(b)}</div><span class="cv-tag">{escape(b['tagline'])}</span></div>
+  <div class="cv-mid">
+    <div class="cv-accent"></div>
+    <div class="kicker">{doc_type}</div>
+    <h1>{title}</h1>
+    {f'<div class="sub">{subtitle}</div>' if subtitle else ''}
+    <div class="co">Prepared for {prepared_for}</div>
+  </div>
+  <div class="cv-bot">
+    <div class="cv-meta">
+      <div><span>Date</span>{escape(date_str)}</div>
+      <div><span>Version</span>{escape(str(d.get('version') or '1.0'))}</div>
+      <div><span>Prepared by</span>{escape(b['legal'])}</div>
+    </div>
+    <div class="cv-conf">{escape(b['confidential'])}<br>{escape(b['address'])} · {escape(b['contact'])}</div>
+  </div>
+</div>
 <div class="page">
-  {f'<div class="sec-head"><h2>Executive Summary</h2></div><div class="exec">{exec_sum}</div>' if exec_sum else ''}
+  {f'<div class="dsec"><div class="sec-head"><h2>Executive Summary</h2></div><div class="exec">{exec_sum}</div></div>' if exec_sum else ''}
   {sections}
   {('<div class="dsec"><div class="sec-head"><h2>Acceptance Criteria</h2></div><div class="body">'+_ul(d.get('acceptance_criteria'))+'</div></div>') if d.get('acceptance_criteria') else ''}
   {('<div class="dsec"><div class="sec-head"><h2>Assumptions</h2></div><div class="body">'+_ul(d.get('assumptions'))+'</div></div>') if d.get('assumptions') else ''}
