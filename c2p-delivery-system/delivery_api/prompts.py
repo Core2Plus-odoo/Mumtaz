@@ -547,3 +547,42 @@ MAX_TOKENS = {
     "functional": 4096,
     "developer": 8192,
 }
+
+
+# --------------------------------------------------------------------------- #
+# Deploy the built-in knowledge INTO the agents. Each relevant agent's system
+# prompt is augmented with C2P's curated Odoo / Chartered-Accountant / PM
+# knowledge, so the agent reasons from house knowledge — not generic training.
+# System prompts are prompt-cached, so this grounding is near-free after the
+# first call. Toggle with C2P_EMBED_KNOWLEDGE=0.
+# --------------------------------------------------------------------------- #
+import os as _os
+
+if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
+    try:
+        import odoo_knowledge as _ok
+        import finance_knowledge as _fk
+        import pm_knowledge as _pk
+
+        _ODOO = _ok.capability_digest()
+        _FIN = _fk.digest()
+        _PM = _pk.digest()
+
+        _AGENT_KNOWLEDGE = {
+            "functional": _ODOO + "\n\n" + _FIN,
+            "ba": _ODOO + "\n\n" + _FIN + "\n\n" + _PM,
+            "ba_discovery": _ODOO + "\n\n" + _FIN,
+            "developer": _ODOO,
+            "proposal": _PM + "\n\n" + _ODOO,
+            "project": _PM + "\n\n" + _ODOO,
+            "config": _ODOO + "\n\n" + _FIN,
+            "dispatch": _ODOO,
+            "presales": _ODOO,
+        }
+        for _k, _v in _AGENT_KNOWLEDGE.items():
+            if _k in PROMPTS:
+                PROMPTS[_k] = (PROMPTS[_k]
+                               + "\n\n=== BUILT-IN C2P KNOWLEDGE (authoritative; "
+                                 "reason from this) ===\n" + _v)
+    except Exception:   # knowledge embedding must never break prompt loading
+        pass

@@ -118,6 +118,18 @@ PROCESSES = [
 ]
 
 
+def digest() -> str:
+    """A compact CA/finance reference to embed in an agent's system prompt."""
+    tax = "; ".join(f"{c} {d['name']} VAT {d['vat']} ({d['authority']})"
+                    for c, d in TAX_REGIMES.items())
+    ifrs = "; ".join(f"{e['std']} ({e['keys'][0]})" for e in IFRS)
+    proc = "; ".join(f"{p['keys'][0]}→{p['fit']}" for p in PROCESSES)
+    return ("CHARTERED-ACCOUNTANT REFERENCE (C2P). Apply the correct treatment, cite the "
+            "standard, and map to Odoo accounting modules — standard-first.\n"
+            "GCC/PK indirect tax: " + tax + "\nIFRS treatments: " + ifrs +
+            "\nFinance process → Odoo fit: " + proc)
+
+
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").lower())
 

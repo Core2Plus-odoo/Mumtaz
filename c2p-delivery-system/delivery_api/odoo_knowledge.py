@@ -315,6 +315,21 @@ _GCC = ("AED defaults, 5% UAE VAT and multi-company are available out of the box
         "confirm KSA ZATCA needs separately if any Saudi entity is in scope.")
 
 
+def capability_digest() -> str:
+    """A compact Odoo knowledge reference to embed in an agent's system prompt."""
+    by_v: dict[str, list] = {}
+    for r in RULES:
+        by_v.setdefault(r["verdict"], []).append(r["id"].replace("_", " "))
+    order = ["standard", "configurable", "studio", "custom"]
+    pat = "\n".join(f"- {v.upper()}: " + ", ".join(sorted(set(by_v.get(v, []))))
+                    for v in order if by_v.get(v))
+    mods = ", ".join(MODULES.keys())
+    return ("ODOO CAPABILITY REFERENCE (C2P house knowledge, v17–v19). Standard-first: "
+            "never custom-build what standard Odoo or Studio already does; bias borderline "
+            "calls to the lower rung.\nKey modules: " + mods + "\nKnown requirement→verdict "
+            "patterns:\n" + pat)
+
+
 def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").lower())
 

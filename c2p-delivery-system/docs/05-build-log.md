@@ -494,3 +494,13 @@ Three professional knowledge brains, all local-first (no API for routine work):
   duration, phased timeline, team, and an AED price band. New
   `POST /engagements/{id}/estimate` (0 tokens) and a PM-view "⚡ Estimate effort &
   price (instant)" panel; the estimate also grounds the proposal stage's pricing.
+
+### Knowledge deployed into the agents ✅
+The curated Odoo / Chartered-Accountant / PM knowledge is now embedded in the
+agents' system prompts (not just the deterministic path), so every LLM agent
+reasons from C2P house knowledge instead of generic training:
+- `capability_digest()` / `digest()` produce compact references (~250/210/160
+  tokens) from the same knowledge bases.
+- `prompts.py` augments functional, ba, ba_discovery, developer, proposal,
+  project, config, dispatch and presales with the relevant digests. Prompt
+  caching makes this near-free after the first call. Toggle `C2P_EMBED_KNOWLEDGE`.

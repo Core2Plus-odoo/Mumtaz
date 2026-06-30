@@ -59,6 +59,18 @@ TEAM = [
 ]
 
 
+def digest() -> str:
+    """A compact PM estimating reference to embed in an agent's system prompt."""
+    fit = "; ".join(f"{k}={v}md" for k, v in FIT_MD.items())
+    over = "; ".join(f"{n} {int(f * 100)}%" for n, f, _ in OVERHEADS)
+    ph = "; ".join(f"{n} {int(s * 100)}%" for n, s in PHASES)
+    return ("PM ESTIMATING MODEL (C2P). Build effort per requirement by Odoo-fit: " + fit +
+            " (× area factor). Overheads on build effort: " + over +
+            ". Delivery phases (share of plan): " + ph +
+            f". Blended day rate AED {int(DAY_RATE_AED)}; price band ±15–20%; add 5% VAT; "
+            "Odoo licensing billed separately. Always phase large scope (MVP first).")
+
+
 def _area_factor(area: Optional[str]) -> float:
     a = (area or "").lower()
     for key, f in AREA_FACTOR.items():
