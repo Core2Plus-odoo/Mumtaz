@@ -1215,10 +1215,15 @@ def update_task(eng_id: str, task_id: int, body: dict):
 # --------------------------------------------------------------------------- #
 QA_BAR = int(os.getenv("C2P_QA_BAR", "75"))
 QA_MAX_REVISIONS = int(os.getenv("C2P_QA_MAX_REVISIONS", "1"))
+# Set C2P_QA_ENABLED=0 to skip the Director review pass — roughly halves model
+# calls (no review, no auto-revision), useful on a tight token/credit budget.
+QA_ENABLED = os.getenv("C2P_QA_ENABLED", "1") == "1"
 
 
 def _review_output(stage: str, out: dict, eng: Engagement) -> dict | None:
     """Run the Delivery Director over a specialist's output; returns the review."""
+    if not QA_ENABLED:
+        return None
     content = (
         f"Specialist stage under review: {stage}\n"
         f"Client: {eng.company}\nIndustry: {_industry_for(eng) or 'unknown'}\n"
