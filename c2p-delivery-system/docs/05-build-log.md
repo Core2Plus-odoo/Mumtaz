@@ -477,3 +477,20 @@ from CURATED KNOWLEDGE with no API call.
 - On a real 30-requirement catalog ~70% classified locally — a matching cut in
   functional API calls (on top of cheap-model routing, QA toggle and prompt
   caching). The delivery log marks locally-resolved tasks "⚡ local · no API".
+
+### Advanced built-in intelligence — Odoo + Chartered Accountant + PM ✅
+Three professional knowledge brains, all local-first (no API for routine work):
+- **Odoo** (`odoo_knowledge.py`, now 40 rules): added accounting-depth patterns —
+  bank reconciliation, fixed assets/depreciation, analytic/cost-centres, budgets,
+  multi-currency/FX, revenue recognition, withholding tax, landed costs,
+  dropship, quality, and commission (correctly flagged custom).
+- **Chartered Accountant** (`finance_knowledge.py`): GCC/Pakistan VAT regimes,
+  an IFRS library (15/16/9, IAS 2/16/21/37, IFRS 10) and finance-process →
+  Odoo mappings. `advise()` attaches the correct accounting treatment + Odoo
+  modules + compliance notes to any finance requirement in the functional stage —
+  no API. Rendered as an "Accounting treatment (Chartered Accountant)" panel.
+- **Project Management** (`pm_knowledge.py`): a deterministic estimator — effort
+  (man-days by Odoo-fit × area factor) + overhead workstreams → total md,
+  duration, phased timeline, team, and an AED price band. New
+  `POST /engagements/{id}/estimate` (0 tokens) and a PM-view "⚡ Estimate effort &
+  price (instant)" panel; the estimate also grounds the proposal stage's pricing.

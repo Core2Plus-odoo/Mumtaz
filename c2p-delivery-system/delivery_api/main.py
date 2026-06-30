@@ -38,6 +38,8 @@ from odoo import get_client
 import odoo as odoo_mod
 import industry
 import odoo_knowledge
+import pm_knowledge
+import finance_knowledge
 import llm
 import policy
 import channels
@@ -369,6 +371,12 @@ def ba_requirements(eng_id: str, body: dict | None = None):
 @app.post("/engagements/{eng_id}/proposal")
 def proposal(eng_id: str, body: m.ProposalIn):
     eng = _engagement(eng_id)
+    # Ground pricing in the local PM estimate (compute it if we have requirements).
+    if not eng.stages.get("estimate"):
+        reqs = _estimate_requirements(eng)
+        if reqs:
+            eng.stages["estimate"] = pm_knowledge.estimate(reqs)
+            store.save(eng)
     content = (
         f"Company: {eng.company}\n\n"
         f"Presales / discovery output:\n{_prior(eng, 'presales')}\n\n"
@@ -377,6 +385,7 @@ def proposal(eng_id: str, body: m.ProposalIn):
         + industry.playbook_block(_industry_for(eng))
         + ks.context_block(eng.account_id, "proposal scope modules")
         + _ba_requirements_block(eng)
+        + _estimate_block(eng)
         + _client_answers_block(eng)
     )
     out = run_agent("proposal", content, account_id=eng.account_id, engagement_id=eng.id)
@@ -441,6 +450,14 @@ def functional(eng_id: str, body: m.FunctionalIn):
                 out = {**local["result"], "source": "knowledge-base-fallback"}
             else:
                 raise
+    # Chartered-accountant enrichment: attach IFRS/tax/compliance treatment for
+    # any finance requirement — built-in knowledge, no API call.
+    try:
+        fin = finance_knowledge.advise(body.requirement, _country_code(body.country))
+        if fin:
+            out["finance"] = fin
+    except Exception:
+        pass
     # Keep a list of analysed requirements rather than overwriting.
     eng.stages.setdefault("functional", []).append(out)
     result = _commit(eng, "functional", out)
@@ -1038,6 +1055,61 @@ def project_manager(eng_id: str):
 # organises them into a delivery plan, and drives Functional + Technical to
 # complete each one (with Director QA on every step).
 # --------------------------------------------------------------------------- #
+def _country_code(country: str | None) -> str:
+    """Map a free-text country to a finance regime code (defaults to UAE)."""
+    c = (country or "").lower()
+    table = {"SA": ["saudi", "ksa", "k.s.a"], "AE": ["uae", "emirates", "u.a.e", "dubai", "abu dhabi"],
+             "BH": ["bahrain"], "OM": ["oman"], "QA": ["qatar"], "KW": ["kuwait"],
+             "PK": ["pakistan"]}
+    for code, names in table.items():
+        if any(n in c for n in names):
+            return code
+    return "AE"
+
+
+def _estimate_requirements(eng: Engagement) -> list[dict]:
+    """Best requirement list for sizing: BA catalog → functional → presales."""
+    ba = (eng.stages.get("ba_requirements") or {}).get("functional_requirements") or []
+    if ba:
+        return [{"odoo_fit": r.get("odoo_fit"), "area": r.get("area")} for r in ba]
+    fns = eng.stages.get("functional") or []
+    if fns:
+        out = []
+        for f in fns:
+            mods = ((f.get("standard_capability") or {}).get("modules") or [{}])
+            out.append({"verdict": f.get("verdict"),
+                        "area": (mods[0].get("name") if mods else None)})
+        return out
+    cands = (eng.stages.get("presales") or {}).get("candidate_requirements") or []
+    return [{} for _ in cands]
+
+
+def _estimate_block(eng: Engagement) -> str:
+    est = eng.stages.get("estimate")
+    if not est:
+        return ""
+    keep = {k: est[k] for k in ("total_man_days", "duration_weeks", "pricing",
+                                "custom_builds") if k in est}
+    return ("\n\nLOCAL EFFORT ESTIMATE (computed by the PM knowledge engine — use "
+            "these grounded figures, do not invent different ones):\n"
+            + json.dumps(keep, indent=2))
+
+
+@app.post("/engagements/{eng_id}/estimate")
+def estimate_engagement(eng_id: str):
+    """Deterministic effort/timeline/price estimate from the requirements — no API."""
+    eng = _engagement(eng_id)
+    reqs = _estimate_requirements(eng)
+    if not reqs:
+        raise HTTPException(status_code=400,
+                            detail="No requirements to estimate yet — run the "
+                                   "Business Analyst (or Presales) first.")
+    est = pm_knowledge.estimate(reqs)
+    eng.stages["estimate"] = est
+    store.save(eng)
+    return est
+
+
 def _delivery_packages(eng: Engagement) -> list[dict]:
     """Build work packages from the BA requirements catalog (preferred) or the
     presales candidate requirements."""

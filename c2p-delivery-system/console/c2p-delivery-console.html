@@ -1055,6 +1055,8 @@ const RENDER={
         <div class="chips" style="margin-top:9px">${(o.standard_capability?.modules||[]).map(m=>`<span class="chip">${esc(m.name)}${m.version_note?' · '+esc(m.version_note):''}</span>`).join('')}</div></div></div>
       <div class="sec"><h3>Gap analysis</h3><div class="card">${esc(o.gap_analysis)}</div></div>
       <div class="sec"><h3>Solution options</h3>${opts}</div>
+      ${financeBlock(o.finance)}
+      ${String(o.source||'').startsWith('knowledge-base')?`<div class="hint" style="color:var(--deep-teal)">⚡ Resolved from built-in Odoo knowledge — no API call.</div>`:''}
       ${o.verdict==='custom'?`<div class="callout" style="border-style:dashed;border-color:var(--rust);background:rgba(194,73,47,.04)"><b style="color:var(--rust)">Custom build required.</b> <button class="btn dark sm" style="margin-left:8px" onclick="goView('developer')">Build in Developer →</button></div>`:''}
     </div>`;},
 
@@ -1345,6 +1347,18 @@ async function moveExec(id,stage){try{await api("POST",`/engagements/${eng.id}/t
 async function doneExec(id){try{await api("POST",`/engagements/${eng.id}/tasks/${id}`,{kanban_state:'done'});toast('Marked done','ok');loadExec();}catch(e){toast('Failed: '+e.message,'bad');}}
 async function addExecTask(){const name=val('exNew');if(!name)return;try{await api("POST",`/engagements/${eng.id}/tasks`,{name});toast('Task added in Odoo','ok');const n=document.getElementById('exNew');if(n)n.value='';loadExec();}catch(e){toast('Failed: '+e.message,'bad');}}
 
+/* ---------- chartered-accountant finance enrichment ---------- */
+function financeBlock(fin){
+  if(!fin)return '';
+  const ifrs=(fin.ifrs||[]).map(i=>`<div class="req-row"><span class="chip">${esc(i.standard)}</span><span class="rq-text">${esc(i.treatment)}</span></div><div class="hint" style="margin:-2px 0 6px 4px">Odoo: ${esc(i.odoo)}</div>`).join('');
+  const tax=fin.tax?`<div class="req-row"><span class="chip" style="background:var(--deep-teal);color:#fff">${esc(fin.tax.country)} · VAT ${esc(fin.tax.vat)}</span><span class="rq-text">${esc(fin.tax.notes)}</span></div>`:'';
+  const proc=fin.process?`<div class="hint">Process fit: <b>${esc(fin.process.fit)}</b> · ${esc(fin.process.odoo)}</div>`:'';
+  const comp=(fin.compliance||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  if(!ifrs&&!tax&&!proc&&!comp)return '';
+  return `<div class="sec"><h3>🧮 Accounting treatment (Chartered Accountant · built-in)</h3>
+    <div class="card">${tax}${ifrs}${proc}${comp?`<ul class="clean warn" style="margin-top:6px">${comp}</ul>`:''}</div></div>`;
+}
+
 /* ---------- deliverable documents (agents author them) ---------- */
 function qaBadge(qa){
   if(!qa||qa.score==null)return '';
@@ -1450,6 +1464,7 @@ function renderPM(c){
       <div class="panel"><div class="panel-head"><div><h2>Manage</h2></div></div><div class="panel-body">
         <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
           <button class="btn sm" onclick="goView('ba')">Gather requirements (BA)</button>
+          <button class="btn dark sm" onclick="estimateEngagement()">⚡ Estimate effort &amp; price (instant)</button>
           <button class="btn sm" onclick="dispatchEngagement()">Delegate the work</button>
           <button class="btn sm" onclick="configEngagement()">Configure Odoo (gated)</button>
           <button class="btn sm" onclick="openDossier()">Generate project dossier</button>
@@ -1767,6 +1782,24 @@ async function configEngagement(){
     if(r.approval){toast(`Odoo config recipe (${ops} ops) queued for approval`,'ok');refreshApprovalsCount();}
     else{toast(`Config applied (${(r.result&&r.result.applied)||0}/${(r.result&&r.result.total)||0})`,'ok');}
   }catch(e){toast('Failed: '+e.message,'bad');}
+}
+async function estimateEngagement(){
+  if(!eng)return;const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:90px"></div>`;
+  try{const e=await api("POST",`/engagements/${eng.id}/estimate`,{});
+    const p=e.pricing||{};
+    const phases=(e.timeline||[]).map(t=>`<div class="req-row"><span class="rq-text">${esc(t.phase)}</span><span class="chip">wk ${esc(t.starts_week)}</span><span class="eff" style="background:var(--deep-teal);color:#fff">${esc(t.weeks)}w</span></div>`).join('');
+    const over=(e.overheads||[]).map(o=>`<div class="req-row"><span class="rq-text">${esc(o.workstream)}</span><span class="eff" style="background:var(--line);color:var(--muted)">${esc(o.man_days)} md</span></div>`).join('');
+    if(host)host.innerHTML=`<div class="sec"><h3>⚡ Delivery estimate · computed locally, no API</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <div class="kpi accent" style="flex:1;min-width:120px"><div class="k">Total effort</div><div class="v">${esc(e.total_man_days)}<span style="font-size:13px;color:var(--muted-2)"> md</span></div></div>
+        <div class="kpi" style="flex:1;min-width:120px"><div class="k">Duration</div><div class="v">${esc(e.duration_weeks)}<span style="font-size:13px;color:var(--muted-2)"> wks</span></div></div>
+        <div class="kpi accent" style="flex:1;min-width:140px"><div class="k">Estimate</div><div class="v" style="font-size:18px">${esc(aed(p.estimate_aed))}</div><div class="d">range ${esc(aed((p.range_aed||[])[0]))}–${esc(aed((p.range_aed||[])[1]))}</div></div>
+        <div class="kpi" style="flex:1;min-width:110px"><div class="k">Custom builds</div><div class="v">${esc(e.custom_builds)}</div></div>
+      </div>
+      <div class="two-col"><div><h3>Timeline</h3>${phases||'<div class="hint">—</div>'}</div><div><h3>Workstreams</h3>${over||'<div class="hint">—</div>'}</div></div>
+      <div class="hint" style="margin-top:8px">${esc(p.vat_note||'')} ${esc(p.licensing_note||'')}</div></div>`;
+    toast('Estimate computed locally (0 tokens)','ok');
+  }catch(e){if(host)host.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 async function dispatchEngagement(){
   if(!eng)return;const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:80px"></div>`;
