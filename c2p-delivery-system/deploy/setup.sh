@@ -76,7 +76,8 @@ fi
 # --- 5. web root (the console) ----------------------------------------------
 echo "==> Publishing the console…"
 mkdir -p "$WEB_DIR"
-cp "$APP_DIR/console/c2p-delivery-console.html" "$WEB_DIR/index.html"
+# Symlink (not copy) so `git pull` updates the served console with no extra step.
+ln -sfn "$APP_DIR/console/c2p-delivery-console.html" "$WEB_DIR/index.html"
 
 # --- 6. systemd service ------------------------------------------------------
 echo "==> Installing the background service…"
