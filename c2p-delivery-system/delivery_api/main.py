@@ -210,6 +210,20 @@ def get_engagement(eng_id: str):
     return _engagement(eng_id)
 
 
+@app.post("/engagements/{eng_id}/odoo-db", response_model=Engagement)
+def link_engagement_db(eng_id: str, body: dict | None = None):
+    """Link the engagement to an Odoo database so the agents act on that tenant.
+    Defaults to the database from the saved Odoo Connection (one-click link)."""
+    eng = _engagement(eng_id)
+    db = (body or {}).get("db") or _odoo_settings().get("db") or os.environ.get("C2P_CRM_DB")
+    if not db:
+        raise HTTPException(status_code=400,
+                            detail="No database to link — set the Odoo Connection first.")
+    eng.odoo_db = db
+    store.save(eng)
+    return eng
+
+
 @app.get("/engagements")
 def list_engagements():
     return store.list()

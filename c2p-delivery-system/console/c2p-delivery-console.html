@@ -634,7 +634,19 @@ function renderAll(){renderEngSelect();renderEngDb();renderNav();renderTopbar();
 function renderEngDb(){
   const el=document.getElementById('engDb');
   if(!eng){el.innerHTML='';return;}
-  el.innerHTML=eng.odoo_db?`<span class="db">⛁ ${esc(eng.odoo_db)}</span>`:`<span class="nodb">No Odoo DB linked</span>`;
+  el.innerHTML=eng.odoo_db?`<span class="db">⛁ ${esc(eng.odoo_db)}</span>`:`<button class="btn ghost sm" style="padding:3px 9px;font-size:11px" onclick="linkOdooDb()">⛁ Link Odoo</button>`;
+}
+async function linkOdooDb(db){
+  try{
+    const r=await api("POST",`/engagements/${eng.id}/odoo-db`,db?{db}:{});
+    eng=r;
+    toast('Linked to Odoo · '+esc(r.odoo_db),'ok');
+    try{engagements=await api("GET","/engagements");}catch(_){}
+    renderAll();
+  }catch(e){
+    if(/connection first/i.test(e.message)){toast('Set the Odoo Connection first','bad');goView('odooconn');}
+    else toast('Link failed: '+e.message,'bad');
+  }
 }
 function renderNav(){
   const nav=document.getElementById('nav');
@@ -727,7 +739,7 @@ function renderOverview(c){
       <div class="ring" style="--p:${pct}"><div class="rv"><b>${pct}%</b><span>complete</span></div></div>
       <div>
         <div class="co">${esc(eng.company)}</div>
-        <div class="meta"><span>${eng.id}</span>${eng.odoo_db?`<span style="color:var(--amber)">⛁ ${esc(eng.odoo_db)}</span>`:'<span>No Odoo DB</span>'}<span>${doneCount()}/${STAGES.length} stages</span></div>
+        <div class="meta"><span>${eng.id}</span>${eng.odoo_db?`<span style="color:var(--amber)">⛁ ${esc(eng.odoo_db)}</span>`:`<button class="btn ghost sm" style="padding:2px 9px;font-size:11px" onclick="linkOdooDb()">⛁ Link connected Odoo</button>`}<span>${doneCount()}/${STAGES.length} stages</span></div>
         <div class="ov-steps">${steps}</div>
         <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
           ${next?`<button class="btn primary" onclick="goView('${next.id}')">Continue → ${next.name}</button>`:`<span class="badge b-done">Pipeline complete</span>`}
