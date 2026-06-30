@@ -31,7 +31,16 @@ TENANT_DIR = os.getenv("C2P_TENANT_DIR", "tenants")
 JWT_SECRET = os.getenv("C2P_JWT_SECRET", "")
 JWT_TTL = int(os.getenv("C2P_JWT_TTL", "604800"))   # 7 days
 
-PUBLIC_PATHS = {"/health", "/auth/signup", "/auth/login", "/stripe/webhook",
+# Single-admin login (replaces nginx basic-auth with a branded login page).
+# Independent of MULTITENANT. Set C2P_ADMIN_AUTH=1 + C2P_JWT_SECRET, plus either
+# C2P_ADMIN_PASSWORD or C2P_ADMIN_PASSWORD_HASH (pbkdf2 from hash_password()).
+ADMIN_AUTH = os.getenv("C2P_ADMIN_AUTH") == "1"
+ADMIN_USER = os.getenv("C2P_ADMIN_USER", "admin")
+ADMIN_PASSWORD = os.getenv("C2P_ADMIN_PASSWORD", "")
+ADMIN_PASSWORD_HASH = os.getenv("C2P_ADMIN_PASSWORD_HASH", "")
+
+PUBLIC_PATHS = {"/health", "/config", "/auth/signup", "/auth/login",
+                "/auth/admin/login", "/stripe/webhook",
                 "/docs", "/openapi.json", "/redoc"}
 EDITION_RANK = {"delivery": 1, "growth": 2, "agency": 3}
 
@@ -59,6 +68,18 @@ def verify_password(pw: str, stored: str) -> bool:
         return hmac.compare_digest(dk, base64.b64decode(dk_b))
     except Exception:
         return False
+
+
+def verify_admin(user: str, pw: str) -> bool:
+    """Validate the single-admin credentials (constant-time). Prefers a stored
+    pbkdf2 hash; falls back to a plaintext env password."""
+    if not hmac.compare_digest((user or ""), ADMIN_USER):
+        return False
+    if ADMIN_PASSWORD_HASH:
+        return verify_password(pw or "", ADMIN_PASSWORD_HASH)
+    if ADMIN_PASSWORD:
+        return hmac.compare_digest((pw or ""), ADMIN_PASSWORD)
+    return False
 
 
 # ── JWT (HS256, no deps) ──────────────────────────────────────────────────

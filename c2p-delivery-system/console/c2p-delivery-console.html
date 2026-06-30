@@ -500,7 +500,7 @@ let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
 let odooModules = null, odooModFilter = "";
 let pendingCount = 0, approvalPayloads = {}, accountsCache = [];
 let clarifyOpen = 0;
-let multitenant = false, authToken = localStorage.getItem("c2p_token") || "", currentTenant = null;
+let multitenant = false, adminAuth = false, authToken = localStorage.getItem("c2p_token") || "", currentTenant = null;
 
 const STAGES = [
   {id:"presales",  name:"Presales",  ico:"◎", group:"Win the work",  persona:"Presales Consultant", doc:"Discovery & Qualification Brief", desc:"Qualify the opportunity and turn discovery into candidate requirements."},
@@ -558,7 +558,7 @@ async function api(method, path, body){
   if(authToken) opt.headers["Authorization"]="Bearer "+authToken;
   if(body) opt.body=JSON.stringify(body);
   const res=await fetch(API_BASE+path,opt);
-  if(res.status===401 && multitenant && !path.startsWith('/auth')){ logout(); throw new Error("Please log in"); }
+  if(res.status===401 && (multitenant||adminAuth) && !path.startsWith('/auth')){ logout(); throw new Error("Please log in"); }
   if(!res.ok){let d;try{d=(await res.json()).detail;}catch(e){d=res.statusText;}throw new Error(d||("HTTP "+res.status));}
   return res.json();
 }
@@ -1997,10 +1997,37 @@ async function doAuth(mode){
   }catch(e){err.textContent=e.message;}
 }
 function logout(){localStorage.removeItem('c2p_token');authToken='';location.reload();}
+/* ---------- single-admin login ---------- */
+function showAdminLogin(){
+  let el=document.getElementById('authGate');
+  if(!el){el=document.createElement('div');el.id='authGate';el.className='auth-gate';document.body.appendChild(el);}
+  el.innerHTML=`<div class="auth-card">
+    <div style="height:34px;margin-bottom:8px">${brandMark('dark')}</div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--deep-teal);margin-bottom:8px">${esc(BRAND.tagline||'Delivery Console')}</div>
+    <div style="font-family:var(--display);font-weight:600;font-size:19px;color:var(--charcoal);margin-bottom:16px">Sign in</div>
+    <div class="input-block"><label>Username</label><input type="text" id="ad_user" autocomplete="username" style="width:100%"></div>
+    <div class="input-block"><label>Password</label><input type="password" id="ad_pw" autocomplete="current-password" style="width:100%"></div>
+    <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" onclick="doAdminLogin()">Sign in</button>
+    <div id="ad_err" class="hint" style="color:var(--rust);margin-top:10px"></div></div>`;
+  setTimeout(()=>{const u=document.getElementById('ad_user');if(u)u.focus();const pw=document.getElementById('ad_pw');if(pw)pw.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();});},0);
+}
+async function doAdminLogin(){
+  const err=document.getElementById('ad_err');err.textContent='';
+  const user=val('ad_user'),pw=val('ad_pw');
+  if(!user||!pw){err.textContent='Username and password are required';return;}
+  try{
+    const r=await api("POST","/auth/admin/login",{user,password:pw});
+    if(r&&r.token){localStorage.setItem('c2p_token',r.token);authToken=r.token;location.reload();}
+    else err.textContent='Unexpected response';
+  }catch(e){err.textContent=e.message;}
+}
 function renderTenantFoot(){
-  if(!multitenant||!currentTenant)return;
   const foot=document.querySelector('.sb-foot');if(!foot)return;
-  foot.insertAdjacentHTML('afterbegin',`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:11px;font-weight:600;color:var(--charcoal)">${esc(currentTenant.name)} · <span style="color:var(--deep-teal);text-transform:capitalize">${esc(currentTenant.edition)}</span></span><button class="btn ghost sm" onclick="logout()" style="padding:3px 8px;font-size:10px">Sign out</button></div>`);
+  if(multitenant&&currentTenant){
+    foot.insertAdjacentHTML('afterbegin',`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:11px;font-weight:600;color:var(--charcoal)">${esc(currentTenant.name)} · <span style="color:var(--deep-teal);text-transform:capitalize">${esc(currentTenant.edition)}</span></span><button class="btn ghost sm" onclick="logout()" style="padding:3px 8px;font-size:10px">Sign out</button></div>`);
+  } else if(adminAuth){
+    foot.insertAdjacentHTML('afterbegin',`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:11px;font-weight:600;color:var(--charcoal)">Admin</span><button class="btn ghost sm" onclick="logout()" style="padding:3px 8px;font-size:10px">Sign out</button></div>`);
+  }
 }
 function workspacePanel(){
   if(!multitenant)return '';
@@ -2028,9 +2055,13 @@ async function upgradePlan(edition){try{const r=await api("POST","/billing/check
   renderApiChip();
   let h=null; try{h=await fetch(API_BASE+"/health").then(r=>r.ok?r.json():null);}catch(e){}
   multitenant=!!(h&&h.multitenant);
+  adminAuth=!!(h&&h.admin_auth);
   if(multitenant){
     if(!authToken){ showAuth('login'); return; }
     try{const me=await api("GET","/auth/me"); currentTenant=me.tenant; }catch(e){ logout(); return; }
+  } else if(adminAuth){
+    if(!authToken){ showAdminLogin(); return; }
+    try{ await api("GET","/auth/admin/me"); }catch(e){ logout(); return; }
   }
   pingHealth();
   try{const b=await api("GET","/branding");if(b&&typeof b==='object'&&!Array.isArray(b))Object.assign(BRAND,b);}catch(e){}

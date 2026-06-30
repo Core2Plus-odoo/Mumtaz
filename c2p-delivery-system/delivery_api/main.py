@@ -120,9 +120,18 @@ app.add_middleware(
 async def _tenant_mw(request: Request, call_next):
     """MULTITENANT on → require a JWT on non-public routes and route the request
     to its tenant's store. Off → no-op (single-tenant, nginx basic-auth)."""
+    path = request.url.path
+    # Single-admin login mode (no multi-tenancy): require a valid admin JWT.
+    if not tenancy.MULTITENANT and tenancy.ADMIN_AUTH:
+        if path in tenancy.PUBLIC_PATHS:
+            return await call_next(request)
+        auth = request.headers.get("Authorization", "")
+        claims = tenancy.read_jwt(auth[7:] if auth.startswith("Bearer ") else "")
+        if not claims or claims.get("role") != "admin":
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+        return await call_next(request)
     if not tenancy.MULTITENANT:
         return await call_next(request)
-    path = request.url.path
     if path in tenancy.PUBLIC_PATHS:
         return await call_next(request)
     auth = request.headers.get("Authorization", "")
@@ -2104,6 +2113,32 @@ def auth_me(request: Request):
             "tenant": t.model_dump() if t else None}
 
 
+@app.post("/auth/admin/login")
+def admin_login(body: dict):
+    """Single-admin login → returns a JWT the console sends as a Bearer token."""
+    if not tenancy.ADMIN_AUTH:
+        raise HTTPException(status_code=400, detail="Admin login is not enabled")
+    if not tenancy.JWT_SECRET:
+        raise HTTPException(status_code=500, detail="C2P_JWT_SECRET is not set on the server")
+    user = (body or {}).get("user") or (body or {}).get("email") or ""
+    pw = (body or {}).get("password") or ""
+    if not tenancy.verify_admin(user, pw):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    token = tenancy.make_jwt({"role": "admin", "user": user})
+    return {"token": token, "user": user}
+
+
+@app.get("/auth/admin/me")
+def admin_me(request: Request):
+    """Reached only with a valid admin token (middleware enforces it) when admin
+    auth is on — so a 200 here means the session is valid."""
+    auth = request.headers.get("Authorization", "")
+    claims = tenancy.read_jwt(auth[7:] if auth.startswith("Bearer ") else "")
+    if not claims or claims.get("role") != "admin":
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return {"user": claims.get("user"), "role": "admin"}
+
+
 @app.get("/tenant")
 def get_tenant(request: Request):
     cl = _claims(request)
@@ -2186,4 +2221,11 @@ async def stripe_webhook(request: Request):
 def health():
     return {"ok": True, "model": MODEL, "stages": m.STAGES,
             "agents": list(PROMPTS.keys()), "web_search": llm.WEB_SEARCH_ENABLED,
-            "multitenant": tenancy.MULTITENANT, "stripe": stripe_billing.configured()}
+            "multitenant": tenancy.MULTITENANT, "admin_auth": tenancy.ADMIN_AUTH,
+            "stripe": stripe_billing.configured()}
+
+
+@app.get("/config")
+def public_config():
+    """Public bootstrap flags the console reads before login."""
+    return {"admin_auth": tenancy.ADMIN_AUTH, "multitenant": tenancy.MULTITENANT}

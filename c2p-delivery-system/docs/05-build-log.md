@@ -447,3 +447,16 @@ A cohesive global polish layer (appended, so it refines without restructuring vi
   never returned, and scrubbed from every error message. New console **GitHub
   Repo** panel with Save/Test (lists remote branches). Falls back to the staged
   on-disk/env-git path when no GitHub connection is set.
+
+### Proper admin login ✅
+A branded single-admin login replaces the nginx Basic-Auth popup.
+- **Backend**: `C2P_ADMIN_AUTH=1` turns it on (independent of MULTITENANT). The
+  middleware requires a valid admin JWT on every API route except the public
+  bootstrap set (`/health`, `/config`, `/auth/admin/login`). `verify_admin`
+  checks the username + a pbkdf2 hash (`C2P_ADMIN_PASSWORD_HASH`) or a plaintext
+  `C2P_ADMIN_PASSWORD`, constant-time. `/auth/admin/login` issues the JWT (needs
+  `C2P_JWT_SECRET`); `/auth/admin/me` validates a session.
+- **Console**: a branded full-screen Sign-in page (reuses the auth-gate), token
+  stored and sent as a Bearer header, 401 → re-login, Sign-out in the sidebar.
+- **Deploy**: `deploy/enable-admin-login.sh` sets the env (hashing the password,
+  minting a JWT secret), strips the nginx Basic-Auth directives, and restarts.
