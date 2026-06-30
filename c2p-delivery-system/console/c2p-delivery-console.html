@@ -442,6 +442,28 @@
     .btn,.nav-item,.kpi,.doc-card,.req-row,.odoo-rec{transition:none!important}
     .btn:hover,.kpi:hover,.doc-card:hover,.nav-item:hover{transform:none!important}
   }
+
+  /* ===== professional alignment polish (v3) ===== */
+  .panel-head .run-area{flex-shrink:0;align-self:flex-start}
+  .panel-head>div:first-child{min-width:0}            /* let titles truncate, not push */
+  .run-area{flex-wrap:wrap;justify-content:flex-end;row-gap:8px}
+  .btn{white-space:nowrap;line-height:1.25;min-height:32px}
+  .btn.sm{min-height:28px}
+  .kpis{align-items:stretch}
+  .kpi{display:flex;flex-direction:column;min-height:96px}
+  .kpi .v{margin-top:auto}                              /* values align to a common baseline */
+  .doc-card{align-items:center}
+  .req-row{align-items:center;gap:10px}
+  .req-row .rq-text{min-width:0;overflow-wrap:anywhere}
+  .req-row .chip,.req-row .eff{flex:none}
+  .two-col{align-items:start}
+  .input-grid{align-items:start}
+  .input-block label{font-weight:600;letter-spacing:.1px}
+  .sec h3{display:flex;align-items:center;gap:8px}
+  .sec h3::after{content:"";flex:1;height:1px;background:var(--line-soft)}   /* tidy section rule */
+  .chip,.eff,.badge,.pri{display:inline-flex;align-items:center;line-height:1;white-space:nowrap}
+  .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .panel-body{padding:20px 22px}
 </style>
 </head>
 <body>
