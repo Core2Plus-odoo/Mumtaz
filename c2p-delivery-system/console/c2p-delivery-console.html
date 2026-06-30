@@ -1499,24 +1499,32 @@ async function runPMDelivery(){
     catch(e){pmDelLog('✕ '+esc(e.message),'bad');return;}
     renderDeliveryBoard(plan);
     pmDelLog('▸ '+esc(plan.summary||'Plan ready'),'ok');
-    let guard=0;
-    while(guard++<40){
+    let guard=0, consecErr=0, ranAny=false, failed=0;
+    while(guard++<60){
       if(_pmDelStop){pmDelLog('⏹ Stopped.','warn');break;}
       let r;
       try{r=await api("POST",`/engagements/${eng.id}/pm/deliver/step`,{});}
-      catch(e){pmDelLog('✕ Step failed: '+esc(e.message),'bad');break;}
-      if(r.status==='done'){pmDelLog('✓ All requirements delivered.','done');break;}
-      if(r.status==='error'){pmDelLog('✕ '+esc(r.ran)+' errored: '+esc(r.error||''),'bad');break;}
-      if(r.ran==='functional'){
-        const vc=r.verdict==='custom'?'bad':'ok';
-        pmDelLog(`▸ Functional <b>${esc(r.package||'')}</b> — ${esc((r.requirement||'').slice(0,60))} · <b>${esc(r.verdict||'')}</b>${apReview(r.review)}`,vc==='bad'?'warn':'ok');
-      } else if(r.ran==='developer'){
-        pmDelLog('🔧 Technical build complete'+apReview(r.review),'ok');
+      catch(e){pmDelLog('✕ Step call failed: '+esc(e.message),'bad');break;}
+      if(r.status==='done'){pmDelLog(`✓ Delivery complete — ${ranAny?'tasks executed':'nothing to run'}${failed?` · ${failed} failed`:''}.`,failed?'warn':'done');break;}
+      if(r.status==='error'){
+        failed++; consecErr++;
+        const rl=/rate.?limit|429|tokens per minute/i.test(r.error||'');
+        pmDelLog(`✕ ${esc(r.ran)} <b>${esc(r.package||'')}</b> did not execute — ${esc((r.error||'').slice(0,180))}`,'bad');
+        if(rl && consecErr>=2){pmDelLog('⛔ Repeated rate-limit errors — your Anthropic plan is throttling every call. Raise the limit at console.anthropic.com/settings/limits (or set C2P_MAX_OUTPUT_TOKENS). Nothing will execute until then.','warn');break;}
+        if(consecErr>=4){pmDelLog('⛔ Too many consecutive failures — stopping. Check Agent Activity for the cause.','warn');break;}
+        try{const fresh=await api("GET",`/engagements/${eng.id}/pm/deliver`);renderDeliveryBoard(fresh);}catch(_){}
+        continue;   // skip this task, try the next assigned one
       }
-      // refresh board
+      consecErr=0; ranAny=true;
+      if(r.ran==='functional'){
+        const vc=r.verdict==='custom';
+        pmDelLog(`▸ Functional executed <b>${esc(r.package||'')}</b> — ${esc((r.requirement||'').slice(0,60))} · <b>${esc(r.verdict||'')}</b>${apReview(r.review)}`,vc?'warn':'ok');
+      } else if(r.ran==='developer'){
+        pmDelLog('🔧 Technical build executed'+apReview(r.review),'ok');
+      }
       try{const fresh=await api("GET",`/engagements/${eng.id}/pm/deliver`);renderDeliveryBoard(fresh);}catch(_){}
     }
-    if(guard>=40)pmDelLog('⚠ Step limit reached — re-launch to continue.','warn');
+    if(guard>=60)pmDelLog('⚠ Step limit reached — re-launch to continue.','warn');
   } finally {
     if(btn){btn.disabled=false;btn.textContent='▶ Organise & deliver';}
     if(stop)stop.style.display='none';
@@ -1763,7 +1771,9 @@ async function dispatchEngagement(){
   if(!eng)return;const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:80px"></div>`;
   try{const o=await api("POST",`/engagements/${eng.id}/dispatch`,{});
     const rows=(o.assignments||[]).map(a=>`<div class="req-row"><span class="pri pri-${esc(a.priority)}">${esc(a.priority)}</span><span class="rq-text">${esc(a.item)}</span><span class="chip">${esc(a.assign_to)}</span><span class="eff ${a.autonomy==='approval'?'eff-High':'eff-Low'}">${esc(a.autonomy)}</span></div>`).join('');
-    if(host)host.innerHTML=`<div class="sec"><h3>PM delegation</h3>${rows||'<div class="hint">No assignments.</div>'}${o.sequence_notes?`<div class="callout" style="margin-top:8px">${esc(o.sequence_notes)}</div>`:''}${(o.owner_decisions||[]).length?`<div class="set-h" style="margin-top:10px">Needs you</div><ul class="clean warn">${o.owner_decisions.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>`;
+    if(host)host.innerHTML=`<div class="sec"><h3>PM delegation</h3>${rows||'<div class="hint">No assignments.</div>'}${o.sequence_notes?`<div class="callout" style="margin-top:8px">${esc(o.sequence_notes)}</div>`:''}${(o.owner_decisions||[]).length?`<div class="set-h" style="margin-top:10px">Needs you</div><ul class="clean warn">${o.owner_decisions.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
+      <div class="hint" style="margin-top:8px">This is the plan only. To make Functional &amp; Technical actually <b>execute</b> these, run the delivery loop:</div>
+      <button class="btn dark sm" style="margin-top:6px" onclick="runPMDelivery()">▶ Execute the assigned work</button></div>`;
   }catch(e){if(host)host.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 
