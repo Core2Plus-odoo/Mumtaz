@@ -39,6 +39,7 @@ import odoo as odoo_mod
 import industry
 import odoo_knowledge
 import odoo_standard
+import odoo_automation
 import pm_knowledge
 import finance_knowledge
 import ba_knowledge
@@ -532,6 +533,22 @@ def functional(eng_id: str, body: m.FunctionalIn):
         cov = odoo_standard.covered_by(body.requirement)
         if cov:
             out["standard_first_apps"] = cov
+        # Native no-code automation design + standard-flow connection map.
+        auto = odoo_automation.suggest(body.requirement)
+        if auto.get("automation_design") and not out.get("automation_design"):
+            out["automation_design"] = auto["automation_design"]
+        if auto.get("connection_map") and not out.get("connection_map"):
+            out["connection_map"] = auto["connection_map"]
+        # complete the architect structure for locally-classified results
+        if not out.get("configuration") and out.get("recommended_path"):
+            out["configuration"] = [out["recommended_path"]]
+        if out.get("verdict") == "custom" and not out.get("custom"):
+            mods = (out.get("standard_capability") or {}).get("modules") or []
+            base = (mods[0].get("name") if mods else None) or "the closest standard model"
+            out["custom"] = {"needed": True, "inherits": base,
+                             "connection": "Extend via _inherit; reuse standard states, "
+                                           "chatter, activities and sequences — connected to "
+                                           "the standard flow."}
     except Exception:
         pass
     # Chartered-accountant enrichment: attach IFRS/tax/compliance treatment for

@@ -1240,8 +1240,13 @@ const RENDER={
       <div class="sec"><h3>Standard capability</h3><div class="card">${esc(o.standard_capability?.description)}
         <div class="chips" style="margin-top:9px">${(o.standard_capability?.modules||[]).map(m=>`<span class="chip">${esc(m.name)}${m.version_note?' · '+esc(m.version_note):''}</span>`).join('')}</div></div></div>
       ${(o.standard_first_apps||[]).length?`<div class="sec"><h3>Standard-first apps that cover this</h3>${o.standard_first_apps.map(a=>`<div class="req-row"><span class="chip">${esc(a.module)}</span><span class="rq-text"><b>${esc(a.app)}</b> · ${(a.features||[]).map(esc).join('; ')}</span></div>`).join('')}</div>`:''}
+      ${(o.configuration||[]).length?`<div class="sec"><h3>Configuration (settings &amp; master data)</h3><ul class="clean">${o.configuration.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
+      ${(o.automation_design||[]).length?`<div class="sec"><h3>⚙ Native automation (no code)</h3>${o.automation_design.map(a=>`<div class="req-row" style="flex-direction:column;align-items:flex-start;gap:3px"><div style="display:flex;gap:8px;align-items:center"><span class="chip">${esc(a.tool)}</span></div><span class="rq-text" style="font-size:12.5px"><b>Trigger:</b> ${esc(a.trigger)} → <b>Action:</b> ${esc(a.action)}${a.filter?` <span style="color:var(--muted-2)">(${esc(a.filter)})</span>`:''}</span></div>`).join('')}</div>`:''}
+      ${(o.studio||[]).length?`<div class="sec"><h3>Studio (no-code)</h3><ul class="clean">${o.studio.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`:''}
       <div class="sec"><h3>Gap analysis</h3><div class="card">${esc(o.gap_analysis)}</div></div>
       <div class="sec"><h3>Solution options</h3>${opts}</div>
+      ${(o.connection_map||[]).length?`<div class="sec"><h3>🔗 Connection map (standard objects &amp; flow)</h3><div class="chips">${o.connection_map.map(cm=>`<span class="chip" style="font-size:11px">${esc(cm)}</span>`).join('')}</div></div>`:''}
+      ${o.custom&&o.custom.needed?`<div class="callout" style="border-color:var(--rust)"><b style="color:var(--rust)">Custom (on top of standard).</b> Inherits <code>${esc(o.custom.inherits||'a standard model')}</code>. ${esc(o.custom.connection||'')}</div>`:''}
       ${financeBlock(o.finance)}
       ${String(o.source||'').startsWith('knowledge-base')?`<div class="hint" style="color:var(--deep-teal)">⚡ Resolved from built-in Odoo knowledge — no API call.</div>`:''}
       ${o.verdict==='custom'?`<div class="callout" style="border-style:dashed;border-color:var(--rust);background:rgba(194,73,47,.04)"><b style="color:var(--rust)">Custom build required.</b> <button class="btn dark sm" style="margin-left:8px" onclick="goView('developer')">Build in Developer →</button></div>`:''}

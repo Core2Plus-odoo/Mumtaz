@@ -624,3 +624,20 @@ and settings.
   the functional analysis (shown in the UI), proving a standard path before custom.
 - New `GET /odoo/standard-reference` + a console **Odoo Standard** reference view
   (Grounding) so consultants can browse the standard capability.
+
+### Odoo Automation & Configuration Architect ✅
+Adopted the standard-first + native-automation architect discipline end to end:
+- **Functional agent prompt** rewritten as an Odoo Automation & Configuration
+  Architect: the 4-rung ladder (standard config → native no-code automation →
+  Studio → custom-on-top-of-standard, inherit never recreate), connected-to-basics
+  (O2C / P2P / Make chains), and an enriched 8-point output schema (configuration,
+  automation_design [tool·trigger→action·filter], studio, custom {inherits,
+  connection}, connection_map).
+- **`odoo_automation.py`**: the native no-code toolkit (Automation Rules, Server/
+  Scheduled Actions, templates, activities & plans, approvals, sequences) + built-in
+  per-app process automation + the standard integrated flows. `suggest()` produces
+  a first-pass automation design + connection map locally; `digest()` is embedded
+  in the functional/config/developer agents.
+- Every functional analysis (LLM or local) now carries the standard-first apps,
+  configuration steps, native automation design and connection map — rendered in
+  the console.
