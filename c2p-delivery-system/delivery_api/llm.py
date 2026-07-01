@@ -107,17 +107,60 @@ def _is_retryable(exc) -> bool:
                     "APITimeoutError", "OverloadedError", "APIStatusError")
 
 
+def _complete_openai(model: str, system: str, user: str, max_tokens: int) -> dict:
+    """OpenAI-compatible chat completion — works with Ollama, Groq, OpenRouter,
+    LM Studio, vLLM, etc. Point C2P_OPENAI_BASE_URL at any such endpoint to run
+    a FREE local/hosted model instead of paying Anthropic. No SDK dependency."""
+    import json as _json
+    import urllib.request
+    base = os.getenv("C2P_OPENAI_BASE_URL", "").rstrip("/")
+    if not base:
+        raise LLMError("C2P_OPENAI_BASE_URL not set for the openai provider")
+    key = os.getenv("C2P_OPENAI_KEY", "")
+    body = _json.dumps({
+        "model": model, "max_tokens": max_tokens, "temperature": 0.2,
+        "messages": [{"role": "system", "content": system},
+                     {"role": "user", "content": user}],
+    }).encode()
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    req = urllib.request.Request(base + "/chat/completions", data=body, headers=headers)
+    with urllib.request.urlopen(req, timeout=300) as r:
+        data = _json.loads(r.read().decode())
+    text = (data.get("choices") or [{}])[0].get("message", {}).get("content", "") or ""
+    usage = data.get("usage") or {}
+    return {"text": text.strip(), "model": model,
+            "input_tokens": usage.get("prompt_tokens"),
+            "output_tokens": usage.get("completion_tokens")}
+
+
 def _complete(task: str, system: str, user: str, max_tokens: int,
               web_search: bool) -> dict:
     """Provider-agnostic single completion. Returns text + usage metadata.
     Retries transient provider errors (429 rate limit / 5xx / overloaded) with
     exponential backoff, honouring Retry-After."""
     model = model_for(task)
-    if PROVIDER != "anthropic":
-        raise LLMError(f"Unsupported C2P_LLM_PROVIDER '{PROVIDER}'")
+    # No-API mode: skip the model entirely — callers fall back to built-in local
+    # generators (fully free, no Anthropic or any provider).
+    if PROVIDER in ("none", "local", "off", "disabled"):
+        raise LLMError("LLM disabled (C2P_LLM_PROVIDER=none) — using local generators")
 
     if MAX_OUTPUT_TOKENS > 0:
         max_tokens = min(max_tokens, MAX_OUTPUT_TOKENS)
+
+    # OpenAI-compatible providers (Ollama / Groq / OpenRouter / local models).
+    if PROVIDER in ("openai", "openai-compatible", "ollama", "groq", "openrouter"):
+        for attempt in range(LLM_RETRIES + 1):
+            try:
+                return _complete_openai(model, system, user, max_tokens)
+            except Exception:  # noqa: BLE001
+                if attempt >= LLM_RETRIES:
+                    raise
+                time.sleep(min(2 ** attempt, 20))
+
+    if PROVIDER != "anthropic":
+        raise LLMError(f"Unsupported C2P_LLM_PROVIDER '{PROVIDER}'")
 
     # Cache the (stable) system prompt so repeated calls for the same agent only
     # pay full price for it once — big saving across a delivery run's many calls.

@@ -594,3 +594,18 @@ scope summary, workstreams, blockers, next actions, client update, risks)
 deterministically from the engagement state. The `/pm` endpoint now falls back to
 it when the model is unavailable — so the whole Project Manager view (assess,
 estimate, deliver, config) works with zero API.
+
+### Run with NO Anthropic credits — fully local + free-model option ✅
+Two ways to operate without paying Anthropic:
+1. **Fully local (zero API)** — set `C2P_LLM_PROVIDER=none`. `local_agents.py`
+   provides deterministic generators for the last LLM-only stages (presales
+   qualification, requirements catalog, proposal) alongside the existing local
+   paths (BA discovery, functional classification, estimate, project plan, config
+   ops, documents, PM status, Client-Q&A compile). The whole delivery pipeline
+   runs on built-in Odoo/BA/PM/finance knowledge — templated but complete and
+   professional — at zero cost. Only bespoke module CODE still benefits from a model.
+2. **Free/local model** — set `C2P_LLM_PROVIDER=openai` + `C2P_OPENAI_BASE_URL`
+   (Ollama `http://localhost:11434/v1`, or a free API like Groq/OpenRouter) +
+   `C2P_MODEL`. `llm._complete_openai` speaks the OpenAI chat API (no SDK dep), so
+   every agent uses that free model instead of Anthropic.
+Every stage endpoint is now LLM-first with a local fallback, so nothing hard-fails.

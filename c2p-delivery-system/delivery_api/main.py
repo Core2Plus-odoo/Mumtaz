@@ -44,6 +44,7 @@ import ba_knowledge
 import doc_templates
 import config_knowledge
 import config_ops
+import local_agents
 import llm
 import policy
 import channels
@@ -280,7 +281,13 @@ def presales(eng_id: str, body: m.PresalesIn):
         + industry.playbook_block(body.industry)
         + ks.context_block(eng.account_id, body.industry or eng.company)
     )
-    out = run_agent("presales", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("presales", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        if LOCAL_INTELLIGENCE:
+            out = local_agents.build_presales(eng.company, body.industry, body.country, body.notes)
+        else:
+            raise
     eng.stages["presales"] = out
     result = _commit(eng, "presales", out)
     # Compound the account's knowledge with what qualification learned.
@@ -364,7 +371,13 @@ def ba_requirements(eng_id: str, body: dict | None = None):
         + ks.context_block(eng.account_id, "requirements scope modules")
         + _client_answers_block(eng)
     )
-    out = run_agent("ba", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("ba", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        if LOCAL_INTELLIGENCE:
+            out = local_agents.build_catalog(eng)
+        else:
+            raise
     eng.stages["ba_requirements"] = out
     store.save(eng)
     if eng.account_id:
@@ -399,7 +412,13 @@ def proposal(eng_id: str, body: m.ProposalIn):
         + _estimate_block(eng)
         + _client_answers_block(eng)
     )
-    out = run_agent("proposal", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("proposal", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        if LOCAL_INTELLIGENCE:
+            out = local_agents.build_proposal(eng)
+        else:
+            raise
     eng.stages["proposal"] = out
     return _commit(eng, "proposal", out)
 
@@ -1700,7 +1719,21 @@ def compile_clarifications(eng_id: str):
         f"Questions the client has ALREADY answered (never ask these again):\n{prior}\n\n"
         "Compile the consolidated client RFI JSON."
     )
-    out = run_agent("clarifier", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("clarifier", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        # API down: gather open items from the stages ourselves — no model.
+        if not LOCAL_INTELLIGENCE:
+            raise
+        items = []
+        for q in (eng.stages.get("ba_requirements") or {}).get("open_questions") or []:
+            items.append({"question": q, "theme": "Requirements", "waiting_agent": "functional",
+                          "blocks": "medium"})
+        for q in (eng.stages.get("ba_discovery") or {}).get("key_decisions_for_client") or []:
+            items.append({"question": q, "theme": "Key decision", "waiting_agent": "project",
+                          "blocks": "high"})
+        out = {"summary": f"{len(items)} open item(s) gathered from the analysis for client input.",
+               "questions": items}
     qs: list[dict] = []
     seen: set[str] = set()
     for q in answered:                               # keep answered items
