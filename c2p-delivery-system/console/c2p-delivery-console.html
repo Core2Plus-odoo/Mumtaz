@@ -802,35 +802,55 @@ async function linkOdooDb(db){
     else toast('Link failed: '+e.message,'bad');
   }
 }
+function navBtn(view,ico,name,badge){
+  return `<button class="nav-item ${activeView===view?'active':''}" onclick="goView('${view}')"><span class="ni-ico">${ico}</span><span class="ni-name">${name}</span>${badge||''}</button>`;
+}
+function stageBtn(sid){
+  const s=STAGES.find(x=>x.id===sid);if(!s)return '';
+  const done=stageDone(s.id),run=running===s.id;
+  const st=run?`<span class="ni-st running"></span>`:done?`<span class="ni-st done">✓</span>`:`<span class="ni-st"></span>`;
+  const cnt=s.id==='functional'&&Array.isArray(eng?.stages?.functional)&&eng.stages.functional.length?`<span class="ni-count">${eng.stages.functional.length}</span>`:'';
+  return `<button class="nav-item ${activeView===s.id?'active':''}" onclick="goView('${s.id}')"><span class="ni-ico">${s.ico}</span><span class="ni-name">${s.name}</span>${cnt||st}</button>`;
+}
+function navSec(t){return `<div class="nav-sec">${t}</div>`;}
 function renderNav(){
   const nav=document.getElementById('nav');
-  let html=`<button class="nav-item ${activeView==='cockpit'?'active':''}" onclick="goView('cockpit')"><span class="ni-ico">◉</span><span class="ni-name">Agency Cockpit</span></button>`;
-  html+=`<button class="nav-item ${activeView==='overview'?'active':''}" onclick="goView('overview')"><span class="ni-ico">▦</span><span class="ni-name">Overview</span></button>`;
-  html+=`<button class="nav-item ${activeView==='pm'?'active':''}" onclick="goView('pm')"><span class="ni-ico">◑</span><span class="ni-name">Project Manager</span></button>`;
-  html+=`<button class="nav-item ${activeView==='ba'?'active':''}" onclick="goView('ba')"><span class="ni-ico">◈</span><span class="ni-name">Business Analyst</span></button>`;
-  html+=`<button class="nav-item ${activeView==='execution'?'active':''}" onclick="goView('execution')"><span class="ni-ico">▤</span><span class="ni-name">Execution</span></button>`;
-  html+=`<button class="nav-item ${activeView==='documents'?'active':''}" onclick="goView('documents')"><span class="ni-ico">▧</span><span class="ni-name">Documents</span></button>`;
-  html+=`<button class="nav-item ${activeView==='clarify'?'active':''}" onclick="goView('clarify')"><span class="ni-ico">❔</span><span class="ni-name">Client Q&amp;A</span>${clarifyBadge()}</button>`;
-  let lastGroup="";
-  STAGES.forEach(s=>{
-    if(s.group!==lastGroup){html+=`<div class="nav-sec">${s.group}</div>`;lastGroup=s.group;}
-    const done=stageDone(s.id),run=running===s.id;
-    const st=run?`<span class="ni-st running"></span>`:done?`<span class="ni-st done">✓</span>`:`<span class="ni-st"></span>`;
-    const cnt=s.id==='functional'&&Array.isArray(eng?.stages?.functional)&&eng.stages.functional.length?`<span class="ni-count">${eng.stages.functional.length}</span>`:'';
-    html+=`<button class="nav-item ${activeView===s.id?'active':''}" onclick="goView('${s.id}')"><span class="ni-ico">${s.ico}</span><span class="ni-name">${s.name}</span>${cnt||st}</button>`;
-  });
-  html+=`<div class="nav-sec">Clients</div>
-    <button class="nav-item ${activeView==='leads'?'active':''}" onclick="goView('leads')"><span class="ni-ico">⊕</span><span class="ni-name">Leads CRM</span></button>
-    <button class="nav-item ${activeView==='accounts'?'active':''}" onclick="goView('accounts')"><span class="ni-ico">◍</span><span class="ni-name">Accounts</span></button>
-    <button class="nav-item ${activeView==='comms'?'active':''}" onclick="goView('comms')"><span class="ni-ico">✉</span><span class="ni-name">Communications</span></button>
-    <button class="nav-item ${activeView==='approvals'?'active':''}" onclick="goView('approvals')"><span class="ni-ico">✓</span><span class="ni-name">Approvals</span>${approvalsBadge()}</button>`;
-  html+=`<div class="nav-sec">Grounding</div>
-    <button class="nav-item ${activeView==='odooconn'?'active':''}" onclick="goView('odooconn')"><span class="ni-ico">🔒</span><span class="ni-name">Odoo Connection</span></button>
-    <button class="nav-item ${activeView==='githubconn'?'active':''}" onclick="goView('githubconn')"><span class="ni-ico">⎇</span><span class="ni-name">GitHub Repo</span></button>
-    <button class="nav-item ${activeView==='odoo'?'active':''}" onclick="goView('odoo')"><span class="ni-ico">⛁</span><span class="ni-name">Odoo Explorer</span></button>`;
-  html+=`<div class="nav-sec">Admin</div>
-    <button class="nav-item ${activeView==='activity'?'active':''}" onclick="goView('activity')"><span class="ni-ico">◷</span><span class="ni-name">Agent Activity</span></button>
-    <button class="nav-item ${activeView==='settings'?'active':''}" onclick="goView('settings')"><span class="ni-ico">⚙</span><span class="ni-name">Branding &amp; Settings</span></button>`;
+  // ordered by the real business flow: win → plan → deliver → clients → grounding → admin
+  const html=[
+    navBtn('cockpit','◉','Agency Cockpit'),
+    navBtn('overview','▦','Overview'),
+
+    navSec('1 · Win the work'),
+    navBtn('leads','⊕','Leads CRM'),
+    stageBtn('presales'),
+    stageBtn('proposal'),
+
+    navSec('2 · Plan &amp; gather'),
+    navBtn('ba','◈','Business Analyst'),
+    navBtn('clarify','❔','Client Q&amp;A',clarifyBadge()),
+    stageBtn('project'),
+    navBtn('pm','◑','Project Manager'),
+
+    navSec('3 · Deliver'),
+    stageBtn('functional'),
+    stageBtn('developer'),
+    navBtn('execution','▤','Execution'),
+    navBtn('documents','▧','Documents'),
+
+    navSec('Clients'),
+    navBtn('accounts','◍','Accounts'),
+    navBtn('comms','✉','Communications'),
+    navBtn('approvals','✓','Approvals',approvalsBadge()),
+
+    navSec('Grounding'),
+    navBtn('odooconn','🔒','Odoo Connection'),
+    navBtn('githubconn','⎇','GitHub Repo'),
+    navBtn('odoo','⛁','Odoo Explorer'),
+
+    navSec('Admin'),
+    navBtn('activity','◷','Agent Activity'),
+    navBtn('settings','⚙','Settings'),
+  ].join('');
   nav.innerHTML=html;
 }
 function renderTopbar(){
