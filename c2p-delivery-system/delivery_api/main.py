@@ -1132,7 +1132,19 @@ def project_manager(eng_id: str):
     content = (f"Full project scope:\n{json.dumps(scope, indent=2)}\n\n"
                "As the Project Manager, assess status and produce the management report JSON."
                + ks.context_block(eng.account_id, "project status"))
-    out = run_agent("pm", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("pm", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        # API down: the PM assesses status itself from the engagement state.
+        if LOCAL_INTELLIGENCE:
+            out = pm_knowledge.build_status(
+                eng, m.STAGES,
+                pending_labels=[f"{a.action_type} awaiting approval" for a in pending],
+                approval_types={a.action_type for a in
+                                store.list_approvals(None, limit=300)
+                                if a.engagement_id == eng.id})
+        else:
+            raise
     return {"report": out, "scope": scope}
 
 

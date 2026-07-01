@@ -587,3 +587,10 @@ console a distinctive, on-brand identity:
   (created / exists / failed). The functional/technical consultants now DO the
   configuration in live Odoo, not just describe it. Developer deploy already
   pushes modules to the GitHub addons repo. Live writes remain gated/confirmed.
+
+### PM status assessment runs locally too ✅
+`pm_knowledge.build_status()` produces the PM management report (RAG, completion %,
+scope summary, workstreams, blockers, next actions, client update, risks)
+deterministically from the engagement state. The `/pm` endpoint now falls back to
+it when the model is unavailable — so the whole Project Manager view (assess,
+estimate, deliver, config) works with zero API.

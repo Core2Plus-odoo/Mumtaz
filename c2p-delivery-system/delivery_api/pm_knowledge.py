@@ -127,6 +127,68 @@ GOVERNANCE = {
 }
 
 
+def build_status(eng, stages_order=None, pending_labels=None, approval_types=None) -> dict:
+    """Deterministic PM status report from the engagement state — no API call."""
+    stages_order = stages_order or ["presales", "proposal", "project", "functional", "developer"]
+    st = eng.stages or {}
+    approval_types = approval_types or set()
+    _done = lambda s: bool(st.get(s)) or (s in st and st.get(s) is not None)
+    done_stages = [s for s in stages_order if _done(s)]
+    pct = round(len(done_stages) / len(stages_order) * 100)
+
+    plan = st.get("delivery_plan") or {}
+    pkgs = plan.get("packages") or []
+    pkg_done = len([p for p in pkgs if p.get("status") == "done"])
+
+    blockers = list(pending_labels or [])
+    est = st.get("estimate") or {}
+
+    next_stage = next((s for s in stages_order if not _done(s)), None)
+    next_actions = []
+    if next_stage:
+        next_actions.append({"action": f"Run the {next_stage.title()} stage", "owner": "Delivery team"})
+    if pkgs and pkg_done < len(pkgs):
+        next_actions.append({"action": f"Continue delivery — {pkg_done}/{len(pkgs)} requirements executed",
+                             "owner": "Functional/Technical"})
+    if st.get("developer") and "code_deploy" not in approval_types:
+        next_actions.append({"action": "Approve module deploy to the addons repo", "owner": "Sponsor"})
+    if getattr(eng, "odoo_db", None) and not st.get("config"):
+        next_actions.append({"action": "Generate & apply the Odoo configuration", "owner": "Functional"})
+
+    workstreams = [{"name": s.title(),
+                    "status": "done" if _done(s) else ("in_progress" if s == next_stage else "not_started"),
+                    "owner": {"presales": "Presales", "proposal": "Solution Architect",
+                              "project": "PM", "functional": "Functional", "developer": "Developer"}.get(s, ""),
+                    "note": ""} for s in stages_order]
+
+    rag = "green"
+    if blockers:
+        rag = "amber"
+    if len(blockers) >= 3:
+        rag = "red"
+
+    customs = len([f for f in (st.get("functional") or []) if f.get("verdict") == "custom"])
+    return {
+        "rag": rag,
+        "completion_pct": pct,
+        "scope_summary": (f"{eng.company} Odoo ERP implementation — {len(done_stages)}/{len(stages_order)} "
+                          f"stages complete"
+                          + (f", est. {est.get('total_man_days')} md / {est.get('duration_weeks')} wks" if est else "")
+                          + (f", {customs} custom build(s)" if customs else "") + "."),
+        "in_progress": [next_stage.title()] if next_stage else [],
+        "done": [s.title() for s in done_stages],
+        "blockers": blockers or (["Awaiting API credit for generative stages"] if not st.get("proposal") else []),
+        "workstreams": workstreams,
+        "next_actions": next_actions or [{"action": "Pipeline complete — proceed to go-live activities",
+                                          "owner": "PM"}],
+        "risks": [r[0] for r in RISK_REGISTER[:4]],
+        "client_update": f"The {eng.company} implementation is {pct}% through the delivery pipeline. "
+                         + (blockers[0] if blockers else "On track; next up: "
+                            + (next_stage.title() if next_stage else "go-live") + "."),
+        "source": "pm-knowledge",
+    }
+
+
 def methodology() -> str:
     """Compact implementation-methodology reference for embedding in prompts."""
     phases = "; ".join(f"{i+1}. {p['phase']}" for i, p in enumerate(METHODOLOGY))
