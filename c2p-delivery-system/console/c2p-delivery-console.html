@@ -866,7 +866,8 @@ function renderTopbar(){
   prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';
   actions.innerHTML=`
     <button class="btn ghost sm" onclick="exportEngagement()" title="Download engagement JSON">⤓ Export</button>
-    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Generate Document</button>`;
+    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Generate Document</button>
+    ${(adminAuth||multitenant)?`<button class="btn ghost sm" onclick="logout()" title="Sign out">⎋ Sign out</button>`:''}`;
 }
 function goView(v){activeView=v;toggleSidebar(false);renderNav();renderTopbar();renderView();window.scrollTo({top:0,behavior:'smooth'});}
 function toggleSidebar(open){document.getElementById('sidebar').classList.toggle('open',open);document.getElementById('scrim').classList.toggle('open',open);}
