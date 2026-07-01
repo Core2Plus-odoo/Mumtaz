@@ -204,6 +204,23 @@ def _complete(task: str, system: str, user: str, max_tokens: int,
     }
 
 
+def log_local(store, task: str, out: Optional[dict],
+              account_id: Optional[str] = None, engagement_id: Optional[str] = None) -> None:
+    """Record a local (no-model) generation as a clean success in agent_runs, so
+    the Agent Activity log reflects the work done offline."""
+    if store is None or not hasattr(store, "log_run"):
+        return
+    try:
+        store.log_run({
+            "task": task, "model": "local (built-in knowledge)",
+            "account_id": account_id, "engagement_id": engagement_id,
+            "system": "local", "input": "", "output": out, "raw_text": "",
+            "input_tokens": 0, "output_tokens": 0, "ms": 0, "error": None,
+        })
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def run_json(task: str, system: str, user: str, max_tokens: int = 2048,
              web_search: bool = False, store=None,
              account_id: Optional[str] = None,
@@ -236,7 +253,10 @@ def run_json(task: str, system: str, user: str, max_tokens: int = 2048,
         err = f"{type(exc).__name__}: {exc}"
         raise
     finally:
-        if store is not None and hasattr(store, "log_run"):
+        # In no-API mode the model isn't really attempted — don't log a noisy
+        # "error" row; the caller logs the local generation as a clean success.
+        _disabled = PROVIDER in ("none", "local", "off", "disabled")
+        if store is not None and hasattr(store, "log_run") and not _disabled:
             try:
                 store.log_run({
                     "task": task,

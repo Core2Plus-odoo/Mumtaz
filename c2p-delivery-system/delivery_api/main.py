@@ -286,6 +286,7 @@ def presales(eng_id: str, body: m.PresalesIn):
     except HTTPException:
         if LOCAL_INTELLIGENCE:
             out = local_agents.build_presales(eng.company, body.industry, body.country, body.notes)
+            llm.log_local(store, "presales", out, eng.account_id, eng.id)
         else:
             raise
     eng.stages["presales"] = out
@@ -336,6 +337,7 @@ def ba_discovery(eng_id: str, body: dict | None = None):
         # API down: the BA runs the discovery itself from the built-in framework.
         if LOCAL_INTELLIGENCE:
             out = ba_knowledge.build_discovery(eng.company, _industry_for(eng))
+            llm.log_local(store, "ba_discovery", out, eng.account_id, eng.id)
         else:
             raise
     eng.stages["ba_discovery"] = out
@@ -376,6 +378,7 @@ def ba_requirements(eng_id: str, body: dict | None = None):
     except HTTPException:
         if LOCAL_INTELLIGENCE:
             out = local_agents.build_catalog(eng)
+            llm.log_local(store, "ba", out, eng.account_id, eng.id)
         else:
             raise
     eng.stages["ba_requirements"] = out
@@ -417,6 +420,7 @@ def proposal(eng_id: str, body: m.ProposalIn):
     except HTTPException:
         if LOCAL_INTELLIGENCE:
             out = local_agents.build_proposal(eng)
+            llm.log_local(store, "proposal", out, eng.account_id, eng.id)
         else:
             raise
     eng.stages["proposal"] = out
@@ -449,6 +453,7 @@ def project(eng_id: str, body: m.ProjectIn):
         # API down: the PM builds the implementation plan from the methodology.
         if LOCAL_INTELLIGENCE:
             out = pm_knowledge.build_project_plan(eng)
+            llm.log_local(store, "project", out, eng.account_id, eng.id)
         else:
             raise
     eng.stages["project"] = out
@@ -494,6 +499,7 @@ def functional(eng_id: str, body: m.FunctionalIn):
     out = None
     if LOCAL_INTELLIGENCE and local["result"] and local["confidence"] >= LOCAL_CONFIDENCE:
         out = local["result"]
+        llm.log_local(store, "functional", out, eng.account_id, eng.id)
     else:
         content = (
             f"Requirement:\n{body.requirement}\n\nContext:\n"
@@ -1066,6 +1072,7 @@ def config_apply(eng_id: str, body: dict | None = None):
     except HTTPException:
         if LOCAL_INTELLIGENCE:
             out = config_knowledge.build_plan(eng, modules)
+            llm.log_local(store, "config", out, eng.account_id, eng.id)
         else:
             raise
     # The consultant actually DOES the work: generate real, safe, idempotent Odoo
@@ -1162,6 +1169,7 @@ def project_manager(eng_id: str):
                 approval_types={a.action_type for a in
                                 store.list_approvals(None, limit=300)
                                 if a.engagement_id == eng.id})
+            llm.log_local(store, "pm", out, eng.account_id, eng.id)
         else:
             raise
     return {"report": out, "scope": scope}
