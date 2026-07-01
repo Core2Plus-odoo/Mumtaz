@@ -609,3 +609,18 @@ Two ways to operate without paying Anthropic:
    `C2P_MODEL`. `llm._complete_openai` speaks the OpenAI chat API (no SDK dep), so
    every agent uses that free model instead of Anthropic.
 Every stage endpoint is now LLM-first with a local fallback, so nothing hard-fails.
+
+### Odoo standard-first specialisation ✅
+`odoo_standard.py` — a comprehensive per-app catalog of standard Odoo functionality
+(v17–v19): CRM, Sales, Purchase, Inventory, Manufacturing, Accounting, Project, HR,
+POS, Website/eCommerce, Helpdesk, Subscriptions, Sign/Approvals/Documents, Studio,
+Automation, plus Rental/FSM/Quality/Marketing/etc. — with each app's key features
+and settings.
+- `digest()` (the full standard-first reference) is now embedded in the functional,
+  ba, ba_discovery, developer, proposal, config and presales agents, so every agent
+  reasons from what standard Odoo already does — configure standard first, then
+  Studio, then custom on TOP of standard.
+- `covered_by()` attaches the standard apps/features that meet each requirement to
+  the functional analysis (shown in the UI), proving a standard path before custom.
+- New `GET /odoo/standard-reference` + a console **Odoo Standard** reference view
+  (Grounding) so consultants can browse the standard capability.

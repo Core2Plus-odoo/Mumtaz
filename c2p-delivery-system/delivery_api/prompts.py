@@ -561,26 +561,28 @@ import os as _os
 if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
     try:
         import odoo_knowledge as _ok
+        import odoo_standard as _os_
         import finance_knowledge as _fk
         import pm_knowledge as _pk
         import ba_knowledge as _bak
 
         _ODOO = _ok.capability_digest()
+        _STD = _os_.digest()               # comprehensive standard-first reference
         _FIN = _fk.digest()
         _PM = _pk.digest()
         _METH = _pk.methodology()
         _BA = _bak.digest()
 
         _AGENT_KNOWLEDGE = {
-            "functional": _ODOO + "\n\n" + _FIN,
-            "ba": _ODOO + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA,
-            "ba_discovery": _BA + "\n\n" + _ODOO,
-            "developer": _ODOO,
-            "proposal": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
+            "functional": _STD + "\n\n" + _ODOO + "\n\n" + _FIN,
+            "ba": _STD + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA,
+            "ba_discovery": _BA + "\n\n" + _STD,
+            "developer": _STD + "\n\n" + _ODOO,
+            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD,
             "project": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
-            "config": _ODOO + "\n\n" + _FIN,
+            "config": _STD + "\n\n" + _FIN,
             "dispatch": _ODOO,
-            "presales": _ODOO + "\n\n" + _BA,
+            "presales": _STD + "\n\n" + _BA,
             "pm": _PM + "\n\n" + _METH,
         }
         for _k, _v in _AGENT_KNOWLEDGE.items():

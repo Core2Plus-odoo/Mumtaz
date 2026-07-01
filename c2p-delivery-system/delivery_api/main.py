@@ -38,6 +38,7 @@ from odoo import get_client
 import odoo as odoo_mod
 import industry
 import odoo_knowledge
+import odoo_standard
 import pm_knowledge
 import finance_knowledge
 import ba_knowledge
@@ -525,6 +526,14 @@ def functional(eng_id: str, body: m.FunctionalIn):
                 out = {**local["result"], "source": "knowledge-base-fallback"}
             else:
                 out = _deferred_functional(body.requirement, str(exc.detail))
+    # Standard-first: attach the standard Odoo apps/features that plausibly cover
+    # this requirement, so the record proves a standard path before any custom.
+    try:
+        cov = odoo_standard.covered_by(body.requirement)
+        if cov:
+            out["standard_first_apps"] = cov
+    except Exception:
+        pass
     # Chartered-accountant enrichment: attach IFRS/tax/compliance treatment for
     # any finance requirement — built-in knowledge, no API call.
     try:
@@ -2505,6 +2514,12 @@ def health():
             "agents": list(PROMPTS.keys()), "web_search": llm.WEB_SEARCH_ENABLED,
             "multitenant": tenancy.MULTITENANT, "admin_auth": tenancy.ADMIN_AUTH,
             "stripe": stripe_billing.configured()}
+
+
+@app.get("/odoo/standard-reference")
+def odoo_standard_reference():
+    """The full Odoo standard-functionality catalog the agents configure from."""
+    return {"apps": odoo_standard.full_reference()}
 
 
 @app.get("/config")

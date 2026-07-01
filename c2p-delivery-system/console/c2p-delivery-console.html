@@ -843,6 +843,7 @@ function renderNav(){
     navBtn('approvals','✓','Approvals',approvalsBadge()),
 
     navSec('Grounding'),
+    navBtn('odoostd','◈','Odoo Standard'),
     navBtn('odooconn','🔒','Odoo Connection'),
     navBtn('githubconn','⎇','GitHub Repo'),
     navBtn('odoo','⛁','Odoo Explorer'),
@@ -886,6 +887,7 @@ function renderView(){
   if(activeView==='leads')return renderLeads(c);
   if(activeView==='accounts')return renderAccounts(c);
   if(activeView==='odooconn')return renderOdooConn(c);
+  if(activeView==='odoostd')return renderStandardRef(c);
   if(activeView==='githubconn')return renderGithubConn(c);
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
@@ -1237,6 +1239,7 @@ const RENDER={
       <div class="ladder">${ladder}</div>
       <div class="sec"><h3>Standard capability</h3><div class="card">${esc(o.standard_capability?.description)}
         <div class="chips" style="margin-top:9px">${(o.standard_capability?.modules||[]).map(m=>`<span class="chip">${esc(m.name)}${m.version_note?' · '+esc(m.version_note):''}</span>`).join('')}</div></div></div>
+      ${(o.standard_first_apps||[]).length?`<div class="sec"><h3>Standard-first apps that cover this</h3>${o.standard_first_apps.map(a=>`<div class="req-row"><span class="chip">${esc(a.module)}</span><span class="rq-text"><b>${esc(a.app)}</b> · ${(a.features||[]).map(esc).join('; ')}</span></div>`).join('')}</div>`:''}
       <div class="sec"><h3>Gap analysis</h3><div class="card">${esc(o.gap_analysis)}</div></div>
       <div class="sec"><h3>Solution options</h3>${opts}</div>
       ${financeBlock(o.finance)}
@@ -1411,6 +1414,24 @@ async function testOdooConn(){
   const r=document.getElementById('oc_result');r.textContent='Testing…';
   try{const o=await api("POST","/odoo/connection/test",{db:val('oc_db')||undefined});r.innerHTML=`<span style="color:var(--green)">✓ Connected to ${esc(o.db)} — ${o.modules} installed modules.</span>`;}
   catch(e){r.innerHTML=`<span style="color:var(--rust)">✗ ${esc(e.message)}</span>`;}
+}
+
+/* ---------- Odoo standard-functionality reference ---------- */
+async function renderStandardRef(c){
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>Odoo Standard Functionality</h2><p>The house rule is <b>standard-first</b>: exhaust standard configuration, then Studio (no-code), before any custom code. This is the standard capability the agents configure from.</p></div>
+      <div class="run-area"><button class="btn ghost sm" onclick="renderStandardRef(document.getElementById('content'))">↻</button></div></div>
+    <div class="panel-body" id="stdBody"><div class="skel" style="height:200px"></div></div></div></div>`;
+  try{const r=await api("GET","/odoo/standard-reference");
+    const b=document.getElementById('stdBody');if(!b)return;
+    b.innerHTML=`<div class="callout" style="margin-bottom:12px"><b>Standard-first ladder.</b> 1) Standard configuration → 2) Studio / automated actions (no code) → 3) custom module on <i>top</i> of standard, never replacing it.</div>
+      <div class="doc-grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr))">${(r.apps||[]).map(a=>`
+        <div class="doc-card on" style="align-items:flex-start;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:8px;align-items:center;width:100%"><div class="doc-ic">◈</div><div><div class="doc-name">${esc(a.app)}</div><div class="doc-sub"><span class="chip">${esc(a.module)}</span></div></div></div>
+          <ul class="clean" style="margin:0">${(a.features||[]).map(f=>`<li>${esc(f)}</li>`).join('')}</ul>
+          ${(a.settings||[]).length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${a.settings.map(s=>`<span class="chip" style="font-size:10.5px">${esc(s)}</span>`).join('')}</div>`:''}
+        </div>`).join('')}</div>`;
+  }catch(e){const b=document.getElementById('stdBody');if(b)b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 
 /* ---------- GitHub repo connection ---------- */
