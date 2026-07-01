@@ -1237,6 +1237,9 @@ const RENDER={
         <div style="flex:1;min-width:200px"><div style="font-weight:500;font-size:14px">${esc(o.requirement_summary)}</div>
         <div style="font-size:12.5px;color:var(--muted);margin-top:4px">${esc(o.verdict_rationale)}</div></div></div>
       <div class="ladder">${ladder}</div>
+      ${o.self_corrected?`<div class="callout" style="border-color:rgba(18,192,140,.4);background:rgba(18,192,140,.06);margin-bottom:12px"><b style="color:#0a8a66">🧠 Self-corrected (standard-first).</b> The agent downgraded an over-eager custom verdict — native automation / standard configuration covers this, so no custom build.</div>`:''}
+      ${o.memory?`<div class="hint" style="color:var(--deep-teal);margin-bottom:8px">🧠 Recognised — similar to a prior requirement "${esc((o.memory.requirement||'').slice(0,60))}" (${Math.round((o.memory.similarity||0)*100)}% match, verdict ${esc(o.memory.verdict||'')}).</div>`:''}
+      ${(o.sub_requirements||[]).length?`<div class="sec"><h3>Decomposed into</h3>${o.sub_requirements.map(s=>`<div class="req-row"><span class="rq-text">${esc(s)}</span></div>`).join('')}</div>`:''}
       <div class="sec"><h3>Standard capability</h3><div class="card">${esc(o.standard_capability?.description)}
         <div class="chips" style="margin-top:9px">${(o.standard_capability?.modules||[]).map(m=>`<span class="chip">${esc(m.name)}${m.version_note?' · '+esc(m.version_note):''}</span>`).join('')}</div></div></div>
       ${(o.standard_first_apps||[]).length?`<div class="sec"><h3>Standard-first apps that cover this</h3>${o.standard_first_apps.map(a=>`<div class="req-row"><span class="chip">${esc(a.module)}</span><span class="rq-text"><b>${esc(a.app)}</b> · ${(a.features||[]).map(esc).join('; ')}</span></div>`).join('')}</div>`:''}

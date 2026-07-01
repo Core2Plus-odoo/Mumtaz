@@ -40,6 +40,7 @@ import industry
 import odoo_knowledge
 import odoo_standard
 import odoo_automation
+import agent_brain
 import pm_knowledge
 import finance_knowledge
 import ba_knowledge
@@ -559,6 +560,9 @@ def functional(eng_id: str, body: m.FunctionalIn):
             out["finance"] = fin
     except Exception:
         pass
+    # Smart pass: cross-knowledge self-correction (standard-first enforcement),
+    # compound-requirement decomposition, and memory reuse of prior analyses.
+    agent_brain.enrich(out, body.requirement, eng)
     # Keep a list of analysed requirements rather than overwriting.
     eng.stages.setdefault("functional", []).append(out)
     result = _commit(eng, "functional", out)

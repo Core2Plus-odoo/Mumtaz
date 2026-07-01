@@ -641,3 +641,15 @@ Adopted the standard-first + native-automation architect discipline end to end:
 - Every functional analysis (LLM or local) now carries the standard-first apps,
   configuration steps, native automation design and connection map — rendered in
   the console.
+
+### Smarter agents — cross-knowledge, self-correction, memory ✅
+`agent_brain.py` makes every functional analysis smarter (local or model):
+- **Self-correction (standard-first enforcement)**: downgrades an over-eager
+  "custom"/"studio" verdict to "configurable"/"standard" when native automation or
+  strong standard coverage genuinely applies — unless the requirement carries a real
+  custom signal (tiered logic, integration/connector, commission, bespoke algorithm).
+- **Compound decomposition**: splits multi-part requirements into sub-requirements.
+- **Memory reuse**: recognises requirements similar to ones already analysed on the
+  engagement (keyword overlap) and surfaces the prior verdict.
+Wired into the functional stage; the console shows the self-corrected, memory and
+decomposition signals on each analysis.
