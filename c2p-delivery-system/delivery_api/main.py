@@ -43,6 +43,7 @@ import finance_knowledge
 import ba_knowledge
 import doc_templates
 import config_knowledge
+import config_ops
 import llm
 import policy
 import channels
@@ -1044,26 +1045,37 @@ def config_apply(eng_id: str, body: dict | None = None):
     try:
         out = run_agent("config", content, account_id=eng.account_id, engagement_id=eng.id)
     except HTTPException:
-        # API down: produce a local configuration PLAN (no auto-executable ops),
-        # so the pipeline completes; live writes stay a deliberate gated action.
         if LOCAL_INTELLIGENCE:
             out = config_knowledge.build_plan(eng, modules)
         else:
             raise
-    eng.stages["config"] = out                      # persist the recipe/plan
+    # The consultant actually DOES the work: generate real, safe, idempotent Odoo
+    # operations deterministically from the requirements (CRM stages, sources,
+    # teams, categories) and merge with any the config agent produced.
+    local_ops = config_ops.build_operations(eng) if LOCAL_INTELLIGENCE else []
+    ops = (out.get("operations") or []) + local_ops
+    out["operations"] = ops
+    eng.stages["config"] = out
     store.save(eng)
-    ops = out.get("operations") or []
-    if not ops:                                     # local plan — nothing to auto-apply
+    if not ops:
         return {"recipe": out, "approval": None,
                 "result": {"mode": "plan", "applied": 0,
-                           "note": "Configuration plan generated (no live writes)."}}
+                           "note": "Configuration plan generated (no executable operations found)."}}
     payload = {"engagement_id": eng.id, "operations": ops, "summary": out.get("summary")}
+    # Execute immediately when asked (apply=true) — the consultant does the needful.
+    if body.get("apply"):
+        res = _execute_config_apply(payload, eng.account_id)
+        out["last_apply"] = res
+        eng.stages["config"] = out
+        store.save(eng)
+        return {"recipe": out, "approval": None, "result": res}
+    # Otherwise route through the approval gate (auto-runs if policy allows).
     appr = policy.gate(store, "config_apply", payload, requester_agent="config",
                        account_id=eng.account_id, engagement_id=eng.id)
     if appr is None:
         return {"recipe": out, "approval": None,
                 "result": _execute_config_apply(payload, eng.account_id)}
-    return {"recipe": out, "approval": appr.model_dump()}
+    return {"recipe": out, "approval": appr.model_dump(), "ops_count": len(ops)}
 
 
 @app.post("/engagements/{eng_id}/dispatch")
@@ -1975,6 +1987,15 @@ def _execute_config_apply(payload: dict, account_id: str | None = None) -> dict:
             if method == "create":
                 rid = c.execute(model, "create", vals)
                 results.append({"label": label, "model": model, "id": rid, "ok": True})
+            elif method == "ensure":
+                # idempotent: create only if no record matches the domain
+                ids = c.execute(model, "search", op.get("domain") or [])
+                if ids:
+                    results.append({"label": label, "model": model, "ids": ids,
+                                    "ok": True, "skipped": "already exists"})
+                else:
+                    rid = c.execute(model, "create", vals)
+                    results.append({"label": label, "model": model, "id": rid, "ok": True})
             elif method == "write":
                 ids = c.execute(model, "search", op.get("domain") or [])
                 if ids:

@@ -1970,14 +1970,31 @@ async function configEngagement(){
       const plan=(rec.plan||[]).map(a=>`<div class="req-row" style="flex-direction:column;align-items:flex-start;gap:4px">
         <div style="display:flex;gap:8px;align-items:center;width:100%"><b>${esc(a.area)}</b>${(a.modules||[]).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div>
         <ul class="clean" style="margin:0">${(a.steps||[]).map(s=>`<li>${esc(s)}</li>`).join('')}</ul></div>`).join('');
-      const opsList=(rec.operations||[]).map(o=>`<div class="req-row"><span class="chip">${esc(o.method||'')}</span><span class="rq-text">${esc(o.label||o.model||'')}</span></div>`).join('');
-      host.innerHTML=`<div class="sec"><h3>⚙ Odoo configuration${(r.result||{}).mode==='plan'?' · plan · no API':''}</h3>
+      const ops=rec.operations||[];
+      const opsList=ops.map(o=>`<div class="req-row"><span class="chip">${esc(o.model||'')}</span><span class="rq-text">${esc((o.values&&o.values.name)||o.label||'')}</span></div>`).join('');
+      const applied=(r.result||{}).results||[];
+      const applyRows=applied.map(x=>`<div class="req-row"><span class="eff" style="background:${x.ok?'var(--emerald,#12C08C)':'var(--rust)'};color:#fff">${x.ok?(x.skipped?'exists':'created'):'failed'}</span><span class="rq-text">${esc(x.label||x.model||'')}</span></div>`).join('');
+      host.innerHTML=`<div class="sec"><h3>⚙ Odoo configuration${(r.result||{}).mode==='plan'?' · plan':''}</h3>
         ${rec.summary?`<div class="callout" style="margin-bottom:8px">${esc(rec.summary)}</div>`:''}
-        ${baseline?`<div class="set-h">GCC baseline</div><ul class="clean">${baseline}</ul>`:''}
+        ${baseline?`<div class="set-h">GCC baseline (manual/config)</div><ul class="clean">${baseline}</ul>`:''}
         ${plan?`<div class="set-h" style="margin-top:8px">By area</div>${plan}`:''}
-        ${opsList?`<div class="set-h" style="margin-top:8px">Operations (gated)</div>${opsList}`:''}
+        ${opsList?`<div class="set-h" style="margin-top:10px">Executable operations · ${ops.length}</div>${opsList}
+           <button class="btn primary sm" style="margin-top:8px" onclick="applyConfig()">⚡ Apply these to Odoo now</button>`:''}
+        ${applyRows?`<div class="set-h" style="margin-top:10px">Applied to Odoo · ${(r.result||{}).applied||0}/${(r.result||{}).total||0}</div>${applyRows}`:''}
         ${r.approval?`<button class="btn dark sm" style="margin-top:8px" onclick="goView('approvals')">Review &amp; approve →</button>`:''}</div>`;
     }
+  }catch(e){if(host)host.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function applyConfig(){
+  if(!eng)return;
+  if(!confirm('Apply the configuration to the live Odoo ('+eng.odoo_db+')? Operations are idempotent (create-if-missing).'))return;
+  const host=document.getElementById('dispatchOut');if(host)host.innerHTML=`<div class="skel" style="height:90px"></div>`;
+  try{const r=await api("POST",`/engagements/${eng.id}/config`,{apply:true});
+    const res=r.result||{};
+    toast(`Applied to Odoo · ${res.applied||0}/${res.total||0} operations`,'ok');
+    const applyRows=(res.results||[]).map(x=>`<div class="req-row"><span class="eff" style="background:${x.ok?'#12C08C':'var(--rust)'};color:#fff">${x.ok?(x.skipped?'exists':'created'):'failed'}</span><span class="rq-text">${esc(x.label||x.model||'')}</span>${x.error?`<span class="hint">${esc(x.error)}</span>`:''}</div>`).join('');
+    if(host)host.innerHTML=`<div class="sec"><h3>⚙ Applied to Odoo · ${res.applied||0}/${res.total||0}</h3>${applyRows||'<div class="hint">No operations.</div>'}
+      <button class="btn sm" style="margin-top:8px" onclick="goView('odoo')">Open Odoo Explorer →</button></div>`;
   }catch(e){if(host)host.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 async function estimateEngagement(){

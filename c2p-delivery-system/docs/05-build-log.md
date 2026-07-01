@@ -572,3 +572,18 @@ console a distinctive, on-brand identity:
 - **Functional & Technical execute into the system**: config-apply writes master
   data / tax / stages to live Odoo (gated); deploy pushes modules to the GitHub
   addons repo (Odoo.sh builds) — both already wired and gated.
+
+### Consultants EXECUTE, not just instruct ✅
+- **`config_ops.py`**: a deterministic engine that parses the requirements and
+  emits real, SAFE, IDEMPOTENT Odoo operations on self-contained models —
+  CRM stages, lead sources (utm.source), sales teams, product/contact categories.
+  e.g. "stages: New Enquiry → Qualified → Quoted → Won → Lost" becomes 5
+  `crm.stage` records; the source picklist becomes `utm.source` records.
+- **Execution**: `_execute_config_apply` gained an idempotent `ensure` method
+  (create only if not present — safe to re-run). `config_apply` now merges the
+  local ops with any the config agent produced, persists them, and either applies
+  immediately (`apply:true`) or routes through the approval gate. New console
+  **⚡ Apply these to Odoo now** button (with confirm) shows per-op results
+  (created / exists / failed). The functional/technical consultants now DO the
+  configuration in live Odoo, not just describe it. Developer deploy already
+  pushes modules to the GitHub addons repo. Live writes remain gated/confirmed.
