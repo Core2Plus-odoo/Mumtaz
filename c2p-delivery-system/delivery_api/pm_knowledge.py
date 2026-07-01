@@ -59,6 +59,124 @@ TEAM = [
 ]
 
 
+# --------------------------------------------------------------------------- #
+# Odoo ERP Implementation methodology — the full delivery playbook.
+# --------------------------------------------------------------------------- #
+METHODOLOGY = [
+    dict(phase="Discovery & Analysis", workstream="Analysis",
+         objectives="Understand the business, agree scope, baseline current processes.",
+         activities=["Stakeholder interviews per business area", "As-is process mapping",
+                     "Requirements gathering & prioritisation (MoSCoW)", "Fit-gap against standard Odoo"],
+         deliverables=["Business Requirements Document (BRD)", "Process maps", "Prioritised backlog"],
+         exit="BRD signed off; scope baselined."),
+    dict(phase="Solution Design", workstream="Design",
+         objectives="Design the to-be solution, standard-first; specify configuration and any gaps.",
+         activities=["To-be process design", "Functional specification (FRS)",
+                     "Configuration workbook", "Custom-development specs (only where proven)",
+                     "Integration & data-migration design"],
+         deliverables=["Functional Specification (FRS)", "Config workbook", "Technical design (customs)"],
+         exit="FRS & design signed off."),
+    dict(phase="Configuration & Build", workstream="Build",
+         objectives="Configure modules and build the agreed customisations.",
+         activities=["Configure master data & modules per workbook", "Develop custom modules",
+                     "Build reports & dashboards", "Unit test each build"],
+         deliverables=["Configured system (staging)", "Custom modules", "Reports"],
+         exit="Build complete; unit-tested; ready for data & SIT."),
+    dict(phase="Data Migration", workstream="Data",
+         objectives="Migrate clean master and opening data into Odoo.",
+         activities=["Extract from legacy", "Cleanse & de-duplicate", "Map & transform",
+                     "Load (customers, vendors, products, stock, opening balances)", "Reconcile & validate"],
+         deliverables=["Migration templates", "Loaded & reconciled data", "Validation sign-off"],
+         exit="Data validated and reconciled to source (e.g. trial balance ties)."),
+    dict(phase="Testing & UAT", workstream="Test",
+         objectives="Prove the solution end-to-end and get business sign-off.",
+         activities=["System integration testing (SIT)", "Prepare UAT scripts",
+                     "Business UAT cycles", "Defect triage & fixes", "Performance check"],
+         deliverables=["Test scripts", "Defect log", "UAT sign-off"],
+         exit="UAT signed off; open defects within agreed threshold."),
+    dict(phase="Training & Go-Live", workstream="Deploy",
+         objectives="Prepare users and cut over to production.",
+         activities=["Train-the-trainer & end-user training", "Cutover plan & dry-run",
+                     "Production migration & go/no-go", "Go-live"],
+         deliverables=["Training materials", "Cutover runbook", "Production go-live"],
+         exit="Production live; users trained; cutover checklist complete."),
+    dict(phase="Hypercare", workstream="Support",
+         objectives="Stabilise, support and hand over to BAU.",
+         activities=["On-site/near support (typically 2 weeks)", "Rapid defect resolution",
+                     "KPI monitoring", "Handover to support"],
+         deliverables=["Hypercare log", "Lessons learned", "Support handover"],
+         exit="Stable operation; handover to support/BAU."),
+]
+
+RISK_REGISTER = [
+    ("Poor/late data quality delays go-live", "High", "Get sample data in discovery; parallel cleansing workstream."),
+    ("Scope creep / evolving requirements", "High", "Baseline at design sign-off; change-request gate with impact assessment."),
+    ("Low user adoption", "Medium", "Early involvement, role-based training, super-users, phased rollout."),
+    ("Integration complexity underestimated", "Medium", "Prototype integrations early; agree owners and SLAs."),
+    ("Over-customisation increases cost & upgrade risk", "Medium", "Standard-first; challenge every custom; Studio before code."),
+    ("Insufficient client resource for UAT/sign-off", "Medium", "Name owners in the charter; schedule UAT windows upfront."),
+    ("Statutory/VAT/e-invoicing compliance gaps", "Medium", "Validate with the client's auditor; use localisation modules."),
+    ("Cutover issues at go-live", "Medium", "Cutover dry-run; go/no-go checklist; rollback plan."),
+]
+
+GOVERNANCE = {
+    "cadence": "Weekly delivery status + fortnightly steering committee.",
+    "steering": "C2P Delivery Lead + Client Sponsor + workstream owners; decisions and risks escalated here.",
+    "reporting": "Weekly RAG status (scope/schedule/budget/risks), open decisions, and next-week plan.",
+    "change_control": "All scope changes via a change request with effort/cost/schedule impact and sponsor approval.",
+}
+
+
+def methodology() -> str:
+    """Compact implementation-methodology reference for embedding in prompts."""
+    phases = "; ".join(f"{i+1}. {p['phase']}" for i, p in enumerate(METHODOLOGY))
+    return ("ODOO ERP IMPLEMENTATION METHODOLOGY (C2P). Phased delivery: " + phases +
+            ". Each phase has clear deliverables and exit criteria; standard-Odoo-first; "
+            "data quality is the usual critical path; weekly RAG + steering governance; "
+            "scope baselined at design sign-off with a change-request gate; 2-week hypercare.")
+
+
+def build_project_plan(eng) -> dict:
+    """Generate a full implementation project plan (the 'project' stage shape)
+    from the estimate + methodology — NO API call."""
+    est = eng.stages.get("estimate") or {}
+    tl = {t.get("phase"): t for t in (est.get("timeline") or [])}
+    reqs = (eng.stages.get("ba_requirements") or {}).get("functional_requirements") or []
+    customs = [r for r in reqs if (r.get("odoo_fit") in ("custom", "studio"))]
+
+    phases = []
+    for m in METHODOLOGY:
+        # match methodology phase to the estimate's timeline where possible
+        wk = next((t.get("weeks") for name, t in tl.items()
+                   if name and (name.split()[0].lower() in m["phase"].lower()
+                                or m["phase"].split()[0].lower() in name.lower())), None)
+        tasks = [{"name": a, "workstream": m["workstream"],
+                  "owner_role": ("Developer" if m["workstream"] == "Build" and "custom" in a.lower()
+                                 else "Functional Consultant" if m["workstream"] in ("Analysis", "Design", "Build")
+                                 else "PM" if m["workstream"] == "Deploy" else "Consultant"),
+                  "depends_on": ""}
+                 for a in m["activities"]]
+        phases.append({"name": m["phase"], "weeks": wk or 2,
+                       "milestone": m["exit"], "tasks": tasks})
+
+    return {
+        "project_name": f"{eng.company} — Odoo ERP Implementation",
+        "phases": phases,
+        "raid": {
+            "risks": [f"{r[0]} ({r[1]}) — {r[2]}" for r in RISK_REGISTER],
+            "assumptions": ["Standard Odoo where it fits; custom only where proven.",
+                            "Client provides timely data, sign-offs and UAT resources.",
+                            "One production go-live; phased rollout for large scope."],
+            "issues": [],
+            "dependencies": ["Timely, clean legacy data", "Named client owners for UAT/sign-off",
+                             "Access/credentials for integrations"],
+        },
+        "governance": GOVERNANCE,
+        "custom_builds": len(customs),
+        "source": "pm-knowledge",
+    }
+
+
 def digest() -> str:
     """A compact PM estimating reference to embed in an agent's system prompt."""
     fit = "; ".join(f"{k}={v}md" for k, v in FIT_MD.items())

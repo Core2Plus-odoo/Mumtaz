@@ -563,21 +563,25 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         import odoo_knowledge as _ok
         import finance_knowledge as _fk
         import pm_knowledge as _pk
+        import ba_knowledge as _bak
 
         _ODOO = _ok.capability_digest()
         _FIN = _fk.digest()
         _PM = _pk.digest()
+        _METH = _pk.methodology()
+        _BA = _bak.digest()
 
         _AGENT_KNOWLEDGE = {
             "functional": _ODOO + "\n\n" + _FIN,
-            "ba": _ODOO + "\n\n" + _FIN + "\n\n" + _PM,
-            "ba_discovery": _ODOO + "\n\n" + _FIN,
+            "ba": _ODOO + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA,
+            "ba_discovery": _BA + "\n\n" + _ODOO,
             "developer": _ODOO,
-            "proposal": _PM + "\n\n" + _ODOO,
-            "project": _PM + "\n\n" + _ODOO,
+            "proposal": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
+            "project": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
             "config": _ODOO + "\n\n" + _FIN,
             "dispatch": _ODOO,
-            "presales": _ODOO,
+            "presales": _ODOO + "\n\n" + _BA,
+            "pm": _PM + "\n\n" + _METH,
         }
         for _k, _v in _AGENT_KNOWLEDGE.items():
             if _k in PROMPTS:

@@ -40,6 +40,7 @@ import industry
 import odoo_knowledge
 import pm_knowledge
 import finance_knowledge
+import ba_knowledge
 import doc_templates
 import config_knowledge
 import llm
@@ -321,7 +322,14 @@ def ba_discovery(eng_id: str, body: dict | None = None):
         "Produce the discovery plan JSON."
         + industry.playbook_block(_industry_for(eng))
     )
-    out = run_agent("ba_discovery", content, account_id=eng.account_id, engagement_id=eng.id)
+    try:
+        out = run_agent("ba_discovery", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        # API down: the BA runs the discovery itself from the built-in framework.
+        if LOCAL_INTELLIGENCE:
+            out = ba_knowledge.build_discovery(eng.company, _industry_for(eng))
+        else:
+            raise
     eng.stages["ba_discovery"] = out
     store.save(eng)
     pushed = 0
@@ -410,7 +418,19 @@ def project(eng_id: str, body: m.ProjectIn):
         + _ba_requirements_block(eng)
         + _client_answers_block(eng)
     )
-    out = run_agent("project", content, account_id=eng.account_id, engagement_id=eng.id)
+    if not eng.stages.get("estimate"):                 # ground the plan in the estimate
+        reqs = _estimate_requirements(eng)
+        if reqs:
+            eng.stages["estimate"] = pm_knowledge.estimate(reqs)
+            store.save(eng)
+    try:
+        out = run_agent("project", content, account_id=eng.account_id, engagement_id=eng.id)
+    except HTTPException:
+        # API down: the PM builds the implementation plan from the methodology.
+        if LOCAL_INTELLIGENCE:
+            out = pm_knowledge.build_project_plan(eng)
+        else:
+            raise
     eng.stages["project"] = out
     return _commit(eng, "project", out)
 

@@ -552,3 +552,23 @@ console a distinctive, on-brand identity:
 - Teal-tinted panel headers, gradient buttons, bolder chips/callouts, gradient
   persona avatars. Verified across Overview and the Business Analyst view; all
   other views inherit it automatically.
+
+### Deeper agent brains — BA discovery framework + PM implementation methodology ✅
+- **Business Analyst** (`ba_knowledge.py`): a full Odoo discovery framework — for
+  every business area (Sales/CRM, Purchase, Inventory, Manufacturing, Finance, HR,
+  Projects, POS, eCommerce) the questions, data, pains and KPIs a senior BA asks,
+  plus cross-cutting reporting/integration/migration/security scope and standard
+  stakeholders. `build_discovery()` assembles an industry-aware plan with no API;
+  the BA discovery stage is now local-first (LLM when available, framework
+  fallback). Framework embedded in the BA agent prompts.
+- **Project Manager** (`pm_knowledge.py`): the complete **Odoo ERP Implementation
+  methodology** — 7 phases (Discovery→Hypercare) each with objectives, activities,
+  deliverables and exit criteria; an 8-item risk register with mitigations; and
+  governance/change-control. `build_project_plan()` generates the full project
+  stage (phases, tasks, RAID, governance) locally; the project stage is now
+  local-first. Methodology embedded in the project/proposal/pm agent prompts.
+- **Documents**: the Project Charter/SOW now include Delivery Methodology,
+  Governance and Risks (RAID) pulled from the methodology.
+- **Functional & Technical execute into the system**: config-apply writes master
+  data / tax / stages to live Odoo (gated); deploy pushes modules to the GitHub
+  addons repo (Odoo.sh builds) — both already wired and gated.

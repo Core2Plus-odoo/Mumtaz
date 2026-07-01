@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pm_knowledge
+
 DOC_TITLES = {
     "brd": "Business Requirements Document",
     "frs": "Functional Specification Document",
@@ -129,17 +131,27 @@ def _sections_charter(eng) -> list:
                        [[t.get("phase", ""), t.get("starts_week", ""), f"{t.get('weeks','')}w"] for t in tl])
     team_md = "\n".join(f"- **{m.get('role','')}** — {m.get('allocation','')}" for m in team) or "_TBD_"
     pr = est.get("pricing") or {}
+    gov = pm_knowledge.GOVERNANCE
+    method_md = "\n".join(
+        f"### {i+1}. {m['phase']}\n{m['objectives']}\n\n**Deliverables:** "
+        f"{', '.join(m['deliverables'])}. **Exit:** {m['exit']}"
+        for i, m in enumerate(pm_knowledge.METHODOLOGY))
+    raid_md = ("**Risks**\n" + "\n".join(f"- {r[0]} ({r[1]}) — {r[2]}"
+                                         for r in pm_knowledge.RISK_REGISTER))
     return [
         {"heading": "Objectives & Scope", "body_markdown":
-            f"Deliver an Odoo solution for {eng.company} covering the agreed scope, "
-            f"on a phased plan with one production go-live.\n\n"
+            f"Deliver an Odoo ERP solution for {eng.company} covering the agreed scope, "
+            f"standard-Odoo-first, on a phased plan with one production go-live.\n\n"
             f"- Total effort: **{est.get('total_man_days','TBD')} man-days**\n"
             f"- Duration: **{est.get('duration_weeks','TBD')} weeks**\n"
             f"- Custom builds: **{est.get('custom_builds',0)}**"},
+        {"heading": "Delivery Methodology", "body_markdown": method_md},
         {"heading": "Delivery Plan", "body_markdown": phase_tbl},
-        {"heading": "Team & Governance", "body_markdown":
-            f"{team_md}\n\nGovernance: weekly status, change-request gate, "
-            f"steering at each phase exit."},
+        {"heading": "Team", "body_markdown": team_md},
+        {"heading": "Governance", "body_markdown":
+            f"- **Cadence:** {gov['cadence']}\n- **Steering:** {gov['steering']}\n"
+            f"- **Reporting:** {gov['reporting']}\n- **Change control:** {gov['change_control']}"},
+        {"heading": "Risks (RAID)", "body_markdown": raid_md},
         {"heading": "Commercials", "body_markdown":
             f"Estimated value: **{_aed(pr.get('estimate_aed'))}** "
             f"(band {_aed((pr.get('range_aed') or [None,None])[0])}–{_aed((pr.get('range_aed') or [None,None])[1])}). "
