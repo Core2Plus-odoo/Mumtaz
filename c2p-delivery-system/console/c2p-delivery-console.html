@@ -1175,6 +1175,7 @@ const RENDER={
       </div>
       <div class="sec"><h3>Company</h3><div class="chips">
         <span class="chip">${esc(o.company_profile?.industry)}</span><span class="chip">${esc(o.company_profile?.country)}</span><span class="chip">${esc(o.company_profile?.size_band)}</span></div></div>
+      ${o.qualification?`<div class="sec"><h3>🎯 Qualification (sales playbook · built-in)</h3><div class="card"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><span class="score">BANT <b>${esc(o.qualification.score)}</b>/100</span>${(o.qualification.found||[]).map(f=>`<span class="chip" style="background:rgba(18,192,140,.14);border-color:rgba(18,192,140,.35);color:#0a8a66">✓ ${esc(f)}</span>`).join('')}${(o.qualification.missing||[]).map(m=>`<span class="chip" style="background:rgba(201,138,30,.12);border-color:rgba(201,138,30,.3);color:var(--amber)">? ${esc(m)}</span>`).join('')}</div>${(o.qualification.ask_next||[]).length?`<div class="hint">Next: ${o.qualification.ask_next.map(esc).join(' · ')}</div>`:''}</div></div>`:''}
       <div class="two-col">
         <div class="sec"><h3>Pains</h3><ul class="clean">${(o.discovery?.pains||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
         <div class="sec"><h3>Goals</h3><ul class="clean">${(o.discovery?.goals||[]).map(g=>`<li>${esc(g)}</li>`).join('')}</ul></div>
@@ -1263,6 +1264,7 @@ const RENDER={
         <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto">${devFiles.length} files</span></div>
         <div style="font-size:13px;color:var(--muted);margin-top:9px">${esc(o.summary)}</div>
         <div class="chips" style="margin-top:9px">${(o.depends||[]).map(d=>`<span class="chip">${esc(d)}</span>`).join('')}</div></div></div>
+      ${(o.code_review||[]).length?`<div class="sec"><h3>🛠 Code review (Odoo standards · built-in)</h3><ul class="clean warn">${o.code_review.map(w=>`<li>${esc(w)}</li>`).join('')}</ul></div>`:''}
       <div class="wb"><div class="wb-bar"><span class="t">Files</span><button class="btn primary sm" style="margin-left:auto" onclick="deployModule()">Deploy to addons repo (needs approval)</button><button class="btn dark sm" onclick="devZip()">Download .zip</button></div>
         <div class="wb-body"><div class="flist" id="flist"></div>
           <div class="cpane"><div class="chead"><span class="cpath" id="cpath"></span><button class="cbtn" id="cCopy" onclick="devCopy()">Copy</button></div>

@@ -675,3 +675,22 @@ Full-repo audit (backend, console, deploy, docs, tests):
     full system map (knowledge stack, execution plumbing, pipeline order), console
     conventions (layered CSS, verification recipe), and the working agreements
     (standard-first ladder, LLM-first + local-fallback pattern, verify-then-commit).
+
+### Full agency knowledge — all five roles ✅
+The remaining thin roles got first-class knowledge modules; every role is now
+covered: Sales & Marketing, Business Analyst, Project Manager, Functional,
+Technical.
+- **`sales_knowledge.py` (Sales & Marketing)** — ICP + strong signals +
+  disqualifiers, BANT/MEDDICC qualification, discovery-call structure, a 7-entry
+  objection playbook, competitor positioning (SAP B1, Dynamics BC, Zoho, NetSuite,
+  Tally/QB, vertical ERPs), pricing & packaging rules, outreach cadence & channels,
+  win themes. Embedded in prospect/outreach/presales/comms/research/proposal.
+  `qualify()` scores discovery notes locally (BANT found/missing → shown on the
+  presales output); `handle_objection()` looks up playbook responses.
+- **`tech_knowledge.py` (Technical)** — Odoo dev standards: module anatomy,
+  ORM/inheritance rules (inherit-never-recreate, mixins, no N+1, sudo discipline),
+  view extension per version, security (access CSV + record rules), integration
+  patterns (idempotent sync, webhooks), performance, upgrade-safe checklist,
+  Odoo.sh flow. Embedded in the developer agent. `review_module()` runs a local
+  best-practice code review over generated modules (caught 6/6 planted violations
+  in test) — warnings attached as `code_review` and rendered on the Developer view.

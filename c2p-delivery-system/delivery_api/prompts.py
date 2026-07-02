@@ -593,6 +593,8 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         import finance_knowledge as _fk
         import pm_knowledge as _pk
         import ba_knowledge as _bak
+        import sales_knowledge as _sk
+        import tech_knowledge as _tk
 
         _ODOO = _ok.capability_digest()
         _STD = _os_.digest()               # comprehensive standard-first reference
@@ -601,18 +603,24 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         _PM = _pk.digest()
         _METH = _pk.methodology()
         _BA = _bak.digest()
+        _SALES = _sk.digest()              # sales & marketing playbook
+        _TECH = _tk.digest()               # Odoo development standards
 
         _AGENT_KNOWLEDGE = {
             "functional": _STD + "\n\n" + _AUTO + "\n\n" + _FIN,
             "ba": _STD + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA,
             "ba_discovery": _BA + "\n\n" + _STD,
-            "developer": _STD + "\n\n" + _AUTO + "\n\n" + _ODOO,
-            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD,
+            "developer": _TECH + "\n\n" + _STD + "\n\n" + _AUTO,
+            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD + "\n\n" + _SALES,
             "project": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
             "config": _STD + "\n\n" + _AUTO + "\n\n" + _FIN,
             "dispatch": _ODOO,
-            "presales": _STD + "\n\n" + _BA,
+            "presales": _SALES + "\n\n" + _STD + "\n\n" + _BA,
             "pm": _PM + "\n\n" + _METH,
+            "prospect": _SALES,
+            "outreach": _SALES,
+            "comms": _SALES,
+            "research": _SALES,
         }
         for _k, _v in _AGENT_KNOWLEDGE.items():
             if _k in PROMPTS:

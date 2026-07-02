@@ -52,7 +52,16 @@ Knowledge stack (deterministic, embedded into agent prompts via `prompts.py`):
   methodology, risk register, governance; `build_project_plan()`,
   `build_status()`.
 - `ba_knowledge.py` — per-area discovery framework (questions/data/pains/KPIs);
-  `build_discovery()`.
+  `build_discovery()`, `focus_areas()`.
+- `sales_knowledge.py` — sales & marketing playbook: ICP/signals/disqualifiers,
+  BANT+ qualification (`qualify()`), discovery-call structure, objection
+  handling (`handle_objection()`), competitor positioning, pricing/packaging,
+  outreach cadence, win themes. Embedded in prospect/outreach/presales/comms/
+  research/proposal agents.
+- `tech_knowledge.py` — Odoo development standards: module anatomy, ORM/
+  inheritance/view/security/performance/integration rules, version notes,
+  Odoo.sh flow; `review_module()` runs a local best-practice code review over
+  generated modules (attached as `code_review` on the developer stage).
 - `local_agents.py` — local presales / requirements-catalog / proposal
   generators (schema-compatible with the LLM outputs).
 - `doc_templates.py` — assembles BRD/FRS/Charter/SOW/TechDesign from structured

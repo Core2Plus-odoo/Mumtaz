@@ -41,6 +41,8 @@ import odoo_knowledge
 import odoo_standard
 import odoo_automation
 import agent_brain
+import sales_knowledge
+import tech_knowledge
 import pm_knowledge
 import finance_knowledge
 import ba_knowledge
@@ -292,6 +294,11 @@ def presales(eng_id: str, body: m.PresalesIn):
             llm.log_local(store, "presales", out, eng.account_id, eng.id)
         else:
             raise
+    # Sales-playbook qualification scan (BANT signals found/missing) — no API.
+    try:
+        out["qualification"] = sales_knowledge.qualify(body.notes, body.industry)
+    except Exception:
+        pass
     eng.stages["presales"] = out
     result = _commit(eng, "presales", out)
     # Compound the account's knowledge with what qualification learned.
@@ -605,6 +612,14 @@ def developer(eng_id: str, body: m.DeveloperIn):
         + _client_answers_block(eng)
     )
     out = run_agent("developer", content)
+    # Local best-practice review (security, mixins, N+1, view syntax, tests) —
+    # attached so the operator and the Director see the warnings.
+    try:
+        warns = tech_knowledge.review_module(out.get("files"))
+        if warns:
+            out["code_review"] = warns
+    except Exception:
+        pass
     eng.stages["developer"] = out
     return _commit(eng, "developer", out)
 
