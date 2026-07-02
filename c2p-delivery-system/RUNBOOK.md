@@ -1,10 +1,15 @@
 # Get the C2P Delivery System running — the short version
 
-You need three things ready first:
-- Your **Anthropic API key** (starts with `sk-`).
+You need two things ready first:
 - Your **Odoo login** (the URL, username, password) — only if you want the live
   Odoo connection now. The agents work without it; you can add it later.
 - About **5 minutes**.
+
+An AI key is **optional**: with `C2P_LLM_PROVIDER=none` (the free default) every
+stage runs on the built-in Odoo/BA/PM/finance knowledge — no Anthropic account
+needed. Set `anthropic` (paid) or an OpenAI-compatible endpoint like Ollama
+(free) later for AI-written prose and module code. All knobs are documented in
+`delivery_api/.env.example`.
 
 That's it. You won't touch any code.
 

@@ -1038,7 +1038,7 @@ function renderStageView(c){
   const s=STAGES.find(x=>x.id===activeView);
   c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head" id="panelHead"></div><div class="panel-body" id="panelBody"></div></div></div>`;
   const persona=`<div class="persona"><span class="pavatar">${esc(s.persona.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><div><div class="pname">${esc(s.persona)}</div><div class="prole">on this engagement</div></div></div>`;
-  document.getElementById('panelHead').innerHTML=`<div>${persona}<h2 style="margin-top:11px">${s.name}</h2><p>${s.desc}</p></div><div class="run-area" id="runArea">${stageDone(activeView)?`<button class="btn ghost sm" onclick="openDoc('${activeView}')" title="Branded document">📄 Document</button>`:''}</div>`;
+  document.getElementById('panelHead').innerHTML=`<div>${persona}<h2 style="margin-top:11px">${s.name}</h2><p>${s.desc}</p></div><div class="run-area" id="runArea">${stageDone(activeView)?`<button class="btn ghost sm" onclick="openStageDoc('${activeView}')" title="Branded document">📄 Document</button>`:''}</div>`;
   const body=document.getElementById('panelBody');
   if(!eng){body.innerHTML=`<div class="placeholder">Start or select an engagement to begin.</div>`;document.getElementById('runArea').innerHTML='';return;}
   INPUTS[activeView](body);
@@ -2267,7 +2267,7 @@ function _openDoc(html){
   setTimeout(()=>{try{w.print();}catch(e){}},700);
 }
 function openDossier(){if(!eng)return;if(!doneCount()){toast('Run at least one stage first','bad');return;}_openDoc(buildDossierHTML(eng));toast('Document generated — use your browser’s Save as PDF','ok');}
-function openDoc(stage){if(!eng||!stageDone(stage))return;_openDoc(buildDossierHTML(eng,[stage]));}
+function openStageDoc(stage){if(!eng||!stageDone(stage))return;_openDoc(buildDossierHTML(eng,[stage]));}
 
 /* ---------- keyboard ---------- */
 document.addEventListener('keydown',e=>{

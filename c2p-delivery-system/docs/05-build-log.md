@@ -653,3 +653,25 @@ Adopted the standard-first + native-automation architect discipline end to end:
   engagement (keyword overlap) and surfaces the prior verdict.
 Wired into the functional stage; the console shows the self-corrected, memory and
 decomposition signals on each analysis.
+
+### Repo audit — code & workflow cleanup + durable knowledge ✅
+Full-repo audit (backend, console, deploy, docs, tests):
+- **Real bug fixed**: duplicate `openDoc` declaration in the console — the old
+  per-stage dossier opener silently overrode the Documents-view preview drawer,
+  breaking the Preview button. Renamed to `openStageDoc`; drawer verified headless.
+  Convention recorded: single-file console = one global scope, function names must
+  be unique (duplicate-declaration check added to the audit routine).
+- **Dead code removed**: `if False else` remnant in `local_agents.build_presales`;
+  unused imports/vars in `tests/test_phase1.py`. `ba_knowledge.focus_areas` made a
+  public API (was privately accessed cross-module). pyflakes now clean repo-wide.
+- **Stale docs corrected**: RUNBOOK no longer claims an Anthropic key is required
+  (free `C2P_LLM_PROVIDER=none` mode is the default posture).
+- **Knowledge made durable**:
+  - `delivery_api/.env.example` — every configuration knob (48 env vars) documented
+    in one annotated reference: provider modes, intelligence/QA toggles, estimating
+    model, Odoo/GitHub connections, login, storage, tenancy, channels.
+  - Root `CLAUDE.md` — the working knowledge for future sessions: repo layout,
+    deploy workflow + gotchas (web-root symlink, .env location, hard refresh),
+    full system map (knowledge stack, execution plumbing, pipeline order), console
+    conventions (layered CSS, verification recipe), and the working agreements
+    (standard-first ladder, LLM-first + local-fallback pattern, verify-then-commit).

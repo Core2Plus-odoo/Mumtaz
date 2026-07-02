@@ -137,7 +137,7 @@ _STAKEHOLDERS = [
 ]
 
 
-def _focus_areas(industry: Optional[str]) -> list:
+def focus_areas(industry: Optional[str]) -> list:
     ind = (industry or "").lower()
     for key, areas in INDUSTRY_FOCUS.items():
         if key in ind:
@@ -148,7 +148,7 @@ def _focus_areas(industry: Optional[str]) -> list:
 def build_discovery(company: str, industry: Optional[str] = None,
                     extra_areas: Optional[list] = None) -> dict:
     """Assemble a comprehensive, industry-aware discovery plan — no API call."""
-    names = list(dict.fromkeys(_focus_areas(industry) + (extra_areas or [])))
+    names = list(dict.fromkeys(focus_areas(industry) + (extra_areas or [])))
     process_areas = []
     for name in names:
         a = AREAS.get(name)

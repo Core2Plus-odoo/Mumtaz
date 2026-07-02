@@ -37,15 +37,14 @@ def _lines(notes: str) -> list:
 def build_presales(company: str, industry: Optional[str], country: str,
                    notes: str = "") -> dict:
     score, rationale = _icp_score(industry)
-    areas = ba_knowledge._focus_areas(industry)
+    areas = ba_knowledge.focus_areas(industry)
     note_reqs = _lines(notes)
     cand = [{"requirement": r, "priority": "Medium"} for r in note_reqs]
     for a in areas[:5]:
         cand.append({"requirement": f"Implement {a} in Odoo (standard-first)",
                      "priority": "High" if a in ("Accounting & Finance", "Sales & CRM") else "Medium"})
-    modules = sorted({m for a in areas for m in odoo_knowledge.MODULES
-                      if a and m}) if False else sorted(
-        {mm for a in areas for mm in (ba_knowledge.AREAS.get(a, {}).get("modules") or [])})
+    modules = sorted(
+        {m for a in areas for m in (ba_knowledge.AREAS.get(a, {}).get("modules") or [])})
     return {
         "company_profile": {"name": company, "industry": industry or "Unknown",
                             "country": country or "UAE/GCC", "size_band": "SME (20–500)"},

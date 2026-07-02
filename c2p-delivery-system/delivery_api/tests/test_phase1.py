@@ -7,7 +7,7 @@ import tempfile
 
 import pytest
 
-from models import Account, Approval, Engagement, KnowledgeEntry
+from models import Account, KnowledgeEntry
 from store import EngagementStore
 from knowledge import KnowledgeService
 import industry
@@ -157,7 +157,7 @@ def test_model_routing_via_env(monkeypatch):
 
 # ── Endpoint wiring (only if FastAPI is available) ─────────────────────────
 def test_endpoints_account_research_knowledge(monkeypatch, tmp_path):
-    fastapi = pytest.importorskip("fastapi")
+    pytest.importorskip("fastapi")
     pytest.importorskip("httpx")
     from fastapi.testclient import TestClient
 
