@@ -62,6 +62,12 @@ Knowledge stack (deterministic, embedded into agent prompts via `prompts.py`):
   inheritance/view/security/performance/integration rules, version notes,
   Odoo.sh flow; `review_module()` runs a local best-practice code review over
   generated modules (attached as `code_review` on the developer stage).
+- `industry.py` (+ `data/industry_playbooks.json`, 11 verticals) — functional
+  playbook per industry; `vertical_playbooks.py` composes the FIVE-ROLE view on
+  top (sales angle/proofs, BA focus, PM sizing via the estimator, functional
+  starter config, usual customs). `sales_block()` is injected into presales/
+  outreach at call time; `GET /verticals[/key]` + the console Industry
+  Playbooks view browse it.
 - `local_agents.py` — local presales / requirements-catalog / proposal
   generators (schema-compatible with the LLM outputs).
 - `doc_templates.py` — assembles BRD/FRS/Charter/SOW/TechDesign from structured

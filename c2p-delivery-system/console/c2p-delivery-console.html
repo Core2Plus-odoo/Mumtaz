@@ -843,6 +843,7 @@ function renderNav(){
     navBtn('approvals','✓','Approvals',approvalsBadge()),
 
     navSec('Grounding'),
+    navBtn('verticals','▣','Industry Playbooks'),
     navBtn('odoostd','◈','Odoo Standard'),
     navBtn('odooconn','🔒','Odoo Connection'),
     navBtn('githubconn','⎇','GitHub Repo'),
@@ -888,6 +889,7 @@ function renderView(){
   if(activeView==='accounts')return renderAccounts(c);
   if(activeView==='odooconn')return renderOdooConn(c);
   if(activeView==='odoostd')return renderStandardRef(c);
+  if(activeView==='verticals')return renderVerticals(c);
   if(activeView==='githubconn')return renderGithubConn(c);
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
@@ -1424,6 +1426,33 @@ async function testOdooConn(){
   const r=document.getElementById('oc_result');r.textContent='Testing…';
   try{const o=await api("POST","/odoo/connection/test",{db:val('oc_db')||undefined});r.innerHTML=`<span style="color:var(--green)">✓ Connected to ${esc(o.db)} — ${o.modules} installed modules.</span>`;}
   catch(e){r.innerHTML=`<span style="color:var(--rust)">✗ ${esc(e.message)}</span>`;}
+}
+
+/* ---------- industry (vertical) playbooks — five-role view ---------- */
+async function renderVerticals(c){
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>Industry Playbooks</h2><p>The full five-role playbook per vertical — how Sales sells it, what the BA digs into, how the PM sizes it, what Functional configures, and the customs Technical usually builds.</p></div></div>
+    <div class="panel-body" id="vertBody"><div class="skel" style="height:160px"></div></div></div></div>`;
+  try{const r=await api("GET","/verticals");
+    const b=document.getElementById('vertBody');if(!b)return;
+    b.innerHTML=`<div class="chips" id="vertChips" style="margin-bottom:14px">${(r.verticals||[]).map(v=>`<button class="btn sm" onclick="openVertical('${v.key}')">${esc(v.name)}</button>`).join('')}</div><div id="vertDetail"><div class="placeholder">Pick an industry to open its playbook.</div></div>`;
+  }catch(e){const b=document.getElementById('vertBody');if(b)b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function openVertical(key){
+  const d=document.getElementById('vertDetail');if(!d)return;d.innerHTML=`<div class="skel" style="height:220px"></div>`;
+  try{const p=await api("GET","/verticals/"+key);
+    const roleCard=(icon,title,body)=>`<div class="doc-card on" style="align-items:flex-start;flex-direction:column;gap:8px"><div style="display:flex;gap:8px;align-items:center"><div class="doc-ic">${icon}</div><div class="doc-name">${title}</div></div>${body}</div>`;
+    const ul=x=>`<ul class="clean" style="margin:0">${(x||[]).map(i=>`<li>${esc(i)}</li>`).join('')||'<li class="hint">—</li>'}</ul>`;
+    const band=(p.pm.price_band_aed||[]).map(n=>aed(n)).join(' – ');
+    d.innerHTML=`<div class="callout" style="margin-bottom:12px"><b>${esc(p.name)}.</b> ${esc(p.sales.angle)}</div>
+      <div class="doc-grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr))">
+        ${roleCard('◎','Sales & Marketing',`${ul(p.sales.proof_points)}<div class="set-h" style="margin-top:6px">Pains to quantify</div>${ul(p.sales.pains_to_quantify)}`)}
+        ${roleCard('◈','Business Analyst',`<div class="chips" style="margin-bottom:6px">${(p.ba.focus_areas||[]).map(a=>`<span class="chip">${esc(a)}</span>`).join('')}</div><div class="set-h">KPIs to baseline</div>${ul(p.ba.kpis)}`)}
+        ${roleCard('◑','Project Manager',`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span class="chip">~${esc(p.pm.typical_requirements)} reqs</span><span class="chip">${esc(p.pm.duration_weeks)} wks</span><span class="chip">${esc(p.pm.effort_man_days)} md</span>${band?`<span class="chip">${esc(band)}</span>`:''}</div><div class="set-h">Phase 1</div><div style="font-size:12.5px">${esc(p.pm.phase1)}</div>`)}
+        ${roleCard('◮','Functional',`<div class="chips" style="margin-bottom:6px">${((p.functional.modules||{}).core||[]).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}</div><div class="set-h">Starter configuration</div>${ul(p.functional.config_starter)}`)}
+        ${roleCard('◆','Technical',`<div class="set-h">Usual customs (on top of standard)</div>${ul(p.technical.usual_customs)}<div class="hint" style="margin-top:6px">${esc(p.technical.note)}</div>`)}
+      </div>`;
+  }catch(e){d.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
 
 /* ---------- Odoo standard-functionality reference ---------- */

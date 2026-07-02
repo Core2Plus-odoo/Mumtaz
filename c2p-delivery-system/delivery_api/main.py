@@ -43,6 +43,7 @@ import odoo_automation
 import agent_brain
 import sales_knowledge
 import tech_knowledge
+import vertical_playbooks
 import pm_knowledge
 import finance_knowledge
 import ba_knowledge
@@ -284,6 +285,7 @@ def presales(eng_id: str, body: m.PresalesIn):
         f"Industry: {body.industry or 'Unknown'}\n\n"
         f"Discovery notes:\n{body.notes}\n\nQualify and return the JSON."
         + industry.playbook_block(body.industry)
+        + vertical_playbooks.sales_block(body.industry)
         + ks.context_block(eng.account_id, body.industry or eng.company)
     )
     try:
@@ -1967,6 +1969,7 @@ def outreach(account_id: str, body: m.OutreachIn, request: Request):
         f"Angle: {body.angle or 'open a conversation about an Odoo outcome'}\n\n"
         "Write the outreach sequence JSON."
         + industry.playbook_block(acc.industry)
+        + vertical_playbooks.sales_block(acc.industry)
         + ks.context_block(account_id, body.angle or acc.industry or acc.name)
     )
     out = run_agent("outreach", content, account_id=account_id)
@@ -2556,6 +2559,21 @@ def health():
 def odoo_standard_reference():
     """The full Odoo standard-functionality catalog the agents configure from."""
     return {"apps": odoo_standard.full_reference()}
+
+
+@app.get("/verticals")
+def list_vertical_playbooks():
+    """The industries C2P sells into, with five-role playbook availability."""
+    return {"verticals": vertical_playbooks.list_verticals()}
+
+
+@app.get("/verticals/{key}")
+def get_vertical_playbook(key: str):
+    """The composed five-role playbook (sales/BA/PM/functional/technical)."""
+    p = vertical_playbooks.full_playbook(key)
+    if not p:
+        raise HTTPException(status_code=404, detail="Unknown vertical")
+    return p
 
 
 @app.get("/config")

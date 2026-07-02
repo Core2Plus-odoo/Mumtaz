@@ -694,3 +694,20 @@ Technical.
   Odoo.sh flow. Embedded in the developer agent. `review_module()` runs a local
   best-practice code review over generated modules (caught 6/6 planted violations
   in test) — warnings attached as `code_review` and rendered on the Developer view.
+
+### Per-industry vertical playbooks — the five-role view ✅
+`vertical_playbooks.py` composes, for each of the 11 industries in
+`data/industry_playbooks.json`, what every role needs on day one:
+- **Sales & Marketing** — the vertical's selling angle, proof points and the
+  pains to quantify in discovery (per-vertical OVERLAY, e.g. retail = "one stock
+  + one customer across stores and web"; construction = budget vs committed vs
+  actual).
+- **Business Analyst** — discovery focus areas (via `ba_knowledge.focus_areas`)
+  + the vertical's key processes and KPIs.
+- **Project Manager** — typical requirement count, duration, effort and an AED
+  price band computed live by `pm_knowledge.estimate` (no API).
+- **Functional** — core modules + a Phase-1 starter-configuration checklist.
+- **Technical** — the customs that usually survive standard-first scrutiny.
+`sales_block()` injects the vertical's commercial angle into presales/outreach
+at call time. New `GET /verticals` + `GET /verticals/{key}` and a console
+**Industry Playbooks** view (Grounding) with per-role cards. All local.
