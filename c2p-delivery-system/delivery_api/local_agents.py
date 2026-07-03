@@ -130,7 +130,7 @@ def build_proposal(eng) -> dict:
     timeline = [{"milestone": t.get("phase"), "week": t.get("starts_week")}
                 for t in (est.get("timeline") or [])]
     return {
-        "solution_summary": (f"C2P Consultants will implement Odoo ERP for {eng.company}, "
+        "solution_summary": (f"the consultancy will implement Odoo ERP for {eng.company}, "
                              f"standard-Odoo-first, across {', '.join(areas) or 'the agreed scope'}. "
                              f"{len(customs)} item(s) require custom/Studio work; the rest is "
                              "delivered by configuration on a phased plan with one production go-live."),

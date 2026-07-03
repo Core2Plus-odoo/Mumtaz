@@ -183,7 +183,7 @@ def _sections_sow(eng) -> list:
     ws = _table(["Workstream", "Man-days"], [[o.get("workstream", ""), o.get("man_days", "")] for o in over])
     return [
         {"heading": "Scope of Work", "body_markdown":
-            f"C2P Consultants will deliver the Odoo implementation for {eng.company} "
+            f"the consultancy will deliver the Odoo implementation for {eng.company} "
             f"per the requirements catalog ({len((_ba(eng).get('functional_requirements') or []))} "
             f"requirements) and the delivery plan below."},
         {"heading": "Effort & Workstreams", "body_markdown":
@@ -218,7 +218,7 @@ def build(doc_key: str, eng) -> dict[str, Any]:
     return {
         "doc_type": name, "title": name,
         "subtitle": eng.company, "version": "1.0",
-        "prepared_for": eng.company, "prepared_by": "C2P Consultants",
+        "prepared_for": eng.company, "prepared_by": "the consultancy",
         "executive_summary": exec_sum,
         "sections": sections,
         "acceptance_criteria": [r.get("requirement", "")[:120] for r in reqs

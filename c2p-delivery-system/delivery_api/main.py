@@ -2235,7 +2235,7 @@ def _execute_action(appr) -> dict:
     if action == "client_comms_sensitive":
         msg = payload.get("message") or {}
         res = channels.send(payload.get("channel", "email"), payload.get("to", ""),
-                            msg.get("subject", "C2P Consultants"), msg.get("body", ""))
+                            msg.get("subject", "Mumtaz"), msg.get("body", ""))
         if appr.account_id:
             ks.write_entry(appr.account_id, "communication",
                            {"direction": "outbound", "to": payload.get("to"),
@@ -2246,7 +2246,7 @@ def _execute_action(appr) -> dict:
     if action == "outreach_send":
         msg = payload.get("message") or {}
         res = channels.send(payload.get("channel", "email"), payload.get("to", ""),
-                            msg.get("subject", "C2P Consultants"), msg.get("body", ""))
+                            msg.get("subject", "Mumtaz"), msg.get("body", ""))
         if appr.account_id:
             ks.write_entry(appr.account_id, "communication",
                            {"channel": payload.get("channel"), "to": payload.get("to"),
@@ -2352,7 +2352,7 @@ def comms_inbound(body: m.CommsInboundIn, request: Request):
         result["approval"] = appr.model_dump() if appr else None
     else:
         send = channels.send(body.channel, body.from_party,
-                             reply.get("subject", "C2P Consultants"), reply.get("body", ""))
+                             reply.get("subject", "Mumtaz"), reply.get("body", ""))
         store.add_comm(Communication(
             account_id=aid, direction="outbound", channel=body.channel,
             to_party=body.from_party, subject=reply.get("subject", ""),

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C2P · Delivery Console</title>
+<title>Mumtaz · Delivery Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -847,14 +847,13 @@
     <!-- ===== sidebar ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sb-brand">
-        <svg class="sb-logo" viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants">
-          <text x="0" y="54" font-family="'Inter',sans-serif" font-weight="700" font-size="56" fill="#1A1D21">C2P</text>
-          <text x="3" y="80" font-family="'Inter',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="#1A1D21">Consultants</text>
-          <g fill="none" stroke="#00B3B3" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g>
+        <svg class="sb-logo" viewBox="0 0 250 74" xmlns="http://www.w3.org/2000/svg" aria-label="Mumtaz">
+          <g fill="none" stroke="#2E74F6" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 54 L12 22 L30 44 L48 22 L48 54"/></g>
+          <text x="64" y="50" font-family="'Plus Jakarta Sans','Inter',sans-serif" font-weight="800" font-size="46" letter-spacing="-1" fill="#0F1B33">mumtaz</text>
         </svg>
       </div>
-      <div class="sb-strap"><b>Delivery Console</b><span>Beyond the Core.</span></div>
+      <div class="sb-strap"><b>Delivery Console</b><span>ERP, delivered by AI.</span></div>
       <div class="sb-eng">
         <div class="lbl">Engagement</div>
         <select id="engSelect" onchange="selectEngagement(this.value)"></select>
@@ -915,17 +914,17 @@ const VERDICTS={standard:{label:"Standard",color:"#1f9d6b"},configurable:{label:
 const LADDER=["standard","configurable","studio","custom"];
 const LNAME={standard:"Config",configurable:"Workflows",studio:"Studio",custom:"Module"};
 
-/* C2P Consultants brand — used in the console and generated documents. */
+/* Mumtaz brand (product default) — each tenant overrides this with their own. */
 const BRAND={
-  name:"C2P Consultants",
-  legal:"C2P Consultants FZC LLC",
-  tagline:"Beyond the Core.",
-  accent:"#00B3B3", accentDark:"#008080", ink:"#2E2E2E",
-  contact:"core2plus.com · info@core2plus.com · +971 58 128 2057",
-  address:"Ajman Free Zone, UAE · Trade Licence 34241",
+  name:"Mumtaz",
+  legal:"Mumtaz",
+  tagline:"ERP, delivered by AI.",
+  accent:"#2E74F6", accentDark:"#1E5FE0", ink:"#0F1B33",
+  contact:"mumtaz.digital",
+  address:"",
   confidential:"Confidential — prepared for the named client only.",
 };
-function logoSVG(c){return `<svg viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants" style="height:100%;width:auto"><text x="0" y="54" font-family="'Inter',sans-serif" font-weight="700" font-size="56" fill="${c}">C2P</text><text x="3" y="80" font-family="'Inter',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="${c}">Consultants</text><g fill="none" stroke="${BRAND.accent||'#00B3B3'}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g></svg>`;}
+function logoSVG(c){return `<svg viewBox="0 0 250 74" xmlns="http://www.w3.org/2000/svg" aria-label="Mumtaz" style="height:100%;width:auto"><g fill="none" stroke="${BRAND.accent||'#2E74F6'}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M12 54 L12 22 L30 44 L48 22 L48 54"/></g><text x="64" y="50" font-family="'Plus Jakarta Sans','Inter',sans-serif" font-weight="800" font-size="46" letter-spacing="-1" fill="${c}">mumtaz</text></svg>`;}
 const DEFAULT_BRAND=JSON.parse(JSON.stringify(BRAND));
 /* light = for dark backgrounds (sidebar); dark = for light backgrounds (documents). */
 function brandMark(ctx){
@@ -940,7 +939,7 @@ function applyBranding(){
   if(BRAND.ink)r.setProperty('--charcoal',BRAND.ink);
   const b=document.querySelector('.sb-brand');if(b)b.innerHTML=`<span style="display:block;height:30px">${brandMark('dark')}</span>`;
   const strap=document.querySelector('.sb-strap');if(strap)strap.innerHTML=`<b>Delivery Console</b><span>${esc(BRAND.tagline||'')}</span>`;
-  try{document.title='Delivery Console · '+(BRAND.name||'C2P');}catch(e){}
+  try{document.title='Delivery Console · '+(BRAND.name||'Mumtaz');}catch(e){}
 }
 
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -2022,7 +2021,7 @@ async function testGithubConn(){
 /* ---------- accounts (clients) ---------- */
 async function renderAccounts(c){
   c.innerHTML=`<div class="view">
-    <div class="panel"><div class="panel-head"><div><h2>Accounts</h2><p>Clients C2P knows — each owns a knowledge base that compounds every interaction.</p></div>
+    <div class="panel"><div class="panel-head"><div><h2>Accounts</h2><p>Clients your firm knows — each owns a knowledge base that compounds every interaction.</p></div>
       <div class="run-area"><button class="btn primary sm" onclick="newAccountModal()">+ New account</button></div></div>
       <div class="panel-body" id="accList"><div class="skel" style="height:120px"></div></div></div>
     <div id="accDetail" style="margin-top:16px"></div></div>`;
@@ -2062,7 +2061,7 @@ async function runAccountAgent(id,kind){
 }
 function newAccountModal(){
   const m=document.createElement('div');m.className='modal-bg';m.id='accModal';
-  m.innerHTML=`<div class="modal" onclick="event.stopPropagation()"><div class="modal-h"><h3>New account</h3><p>A client C2P will accumulate knowledge about.</p></div>
+  m.innerHTML=`<div class="modal" onclick="event.stopPropagation()"><div class="modal-h"><h3>New account</h3><p>A client your firm will accumulate knowledge about.</p></div>
     <div class="modal-b">
       <div class="input-block"><label>Company name</label><input type="text" id="na_name" style="width:100%"></div>
       <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="na_ind" placeholder="Manufacturing" style="width:100%"></div>
@@ -2673,7 +2672,7 @@ function renderSettings(c){
     <div class="panel-body" id="setupSummary"><div class="hint">Loading your setup…</div></div></div>
   <div class="panel">
     <div class="panel-head"><div><h2>Branding &amp; Settings</h2><p>Control how the console and every generated document are branded. Saved on the server, applied for all users.</p></div>
-      <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to C2P</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
+      <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to default</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
     <div class="panel-body"><div class="two-col">
       <div>
         <h3 class="set-h">Identity</h3>
@@ -2722,7 +2721,7 @@ function brandField(k,val){BRAND[k]=val;if(k==='accent'||k==='accentDark'||k==='
 function loadLogo(which,input){const f=input.files&&input.files[0];if(!f)return;if(f.size>1500000){toast('Logo too large (max ~1.5 MB) — use a smaller PNG/SVG','bad');return;}const rd=new FileReader();rd.onload=()=>{BRAND[which]=rd.result;applyBranding();renderSettings(document.getElementById('content'));toast('Logo loaded — click Save to apply','info');};rd.readAsDataURL(f);}
 function clearLogo(which){BRAND[which]='';applyBranding();renderSettings(document.getElementById('content'));}
 async function saveBranding(){try{await api("POST","/branding",BRAND);applyBranding();renderTopbar();toast('Branding saved — applied for everyone','ok');}catch(e){toast('Save failed: '+e.message,'bad');}}
-function resetBranding(){Object.assign(BRAND,JSON.parse(JSON.stringify(DEFAULT_BRAND)));BRAND.logoLight='';BRAND.logoDark='';applyBranding();renderSettings(document.getElementById('content'));toast('Reset to C2P defaults — click Save to apply','info');}
+function resetBranding(){Object.assign(BRAND,JSON.parse(JSON.stringify(DEFAULT_BRAND)));BRAND.logoLight='';BRAND.logoDark='';applyBranding();renderSettings(document.getElementById('content'));toast('Reset to default branding — click Save to apply','info');}
 
 /* ---------- branded document generator ---------- */
 function _dt(){try{return new Date(eng.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}catch(e){return '';}}

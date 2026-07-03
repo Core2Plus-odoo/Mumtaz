@@ -877,3 +877,18 @@ Per direction ("grey looks too old / font outdated"), a decisive v10 theme layer
   — no page errors. (Web fonts don't load in the sandbox's blocked egress, so the
   headless screenshots show the fallback; Plus Jakarta Sans renders in a real
   browser.)
+
+### Rebrand to Mumtaz (standalone product; C2P becomes a tenant) ✅
+Removed all C2P product branding — Mumtaz is the standalone product; any firm
+(including C2P) is just a tenant that sets its own branding.
+- **Console** — default BRAND is now Mumtaz (name, tagline "ERP, delivered by
+  AI.", blue accent); new Mumtaz wordmark logo (blue M + "mumtaz"); page title,
+  sidebar strap, "Reset to default" and Accounts copy degenericised; no C2P
+  strings remain (env var names like C2P_SECRET_KEY are unchanged).
+- **Backend** — `prompts.py` agent personas genericised (no hardcoded "C2P
+  Consultants" / ICP; each agent already gets the tenant's firm via
+  `profile_block`); `proposal_render._DEFAULT_BRAND`, `doc_templates`,
+  `local_agents` and channel-message fallbacks default to Mumtaz / "the
+  consultancy". Generated documents and agent output no longer say C2P.
+- Verified: py_compile + main imports; console JS syntax + headless render
+  (title "Delivery Console · Mumtaz", Mumtaz logo, zero C2P text, no page errors).
