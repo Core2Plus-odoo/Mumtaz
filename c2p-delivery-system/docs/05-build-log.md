@@ -830,3 +830,65 @@ later at the Deliver stage:
 - Default landing is now the CRM funnel (Leads), not the PM command center, so
   the flow reads lead → qualify → propose → win → deliver (PM). Verified via
   headless render (sections + default view + Advanced expansion, no page errors).
+
+### Segments actually specialise — generic workflow runner ✅
+Each PM segment now runs ITS OWN workflow instead of the generic Odoo pipeline.
+- **Backend `/engagements/{id}/workflow/step?service=X`** (main.py) — a generic
+  runner that walks the service's workflow from the Consulting-OS workflow engine
+  one step at a time, tracking progress in `stages['_wf']` and keeping each step
+  result in `stages['_wf_out']`. `_workflow_run_step` executes each step with the
+  best available capability: `kb:finance_knowledge` steps call
+  `finance_knowledge.advise`; other `kb:` steps summarise deterministically; llm
+  steps call the matching agent (guarded, so a step never breaks the run). The
+  ERP segment keeps the richer autopilot (QA loops, docs, approvals, live
+  config/deploy) untouched — backward compatible.
+- **Console** — each PM segment carries its service (ERP→autopilot,
+  Bookkeeping→`bookkeeping`, Accounting→`compliance_advisory`,
+  Consulting→`sop_design`); the run loop calls the workflow runner for non-ERP
+  segments and renders each step's real label + "Step n of N" progress.
+- Verified: `py_compile`; in-process FastAPI TestClient run of three segments —
+  bookkeeping (onboarding→close→reconciliation→…→reporting), compliance_advisory
+  (discovery→review→advisory) and sop_design (mapping→SOP→docs) each ran their
+  own ordered steps; console headless run of the Bookkeeping segment showed its
+  own step labels and called `/workflow/step` (never autopilot), no page errors.
+
+### Modern compact overhaul + agency setup moved to Settings ✅
+- **v9 modern-compact layer** — a full shell overhaul: slimmer 216px sidebar,
+  denser icon-forward nav, compact topbar, tighter content/panel/button density,
+  refined neutral palette + single teal accent, smaller radii and flatter
+  shadows. Applied across the shell and the PM home.
+- **Agency setup relocated** — removed from the sidebar; now set at signup (the
+  first-run wizard) and thereafter under **Settings → Agency setup**, which shows
+  a live roles / segments / services summary and an "Open setup" button.
+- Verified: JS syntax + no duplicate function names + Playwright headless render
+  of the PM home and Settings (agency-setup panel present) — no page errors.
+
+### Visual re-theme — vibrant light, vivid blue, Plus Jakarta Sans ✅
+Per direction ("grey looks too old / font outdated"), a decisive v10 theme layer:
+- **Palette** — killed the grey: soft blue-tinted app background, pure-white cards,
+  vivid-blue accent (#2E74F6) with violet→blue gradients for hero elements
+  (buttons, PM title, wizard hero, landing). Redefines the shared --teal/--accent
+  tokens so the whole app recolours at once; overrides the remaining hardcoded
+  teal chips/active states.
+- **Type** — Plus Jakarta Sans (loaded via Google Fonts), tighter/bolder headings.
+- **Surfaces** — larger card radii (16px), airy spacing, soft blue-tinted shadows,
+  blue focus rings.
+- Verified: JS syntax + Playwright headless render of PM home, Settings and landing
+  — no page errors. (Web fonts don't load in the sandbox's blocked egress, so the
+  headless screenshots show the fallback; Plus Jakarta Sans renders in a real
+  browser.)
+
+### Rebrand to Mumtaz (standalone product; C2P becomes a tenant) ✅
+Removed all C2P product branding — Mumtaz is the standalone product; any firm
+(including C2P) is just a tenant that sets its own branding.
+- **Console** — default BRAND is now Mumtaz (name, tagline "ERP, delivered by
+  AI.", blue accent); new Mumtaz wordmark logo (blue M + "mumtaz"); page title,
+  sidebar strap, "Reset to default" and Accounts copy degenericised; no C2P
+  strings remain (env var names like C2P_SECRET_KEY are unchanged).
+- **Backend** — `prompts.py` agent personas genericised (no hardcoded "C2P
+  Consultants" / ICP; each agent already gets the tenant's firm via
+  `profile_block`); `proposal_render._DEFAULT_BRAND`, `doc_templates`,
+  `local_agents` and channel-message fallbacks default to Mumtaz / "the
+  consultancy". Generated documents and agent output no longer say C2P.
+- Verified: py_compile + main imports; console JS syntax + headless render
+  (title "Delivery Console · Mumtaz", Mumtaz logo, zero C2P text, no page errors).

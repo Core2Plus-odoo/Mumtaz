@@ -12,12 +12,12 @@ from html import escape
 from typing import Optional
 
 _DEFAULT_BRAND = {
-    "name": "C2P Consultants",
-    "legal": "C2P Consultants FZC LLC",
-    "tagline": "Beyond the Core.",
-    "accent": "#00B3B3", "accentDark": "#008080", "ink": "#2E2E2E",
-    "contact": "core2plus.com · info@core2plus.com · +971 58 128 2057",
-    "address": "Ajman Free Zone, UAE · Trade Licence 34241",
+    "name": "Mumtaz",
+    "legal": "Mumtaz",
+    "tagline": "ERP, delivered by AI.",
+    "accent": "#2E74F6", "accentDark": "#1E5FE0", "ink": "#0F1B33",
+    "contact": "mumtaz.digital",
+    "address": "",
     "confidential": "Confidential — prepared for the named client only.",
 }
 

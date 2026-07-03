@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>C2P · Delivery Console</title>
+<title>Mumtaz · Delivery Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
@@ -721,6 +721,125 @@
   .pm-seg .seg.s1.on{border-color:#f0932b;background:linear-gradient(180deg,rgba(240,147,43,.14),rgba(240,147,43,.02));box-shadow:0 8px 20px -14px rgba(240,147,43,.7)}
   .pm-seg .seg.s2.on{border-color:#4aa3ff;background:linear-gradient(180deg,rgba(74,163,255,.14),rgba(74,163,255,.02));box-shadow:0 8px 20px -14px rgba(74,163,255,.7)}
   .pm-seg .seg.s3.on{border-color:#7b5bff;background:linear-gradient(180deg,rgba(123,91,255,.14),rgba(123,91,255,.02));box-shadow:0 8px 20px -14px rgba(123,91,255,.7)}
+
+  /* ================= v9: MODERN COMPACT OVERHAUL (shell) ================= */
+  :root{
+    --sb:216px;
+    --line:#E9EBEF;--line-soft:#F1F3F6;--paper:#F7F8FA;--surface:#fff;
+    --muted:#616B78;--muted-2:#9AA2AD;
+    --accent:#0EA5A5;--accent-2:#0B8585;--accent-ink:#0A6C6C;
+    --grad-hero:linear-gradient(120deg,#12BDBD 0%,#0B9C9C 60%,#0A7E7E 100%);
+    --shadow:0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg:0 20px 50px -24px rgba(16,24,40,.28);
+    --r:9px;--r-sm:7px;--r-lg:13px;
+  }
+  body{font-size:13.5px;line-height:1.5}
+  /* sidebar — slim, quiet, icon-forward */
+  .sidebar{background:#FCFCFD;border-right:1px solid var(--line)}
+  .sb-brand{padding:15px 16px 4px}.sb-logo{height:26px}
+  .sb-strap{padding:0 16px 12px}.sb-strap b{font-size:12.5px}.sb-strap span{font-size:9.5px}
+  .sb-eng{margin:4px 10px 8px;padding:9px 10px;border-radius:9px}
+  .sb-eng .lbl{font-size:8.5px;margin-bottom:5px}
+  .sb-eng select{font-size:12px;padding:7px 8px;border-radius:7px}
+  #nav{padding:2px 8px}
+  .nav-sec{font-size:8.5px;letter-spacing:1.1px;padding:12px 8px 4px;color:var(--muted-2)}
+  .nav-item{gap:9px;font-size:12.5px;font-weight:500;padding:6px 9px;border-radius:7px;color:var(--muted)}
+  .nav-item .ni-ico{width:17px;text-align:center;font-size:14px;opacity:.9}
+  .nav-item.active{background:rgba(14,165,165,.1);color:var(--accent-ink);font-weight:600;box-shadow:none}
+  .nav-item.active::before{top:6px;bottom:6px;width:2.5px;background:var(--accent)}
+  .nav-toggle{margin:6px 8px;padding:6px 9px;font-size:11px}
+  .sb-foot{padding:9px 12px}
+  /* topbar — compact */
+  .topbar{padding:9px 20px;gap:12px;min-height:52px}
+  .tb-title{font-size:15px;letter-spacing:-.2px}.tb-sub{font-size:10.5px}
+  .tb-bar{width:104px;height:5px}
+  /* content density */
+  .view{padding:20px 22px;max-width:1180px}
+  .panel{border-radius:var(--r-lg);box-shadow:var(--shadow);border:1px solid var(--line)}
+  .panel-head{padding:16px 18px}
+  .panel-head h2{font-size:16px;letter-spacing:-.3px}
+  .panel-head p{font-size:12.5px;color:var(--muted)}
+  .panel-body{padding:16px 18px}
+  /* buttons — tighter, modern */
+  .btn{font-size:12px;padding:7px 12px;border-radius:8px;box-shadow:none}
+  .btn.sm{font-size:11px;padding:5px 9px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);box-shadow:0 1px 2px rgba(14,165,165,.25)}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  .chip{font-size:11px;padding:3px 8px;border-radius:7px}
+  input[type=text],textarea,select{font-size:13px;border-radius:8px}
+  .nav-item.active::before{border-radius:0 3px 3px 0}
+  /* PM home — modern compact */
+  .pm-wrap{max-width:760px}
+  .pm-head{margin:2px 0 16px}.pm-head h2{font-size:21px}
+  .pm-head p{font-size:13px}
+  .pm-seg .seg{padding:8px 13px;border-radius:10px;font-size:12.5px}
+  .pm-seg .seg .si{font-size:16px}
+  .pm-composer{border-radius:var(--r-lg)}
+  .pm-composer textarea{font-size:14px;min-height:104px}
+  .pm-send{padding:9px 15px;font-size:12.5px;border-radius:9px}
+  .pm-tool{font-size:12px;padding:6px 10px}
+  .pm-stat-row{padding:10px 12px;border-radius:10px;margin-bottom:6px}
+  .pm-stat-row .ic{width:26px;height:26px;border-radius:7px;font-size:12px}
+
+  /* ============ v10: VIBRANT LIGHT · vivid blue · Plus Jakarta ============ */
+  :root{
+    /* recolour the whole app by redefining the shared tokens */
+    --teal:#2E74F6;--deep-teal:#1E5FE0;
+    --accent:#2E74F6;--accent-2:#1E5FE0;--accent-ink:#1B50CC;
+    --charcoal:#0F1B33;--ink:#0B1327;--ink-2:#101a30;
+    --paper:#F4F7FE;--surface:#ffffff;
+    --line:#E4EBF7;--line-soft:#EEF3FC;
+    --muted:#586179;--muted-2:#93A0BA;
+    --grad-hero:linear-gradient(120deg,#7A5CF6 0%,#4B74F7 52%,#2E86F6 100%);
+    --shadow:0 1px 2px rgba(20,58,138,.05),0 1px 3px rgba(20,58,138,.06);
+    --shadow-lg:0 28px 64px -30px rgba(46,116,246,.42);
+    --display:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+    --body:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  }
+  body{font-family:var(--body);letter-spacing:-.1px}
+  ::selection{background:rgba(46,116,246,.18)}
+  /* headings tighter + bolder = modern */
+  .tb-title,.panel-head h2,.pm-head h2,.wz-title,.set-h{font-weight:700;letter-spacing:-.4px}
+  .panel-head h2{font-weight:700}
+  /* kill grey: soft blue-tinted app bg, pure-white cards */
+  .app{background:var(--paper)}
+  .sidebar{background:#fff;border-right:1px solid var(--line)}
+  .content,.view{background:transparent}
+  /* nav active → vivid blue */
+  .nav-item.active{background:rgba(46,116,246,.1);color:var(--accent-ink)}
+  .nav-item.active::before{background:var(--accent)}
+  .sb-strap span{color:var(--accent-ink)}
+  /* chips → blue, pill, crisp */
+  .chip{background:rgba(46,116,246,.1);border:1px solid rgba(46,116,246,.22);color:var(--accent-ink);font-weight:600}
+  /* buttons → vivid, soft glow */
+  .btn{border-radius:9px;font-weight:600}
+  .btn.primary{background:var(--accent);border-color:var(--accent);box-shadow:0 2px 10px -2px rgba(46,116,246,.5)}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2);box-shadow:0 6px 16px -4px rgba(46,116,246,.6)}
+  /* cards → bigger radius, airy, soft blue shadow */
+  .panel{border-radius:16px;box-shadow:0 1px 2px rgba(20,58,138,.04),0 10px 30px -22px rgba(46,116,246,.4)}
+  /* inputs → modern focus ring */
+  input[type=text],textarea,select{border-radius:9px;border-color:var(--line)}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,116,246,.14)}
+  /* topbar → clean white, subtle */
+  .topbar{background:#fff;border-bottom:1px solid var(--line)}
+  .tb-bar i{background:var(--grad-hero)}
+  /* PM home vivid */
+  .pm-composer:focus-within{border-color:var(--accent);box-shadow:0 14px 34px -18px rgba(46,116,246,.5)}
+  .pm-send{background:var(--grad-hero);box-shadow:0 8px 20px -6px rgba(46,116,246,.7)}
+  .pm-tool:hover{border-color:rgba(46,116,246,.5);color:var(--accent-ink)}
+  .pm-seg .seg.on,.pm-seg .seg.s0.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(46,116,246,.1),rgba(46,116,246,.02));box-shadow:0 8px 20px -14px rgba(46,116,246,.7)}
+  .pm-stat-row.done .ic{background:var(--grad-hero)}
+  /* landing → violet→blue vibrant */
+  .auth-brand::before{background:radial-gradient(820px 480px at 8% -10%,rgba(90,110,246,.55),transparent 58%),radial-gradient(680px 520px at 112% 118%,rgba(46,134,246,.5),transparent 55%),radial-gradient(520px 420px at 95% 4%,rgba(140,92,246,.4),transparent 55%)}
+  .auth-prod .ap-ic{background:linear-gradient(135deg,#5A8CFF,#2E74F6)}
+  .auth-prod.p2 .ap-ic{background:linear-gradient(135deg,#8A5CFF,#5A6EF6)}
+  .auth-prod .tag{color:#bcd0ff;background:rgba(46,116,246,.18);border-color:rgba(120,160,255,.35)}
+  .auth-brand .ab-kick{color:#a9c4ff}
+  /* wizard hero + stepper on brand blue */
+  .wz-hero,.wz-done-ic,.wz-st.done .dot,.wz-opt.on .oic,.wz-opt.on .ochk{background:var(--grad-hero)}
+  .wz-opt.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(46,116,246,.06),rgba(46,116,246,.02))}
+  .wz-st.active .dot{border-color:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 4px rgba(46,116,246,.14)}
+  .badge.b-done,.badge.b-pursue{background:linear-gradient(135deg,#2E86F6,#1E5FE0)}
 </style>
 </head>
 <body>
@@ -728,14 +847,13 @@
     <!-- ===== sidebar ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sb-brand">
-        <svg class="sb-logo" viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants">
-          <text x="0" y="54" font-family="'Inter',sans-serif" font-weight="700" font-size="56" fill="#1A1D21">C2P</text>
-          <text x="3" y="80" font-family="'Inter',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="#1A1D21">Consultants</text>
-          <g fill="none" stroke="#00B3B3" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g>
+        <svg class="sb-logo" viewBox="0 0 250 74" xmlns="http://www.w3.org/2000/svg" aria-label="Mumtaz">
+          <g fill="none" stroke="#2E74F6" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 54 L12 22 L30 44 L48 22 L48 54"/></g>
+          <text x="64" y="50" font-family="'Plus Jakarta Sans','Inter',sans-serif" font-weight="800" font-size="46" letter-spacing="-1" fill="#0F1B33">mumtaz</text>
         </svg>
       </div>
-      <div class="sb-strap"><b>Delivery Console</b><span>Beyond the Core.</span></div>
+      <div class="sb-strap"><b>Delivery Console</b><span>ERP, delivered by AI.</span></div>
       <div class="sb-eng">
         <div class="lbl">Engagement</div>
         <select id="engSelect" onchange="selectEngagement(this.value)"></select>
@@ -796,17 +914,17 @@ const VERDICTS={standard:{label:"Standard",color:"#1f9d6b"},configurable:{label:
 const LADDER=["standard","configurable","studio","custom"];
 const LNAME={standard:"Config",configurable:"Workflows",studio:"Studio",custom:"Module"};
 
-/* C2P Consultants brand — used in the console and generated documents. */
+/* Mumtaz brand (product default) — each tenant overrides this with their own. */
 const BRAND={
-  name:"C2P Consultants",
-  legal:"C2P Consultants FZC LLC",
-  tagline:"Beyond the Core.",
-  accent:"#00B3B3", accentDark:"#008080", ink:"#2E2E2E",
-  contact:"core2plus.com · info@core2plus.com · +971 58 128 2057",
-  address:"Ajman Free Zone, UAE · Trade Licence 34241",
+  name:"Mumtaz",
+  legal:"Mumtaz",
+  tagline:"ERP, delivered by AI.",
+  accent:"#2E74F6", accentDark:"#1E5FE0", ink:"#0F1B33",
+  contact:"mumtaz.digital",
+  address:"",
   confidential:"Confidential — prepared for the named client only.",
 };
-function logoSVG(c){return `<svg viewBox="0 0 230 88" xmlns="http://www.w3.org/2000/svg" aria-label="C2P Consultants" style="height:100%;width:auto"><text x="0" y="54" font-family="'Inter',sans-serif" font-weight="700" font-size="56" fill="${c}">C2P</text><text x="3" y="80" font-family="'Inter',sans-serif" font-weight="500" font-size="17" letter-spacing="2" fill="${c}">Consultants</text><g fill="none" stroke="${BRAND.accent||'#00B3B3'}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M168 42 L190 20 L212 42"/><path d="M168 60 L190 38 L212 60"/></g></svg>`;}
+function logoSVG(c){return `<svg viewBox="0 0 250 74" xmlns="http://www.w3.org/2000/svg" aria-label="Mumtaz" style="height:100%;width:auto"><g fill="none" stroke="${BRAND.accent||'#2E74F6'}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M12 54 L12 22 L30 44 L48 22 L48 54"/></g><text x="64" y="50" font-family="'Plus Jakarta Sans','Inter',sans-serif" font-weight="800" font-size="46" letter-spacing="-1" fill="${c}">mumtaz</text></svg>`;}
 const DEFAULT_BRAND=JSON.parse(JSON.stringify(BRAND));
 /* light = for dark backgrounds (sidebar); dark = for light backgrounds (documents). */
 function brandMark(ctx){
@@ -821,7 +939,7 @@ function applyBranding(){
   if(BRAND.ink)r.setProperty('--charcoal',BRAND.ink);
   const b=document.querySelector('.sb-brand');if(b)b.innerHTML=`<span style="display:block;height:30px">${brandMark('dark')}</span>`;
   const strap=document.querySelector('.sb-strap');if(strap)strap.innerHTML=`<b>Delivery Console</b><span>${esc(BRAND.tagline||'')}</span>`;
-  try{document.title='Delivery Console · '+(BRAND.name||'C2P');}catch(e){}
+  try{document.title='Delivery Console · '+(BRAND.name||'Mumtaz');}catch(e){}
 }
 
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
@@ -982,7 +1100,6 @@ function renderNav(){
     navBtn('blueprint','◱','Workflow Blueprint'),
 
     navSec('Admin'),
-    navBtn('wizard','🧭','Setup Wizard'),
     navBtn('activity','◷','Agent Activity'),
     navBtn('settings','⚙','Settings'),
   ];
@@ -1723,10 +1840,10 @@ async function regenBlueprint(){
 // (text + attachments + connections), and it distributes work to the other
 // agents and reports status. Wraps the existing autopilot pipeline.
 const PM_SEGMENTS=[
-  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',ci:0,hint:'Odoo implementation — discovery to go-live'},
-  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',ci:1,hint:'Books, VAT, payroll'},
-  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',ci:2,hint:'Tax, audit, IFRS, CFO advisory'},
-  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',ci:3,hint:'Process, SOPs, strategy, KPIs'},
+  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',ci:0,service:null,hint:'Odoo implementation — discovery to go-live'},
+  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',ci:1,service:'bookkeeping',hint:'Books, VAT, payroll'},
+  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',ci:2,service:'compliance_advisory',hint:'Tax, audit, IFRS, CFO advisory'},
+  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',ci:3,service:'sop_design',hint:'Process, SOPs, strategy, KPIs'},
 ];
 let pmState={segment:'erp',running:false};
 const PM_STEP={presales:{ic:'◎',t:'Qualifying the opportunity'},ba_discovery:{ic:'❔',t:'Asking discovery questions'},
@@ -1801,17 +1918,21 @@ async function runManager(){
     await api("POST",`/engagements/${eng.id}/presales`,{notes:brief,country:'UAE',industry:null});
     eng=await api("GET","/engagements/"+eng.id);
     row.className='pm-stat-row done';row.querySelector('.ic').textContent='✓';
-    // 3) autopilot loop — the PM distributes work to the agents
+    // 3) the PM distributes work — ERP runs the full autopilot pipeline; every
+    //    other segment runs ITS OWN workflow via the generic runner.
+    const svc=seg&&seg.service;
     let guard=0;
     while(guard++<24){
-      const r=await api("POST",`/engagements/${eng.id}/autopilot/step`,{});
-      if(r.status==='done'){pmStat('done','✓','All done','The Project Manager finished this stage of delivery.');break;}
+      let r;
+      if(svc){r=await api("POST",`/engagements/${eng.id}/workflow/step?service=${encodeURIComponent(svc)}`,{});}
+      else{r=await api("POST",`/engagements/${eng.id}/autopilot/step`,{});}
+      if(r.status==='done'){pmStat('done','✓','All done',`The Project Manager finished the ${seg?seg.label:''} workflow.`);break;}
       if(r.status==='needs_input'){pmStat('wait','✎','Waiting on you',(PM_STEP[r.ran]||{}).t||r.ran);break;}
       if(r.status==='blocked'){pmStat('wait','⚑','Needs your approval','Open Approvals to release the next step.');break;}
       if(r.status==='error'){pmStat('err','!','Hit a snag',r.error||'');break;}
-      const meta=PM_STEP[r.ran]||{ic:'•',t:r.ran};
-      const rw=pmStat('run','',meta.t,'');
-      // small settle so the row shows as active, then mark done
+      const title=r.label||(PM_STEP[r.ran]||{}).t||r.ran;
+      const sub=r.progress?`Step ${r.progress.done} of ${r.progress.total}`:'';
+      const rw=pmStat('run','',title,sub);
       rw.className='pm-stat-row done';rw.querySelector('.ic').textContent='✓';
     }
     eng=await api("GET","/engagements/"+eng.id);renderTopbar();
@@ -1900,7 +2021,7 @@ async function testGithubConn(){
 /* ---------- accounts (clients) ---------- */
 async function renderAccounts(c){
   c.innerHTML=`<div class="view">
-    <div class="panel"><div class="panel-head"><div><h2>Accounts</h2><p>Clients C2P knows — each owns a knowledge base that compounds every interaction.</p></div>
+    <div class="panel"><div class="panel-head"><div><h2>Accounts</h2><p>Clients your firm knows — each owns a knowledge base that compounds every interaction.</p></div>
       <div class="run-area"><button class="btn primary sm" onclick="newAccountModal()">+ New account</button></div></div>
       <div class="panel-body" id="accList"><div class="skel" style="height:120px"></div></div></div>
     <div id="accDetail" style="margin-top:16px"></div></div>`;
@@ -1940,7 +2061,7 @@ async function runAccountAgent(id,kind){
 }
 function newAccountModal(){
   const m=document.createElement('div');m.className='modal-bg';m.id='accModal';
-  m.innerHTML=`<div class="modal" onclick="event.stopPropagation()"><div class="modal-h"><h3>New account</h3><p>A client C2P will accumulate knowledge about.</p></div>
+  m.innerHTML=`<div class="modal" onclick="event.stopPropagation()"><div class="modal-h"><h3>New account</h3><p>A client your firm will accumulate knowledge about.</p></div>
     <div class="modal-b">
       <div class="input-block"><label>Company name</label><input type="text" id="na_name" style="width:100%"></div>
       <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="na_ind" placeholder="Manufacturing" style="width:100%"></div>
@@ -2545,9 +2666,13 @@ function brandPreview(){return `
   </div>`;}
 function renderSettings(c){
   const v=k=>esc(BRAND[k]||'');
-  c.innerHTML=`<div class="view">`+workspacePanel()+`<div class="panel">
-    <div class="panel-head"><div><h2>Branding &amp; Settings</h2><p>Control how the console and every generated document are branded. Saved on the server, applied for all users.</p></div>
-      <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to C2P</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
+  c.innerHTML=`<div class="view">`+workspacePanel()+`<div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><div><h2>Agency setup</h2><p>Your roles, client segments and services — this configures the workflows and agents. Set once at signup; change it here anytime.</p></div>
+      <div class="run-area"><button class="btn primary sm" onclick="goView('wizard')">Open setup →</button></div></div>
+    <div class="panel-body" id="setupSummary"><div class="hint">Loading your setup…</div></div></div>
+  <div class="panel">
+    <div class="panel-head"><div><h2>Your branding</h2><p>Your logo, colours and details appear on every proposal, BRD, SOW and document you generate — the cover logo, the accent colour, the “Prepared by” block and the footer. Saved to your workspace only.</p></div>
+      <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to default</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
     <div class="panel-body"><div class="two-col">
       <div>
         <h3 class="set-h">Identity</h3>
@@ -2577,12 +2702,26 @@ function renderSettings(c){
         <div id="brandPreview">${brandPreview()}</div>
       </div>
     </div></div></div></div>`;
+  fillSetupSummary();
+}
+async function fillSetupSummary(){
+  const el=document.getElementById('setupSummary');if(!el)return;
+  try{const p=await api("GET","/consulting/profile");
+    if(!p||!(p.roles||[]).length){el.innerHTML=`<div class="hint">You haven’t completed setup yet. <a href="#" onclick="goView('wizard');return false" style="color:var(--accent-ink);font-weight:600">Run it now →</a></div>`;return;}
+    const cat=window._setupCat||(window._setupCat=await api("GET","/consulting/catalog").catch(()=>null));
+    const lbl=(map,k)=>((cat&&cat[map]&&cat[map][k])||k);
+    const allsv={};if(cat)Object.values(cat.services||{}).forEach(o=>Object.assign(allsv,o));
+    const chip=x=>`<span class="chip">${esc(x)}</span>`;
+    el.innerHTML=`<div class="set-h">Roles</div><div class="chips" style="margin-bottom:8px">${(p.roles||[]).map(r=>chip(lbl('roles',r))).join('')||'<span class="hint">—</span>'}</div>
+      <div class="set-h">Client segments</div><div class="chips" style="margin-bottom:8px">${(p.client_types||[]).map(c=>chip(lbl('client_types',c))).join('')||'<span class="hint">—</span>'}</div>
+      <div class="set-h">Services</div><div class="chips">${(p.services||[]).map(s=>chip(allsv[s]||s)).join('')||'<span class="hint">—</span>'}</div>`;
+  }catch(e){el.innerHTML=`<div class="hint">Setup unavailable: ${esc(e.message)}</div>`;}
 }
 function brandField(k,val){BRAND[k]=val;if(k==='accent'||k==='accentDark'||k==='ink')applyBranding();const p=document.getElementById('brandPreview');if(p)p.innerHTML=brandPreview();}
 function loadLogo(which,input){const f=input.files&&input.files[0];if(!f)return;if(f.size>1500000){toast('Logo too large (max ~1.5 MB) — use a smaller PNG/SVG','bad');return;}const rd=new FileReader();rd.onload=()=>{BRAND[which]=rd.result;applyBranding();renderSettings(document.getElementById('content'));toast('Logo loaded — click Save to apply','info');};rd.readAsDataURL(f);}
 function clearLogo(which){BRAND[which]='';applyBranding();renderSettings(document.getElementById('content'));}
 async function saveBranding(){try{await api("POST","/branding",BRAND);applyBranding();renderTopbar();toast('Branding saved — applied for everyone','ok');}catch(e){toast('Save failed: '+e.message,'bad');}}
-function resetBranding(){Object.assign(BRAND,JSON.parse(JSON.stringify(DEFAULT_BRAND)));BRAND.logoLight='';BRAND.logoDark='';applyBranding();renderSettings(document.getElementById('content'));toast('Reset to C2P defaults — click Save to apply','info');}
+function resetBranding(){Object.assign(BRAND,JSON.parse(JSON.stringify(DEFAULT_BRAND)));BRAND.logoLight='';BRAND.logoDark='';applyBranding();renderSettings(document.getElementById('content'));toast('Reset to default branding — click Save to apply','info');}
 
 /* ---------- branded document generator ---------- */
 function _dt(){try{return new Date(eng.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});}catch(e){return '';}}
