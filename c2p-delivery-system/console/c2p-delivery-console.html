@@ -851,6 +851,7 @@ function renderNav(){
 
     navSec('Admin'),
     navBtn('wizard','🧭','Setup Wizard'),
+    navBtn('blueprint','◱','Workflow Blueprint'),
     navBtn('activity','◷','Agent Activity'),
     navBtn('settings','⚙','Settings'),
   ].join('');
@@ -892,6 +893,7 @@ function renderView(){
   if(activeView==='odoostd')return renderStandardRef(c);
   if(activeView==='verticals')return renderVerticals(c);
   if(activeView==='wizard')return renderWizard(c);
+  if(activeView==='blueprint')return renderBlueprint(c);
   if(activeView==='githubconn')return renderGithubConn(c);
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
@@ -1503,10 +1505,44 @@ async function wizNext(){
         <div class="set-h">Roles</div><div class="chips">${s.roles.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
         <div class="set-h" style="margin-top:8px">Client segments</div><div class="chips">${s.client_types.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
         <div class="set-h" style="margin-top:8px">Services</div><div class="chips">${s.services.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div></div>
+      ${r.blueprint?`<div class="set-h" style="margin-top:8px">Workflows composed</div><div class="chips">${(r.blueprint.workflows||[]).map(w=>`<span class="chip">${esc(w.label)} · ${esc(String(w.step_count))} steps</span>`).join('')}</div>`:''}
       <div class="hint" style="margin-top:10px">Every agent now works as ${esc(p.identity.company||'your firm')} — scoped to these roles and services.</div>
-      <button class="btn primary" style="margin-top:12px" onclick="goView('cockpit')">Open the Cockpit →</button>`;
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" onclick="goView('blueprint')">View Workflow Blueprint →</button><button class="btn" onclick="goView('cockpit')">Open the Cockpit</button></div>`;
     toast('Consultant profile saved — agents reconfigured','ok');
   }catch(e){toast(e.message,'bad');}
+}
+
+/* ---------- consulting OS — workflow blueprint (intelligence engine) ---------- */
+async function renderBlueprint(c){
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>◱ Workflow Blueprint</h2><p>The workflows, agents and documents the intelligence engine composed from your consultant profile. Each service becomes an ordered workflow of steps drawn from the step library; gated steps clear an approval before writing to a client.</p></div>
+      <div class="run-area"><button class="btn sm" onclick="regenBlueprint()">↻ Regenerate</button></div></div>
+    <div class="panel-body" id="bpBody"><div class="skel" style="height:200px"></div></div></div></div>`;
+  await loadBlueprint();
+}
+async function loadBlueprint(){
+  const b=document.getElementById('bpBody');if(!b)return;
+  try{const bp=await api("GET","/consulting/blueprint");
+    if(!(bp.workflows||[]).length){b.innerHTML=`<div class="placeholder">No workflows yet — complete the <a href="#" onclick="goView('wizard');return false">Setup Wizard</a> to compose your blueprint.</div>`;return;}
+    const cc=bp.counts||{};
+    const stat=(n,l)=>`<div class="doc-card on" style="flex-direction:column;align-items:flex-start;gap:2px;min-width:120px"><div style="font-size:22px;font-weight:700">${esc(String(n||0))}</div><div class="doc-sub">${esc(l)}</div></div>`;
+    const gicon={proposal_send:'✉ proposal send',code_deploy:'⎇ code deploy',config_apply:'⚙ config apply',client_comms_sensitive:'⚑ client comms',outreach_send:'✉ outreach',contract_commitment:'✔ contract'};
+    const wfCard=w=>`<div class="doc-card on" style="align-items:flex-start;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center;width:100%"><div class="doc-ic">◱</div><div><div class="doc-name">${esc(w.label)} ${w.builtin?'<span class="chip" style="font-size:10px">built-in</span>':''}</div><div class="doc-sub">${esc(String(w.step_count))} steps</div></div></div>
+        <ol class="clean" style="margin:0;padding-left:18px">${(w.steps||[]).map(s=>`<li>${esc(s.label)}${s.gate?` <span class="chip" style="font-size:10px">${esc(gicon[s.gate]||s.gate)}</span>`:''}</li>`).join('')}</ol>
+      </div>`;
+    b.innerHTML=`<div class="chips" style="gap:10px;margin-bottom:14px">${stat(cc.workflows,'Workflows')}${stat(cc.steps,'Steps')}${stat(cc.agents,'Agents')}${stat(cc.documents,'Documents')}</div>
+      <div class="set-h">Workflows</div>
+      <div class="doc-grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr));margin-bottom:14px">${bp.workflows.map(wfCard).join('')}</div>
+      <div class="set-h">Agents activated</div><div class="chips" style="margin-bottom:12px">${(bp.agents||[]).map(a=>`<span class="chip">${esc(a.label)}</span>`).join('')}</div>
+      <div class="set-h">Documents produced</div><div class="chips" style="margin-bottom:12px">${(bp.documents||[]).map(d=>`<span class="chip">${esc(d)}</span>`).join('')||'<span class="hint">—</span>'}</div>
+      ${(bp.gates||[]).length?`<div class="set-h">Approval gates</div><div class="chips">${bp.gates.map(g=>`<span class="chip">${esc(gicon[g]||g)}</span>`).join('')}</div>`:''}
+      ${bp.generated_at?`<div class="hint" style="margin-top:10px">Generated ${new Date(bp.generated_at).toLocaleString()}</div>`:''}`;
+  }catch(e){b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+async function regenBlueprint(){
+  try{await api("POST","/consulting/workflows/generate",{});toast('Blueprint regenerated','ok');await loadBlueprint();}
+  catch(e){toast(e.message,'bad');}
 }
 
 /* ---------- industry (vertical) playbooks — five-role view ---------- */
