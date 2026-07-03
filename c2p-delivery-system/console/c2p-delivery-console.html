@@ -1966,9 +1966,9 @@ async function renderManager(c){
       <div class="pm-files" id="pm_files"></div>
       <div class="pm-bar" id="pm_drop">
         <label class="pm-tool" for="pm_file">📎 Attach<input type="file" id="pm_file" multiple accept=".pdf,.txt,.md,.csv,.json,.log,.html,.htm" style="display:none"></label>
-        <button class="pm-tool" onclick="goView('odooconn')"><span class="dot ${odooOn?'ok':''}"></span>⛁ Odoo</button>
-        <button class="pm-tool" onclick="goView('githubconn')"><span class="dot"></span>⎇ GitHub</button>
-        <button class="pm-tool" onclick="goView('clarify')">✉ Client replies</button>
+        <button class="pm-tool" onclick="goView('odooconn')" title="Odoo connection"><span class="dot ${odooOn?'ok':''}" id="pm_dot_odoo"></span>⛁ Odoo</button>
+        <button class="pm-tool" onclick="goView('githubconn')" title="GitHub connection"><span class="dot" id="pm_dot_gh"></span>⎇ GitHub</button>
+        <button class="pm-tool" onclick="goView('clarify')" title="Client Q&amp;A replies">✉ Client replies</button>
         <span class="sp"></span>
         <button class="pm-send" id="pm_send" onclick="runManager()">Hand to Project Manager →</button>
       </div>
@@ -1976,6 +1976,18 @@ async function renderManager(c){
     <div class="pm-status" id="pm_status"></div>
   </div></div>`;
   attachDropzone('pm_brief','pm_drop','pm_file','pm_files');
+  pmConnStatus();
+}
+// Reflect the real Odoo / GitHub connection status on the composer dots.
+async function pmConnStatus(){
+  try{const o=await api("GET","/odoo/connection");
+    const d=document.getElementById('pm_dot_odoo');
+    if(d&&o&&o.url&&o.has_key)d.classList.add('ok');
+  }catch(e){}
+  try{const g=await api("GET","/github/connection");
+    const d=document.getElementById('pm_dot_gh');
+    if(d&&g&&(g.configured||(g.has_token&&g.repo)))d.classList.add('ok');
+  }catch(e){}
 }
 function pmSeg(k){pmState.segment=k;renderManager(document.getElementById('content'));}
 async function pmPick(id){
