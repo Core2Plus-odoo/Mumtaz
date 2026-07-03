@@ -15,6 +15,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from consulting import consultant_profile as cp
+from consulting import intelligence_engine as ie
 from consulting import service_catalog as cat
 
 router = APIRouter(prefix="/consulting", tags=["consulting"])
@@ -68,4 +69,7 @@ def complete_wizard(body: dict):
         "client_types": [cat.CLIENT_TYPES[c] for c in prof["client_types"]],
         "services": [all_sv.get(s, s) for s in prof["services"]],
     }
-    return {"profile": prof, "summary": summary, "event": "wizard.completed"}
+    # Compose the workflows/agents/documents this consultant will run.
+    blueprint = ie.generate(_store)
+    return {"profile": prof, "summary": summary, "blueprint": blueprint,
+            "event": "wizard.completed"}

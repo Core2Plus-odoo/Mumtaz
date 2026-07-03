@@ -727,3 +727,34 @@ First slice of the approved Consulting-OS plan (docs/06-consulting-os-plan.md):
 - Console **Setup Wizard** (Admin): 5 steps — identity → roles (multi) →
   client segments (multi) → services (auto-suggested, editable) → output
   config → completion summary. Verified headless end-to-end.
+
+### Consulting OS — slice 2: intelligence + workflow engine ✅
+Second slice of the approved Consulting-OS plan (docs/06-consulting-os-plan.md):
+workflows are now DATA, composed from the profile — no hardcoded pipeline.
+- `consulting/step_library.py` — 30-entry reusable STEP LIBRARY. Each step names
+  the real `run_agent` task(s) that execute it (plus `kb:` knowledge hooks for
+  estimation/finance/status), the document(s) it produces, the approval `gate`
+  it must clear (mapped to policy.AUTONOMY: proposal_send / code_deploy /
+  config_apply / client_comms_sensitive), the event it emits and a `done_when`.
+  Covers the Odoo delivery spine + bookkeeping cadence + CA advisory + management-
+  consultant (process/strategy) steps.
+- `consulting/workflow_engine.py` — `SERVICE_WORKFLOW[service]` = ordered step
+  keys per service; `compose()` expands a service into a full workflow object
+  (steps, gates, documents, agents, step_count); `generate(services)` composes
+  one workflow per service the consultant sells. The built-in `erp_implementation`
+  workflow reproduces the existing 13-step Odoo pipeline EXACTLY, so autopilot
+  stays backward-compatible. Unknown services fall back to a default chain.
+- `consulting/intelligence_engine.py` — profile → BLUEPRINT: workflows +
+  the union of agents they activate (with labels + where each runs) + documents
+  produced + gates. Persisted per tenant in app_settings (`consulting_blueprint`,
+  tenant-isolated via StoreProxy), regenerated on demand and on wizard completion.
+  `summary()` gives the compact activation view. Pure deterministic composition,
+  no LLM.
+- `routers/workflows.py` — `/consulting/blueprint` · `/blueprint/summary` ·
+  `/workflows` · `/workflows/{key}` · `/workflows/generate` (recompute) ·
+  `/steps` (step-library reference). main.py gains only init + include_router.
+  `wizard/complete` now regenerates and returns the blueprint.
+- Console **Workflow Blueprint** view (Admin): stat tiles (workflows/steps/agents/
+  documents), per-workflow ordered step lists with gate chips, activated-agents and
+  documents-produced chip rows, approval-gates, Regenerate button; linked from the
+  wizard completion screen. Verified headless (JS syntax + no dup names + render).

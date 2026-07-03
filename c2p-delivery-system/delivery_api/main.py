@@ -120,9 +120,10 @@ def _github_conn():
 github_mod.CONN_PROVIDER = _github_conn
 app = FastAPI(title="C2P Agency OS API", version="1.2.0")
 
-# Consulting OS (additive): consultant profile + wizard router.
+# Consulting OS (additive): consultant profile + wizard + workflow engine.
 from consulting import consultant_profile  # noqa: E402
 from routers import onboarding as onboarding_router  # noqa: E402
+from routers import workflows as workflows_router  # noqa: E402
 
 # The frontends are static HTML served by Nginx; allow them to call this API.
 app.add_middleware(
@@ -134,6 +135,8 @@ app.add_middleware(
 
 onboarding_router.init(store, ks)
 app.include_router(onboarding_router.router)
+workflows_router.init(store)
+app.include_router(workflows_router.router)
 
 
 @app.middleware("http")
