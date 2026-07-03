@@ -46,6 +46,7 @@ import tech_knowledge
 import vertical_playbooks
 import pm_knowledge
 import finance_knowledge
+import consulting_knowledge
 import ba_knowledge
 import doc_templates
 import config_knowledge
@@ -1996,20 +1997,32 @@ def _workflow_run_step(eng: Engagement, step: dict) -> dict:
                 "advice": advice}
     if primary in ("kb:pm_knowledge", "kb:pm_status", "kb:knowledge"):
         return {"kind": "knowledge", "label": label, "summary": done_when or label}
+    # Consulting steps (process mapping, redesign, SOPs, KPIs) run on general
+    # agents but are grounded with the built-in consulting frameworks.
+    con = None
+    try:
+        con = consulting_knowledge.advise(f"{label}. {done_when}")
+    except Exception:  # noqa: BLE001
+        con = None
     if primary in PROMPTS:
         try:
+            grounding = ("\n\nBuilt-in consulting frameworks to apply: "
+                         + "; ".join(f["name"] for f in con["frameworks"])
+                         if con and con.get("frameworks") else "")
             content = (f"Client: {eng.company}\nWorkflow step: {label}\n"
-                       f"Objective: {done_when}\nClient brief:\n{brief}")
+                       f"Objective: {done_when}\nClient brief:\n{brief}{grounding}")
             out = run_agent(primary, content, account_id=eng.account_id,
                             engagement_id=eng.id)
-            return {"kind": "agent", "agent": primary, "label": label, "output": out}
+            return {"kind": "agent", "agent": primary, "label": label,
+                    "output": out, "consulting": con}
         except HTTPException as exc:
             return {"kind": "note", "label": label, "summary": done_when or label,
-                    "note": str(exc.detail)[:200]}
+                    "note": str(exc.detail)[:200], "consulting": con}
         except Exception as exc:  # noqa: BLE001
             return {"kind": "note", "label": label, "summary": done_when or label,
-                    "note": str(exc)[:200]}
-    return {"kind": "note", "label": label, "summary": done_when or label}
+                    "note": str(exc)[:200], "consulting": con}
+    return {"kind": "note", "label": label, "summary": done_when or label,
+            "consulting": con}
 
 
 @app.post("/engagements/{eng_id}/workflow/step")
