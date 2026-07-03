@@ -862,3 +862,18 @@ Each PM segment now runs ITS OWN workflow instead of the generic Odoo pipeline.
   a live roles / segments / services summary and an "Open setup" button.
 - Verified: JS syntax + no duplicate function names + Playwright headless render
   of the PM home and Settings (agency-setup panel present) — no page errors.
+
+### Visual re-theme — vibrant light, vivid blue, Plus Jakarta Sans ✅
+Per direction ("grey looks too old / font outdated"), a decisive v10 theme layer:
+- **Palette** — killed the grey: soft blue-tinted app background, pure-white cards,
+  vivid-blue accent (#2E74F6) with violet→blue gradients for hero elements
+  (buttons, PM title, wizard hero, landing). Redefines the shared --teal/--accent
+  tokens so the whole app recolours at once; overrides the remaining hardcoded
+  teal chips/active states.
+- **Type** — Plus Jakarta Sans (loaded via Google Fonts), tighter/bolder headings.
+- **Surfaces** — larger card radii (16px), airy spacing, soft blue-tinted shadows,
+  blue focus rings.
+- Verified: JS syntax + Playwright headless render of PM home, Settings and landing
+  — no page errors. (Web fonts don't load in the sandbox's blocked egress, so the
+  headless screenshots show the fallback; Plus Jakarta Sans renders in a real
+  browser.)
