@@ -779,3 +779,27 @@ before using it.
 - Verified: JS syntax + no duplicate function names + Playwright headless render
   of both the landing (two product blocks) and the wizard (stepper + option
   cards + step advance), plus screenshots — no page errors.
+
+### Simple, CEO-run home — PM Command Center + Simple/Advanced nav ✅
+Reframed the console around the Project Manager as the main agent, so a CEO can
+run their own automated agency with almost no complexity.
+- **PM Command Center** (new default home, `renderManager`) — a Claude-style
+  composer: a segment selector (ERP / Bookkeeping / Accounting / Consulting,
+  filtered to the consultant's own roles), a big brief text box, **attachments**
+  (drag-drop / file import via the existing text-extraction dropzone), and
+  **connections** (Odoo · GitHub · Client replies). One button — "Hand to
+  Project Manager" — creates the project, hands over the brief (presales intake),
+  then loops the existing autopilot pipeline so the PM distributes work to the
+  other agents. A live status stream narrates each step in plain language
+  (Qualifying → Discovery → Requirements → Proposal → Planning → …) and stops
+  cleanly on needs-input / approval / done.
+- **Simple / Advanced navigation** — the sidebar now shows only the essentials by
+  default (Project Manager, Leads, Presales, Proposal, Client Replies, Documents,
+  Approvals); an "▸ Advanced" toggle reveals the full toolset (BA, project,
+  functional, developer, execution, accounts, comms, grounding, blueprint, admin).
+  State persists in localStorage. Client communication (feeding client replies
+  back into the pipeline) is now front-and-centre in Simple mode.
+- Default landing is the PM home; new signups still go through the wizard first.
+- Verified: JS syntax + no duplicate function names + Playwright headless render
+  and a simulated end-to-end PM run (brief → project → autopilot steps → done),
+  plus a screenshot — no page errors.

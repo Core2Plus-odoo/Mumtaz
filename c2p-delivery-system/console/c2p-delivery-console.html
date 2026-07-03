@@ -660,6 +660,48 @@
   .auth-pane{display:grid;place-items:center;padding:28px}
   .auth-pane .auth-card{box-shadow:0 24px 60px -30px rgba(16,24,40,.4);max-width:410px}
   @media(max-width:900px){.auth-split{grid-template-columns:1fr}.auth-brand{display:none}}
+
+  /* ---------- v7: PM Command Center (simple, CEO-friendly home) ---------- */
+  .pm-wrap{max-width:820px;margin:0 auto}
+  .pm-head{text-align:center;margin:6px 0 20px}
+  .pm-head h2{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.5px;color:var(--charcoal);margin:0 0 6px}
+  .pm-head p{font-size:14px;color:var(--muted);margin:0}
+  .pm-seg{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+  .pm-seg .seg{display:flex;align-items:center;gap:9px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 15px;cursor:pointer;font-weight:600;font-size:13px;color:var(--charcoal);transition:all .14s}
+  .pm-seg .seg:hover{border-color:rgba(0,179,179,.5)}
+  .pm-seg .seg.on{border-color:var(--teal);background:linear-gradient(180deg,rgba(0,179,179,.08),rgba(0,179,179,.02));box-shadow:0 8px 20px -14px rgba(1,138,138,.7)}
+  .pm-seg .seg .si{font-size:18px}
+  /* composer */
+  .pm-composer{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;box-shadow:0 10px 34px -20px rgba(16,24,40,.32);padding:8px;transition:border-color .14s,box-shadow .14s}
+  .pm-composer:focus-within{border-color:var(--teal);box-shadow:0 12px 34px -18px rgba(1,138,138,.5)}
+  .pm-composer textarea{width:100%;border:none;outline:none;resize:vertical;min-height:120px;font-family:var(--body);font-size:15px;line-height:1.55;color:var(--charcoal);background:transparent;padding:14px 14px 4px}
+  .pm-composer textarea::placeholder{color:var(--muted-2)}
+  .pm-bar{display:flex;align-items:center;gap:8px;padding:8px 10px;flex-wrap:wrap}
+  .pm-bar .sp{flex:1}
+  .pm-tool{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:7px 11px;cursor:pointer;transition:all .12s}
+  .pm-tool:hover{border-color:rgba(0,179,179,.5);color:var(--deep-teal)}
+  .pm-tool .dot{width:7px;height:7px;border-radius:50%;background:var(--muted-2)}
+  .pm-tool .dot.ok{background:var(--green)}
+  .pm-send{background:var(--grad-hero);color:#fff;border:none;border-radius:11px;padding:10px 18px;font-weight:700;font-size:13.5px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;box-shadow:0 8px 18px -8px rgba(1,154,154,.8);transition:transform .06s,box-shadow .12s}
+  .pm-send:hover{box-shadow:0 10px 22px -8px rgba(1,154,154,.9)}
+  .pm-send:disabled{opacity:.55;cursor:default;box-shadow:none}
+  .pm-files{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px}
+  .pm-proj{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+  .pm-proj select,.pm-proj input{font-size:13px;padding:8px 11px;border-radius:9px}
+  /* live status */
+  .pm-status{margin-top:22px}
+  .pm-stat-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;animation:pmIn .3s ease}
+  @keyframes pmIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .pm-stat-row .ic{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;font-size:14px;background:var(--paper)}
+  .pm-stat-row.done .ic{background:linear-gradient(135deg,#16C792,#048A66);color:#fff}
+  .pm-stat-row.run .ic{background:var(--grad-hero);color:#fff}
+  .pm-stat-row.wait .ic{color:var(--amber)}
+  .pm-stat-row.err .ic{background:var(--rust);color:#fff}
+  .pm-stat-row .tx b{display:block;font-size:13.5px;font-weight:600;color:var(--charcoal)}
+  .pm-stat-row .tx span{font-size:12px;color:var(--muted)}
+  .pm-spin{width:15px;height:15px;border:2px solid rgba(0,179,179,.3);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
+  .nav-toggle{margin:8px 10px;width:calc(100% - 20px);text-align:left;background:none;border:none;color:var(--muted);font-family:var(--body);font-weight:600;font-size:12px;padding:8px 11px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .nav-toggle:hover{background:#F1F2F4;color:var(--charcoal)}
 </style>
 </head>
 <body>
@@ -715,7 +757,8 @@
 let API_BASE = localStorage.getItem("c2p_api") || "/api";
 let engagements = [];
 let eng = null;
-let activeView = "overview";          // 'overview' | stage id | 'odoo'
+let activeView = "manager";           // PM Command Center is the default home
+let advancedMode = localStorage.getItem('c2p_advanced')==='1';
 let running = null;
 let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
 let odooModules = null, odooModFilter = "";
@@ -880,34 +923,32 @@ function stageBtn(sid){
   return `<button class="nav-item ${activeView===s.id?'active':''}" onclick="goView('${s.id}')"><span class="ni-ico">${s.ico}</span><span class="ni-name">${s.name}</span>${cnt||st}</button>`;
 }
 function navSec(t){return `<div class="nav-sec">${t}</div>`;}
+function toggleAdvanced(){advancedMode=!advancedMode;localStorage.setItem('c2p_advanced',advancedMode?'1':'0');renderNav();}
 function renderNav(){
   const nav=document.getElementById('nav');
-  // ordered by the real business flow: win → plan → deliver → clients → grounding → admin
-  const html=[
-    navBtn('cockpit','◉','Agency Cockpit'),
-    navBtn('overview','▦','Overview'),
-
-    navSec('1 · Win the work'),
-    navBtn('leads','⊕','Leads CRM'),
+  // SIMPLE mode (default): the few things a CEO needs — the PM runs the rest.
+  const simple=[
+    navBtn('manager','◉','Project Manager'),
+    navBtn('leads','⊕','Leads'),
     stageBtn('presales'),
     stageBtn('proposal'),
-
-    navSec('2 · Plan &amp; gather'),
+    navBtn('clarify','✉','Client Replies',clarifyBadge()),
+    navBtn('documents','▧','Documents'),
+    navBtn('approvals','✓','Approvals',approvalsBadge()),
+  ];
+  // Everything else lives under Advanced so the default view stays uncluttered.
+  const advanced=[
+    navSec('Deliver'),
+    navBtn('overview','▦','Overview'),
     navBtn('ba','◈','Business Analyst'),
-    navBtn('clarify','❔','Client Q&amp;A',clarifyBadge()),
     stageBtn('project'),
-    navBtn('pm','◑','Project Manager'),
-
-    navSec('3 · Deliver'),
     stageBtn('functional'),
     stageBtn('developer'),
     navBtn('execution','▤','Execution'),
-    navBtn('documents','▧','Documents'),
 
     navSec('Clients'),
     navBtn('accounts','◍','Accounts'),
     navBtn('comms','✉','Communications'),
-    navBtn('approvals','✓','Approvals',approvalsBadge()),
 
     navSec('Grounding'),
     navBtn('verticals','▣','Industry Playbooks'),
@@ -915,13 +956,15 @@ function renderNav(){
     navBtn('odooconn','🔒','Odoo Connection'),
     navBtn('githubconn','⎇','GitHub Repo'),
     navBtn('odoo','⛁','Odoo Explorer'),
+    navBtn('blueprint','◱','Workflow Blueprint'),
 
     navSec('Admin'),
     navBtn('wizard','🧭','Setup Wizard'),
-    navBtn('blueprint','◱','Workflow Blueprint'),
     navBtn('activity','◷','Agent Activity'),
     navBtn('settings','⚙','Settings'),
-  ].join('');
+  ];
+  const toggle=`<button class="nav-toggle" onclick="toggleAdvanced()">${advancedMode?'▾ Hide advanced':'▸ Advanced'}</button>`;
+  const html=[...simple, toggle, ...(advancedMode?advanced:[])].join('');
   nav.innerHTML=html;
 }
 function renderTopbar(){
@@ -946,6 +989,7 @@ function toggleSidebar(open){document.getElementById('sidebar').classList.toggle
 /* ---------- view dispatch ---------- */
 function renderView(){
   const c=document.getElementById('content');
+  if(activeView==='manager')return renderManager(c);
   if(activeView==='cockpit')return renderCockpit(c);
   if(activeView==='pm')return renderPM(c);
   if(activeView==='ba')return renderBA(c);
@@ -1649,6 +1693,108 @@ async function loadBlueprint(){
 async function regenBlueprint(){
   try{await api("POST","/consulting/workflows/generate",{});toast('Blueprint regenerated','ok');await loadBlueprint();}
   catch(e){toast(e.message,'bad');}
+}
+
+/* ---------- PM Command Center — the simple, CEO-friendly home ---------- */
+// The Project Manager is the main agent: pick a segment, hand it the brief
+// (text + attachments + connections), and it distributes work to the other
+// agents and reports status. Wraps the existing autopilot pipeline.
+const PM_SEGMENTS=[
+  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',hint:'Odoo implementation — discovery to go-live'},
+  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',hint:'Books, VAT, payroll'},
+  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',hint:'Tax, audit, IFRS, CFO advisory'},
+  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',hint:'Process, SOPs, strategy, KPIs'},
+];
+let pmState={segment:'erp',running:false};
+const PM_STEP={presales:{ic:'◎',t:'Qualifying the opportunity'},ba_discovery:{ic:'❔',t:'Asking discovery questions'},
+  ba_requirements:{ic:'◈',t:'Cataloguing the requirements'},proposal:{ic:'◪',t:'Drafting the proposal'},
+  project:{ic:'◑',t:'Planning the project'},functional:{ic:'◮',t:'Designing the solution'},
+  developer:{ic:'◆',t:'Building customizations'},document:{ic:'▧',t:'Writing the documents'},
+  config:{ic:'⚙',t:'Configuring Odoo'},deploy:{ic:'⇧',t:'Deploying to the client'}};
+async function renderManager(c){
+  let avail=PM_SEGMENTS;
+  try{const prof=await api("GET","/consulting/profile");
+    const roles=prof&&prof.roles||[];
+    if(roles.length){const f=PM_SEGMENTS.filter(s=>roles.includes(s.role));if(f.length)avail=f;}
+  }catch(e){}
+  if(!avail.some(s=>s.key===pmState.segment))pmState.segment=avail[0].key;
+  try{if(!engagements.length)await loadEngagements();}catch(e){}
+  const odooOn=!!(eng&&eng.odoo_db);
+  const projOpts=engagements.map(e=>`<option value="${e.id}" ${eng&&eng.id===e.id?'selected':''}>${esc(e.company)}</option>`).join('');
+  c.innerHTML=`<div class="view"><div class="pm-wrap">
+    <div class="pm-head"><h2>What do you need done?</h2><p>Tell your Project Manager. It gathers the details and puts the right agents to work.</p></div>
+    <div class="pm-seg">${avail.map(s=>`<button class="seg ${pmState.segment===s.key?'on':''}" onclick="pmSeg('${s.key}')" title="${esc(s.hint)}"><span class="si">${s.ic}</span>${esc(s.label)}</button>`).join('')}</div>
+    <div class="pm-proj">
+      <span class="hint">Project:</span>
+      <select id="pm_proj" onchange="pmPick(this.value)"><option value="">➕ New project…</option>${projOpts}</select>
+      <input type="text" id="pm_client" placeholder="New client / company name" style="${eng?'display:none':''}min-width:220px" value="">
+    </div>
+    <div class="pm-composer">
+      <textarea id="pm_brief" placeholder="Describe the client and what you need — goals, current systems, pain points, scope. Attach documents or connect your systems and the PM will pull in the details."></textarea>
+      <div class="pm-files" id="pm_files"></div>
+      <div class="pm-bar" id="pm_drop">
+        <label class="pm-tool" for="pm_file">📎 Attach<input type="file" id="pm_file" multiple accept=".pdf,.txt,.md,.csv,.json,.log,.html,.htm" style="display:none"></label>
+        <button class="pm-tool" onclick="goView('odooconn')"><span class="dot ${odooOn?'ok':''}"></span>⛁ Odoo</button>
+        <button class="pm-tool" onclick="goView('githubconn')"><span class="dot"></span>⎇ GitHub</button>
+        <button class="pm-tool" onclick="goView('clarify')">✉ Client replies</button>
+        <span class="sp"></span>
+        <button class="pm-send" id="pm_send" onclick="runManager()">Hand to Project Manager →</button>
+      </div>
+    </div>
+    <div class="pm-status" id="pm_status"></div>
+  </div></div>`;
+  attachDropzone('pm_brief','pm_drop','pm_file','pm_files');
+}
+function pmSeg(k){pmState.segment=k;renderManager(document.getElementById('content'));}
+async function pmPick(id){
+  if(!id){eng=null;localStorage.removeItem('c2p_last');}
+  else{try{eng=await api("GET","/engagements/"+id);localStorage.setItem('c2p_last',id);}catch(e){toast('Could not load project','bad');return;}}
+  renderManager(document.getElementById('content'));
+}
+function pmStat(cls,ic,title,sub){
+  const s=document.getElementById('pm_status');if(!s)return null;
+  const row=document.createElement('div');row.className='pm-stat-row '+cls;
+  row.innerHTML=`<div class="ic">${cls==='run'?'<div class="pm-spin"></div>':ic}</div><div class="tx"><b>${esc(title)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div>`;
+  s.appendChild(row);return row;
+}
+async function runManager(){
+  if(pmState.running)return;
+  const brief=val('pm_brief');
+  if(!brief){toast('Tell the PM what you need first','bad');focus('pm_brief');return;}
+  const btn=document.getElementById('pm_send');pmState.running=true;if(btn){btn.disabled=true;btn.textContent='Working…';}
+  const status=document.getElementById('pm_status');if(status)status.innerHTML='';
+  try{
+    // 1) ensure a project (engagement)
+    if(!eng){
+      const name=val('pm_client')||(brief.split('\n')[0].slice(0,60))||'New project';
+      const row=pmStat('run','',`Setting up project · ${name}`,'');
+      const e=await api("POST","/engagements",{company:name,odoo_db:null});
+      eng={...e,stages:e.stages||{}};localStorage.setItem('c2p_last',eng.id);await loadEngagements();
+      row.className='pm-stat-row done';row.querySelector('.ic').textContent='✓';
+    }
+    // 2) hand the brief to the PM (presales intake) then let it distribute work
+    const seg=PM_SEGMENTS.find(s=>s.key===pmState.segment);
+    let row=pmStat('run','',`${PM_STEP.presales.t}`,seg?seg.label:'');
+    await api("POST",`/engagements/${eng.id}/presales`,{notes:brief,country:'UAE',industry:null});
+    eng=await api("GET","/engagements/"+eng.id);
+    row.className='pm-stat-row done';row.querySelector('.ic').textContent='✓';
+    // 3) autopilot loop — the PM distributes work to the agents
+    let guard=0;
+    while(guard++<24){
+      const r=await api("POST",`/engagements/${eng.id}/autopilot/step`,{});
+      if(r.status==='done'){pmStat('done','✓','All done','The Project Manager finished this stage of delivery.');break;}
+      if(r.status==='needs_input'){pmStat('wait','✎','Waiting on you',(PM_STEP[r.ran]||{}).t||r.ran);break;}
+      if(r.status==='blocked'){pmStat('wait','⚑','Needs your approval','Open Approvals to release the next step.');break;}
+      if(r.status==='error'){pmStat('err','!','Hit a snag',r.error||'');break;}
+      const meta=PM_STEP[r.ran]||{ic:'•',t:r.ran};
+      const rw=pmStat('run','',meta.t,'');
+      // small settle so the row shows as active, then mark done
+      rw.className='pm-stat-row done';rw.querySelector('.ic').textContent='✓';
+    }
+    eng=await api("GET","/engagements/"+eng.id);renderTopbar();
+    toast('Project Manager updated the project','ok');
+  }catch(e){pmStat('err','!','Could not complete',e.message);toast('PM run failed: '+e.message,'bad');}
+  finally{pmState.running=false;if(btn){btn.disabled=false;btn.innerHTML='Hand to Project Manager →';}}
 }
 
 /* ---------- industry (vertical) playbooks — five-role view ---------- */
