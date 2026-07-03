@@ -818,3 +818,15 @@ run their own automated agency with almost no complexity.
   (colourful segment chips) + screenshots — no page errors.
   (Note: could not visually match mumtaz.digital directly — the sandbox egress
   proxy blocks external sites by policy — so vibrancy was built on our own brand.)
+
+### Nav restructured to the standard delivery lifecycle ✅
+Reordered navigation to match standard agency / professional-services practice —
+CRM at the front of the funnel as its own section, the Project Manager introduced
+later at the Deliver stage:
+- **Sales & CRM** — Leads, Clients (separate, first section).
+- **Win the work** — Presales, Proposal.
+- **Deliver** — Project Manager, Client Replies, Documents, Approvals.
+- Advanced reveals the deeper delivery tools, grounding and admin.
+- Default landing is now the CRM funnel (Leads), not the PM command center, so
+  the flow reads lead → qualify → propose → win → deliver (PM). Verified via
+  headless render (sections + default view + Advanced expansion, no page errors).

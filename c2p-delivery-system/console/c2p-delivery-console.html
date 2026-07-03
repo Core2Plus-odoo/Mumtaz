@@ -776,7 +776,7 @@
 let API_BASE = localStorage.getItem("c2p_api") || "/api";
 let engagements = [];
 let eng = null;
-let activeView = "manager";           // PM Command Center is the default home
+let activeView = "leads";             // standard practice: start at the CRM funnel
 let advancedMode = localStorage.getItem('c2p_advanced')==='1';
 let running = null;
 let devFiles = [], devActive = 0, devObj = null, lastFunctional = null;
@@ -945,28 +945,32 @@ function navSec(t){return `<div class="nav-sec">${t}</div>`;}
 function toggleAdvanced(){advancedMode=!advancedMode;localStorage.setItem('c2p_advanced',advancedMode?'1':'0');renderNav();}
 function renderNav(){
   const nav=document.getElementById('nav');
-  // SIMPLE mode (default): the few things a CEO needs — the PM runs the rest.
+  // SIMPLE mode (default): the standard delivery lifecycle — CRM first, the
+  // Project Manager introduced later at the Deliver stage (standard practice).
   const simple=[
-    navBtn('manager','◉','Project Manager'),
+    navSec('Sales &amp; CRM'),
     navBtn('leads','⊕','Leads'),
+    navBtn('accounts','◍','Clients'),
+
+    navSec('Win the work'),
     stageBtn('presales'),
     stageBtn('proposal'),
+
+    navSec('Deliver'),
+    navBtn('manager','◉','Project Manager'),
     navBtn('clarify','✉','Client Replies',clarifyBadge()),
     navBtn('documents','▧','Documents'),
     navBtn('approvals','✓','Approvals',approvalsBadge()),
   ];
-  // Everything else lives under Advanced so the default view stays uncluttered.
+  // Everything else lives under Advanced so the default stays uncluttered.
   const advanced=[
-    navSec('Deliver'),
+    navSec('Deliver · more'),
     navBtn('overview','▦','Overview'),
     navBtn('ba','◈','Business Analyst'),
     stageBtn('project'),
     stageBtn('functional'),
     stageBtn('developer'),
     navBtn('execution','▤','Execution'),
-
-    navSec('Clients'),
-    navBtn('accounts','◍','Accounts'),
     navBtn('comms','✉','Communications'),
 
     navSec('Grounding'),
