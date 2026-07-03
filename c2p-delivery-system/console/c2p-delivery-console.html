@@ -702,6 +702,25 @@
   .pm-spin{width:15px;height:15px;border:2px solid rgba(0,179,179,.3);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
   .nav-toggle{margin:8px 10px;width:calc(100% - 20px);text-align:left;background:none;border:none;color:var(--muted);font-family:var(--body);font-weight:600;font-size:12px;padding:8px 11px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
   .nav-toggle:hover{background:#F1F2F4;color:var(--charcoal)}
+
+  /* ---------- v8: vibrant landing products + colourful segments ---------- */
+  .auth-brand::before{background:radial-gradient(820px 480px at 10% -10%,rgba(0,214,214,.5),transparent 58%),radial-gradient(680px 520px at 112% 118%,rgba(101,60,220,.5),transparent 55%),radial-gradient(520px 420px at 92% 6%,rgba(255,138,76,.28),transparent 55%)}
+  .auth-prod .tag{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#7ef0f0;background:rgba(94,224,224,.14);border:1px solid rgba(94,224,224,.3);padding:2px 7px;border-radius:20px;margin-bottom:7px}
+  .auth-prod.p2 .ap-ic{background:linear-gradient(135deg,#7b5bff,#3aa0ff);box-shadow:0 8px 18px -8px rgba(101,70,255,.85)}
+  .auth-prod.p2 .tag{color:#c9bcff;background:rgba(123,91,255,.16);border-color:rgba(123,91,255,.36)}
+  .auth-segs{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+  .auth-seg{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#fff;padding:5px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.16)}
+  .auth-seg.s0{background:linear-gradient(135deg,rgba(0,192,192,.34),rgba(0,192,192,.12))}
+  .auth-seg.s1{background:linear-gradient(135deg,rgba(255,161,76,.34),rgba(255,161,76,.12))}
+  .auth-seg.s2{background:linear-gradient(135deg,rgba(101,180,255,.34),rgba(101,180,255,.12))}
+  .auth-seg.s3{background:linear-gradient(135deg,rgba(158,120,255,.34),rgba(158,120,255,.12))}
+  /* vibrant PM segment chips + header */
+  .pm-head h2{background:var(--grad-hero);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .pm-seg .seg .si{filter:saturate(1.2)}
+  .pm-seg .seg.s0.on{border-color:#00b3b3;background:linear-gradient(180deg,rgba(0,179,179,.12),rgba(0,179,179,.02))}
+  .pm-seg .seg.s1.on{border-color:#f0932b;background:linear-gradient(180deg,rgba(240,147,43,.14),rgba(240,147,43,.02));box-shadow:0 8px 20px -14px rgba(240,147,43,.7)}
+  .pm-seg .seg.s2.on{border-color:#4aa3ff;background:linear-gradient(180deg,rgba(74,163,255,.14),rgba(74,163,255,.02));box-shadow:0 8px 20px -14px rgba(74,163,255,.7)}
+  .pm-seg .seg.s3.on{border-color:#7b5bff;background:linear-gradient(180deg,rgba(123,91,255,.14),rgba(123,91,255,.02));box-shadow:0 8px 20px -14px rgba(123,91,255,.7)}
 </style>
 </head>
 <body>
@@ -1700,10 +1719,10 @@ async function regenBlueprint(){
 // (text + attachments + connections), and it distributes work to the other
 // agents and reports status. Wraps the existing autopilot pipeline.
 const PM_SEGMENTS=[
-  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',hint:'Odoo implementation — discovery to go-live'},
-  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',hint:'Books, VAT, payroll'},
-  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',hint:'Tax, audit, IFRS, CFO advisory'},
-  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',hint:'Process, SOPs, strategy, KPIs'},
+  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',ci:0,hint:'Odoo implementation — discovery to go-live'},
+  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',ci:1,hint:'Books, VAT, payroll'},
+  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',ci:2,hint:'Tax, audit, IFRS, CFO advisory'},
+  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',ci:3,hint:'Process, SOPs, strategy, KPIs'},
 ];
 let pmState={segment:'erp',running:false};
 const PM_STEP={presales:{ic:'◎',t:'Qualifying the opportunity'},ba_discovery:{ic:'❔',t:'Asking discovery questions'},
@@ -1723,7 +1742,7 @@ async function renderManager(c){
   const projOpts=engagements.map(e=>`<option value="${e.id}" ${eng&&eng.id===e.id?'selected':''}>${esc(e.company)}</option>`).join('');
   c.innerHTML=`<div class="view"><div class="pm-wrap">
     <div class="pm-head"><h2>What do you need done?</h2><p>Tell your Project Manager. It gathers the details and puts the right agents to work.</p></div>
-    <div class="pm-seg">${avail.map(s=>`<button class="seg ${pmState.segment===s.key?'on':''}" onclick="pmSeg('${s.key}')" title="${esc(s.hint)}"><span class="si">${s.ic}</span>${esc(s.label)}</button>`).join('')}</div>
+    <div class="pm-seg">${avail.map(s=>`<button class="seg s${s.ci} ${pmState.segment===s.key?'on':''}" onclick="pmSeg('${s.key}')" title="${esc(s.hint)}"><span class="si">${s.ic}</span>${esc(s.label)}</button>`).join('')}</div>
     <div class="pm-proj">
       <span class="hint">Project:</span>
       <select id="pm_proj" onchange="pmPick(this.value)"><option value="">➕ New project…</option>${projOpts}</select>
@@ -2685,12 +2704,14 @@ function showAuth(mode){
     <div class="auth-brand">
       <div>
         <div style="height:30px;margin-bottom:26px">${brandMark('light')}</div>
-        <div class="ab-kick">Multitenant ERP Platform</div>
-        <h1>Run and deliver Odoo ERP — end to end, on autopilot.</h1>
-        <div class="ab-lede">One workspace for your firm: a live, standard-first ERP and an AI delivery team that takes every implementation from discovery to go-live.</div>
+        <div class="ab-kick">Two products · one login</div>
+        <h1>The ERP — and the AI team that delivers it.</h1>
+        <div class="ab-lede">Mumtaz gives your firm a production ERP plus a separate, AI-run delivery platform. Pick a segment, hand over the brief, and your Project Manager puts the right agents to work.</div>
         <div class="auth-prods">
-          <div class="auth-prod"><div class="ap-ic">⛁</div><div><b>ERP</b><span>A production Odoo ERP — finance, sales, inventory, manufacturing and more — configured standard-first for your clients.</span></div></div>
-          <div class="auth-prod"><div class="ap-ic">🤖</div><div><b>Automated ERP Implementation</b><span>AI agents run the full delivery — presales, discovery, proposals, configuration, build and documents — as your firm.</span></div></div>
+          <div class="auth-prod p1"><div class="ap-ic">⛁</div><div><span class="tag">Product · ERP</span><b>Mumtaz ERP</b><span>A production Odoo ERP — finance, sales, inventory, manufacturing and more — configured standard-first for your clients.</span></div></div>
+          <div class="auth-prod p2"><div class="ap-ic">🤖</div><div><span class="tag">Product · Automated Delivery</span><b>Automated ERP Implementation</b><span>A separate product: AI agents run the full delivery as your firm — across four segments.</span>
+            <div class="auth-segs"><span class="auth-seg s0">⛁ ERP</span><span class="auth-seg s1">📒 Bookkeeping</span><span class="auth-seg s2">📊 Accounting</span><span class="auth-seg s3">◎ Consulting</span></div>
+          </div></div>
         </div>
       </div>
       <div class="ab-foot">${esc(BRAND.legal||BRAND.name||'Mumtaz')} · ${esc(BRAND.tagline||'ERP & Business Consulting')}</div>

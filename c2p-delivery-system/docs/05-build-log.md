@@ -803,3 +803,18 @@ run their own automated agency with almost no complexity.
 - Verified: JS syntax + no duplicate function names + Playwright headless render
   and a simulated end-to-end PM run (brief → project → autopilot steps → done),
   plus a screenshot — no page errors.
+
+### Vibrant landing (two separate products) + colourful PM home ✅
+- **Landing reframed as two products** — "Two products · one login": **Mumtaz ERP**
+  (the production Odoo ERP) and, tagged as a *separate product*, **Automated ERP
+  Implementation** (the AI delivery platform), which now introduces its four
+  segments as colour-coded pills — ERP · Bookkeeping · Accounting · Consulting.
+- **Vibrant styling (new v8 CSS layer)** — the landing gradient gained teal +
+  violet + amber hues; each product/segment carries its own accent; the PM home
+  title is a teal gradient and each PM segment chip lights up in its own colour
+  when selected (ERP teal, Bookkeeping amber, Accounting blue, Consulting violet).
+- Verified: JS syntax + no duplicate function names + Playwright headless render
+  of both the landing (two products, four segment pills) and the PM home
+  (colourful segment chips) + screenshots — no page errors.
+  (Note: could not visually match mumtaz.digital directly — the sandbox egress
+  proxy blocks external sites by policy — so vibrancy was built on our own brand.)
