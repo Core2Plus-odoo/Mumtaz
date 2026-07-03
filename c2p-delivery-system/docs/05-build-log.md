@@ -900,3 +900,10 @@ trees, strategy, TOM/org design, ADKAR/Kotter change, cost/efficiency; SOP anato
 per-function KPI trees; the Frame→…→Sustain method). `advise()`/`digest()` no API.
 Embedded into functional/ba/ba_discovery/proposal/docwriter/director/pm/research
 agents; the workflow runner grounds consulting-segment steps with the frameworks.
+
+### Live connection status in the PM composer ✅
+The composer's Odoo / GitHub connection dots now reflect the real connection
+state (via GET /odoo/connection and /github/connection) instead of a static
+placeholder — green when Odoo has a URL + key, or GitHub is configured; grey
+otherwise. Clicking still opens the respective connection setup. Verified
+headless (both dots turn green when the mocked connections report connected).
