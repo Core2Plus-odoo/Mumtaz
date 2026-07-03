@@ -593,6 +593,73 @@
   .badge.b-done,.badge.b-pursue{background:linear-gradient(135deg,#16C792,#048A66)}
   .chip{background:rgba(4,196,196,.13);border-color:rgba(4,196,196,.32)}
   .ov-step.done{background:linear-gradient(180deg,rgba(4,196,196,.1),rgba(4,196,196,.03))}
+
+  /* ---------- v6: professional onboarding wizard ---------- */
+  .wz-wrap{max-width:860px;margin:0 auto}
+  .wz-hero{background:var(--grad-hero);color:#fff;border-radius:20px;padding:30px 34px;position:relative;overflow:hidden;box-shadow:0 20px 46px -22px rgba(1,120,120,.7)}
+  .wz-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.12)}
+  .wz-hero::before{content:"";position:absolute;right:60px;bottom:-90px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)}
+  .wz-hero h2{font-family:var(--display);font-weight:700;font-size:25px;letter-spacing:-.6px;margin:0 0 6px;position:relative}
+  .wz-hero p{font-size:14px;line-height:1.55;opacity:.94;margin:0;max-width:560px;position:relative}
+  .wz-hero .wz-kick{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;opacity:.85;margin-bottom:12px;position:relative}
+  /* stepper */
+  .wz-steps{display:flex;align-items:flex-start;gap:0;margin:26px auto 4px;padding:0 6px}
+  .wz-st{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;text-align:center}
+  .wz-st .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--surface);border:2px solid var(--line);color:var(--muted-2);z-index:2;transition:all .2s}
+  .wz-st .lab{font-size:11px;font-weight:600;color:var(--muted-2);letter-spacing:.1px;transition:color .2s;max-width:96px}
+  .wz-st::before{content:"";position:absolute;top:16px;left:-50%;width:100%;height:2px;background:var(--line);z-index:1}
+  .wz-st:first-child::before{display:none}
+  .wz-st.done .dot{background:var(--grad-hero);border-color:transparent;color:#fff;box-shadow:0 6px 14px -5px rgba(1,154,154,.75)}
+  .wz-st.done .lab{color:var(--deep-teal)}
+  .wz-st.active .dot{background:var(--surface);border-color:var(--teal);color:var(--deep-teal);box-shadow:0 0 0 4px rgba(0,179,179,.14)}
+  .wz-st.active .lab{color:var(--charcoal);font-weight:700}
+  .wz-st.done::before,.wz-st.active::before{background:linear-gradient(90deg,var(--teal),var(--deep-teal))}
+  /* card */
+  .wz-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:30px 32px;box-shadow:0 8px 30px -18px rgba(16,24,40,.28);margin-top:18px}
+  .wz-title{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.3px;color:var(--charcoal);margin:0 0 4px}
+  .wz-sub{font-size:13px;color:var(--muted);margin:0 0 20px;line-height:1.5}
+  /* selectable option cards */
+  .wz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .wz-opt{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:13px;padding:15px 16px;cursor:pointer;transition:border-color .14s,box-shadow .14s,transform .06s,background .14s;position:relative;display:flex;gap:12px;align-items:flex-start}
+  .wz-opt:hover{border-color:rgba(0,179,179,.5);box-shadow:0 8px 20px -14px rgba(1,138,138,.7);transform:translateY(-1px)}
+  .wz-opt.on{border-color:var(--teal);background:linear-gradient(180deg,rgba(0,179,179,.06),rgba(0,179,179,.02));box-shadow:0 8px 22px -14px rgba(1,138,138,.75)}
+  .wz-opt .oic{width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:18px;background:rgba(0,179,179,.1);color:var(--deep-teal)}
+  .wz-opt.on .oic{background:var(--grad-hero);color:#fff}
+  .wz-opt .otx b{display:block;font-size:13.5px;font-weight:600;color:var(--charcoal);margin-bottom:2px;letter-spacing:-.1px}
+  .wz-opt .otx span{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .wz-opt .ochk{position:absolute;top:11px;right:11px;width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11px;color:#fff;transition:all .14s}
+  .wz-opt.on .ochk{background:var(--grad-hero);border-color:transparent}
+  /* footer nav */
+  .wz-foot{display:flex;align-items:center;justify-content:space-between;margin-top:26px;padding-top:20px;border-top:1px solid var(--line-soft)}
+  .wz-foot .cnt{font-size:12px;color:var(--muted-2);font-weight:500}
+  .wz-field label{display:block;font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .wz-field input,.wz-field select{width:100%}
+  .wz-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:620px){.wz-2col{grid-template-columns:1fr}.wz-st .lab{display:none}}
+  /* completion */
+  .wz-done-ic{width:64px;height:64px;border-radius:50%;background:var(--grad-hero);display:grid;place-items:center;font-size:30px;color:#fff;margin:0 auto 14px;box-shadow:0 14px 30px -12px rgba(1,154,154,.8)}
+  .wz-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+  .wz-scard{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:15px 16px}
+  .wz-scard .k{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted-2);margin-bottom:9px}
+
+  /* ---------- v6: professional multitenant landing (auth gate) ---------- */
+  .auth-split{position:fixed;inset:0;display:grid;grid-template-columns:1.15fr .85fr;z-index:300;background:var(--paper)}
+  .auth-brand{position:relative;overflow:hidden;background:var(--ink);color:#fff;padding:52px 56px;display:flex;flex-direction:column;justify-content:space-between}
+  .auth-brand::before{content:"";position:absolute;inset:0;background:radial-gradient(900px 500px at 12% -8%,rgba(0,192,192,.4),transparent 60%),radial-gradient(700px 500px at 110% 120%,rgba(6,110,110,.55),transparent 55%)}
+  .auth-brand>*{position:relative}
+  .auth-brand .ab-kick{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#5ee0e0}
+  .auth-brand h1{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.12;letter-spacing:-1px;margin:16px 0 12px;max-width:460px}
+  .auth-brand .ab-lede{font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.82);max-width:440px;margin-bottom:26px}
+  .auth-prods{display:flex;flex-direction:column;gap:14px;max-width:460px}
+  .auth-prod{display:flex;gap:16px;align-items:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:15px;padding:18px 20px;backdrop-filter:blur(6px);transition:border-color .15s,background .15s}
+  .auth-prod:hover{border-color:rgba(94,224,224,.55);background:rgba(255,255,255,.09)}
+  .auth-prod .ap-ic{width:46px;height:46px;flex:none;border-radius:12px;display:grid;place-items:center;font-size:22px;background:linear-gradient(135deg,#06d0d0,#066e6e);box-shadow:0 8px 18px -8px rgba(6,208,208,.8)}
+  .auth-prod b{display:block;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-.2px;margin-bottom:4px}
+  .auth-prod span{font-size:12.8px;line-height:1.5;color:rgba(255,255,255,.72)}
+  .auth-brand .ab-foot{font-size:11.5px;color:rgba(255,255,255,.5)}
+  .auth-pane{display:grid;place-items:center;padding:28px}
+  .auth-pane .auth-card{box-shadow:0 24px 60px -30px rgba(16,24,40,.4);max-width:410px}
+  @media(max-width:900px){.auth-split{grid-template-columns:1fr}.auth-brand{display:none}}
 </style>
 </head>
 <body>
@@ -1434,20 +1501,56 @@ async function testOdooConn(){
 
 /* ---------- consulting OS — setup wizard (5 steps) ---------- */
 let wiz={step:1,catalog:null,profile:null};
+// Descriptions + icons that make the selections read professionally (client-side
+// only; keys mirror the backend catalog).
+const WIZ_META={
+  roles:{odoo_partner:{ic:'⛁',d:'Implement, customise and integrate Odoo ERP.'},
+    bookkeeper:{ic:'📒',d:'Recurring books, VAT and payroll for clients.'},
+    chartered_accountant:{ic:'📊',d:'Tax, audit, IFRS reporting and CFO advisory.'},
+    management_consultant:{ic:'◎',d:'Process, SOPs, strategy and KPI frameworks.'}},
+  client_types:{trading:{ic:'📦',d:'Distribution & wholesale businesses.'},
+    manufacturing:{ic:'🏭',d:'Production, BOM and shop-floor operations.'},
+    ecommerce_retail:{ic:'🛍️',d:'Online and multi-store retail.'},
+    services:{ic:'🧩',d:'Consulting & professional-services firms.'},
+    finance:{ic:'🏦',d:'Finance-led and corporate ERP.'},
+    enterprise:{ic:'🏛️',d:'Government and large enterprise.'}},
+};
+function wizMeta(field,key){return (WIZ_META[field]||{})[key]||{ic:'◆',d:''};}
 async function renderWizard(c){
-  c.innerHTML=`<div class="view"><div class="panel">
-    <div class="panel-head"><div><h2>🧭 Consultant Setup Wizard</h2><p>Tell the platform who you are, who you serve and what you deliver — it configures your workflows, agents and templates from this.</p></div>
-      <div class="run-area"><span class="chip" id="wizStep">Step ${wiz.step} of 5</span></div></div>
-    <div class="panel-body" id="wizBody"><div class="skel" style="height:200px"></div></div></div></div>`;
+  const firstRun=localStorage.getItem('c2p_signup_first')==='1';
+  const kick=firstRun?'Welcome to Mumtaz':'Consultant Setup';
+  const title=firstRun?'Let’s set up your workspace':'Consultant Setup Wizard';
+  c.innerHTML=`<div class="view"><div class="wz-wrap">
+    <div class="wz-hero">
+      <div class="wz-kick">${esc(kick)}</div>
+      <h2>${esc(title)}</h2>
+      <p>Tell the platform who you are, who you serve and what you deliver — it composes your workflows, activates the matching agents and tailors every document to your practice.</p>
+    </div>
+    <div id="wizStepper"></div>
+    <div class="wz-card"><div id="wizBody"><div class="skel" style="height:220px"></div></div></div>
+  </div></div>`;
   try{
     if(!wiz.catalog)wiz.catalog=await api("GET","/consulting/catalog");
     if(!wiz.profile)wiz.profile=await api("GET","/consulting/profile");
+    // Seed identity from the signup form on first run (only if still blank).
+    try{const seed=JSON.parse(localStorage.getItem('c2p_signup_seed')||'null');
+      if(seed&&wiz.profile&&wiz.profile.identity){
+        if(!wiz.profile.identity.company&&seed.company)wiz.profile.identity.company=seed.company;
+        if(!wiz.profile.identity.email&&seed.email)wiz.profile.identity.email=seed.email;
+      }}catch(_){}
     drawWizStep();
   }catch(e){const b=document.getElementById('wizBody');if(b)b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
 }
-function wizChip(list,key,label){const on=(list||[]).includes(key);
-  return `<button class="btn ${on?'primary':''} sm" onclick="wizToggle('${key}',this)" data-k="${key}">${on?'✓ ':''}${esc(label)}</button>`;}
+const WIZ_LABELS=['Identity','Your role','Clients','Services','Finish'];
+function drawStepper(){
+  const el=document.getElementById('wizStepper');if(!el)return;
+  el.innerHTML=`<div class="wz-steps">${WIZ_LABELS.map((l,i)=>{
+    const n=i+1,cls=n<wiz.step?'done':(n===wiz.step?'active':'');
+    return `<div class="wz-st ${cls}"><div class="dot">${n<wiz.step?'✓':n}</div><div class="lab">${esc(l)}</div></div>`;}).join('')}</div>`;
+}
 let _wizField='roles';
+function wizOpt(field,list,key,label){const on=(list||[]).includes(key);const m=wizMeta(field,key);
+  return `<button class="wz-opt ${on?'on':''}" onclick="wizToggle('${key}')"><div class="oic">${m.ic}</div><div class="otx"><b>${esc(label)}</b>${m.d?`<span>${esc(m.d)}</span>`:''}</div><div class="ochk">${on?'✓':''}</div></button>`;}
 function wizToggle(key){
   const l=wiz.profile[_wizField]=wiz.profile[_wizField]||[];
   const i=l.indexOf(key); i>=0?l.splice(i,1):l.push(key);
@@ -1455,32 +1558,31 @@ function wizToggle(key){
 }
 function drawWizStep(){
   const b=document.getElementById('wizBody');if(!b)return;
-  document.getElementById('wizStep').textContent=`Step ${wiz.step} of 5`;
+  drawStepper();
   const p=wiz.profile,cat=wiz.catalog;
-  const nav=(back,nextLabel)=>`<div style="display:flex;gap:8px;margin-top:16px">${back?`<button class="btn sm" onclick="wiz.step--;drawWizStep()">← Back</button>`:''}<button class="btn primary" onclick="wizNext()">${nextLabel||'Continue →'}</button></div>`;
+  const foot=(back,nextLabel)=>`<div class="wz-foot"><div>${back?`<button class="btn" onclick="wiz.step--;drawWizStep()">← Back</button>`:'<span class="cnt">Step '+wiz.step+' of 5</span>'}</div><button class="btn primary" onclick="wizNext()">${nextLabel||'Continue →'}</button></div>`;
   if(wiz.step===1){
-    b.innerHTML=`<div class="set-h">Step 1 · Consultant identity</div>
-      <div class="input-grid"><div class="input-block"><label>Your name</label><input type="text" id="wz_name" value="${esc(p.identity.name||'')}"></div>
-      <div class="input-block"><label>Email</label><input type="text" id="wz_email" value="${esc(p.identity.email||'')}"></div></div>
-      <div class="input-grid"><div class="input-block"><label>Company / firm</label><input type="text" id="wz_company" value="${esc(p.identity.company||'')}"></div>
-      <div class="input-block"><label>Country</label><input type="text" id="wz_country" value="${esc(p.identity.country||'UAE')}"></div></div>${nav(false)}`;
+    b.innerHTML=`<h3 class="wz-title">Tell us about your firm</h3><p class="wz-sub">This is how every proposal, BRD and message will be signed.</p>
+      <div class="wz-2col"><div class="wz-field"><label>Your name</label><input type="text" id="wz_name" value="${esc(p.identity.name||'')}" placeholder="e.g. Sara Ahmed"></div>
+      <div class="wz-field"><label>Work email</label><input type="text" id="wz_email" value="${esc(p.identity.email||'')}" placeholder="you@firm.com"></div></div>
+      <div class="wz-2col"><div class="wz-field"><label>Company / firm</label><input type="text" id="wz_company" value="${esc(p.identity.company||'')}" placeholder="e.g. Gulf Advisory"></div>
+      <div class="wz-field"><label>Country</label><input type="text" id="wz_country" value="${esc(p.identity.country||'UAE')}"></div></div>${foot(false)}`;
   }else if(wiz.step===2){_wizField='roles';
-    b.innerHTML=`<div class="set-h">Step 2 · Your role(s) — select all that apply</div>
-      <div class="chips" style="gap:8px">${Object.entries(cat.roles).map(([k,l])=>wizChip(p.roles,k,l)).join('')}</div>${nav(true)}`;
+    b.innerHTML=`<h3 class="wz-title">What do you do?</h3><p class="wz-sub">Select every role your firm delivers — the platform activates the right agents for each.</p>
+      <div class="wz-grid">${Object.entries(cat.roles).map(([k,l])=>wizOpt('roles',p.roles,k,l)).join('')}</div>${foot(true)}`;
   }else if(wiz.step===3){_wizField='client_types';
-    b.innerHTML=`<div class="set-h">Step 3 · Client segments you serve</div>
-      <div class="chips" style="gap:8px">${Object.entries(cat.client_types).map(([k,l])=>wizChip(p.client_types,k,l)).join('')}</div>${nav(true)}`;
+    b.innerHTML=`<h3 class="wz-title">Who are your clients?</h3><p class="wz-sub">Pick the segments you serve so discovery, KPIs and playbooks match their industry.</p>
+      <div class="wz-grid">${Object.entries(cat.client_types).map(([k,l])=>wizOpt('client_types',p.client_types,k,l)).join('')}</div>${foot(true)}`;
   }else if(wiz.step===4){_wizField='services';
-    const all={};Object.values(cat.services).forEach(sv=>Object.assign(all,sv));
     const avail={};(p.roles||[]).forEach(r=>Object.assign(avail,cat.services[r]||{}));
-    b.innerHTML=`<div class="set-h">Step 4 · Services you deliver <span class="hint">(auto-suggested from your roles × clients — edit freely)</span></div>
-      <div class="chips" style="gap:8px">${Object.entries(avail).map(([k,l])=>wizChip(p.services,k,l)).join('')}</div>${nav(true)}`;
+    b.innerHTML=`<h3 class="wz-title">What do you deliver?</h3><p class="wz-sub">Auto-suggested from your roles and clients — add or remove any. Each service becomes a workflow.</p>
+      <div class="wz-grid">${Object.entries(avail).map(([k,l])=>wizOpt('services',p.services,k,l)).join('')}</div>${foot(true)}`;
   }else{
-    b.innerHTML=`<div class="set-h">Step 5 · Output configuration</div>
-      <div class="input-grid"><div class="input-block"><label>Proposal template</label><select id="wz_prop"><option value="default">C2P branded (default)</option></select></div>
-      <div class="input-block"><label>BRD template</label><select id="wz_brd"><option value="default">C2P branded (default)</option></select></div></div>
-      <div class="callout"><b>Ready.</b> Finishing will configure your workflows, activate the matching agents and set your document templates.</div>
-      ${nav(true,'✓ Finish setup')}`;
+    b.innerHTML=`<h3 class="wz-title">Output & branding</h3><p class="wz-sub">Choose the templates your documents are generated from. You can refine these later in Settings.</p>
+      <div class="wz-2col"><div class="wz-field"><label>Proposal template</label><select id="wz_prop"><option value="default">Branded (default)</option></select></div>
+      <div class="wz-field"><label>BRD template</label><select id="wz_brd"><option value="default">Branded (default)</option></select></div></div>
+      <div class="callout"><b>You’re all set.</b> Finishing composes your workflows, activates the matching agents and sets your document templates.</div>
+      ${foot(true,'✓ Finish setup')}`;
   }
 }
 async function wizNext(){
@@ -1499,15 +1601,19 @@ async function wizNext(){
     const r=await api("POST","/consulting/wizard/complete",{identity:p.identity,roles:p.roles,client_types:p.client_types,services:p.services,
       output:{proposal_template:val('wz_prop')||'default',brd_template:val('wz_brd')||'default'}});
     wiz.profile=r.profile;
-    const s=r.summary;
-    document.getElementById('wizBody').innerHTML=`<div class="callout" style="border-color:rgba(18,192,140,.4)"><b style="color:#0a8a66">✓ Setup complete.</b> Your platform is configured.</div>
-      <div class="sec" style="margin-top:12px"><h3>Your configuration</h3>
-        <div class="set-h">Roles</div><div class="chips">${s.roles.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
-        <div class="set-h" style="margin-top:8px">Client segments</div><div class="chips">${s.client_types.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
-        <div class="set-h" style="margin-top:8px">Services</div><div class="chips">${s.services.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div></div>
-      ${r.blueprint?`<div class="set-h" style="margin-top:8px">Workflows composed</div><div class="chips">${(r.blueprint.workflows||[]).map(w=>`<span class="chip">${esc(w.label)} · ${esc(String(w.step_count))} steps</span>`).join('')}</div>`:''}
-      <div class="hint" style="margin-top:10px">Every agent now works as ${esc(p.identity.company||'your firm')} — scoped to these roles and services.</div>
-      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn primary" onclick="goView('blueprint')">View Workflow Blueprint →</button><button class="btn" onclick="goView('cockpit')">Open the Cockpit</button></div>`;
+    localStorage.removeItem('c2p_signup_first');localStorage.removeItem('c2p_signup_seed');
+    const s=r.summary;const chip=x=>`<span class="chip">${esc(x)}</span>`;
+    drawStepper();
+    document.getElementById('wizBody').innerHTML=`<div style="text-align:center"><div class="wz-done-ic">✓</div>
+      <h3 class="wz-title" style="text-align:center">You’re all set, ${esc((p.identity.company||'').split(' ')[0]||'welcome')}</h3>
+      <p class="wz-sub" style="text-align:center">Your workspace is configured. Every agent now works as ${esc(p.identity.company||'your firm')}.</p></div>
+      <div class="wz-summary">
+        <div class="wz-scard"><div class="k">Roles</div><div class="chips">${s.roles.map(chip).join('')}</div></div>
+        <div class="wz-scard"><div class="k">Client segments</div><div class="chips">${(s.client_types.length?s.client_types:['—']).map(chip).join('')}</div></div>
+        <div class="wz-scard"><div class="k">Services</div><div class="chips">${s.services.map(chip).join('')}</div></div>
+        ${r.blueprint?`<div class="wz-scard"><div class="k">Workflows composed</div><div class="chips">${(r.blueprint.workflows||[]).map(w=>chip(w.label+' · '+w.step_count+' steps')).join('')}</div></div>`:''}
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:6px"><button class="btn primary" onclick="goView('blueprint')">View Workflow Blueprint →</button><button class="btn" onclick="goView('cockpit')">Open the Cockpit</button></div>`;
     toast('Consultant profile saved — agents reconfigured','ok');
   }catch(e){toast(e.message,'bad');}
 }
@@ -2427,17 +2533,33 @@ document.addEventListener('keydown',e=>{
 function showAuth(mode){
   mode=mode||'login';
   let el=document.getElementById('authGate');
-  if(!el){el=document.createElement('div');el.id='authGate';el.className='auth-gate';document.body.appendChild(el);}
-  el.innerHTML=`<div class="auth-card">
-    <div style="height:32px;margin-bottom:6px">${brandMark('dark')}</div>
-    <div style="font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--deep-teal);margin-bottom:18px">${esc(BRAND.tagline||'Delivery Console')}</div>
-    <div class="auth-tabs"><div class="auth-tab ${mode==='login'?'on':''}" onclick="showAuth('login')">Log in</div><div class="auth-tab ${mode==='signup'?'on':''}" onclick="showAuth('signup')">Sign up</div></div>
-    ${mode==='signup'?`<div class="input-block"><label>Agency name</label><input type="text" id="au_company" style="width:100%"></div>`:''}
-    <div class="input-block"><label>Email</label><input type="text" id="au_email" style="width:100%"></div>
-    <div class="input-block"><label>Password</label><input type="password" id="au_pw" style="width:100%"></div>
-    ${mode==='signup'?`<div class="input-block"><label>Plan</label><select id="au_edition" style="width:100%"><option value="delivery">Delivery</option><option value="growth">Growth</option><option value="agency">Agency</option></select></div>`:''}
-    <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" onclick="doAuth('${mode}')">${mode==='signup'?'Create workspace':'Log in'}</button>
-    <div id="au_err" class="hint" style="color:var(--rust);margin-top:10px"></div></div>`;
+  if(!el){el=document.createElement('div');el.id='authGate';document.body.appendChild(el);}
+  el.className='auth-split';el.removeAttribute('style');
+  el.innerHTML=`
+    <div class="auth-brand">
+      <div>
+        <div style="height:30px;margin-bottom:26px">${brandMark('light')}</div>
+        <div class="ab-kick">Multitenant ERP Platform</div>
+        <h1>Run and deliver Odoo ERP — end to end, on autopilot.</h1>
+        <div class="ab-lede">One workspace for your firm: a live, standard-first ERP and an AI delivery team that takes every implementation from discovery to go-live.</div>
+        <div class="auth-prods">
+          <div class="auth-prod"><div class="ap-ic">⛁</div><div><b>ERP</b><span>A production Odoo ERP — finance, sales, inventory, manufacturing and more — configured standard-first for your clients.</span></div></div>
+          <div class="auth-prod"><div class="ap-ic">🤖</div><div><b>Automated ERP Implementation</b><span>AI agents run the full delivery — presales, discovery, proposals, configuration, build and documents — as your firm.</span></div></div>
+        </div>
+      </div>
+      <div class="ab-foot">${esc(BRAND.legal||BRAND.name||'Mumtaz')} · ${esc(BRAND.tagline||'ERP & Business Consulting')}</div>
+    </div>
+    <div class="auth-pane"><div class="auth-card">
+      <div style="font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:-.3px;color:var(--charcoal);margin-bottom:4px">${mode==='signup'?'Create your workspace':'Welcome back'}</div>
+      <div class="hint" style="margin-bottom:16px">${mode==='signup'?'Start free — set up your firm in about a minute.':'Log in to your delivery workspace.'}</div>
+      <div class="auth-tabs"><div class="auth-tab ${mode==='login'?'on':''}" onclick="showAuth('login')">Log in</div><div class="auth-tab ${mode==='signup'?'on':''}" onclick="showAuth('signup')">Sign up</div></div>
+      ${mode==='signup'?`<div class="input-block"><label>Company / firm name</label><input type="text" id="au_company" style="width:100%" placeholder="e.g. Gulf Advisory"></div>`:''}
+      <div class="input-block"><label>Email</label><input type="text" id="au_email" style="width:100%" placeholder="you@firm.com"></div>
+      <div class="input-block"><label>Password</label><input type="password" id="au_pw" style="width:100%"></div>
+      ${mode==='signup'?`<div class="input-block"><label>Plan</label><select id="au_edition" style="width:100%"><option value="delivery">Delivery</option><option value="growth">Growth</option><option value="agency">Agency</option></select></div>`:''}
+      <button class="btn primary" style="width:100%;justify-content:center;margin-top:6px" onclick="doAuth('${mode}')">${mode==='signup'?'Create workspace →':'Log in'}</button>
+      <div id="au_err" class="hint" style="color:var(--rust);margin-top:10px"></div>
+    </div></div>`;
   setTimeout(()=>{const f=document.getElementById(mode==='signup'?'au_company':'au_email');if(f)f.focus();const pw=document.getElementById('au_pw');if(pw)pw.addEventListener('keydown',e=>{if(e.key==='Enter')doAuth(mode);});},0);
 }
 async function doAuth(mode){
@@ -2448,7 +2570,12 @@ async function doAuth(mode){
     let r;
     if(mode==='signup'){const company=val('au_company');if(!company){err.textContent='Agency name is required';return;}r=await api("POST","/auth/signup",{company,email,password:pw,edition:document.getElementById('au_edition').value});}
     else{r=await api("POST","/auth/login",{email,password:pw});}
-    if(r&&r.token){localStorage.setItem('c2p_token',r.token);authToken=r.token;location.reload();}
+    if(r&&r.token){
+      localStorage.setItem('c2p_token',r.token);authToken=r.token;
+      if(mode==='signup'){localStorage.setItem('c2p_signup_first','1');
+        try{localStorage.setItem('c2p_signup_seed',JSON.stringify({company:val('au_company'),email}));}catch(_){}}
+      location.reload();
+    }
     else err.textContent='Unexpected response';
   }catch(e){err.textContent=e.message;}
 }
@@ -2526,6 +2653,11 @@ async function upgradePlan(edition){try{const r=await api("POST","/billing/check
   await loadEngagements();
   const last=localStorage.getItem("c2p_last");
   if(last&&engagements.some(e=>e.id===last)){try{eng=await api("GET","/engagements/"+last);}catch(e){}}
+  // First run: land new consultants in the Setup Wizard until it's completed.
+  try{
+    const prof=await api("GET","/consulting/profile");
+    if(prof&&!prof.wizard_completed) activeView='wizard';
+  }catch(e){}
   renderAll();
   refreshApprovalsCount();
 })();

@@ -758,3 +758,24 @@ workflows are now DATA, composed from the profile — no hardcoded pipeline.
   documents), per-workflow ordered step lists with gate chips, activated-agents and
   documents-produced chip rows, approval-gates, Regenerate button; linked from the
   wizard completion screen. Verified headless (JS syntax + no dup names + render).
+
+### Multitenant onboarding — professional landing + signup→wizard ✅
+Pivoted the console into a professional multitenant onboarding: a new user signs
+up, lands in a polished setup wizard, and tells the platform about their services
+before using it.
+- **Landing (auth gate)** — redesigned into a two-pane split: a dark gradient
+  brand pane presenting the two products as blocks — **ERP** (a production,
+  standard-first Odoo ERP) and **Automated ERP Implementation** (AI agents that
+  run the full delivery as the firm) — beside a clean Log in / Sign up card.
+  Responsive (brand pane collapses under 900px).
+- **Signup → wizard** — boot now routes any consultant whose profile isn't
+  `wizard_completed` straight into the Setup Wizard; signup seeds the wizard's
+  company/email and shows a first-run welcome; the flags clear on completion.
+- **Professional wizard UI (new v6 CSS layer)** — gradient hero, a 5-step
+  stepper with done/active states, icon + description selection cards for roles /
+  client segments / services (replacing plain chips), a refined output step, and
+  a centred completion screen with a summary grid (roles, segments, services,
+  workflows composed). Client-side role/segment descriptions; no backend change.
+- Verified: JS syntax + no duplicate function names + Playwright headless render
+  of both the landing (two product blocks) and the wizard (stepper + option
+  cards + step advance), plus screenshots — no page errors.
