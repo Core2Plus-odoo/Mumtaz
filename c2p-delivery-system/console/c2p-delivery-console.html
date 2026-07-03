@@ -1723,10 +1723,10 @@ async function regenBlueprint(){
 // (text + attachments + connections), and it distributes work to the other
 // agents and reports status. Wraps the existing autopilot pipeline.
 const PM_SEGMENTS=[
-  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',ci:0,hint:'Odoo implementation — discovery to go-live'},
-  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',ci:1,hint:'Books, VAT, payroll'},
-  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',ci:2,hint:'Tax, audit, IFRS, CFO advisory'},
-  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',ci:3,hint:'Process, SOPs, strategy, KPIs'},
+  {key:'erp',role:'odoo_partner',ic:'⛁',label:'ERP',ci:0,service:null,hint:'Odoo implementation — discovery to go-live'},
+  {key:'bookkeeping',role:'bookkeeper',ic:'📒',label:'Bookkeeping',ci:1,service:'bookkeeping',hint:'Books, VAT, payroll'},
+  {key:'accounting',role:'chartered_accountant',ic:'📊',label:'Accounting',ci:2,service:'compliance_advisory',hint:'Tax, audit, IFRS, CFO advisory'},
+  {key:'consulting',role:'management_consultant',ic:'◎',label:'Consulting',ci:3,service:'sop_design',hint:'Process, SOPs, strategy, KPIs'},
 ];
 let pmState={segment:'erp',running:false};
 const PM_STEP={presales:{ic:'◎',t:'Qualifying the opportunity'},ba_discovery:{ic:'❔',t:'Asking discovery questions'},
@@ -1801,17 +1801,21 @@ async function runManager(){
     await api("POST",`/engagements/${eng.id}/presales`,{notes:brief,country:'UAE',industry:null});
     eng=await api("GET","/engagements/"+eng.id);
     row.className='pm-stat-row done';row.querySelector('.ic').textContent='✓';
-    // 3) autopilot loop — the PM distributes work to the agents
+    // 3) the PM distributes work — ERP runs the full autopilot pipeline; every
+    //    other segment runs ITS OWN workflow via the generic runner.
+    const svc=seg&&seg.service;
     let guard=0;
     while(guard++<24){
-      const r=await api("POST",`/engagements/${eng.id}/autopilot/step`,{});
-      if(r.status==='done'){pmStat('done','✓','All done','The Project Manager finished this stage of delivery.');break;}
+      let r;
+      if(svc){r=await api("POST",`/engagements/${eng.id}/workflow/step?service=${encodeURIComponent(svc)}`,{});}
+      else{r=await api("POST",`/engagements/${eng.id}/autopilot/step`,{});}
+      if(r.status==='done'){pmStat('done','✓','All done',`The Project Manager finished the ${seg?seg.label:''} workflow.`);break;}
       if(r.status==='needs_input'){pmStat('wait','✎','Waiting on you',(PM_STEP[r.ran]||{}).t||r.ran);break;}
       if(r.status==='blocked'){pmStat('wait','⚑','Needs your approval','Open Approvals to release the next step.');break;}
       if(r.status==='error'){pmStat('err','!','Hit a snag',r.error||'');break;}
-      const meta=PM_STEP[r.ran]||{ic:'•',t:r.ran};
-      const rw=pmStat('run','',meta.t,'');
-      // small settle so the row shows as active, then mark done
+      const title=r.label||(PM_STEP[r.ran]||{}).t||r.ran;
+      const sub=r.progress?`Step ${r.progress.done} of ${r.progress.total}`:'';
+      const rw=pmStat('run','',title,sub);
       rw.className='pm-stat-row done';rw.querySelector('.ic').textContent='✓';
     }
     eng=await api("GET","/engagements/"+eng.id);renderTopbar();

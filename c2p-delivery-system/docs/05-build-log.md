@@ -830,3 +830,24 @@ later at the Deliver stage:
 - Default landing is now the CRM funnel (Leads), not the PM command center, so
   the flow reads lead → qualify → propose → win → deliver (PM). Verified via
   headless render (sections + default view + Advanced expansion, no page errors).
+
+### Segments actually specialise — generic workflow runner ✅
+Each PM segment now runs ITS OWN workflow instead of the generic Odoo pipeline.
+- **Backend `/engagements/{id}/workflow/step?service=X`** (main.py) — a generic
+  runner that walks the service's workflow from the Consulting-OS workflow engine
+  one step at a time, tracking progress in `stages['_wf']` and keeping each step
+  result in `stages['_wf_out']`. `_workflow_run_step` executes each step with the
+  best available capability: `kb:finance_knowledge` steps call
+  `finance_knowledge.advise`; other `kb:` steps summarise deterministically; llm
+  steps call the matching agent (guarded, so a step never breaks the run). The
+  ERP segment keeps the richer autopilot (QA loops, docs, approvals, live
+  config/deploy) untouched — backward compatible.
+- **Console** — each PM segment carries its service (ERP→autopilot,
+  Bookkeeping→`bookkeeping`, Accounting→`compliance_advisory`,
+  Consulting→`sop_design`); the run loop calls the workflow runner for non-ERP
+  segments and renders each step's real label + "Step n of N" progress.
+- Verified: `py_compile`; in-process FastAPI TestClient run of three segments —
+  bookkeeping (onboarding→close→reconciliation→…→reporting), compliance_advisory
+  (discovery→review→advisory) and sop_design (mapping→SOP→docs) each ran their
+  own ordered steps; console headless run of the Bookkeeping segment showed its
+  own step labels and called `/workflow/step` (never autopilot), no page errors.

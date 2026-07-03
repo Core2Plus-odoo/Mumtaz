@@ -1970,6 +1970,89 @@ def autopilot_step(eng_id: str):
 
 
 # --------------------------------------------------------------------------- #
+# Generic workflow runner — segment-specialised delivery.
+# The ERP segment keeps the rich autopilot above; every other segment
+# (bookkeeping, accounting, consulting) runs ITS OWN workflow from the
+# Consulting-OS workflow engine, one step at a time, so the PM distributes the
+# right work for that practice instead of the Odoo pipeline.
+# --------------------------------------------------------------------------- #
+def _workflow_run_step(eng: Engagement, step: dict) -> dict:
+    """Execute one workflow step with the best available capability. kb: steps
+    use the deterministic knowledge modules; llm steps call the matching agent
+    (guarded, so a step never breaks the run). Returns a stored step result."""
+    key = step.get("key")
+    label = step.get("label", key)
+    done_when = step.get("done_when", "")
+    agents = step.get("agents") or []
+    primary = agents[0] if agents else None
+    brief = (eng.stages.get("presales") or {}).get("_notes") or eng.company
+    if primary == "kb:finance_knowledge":
+        advice = None
+        try:
+            advice = finance_knowledge.advise(f"{label}. {done_when}", "AE")
+        except Exception:  # noqa: BLE001
+            advice = None
+        return {"kind": "finance", "label": label, "summary": done_when or label,
+                "advice": advice}
+    if primary in ("kb:pm_knowledge", "kb:pm_status", "kb:knowledge"):
+        return {"kind": "knowledge", "label": label, "summary": done_when or label}
+    if primary in PROMPTS:
+        try:
+            content = (f"Client: {eng.company}\nWorkflow step: {label}\n"
+                       f"Objective: {done_when}\nClient brief:\n{brief}")
+            out = run_agent(primary, content, account_id=eng.account_id,
+                            engagement_id=eng.id)
+            return {"kind": "agent", "agent": primary, "label": label, "output": out}
+        except HTTPException as exc:
+            return {"kind": "note", "label": label, "summary": done_when or label,
+                    "note": str(exc.detail)[:200]}
+        except Exception as exc:  # noqa: BLE001
+            return {"kind": "note", "label": label, "summary": done_when or label,
+                    "note": str(exc)[:200]}
+    return {"kind": "note", "label": label, "summary": done_when or label}
+
+
+@app.post("/engagements/{eng_id}/workflow/step")
+def workflow_step(eng_id: str, service: str = "erp_implementation"):
+    """Run the next step of the given service's workflow. The console loops this
+    (like autopilot) until status is done / error. Progress is tracked per
+    engagement in stages['_wf']; each step's result is kept in stages['_wf_out']."""
+    eng = _engagement(eng_id)
+    from consulting import workflow_engine as _wfe
+    steps = _wfe.compose(service).get("steps", [])
+    if not steps:
+        return {"status": "done", "ran": None, "service": service}
+    state = eng.stages.get("_wf") or {}
+    if state.get("service") != service:
+        state = {"service": service, "done": []}
+    done = list(state.get("done") or [])
+    nxt = next((s for s in steps if s.get("key") not in done), None)
+    if not nxt:
+        state["done"] = done
+        eng.stages["_wf"] = state
+        store.save(eng)
+        return {"status": "done", "ran": None, "service": service,
+                "progress": {"done": len(done), "total": len(steps)}}
+    try:
+        result = _workflow_run_step(eng, nxt)
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "ran": nxt.get("key"), "error": str(exc),
+                "service": service}
+    done.append(nxt["key"])
+    state["done"] = done
+    eng.stages["_wf"] = state
+    outs = eng.stages.get("_wf_out") or {}
+    outs[nxt["key"]] = result
+    eng.stages["_wf_out"] = outs
+    store.save(eng)
+    remaining = [s for s in steps if s.get("key") not in done]
+    return {"status": "running" if remaining else "done", "ran": nxt.get("key"),
+            "label": nxt.get("label"), "done_when": nxt.get("done_when"),
+            "gate": nxt.get("gate"), "service": service,
+            "progress": {"done": len(done), "total": len(steps)}}
+
+
+# --------------------------------------------------------------------------- #
 # Phase 2 — Outreach (SDR) + the approval layer
 # --------------------------------------------------------------------------- #
 @app.post("/accounts/{account_id}/outreach")
