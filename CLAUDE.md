@@ -114,6 +114,16 @@ Conventions / pitfalls:
 - API base is `/api` (nginx proxies to uvicorn on 127.0.0.1:8800); auth token
   in localStorage `c2p_token` sent as Bearer.
 
+## Next build — Consulting OS (approved)
+
+The approved plan to generalise the Agency OS into a multi-tenant
+consultant-first platform (roles × client types × services → generated
+workflows/agents/templates, wizard, event bus, knowledge hub v2) lives in
+`c2p-delivery-system/docs/06-consulting-os-plan.md`. Build order: profile +
+catalog + wizard → intelligence/workflow engine → activation matrix → event
+bus → hub v2 → new role prompts. Extend, never replace; new code goes in
+`delivery_api/consulting|routers|events|hub`, not main.py.
+
 ## Working agreements
 
 - Standard-first is the product's core discipline: standard config → native
