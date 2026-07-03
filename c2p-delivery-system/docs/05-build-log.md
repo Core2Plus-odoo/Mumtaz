@@ -892,3 +892,11 @@ Removed all C2P product branding — Mumtaz is the standalone product; any firm
   consultancy". Generated documents and agent output no longer say C2P.
 - Verified: py_compile + main imports; console JS syntax + headless render
   (title "Delivery Console · Mumtaz", Mumtaz logo, zero C2P text, no page errors).
+
+### Built-in intelligence for every skill set — consulting_knowledge ✅
+Added a large, built-in management-consulting knowledge base (frameworks: process
+mapping/SIPOC, gap assessment, Lean/DMAIC, SOP authoring, Balanced Scorecard/KPI
+trees, strategy, TOM/org design, ADKAR/Kotter change, cost/efficiency; SOP anatomy;
+per-function KPI trees; the Frame→…→Sustain method). `advise()`/`digest()` no API.
+Embedded into functional/ba/ba_discovery/proposal/docwriter/director/pm/research
+agents; the workflow runner grounds consulting-segment steps with the frameworks.
