@@ -851,3 +851,14 @@ Each PM segment now runs ITS OWN workflow instead of the generic Odoo pipeline.
   (discovery→review→advisory) and sop_design (mapping→SOP→docs) each ran their
   own ordered steps; console headless run of the Bookkeeping segment showed its
   own step labels and called `/workflow/step` (never autopilot), no page errors.
+
+### Modern compact overhaul + agency setup moved to Settings ✅
+- **v9 modern-compact layer** — a full shell overhaul: slimmer 216px sidebar,
+  denser icon-forward nav, compact topbar, tighter content/panel/button density,
+  refined neutral palette + single teal accent, smaller radii and flatter
+  shadows. Applied across the shell and the PM home.
+- **Agency setup relocated** — removed from the sidebar; now set at signup (the
+  first-run wizard) and thereafter under **Settings → Agency setup**, which shows
+  a live roles / segments / services summary and an "Open setup" button.
+- Verified: JS syntax + no duplicate function names + Playwright headless render
+  of the PM home and Settings (agency-setup panel present) — no page errors.

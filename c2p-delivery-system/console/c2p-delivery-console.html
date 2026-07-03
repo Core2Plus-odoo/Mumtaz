@@ -721,6 +721,65 @@
   .pm-seg .seg.s1.on{border-color:#f0932b;background:linear-gradient(180deg,rgba(240,147,43,.14),rgba(240,147,43,.02));box-shadow:0 8px 20px -14px rgba(240,147,43,.7)}
   .pm-seg .seg.s2.on{border-color:#4aa3ff;background:linear-gradient(180deg,rgba(74,163,255,.14),rgba(74,163,255,.02));box-shadow:0 8px 20px -14px rgba(74,163,255,.7)}
   .pm-seg .seg.s3.on{border-color:#7b5bff;background:linear-gradient(180deg,rgba(123,91,255,.14),rgba(123,91,255,.02));box-shadow:0 8px 20px -14px rgba(123,91,255,.7)}
+
+  /* ================= v9: MODERN COMPACT OVERHAUL (shell) ================= */
+  :root{
+    --sb:216px;
+    --line:#E9EBEF;--line-soft:#F1F3F6;--paper:#F7F8FA;--surface:#fff;
+    --muted:#616B78;--muted-2:#9AA2AD;
+    --accent:#0EA5A5;--accent-2:#0B8585;--accent-ink:#0A6C6C;
+    --grad-hero:linear-gradient(120deg,#12BDBD 0%,#0B9C9C 60%,#0A7E7E 100%);
+    --shadow:0 1px 2px rgba(16,24,40,.04);
+    --shadow-lg:0 20px 50px -24px rgba(16,24,40,.28);
+    --r:9px;--r-sm:7px;--r-lg:13px;
+  }
+  body{font-size:13.5px;line-height:1.5}
+  /* sidebar — slim, quiet, icon-forward */
+  .sidebar{background:#FCFCFD;border-right:1px solid var(--line)}
+  .sb-brand{padding:15px 16px 4px}.sb-logo{height:26px}
+  .sb-strap{padding:0 16px 12px}.sb-strap b{font-size:12.5px}.sb-strap span{font-size:9.5px}
+  .sb-eng{margin:4px 10px 8px;padding:9px 10px;border-radius:9px}
+  .sb-eng .lbl{font-size:8.5px;margin-bottom:5px}
+  .sb-eng select{font-size:12px;padding:7px 8px;border-radius:7px}
+  #nav{padding:2px 8px}
+  .nav-sec{font-size:8.5px;letter-spacing:1.1px;padding:12px 8px 4px;color:var(--muted-2)}
+  .nav-item{gap:9px;font-size:12.5px;font-weight:500;padding:6px 9px;border-radius:7px;color:var(--muted)}
+  .nav-item .ni-ico{width:17px;text-align:center;font-size:14px;opacity:.9}
+  .nav-item.active{background:rgba(14,165,165,.1);color:var(--accent-ink);font-weight:600;box-shadow:none}
+  .nav-item.active::before{top:6px;bottom:6px;width:2.5px;background:var(--accent)}
+  .nav-toggle{margin:6px 8px;padding:6px 9px;font-size:11px}
+  .sb-foot{padding:9px 12px}
+  /* topbar — compact */
+  .topbar{padding:9px 20px;gap:12px;min-height:52px}
+  .tb-title{font-size:15px;letter-spacing:-.2px}.tb-sub{font-size:10.5px}
+  .tb-bar{width:104px;height:5px}
+  /* content density */
+  .view{padding:20px 22px;max-width:1180px}
+  .panel{border-radius:var(--r-lg);box-shadow:var(--shadow);border:1px solid var(--line)}
+  .panel-head{padding:16px 18px}
+  .panel-head h2{font-size:16px;letter-spacing:-.3px}
+  .panel-head p{font-size:12.5px;color:var(--muted)}
+  .panel-body{padding:16px 18px}
+  /* buttons — tighter, modern */
+  .btn{font-size:12px;padding:7px 12px;border-radius:8px;box-shadow:none}
+  .btn.sm{font-size:11px;padding:5px 9px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);box-shadow:0 1px 2px rgba(14,165,165,.25)}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  .chip{font-size:11px;padding:3px 8px;border-radius:7px}
+  input[type=text],textarea,select{font-size:13px;border-radius:8px}
+  .nav-item.active::before{border-radius:0 3px 3px 0}
+  /* PM home — modern compact */
+  .pm-wrap{max-width:760px}
+  .pm-head{margin:2px 0 16px}.pm-head h2{font-size:21px}
+  .pm-head p{font-size:13px}
+  .pm-seg .seg{padding:8px 13px;border-radius:10px;font-size:12.5px}
+  .pm-seg .seg .si{font-size:16px}
+  .pm-composer{border-radius:var(--r-lg)}
+  .pm-composer textarea{font-size:14px;min-height:104px}
+  .pm-send{padding:9px 15px;font-size:12.5px;border-radius:9px}
+  .pm-tool{font-size:12px;padding:6px 10px}
+  .pm-stat-row{padding:10px 12px;border-radius:10px;margin-bottom:6px}
+  .pm-stat-row .ic{width:26px;height:26px;border-radius:7px;font-size:12px}
 </style>
 </head>
 <body>
@@ -982,7 +1041,6 @@ function renderNav(){
     navBtn('blueprint','◱','Workflow Blueprint'),
 
     navSec('Admin'),
-    navBtn('wizard','🧭','Setup Wizard'),
     navBtn('activity','◷','Agent Activity'),
     navBtn('settings','⚙','Settings'),
   ];
@@ -2549,7 +2607,11 @@ function brandPreview(){return `
   </div>`;}
 function renderSettings(c){
   const v=k=>esc(BRAND[k]||'');
-  c.innerHTML=`<div class="view">`+workspacePanel()+`<div class="panel">
+  c.innerHTML=`<div class="view">`+workspacePanel()+`<div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><div><h2>Agency setup</h2><p>Your roles, client segments and services — this configures the workflows and agents. Set once at signup; change it here anytime.</p></div>
+      <div class="run-area"><button class="btn primary sm" onclick="goView('wizard')">Open setup →</button></div></div>
+    <div class="panel-body" id="setupSummary"><div class="hint">Loading your setup…</div></div></div>
+  <div class="panel">
     <div class="panel-head"><div><h2>Branding &amp; Settings</h2><p>Control how the console and every generated document are branded. Saved on the server, applied for all users.</p></div>
       <div class="run-area"><button class="btn ghost sm" onclick="resetBranding()">Reset to C2P</button><button class="btn primary sm" onclick="saveBranding()">Save</button></div></div>
     <div class="panel-body"><div class="two-col">
@@ -2581,6 +2643,20 @@ function renderSettings(c){
         <div id="brandPreview">${brandPreview()}</div>
       </div>
     </div></div></div></div>`;
+  fillSetupSummary();
+}
+async function fillSetupSummary(){
+  const el=document.getElementById('setupSummary');if(!el)return;
+  try{const p=await api("GET","/consulting/profile");
+    if(!p||!(p.roles||[]).length){el.innerHTML=`<div class="hint">You haven’t completed setup yet. <a href="#" onclick="goView('wizard');return false" style="color:var(--accent-ink);font-weight:600">Run it now →</a></div>`;return;}
+    const cat=window._setupCat||(window._setupCat=await api("GET","/consulting/catalog").catch(()=>null));
+    const lbl=(map,k)=>((cat&&cat[map]&&cat[map][k])||k);
+    const allsv={};if(cat)Object.values(cat.services||{}).forEach(o=>Object.assign(allsv,o));
+    const chip=x=>`<span class="chip">${esc(x)}</span>`;
+    el.innerHTML=`<div class="set-h">Roles</div><div class="chips" style="margin-bottom:8px">${(p.roles||[]).map(r=>chip(lbl('roles',r))).join('')||'<span class="hint">—</span>'}</div>
+      <div class="set-h">Client segments</div><div class="chips" style="margin-bottom:8px">${(p.client_types||[]).map(c=>chip(lbl('client_types',c))).join('')||'<span class="hint">—</span>'}</div>
+      <div class="set-h">Services</div><div class="chips">${(p.services||[]).map(s=>chip(allsv[s]||s)).join('')||'<span class="hint">—</span>'}</div>`;
+  }catch(e){el.innerHTML=`<div class="hint">Setup unavailable: ${esc(e.message)}</div>`;}
 }
 function brandField(k,val){BRAND[k]=val;if(k==='accent'||k==='accentDark'||k==='ink')applyBranding();const p=document.getElementById('brandPreview');if(p)p.innerHTML=brandPreview();}
 function loadLogo(which,input){const f=input.files&&input.files[0];if(!f)return;if(f.size>1500000){toast('Logo too large (max ~1.5 MB) — use a smaller PNG/SVG','bad');return;}const rd=new FileReader();rd.onload=()=>{BRAND[which]=rd.result;applyBranding();renderSettings(document.getElementById('content'));toast('Logo loaded — click Save to apply','info');};rd.readAsDataURL(f);}
