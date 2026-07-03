@@ -850,6 +850,7 @@ function renderNav(){
     navBtn('odoo','⛁','Odoo Explorer'),
 
     navSec('Admin'),
+    navBtn('wizard','🧭','Setup Wizard'),
     navBtn('activity','◷','Agent Activity'),
     navBtn('settings','⚙','Settings'),
   ].join('');
@@ -890,6 +891,7 @@ function renderView(){
   if(activeView==='odooconn')return renderOdooConn(c);
   if(activeView==='odoostd')return renderStandardRef(c);
   if(activeView==='verticals')return renderVerticals(c);
+  if(activeView==='wizard')return renderWizard(c);
   if(activeView==='githubconn')return renderGithubConn(c);
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
@@ -1426,6 +1428,85 @@ async function testOdooConn(){
   const r=document.getElementById('oc_result');r.textContent='Testing…';
   try{const o=await api("POST","/odoo/connection/test",{db:val('oc_db')||undefined});r.innerHTML=`<span style="color:var(--green)">✓ Connected to ${esc(o.db)} — ${o.modules} installed modules.</span>`;}
   catch(e){r.innerHTML=`<span style="color:var(--rust)">✗ ${esc(e.message)}</span>`;}
+}
+
+/* ---------- consulting OS — setup wizard (5 steps) ---------- */
+let wiz={step:1,catalog:null,profile:null};
+async function renderWizard(c){
+  c.innerHTML=`<div class="view"><div class="panel">
+    <div class="panel-head"><div><h2>🧭 Consultant Setup Wizard</h2><p>Tell the platform who you are, who you serve and what you deliver — it configures your workflows, agents and templates from this.</p></div>
+      <div class="run-area"><span class="chip" id="wizStep">Step ${wiz.step} of 5</span></div></div>
+    <div class="panel-body" id="wizBody"><div class="skel" style="height:200px"></div></div></div></div>`;
+  try{
+    if(!wiz.catalog)wiz.catalog=await api("GET","/consulting/catalog");
+    if(!wiz.profile)wiz.profile=await api("GET","/consulting/profile");
+    drawWizStep();
+  }catch(e){const b=document.getElementById('wizBody');if(b)b.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+}
+function wizChip(list,key,label){const on=(list||[]).includes(key);
+  return `<button class="btn ${on?'primary':''} sm" onclick="wizToggle('${key}',this)" data-k="${key}">${on?'✓ ':''}${esc(label)}</button>`;}
+let _wizField='roles';
+function wizToggle(key){
+  const l=wiz.profile[_wizField]=wiz.profile[_wizField]||[];
+  const i=l.indexOf(key); i>=0?l.splice(i,1):l.push(key);
+  drawWizStep();
+}
+function drawWizStep(){
+  const b=document.getElementById('wizBody');if(!b)return;
+  document.getElementById('wizStep').textContent=`Step ${wiz.step} of 5`;
+  const p=wiz.profile,cat=wiz.catalog;
+  const nav=(back,nextLabel)=>`<div style="display:flex;gap:8px;margin-top:16px">${back?`<button class="btn sm" onclick="wiz.step--;drawWizStep()">← Back</button>`:''}<button class="btn primary" onclick="wizNext()">${nextLabel||'Continue →'}</button></div>`;
+  if(wiz.step===1){
+    b.innerHTML=`<div class="set-h">Step 1 · Consultant identity</div>
+      <div class="input-grid"><div class="input-block"><label>Your name</label><input type="text" id="wz_name" value="${esc(p.identity.name||'')}"></div>
+      <div class="input-block"><label>Email</label><input type="text" id="wz_email" value="${esc(p.identity.email||'')}"></div></div>
+      <div class="input-grid"><div class="input-block"><label>Company / firm</label><input type="text" id="wz_company" value="${esc(p.identity.company||'')}"></div>
+      <div class="input-block"><label>Country</label><input type="text" id="wz_country" value="${esc(p.identity.country||'UAE')}"></div></div>${nav(false)}`;
+  }else if(wiz.step===2){_wizField='roles';
+    b.innerHTML=`<div class="set-h">Step 2 · Your role(s) — select all that apply</div>
+      <div class="chips" style="gap:8px">${Object.entries(cat.roles).map(([k,l])=>wizChip(p.roles,k,l)).join('')}</div>${nav(true)}`;
+  }else if(wiz.step===3){_wizField='client_types';
+    b.innerHTML=`<div class="set-h">Step 3 · Client segments you serve</div>
+      <div class="chips" style="gap:8px">${Object.entries(cat.client_types).map(([k,l])=>wizChip(p.client_types,k,l)).join('')}</div>${nav(true)}`;
+  }else if(wiz.step===4){_wizField='services';
+    const all={};Object.values(cat.services).forEach(sv=>Object.assign(all,sv));
+    const avail={};(p.roles||[]).forEach(r=>Object.assign(avail,cat.services[r]||{}));
+    b.innerHTML=`<div class="set-h">Step 4 · Services you deliver <span class="hint">(auto-suggested from your roles × clients — edit freely)</span></div>
+      <div class="chips" style="gap:8px">${Object.entries(avail).map(([k,l])=>wizChip(p.services,k,l)).join('')}</div>${nav(true)}`;
+  }else{
+    b.innerHTML=`<div class="set-h">Step 5 · Output configuration</div>
+      <div class="input-grid"><div class="input-block"><label>Proposal template</label><select id="wz_prop"><option value="default">C2P branded (default)</option></select></div>
+      <div class="input-block"><label>BRD template</label><select id="wz_brd"><option value="default">C2P branded (default)</option></select></div></div>
+      <div class="callout"><b>Ready.</b> Finishing will configure your workflows, activate the matching agents and set your document templates.</div>
+      ${nav(true,'✓ Finish setup')}`;
+  }
+}
+async function wizNext(){
+  const p=wiz.profile;
+  if(wiz.step===1){
+    p.identity={name:val('wz_name'),email:val('wz_email'),company:val('wz_company'),country:val('wz_country')||'UAE'};
+    try{await api("POST","/consulting/profile",{identity:p.identity});}catch(e){toast(e.message,'bad');return;}
+  }
+  if(wiz.step===2&&!(p.roles||[]).length){toast('Select at least one role','bad');return;}
+  if(wiz.step===3){ // auto-suggest services entering step 4
+    try{const r=await api("POST","/consulting/suggest-services",{roles:p.roles,client_types:p.client_types});
+      if(!(p.services||[]).length)p.services=r.services||[];}catch(_){}
+  }
+  if(wiz.step<5){wiz.step++;drawWizStep();return;}
+  try{
+    const r=await api("POST","/consulting/wizard/complete",{identity:p.identity,roles:p.roles,client_types:p.client_types,services:p.services,
+      output:{proposal_template:val('wz_prop')||'default',brd_template:val('wz_brd')||'default'}});
+    wiz.profile=r.profile;
+    const s=r.summary;
+    document.getElementById('wizBody').innerHTML=`<div class="callout" style="border-color:rgba(18,192,140,.4)"><b style="color:#0a8a66">✓ Setup complete.</b> Your platform is configured.</div>
+      <div class="sec" style="margin-top:12px"><h3>Your configuration</h3>
+        <div class="set-h">Roles</div><div class="chips">${s.roles.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
+        <div class="set-h" style="margin-top:8px">Client segments</div><div class="chips">${s.client_types.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
+        <div class="set-h" style="margin-top:8px">Services</div><div class="chips">${s.services.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div></div>
+      <div class="hint" style="margin-top:10px">Every agent now works as ${esc(p.identity.company||'your firm')} — scoped to these roles and services.</div>
+      <button class="btn primary" style="margin-top:12px" onclick="goView('cockpit')">Open the Cockpit →</button>`;
+    toast('Consultant profile saved — agents reconfigured','ok');
+  }catch(e){toast(e.message,'bad');}
 }
 
 /* ---------- industry (vertical) playbooks — five-role view ---------- */

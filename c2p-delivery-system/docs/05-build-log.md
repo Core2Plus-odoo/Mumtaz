@@ -711,3 +711,19 @@ Technical.
 `sales_block()` injects the vertical's commercial angle into presales/outreach
 at call time. New `GET /verticals` + `GET /verticals/{key}` and a console
 **Industry Playbooks** view (Grounding) with per-role cards. All local.
+
+### Consulting OS — slice 1: profile + catalog + wizard ✅
+First slice of the approved Consulting-OS plan (docs/06-consulting-os-plan.md):
+- `consulting/service_catalog.py` — roles × client types × per-role service
+  catalog + SUGGEST[(role, client)] defaults, `suggest_services()` (union across
+  selections), `validate()`.
+- `consulting/consultant_profile.py` — per-tenant profile in app_settings
+  (tenant-isolated via StoreProxy); merge-save with validation;
+  `profile_block()` injected into EVERY agent call via run_agent so all agents
+  speak as the consultant's firm, scoped to their roles/segments/services.
+- `routers/onboarding.py` — /consulting/catalog · /profile (GET/POST) ·
+  /suggest-services · /wizard/complete (validated finalise + summary).
+  main.py gains only init + include_router (extend-not-replace).
+- Console **Setup Wizard** (Admin): 5 steps — identity → roles (multi) →
+  client segments (multi) → services (auto-suggested, editable) → output
+  config → completion summary. Verified headless end-to-end.

@@ -120,6 +120,10 @@ def _github_conn():
 github_mod.CONN_PROVIDER = _github_conn
 app = FastAPI(title="C2P Agency OS API", version="1.2.0")
 
+# Consulting OS (additive): consultant profile + wizard router.
+from consulting import consultant_profile  # noqa: E402
+from routers import onboarding as onboarding_router  # noqa: E402
+
 # The frontends are static HTML served by Nginx; allow them to call this API.
 app.add_middleware(
     CORSMiddleware,
@@ -127,6 +131,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+onboarding_router.init(store, ks)
+app.include_router(onboarding_router.router)
 
 
 @app.middleware("http")
@@ -170,6 +177,12 @@ async def _tenant_mw(request: Request, call_next):
 # --------------------------------------------------------------------------- #
 def run_agent(stage: str, user_content: str, web_search: bool = False,
               account_id: str | None = None, engagement_id: str | None = None) -> dict:
+    # Consulting OS: every agent knows WHO the consultant is (roles/segments/
+    # services), so outputs speak as this firm and stay scoped to its practice.
+    try:
+        user_content = user_content + consultant_profile.profile_block(store)
+    except Exception:
+        pass
     fb = _qa_feedback.get()
     if fb:
         user_content = (
