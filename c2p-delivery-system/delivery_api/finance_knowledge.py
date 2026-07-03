@@ -124,7 +124,7 @@ def digest() -> str:
                     for c, d in TAX_REGIMES.items())
     ifrs = "; ".join(f"{e['std']} ({e['keys'][0]})" for e in IFRS)
     proc = "; ".join(f"{p['keys'][0]}→{p['fit']}" for p in PROCESSES)
-    return ("CHARTERED-ACCOUNTANT REFERENCE (C2P). Apply the correct treatment, cite the "
+    return ("CHARTERED-ACCOUNTANT REFERENCE. Apply the correct treatment, cite the "
             "standard, and map to Odoo accounting modules — standard-first.\n"
             "GCC/PK indirect tax: " + tax + "\nIFRS treatments: " + ifrs +
             "\nFinance process → Odoo fit: " + proc)

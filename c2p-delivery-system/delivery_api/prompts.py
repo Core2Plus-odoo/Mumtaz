@@ -595,6 +595,7 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         import ba_knowledge as _bak
         import sales_knowledge as _sk
         import tech_knowledge as _tk
+        import consulting_knowledge as _con
 
         _ODOO = _ok.capability_digest()
         _STD = _os_.digest()               # comprehensive standard-first reference
@@ -605,22 +606,25 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         _BA = _bak.digest()
         _SALES = _sk.digest()              # sales & marketing playbook
         _TECH = _tk.digest()               # Odoo development standards
+        _CON = _con.digest()               # management-consulting frameworks/SOP/KPI
 
         _AGENT_KNOWLEDGE = {
-            "functional": _STD + "\n\n" + _AUTO + "\n\n" + _FIN,
-            "ba": _STD + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA,
-            "ba_discovery": _BA + "\n\n" + _STD,
+            "functional": _STD + "\n\n" + _AUTO + "\n\n" + _FIN + "\n\n" + _CON,
+            "ba": _STD + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA + "\n\n" + _CON,
+            "ba_discovery": _BA + "\n\n" + _STD + "\n\n" + _CON,
             "developer": _TECH + "\n\n" + _STD + "\n\n" + _AUTO,
-            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD + "\n\n" + _SALES,
+            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD + "\n\n" + _SALES + "\n\n" + _CON,
             "project": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
             "config": _STD + "\n\n" + _AUTO + "\n\n" + _FIN,
+            "docwriter": _CON + "\n\n" + _FIN + "\n\n" + _STD,
+            "director": _PM + "\n\n" + _METH + "\n\n" + _CON,
             "dispatch": _ODOO,
             "presales": _SALES + "\n\n" + _STD + "\n\n" + _BA,
-            "pm": _PM + "\n\n" + _METH,
+            "pm": _PM + "\n\n" + _METH + "\n\n" + _CON,
             "prospect": _SALES,
             "outreach": _SALES,
             "comms": _SALES,
-            "research": _SALES,
+            "research": _SALES + "\n\n" + _CON,
         }
         for _k, _v in _AGENT_KNOWLEDGE.items():
             if _k in PROMPTS:
