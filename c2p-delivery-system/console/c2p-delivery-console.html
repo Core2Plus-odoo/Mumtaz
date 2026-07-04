@@ -876,6 +876,91 @@
   .proj-row .pn{font-weight:600;font-size:13px;color:var(--charcoal)}
   .proj-row .pm{font-size:11.5px;color:var(--muted-2)}
   .proj-row .parrow{margin-left:auto;color:var(--muted-2)}
+
+  /* ============ v12: ODOO-STYLE ERP CHROME ============ */
+  :root{
+    --paper:#F4F5F7;          /* Odoo body grey */
+    --surface:#ffffff;
+    --line:#DFE2E8;--line-soft:#EAECF1;
+    --charcoal:#1F2937;--muted:#6B7280;--muted-2:#9CA3AF;
+    --accent:#2E74F6;--accent-2:#1E5FE0;--accent-ink:#1B50CC;
+    --r:6px;--r-sm:4px;--r-lg:8px;
+    --sb:230px;
+    --shadow:0 1px 2px rgba(17,24,39,.05);
+    --shadow-lg:0 12px 40px -12px rgba(17,24,39,.22);
+  }
+  body{background:var(--paper);font-size:13px}
+  /* sidebar — flat Odoo app menu */
+  .sidebar{background:#fff;border-right:1px solid var(--line)}
+  .nav-item{border-radius:4px;font-size:13px;padding:6px 9px}
+  .nav-item.active{background:rgba(46,116,246,.1);color:var(--accent-ink)}
+  .nav-item.active::before{width:3px;border-radius:0}
+  .nav-sec{font-size:9px;color:var(--muted-2)}
+  /* ===== Odoo control-panel top bar ===== */
+  .topbar{background:#fff;border-bottom:1px solid var(--line);min-height:46px;padding:0 14px;gap:10px;box-shadow:0 1px 0 rgba(17,24,39,.02)}
+  .odoo-bc{display:flex;align-items:center;gap:7px;min-width:0}
+  .odoo-bc .home{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:800;font-size:13px;flex:none;cursor:pointer}
+  .odoo-bc .crumb{font-size:14px;font-weight:600;color:var(--charcoal);white-space:nowrap;letter-spacing:-.1px}
+  .odoo-bc .sep{color:var(--muted-2);font-size:12px}
+  .odoo-bc .crumb.dim{color:var(--muted);font-weight:500}
+  .tb-actions .btn{border-radius:5px}
+  .systray{display:flex;align-items:center;gap:6px}
+  .systray .sysbtn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--muted);cursor:pointer;position:relative;font-size:15px;border:1px solid transparent}
+  .systray .sysbtn:hover{background:var(--paper);border-color:var(--line)}
+  .systray .sysbtn .cnt{position:absolute;top:-3px;right:-3px;background:var(--rust);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:9px;display:grid;place-items:center;padding:0 3px}
+  .systray .who{display:flex;align-items:center;gap:7px;padding:3px 8px 3px 4px;border-radius:20px;cursor:pointer;border:1px solid var(--line)}
+  .systray .who .av{width:24px;height:24px;border-radius:50%;background:var(--grad-hero);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+  .systray .who .nm{font-size:12px;font-weight:600;color:var(--charcoal);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ===== Odoo control panel (per view header) ===== */
+  .cp{display:flex;align-items:center;gap:10px;background:#fff;border-bottom:1px solid var(--line);padding:9px 16px;flex-wrap:wrap;position:sticky;top:0;z-index:8}
+  .cp .cp-title{font-size:16px;font-weight:700;color:var(--charcoal);letter-spacing:-.3px;margin-right:4px}
+  .cp .cp-new{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:7px 13px;font-weight:600;font-size:12.5px;cursor:pointer}
+  .cp .cp-new:hover{background:var(--accent-2)}
+  .cp .sp{flex:1}
+  .cp .cp-search{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;padding:5px 10px;min-width:220px;background:#fff}
+  .cp .cp-search input{border:none;outline:none;font-size:12.5px;width:100%;padding:0}
+  .cp .switcher{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .cp .switcher button{border:none;background:#fff;padding:6px 9px;cursor:pointer;color:var(--muted);font-size:13px}
+  .cp .switcher button.on{background:var(--accent);color:#fff}
+  .view{padding:16px 18px}
+  /* flatten cards → Odoo sheets */
+  .panel,.dash-card,.stat,.pm-composer,.wz-card,.dash-hero{border-radius:8px}
+  .panel{box-shadow:var(--shadow);border:1px solid var(--line)}
+  .stat{box-shadow:var(--shadow);border-radius:8px}
+  .stat:hover{transform:none;box-shadow:0 4px 14px -6px rgba(17,24,39,.2)}
+  .btn{border-radius:5px}
+  .chip{border-radius:4px}
+  /* Odoo-style dense tables */
+  table.odoo{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  table.odoo thead th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+  table.odoo tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft)}
+  table.odoo tbody tr:hover{background:rgba(113,75,103,.05);cursor:pointer}
+
+  /* ============ v13: ODOO AUBERGINE (purple) THEME ============ */
+  :root{
+    --accent:#714B67;--accent-2:#5C3D54;--accent-ink:#5C3D54;
+    --teal:#714B67;--deep-teal:#5C3D54;
+    --grad-hero:linear-gradient(120deg,#8A5E7E 0%,#714B67 55%,#5C3D54 100%);
+  }
+  ::selection{background:rgba(113,75,103,.2)}
+  .nav-item.active{background:rgba(113,75,103,.12);color:var(--accent-ink)}
+  .nav-item.active::before{background:var(--accent)}
+  .sb-strap span{color:var(--accent-ink)}
+  .odoo-bc .home{background:var(--accent)}
+  .chip{background:rgba(113,75,103,.1);border:1px solid rgba(113,75,103,.24);color:var(--accent-ink)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);box-shadow:0 1px 2px rgba(113,75,103,.3)}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(113,75,103,.14)}
+  .cp .cp-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(113,75,103,.12)}
+  .pm-composer:focus-within{border-color:var(--accent);box-shadow:0 14px 34px -18px rgba(113,75,103,.45)}
+  .pm-tool:hover{border-color:rgba(113,75,103,.5);color:var(--accent-ink)}
+  .pm-seg .seg.on,.pm-seg .seg.s0.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(113,75,103,.1),rgba(113,75,103,.02));box-shadow:0 8px 20px -14px rgba(113,75,103,.6)}
+  .stat.c0 .si{background:rgba(113,75,103,.12);color:#714B67}
+  .dash-hero{box-shadow:0 24px 60px -30px rgba(113,75,103,.55)}
+  .stat:hover{box-shadow:0 6px 16px -6px rgba(113,75,103,.35)}
+  .auth-prod .ap-ic{background:linear-gradient(135deg,#8A5E7E,#714B67)}
+  .auth-prod.p2 .ap-ic{background:linear-gradient(135deg,#9C6E90,#714B67)}
+  .badge.b-done,.badge.b-pursue{background:linear-gradient(135deg,#875A7B,#5C3D54)}
 </style>
 </head>
 <body>
@@ -910,15 +995,14 @@
     <div class="main">
       <div class="topbar">
         <button class="btn ghost sm menu-btn" onclick="toggleSidebar(true)">☰</button>
-        <div>
-          <div class="tb-title" id="tbTitle">Delivery Console</div>
-          <div class="tb-sub" id="tbSub">No engagement selected</div>
-        </div>
+        <div class="odoo-bc" id="tbCrumb"></div>
         <div class="tb-prog" id="tbProg" style="display:none">
           <div class="tb-bar"><i id="tbBar" style="width:0%"></i></div>
           <span class="tb-sub" id="tbPct">0%</span>
         </div>
+        <span style="flex:1"></span>
         <div class="tb-actions" id="tbActions"></div>
+        <div class="systray" id="tbSystray"></div>
       </div>
       <div class="content" id="content"></div>
     </div>
@@ -1158,21 +1242,38 @@ function renderNav(){
   const html=[...simple, toggle, ...(advancedMode?advanced:[])].join('');
   nav.innerHTML=html;
 }
+const VIEW_LABELS={dashboard:'Dashboard',manager:'Project Manager',leads:'Leads',accounts:'Customers',
+  presales:'Presales',proposal:'Proposal',project:'Project Plan',functional:'Functional',developer:'Developer',
+  clarify:'Client Replies',documents:'Documents',approvals:'Approvals',execution:'Execution',overview:'Overview',
+  ba:'Business Analyst',comms:'Communications',verticals:'Industry Playbooks',odoostd:'Odoo Standard',
+  odooconn:'Odoo Connection',githubconn:'GitHub Repo',odoo:'Odoo Explorer',blueprint:'Workflow Blueprint',
+  activity:'Agent Activity',settings:'Settings',wizard:'Agency Setup'};
+function viewLabel(v){return VIEW_LABELS[v]||v;}
 function renderTopbar(){
-  const title=document.getElementById('tbTitle'),sub=document.getElementById('tbSub');
+  const crumb=document.getElementById('tbCrumb');
   const prog=document.getElementById('tbProg'),actions=document.getElementById('tbActions');
-  if(!eng){
-    title.textContent="Delivery Console";sub.textContent="Select or create an engagement to begin";
-    prog.style.display='none';actions.innerHTML='';return;
-  }
-  title.textContent=eng.company;
-  sub.innerHTML=`${eng.id}${eng.odoo_db?' · '+esc(eng.odoo_db):''}${eng.created_at?' · '+new Date(eng.created_at).toLocaleDateString():''}`;
-  const pct=Math.round(doneCount()/STAGES.length*100);
-  prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';
-  actions.innerHTML=`
+  const systray=document.getElementById('tbSystray');
+  // Odoo-style breadcrumb: [M] App / View  (/ Project when a project is scoped)
+  const projScoped=PROJECT_VIEWS.includes(activeView)||activeView==='manager';
+  let bc=`<div class="home" onclick="goView('dashboard')" title="Home">${esc((BRAND.name||'M')[0].toUpperCase())}</div>`
+       + `<span class="crumb">${esc(viewLabel(activeView))}</span>`;
+  if(projScoped&&eng)bc+=`<span class="sep">›</span><span class="crumb dim">${esc(eng.company)}</span>`;
+  crumb.innerHTML=bc;
+  // progress bar only inside a project
+  if(eng&&projScoped){const pct=Math.round(doneCount()/STAGES.length*100);
+    prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';}
+  else prog.style.display='none';
+  // contextual actions (project export/doc live only inside a project)
+  actions.innerHTML=(eng&&projScoped)?`
     <button class="btn ghost sm" onclick="exportEngagement()" title="Download engagement JSON">⤓ Export</button>
-    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Generate Document</button>
-    ${(adminAuth||multitenant)?`<button class="btn ghost sm" onclick="logout()" title="Sign out">⎋ Sign out</button>`:''}`;
+    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Document</button>`:'';
+  // systray: approvals bell + user/tenant chip
+  const ac=(typeof pendingCount!=='undefined'&&pendingCount)||0;
+  const who=(currentTenant&&currentTenant.name)||(BRAND.name||'Mumtaz');
+  systray.innerHTML=`
+    <div class="sysbtn" onclick="goView('approvals')" title="Approvals">✓${ac?`<span class="cnt">${ac}</span>`:''}</div>
+    <div class="sysbtn" onclick="goView('settings')" title="Settings">⚙</div>
+    ${(adminAuth||multitenant)?`<div class="who" onclick="logout()" title="Sign out"><span class="av">${esc(who[0].toUpperCase())}</span><span class="nm">${esc(who)}</span></div>`:''}`;
 }
 function goView(v){
   if(PROJECT_VIEWS.includes(v)&&!eng){pmGate();return;}
@@ -1648,20 +1749,29 @@ async function odooFields(){
 
 /* ---------- leads CRM ---------- */
 let lastProspects=[];
+let _leadsCache=[];
 async function renderLeads(c){
-  c.innerHTML=`<div class="view">
-    <div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Prospecting</h2><p>Find ICP-fit companies and save them as leads.</p></div></div>
-      <div class="panel-body">
-        <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="pr_ind" placeholder="Manufacturing"></div>
-          <div class="input-block"><label>Country</label><input type="text" id="pr_country" value="UAE"></div></div>
-        <div class="input-grid"><div class="input-block"><label>Size band</label><input type="text" id="pr_size" placeholder="20-500 employees"></div>
-          <div class="input-block"><label>Signals</label><input type="text" id="pr_sig" placeholder="ERP modernisation, growth"></div></div>
-        <button class="btn primary sm" onclick="runProspector()">Find prospects</button>
-        <div id="prResult" style="margin-top:14px"></div></div></div>
-    <div class="panel"><div class="panel-head"><div><h2>Leads</h2></div><div class="run-area"><button class="btn ghost sm" onclick="newLeadModal()">+ New lead</button><button class="btn ghost sm" onclick="loadLeads()">↻</button></div></div>
-      <div class="panel-body" id="leadsList"><div class="skel" style="height:120px"></div></div></div></div>`;
+  c.innerHTML=`
+    <div class="cp"><button class="cp-new" onclick="newLeadModal()">New</button><span class="cp-title">Leads</span>
+      <span class="sp"></span>
+      <div class="cp-search">🔍<input id="lead_q" placeholder="Search leads…" oninput="filterLeads()"></div>
+      <button class="btn ghost sm" onclick="loadLeads()" title="Refresh">↻</button>
+      <button class="btn sm" onclick="toggleProspector()">✨ Find prospects</button></div>
+    <div class="view">
+      <div class="panel" id="prospectPanel" style="display:none;margin-bottom:16px"><div class="panel-head"><div><h2>Prospecting</h2><p>Find ICP-fit companies and save them as leads.</p></div></div>
+        <div class="panel-body">
+          <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="pr_ind" placeholder="Manufacturing"></div>
+            <div class="input-block"><label>Country</label><input type="text" id="pr_country" value="UAE"></div></div>
+          <div class="input-grid"><div class="input-block"><label>Size band</label><input type="text" id="pr_size" placeholder="20-500 employees"></div>
+            <div class="input-block"><label>Signals</label><input type="text" id="pr_sig" placeholder="ERP modernisation, growth"></div></div>
+          <button class="btn primary sm" onclick="runProspector()">Find prospects</button>
+          <div id="prResult" style="margin-top:14px"></div></div></div>
+      <div class="panel" style="padding:0;overflow:hidden"><div id="leadsList"><div class="skel" style="height:140px;margin:16px"></div></div></div>
+    </div>`;
   loadLeads();
 }
+function toggleProspector(){const p=document.getElementById('prospectPanel');if(p)p.style.display=p.style.display==='none'?'':'none';}
+function filterLeads(){const q=(val('lead_q')||'').toLowerCase();renderLeadsTable(q?_leadsCache.filter(x=>((x.name||'')+(x.industry||'')+(x.source||'')).toLowerCase().includes(q)):_leadsCache);}
 async function runProspector(){
   const r=document.getElementById('prResult');r.innerHTML=`<div class="skel" style="height:90px"></div>`;
   try{
@@ -1673,15 +1783,18 @@ async function runProspector(){
 }
 async function saveProspects(){if(!lastProspects.length)return;try{const r=await api("POST","/leads/bulk",{prospects:lastProspects});toast(r.created+' leads saved','ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
 async function loadLeads(){
-  try{const items=await api("GET","/leads?limit=200");const l=document.getElementById('leadsList');if(!l)return;
-    if(!items.length){l.innerHTML=`<div class="placeholder">No leads yet — run the prospector or add one.</div>`;return;}
-    l.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>Company</th><th>Industry</th><th class="num">Fit</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${items.map(x=>`<tr>
+  try{_leadsCache=await api("GET","/leads?limit=200");renderLeadsTable(_leadsCache);}
+  catch(e){const l=document.getElementById('leadsList');if(l)l.innerHTML=`<div class="err" style="margin:16px">${esc(e.message)}</div>`;}
+}
+function renderLeadsTable(items){
+  const l=document.getElementById('leadsList');if(!l)return;
+  if(!items.length){l.innerHTML=`<div class="placeholder" style="margin:16px">No leads yet — run the prospector or add one.</div>`;return;}
+  l.innerHTML=`<div style="overflow:auto"><table class="odoo"><thead><tr><th>Company</th><th>Industry</th><th>Fit</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${items.map(x=>`<tr>
       <td><b>${esc(x.name)}</b>${x.crm_lead_id?` <span class="chip" style="font-size:9px">Odoo #${esc(x.crm_lead_id)}</span>`:''}</td>
-      <td style="color:var(--muted)">${esc(x.industry||'')}</td><td class="num">${x.fit_score??''}</td>
+      <td style="color:var(--muted)">${esc(x.industry||'')}</td><td>${x.fit_score??''}</td>
       <td style="color:var(--muted);font-size:11px">${esc(x.source||'')}</td>
       <td><select onchange="setLeadStatus('${x.id}',this.value)" style="padding:4px 6px;font-size:11px">${['new','contacted','qualified','converted','disqualified'].map(s=>`<option value="${s}" ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
-      <td style="white-space:nowrap">${x.account_id?'<span class="pend">→ account</span>':`<button class="btn sm" onclick="convertLead('${x.id}')">Convert</button>`} <button class="btn sm" onclick="pushLead('${x.id}')" title="Push to Odoo CRM">⇪ Odoo</button></td></tr>`).join('')}</tbody></table></div>`;
-  }catch(e){const l=document.getElementById('leadsList');if(l)l.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+      <td style="white-space:nowrap">${x.account_id?'<span class="chip">→ customer</span>':`<button class="btn sm" onclick="convertLead('${x.id}')">Convert</button>`} <button class="btn sm" onclick="pushLead('${x.id}')" title="Push to Odoo CRM">⇪ Odoo</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 async function setLeadStatus(id,status){try{await api("POST",`/leads/${id}/update`,{status});}catch(e){toast('Failed: '+e.message,'bad');}}
 async function convertLead(id){try{const r=await api("POST",`/leads/${id}/convert`,{});toast('Converted to account: '+((r.account&&r.account.name)||''),'ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
@@ -2124,17 +2237,26 @@ async function testGithubConn(){
 
 /* ---------- accounts (clients) ---------- */
 async function renderAccounts(c){
-  c.innerHTML=`<div class="view">
-    <div class="panel"><div class="panel-head"><div><h2>Accounts</h2><p>Clients your firm knows — each owns a knowledge base that compounds every interaction.</p></div>
-      <div class="run-area"><button class="btn primary sm" onclick="newAccountModal()">+ New account</button></div></div>
-      <div class="panel-body" id="accList"><div class="skel" style="height:120px"></div></div></div>
-    <div id="accDetail" style="margin-top:16px"></div></div>`;
+  c.innerHTML=`
+    <div class="cp"><button class="cp-new" onclick="newAccountModal()">New</button><span class="cp-title">Customers</span>
+      <span class="sp"></span>
+      <div class="cp-search">🔍<input id="acc_q" placeholder="Search customers…" oninput="filterAccounts()"></div></div>
+    <div class="view">
+      <div class="panel" style="padding:0;overflow:hidden"><div id="accList"><div class="skel" style="height:140px;margin:16px"></div></div></div>
+      <div id="accDetail" style="margin-top:16px"></div></div>`;
   try{
     accountsCache=await api("GET","/accounts");
-    const l=document.getElementById('accList');
-    if(!accountsCache.length){l.innerHTML=`<div class="placeholder">No accounts yet — create one to research, qualify and run outreach.</div>`;return;}
-    l.innerHTML=accountsCache.map(a=>`<div class="odoo-rec" style="cursor:pointer" onclick="openAccount('${a.id}')"><div class="ic" style="background:var(--charcoal)">${esc((a.name||'?')[0].toUpperCase())}</div><div class="nm"><b>${esc(a.name)}</b>${a.industry?` · <span style="color:var(--muted)">${esc(a.industry)}</span>`:''}</div><span class="pend">open →</span></div>`).join('');
-  }catch(e){const l=document.getElementById('accList');if(l)l.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+    renderAccountsTable(accountsCache);
+  }catch(e){const l=document.getElementById('accList');if(l)l.innerHTML=`<div class="err" style="margin:16px">${esc(e.message)}</div>`;}
+}
+function filterAccounts(){const q=(val('acc_q')||'').toLowerCase();renderAccountsTable(q?accountsCache.filter(a=>((a.name||'')+(a.industry||'')+(a.country||'')).toLowerCase().includes(q)):accountsCache);}
+function renderAccountsTable(items){
+  const l=document.getElementById('accList');if(!l)return;
+  if(!items.length){l.innerHTML=`<div class="placeholder" style="margin:16px">No customers yet — convert a lead, or create one.</div>`;return;}
+  l.innerHTML=`<div style="overflow:auto"><table class="odoo"><thead><tr><th>Customer</th><th>Industry</th><th>Country</th><th>Odoo DB</th><th></th></tr></thead><tbody>${items.map(a=>`<tr onclick="openAccount('${a.id}')">
+      <td><b>${esc(a.name)}</b></td><td style="color:var(--muted)">${esc(a.industry||'—')}</td>
+      <td style="color:var(--muted)">${esc(a.country||'—')}</td><td style="color:var(--muted);font-size:11px">${esc(a.odoo_db||'—')}</td>
+      <td style="text-align:right;color:var(--muted-2)">open →</td></tr>`).join('')}</tbody></table></div>`;
 }
 async function openAccount(id){
   try{
