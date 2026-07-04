@@ -876,6 +876,65 @@
   .proj-row .pn{font-weight:600;font-size:13px;color:var(--charcoal)}
   .proj-row .pm{font-size:11.5px;color:var(--muted-2)}
   .proj-row .parrow{margin-left:auto;color:var(--muted-2)}
+
+  /* ============ v12: ODOO-STYLE ERP CHROME ============ */
+  :root{
+    --paper:#F4F5F7;          /* Odoo body grey */
+    --surface:#ffffff;
+    --line:#DFE2E8;--line-soft:#EAECF1;
+    --charcoal:#1F2937;--muted:#6B7280;--muted-2:#9CA3AF;
+    --accent:#2E74F6;--accent-2:#1E5FE0;--accent-ink:#1B50CC;
+    --r:6px;--r-sm:4px;--r-lg:8px;
+    --sb:230px;
+    --shadow:0 1px 2px rgba(17,24,39,.05);
+    --shadow-lg:0 12px 40px -12px rgba(17,24,39,.22);
+  }
+  body{background:var(--paper);font-size:13px}
+  /* sidebar — flat Odoo app menu */
+  .sidebar{background:#fff;border-right:1px solid var(--line)}
+  .nav-item{border-radius:4px;font-size:13px;padding:6px 9px}
+  .nav-item.active{background:rgba(46,116,246,.1);color:var(--accent-ink)}
+  .nav-item.active::before{width:3px;border-radius:0}
+  .nav-sec{font-size:9px;color:var(--muted-2)}
+  /* ===== Odoo control-panel top bar ===== */
+  .topbar{background:#fff;border-bottom:1px solid var(--line);min-height:46px;padding:0 14px;gap:10px;box-shadow:0 1px 0 rgba(17,24,39,.02)}
+  .odoo-bc{display:flex;align-items:center;gap:7px;min-width:0}
+  .odoo-bc .home{width:26px;height:26px;border-radius:5px;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:800;font-size:13px;flex:none;cursor:pointer}
+  .odoo-bc .crumb{font-size:14px;font-weight:600;color:var(--charcoal);white-space:nowrap;letter-spacing:-.1px}
+  .odoo-bc .sep{color:var(--muted-2);font-size:12px}
+  .odoo-bc .crumb.dim{color:var(--muted);font-weight:500}
+  .tb-actions .btn{border-radius:5px}
+  .systray{display:flex;align-items:center;gap:6px}
+  .systray .sysbtn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--muted);cursor:pointer;position:relative;font-size:15px;border:1px solid transparent}
+  .systray .sysbtn:hover{background:var(--paper);border-color:var(--line)}
+  .systray .sysbtn .cnt{position:absolute;top:-3px;right:-3px;background:var(--rust);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:9px;display:grid;place-items:center;padding:0 3px}
+  .systray .who{display:flex;align-items:center;gap:7px;padding:3px 8px 3px 4px;border-radius:20px;cursor:pointer;border:1px solid var(--line)}
+  .systray .who .av{width:24px;height:24px;border-radius:50%;background:var(--grad-hero);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+  .systray .who .nm{font-size:12px;font-weight:600;color:var(--charcoal);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ===== Odoo control panel (per view header) ===== */
+  .cp{display:flex;align-items:center;gap:10px;background:#fff;border-bottom:1px solid var(--line);padding:9px 16px;flex-wrap:wrap;position:sticky;top:0;z-index:8}
+  .cp .cp-title{font-size:16px;font-weight:700;color:var(--charcoal);letter-spacing:-.3px;margin-right:4px}
+  .cp .cp-new{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:7px 13px;font-weight:600;font-size:12.5px;cursor:pointer}
+  .cp .cp-new:hover{background:var(--accent-2)}
+  .cp .sp{flex:1}
+  .cp .cp-search{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;padding:5px 10px;min-width:220px;background:#fff}
+  .cp .cp-search input{border:none;outline:none;font-size:12.5px;width:100%;padding:0}
+  .cp .switcher{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .cp .switcher button{border:none;background:#fff;padding:6px 9px;cursor:pointer;color:var(--muted);font-size:13px}
+  .cp .switcher button.on{background:var(--accent);color:#fff}
+  .view{padding:16px 18px}
+  /* flatten cards → Odoo sheets */
+  .panel,.dash-card,.stat,.pm-composer,.wz-card,.dash-hero{border-radius:8px}
+  .panel{box-shadow:var(--shadow);border:1px solid var(--line)}
+  .stat{box-shadow:var(--shadow);border-radius:8px}
+  .stat:hover{transform:none;box-shadow:0 4px 14px -6px rgba(17,24,39,.2)}
+  .btn{border-radius:5px}
+  .chip{border-radius:4px}
+  /* Odoo-style dense tables */
+  table.odoo{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
+  table.odoo thead th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
+  table.odoo tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft)}
+  table.odoo tbody tr:hover{background:rgba(46,116,246,.04);cursor:pointer}
 </style>
 </head>
 <body>
@@ -910,15 +969,14 @@
     <div class="main">
       <div class="topbar">
         <button class="btn ghost sm menu-btn" onclick="toggleSidebar(true)">☰</button>
-        <div>
-          <div class="tb-title" id="tbTitle">Delivery Console</div>
-          <div class="tb-sub" id="tbSub">No engagement selected</div>
-        </div>
+        <div class="odoo-bc" id="tbCrumb"></div>
         <div class="tb-prog" id="tbProg" style="display:none">
           <div class="tb-bar"><i id="tbBar" style="width:0%"></i></div>
           <span class="tb-sub" id="tbPct">0%</span>
         </div>
+        <span style="flex:1"></span>
         <div class="tb-actions" id="tbActions"></div>
+        <div class="systray" id="tbSystray"></div>
       </div>
       <div class="content" id="content"></div>
     </div>
@@ -1158,21 +1216,38 @@ function renderNav(){
   const html=[...simple, toggle, ...(advancedMode?advanced:[])].join('');
   nav.innerHTML=html;
 }
+const VIEW_LABELS={dashboard:'Dashboard',manager:'Project Manager',leads:'Leads',accounts:'Customers',
+  presales:'Presales',proposal:'Proposal',project:'Project Plan',functional:'Functional',developer:'Developer',
+  clarify:'Client Replies',documents:'Documents',approvals:'Approvals',execution:'Execution',overview:'Overview',
+  ba:'Business Analyst',comms:'Communications',verticals:'Industry Playbooks',odoostd:'Odoo Standard',
+  odooconn:'Odoo Connection',githubconn:'GitHub Repo',odoo:'Odoo Explorer',blueprint:'Workflow Blueprint',
+  activity:'Agent Activity',settings:'Settings',wizard:'Agency Setup'};
+function viewLabel(v){return VIEW_LABELS[v]||v;}
 function renderTopbar(){
-  const title=document.getElementById('tbTitle'),sub=document.getElementById('tbSub');
+  const crumb=document.getElementById('tbCrumb');
   const prog=document.getElementById('tbProg'),actions=document.getElementById('tbActions');
-  if(!eng){
-    title.textContent="Delivery Console";sub.textContent="Select or create an engagement to begin";
-    prog.style.display='none';actions.innerHTML='';return;
-  }
-  title.textContent=eng.company;
-  sub.innerHTML=`${eng.id}${eng.odoo_db?' · '+esc(eng.odoo_db):''}${eng.created_at?' · '+new Date(eng.created_at).toLocaleDateString():''}`;
-  const pct=Math.round(doneCount()/STAGES.length*100);
-  prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';
-  actions.innerHTML=`
+  const systray=document.getElementById('tbSystray');
+  // Odoo-style breadcrumb: [M] App / View  (/ Project when a project is scoped)
+  const projScoped=PROJECT_VIEWS.includes(activeView)||activeView==='manager';
+  let bc=`<div class="home" onclick="goView('dashboard')" title="Home">${esc((BRAND.name||'M')[0].toUpperCase())}</div>`
+       + `<span class="crumb">${esc(viewLabel(activeView))}</span>`;
+  if(projScoped&&eng)bc+=`<span class="sep">›</span><span class="crumb dim">${esc(eng.company)}</span>`;
+  crumb.innerHTML=bc;
+  // progress bar only inside a project
+  if(eng&&projScoped){const pct=Math.round(doneCount()/STAGES.length*100);
+    prog.style.display='flex';document.getElementById('tbBar').style.width=pct+'%';document.getElementById('tbPct').textContent=pct+'%';}
+  else prog.style.display='none';
+  // contextual actions (project export/doc live only inside a project)
+  actions.innerHTML=(eng&&projScoped)?`
     <button class="btn ghost sm" onclick="exportEngagement()" title="Download engagement JSON">⤓ Export</button>
-    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Generate Document</button>
-    ${(adminAuth||multitenant)?`<button class="btn ghost sm" onclick="logout()" title="Sign out">⎋ Sign out</button>`:''}`;
+    <button class="btn primary sm" onclick="openDossier()" title="Branded engagement dossier (PDF)">📄 Document</button>`:'';
+  // systray: approvals bell + user/tenant chip
+  const ac=(typeof pendingCount!=='undefined'&&pendingCount)||0;
+  const who=(currentTenant&&currentTenant.name)||(BRAND.name||'Mumtaz');
+  systray.innerHTML=`
+    <div class="sysbtn" onclick="goView('approvals')" title="Approvals">✓${ac?`<span class="cnt">${ac}</span>`:''}</div>
+    <div class="sysbtn" onclick="goView('settings')" title="Settings">⚙</div>
+    ${(adminAuth||multitenant)?`<div class="who" onclick="logout()" title="Sign out"><span class="av">${esc(who[0].toUpperCase())}</span><span class="nm">${esc(who)}</span></div>`:''}`;
 }
 function goView(v){
   if(PROJECT_VIEWS.includes(v)&&!eng){pmGate();return;}

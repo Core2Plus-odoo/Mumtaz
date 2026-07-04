@@ -907,3 +907,15 @@ state (via GET /odoo/connection and /github/connection) instead of a static
 placeholder — green when Odoo has a URL + key, or GitHub is configured; grey
 otherwise. Clicking still opens the respective connection setup. Verified
 headless (both dots turn green when the mocked connections report connected).
+
+### Odoo-style ERP chrome (v12) ✅
+Began the redesign toward a proper-ERP / Odoo interface.
+- **App breadcrumb bar** — replaces the old title/subtitle topbar with an Odoo
+  control-panel style: [home app icon] › View › Project breadcrumb, contextual
+  actions (Export / Document only inside a project), and a **systray** (approvals
+  bell with count, settings, user/tenant chip).
+- **Flatter Odoo aesthetic (v12 layer)** — Odoo body-grey canvas, white sheets
+  with thin borders and small radii (6px), flat dense nav, and reusable
+  `.cp` control-panel + `table.odoo` list styles ready for per-view conversion.
+- Verified: JS syntax + no dup names + headless render (breadcrumb + systray
+  populate, approvals count shows) — no page errors.
