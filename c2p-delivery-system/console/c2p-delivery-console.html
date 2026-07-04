@@ -961,6 +961,21 @@
   .auth-prod .ap-ic{background:linear-gradient(135deg,#8A5E7E,#714B67)}
   .auth-prod.p2 .ap-ic{background:linear-gradient(135deg,#9C6E90,#714B67)}
   .badge.b-done,.badge.b-pursue{background:linear-gradient(135deg,#875A7B,#5C3D54)}
+
+  /* ============ v14: Odoo form view — statusbar + sheet ============ */
+  .o-form .cp{align-items:center}
+  .o-statusbar{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:#fff}
+  .o-statusbar .stp{position:relative;padding:6px 16px 6px 20px;font-size:12px;font-weight:600;color:var(--muted);background:#fff;border:none;cursor:pointer;white-space:nowrap}
+  .o-statusbar .stp:not(:first-child){padding-left:22px}
+  .o-statusbar .stp:not(:last-child)::after{content:"";position:absolute;right:-9px;top:0;bottom:0;width:18px;background:#fff;transform:skewX(-20deg);border-right:1px solid var(--line);z-index:1}
+  .o-statusbar .stp.done{color:var(--accent-ink)}
+  .o-statusbar .stp.cur{background:var(--accent);color:#fff}
+  .o-statusbar .stp.cur::after{background:var(--accent);border-right-color:var(--accent)}
+  .o-sheet{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);max-width:960px;margin:16px auto 0;padding:22px 26px}
+  .o-sheet .o-title{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line-soft);padding-bottom:14px;margin-bottom:16px}
+  .o-sheet .o-title .pavatar{width:40px;height:40px;font-size:14px}
+  .o-sheet .o-title h2{font-size:19px;font-weight:700;letter-spacing:-.3px;margin:0}
+  .o-sheet .o-title p{font-size:12.5px;color:var(--muted);margin:2px 0 0}
 </style>
 </head>
 <body>
@@ -1446,13 +1461,28 @@ function exportEngagement(){
 }
 
 /* ---------- stage view ---------- */
+function stageStatusbar(){
+  const cur=activeView;
+  return `<div class="o-statusbar">${STAGES.map(st=>{
+    const done=stageDone(st.id),isCur=st.id===cur;
+    return `<button class="stp ${isCur?'cur':(done?'done':'')}" onclick="goView('${st.id}')">${done&&!isCur?'✓ ':''}${esc(st.name)}</button>`;
+  }).join('')}</div>`;
+}
 function renderStageView(c){
   const s=STAGES.find(x=>x.id===activeView);
-  c.innerHTML=`<div class="view"><div class="panel"><div class="panel-head" id="panelHead"></div><div class="panel-body" id="panelBody"></div></div></div>`;
-  const persona=`<div class="persona"><span class="pavatar">${esc(s.persona.split(' ').map(w=>w[0]).join('').slice(0,2))}</span><div><div class="pname">${esc(s.persona)}</div><div class="prole">on this engagement</div></div></div>`;
-  document.getElementById('panelHead').innerHTML=`<div>${persona}<h2 style="margin-top:11px">${s.name}</h2><p>${s.desc}</p></div><div class="run-area" id="runArea">${stageDone(activeView)?`<button class="btn ghost sm" onclick="openStageDoc('${activeView}')" title="Branded document">📄 Document</button>`:''}</div>`;
+  const initials=esc(s.persona.split(' ').map(w=>w[0]).join('').slice(0,2));
+  c.innerHTML=`<div class="o-form">
+    <div class="cp"><span class="cp-title">${esc(s.name)}</span><span class="sp"></span>
+      ${stageStatusbar()}
+      <div class="run-area" id="runArea" style="margin-left:10px"></div></div>
+    <div class="view" style="padding-top:0">
+      <div class="o-sheet">
+        <div class="o-title"><span class="pavatar">${initials}</span><div><h2>${esc(s.name)}</h2><p>${esc(s.desc)} · <b>${esc(s.persona)}</b></p></div></div>
+        <div id="panelBody"></div>
+      </div>
+    </div></div>`;
   const body=document.getElementById('panelBody');
-  if(!eng){body.innerHTML=`<div class="placeholder">Start or select an engagement to begin.</div>`;document.getElementById('runArea').innerHTML='';return;}
+  if(!eng){body.innerHTML=`<div class="placeholder">Start or select an engagement to begin.</div>`;return;}
   INPUTS[activeView](body);
   if(activeView==='presales')attachDropzone('ps_notes','ps_drop','ps_file','ps_files');
   if(activeView==='functional')attachDropzone('fn_req','fn_drop','fn_file','fn_files');
@@ -1465,7 +1495,8 @@ function renderStageView(c){
 function renderRunBtn(){
   const area=document.getElementById('runArea');if(!area)return;
   const run=running===activeView;
-  area.innerHTML=`<button class="btn primary" id="runBtn" onclick="runStage()" ${run?'disabled':''}>${run?'<span class="spinner-sm"></span> Running…':'Run '+STAGES.find(x=>x.id===activeView).name}</button>`;
+  const doc=stageDone(activeView)?`<button class="btn ghost sm" onclick="openStageDoc('${activeView}')" title="Branded document">📄 Document</button>`:'';
+  area.innerHTML=`${doc}<button class="btn primary" id="runBtn" onclick="runStage()" ${run?'disabled':''}>${run?'<span class="spinner-sm"></span> Running…':'Run '+STAGES.find(x=>x.id===activeView).name}</button>`;
 }
 
 /* ---------- stage inputs ---------- */

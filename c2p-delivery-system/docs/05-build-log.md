@@ -931,3 +931,13 @@ Began the redesign toward a proper-ERP / Odoo interface.
   panel behind "Find prospects".
 - Verified: JS syntax + no dup names + headless render (control panels present,
   list rows populate, purple theme) — no page errors.
+
+### Odoo form view for the delivery stages (v14) ✅
+The five delivery stages (presales → developer) now render as an Odoo form view:
+- **Statusbar** — the signature Odoo chevron stage-chain in the control panel
+  (done stages ticked, current stage highlighted in aubergine, click to jump).
+- **Form sheet** — a centred white sheet with the persona avatar, title and the
+  stage's input fields; the Run + Document actions sit in the control panel.
+- renderRunBtn now keeps both the Run and Document buttons.
+- Verified: JS syntax + no dup names + headless render (5-step statusbar with the
+  correct done/current states, form sheet present) — no page errors.
