@@ -919,3 +919,15 @@ Began the redesign toward a proper-ERP / Odoo interface.
   `.cp` control-panel + `table.odoo` list styles ready for per-view conversion.
 - Verified: JS syntax + no dup names + headless render (breadcrumb + systray
   populate, approvals count shows) — no page errors.
+
+### Odoo-alike theme + list views (v13) ✅
+- **Odoo aubergine theme** — switched the accent from blue to Odoo purple
+  (#714B67 primary, #5C3D54 hover) across buttons, nav, chips, breadcrumb app
+  icon, systray, focus rings and hero gradients.
+- **Odoo list views** — Leads and Customers rebuilt as proper Odoo lists: a
+  control panel (New + title on the left; search + view actions on the right)
+  above a dense `table.odoo` with uppercase column headers, hover rows and inline
+  actions; client-side search filters the list. Prospecting is now a toggled
+  panel behind "Find prospects".
+- Verified: JS syntax + no dup names + headless render (control panels present,
+  list rows populate, purple theme) — no page errors.

@@ -934,7 +934,33 @@
   table.odoo{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
   table.odoo thead th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:8px 12px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0}
   table.odoo tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft)}
-  table.odoo tbody tr:hover{background:rgba(46,116,246,.04);cursor:pointer}
+  table.odoo tbody tr:hover{background:rgba(113,75,103,.05);cursor:pointer}
+
+  /* ============ v13: ODOO AUBERGINE (purple) THEME ============ */
+  :root{
+    --accent:#714B67;--accent-2:#5C3D54;--accent-ink:#5C3D54;
+    --teal:#714B67;--deep-teal:#5C3D54;
+    --grad-hero:linear-gradient(120deg,#8A5E7E 0%,#714B67 55%,#5C3D54 100%);
+  }
+  ::selection{background:rgba(113,75,103,.2)}
+  .nav-item.active{background:rgba(113,75,103,.12);color:var(--accent-ink)}
+  .nav-item.active::before{background:var(--accent)}
+  .sb-strap span{color:var(--accent-ink)}
+  .odoo-bc .home{background:var(--accent)}
+  .chip{background:rgba(113,75,103,.1);border:1px solid rgba(113,75,103,.24);color:var(--accent-ink)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);box-shadow:0 1px 2px rgba(113,75,103,.3)}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(113,75,103,.14)}
+  .cp .cp-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(113,75,103,.12)}
+  .pm-composer:focus-within{border-color:var(--accent);box-shadow:0 14px 34px -18px rgba(113,75,103,.45)}
+  .pm-tool:hover{border-color:rgba(113,75,103,.5);color:var(--accent-ink)}
+  .pm-seg .seg.on,.pm-seg .seg.s0.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(113,75,103,.1),rgba(113,75,103,.02));box-shadow:0 8px 20px -14px rgba(113,75,103,.6)}
+  .stat.c0 .si{background:rgba(113,75,103,.12);color:#714B67}
+  .dash-hero{box-shadow:0 24px 60px -30px rgba(113,75,103,.55)}
+  .stat:hover{box-shadow:0 6px 16px -6px rgba(113,75,103,.35)}
+  .auth-prod .ap-ic{background:linear-gradient(135deg,#8A5E7E,#714B67)}
+  .auth-prod.p2 .ap-ic{background:linear-gradient(135deg,#9C6E90,#714B67)}
+  .badge.b-done,.badge.b-pursue{background:linear-gradient(135deg,#875A7B,#5C3D54)}
 </style>
 </head>
 <body>
@@ -1723,20 +1749,29 @@ async function odooFields(){
 
 /* ---------- leads CRM ---------- */
 let lastProspects=[];
+let _leadsCache=[];
 async function renderLeads(c){
-  c.innerHTML=`<div class="view">
-    <div class="panel" style="margin-bottom:16px"><div class="panel-head"><div><h2>Prospecting</h2><p>Find ICP-fit companies and save them as leads.</p></div></div>
-      <div class="panel-body">
-        <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="pr_ind" placeholder="Manufacturing"></div>
-          <div class="input-block"><label>Country</label><input type="text" id="pr_country" value="UAE"></div></div>
-        <div class="input-grid"><div class="input-block"><label>Size band</label><input type="text" id="pr_size" placeholder="20-500 employees"></div>
-          <div class="input-block"><label>Signals</label><input type="text" id="pr_sig" placeholder="ERP modernisation, growth"></div></div>
-        <button class="btn primary sm" onclick="runProspector()">Find prospects</button>
-        <div id="prResult" style="margin-top:14px"></div></div></div>
-    <div class="panel"><div class="panel-head"><div><h2>Leads</h2></div><div class="run-area"><button class="btn ghost sm" onclick="newLeadModal()">+ New lead</button><button class="btn ghost sm" onclick="loadLeads()">↻</button></div></div>
-      <div class="panel-body" id="leadsList"><div class="skel" style="height:120px"></div></div></div></div>`;
+  c.innerHTML=`
+    <div class="cp"><button class="cp-new" onclick="newLeadModal()">New</button><span class="cp-title">Leads</span>
+      <span class="sp"></span>
+      <div class="cp-search">🔍<input id="lead_q" placeholder="Search leads…" oninput="filterLeads()"></div>
+      <button class="btn ghost sm" onclick="loadLeads()" title="Refresh">↻</button>
+      <button class="btn sm" onclick="toggleProspector()">✨ Find prospects</button></div>
+    <div class="view">
+      <div class="panel" id="prospectPanel" style="display:none;margin-bottom:16px"><div class="panel-head"><div><h2>Prospecting</h2><p>Find ICP-fit companies and save them as leads.</p></div></div>
+        <div class="panel-body">
+          <div class="input-grid"><div class="input-block"><label>Industry</label><input type="text" id="pr_ind" placeholder="Manufacturing"></div>
+            <div class="input-block"><label>Country</label><input type="text" id="pr_country" value="UAE"></div></div>
+          <div class="input-grid"><div class="input-block"><label>Size band</label><input type="text" id="pr_size" placeholder="20-500 employees"></div>
+            <div class="input-block"><label>Signals</label><input type="text" id="pr_sig" placeholder="ERP modernisation, growth"></div></div>
+          <button class="btn primary sm" onclick="runProspector()">Find prospects</button>
+          <div id="prResult" style="margin-top:14px"></div></div></div>
+      <div class="panel" style="padding:0;overflow:hidden"><div id="leadsList"><div class="skel" style="height:140px;margin:16px"></div></div></div>
+    </div>`;
   loadLeads();
 }
+function toggleProspector(){const p=document.getElementById('prospectPanel');if(p)p.style.display=p.style.display==='none'?'':'none';}
+function filterLeads(){const q=(val('lead_q')||'').toLowerCase();renderLeadsTable(q?_leadsCache.filter(x=>((x.name||'')+(x.industry||'')+(x.source||'')).toLowerCase().includes(q)):_leadsCache);}
 async function runProspector(){
   const r=document.getElementById('prResult');r.innerHTML=`<div class="skel" style="height:90px"></div>`;
   try{
@@ -1748,15 +1783,18 @@ async function runProspector(){
 }
 async function saveProspects(){if(!lastProspects.length)return;try{const r=await api("POST","/leads/bulk",{prospects:lastProspects});toast(r.created+' leads saved','ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
 async function loadLeads(){
-  try{const items=await api("GET","/leads?limit=200");const l=document.getElementById('leadsList');if(!l)return;
-    if(!items.length){l.innerHTML=`<div class="placeholder">No leads yet — run the prospector or add one.</div>`;return;}
-    l.innerHTML=`<div style="overflow:auto"><table><thead><tr><th>Company</th><th>Industry</th><th class="num">Fit</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${items.map(x=>`<tr>
+  try{_leadsCache=await api("GET","/leads?limit=200");renderLeadsTable(_leadsCache);}
+  catch(e){const l=document.getElementById('leadsList');if(l)l.innerHTML=`<div class="err" style="margin:16px">${esc(e.message)}</div>`;}
+}
+function renderLeadsTable(items){
+  const l=document.getElementById('leadsList');if(!l)return;
+  if(!items.length){l.innerHTML=`<div class="placeholder" style="margin:16px">No leads yet — run the prospector or add one.</div>`;return;}
+  l.innerHTML=`<div style="overflow:auto"><table class="odoo"><thead><tr><th>Company</th><th>Industry</th><th>Fit</th><th>Source</th><th>Status</th><th></th></tr></thead><tbody>${items.map(x=>`<tr>
       <td><b>${esc(x.name)}</b>${x.crm_lead_id?` <span class="chip" style="font-size:9px">Odoo #${esc(x.crm_lead_id)}</span>`:''}</td>
-      <td style="color:var(--muted)">${esc(x.industry||'')}</td><td class="num">${x.fit_score??''}</td>
+      <td style="color:var(--muted)">${esc(x.industry||'')}</td><td>${x.fit_score??''}</td>
       <td style="color:var(--muted);font-size:11px">${esc(x.source||'')}</td>
       <td><select onchange="setLeadStatus('${x.id}',this.value)" style="padding:4px 6px;font-size:11px">${['new','contacted','qualified','converted','disqualified'].map(s=>`<option value="${s}" ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
-      <td style="white-space:nowrap">${x.account_id?'<span class="pend">→ account</span>':`<button class="btn sm" onclick="convertLead('${x.id}')">Convert</button>`} <button class="btn sm" onclick="pushLead('${x.id}')" title="Push to Odoo CRM">⇪ Odoo</button></td></tr>`).join('')}</tbody></table></div>`;
-  }catch(e){const l=document.getElementById('leadsList');if(l)l.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+      <td style="white-space:nowrap">${x.account_id?'<span class="chip">→ customer</span>':`<button class="btn sm" onclick="convertLead('${x.id}')">Convert</button>`} <button class="btn sm" onclick="pushLead('${x.id}')" title="Push to Odoo CRM">⇪ Odoo</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 async function setLeadStatus(id,status){try{await api("POST",`/leads/${id}/update`,{status});}catch(e){toast('Failed: '+e.message,'bad');}}
 async function convertLead(id){try{const r=await api("POST",`/leads/${id}/convert`,{});toast('Converted to account: '+((r.account&&r.account.name)||''),'ok');loadLeads();}catch(e){toast('Failed: '+e.message,'bad');}}
@@ -2199,17 +2237,26 @@ async function testGithubConn(){
 
 /* ---------- accounts (clients) ---------- */
 async function renderAccounts(c){
-  c.innerHTML=`<div class="view">
-    <div class="panel"><div class="panel-head"><div><h2>Accounts</h2><p>Clients your firm knows — each owns a knowledge base that compounds every interaction.</p></div>
-      <div class="run-area"><button class="btn primary sm" onclick="newAccountModal()">+ New account</button></div></div>
-      <div class="panel-body" id="accList"><div class="skel" style="height:120px"></div></div></div>
-    <div id="accDetail" style="margin-top:16px"></div></div>`;
+  c.innerHTML=`
+    <div class="cp"><button class="cp-new" onclick="newAccountModal()">New</button><span class="cp-title">Customers</span>
+      <span class="sp"></span>
+      <div class="cp-search">🔍<input id="acc_q" placeholder="Search customers…" oninput="filterAccounts()"></div></div>
+    <div class="view">
+      <div class="panel" style="padding:0;overflow:hidden"><div id="accList"><div class="skel" style="height:140px;margin:16px"></div></div></div>
+      <div id="accDetail" style="margin-top:16px"></div></div>`;
   try{
     accountsCache=await api("GET","/accounts");
-    const l=document.getElementById('accList');
-    if(!accountsCache.length){l.innerHTML=`<div class="placeholder">No accounts yet — create one to research, qualify and run outreach.</div>`;return;}
-    l.innerHTML=accountsCache.map(a=>`<div class="odoo-rec" style="cursor:pointer" onclick="openAccount('${a.id}')"><div class="ic" style="background:var(--charcoal)">${esc((a.name||'?')[0].toUpperCase())}</div><div class="nm"><b>${esc(a.name)}</b>${a.industry?` · <span style="color:var(--muted)">${esc(a.industry)}</span>`:''}</div><span class="pend">open →</span></div>`).join('');
-  }catch(e){const l=document.getElementById('accList');if(l)l.innerHTML=`<div class="err">${esc(e.message)}</div>`;}
+    renderAccountsTable(accountsCache);
+  }catch(e){const l=document.getElementById('accList');if(l)l.innerHTML=`<div class="err" style="margin:16px">${esc(e.message)}</div>`;}
+}
+function filterAccounts(){const q=(val('acc_q')||'').toLowerCase();renderAccountsTable(q?accountsCache.filter(a=>((a.name||'')+(a.industry||'')+(a.country||'')).toLowerCase().includes(q)):accountsCache);}
+function renderAccountsTable(items){
+  const l=document.getElementById('accList');if(!l)return;
+  if(!items.length){l.innerHTML=`<div class="placeholder" style="margin:16px">No customers yet — convert a lead, or create one.</div>`;return;}
+  l.innerHTML=`<div style="overflow:auto"><table class="odoo"><thead><tr><th>Customer</th><th>Industry</th><th>Country</th><th>Odoo DB</th><th></th></tr></thead><tbody>${items.map(a=>`<tr onclick="openAccount('${a.id}')">
+      <td><b>${esc(a.name)}</b></td><td style="color:var(--muted)">${esc(a.industry||'—')}</td>
+      <td style="color:var(--muted)">${esc(a.country||'—')}</td><td style="color:var(--muted);font-size:11px">${esc(a.odoo_db||'—')}</td>
+      <td style="text-align:right;color:var(--muted-2)">open →</td></tr>`).join('')}</tbody></table></div>`;
 }
 async function openAccount(id){
   try{
