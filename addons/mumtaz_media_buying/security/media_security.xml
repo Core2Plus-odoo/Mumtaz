@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- ── Media Buying / User ─────────────────────────────────────────── -->
+    <!-- Planners & buyers: create and edit outlets, rate cards and plans. -->
+    <record id="group_media_user" model="res.groups">
+        <field name="name">Media Buying / User</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- ── Media Buying / Manager ──────────────────────────────────────── -->
+    <!-- Approves plans, can delete records.                               -->
+    <record id="group_media_manager" model="res.groups">
+        <field name="name">Media Buying / Manager</field>
+        <field name="implied_ids" eval="[(4, ref('group_media_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+</odoo>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_media_rate_card_list" model="ir.ui.view">
+        <field name="name">media.rate.card.list</field>
+        <field name="model">media.rate.card</field>
+        <field name="arch" type="xml">
+            <list string="Rate Cards"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state == 'expired'">
+                <field name="name"/>
+                <field name="vendor_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="line_count" string="Rates"/>
+                <field name="currency_id" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_media_rate_card_form" model="ir.ui.view">
+        <field name="name">media.rate.card.form</field>
+        <field name="model">media.rate.card</field>
+        <field name="arch" type="xml">
+            <form string="Rate Card">
+                <header>
+                    <button name="action_activate" type="object" string="Activate"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_expire" type="object" string="Expire"
+                            invisible="state != 'active'"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Reset to Draft" invisible="state != 'expired'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,expired"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. GEO Network — H2 2026"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="vendor_id"/>
+                            <field name="currency_id"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Rates" name="rates">
+                            <field name="line_ids" readonly="state == 'expired'">
+                                <list editable="bottom">
+                                    <field name="outlet_id"/>
+                                    <field name="channel"/>
+                                    <field name="name"/>
+                                    <field name="unit"/>
+                                    <field name="gross_rate" optional="show"/>
+                                    <field name="rate"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_media_rate_card" model="ir.actions.act_window">
+        <field name="name">Rate Cards</field>
+        <field name="res_model">media.rate.card</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first rate card</p>
+            <p>Each vendor's negotiated price list, with a validity window.
+               Media plan lines price from active rate cards.</p>
+        </field>
+    </record>
+
+</odoo>

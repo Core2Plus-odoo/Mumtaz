@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Mumtaz CEO Dashboard — Media Buying",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "summary": "Executive dashboard for a media-buying agency: billings, "
                "revenue, channel mix, budget pacing, campaigns & receivables.",
     "description": """

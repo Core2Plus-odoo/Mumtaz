@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+
+    <!-- Sequence for media plan references: MP/2026/0001 -->
+    <record id="seq_media_plan" model="ir.sequence">
+        <field name="name">Media Plan</field>
+        <field name="code">media.plan</field>
+        <field name="prefix">MP/%(range_year)s/</field>
+        <field name="padding">4</field>
+        <field name="use_date_range" eval="True"/>
+    </record>
+
+    <!-- Generic service product used on generated client SOs / vendor POs.
+         Actual description and price come from each media plan line. -->
+    <record id="product_media_placement" model="product.product">
+        <field name="name">Media Placement</field>
+        <field name="type">service</field>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="True"/>
+        <field name="list_price">0.0</field>
+        <field name="standard_price">0.0</field>
+        <field name="default_code">MEDIA</field>
+    </record>
+
+</odoo>

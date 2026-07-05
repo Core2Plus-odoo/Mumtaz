@@ -2,6 +2,7 @@
 
 import { Component, onMounted, useRef } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { rpc } from "@web/core/network/rpc";
 
 /* ------------------------------------------------------------------ *
  * Mumtaz CEO Dashboard — Media Buying
@@ -26,7 +27,7 @@ const SHELL = `
         <button data-period="q2" aria-pressed="false">Q2</button>
         <button data-period="l3m" aria-pressed="false">Last 3M</button>
       </div>
-      <div class="cd-asof">Fiscal Year 2026<br/><strong>as of 05 Jul 2026</strong></div>
+      <div class="cd-asof" data-el="asof">Fiscal Year 2026<br/><strong>as of 05 Jul 2026</strong></div>
       <button class="cd-theme-toggle" data-role="theme" title="Toggle light / dark" aria-label="Toggle light or dark theme"><span class="cd-ico" data-role="theme-ico">☾</span><span data-role="theme-lbl">Dark</span></button>
     </div>
   </header>
@@ -50,7 +51,7 @@ const SHELL = `
           <div class="cd-card-meta">commission + fees</div>
         </div>
         <div data-el="revChart"></div>
-        <div class="cd-legend"><span><span class="cd-swatch" style="background:var(--cd-rev)"></span>Net revenue (PKR m)</span></div>
+        <div class="cd-legend"><span><span class="cd-swatch" style="background:var(--cd-rev)"></span><span data-el="revLegend">Net revenue (PKR m)</span></span></div>
       </div>
     </div>
 
@@ -106,15 +107,14 @@ const SHELL = `
         <div class="cd-ar-stat">
           <div class="cd-lbl">Outstanding</div>
           <div class="cd-big" data-el="arTotal"></div>
-          <div class="cd-kpi-foot" style="justify-content:flex-end"><span class="cd-kpi-note">DSO 47 days · vendor payables PKR 268m</span></div>
+          <div class="cd-kpi-foot" style="justify-content:flex-end"><span class="cd-kpi-note" data-el="arNote">DSO 47 days · vendor payables PKR 268m</span></div>
         </div>
       </div>
     </div>
 
     <div class="cd-foot-note">
-      <span class="cd-badge-demo">Sample data</span>
-      Illustrative figures for design sign-off. Once approved, this dashboard connects live to the current Odoo database
-      (media plans, insertion orders, vendor bills &amp; client invoices) and refreshes automatically.
+      <span class="cd-badge-demo" data-el="badge">Sample data</span>
+      <span data-el="footNote">Illustrative figures. Install the Media Buying app and approve a media plan — this dashboard then switches to live data automatically.</span>
     </div>
   </div>
 
@@ -126,15 +126,24 @@ class CeoDashboard extends Component {
 
     setup() {
         this.rootRef = useRef("root");
-        onMounted(() => {
+        onMounted(async () => {
             const host = this.rootRef.el;
             if (!host) return;
+            // Live feed served by mumtaz_media_buying when installed and
+            // populated; on any failure the built-in sample data renders.
+            let live = null;
+            try {
+                const res = await rpc("/mumtaz_ceo_dashboard/data", {});
+                if (res && res.live) live = res;
+            } catch {
+                live = null;
+            }
             host.innerHTML = SHELL;
-            this._init(host);
+            this._init(host, live);
         });
     }
 
-    _init(root) {
+    _init(root, live) {
         const $ = (s) => root.querySelector(s);
         const $$ = (s) => root.querySelectorAll(s);
         const q = (name) => root.querySelector('[data-el="' + name + '"]');
@@ -146,32 +155,36 @@ class CeoDashboard extends Component {
         const CH_VAR = { tv: "--cd-ch-tv", digital: "--cd-ch-digital", print: "--cd-ch-print", ooh: "--cd-ch-ooh" };
         const cvar = (n) => getComputedStyle(root).getPropertyValue(n).trim();
 
-        // ---------------- DATA (sample) ----------------
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
-        const billings = {
+        // ---------------- DATA (live payload, else sample) --------------
+        const CUR = (live && live.currency) || "PKR";
+        const months = live ? live.months
+            : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+        const billings = live ? live.billings : {
             tv: [114, 120, 138, 132, 154, 164, 24],
             digital: [72, 76, 87, 84, 97, 103, 15],
             print: [35, 37, 42, 40, 47, 50, 7],
             ooh: [27, 29, 34, 32, 36, 39, 5],
         };
-        const revenue = [28.5, 30.1, 35.2, 33.0, 39.4, 42.8, 5.9];
-        const clients = [
+        const revenue = live ? live.revenue
+            : [28.5, 30.1, 35.2, 33.0, 39.4, 42.8, 5.9];
+        const sampleClients = [
             { nm: "Unilever Pakistan", v: 286 }, { nm: "Telenor", v: 231 },
             { nm: "Bank Alfalah", v: 188 }, { nm: "Coca-Cola", v: 164 },
             { nm: "K&N's Foods", v: 132 }, { nm: "Bata Pakistan", v: 98 },
         ];
-        const vendors = [
+        const clients = live ? live.clients : sampleClients;
+        const vendors = live ? live.vendors : [
             { nm: "GEO Network", v: 214 }, { nm: "ARY Digital", v: 176 },
             { nm: "Hum Network", v: 142 }, { nm: "Meta", v: 138 },
             { nm: "Google / YT", v: 121 }, { nm: "Dawn Media", v: 88 },
         ];
-        const pacing = [
+        const pacing = (live && live.pacing.length) ? live.pacing : [
             { nm: "TV & Radio", ch: "tv", plan: 520, spent: 398 },
             { nm: "Digital", ch: "digital", plan: 330, spent: 271 },
             { nm: "Print", ch: "print", plan: 172, spent: 118 },
             { nm: "OOH", ch: "ooh", plan: 130, spent: 126 },
         ];
-        const campaigns = [
+        const campaigns = live ? live.campaigns : [
             { nm: "Summer Refresh 2026", cl: "Unilever", ch: ["tv", "digital"], budget: 120, spent: 88, margin: 12.4, status: "good", label: "On track" },
             { nm: "5G Nationwide Launch", cl: "Telenor", ch: ["tv", "ooh", "digital"], budget: 180, spent: 152, margin: 10.8, status: "good", label: "On track" },
             { nm: "Ramadan Banking", cl: "Bank Alfalah", ch: ["tv", "print"], budget: 95, spent: 96, margin: 9.6, status: "serious", label: "Overpacing" },
@@ -181,14 +194,41 @@ class CeoDashboard extends Component {
             { nm: "Monsoon Drive", cl: "Suzuki", ch: ["tv", "ooh"], budget: 88, spent: 79, margin: 10.2, status: "good", label: "On track" },
             { nm: "Wallet Everywhere", cl: "Easypaisa", ch: ["digital"], budget: 56, spent: 58, margin: 8.9, status: "serious", label: "Overpacing" },
         ];
-        const ageing = [
+        const ageing = live ? live.ageing : [
             { nm: "Current", v: 178, c: "--cd-good" },
             { nm: "1–30 days", v: 84, c: "--cd-ch-tv" },
             { nm: "31–60 days", v: 32, c: "--cd-warning" },
             { nm: "60+ days", v: 18, c: "--cd-critical" },
         ];
-        const PERIODS = { ytd: [0, 7], q2: [3, 6], l3m: [4, 7] };
+        // headline numbers not derivable from the chart arrays
+        const K = live ? live.kpis : {
+            active_campaigns: 28, clients_live: 34,
+            receivables: 312, payables: 268, dso: 47,
+        };
+        const asOf = live && live.as_of
+            ? new Date(live.as_of + "T00:00:00")
+            : new Date(2026, 6, 5);
+        const yr = asOf.getFullYear();
+        const asOfLabel = asOf.toLocaleDateString("en-GB",
+            { day: "2-digit", month: "short", year: "numeric" });
+        const nM = months.length;
+        const PERIODS = {
+            ytd: [0, nM],
+            q2: [Math.min(3, nM - 1), Math.min(6, nM)],
+            l3m: [Math.max(0, nM - 3), nM],
+        };
         let period = "ytd";
+
+        // contextual chrome: as-of stamp, currency labels, live/sample badge
+        q("asof").innerHTML =
+            `Fiscal Year ${yr}<br><strong>as of ${asOfLabel}</strong>`;
+        q("revLegend").textContent = `Net revenue (${CUR} m)`;
+        if (live) {
+            q("badge").textContent = "Live data";
+            q("footNote").innerHTML =
+                `Figures computed from approved & running media plans, ` +
+                `vendor bills and client invoices in <strong>${live.db}</strong>.`;
+        }
 
         // ---------------- tooltip ----------------
         const tip = q("tip");
@@ -208,18 +248,22 @@ class CeoDashboard extends Component {
             const r = PERIODS[period];
             const totalBill = CH.reduce((a, c) => a + sumRange(billings[c], r), 0);
             const totalRev = sumRange(revenue, r);
-            const margin = totalRev / totalBill * 100;
+            const margin = totalBill ? totalRev / totalBill * 100 : 0;
+            // sample mode shows illustrative deltas; live mode shows a
+            // neutral "live" chip (no fabricated year-on-year comparisons)
+            const dl = (sample) => live
+                ? { delta: "live", dir: "flat" } : sample;
             const data = [
-                { cls: "", label: "Gross Media Billings", val: money(totalBill), pkr: true, delta: "+18.4%", dir: "up", note: "vs FY25" },
-                { cls: "k-rev", label: "Net Revenue", val: money(totalRev), pkr: true, delta: "+21.2%", dir: "up", note: "commission + fees" },
-                { cls: "k-margin", label: "Blended Margin", val: margin.toFixed(1) + "%", pkr: false, delta: "+0.6 pp", dir: "up", note: "target 11.0%" },
-                { cls: "k-camp", label: "Active Campaigns", val: "28", pkr: false, delta: "+5", dir: "up", note: "34 clients live" },
-                { cls: "k-cash", label: "Receivables", val: money(312), pkr: true, delta: "DSO 47d", dir: "flat", note: "payables 268m" },
+                { cls: "", label: "Gross Media Billings", val: money(totalBill), pkr: true, note: live ? "approved + running plans" : "vs FY25", ...dl({ delta: "+18.4%", dir: "up" }) },
+                { cls: "k-rev", label: "Net Revenue", val: money(totalRev), pkr: true, note: "commission + fees", ...dl({ delta: "+21.2%", dir: "up" }) },
+                { cls: "k-margin", label: "Blended Margin", val: margin.toFixed(1) + "%", pkr: false, note: live ? "of client billings" : "target 11.0%", ...dl({ delta: "+0.6 pp", dir: "up" }) },
+                { cls: "k-camp", label: "Active Campaigns", val: String(K.active_campaigns), pkr: false, note: `${K.clients_live} clients live`, ...dl({ delta: "+5", dir: "up" }) },
+                { cls: "k-cash", label: "Receivables", val: money(K.receivables), pkr: true, delta: `DSO ${K.dso}d`, dir: "flat", note: `payables ${money(K.payables)}` },
             ];
             q("kpis").innerHTML = data.map((d) => `
                 <div class="cd-kpi ${d.cls}">
                     <div class="cd-kpi-label">${d.label}</div>
-                    <div class="cd-kpi-value">${d.pkr ? '<span class="cd-cur">PKR </span>' : ''}${d.val}</div>
+                    <div class="cd-kpi-value">${d.pkr ? `<span class="cd-cur">${CUR} </span>` : ''}${d.val}</div>
                     <div class="cd-kpi-foot">
                         <span class="cd-delta ${d.dir}">${d.dir === 'up' ? '▲' : d.dir === 'down' ? '▼' : '●'} ${d.delta}</span>
                         <span class="cd-kpi-note">${d.note}</span>
@@ -256,7 +300,7 @@ class CeoDashboard extends Component {
                     const rct = el("rect", { x: cx - bw / 2, y: y, width: bw, height: Math.max(h - 2, 0), rx: 2, fill: cvar(CH_VAR[c]), class: "cd-seg" });
                     rct.addEventListener("mousemove", (e) => {
                         const tot = CH.reduce((a, cc) => a + billings[cc][mi], 0);
-                        showTip(`<div class="cd-tt-h">${months[mi]} 2026 · PKR ${tot} m</div>` +
+                        showTip(`<div class="cd-tt-h">${months[mi]} ${yr} · ${CUR} ${Math.round(tot)} m</div>` +
                             CH.map((cc) => `<div class="cd-tt-r"><span class="k"><span class="cd-tt-dot" style="background:${cvar(CH_VAR[cc])}"></span>${CH_LABEL[cc]}</span><span class="v">${billings[cc][mi]}</span></div>`).join(""),
                             e.clientX, e.clientY);
                     });
@@ -270,7 +314,7 @@ class CeoDashboard extends Component {
             svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: padT + ih, y2: padT + ih, stroke: cvar('--cd-baseline'), "stroke-width": 1 }));
             host.appendChild(svg);
             q("trendLegend").innerHTML = CH.map((c) => `<span><span class="cd-swatch" style="background:${cvar(CH_VAR[c])}"></span>${CH_LABEL[c]}</span>`).join("");
-            q("trendMeta").textContent = `${months[idx[0]]}–${months[idx[idx.length - 1]]} 2026 · PKR millions`;
+            q("trendMeta").textContent = `${months[idx[0]]}–${months[idx[idx.length - 1]]} ${yr} · ${CUR} millions`;
         }
 
         // ---------------- revenue area ----------------
@@ -304,7 +348,7 @@ class CeoDashboard extends Component {
                 const isEnd = k === vals.length - 1;
                 const dot = el("circle", { cx: x(k), cy: y(v), r: isEnd ? 4.5 : 3.4, fill: cvar('--cd-surface'), stroke: cvar('--cd-rev'), "stroke-width": 2.2 });
                 const hit = el("circle", { cx: x(k), cy: y(v), r: 14, fill: "transparent" });
-                hit.addEventListener("mousemove", (e) => showTip(`<div class="cd-tt-h">${months[idx[k]]} 2026</div><div class="cd-tt-r"><span class="k">Net revenue</span><span class="v">PKR ${v} m</span></div>`, e.clientX, e.clientY));
+                hit.addEventListener("mousemove", (e) => showTip(`<div class="cd-tt-h">${months[idx[k]]} ${yr}</div><div class="cd-tt-r"><span class="k">Net revenue</span><span class="v">${CUR} ${v} m</span></div>`, e.clientX, e.clientY));
                 hit.addEventListener("mouseleave", hideTip);
                 svg.appendChild(dot); svg.appendChild(hit);
                 if (isEnd) { const t = el("text", { x: x(k), y: y(v) - 10, class: "cd-bar-total", "text-anchor": "end" }); t.textContent = v; svg.appendChild(t); }
@@ -361,15 +405,18 @@ class CeoDashboard extends Component {
                     <td><span class="cd-pill ${c.status === 'good' ? 'good' : c.status}">${c.label}</span></td>
                 </tr>`;
             }).join("");
-            q("campMeta").textContent = `${campaigns.length} of 28 flagged · sorted by attention`;
+            q("campMeta").textContent = live
+                ? `${campaigns.length} active plan${campaigns.length === 1 ? "" : "s"} · sorted by size`
+                : `${campaigns.length} of 28 flagged · sorted by attention`;
         }
 
         // ---------------- receivables ----------------
         function renderAR() {
             const total = ageing.reduce((a, x) => a + x.v, 0);
-            q("arBar").innerHTML = ageing.map((a) => `<i style="width:${a.v / total * 100}%;background:${cvar(a.c)}" title="${a.nm}: PKR ${a.v}m"></i>`).join("");
+            q("arBar").innerHTML = ageing.map((a) => `<i style="width:${a.v / total * 100}%;background:${cvar(a.c)}" title="${a.nm}: ${CUR} ${a.v}m"></i>`).join("");
             q("arLegend").innerHTML = ageing.map((a) => `<span><span class="cd-swatch" style="background:${cvar(a.c)}"></span>${a.nm} · <strong style="color:var(--cd-ink)">${a.v}m</strong></span>`).join("");
-            q("arTotal").innerHTML = `<span style="font-size:14px;color:var(--cd-ink-2);font-weight:650">PKR </span>${total}m`;
+            q("arTotal").innerHTML = `<span style="font-size:14px;color:var(--cd-ink-2);font-weight:650">${CUR} </span>${money(total)}`;
+            q("arNote").textContent = `DSO ${K.dso} days · vendor payables ${CUR} ${money(K.payables)}`;
         }
 
         function renderAll() {

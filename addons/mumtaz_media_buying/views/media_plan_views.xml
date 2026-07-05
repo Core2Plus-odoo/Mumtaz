@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_media_plan_list" model="ir.ui.view">
+        <field name="name">media.plan.list</field>
+        <field name="model">media.plan</field>
+        <field name="arch" type="xml">
+            <list string="Media Plans"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'running'"
+                  decoration-muted="state in ('done', 'cancelled')">
+                <field name="name"/>
+                <field name="campaign"/>
+                <field name="client_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="media_cost" sum="Total" optional="show"/>
+                <field name="client_total" sum="Total"/>
+                <field name="net_revenue" sum="Total" optional="show"/>
+                <field name="margin_percent" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'approved'"
+                       decoration-success="state == 'running'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_media_plan_form" model="ir.ui.view">
+        <field name="name">media.plan.form</field>
+        <field name="model">media.plan</field>
+        <field name="arch" type="xml">
+            <form string="Media Plan">
+                <header>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-primary"
+                            invisible="state != 'draft'"
+                            groups="mumtaz_media_buying.group_media_manager"/>
+                    <button name="action_create_orders" type="object"
+                            string="Generate Client &amp; Vendor Orders"
+                            class="btn-primary"
+                            invisible="state not in ('approved', 'running')"/>
+                    <button name="action_start" type="object" string="Start Campaign"
+                            invisible="state != 'approved'"/>
+                    <button name="action_done" type="object" string="Mark Completed"
+                            invisible="state != 'running'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('done', 'cancelled')"/>
+                    <button name="action_reset_to_draft" type="object"
+                            string="Reset to Draft"
+                            invisible="state not in ('cancelled',)"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,approved,running,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_order" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                invisible="not sale_order_id">
+                            <field name="sale_order_count" widget="statinfo"
+                                   string="Client Order"/>
+                        </button>
+                        <button name="action_view_purchase_orders" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart"
+                                invisible="purchase_order_count == 0">
+                            <field name="purchase_order_count" widget="statinfo"
+                                   string="Vendor Orders"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                        <h2><field name="campaign" placeholder="Campaign name…"/></h2>
+                    </div>
+                    <group>
+                        <group string="Client">
+                            <field name="client_id"/>
+                            <field name="user_id"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group string="Commercials">
+                            <field name="budget"/>
+                            <field name="commission_percent"/>
+                            <field name="service_fee"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Placements" name="placements">
+                            <field name="line_ids"
+                                   readonly="state in ('done', 'cancelled')">
+                                <list editable="bottom">
+                                    <field name="outlet_id"/>
+                                    <field name="channel"/>
+                                    <field name="rate_line_id" optional="show"/>
+                                    <field name="description"/>
+                                    <field name="qty"/>
+                                    <field name="unit_rate"/>
+                                    <field name="discount" optional="show"/>
+                                    <field name="net_cost" sum="Total"/>
+                                    <field name="client_amount" sum="Total"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer">
+                                <field name="media_cost"/>
+                                <field name="commission_amount"/>
+                                <field name="service_fee" readonly="1"/>
+                                <field name="client_total" class="oe_subtotal_footer_separator"/>
+                                <field name="net_revenue"/>
+                                <field name="margin_percent"/>
+                            </group>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Objectives, audience, flight notes…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_media_plan_search" model="ir.ui.view">
+        <field name="name">media.plan.search</field>
+        <field name="model">media.plan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="campaign"/>
+                <field name="client_id"/>
+                <filter name="filter_active" string="Active"
+                        domain="[('state', 'in', ('approved', 'running'))]"/>
+                <filter name="filter_draft" string="Draft"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_done" string="Completed"
+                        domain="[('state', '=', 'done')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_client" string="Client"
+                            context="{'group_by': 'client_id'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_media_plan" model="ir.actions.act_window">
+        <field name="name">Media Plans</field>
+        <field name="res_model">media.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first media plan</p>
+            <p>Pick the client, add placements priced from vendor rate cards,
+               and generate the client order and vendor POs in one click.</p>
+        </field>
+    </record>
+
+</odoo>

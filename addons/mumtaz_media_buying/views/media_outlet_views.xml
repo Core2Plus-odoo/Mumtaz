@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_media_outlet_list" model="ir.ui.view">
+        <field name="name">media.outlet.list</field>
+        <field name="model">media.outlet</field>
+        <field name="arch" type="xml">
+            <list string="Media Outlets" editable="bottom">
+                <field name="name"/>
+                <field name="channel"/>
+                <field name="vendor_id"/>
+                <field name="audience" optional="show"/>
+                <field name="rate_line_count" string="Rates" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_media_outlet_search" model="ir.ui.view">
+        <field name="name">media.outlet.search</field>
+        <field name="model">media.outlet</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="vendor_id"/>
+                <filter name="group_channel" string="Channel"
+                        context="{'group_by': 'channel'}"/>
+                <filter name="group_vendor" string="Vendor"
+                        context="{'group_by': 'vendor_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_media_outlet" model="ir.actions.act_window">
+        <field name="name">Media Outlets</field>
+        <field name="res_model">media.outlet</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_group_channel': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your first media outlet</p>
+            <p>An outlet is a property you buy on: a TV channel, a newspaper,
+               a digital platform or a billboard site — each owned by a vendor.</p>
+        </field>
+    </record>
+
+    <!-- Vendors: partners flagged as media vendors -->
+    <record id="view_media_vendor_list" model="ir.ui.view">
+        <field name="name">res.partner.media.vendor.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Media Vendors">
+                <field name="name"/>
+                <field name="phone" optional="show"/>
+                <field name="email" optional="show"/>
+                <field name="city" optional="show"/>
+                <field name="is_media_vendor" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_media_vendor" model="ir.actions.act_window">
+        <field name="name">Media Vendors</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_media_vendor_list"/>
+        <field name="domain">[('is_media_vendor', '=', True)]</field>
+        <field name="context">{'default_is_media_vendor': True, 'default_is_company': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your first media vendor</p>
+            <p>Broadcasters, publishers, digital platforms and outdoor-site
+               owners you buy media from.</p>
+        </field>
+    </record>
+
+</odoo>
