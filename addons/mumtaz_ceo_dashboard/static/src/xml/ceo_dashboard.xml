@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="mumtaz_ceo_dashboard.Dashboard">
+        <div class="ceo-dash" data-theme="light" t-ref="root"/>
+    </t>
+
+</templates>

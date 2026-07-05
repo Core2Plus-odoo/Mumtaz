@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_ceo_dashboard" model="ir.actions.client">
+        <field name="name">CEO Dashboard</field>
+        <field name="tag">mumtaz_ceo_dashboard</field>
+    </record>
+
+    <!-- Top-level application menu -->
+    <menuitem id="menu_ceo_dashboard_root"
+              name="CEO Dashboard"
+              web_icon="mumtaz_ceo_dashboard,static/description/icon.png"
+              sequence="4"/>
+
+    <menuitem id="menu_ceo_dashboard_main"
+              name="Executive Dashboard"
+              parent="menu_ceo_dashboard_root"
+              action="action_ceo_dashboard"
+              sequence="1"
+              groups="base.group_user"/>
+
+</odoo>
