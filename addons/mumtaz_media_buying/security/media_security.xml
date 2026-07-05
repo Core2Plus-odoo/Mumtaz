@@ -13,7 +13,13 @@
     <record id="group_media_manager" model="res.groups">
         <field name="name">Media Buying / Manager</field>
         <field name="implied_ids" eval="[(4, ref('group_media_user'))]"/>
-        <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Give Settings administrators the Manager role out of the box, so a
+         fresh install is usable immediately. Uses implied_ids (stable in
+         Odoo 19) rather than assigning users on the group directly. -->
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_media_manager'))]"/>
     </record>
 
 </odoo>

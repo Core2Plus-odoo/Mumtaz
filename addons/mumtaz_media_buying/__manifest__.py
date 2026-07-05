@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Mumtaz Media Buying",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "summary": "Media-buying business flow: vendors, outlets, rate cards, "
                "media plans with commission + fees, vendor POs & client orders.",
     "description": """
