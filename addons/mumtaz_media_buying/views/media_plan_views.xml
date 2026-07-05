@@ -137,12 +137,11 @@
                         domain="[('state', '=', 'draft')]"/>
                 <filter name="filter_done" string="Completed"
                         domain="[('state', '=', 'done')]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_client" string="Client"
-                            context="{'group_by': 'client_id'}"/>
-                    <filter name="group_state" string="Status"
-                            context="{'group_by': 'state'}"/>
-                </group>
+                <separator/>
+                <filter name="group_client" string="Client"
+                        context="{'group_by': 'client_id'}"/>
+                <filter name="group_state" string="Status"
+                        context="{'group_by': 'state'}"/>
             </search>
         </field>
     </record>
