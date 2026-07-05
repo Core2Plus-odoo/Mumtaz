@@ -42,6 +42,10 @@ class CeoDashboardData(http.Controller):
         env = request.env
         today = fields.Date.context_today(env.user)
         year = today.year
+        # The dashboard renders monetary values in millions (e.g. 114 -> "114m",
+        # 1840 -> "1.84B"), so convert raw currency amounts to millions here.
+        def m(x):
+            return round(x / 1_000_000.0, 2)
         plans = env["media.plan"].search([
             ("state", "in", ["approved", "running", "done"]),
             ("date_from", "<=", date(year, 12, 31)),
@@ -88,7 +92,7 @@ class CeoDashboardData(http.Controller):
             vendor_totals.setdefault(vendor, 0.0)
             vendor_totals[vendor] += line.net_cost
         top = lambda d: [  # noqa: E731
-            {"nm": p.name, "v": round(v, 1)}
+            {"nm": p.name, "v": m(v)}
             for p, v in sorted(d.items(), key=lambda kv: -kv[1])[:6]
         ]
 
@@ -105,7 +109,7 @@ class CeoDashboardData(http.Controller):
                 pacing_map[bucket]["spent"] += line.net_cost * frac
         pacing = [
             {"nm": pace_labels[b], "ch": b,
-             "plan": round(v["plan"], 1), "spent": round(v["spent"], 1)}
+             "plan": m(v["plan"]), "spent": m(v["spent"])}
             for b, v in pacing_map.items() if v["plan"]
         ]
 
@@ -131,8 +135,8 @@ class CeoDashboardData(http.Controller):
                 for c in plan.line_ids.mapped("channel")})
             campaigns.append({
                 "nm": plan.campaign, "cl": plan.client_id.name,
-                "ch": channels, "budget": round(budget, 1),
-                "spent": round(spent, 1),
+                "ch": channels, "budget": m(budget),
+                "spent": m(spent),
                 "margin": round(plan.margin_percent, 1),
                 "status": status, "label": label,
             })
@@ -146,8 +150,12 @@ class CeoDashboardData(http.Controller):
             {"nm": "60+ days", "v": 0.0, "c": "--cd-critical"},
         ]
         receivable = payable = 0.0
-        if "account.move" in env:
-            inv = env["account.move"].search([
+        try:
+            Move = env["account.move"]
+        except KeyError:
+            Move = None
+        if Move is not None:
+            inv = Move.search([
                 ("move_type", "=", "out_invoice"),
                 ("state", "=", "posted"),
                 ("amount_residual", ">", 0),
@@ -161,14 +169,14 @@ class CeoDashboardData(http.Controller):
                        1 if overdue <= 30 else
                        2 if overdue <= 60 else 3)
                 ageing[idx]["v"] += residual
-            bills = env["account.move"].search([
+            bills = Move.search([
                 ("move_type", "=", "in_invoice"),
                 ("state", "=", "posted"),
                 ("amount_residual", ">", 0),
             ])
             payable = sum(bills.mapped("amount_residual"))
         for slot in ageing:
-            slot["v"] = round(slot["v"], 1)
+            slot["v"] = m(slot["v"])
 
         total_billed = sum(client_totals.values())
         days_elapsed = max((today - date(year, 1, 1)).days, 1)
@@ -181,9 +189,9 @@ class CeoDashboardData(http.Controller):
             "currency": env.company.currency_id.name or "PKR",
             "as_of": fields.Date.to_string(today),
             "months": months,
-            "billings": {b: [round(v, 1) for v in billings[b]]
+            "billings": {b: [m(v) for v in billings[b]]
                          for b in BUCKETS},
-            "revenue": [round(v, 1) for v in revenue],
+            "revenue": [m(v) for v in revenue],
             "clients": top(client_totals),
             "vendors": top(vendor_totals),
             "pacing": pacing,
@@ -192,8 +200,8 @@ class CeoDashboardData(http.Controller):
             "kpis": {
                 "active_campaigns": len(watch),
                 "clients_live": len(client_totals),
-                "receivables": round(receivable, 1),
-                "payables": round(payable, 1),
+                "receivables": m(receivable),
+                "payables": m(payable),
                 "dso": dso,
             },
         }
