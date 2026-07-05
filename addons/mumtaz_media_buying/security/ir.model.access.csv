@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_media_outlet_user,media.outlet (user),model_media_outlet,group_media_user,1,1,1,0
+access_media_outlet_manager,media.outlet (manager),model_media_outlet,group_media_manager,1,1,1,1
+access_media_rate_card_user,media.rate.card (user),model_media_rate_card,group_media_user,1,1,1,0
+access_media_rate_card_manager,media.rate.card (manager),model_media_rate_card,group_media_manager,1,1,1,1
+access_media_rate_card_line_user,media.rate.card.line (user),model_media_rate_card_line,group_media_user,1,1,1,1
+access_media_rate_card_line_manager,media.rate.card.line (manager),model_media_rate_card_line,group_media_manager,1,1,1,1
+access_media_plan_user,media.plan (user),model_media_plan,group_media_user,1,1,1,0
+access_media_plan_manager,media.plan (manager),model_media_plan,group_media_manager,1,1,1,1
+access_media_plan_line_user,media.plan.line (user),model_media_plan_line,group_media_user,1,1,1,1
+access_media_plan_line_manager,media.plan.line (manager),model_media_plan_line,group_media_manager,1,1,1,1

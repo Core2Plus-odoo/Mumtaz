@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <menuitem id="menu_media_root" name="Media Buying" sequence="5"
+              web_icon="mumtaz_media_buying,static/description/icon.png"/>
+
+    <menuitem id="menu_media_plans" name="Media Plans"
+              parent="menu_media_root" action="action_media_plan" sequence="10"/>
+
+    <menuitem id="menu_media_rate_cards" name="Rate Cards"
+              parent="menu_media_root" action="action_media_rate_card" sequence="20"/>
+
+    <menuitem id="menu_media_config" name="Configuration"
+              parent="menu_media_root" sequence="90"/>
+    <menuitem id="menu_media_outlets" name="Media Outlets"
+              parent="menu_media_config" action="action_media_outlet" sequence="10"/>
+    <menuitem id="menu_media_vendors" name="Media Vendors"
+              parent="menu_media_config" action="action_media_vendor" sequence="20"/>
+
+</odoo>
