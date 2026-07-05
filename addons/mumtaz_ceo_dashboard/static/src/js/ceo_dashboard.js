@@ -279,7 +279,7 @@ class CeoDashboard extends Component {
             const W = 680, H = 280, padL = 38, padR = 14, padT = 26, padB = 28;
             const iw = W - padL - padR, ih = H - padT - padB;
             const totals = idx.map((i) => CH.reduce((a, c) => a + billings[c][i], 0));
-            const maxV = Math.max(...totals) * 1.12;
+            const maxV = Math.max(...totals) * 1.12 || 1;
             const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Monthly gross billings by channel" });
             const ticks = 4;
             for (let t = 0; t <= ticks; t++) {
@@ -325,7 +325,7 @@ class CeoDashboard extends Component {
             const vals = idx.map((i) => revenue[i]);
             const W = 320, H = 280, padL = 34, padR = 14, padT = 22, padB = 28;
             const iw = W - padL - padR, ih = H - padT - padB;
-            const maxV = Math.max(...vals) * 1.18, minV = 0;
+            const maxV = (Math.max(...vals) * 1.18) || 1, minV = 0;
             const x = (k) => padL + (idx.length === 1 ? iw / 2 : iw * k / (idx.length - 1));
             const y = (v) => padT + ih - ((v - minV) / (maxV - minV)) * ih;
             const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Net revenue trend" });
@@ -359,7 +359,7 @@ class CeoDashboard extends Component {
 
         // ---------------- horizontal bars ----------------
         function renderHBars(name, rows, colorVar) {
-            const max = Math.max(...rows.map((r) => r.v));
+            const max = Math.max(1, ...rows.map((r) => r.v));
             q(name).innerHTML = rows.map((r) => `
                 <div class="cd-hbar">
                     <span class="cd-nm" title="${r.nm}">${r.nm}</span>
@@ -413,7 +413,8 @@ class CeoDashboard extends Component {
         // ---------------- receivables ----------------
         function renderAR() {
             const total = ageing.reduce((a, x) => a + x.v, 0);
-            q("arBar").innerHTML = ageing.map((a) => `<i style="width:${a.v / total * 100}%;background:${cvar(a.c)}" title="${a.nm}: ${CUR} ${a.v}m"></i>`).join("");
+            const pct = (v) => total > 0 ? (v / total * 100) : 0;
+            q("arBar").innerHTML = ageing.map((a) => `<i style="width:${pct(a.v)}%;background:${cvar(a.c)}" title="${a.nm}: ${CUR} ${a.v}m"></i>`).join("");
             q("arLegend").innerHTML = ageing.map((a) => `<span><span class="cd-swatch" style="background:${cvar(a.c)}"></span>${a.nm} · <strong style="color:var(--cd-ink)">${a.v}m</strong></span>`).join("");
             q("arTotal").innerHTML = `<span style="font-size:14px;color:var(--cd-ink-2);font-weight:650">${CUR} </span>${money(total)}`;
             q("arNote").textContent = `DSO ${K.dso} days · vendor payables ${CUR} ${money(K.payables)}`;
