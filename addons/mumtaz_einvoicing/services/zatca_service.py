@@ -8,7 +8,6 @@ Handles:
 """
 import base64
 import hashlib
-import json
 import logging
 import uuid as uuid_lib
 from datetime import datetime

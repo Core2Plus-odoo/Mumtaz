@@ -151,7 +151,7 @@ class MumtazCFOIngestionService(models.AbstractModel):
                 str(payload.get("reference") or ""),
             ]
         )
-        return hashlib.sha1(raw.encode("utf-8")).hexdigest()
+        return hashlib.sha1(raw.encode("utf-8"), usedforsecurity=False).hexdigest()
 
     def _resolve_entry_type(self, payload, direction):
         description = (payload.get("description") or "").lower()

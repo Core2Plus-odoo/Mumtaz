@@ -49,7 +49,7 @@ class LeadNurtureEnrollWizard(models.TransientModel):
             rec.lead_count = len(rec.lead_ids)
             if rec.campaign_id:
                 rec.already_enrolled_count = len(
-                    rec.lead_ids.filtered(lambda l: l.nurture_campaign_id == rec.campaign_id)
+                    rec.lead_ids.filtered(lambda l, rec=rec: l.nurture_campaign_id == rec.campaign_id)
                 )
             else:
                 rec.already_enrolled_count = 0

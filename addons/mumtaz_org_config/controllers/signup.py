@@ -4,7 +4,6 @@ SME Organisation signup API endpoint.
 POST /mumtaz/org/signup  — creates a mumtaz.org in 'pending' state.
 GET  /mumtaz/org/check   — checks slug availability.
 """
-import json
 import logging
 import re
 

@@ -1,0 +1,24 @@
+[flake8]
+max-line-length = 120
+
+# E203/W503/E501: black-compatible + line length handled elsewhere.
+# E221/E241/E251/E272/W504/E126/E127/E131: whitespace-alignment noise, not bugs.
+# E741: Odoo/lambda idiom uses `l` for line/record in many places.
+extend-ignore = E203, W503, E501, E221, E241, E251, E272, W504, E126, E127, E131, E741,
+                E231, E261, E303, E305, E306, E402, F541
+
+# Odoo module structure produces two unavoidable "violations":
+#   __init__.py    — `from . import models` is a re-export, not an unused import
+#   __manifest__.py — the module is a bare dict literal by design
+per-file-ignores =
+    __init__.py: F401
+    __manifest__.py: B018
+
+# Generated/vendored/non-product code and Odoo-shell scripts (where `env` is an
+# injected global) are out of scope for the product lint.
+extend-exclude =
+    **/migrations/**,
+    **/__pycache__/**,
+    **/static/**,
+    **/scripts/**,
+    tools/scrapers/pakistan_trade_portal/run_enriched_companies.py

@@ -8,7 +8,7 @@
         <field name="name">mumtaz.organization.tree</field>
         <field name="model">mumtaz.organization</field>
         <field name="arch" type="xml">
-            <tree string="Organisations">
+            <list string="Organisations">
                 <field name="name"/>
                 <field name="slug"/>
                 <field name="industry"/>
@@ -19,7 +19,7 @@
                     decoration-warning="state == 'pending'"
                     decoration-danger="state == 'suspended'"/>
                 <field name="is_public"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -69,7 +69,7 @@
                         </page>
                         <page string="Signups">
                             <field name="signup_ids">
-                                <tree>
+                                <list>
                                     <field name="company_name"/>
                                     <field name="contact_name"/>
                                     <field name="email"/>
@@ -79,16 +79,12 @@
                                         decoration-warning="state == 'new'"
                                         decoration-danger="state == 'rejected'"/>
                                     <field name="create_date"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
-                    <field name="message_ids"/>
-                </div>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -97,7 +93,7 @@
     <record id="action_mumtaz_organization" model="ir.actions.act_window">
         <field name="name">Organisations</field>
         <field name="res_model">mumtaz.organization</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <!-- SME Signup list -->
@@ -105,7 +101,7 @@
         <field name="name">mumtaz.sme.signup.tree</field>
         <field name="model">mumtaz.sme.signup</field>
         <field name="arch" type="xml">
-            <tree string="SME Signups" decoration-info="state == 'new'">
+            <list string="SME Signups" decoration-info="state == 'new'">
                 <field name="company_name"/>
                 <field name="contact_name"/>
                 <field name="email"/>
@@ -120,7 +116,7 @@
                     icon="fa-check" invisible="state != 'new'"/>
                 <button name="action_reject" string="Reject" type="object"
                     icon="fa-times" invisible="state != 'new'"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -161,10 +157,7 @@
                         <field name="reviewer_notes" nolabel="1"/>
                     </group>
                 </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="message_ids"/>
-                </div>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -173,7 +166,7 @@
     <record id="action_mumtaz_sme_signup" model="ir.actions.act_window">
         <field name="name">SME Signups</field>
         <field name="res_model">mumtaz.sme.signup</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <!-- Backend menus (defined after actions so XML IDs exist) -->

@@ -28,7 +28,7 @@ jobs:
           required_keys = {"name", "version", "depends", "license"}
           errors = []
 
-          for path in pathlib.Path(".").glob("mumtaz_*/__manifest__.py"):
+          for path in pathlib.Path(".").glob("addons/mumtaz_*/__manifest__.py"):
               try:
                   tree = ast.parse(path.read_text())
                   # The manifest must be a single dict literal at module level
@@ -73,11 +73,7 @@ jobs:
         run: pip install flake8 flake8-bugbear
 
       - name: flake8
-        run: |
-          flake8 mumtaz_*/ scrapers/ \
-            --max-line-length=120 \
-            --extend-ignore=E203,W503,E501 \
-            --exclude=**/migrations/**,**/__pycache__/**,**/static/**
+        run: flake8 addons/ tools/scrapers/   # config in .flake8 at repo root
 
   # ────────────────────────────────────────────────────────────────────
   # 3. Security scan
@@ -98,7 +94,7 @@ jobs:
 
       - name: Run bandit
         run: |
-          bandit -r mumtaz_*/ scrapers/ \
+          bandit -r addons/ tools/scrapers/ \
             --severity-level medium \
             --confidence-level medium \
             --skip B101,B311,B603,B607 \
@@ -123,7 +119,7 @@ jobs:
               echo "✗ Invalid XML: $f"
               errors=$((errors + 1))
             fi
-          done < <(find mumtaz_*/ -name "*.xml" -print0)
+          done < <(find addons/ -name "*.xml" -print0)
 
           if [ "$errors" -gt 0 ]; then
             echo "Found $errors XML errors."
@@ -153,18 +149,18 @@ jobs:
           # Modules that exist in this repo
           local_modules = {
               p.parent.name
-              for p in pathlib.Path(".").glob("mumtaz_*/__manifest__.py")
+              for p in pathlib.Path(".").glob("addons/mumtaz_*/__manifest__.py")
           }
 
           # Known Odoo core / OCA modules (non-exhaustive whitelist)
           KNOWN_EXTERNAL = {
               "base", "mail", "web", "website", "account", "crm", "sale",
-              "purchase", "stock", "hr", "project", "contacts",
-              "base_setup", "portal", "utm", "auth_signup",
+              "sale_management", "purchase", "stock", "hr", "project",
+              "contacts", "base_setup", "portal", "utm", "auth_signup",
           }
 
           errors = []
-          for path in pathlib.Path(".").glob("mumtaz_*/__manifest__.py"):
+          for path in pathlib.Path(".").glob("addons/mumtaz_*/__manifest__.py"):
               module = path.parent.name
               tree = ast.parse(path.read_text())
               node = tree.body[0].value

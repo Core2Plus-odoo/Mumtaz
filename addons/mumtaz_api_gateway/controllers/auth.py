@@ -1,19 +1,13 @@
-import json
-
 from odoo import http
-from odoo.http import request
 
 from ..services import response_builder
 from .base import api_endpoint
 
 
 class MumtazAuthController(http.Controller):
-    @http.route("/api/v1/auth/login", type="http", auth="public", methods=["POST"], csrf=False)
-    @api_endpoint(require_api_key=False)
-    def login(self, **kwargs):
-        payload = json.loads(request.httprequest.data or b"{}")
-        username = payload.get("username")
-        return response_builder.success({"token": f"token-for-{username or 'anonymous'}"}, message="Authenticated")
+    # NOTE: gateway authentication is the X-API-Key header (see
+    # services/auth_service.py + the api_endpoint decorator). There is
+    # deliberately no username/password login endpoint here.
 
     @http.route("/api/v1/auth/logout", type="http", auth="public", methods=["POST"], csrf=False)
     @api_endpoint(require_api_key=True, required_feature_code="api_access")

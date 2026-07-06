@@ -19,7 +19,7 @@ class StripeError(Exception):
     """Raised for Stripe API failures. The .user_message is safe to surface;
     the underlying detail is logged server-side only."""
 
-    def __init__(self, user_message, detail=None, code=None):
+    def __init__(self, user_message, detail=None, code=None):  # noqa: B042
         super().__init__(user_message)
         self.user_message = user_message
         self.detail = detail

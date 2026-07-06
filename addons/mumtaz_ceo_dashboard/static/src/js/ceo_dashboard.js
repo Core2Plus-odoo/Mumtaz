@@ -154,6 +154,9 @@ class CeoDashboard extends Component {
         const CH_LABEL = { tv: "TV & Radio", digital: "Digital & Social", print: "Print", ooh: "Outdoor (OOH)" };
         const CH_VAR = { tv: "--cd-ch-tv", digital: "--cd-ch-digital", print: "--cd-ch-print", ooh: "--cd-ch-ooh" };
         const cvar = (n) => getComputedStyle(root).getPropertyValue(n).trim();
+        // escape user-derived strings (live partner/campaign names) before innerHTML
+        const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
+            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
         // ---------------- DATA (live payload, else sample) --------------
         const CUR = (live && live.currency) || "PKR";
@@ -362,7 +365,7 @@ class CeoDashboard extends Component {
             const max = Math.max(1, ...rows.map((r) => r.v));
             q(name).innerHTML = rows.map((r) => `
                 <div class="cd-hbar">
-                    <span class="cd-nm" title="${r.nm}">${r.nm}</span>
+                    <span class="cd-nm" title="${esc(r.nm)}">${esc(r.nm)}</span>
                     <span class="cd-track"><span class="cd-fill" style="width:${(r.v / max * 100).toFixed(1)}%;background:${cvar(colorVar)}"></span></span>
                     <span class="cd-val">${r.v}m</span>
                 </div>`).join("");
@@ -396,7 +399,7 @@ class CeoDashboard extends Component {
                 const pace = c.spent / c.budget * 100;
                 const pc = pace > 100 ? '--cd-critical' : pace >= 45 ? '--cd-accent' : '--cd-warning';
                 return `<tr>
-                    <td><div class="cd-camp-nm">${c.nm}</div><div class="cd-camp-cl">${c.cl}</div></td>
+                    <td><div class="cd-camp-nm">${esc(c.nm)}</div><div class="cd-camp-cl">${esc(c.cl)}</div></td>
                     <td><span class="cd-chips">${c.ch.map((x) => `<span class="cd-chip ${x}">${x === 'tv' ? 'TV/Radio' : x === 'ooh' ? 'OOH' : x[0].toUpperCase() + x.slice(1)}</span>`).join("")}</span></td>
                     <td class="num">${c.budget}m</td>
                     <td class="num">${c.spent}m</td>

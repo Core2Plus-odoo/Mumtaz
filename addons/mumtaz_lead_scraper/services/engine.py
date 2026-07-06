@@ -275,7 +275,7 @@ class ScraperEngine:
                     self.crm_mapper.create_lead(record)
 
                 processed += 1
-            except Exception as exc:
+            except Exception:
                 _logger.exception("Record creation failed")
                 failed += 1
 

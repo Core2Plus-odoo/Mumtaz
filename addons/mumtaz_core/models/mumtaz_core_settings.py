@@ -260,7 +260,7 @@ class MumtazCoreSettings(models.Model):
                 "platform_last_sync": fields.Datetime.now(),
             })
             raise UserError(f"Platform returned HTTP {exc.response.status_code}. Check your Platform Token.")
-        except Exception as exc:
+        except Exception:
             self.sudo().write({
                 "platform_sync_status": "error",
                 "platform_last_sync": fields.Datetime.now(),

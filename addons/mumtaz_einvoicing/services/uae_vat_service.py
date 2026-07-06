@@ -124,7 +124,7 @@ class UAEVATService:
             qr.make(fit=True)
 
             try:
-                from PIL import Image  # type: ignore[import]
+                from PIL import Image  # type: ignore[import]  # noqa: F401
                 img = qr.make_image(fill_color='black', back_color='white')
                 buffer = io.BytesIO()
                 img.save(buffer, format='PNG')

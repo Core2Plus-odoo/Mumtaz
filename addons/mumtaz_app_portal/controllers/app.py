@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date
 
 from odoo import http
 from odoo.http import request
@@ -522,7 +522,6 @@ class MumtazApp(http.Controller):
             return guard
 
         env = request.env
-        company_id = env.company.id
         ctx = self._base_ctx('account', 'Account & Plan')
 
         # Features

@@ -31,7 +31,7 @@ import json
 import logging
 import re
 import time
-from urllib.parse import urlparse, urljoin, urlencode
+from urllib.parse import urlparse
 
 _logger = logging.getLogger(__name__)
 

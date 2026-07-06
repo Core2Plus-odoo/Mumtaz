@@ -1,7 +1,6 @@
 import logging
 from odoo import http
 from odoo.http import request
-from odoo.exceptions import AccessDenied
 
 _logger = logging.getLogger(__name__)
 

@@ -1,9 +1,8 @@
-import time
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-from config import BASE_URL, HEADERS, DELAY_SECONDS
+from config import BASE_URL, HEADERS
 from models import RawTradeRecord, ScoredTradeLead
 from scoring import score_lead
 
