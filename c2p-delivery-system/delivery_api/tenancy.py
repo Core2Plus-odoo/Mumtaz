@@ -139,10 +139,21 @@ def encryption_active() -> bool:
 
 
 def enc_secret(v: str) -> str:
+    if not v:
+        return ""
     f = _fernet()
     if f:
         return "fernet$" + f.encrypt(v.encode()).decode()
-    return "plain$" + base64.b64encode(v.encode()).decode()
+    # No real key configured. Refuse to persist a secret in a trivially
+    # reversible form — Odoo/Stripe/GitHub credentials would otherwise be
+    # recoverable straight from the SQLite file. base64 fallback is an explicit
+    # local-dev opt-in only.
+    if os.getenv("C2P_ALLOW_PLAINTEXT_SECRETS") == "1":
+        return "plain$" + base64.b64encode(v.encode()).decode()
+    raise RuntimeError(
+        "Refusing to store a secret without encryption. Set C2P_SECRET_KEY "
+        "(a Fernet key) to enable encrypted-at-rest secrets; for local dev "
+        "only, set C2P_ALLOW_PLAINTEXT_SECRETS=1.")
 
 
 def dec_secret(v: str) -> str:

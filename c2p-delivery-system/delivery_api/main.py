@@ -1152,19 +1152,17 @@ def config_apply(eng_id: str, body: dict | None = None):
                 "result": {"mode": "plan", "applied": 0,
                            "note": "Configuration plan generated (no executable operations found)."}}
     payload = {"engagement_id": eng.id, "operations": ops, "summary": out.get("summary")}
-    # Execute immediately when asked (apply=true) — the consultant does the needful.
-    if body.get("apply"):
+    # Live Odoo writes are ALWAYS gated. policy.gate auto-runs the action when the
+    # account's policy allows it (returns None), otherwise it records an Approval a
+    # human must release. apply=true previously bypassed the gate — it no longer does.
+    appr = policy.gate(store, "config_apply", payload, requester_agent="config",
+                       account_id=eng.account_id, engagement_id=eng.id)
+    if appr is None:
         res = _execute_config_apply(payload, eng.account_id)
         out["last_apply"] = res
         eng.stages["config"] = out
         store.save(eng)
         return {"recipe": out, "approval": None, "result": res}
-    # Otherwise route through the approval gate (auto-runs if policy allows).
-    appr = policy.gate(store, "config_apply", payload, requester_agent="config",
-                       account_id=eng.account_id, engagement_id=eng.id)
-    if appr is None:
-        return {"recipe": out, "approval": None,
-                "result": _execute_config_apply(payload, eng.account_id)}
     return {"recipe": out, "approval": appr.model_dump(), "ops_count": len(ops)}
 
 
@@ -2181,6 +2179,31 @@ def _execute_deploy(payload: dict, account_id: str | None = None) -> dict:
     return res
 
 
+# Models the config stage is permitted to create/write on a client's live Odoo.
+# This is a security boundary: even if a prompt-injected requirement makes the
+# config agent emit an operation, it can only touch safe master/config data —
+# never security, automation, or system models (res.users, res.groups, ir.rule,
+# ir.config_parameter, ir.cron, ir.actions.server, base.automation, ir.ui.view…).
+CONFIG_ALLOWED_MODELS = frozenset({
+    # CRM / marketing config
+    "crm.stage", "crm.team", "crm.tag", "crm.lost.reason", "crm.recurring.plan",
+    "utm.source", "utm.medium", "utm.campaign",
+    # Catalog / products
+    "product.category", "product.pricelist", "product.attribute",
+    "product.attribute.value", "uom.uom", "uom.category",
+    # Partners
+    "res.partner.category", "res.partner.industry",
+    # Accounting master data (configuration, not postings)
+    "account.tax", "account.tax.group", "account.journal", "account.account",
+    "account.fiscal.position", "account.payment.term",
+    "account.analytic.account", "account.analytic.plan",
+    # Sales / activities / HR / inventory config
+    "sale.order.template", "mail.activity.type", "calendar.event.type",
+    "hr.department", "hr.job",
+    "stock.warehouse", "stock.location", "stock.picking.type",
+})
+
+
 def _execute_config_apply(payload: dict, account_id: str | None = None) -> dict:
     """Apply the config recipe to the engagement's Odoo via the API (create/write
     only — safe, gated). Returns per-operation results."""
@@ -2197,6 +2220,9 @@ def _execute_config_apply(payload: dict, account_id: str | None = None) -> dict:
         try:
             if not model:
                 raise ValueError("missing model")
+            if model not in CONFIG_ALLOWED_MODELS:
+                raise ValueError(
+                    f"model '{model}' is not permitted for config apply")
             if method == "create":
                 rid = c.execute(model, "create", vals)
                 results.append({"label": label, "model": model, "id": rid, "ok": True})
