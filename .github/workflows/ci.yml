@@ -213,7 +213,7 @@ jobs:
 
   # ────────────────────────────────────────────────────────────────────
   # 7. Python dependency audit — pip-audit
-  # Checks for known CVEs in zaki-server Python dependencies.
+  # Checks for known CVEs in the active c2p-delivery-system backend deps.
   # ────────────────────────────────────────────────────────────────────
   pip-audit:
     name: Python Dependency Audit (pip-audit)
@@ -228,19 +228,8 @@ jobs:
       - name: Install pip-audit
         run: pip install pip-audit
 
-      - name: Audit zaki-server dependencies
-        # ecdsa (GHSA-jfh8) and pyasn1 (CVE-2026-30922) are constrained by
-        # python-jose's own resolver; the starlette CVEs are transitive from
-        # FastAPI 0.115 and would need a major FastAPI upgrade to clear. zaki-server
-        # is slated for removal (repo audit), so these are ignored, not force-bumped.
-        run: |
-          pip-audit -r apps/zaki-server/requirements.txt \
-            --ignore-vuln GHSA-jfh8-c2jp-5f7m \
-            --ignore-vuln CVE-2026-30922 \
-            --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-249 \
-            --ignore-vuln PYSEC-2026-248 --ignore-vuln CVE-2024-47874 \
-            --ignore-vuln CVE-2025-54121 --ignore-vuln CVE-2026-48818 \
-            --ignore-vuln CVE-2026-48817
+      - name: Audit c2p-delivery-system dependencies
+        run: pip-audit -r c2p-delivery-system/delivery_api/requirements.txt
 
   # ────────────────────────────────────────────────────────────────────
   # 8. Node.js dependency audit — npm audit
