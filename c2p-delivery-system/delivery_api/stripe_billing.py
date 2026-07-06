@@ -59,11 +59,17 @@ def create_checkout_session(customer_id: str, price_id: str,
 
 def verify_webhook(payload: bytes, sig_header: str) -> Optional[dict]:
     secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-    if not secret:                                  # dev convenience: accept unsigned
-        try:
-            return json.loads(payload)
-        except Exception:
-            return None
+    if not secret:
+        # Fail closed: /stripe/webhook is public and events flip billing state
+        # (activate/suspend a tenant). Without a signing secret the event cannot
+        # be authenticated, so it must not be trusted. Accepting unsigned events
+        # is an explicit local-dev opt-in only.
+        if os.getenv("C2P_STRIPE_ALLOW_UNSIGNED") == "1":
+            try:
+                return json.loads(payload)
+            except Exception:
+                return None
+        return None
     try:
         parts = dict(p.split("=", 1) for p in sig_header.split(","))
         t, v1 = parts.get("t"), parts.get("v1")
