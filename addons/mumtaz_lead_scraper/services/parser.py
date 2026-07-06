@@ -14,7 +14,7 @@ Use get_parser(mode) to get the right instance.
 import json
 import logging
 import re
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 _logger = logging.getLogger(__name__)
 

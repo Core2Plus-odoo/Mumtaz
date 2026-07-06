@@ -1,11 +1,11 @@
 {
     "name": "Mumtaz Organization",
     "summary": "White-label org management — /org/<slug>/ portal + SME signup flow",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Mumtaz Platform",
     "author": "Mumtaz",
     "license": "LGPL-3",
-    "depends": ["portal", "base", "mail"],
+    "depends": ["portal", "base", "website", "mail"],
     "data": [
         "security/ir.model.access.csv",
         "data/org_data.xml",

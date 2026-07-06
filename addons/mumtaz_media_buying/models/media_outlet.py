@@ -46,7 +46,23 @@ class MediaOutlet(models.Model):
         for rec in self:
             rec.rate_line_count = counts.get(rec.id, 0)
 
-    @api.onchange("vendor_id")
-    def _onchange_vendor_id(self):
-        if self.vendor_id and not self.vendor_id.is_media_vendor:
-            self.vendor_id.is_media_vendor = True
+    @api.model_create_multi
+    def create(self, vals_list):
+        outlets = super().create(vals_list)
+        outlets._ensure_vendor_flag()
+        return outlets
+
+    def write(self, vals):
+        res = super().write(vals)
+        if "vendor_id" in vals:
+            self._ensure_vendor_flag()
+        return res
+
+    def _ensure_vendor_flag(self):
+        """A partner used as a media outlet's vendor is, by definition, a
+        media vendor. Set the flag on create/write (not onchange, which would
+        persist even if the user discards the form)."""
+        vendors = self.mapped("vendor_id").filtered(
+            lambda p: not p.is_media_vendor)
+        if vendors:
+            vendors.is_media_vendor = True

@@ -1,7 +1,6 @@
 import json
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
 
 
 class LeadScraperSource(models.Model):

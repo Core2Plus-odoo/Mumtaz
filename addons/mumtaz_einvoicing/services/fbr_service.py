@@ -101,7 +101,6 @@ class FBRService:
         for idx, line in enumerate(invoice.invoice_line_ids.filtered(
             lambda l: l.display_type not in ('line_section', 'line_note')
         ), start=1):
-            unit_price = round(float(line.price_unit), 2)
             sale_value = round(float(line.price_subtotal), 2)
             tax_rate = 0.0
             if line.tax_ids:

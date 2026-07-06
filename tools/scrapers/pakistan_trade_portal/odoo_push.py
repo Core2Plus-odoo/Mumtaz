@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Iterable, List
-from xmlrpc import client
+from xmlrpc import client  # nosec B411 - outbound client to trusted Odoo, not untrusted XML
 
 _LOGGER = logging.getLogger(__name__)
 

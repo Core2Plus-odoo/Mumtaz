@@ -52,8 +52,6 @@ class MumtazControlPlaneDashboard(models.TransientModel):
 
         Tenant = self.env["mumtaz.tenant"].sudo()
         Subscription = self.env["mumtaz.subscription"].sudo()
-        TenantFeature = self.env["mumtaz.tenant.feature"].sudo()
-        UsageMetric = self.env["mumtaz.usage.metric"].sudo()
 
         active_subscription_domain = [
             ("is_current", "=", True),

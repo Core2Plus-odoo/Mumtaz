@@ -1,7 +1,7 @@
 {
     "name": "Mumtaz API Gateway",
     "summary": "Tenant-aware API gateway for Mumtaz platform services",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Mumtaz Platform",
     "author": "Mumtaz",
     "license": "LGPL-3",

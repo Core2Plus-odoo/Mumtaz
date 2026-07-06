@@ -28,7 +28,7 @@ jobs:
           required_keys = {"name", "version", "depends", "license"}
           errors = []
 
-          for path in pathlib.Path(".").glob("mumtaz_*/__manifest__.py"):
+          for path in pathlib.Path(".").glob("addons/mumtaz_*/__manifest__.py"):
               try:
                   tree = ast.parse(path.read_text())
                   # The manifest must be a single dict literal at module level
@@ -73,11 +73,7 @@ jobs:
         run: pip install flake8 flake8-bugbear
 
       - name: flake8
-        run: |
-          flake8 mumtaz_*/ scrapers/ \
-            --max-line-length=120 \
-            --extend-ignore=E203,W503,E501 \
-            --exclude=**/migrations/**,**/__pycache__/**,**/static/**
+        run: flake8 addons/ tools/scrapers/   # config in .flake8 at repo root
 
   # ────────────────────────────────────────────────────────────────────
   # 3. Security scan
@@ -98,7 +94,7 @@ jobs:
 
       - name: Run bandit
         run: |
-          bandit -r mumtaz_*/ scrapers/ \
+          bandit -r addons/ tools/scrapers/ \
             --severity-level medium \
             --confidence-level medium \
             --skip B101,B311,B603,B607 \
@@ -114,6 +110,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
       - name: Validate XML
         run: |
           set -e
@@ -123,7 +122,7 @@ jobs:
               echo "✗ Invalid XML: $f"
               errors=$((errors + 1))
             fi
-          done < <(find mumtaz_*/ -name "*.xml" -print0)
+          done < <(find addons/ -name "*.xml" -print0)
 
           if [ "$errors" -gt 0 ]; then
             echo "Found $errors XML errors."
@@ -153,18 +152,18 @@ jobs:
           # Modules that exist in this repo
           local_modules = {
               p.parent.name
-              for p in pathlib.Path(".").glob("mumtaz_*/__manifest__.py")
+              for p in pathlib.Path(".").glob("addons/mumtaz_*/__manifest__.py")
           }
 
           # Known Odoo core / OCA modules (non-exhaustive whitelist)
           KNOWN_EXTERNAL = {
               "base", "mail", "web", "website", "account", "crm", "sale",
-              "purchase", "stock", "hr", "project", "contacts",
-              "base_setup", "portal", "utm", "auth_signup",
+              "sale_management", "purchase", "stock", "hr", "project",
+              "contacts", "base_setup", "portal", "utm", "auth_signup",
           }
 
           errors = []
-          for path in pathlib.Path(".").glob("mumtaz_*/__manifest__.py"):
+          for path in pathlib.Path(".").glob("addons/mumtaz_*/__manifest__.py"):
               module = path.parent.name
               tree = ast.parse(path.read_text())
               node = tree.body[0].value
@@ -230,7 +229,18 @@ jobs:
         run: pip install pip-audit
 
       - name: Audit zaki-server dependencies
-        run: pip-audit -r apps/zaki-server/requirements.txt --ignore-vuln GHSA-jfh8-c2jp-5f7m
+        # ecdsa (GHSA-jfh8) and pyasn1 (CVE-2026-30922) are constrained by
+        # python-jose's own resolver; the starlette CVEs are transitive from
+        # FastAPI 0.115 and would need a major FastAPI upgrade to clear. zaki-server
+        # is slated for removal (repo audit), so these are ignored, not force-bumped.
+        run: |
+          pip-audit -r apps/zaki-server/requirements.txt \
+            --ignore-vuln GHSA-jfh8-c2jp-5f7m \
+            --ignore-vuln CVE-2026-30922 \
+            --ignore-vuln PYSEC-2026-161 --ignore-vuln PYSEC-2026-249 \
+            --ignore-vuln PYSEC-2026-248 --ignore-vuln CVE-2024-47874 \
+            --ignore-vuln CVE-2025-54121 --ignore-vuln CVE-2026-48818 \
+            --ignore-vuln CVE-2026-48817
 
   # ────────────────────────────────────────────────────────────────────
   # 8. Node.js dependency audit — npm audit
