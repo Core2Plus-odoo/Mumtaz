@@ -78,6 +78,19 @@ class FinancialStatements extends Component {
         const v = (c - p) / Math.abs(p) * 100;
         return { t: (v >= 0 ? "+" : "") + v.toFixed(1) + "%", c: v > 0 ? "up" : v < 0 ? "dn" : "mut" };
     }
+    // "2025-07-01","2026-06-30" -> "FY 2025–26"; same year -> "FY 2026"
+    fyLabel(f, t) {
+        if (!f || !t) return "Current";
+        const fy = +f.slice(0, 4), ty = +t.slice(0, 4);
+        return fy === ty ? `FY ${ty}` : `FY ${fy}–${String(ty).slice(-2)}`;
+    }
+    shiftYear(d) { return d ? (+d.slice(0, 4) - 1) + d.slice(4) : d; }
+    fmtDate(iso) {
+        if (!iso) return "";
+        const M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const [y, m, d] = iso.split("-");
+        return `${+d} ${M[+m - 1]} ${y}`;
+    }
 
     _wire() {
         this.q("tabs").querySelectorAll("button").forEach((b) => {
@@ -167,18 +180,19 @@ class FinancialStatements extends Component {
             </tr>`;
         }
         const titles = { pl: "Statement of Profit & Loss", bs: "Statement of Financial Position", tb: "Trial Balance" };
+        const curFy = this.fyLabel(this.meta.date_from, this.meta.date_to);
+        const priFy = this.fyLabel(this.shiftYear(this.meta.date_from), this.shiftYear(this.meta.date_to));
         const period = this.report === "pl"
-            ? `For the period ${this.meta.date_from} to ${this.meta.date_to}`
-            : `As at ${this.meta.date_to}`;
+            ? `For the year ended ${this.fmtDate(this.meta.date_to)}`
+            : `As at ${this.fmtDate(this.meta.date_to)}`;
+        const head = this.report === "tb"
+            ? `<tr><th class="lft">Account</th><th>Debit</th><th>Credit</th><th></th></tr>`
+            : `<tr><th class="lft"></th><th>${this._esc(curFy)}</th><th>${this._esc(priFy)}</th><th>Δ %</th></tr>`;
         this.q("view").innerHTML = `<div class="fs-stmt">
             <div class="fs-stmt-head"><div class="fs-stmt-title">${titles[this.report] || ""}</div>
-              <div class="fs-stmt-meta">${period} · ${this._esc(this.cur)}</div></div>
+              <div class="fs-stmt-meta">${period} · all figures in ${this._esc(this.cur)}</div></div>
             <div class="fs-scroll"><table>
-              <thead><tr><th class="lft">${this.report === "tb" ? "Account" : ""}</th>
-                <th>Current</th><th>${this.report === "tb" ? "Credit" : "Prior"}</th>
-                <th>${this.report === "tb" ? "" : "Δ %"}</th></tr>
-                ${this.report === "tb" ? '<tr><th class="lft"></th><th>Debit</th><th>Credit</th><th></th></tr>' : ""}
-              </thead><tbody>${body}</tbody></table></div></div>`;
+              <thead>${head}</thead><tbody>${body}</tbody></table></div></div>`;
     }
 
     _renderAged(res) {
