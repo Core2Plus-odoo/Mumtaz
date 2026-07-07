@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_financial_statements" model="ir.actions.client">
+        <field name="name">Financial Statements</field>
+        <field name="tag">mumtaz_financial_reports</field>
+    </record>
+
+    <menuitem id="menu_fs_root"
+              name="Financial Statements"
+              web_icon="mumtaz_financial_reports,static/description/icon.png"
+              sequence="6"/>
+
+    <menuitem id="menu_fs_main"
+              name="Statements"
+              parent="menu_fs_root"
+              action="action_financial_statements"
+              sequence="1"
+              groups="base.group_user"/>
+
+</odoo>
