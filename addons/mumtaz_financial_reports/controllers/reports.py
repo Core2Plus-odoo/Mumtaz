@@ -121,9 +121,24 @@ class FinancialReports(http.Controller):
                      "c": _num(op_c), "p": _num(op_p)})
         rows.append({"t": "spacer"})
         oth_c, oth_p = block("Other Income", PL_OTHER_INCOME)
+        net_c = op_c + oth_c
         rows.append({"t": "grand", "l": "Net Profit / (Loss) for the Period",
-                     "c": _num(op_c + oth_c), "p": _num(op_p + oth_p)})
-        return rows
+                     "c": _num(net_c), "p": _num(op_p + oth_p)})
+
+        def marg(x):
+            return f"{(x / rev_c * 100):.1f}% margin" if rev_c else "—"
+
+        def delta(c, p):
+            return f"{'+' if c >= p else ''}{((c - p) / abs(p) * 100):.1f}% vs prior" if p else "vs prior"
+        tiles = [
+            {"lab": "Revenue", "val": _num(rev_c), "sub": delta(rev_c, rev_p), "kind": ""},
+            {"lab": "Gross Profit", "val": _num(gp_c), "sub": marg(gp_c), "kind": "g"},
+            {"lab": "Operating Profit", "val": _num(op_c), "sub": marg(op_c), "kind": ""},
+            {"lab": "Net Profit", "val": _num(net_c),
+             "sub": (f"{(net_c / rev_c * 100):.1f}% net margin" if rev_c else "—"),
+             "kind": "g" if net_c >= 0 else "b"},
+        ]
+        return rows, tiles
 
     # ------------------------------------------------------------------ #
     #  Balance Sheet
@@ -190,7 +205,24 @@ class FinancialReports(http.Controller):
         rows.append({"t": "total", "l": "Total Equity & Liabilities",
                      "c": _num(teq_c + ncl_c + cl_c),
                      "p": _num(teq_p + ncl_p + cl_p)})
-        return rows
+
+        assets = nca_c + ca_c
+        liab = ncl_c + cl_c
+        wc = ca_c - cl_c
+        prior_assets = nca_p + ca_p
+        tiles = [
+            {"lab": "Total Assets", "val": _num(assets),
+             "sub": (f"{'+' if assets >= prior_assets else ''}{((assets - prior_assets) / abs(prior_assets) * 100):.1f}% YoY" if prior_assets else ""),
+             "kind": ""},
+            {"lab": "Total Equity", "val": _num(teq_c),
+             "sub": (f"{(teq_c / assets * 100):.1f}% of assets" if assets else ""), "kind": "g"},
+            {"lab": "Total Liabilities", "val": _num(liab),
+             "sub": (f"{(liab / assets * 100):.1f}% of assets" if assets else ""), "kind": "n"},
+            {"lab": "Working Capital", "val": _num(wc),
+             "sub": (f"current ratio {ca_c / cl_c:.2f}×" if cl_c else ""),
+             "kind": "g" if wc >= 0 else "b"},
+        ]
+        return rows, tiles
 
     # ------------------------------------------------------------------ #
     #  Trial Balance
@@ -262,9 +294,11 @@ class FinancialReports(http.Controller):
             "date_to": date_to.isoformat(),
         }
         if report == "pl":
-            return {"rows": self._pl(date_from, date_to), "meta": meta}
+            rows, tiles = self._pl(date_from, date_to)
+            return {"rows": rows, "tiles": tiles, "meta": meta}
         if report == "bs":
-            return {"rows": self._bs(date_to), "meta": meta}
+            rows, tiles = self._bs(date_to)
+            return {"rows": rows, "tiles": tiles, "meta": meta}
         if report == "tb":
             return {"rows": self._tb(date_to), "meta": meta}
         if report == "aged":

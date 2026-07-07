@@ -149,11 +149,11 @@ class FinancialStatements extends Component {
         this.allCollapsed = false;
         this.q("fold").textContent = "⇕ Collapse all";
         if (this.report === "aged") this._renderAged(res);
-        else this._renderStmt(res.rows || []);
+        else this._renderStmt(res.rows || [], res.tiles || []);
     }
 
     // -- statement renderer ---------------------------------------------
-    _renderStmt(rows) {
+    _renderStmt(rows, tiles) {
         const hasLines = {}; let g = 0;
         for (const r of rows) { if (r.t === "section" || r.t === "subhead") g++; else if (r.t === "line") hasLines[g] = true; }
         let body = ""; g = 0; let cur = 0;
@@ -188,7 +188,13 @@ class FinancialStatements extends Component {
         const head = this.report === "tb"
             ? `<tr><th class="lft">Account</th><th>Debit</th><th>Credit</th><th></th></tr>`
             : `<tr><th class="lft"></th><th>${this._esc(curFy)}</th><th>${this._esc(priFy)}</th><th>Δ %</th></tr>`;
-        this.q("view").innerHTML = `<div class="fs-stmt">
+        const tilesHtml = (tiles && tiles.length) ? `<div class="fs-tiles">${tiles.map((t) => `
+            <div class="fs-tile ${t.kind || ""}">
+              <div class="fs-tile-lab">${this._esc(t.lab)}</div>
+              <div class="fs-tile-val"><span class="fs-cur">${this._esc(this.cur)} </span>${this.fmt(t.val)}</div>
+              <div class="fs-tile-sub">${this._esc(t.sub || "")}</div>
+            </div>`).join("")}</div>` : "";
+        this.q("view").innerHTML = tilesHtml + `<div class="fs-stmt">
             <div class="fs-stmt-head"><div class="fs-stmt-title">${titles[this.report] || ""}</div>
               <div class="fs-stmt-meta">${period} · all figures in ${this._esc(this.cur)}</div></div>
             <div class="fs-scroll"><table>
