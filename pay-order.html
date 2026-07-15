@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mashreq Pay Order</title>
+<style>
+  :root {
+    --ink: #1a2b4a;
+    --mashreq-red: #e2231a;
+    --mashreq-orange: #f7941d;
+    --border: #b9c4d4;
+    --paper: #f6f9fc;
+    --pattern: #eaf1f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 30px;
+    background: #d7dee7;
+    font-family: "Arial", "Helvetica Neue", sans-serif;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+  }
+  .sheet {
+    width: 760px;
+    max-width: 100%;
+  }
+
+  /* ---------- Top: the pay order ---------- */
+  .cheque {
+    position: relative;
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 18px, rgba(200,215,232,.22) 18px 20px),
+      linear-gradient(180deg, #ffffff, var(--paper));
+    border: 1px solid var(--border);
+    border-radius: 4px 4px 0 0;
+    padding: 20px 26px 16px;
+    overflow: hidden;
+  }
+  /* subtle guilloche corner glows */
+  .cheque::before {
+    content: "";
+    position: absolute;
+    right: -80px; top: -80px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(247,148,29,.10), transparent 62%);
+    pointer-events: none;
+  }
+
+  .row { display: flex; }
+  .between { justify-content: space-between; }
+
+  /* Header */
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+    transform: rotate(-6deg);
+  }
+  .logo-mark span {
+    width: 9px; height: 14px; border-radius: 2px;
+    background: var(--mashreq-orange);
+  }
+  .logo-mark span:nth-child(3n+1){ background: var(--mashreq-red); }
+  .logo-mark span:nth-child(even){ opacity: .85; }
+  .brand-name { font-size: 30px; font-weight: 800; letter-spacing: .5px; color:#2a2a2a; }
+  .brand-ar { font-size: 30px; font-weight: 800; color: var(--mashreq-red); direction: rtl; }
+
+  .head-office { text-align: right; font-size: 11px; line-height: 1.5; color:#4a5a70; }
+  .head-office b { color: var(--ink); }
+
+  .payee-only {
+    color: var(--mashreq-red);
+    border: 1px solid var(--mashreq-red);
+    font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    padding: 2px 10px; border-radius: 3px;
+    transform: rotate(-1deg);
+  }
+
+  .sixmonths { font-size: 10px; color:#5a6a80; font-style: italic; text-align:right; }
+
+  .field-label { font-size: 10px; color:#6b7a90; letter-spacing:.3px; text-transform: uppercase; }
+  .hand {
+    font-family: "Courier New", monospace;
+    color: #123; font-weight: 700;
+  }
+  .under { border-bottom: 1px dotted #9aa8ba; }
+
+  .grid { margin-top: 14px; }
+
+  /* Pay to line */
+  .payto { margin-top: 6px; }
+  .payto .val {
+    font-family: "Courier New", monospace;
+    font-size: 13px; font-weight: 700; line-height: 1.7;
+    border-bottom: 1px dotted #9aa8ba; padding-bottom: 2px;
+  }
+
+  .amount-words {
+    margin-top: 12px;
+    font-family: "Courier New", monospace;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .3px;
+    border-bottom: 1px dotted #9aa8ba; padding-bottom: 3px;
+    text-transform: uppercase;
+  }
+
+  .amount-box {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 12px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 5px 12px;
+    background: #fff;
+  }
+  .amount-box .cur { font-size: 13px; font-weight: 800; }
+  .amount-box .num {
+    font-family: "Courier New", monospace;
+    font-size: 17px; font-weight: 800; letter-spacing: 1px;
+  }
+
+  .to-block { margin-top: 14px; font-size: 12px; }
+  .to-block .val { font-family:"Courier New",monospace; font-weight:700; }
+  .to-block .note { font-size: 10px; color:#6b7a90; font-style: italic; }
+
+  /* signatures */
+  .sign-area { text-align: right; min-width: 250px; }
+  .for-bank { font-size: 12px; font-weight: 700; margin-bottom: 30px; }
+  .sig-names { display:flex; gap:18px; justify-content:flex-end; font-size:10px; color:#4a5a70; }
+  .sig-names .scribble { font-family: "Brush Script MT", cursive; font-size: 20px; color:#1f3a6b; display:block; }
+  .auth { font-size: 10px; color:#6b7a90; border-top: 1px solid #9aa8ba; margin-top:6px; padding-top:3px; }
+
+  /* MICR */
+  .micr {
+    margin-top: 18px;
+    font-family: "Courier New", monospace;
+    font-size: 18px; letter-spacing: 4px; font-weight: 700;
+    color: #101820;
+  }
+
+  /* ---------- Perforation ---------- */
+  .perf {
+    border-top: 2px dashed #9aa8ba;
+    position: relative;
+    height: 0;
+    margin: 0 6px;
+  }
+  .detach {
+    text-align: right; font-size: 10px; color:#6b7a90; font-style: italic;
+    padding: 4px 26px 0;
+    background: var(--paper);
+  }
+
+  /* ---------- Bottom: customer copy ---------- */
+  .stub {
+    background: linear-gradient(180deg, #ffffff, var(--paper));
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    padding: 16px 26px 22px;
+  }
+  .stub-head { align-items:flex-start; }
+  .stub-title { font-size: 12px; font-weight: 700; letter-spacing:.5px; }
+  .stub-title .ar { color: var(--mashreq-red); direction: rtl; }
+  .customer-copy { font-size: 12px; font-weight: 700; color:#4a5a70; text-align:right; }
+  .customer-copy .ar { color: var(--mashreq-red); }
+
+  .stub-grid {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px 18px;
+  }
+  .cell .lab { font-size: 9.5px; color:#6b7a90; text-transform: uppercase; letter-spacing:.3px; }
+  .cell .in { border-bottom: 1px solid #9aa8ba; height: 20px; font-family:"Courier New",monospace; font-weight:700; font-size:12px; padding-top:2px; }
+
+  .stub-foot { margin-top: 16px; display:grid; grid-template-columns: repeat(4,1fr); gap: 10px 18px; }
+
+  @media (max-width: 640px) {
+    body { padding: 10px; }
+    .brand-name, .brand-ar { font-size: 22px; }
+    .stub-grid, .stub-foot { grid-template-columns: repeat(2, 1fr); }
+    .micr { font-size: 14px; letter-spacing: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- ============ PAY ORDER ============ -->
+  <div class="cheque">
+    <!-- Header row -->
+    <div class="row between" style="align-items:flex-start;">
+      <div class="brand">
+        <div class="logo-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <div class="brand-name">mashreq</div>
+        </div>
+        <div class="brand-ar">المشرق</div>
+      </div>
+      <div class="head-office">
+        <b>Head Office</b><br>
+        Post Box 1250, Dubai<br>
+        United Arab Emirates<br>
+        <b>Branch:</b> 073 - DIC Branch
+      </div>
+    </div>
+
+    <div class="row between" style="margin-top:8px; align-items:center;">
+      <span class="payee-only">A/C PAYEE ONLY</span>
+      <span class="sixmonths">Current for Six Months<br>from date hereof</span>
+    </div>
+
+    <!-- Pay to / Date / PO -->
+    <div class="grid">
+      <div class="row between">
+        <div style="flex:1; max-width:62%;">
+          <span class="field-label">Pay to the Order of</span>
+        </div>
+        <div style="text-align:right;">
+          <span class="field-label">Date</span>
+          <span class="hand" style="margin-left:8px;">2021&nbsp;-&nbsp;02&nbsp;-&nbsp;10</span>
+        </div>
+      </div>
+
+      <div class="payto">
+        <div class="val">
+          DUBAI COURTS<br>
+          REF DUBAI COURT CASE#7196/2020/207,<br>
+          LETTER REF 07012/2021 DATED 04/02/2021
+        </div>
+      </div>
+
+      <div style="text-align:right; margin-top:6px;">
+        <span class="field-label">P.O. NO.</span>
+        <span class="hand" style="margin-left:8px;">396765</span>
+      </div>
+    </div>
+
+    <!-- Amount in words -->
+    <div>
+      <span class="field-label">Amount</span>
+      <div class="amount-words">
+        UAE DIRHAM TWENTY EIGHT MILLION FOUR HUNDRED
+        SIXTY SEVEN THOUSAND EIGHT HUNDRED ELEVEN ONLY
+      </div>
+    </div>
+
+    <!-- To + amount box + signatures -->
+    <div class="row between" style="margin-top:6px; align-items:flex-end;">
+      <div>
+        <div class="amount-box">
+          <span class="cur">AED</span>
+          <span class="num">****28,467,811.00</span>
+        </div>
+        <div class="to-block">
+          <span class="field-label">To</span>
+          <span class="val" style="margin-left:6px;">Mashreq Bank - UAE</span><br>
+          <span class="field-label">A/C No.</span>
+          <span class="val" style="margin-left:6px;">290909001</span>
+          <div class="note">(Payable at any Branch in UAE)</div>
+        </div>
+      </div>
+
+      <div class="sign-area">
+        <div class="for-bank">For Mashreqbank psc</div>
+        <div class="sig-names">
+          <div>
+            <span class="scribble">M.Hassan</span>
+            Mohamed Hassan Ali Al Mulla<br>1539/0
+          </div>
+          <div>
+            <span class="scribble">M.Shaker</span>
+            Moath Shaker<br>1722/A
+          </div>
+        </div>
+        <div class="auth">Authorised Signature/s</div>
+      </div>
+    </div>
+
+    <!-- MICR line -->
+    <div class="micr">⑈396765⑈&nbsp;&nbsp;⑉903320133⑈&nbsp;&nbsp;29090900&nbsp;⑈</div>
+  </div>
+
+  <!-- ============ PERFORATION ============ -->
+  <div class="detach">Detach this portion and retain for your future reference</div>
+  <div class="perf"></div>
+
+  <!-- ============ CUSTOMER COPY STUB ============ -->
+  <div class="stub">
+    <div class="row between stub-head">
+      <div class="brand" style="gap:8px;">
+        <div class="logo-mark" aria-hidden="true" style="transform:rotate(-6deg) scale(.7);">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <div class="brand-name" style="font-size:22px;">mashreq</div>
+        <div class="brand-ar" style="font-size:22px;">المشرق</div>
+      </div>
+      <div class="customer-copy">
+        <span class="ar">نسخة العميل</span><br>
+        CUSTOMER COPY
+      </div>
+    </div>
+
+    <div class="stub-title" style="margin-top:14px; text-align:center;">
+      PAY ORDER PARTICULARS &nbsp;·&nbsp; <span class="ar">بيانات الشيك المصرفي</span>
+    </div>
+
+    <div class="stub-grid">
+      <div class="cell">
+        <div class="lab">P.O. NO. · رقم الشيك المصرفي</div>
+        <div class="in">396765</div>
+      </div>
+      <div class="cell">
+        <div class="lab">Date · التاريخ</div>
+        <div class="in">2021-02-10</div>
+      </div>
+      <div class="cell">
+        <div class="lab">Amount · المبلغ</div>
+        <div class="in">28,467,811.00</div>
+      </div>
+      <div class="cell">
+        <div class="lab">Branch · الفرع</div>
+        <div class="in">073</div>
+      </div>
+    </div>
+
+    <div class="stub-grid" style="margin-top:14px;">
+      <div class="cell">
+        <div class="lab">Payee · المستفيد</div>
+        <div class="in" style="font-size:10px;">DUBAI COURTS</div>
+      </div>
+    </div>
+
+    <div class="stub-foot">
+      <div class="cell">
+        <div class="lab">CORR. CODE · رمز المراسل</div>
+        <div class="in">MBAE</div>
+      </div>
+      <div class="cell">
+        <div class="lab">DEBIT ACCT · حساب الخصم</div>
+        <div class="in"></div>
+      </div>
+      <div class="cell">
+        <div class="lab">REMIT CARD · بطاقة التحويل</div>
+        <div class="in"></div>
+      </div>
+      <div class="cell">
+        <div class="lab">TELLER · الصراف</div>
+        <div class="in"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
