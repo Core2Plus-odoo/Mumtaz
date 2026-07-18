@@ -33,6 +33,9 @@
     <template id="report_proposal_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
+                <t t-set="o" t-value="doc"/>
+                <t t-set="company" t-value="doc.company_id"/>
+                <t t-call="web.basic_layout">
                 <div class="page o_c2p">
                     <style>
                         .o_c2p { color:#2f2a2d; font-size:12px; line-height:1.45;
@@ -131,7 +134,7 @@
                             <td class="muted" style="text-align:right; font-size:10px;">
                                 <span t-field="doc.company_id.name"/><br/>
                                 <span t-if="doc.company_id.email" t-field="doc.company_id.email"/>
-                                <t t-if="doc.company_id.phone"> · <span t-field="doc.company_id.phone"/></t>
+                                <t t-if="doc.company_id.phone"> &#183; <span t-field="doc.company_id.phone"/></t>
                             </td>
                         </tr>
                     </table>
@@ -142,7 +145,7 @@
                             <tr>
                                 <td style="vertical-align:middle;">
                                     <div class="hero-kick">Proposal</div>
-                                    <div class="hero-title">C2P × <span t-field="doc.partner_id.name"/></div>
+                                    <div class="hero-title">C2P &#215; <span t-field="doc.partner_id.name"/></div>
                                     <div class="hero-sub"><span t-field="doc.c2p_proposal_title"/></div>
                                 </td>
                                 <td style="width:90px; text-align:right; vertical-align:middle;">
@@ -260,13 +263,13 @@
                     <!-- ══ 4. SOLUTION & MODULES ═════════════════════════ -->
                     <div class="sec">
                         <div class="sec-h"><span class="num">4</span><span class="sec-t">Proposed Solution &amp; In-Scope Modules</span></div>
-                        <p class="muted" style="margin:0 0 6px;">We follow a standard-first approach —
+                        <p class="muted" style="margin:0 0 6px;">We follow a standard-first approach &#8212;
                            configuring native Odoo before any customisation.</p>
                         <table class="tbl">
                             <thead><tr><th style="width:34%;">Module / Service</th><th>Scope</th></tr></thead>
                             <tbody>
                                 <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
-                                    <td><span class="accent" style="font-weight:700;">▪ </span>
+                                    <td><span class="accent" style="font-weight:700;">&#9642; </span>
                                         <span t-field="line.product_id.name"/></td>
                                     <td><span t-field="line.name"/></td>
                                 </tr>
@@ -387,7 +390,7 @@
 
                     <!-- ══ AMC ═══════════════════════════════════════════ -->
                     <div class="sec" t-if="doc.c2p_amc_monthly">
-                        <div class="sec-h"><span class="num" style="background:#B8862A;">＋</span>
+                        <div class="sec-h"><span class="num" style="background:#B8862A;">+</span>
                             <span class="sec-t">Annual Maintenance &amp; Support (AMC)</span></div>
                         <div class="callout gold">
                             <table style="width:100%"><tr>
@@ -405,7 +408,7 @@
 
                     <!-- ══ WHY C2P ═══════════════════════════════════════ -->
                     <div class="sec">
-                        <div class="sec-h"><span class="num" style="background:#0B7A64;">★</span>
+                        <div class="sec-h"><span class="num" style="background:#0B7A64;">&#9733;</span>
                             <span class="sec-t">Why <span t-field="doc.company_id.name"/></span></div>
                         <div class="cf">
                             <div class="tile" t-foreach="doc._c2p_why_choose()" t-as="w">
@@ -423,7 +426,7 @@
 
                     <!-- ══ NEXT STEPS ════════════════════════════════════ -->
                     <div class="sec">
-                        <div class="sec-h"><span class="num" style="background:#0B7A64;">→</span>
+                        <div class="sec-h"><span class="num" style="background:#0B7A64;">&#8594;</span>
                             <span class="sec-t">Conclusion &amp; Next Steps</span></div>
                         <div class="cf">
                             <div class="step" t-foreach="doc._c2p_next_steps()" t-as="s">
@@ -447,9 +450,10 @@
                     <!-- ══ FOOTER ════════════════════════════════════════ -->
                     <div class="foot">
                         <span t-if="doc.company_id.report_footer" t-field="doc.company_id.report_footer"/>
-                        <t t-else=""><span t-field="doc.company_id.name"/> · core2plus.com</t>
+                        <t t-else=""><span t-field="doc.company_id.name"/> &#183; core2plus.com</t>
                     </div>
                 </div>
+                </t>
             </t>
         </t>
     </template>

@@ -100,7 +100,7 @@ class SaleOrder(models.Model):
                      "in-scope apps configured on a dedicated environment."},
             {"n": 4, "name": "Customisation & Development",
              "desc": "Any approved custom modules, reports and integrations built "
-                     "on top of standard Odoo — inherited, never forked."},
+                     "on top of standard Odoo - inherited, never forked."},
             {"n": 5, "name": "Data Migration",
              "desc": "Clean, map and load master and opening data (customers, "
                      "vendors, products, balances) with validation and reconciliation."},
@@ -156,7 +156,7 @@ class SaleOrder(models.Model):
                      "the GCC and Pakistan."},
             {"title": "Standard-first discipline",
              "desc": "We configure standard Odoo first and customise only where it "
-                     "adds real value — lower cost, easier upgrades."},
+                     "adds real value - lower cost, easier upgrades."},
             {"title": "Business + technical depth",
              "desc": "Finance, tax and process consultants working alongside "
                      "developers, not just coders."},
