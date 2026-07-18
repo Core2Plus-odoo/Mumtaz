@@ -6,30 +6,32 @@
         <field name="arch" type="xml">
             <form string="Proposal Maker">
                 <sheet>
-                    <div class="oe_title">
+                    <div class="oe_title" style="width:100%;">
+                        <label for="proposal_title" class="oe_edit_only"/>
                         <h1><field name="proposal_title" placeholder="Proposal title..."/></h1>
                     </div>
                     <group>
-                        <group>
+                        <group string="Client">
+                            <field name="order_id" invisible="not order_id" readonly="1"/>
                             <field name="lead_id" invisible="not lead_id" readonly="1"/>
                             <field name="partner_id"/>
-                            <field name="industry"/>
-                            <field name="template_id"/>
+                            <field name="industry" placeholder="e.g. Manufacturing, Retail, Education"/>
                         </group>
-                        <group>
+                        <group string="Commercial">
+                            <field name="currency_id"/>
                             <field name="validity_days"/>
                             <field name="timeline_weeks"/>
-                            <field name="currency_id" invisible="1"/>
                             <field name="amc_monthly"/>
+                            <field name="template_id"/>
                             <field name="open_pdf"/>
                         </group>
                     </group>
-                    <separator string="Tick the services / modules to include"/>
+                    <separator string="Services / modules to include"/>
                     <field name="service_ids" widget="many2many_checkboxes"/>
                     <notebook>
                         <page string="Executive summary">
                             <field name="exec_summary"
-                                   placeholder="Leave blank to auto-generate a summary..."/>
+                                   placeholder="Leave blank to auto-generate a summary from the client and scope..."/>
                         </page>
                         <page string="Pain points">
                             <field name="pain_points"

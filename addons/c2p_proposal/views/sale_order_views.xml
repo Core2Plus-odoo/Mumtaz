@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- "Proposal Maker" button on the quotation header: pre-fills the wizard
+         with this order's customer, lines and any saved proposal context, and
+         Generate updates this very quotation (no duplicate). -->
+    <record id="view_order_form_c2p_proposal" model="ir.ui.view">
+        <field name="name">sale.order.form.c2p.proposal</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(action_c2p_proposal_wizard)d" type="action"
+                        string="Proposal Maker" class="btn-secondary"
+                        context="{'default_order_id': id}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
