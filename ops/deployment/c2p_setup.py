@@ -55,10 +55,10 @@ for name, cat, price, u, pol in SERVICES:
             'sale_ok': True, 'purchase_ok': False,
             'categ_id': cats[cat].id, 'invoice_policy': pol,
             'uom_id': uom[u].id}
-    try:
+    # Odoo 19 merged purchase UoM into uom_id (uom_po_id removed); set it only
+    # if the field still exists on this version.
+    if 'uom_po_id' in Tmpl._fields:
         vals['uom_po_id'] = uom[u].id
-    except Exception:
-        pass
     if sale_tax:
         vals['taxes_id'] = [(6, 0, sale_tax.ids)]
     try:
