@@ -68,6 +68,23 @@ class SaleOrder(models.Model):
             "Build a scalable foundation that grows with the business.",
         ]
 
+    def _c2p_benefits(self):
+        """Key business benefits — rendered as an icon tile grid."""
+        return [
+            {"title": "One unified platform",
+             "desc": "Every department on a single source of truth."},
+            {"title": "Automation",
+             "desc": "Manual, repetitive work eliminated across processes."},
+            {"title": "Real-time insight",
+             "desc": "Live dashboards for sales, inventory and finance."},
+            {"title": "Built-in compliance",
+             "desc": "VAT / tax and statutory reporting inside the system."},
+            {"title": "Scalable foundation",
+             "desc": "Grows with new users, branches and entities."},
+            {"title": "Anywhere access",
+             "desc": "Secure web and mobile access for teams on the go."},
+        ]
+
     def _c2p_methodology(self):
         """The C2P eight-phase delivery methodology."""
         return [

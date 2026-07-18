@@ -1,11 +1,27 @@
-from odoo import fields, models
+import re
+
+from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+
+def _strip_html(value):
+    """Flatten an HTML field to plain text for the notes box."""
+    if not value:
+        return ""
+    text = re.sub(r"<br\s*/?>", "\n", value)
+    text = re.sub(r"</p>", "\n", text)
+    text = re.sub(r"<[^>]+>", "", text)
+    return text.strip()
 
 
 class C2pProposalWizard(models.TransientModel):
     _name = "c2p.proposal.wizard"
     _description = "C2P Proposal Maker"
 
+    lead_id = fields.Many2one(
+        "crm.lead", string="Opportunity",
+        help="When launched from a CRM opportunity, its customer and context "
+             "are pulled in automatically.")
     partner_id = fields.Many2one(
         "res.partner", string="Customer", required=True)
     proposal_title = fields.Char(
@@ -37,6 +53,42 @@ class C2pProposalWizard(models.TransientModel):
     open_pdf = fields.Boolean(
         string="Open proposal PDF immediately", default=True)
 
+    # ── Pull context from a CRM opportunity ─────────────────────────────────
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        lead_id = self.env.context.get("default_lead_id")
+        if not lead_id and self.env.context.get("active_model") == "crm.lead":
+            lead_id = self.env.context.get("active_id")
+        if lead_id:
+            lead = self.env["crm.lead"].browse(lead_id)
+            if lead.exists():
+                res.update(self._values_from_lead(lead))
+        return res
+
+    def _values_from_lead(self, lead):
+        """Map an opportunity's info onto the proposal fields."""
+        vals = {"lead_id": lead.id}
+        if lead.partner_id:
+            vals["partner_id"] = lead.partner_id.id
+        if lead.description:
+            vals["note"] = _strip_html(lead.description)
+        # A short executive summary seeded from the opportunity.
+        who = lead.partner_id.name or lead.partner_name or lead.contact_name or "the client"
+        vals["exec_summary"] = (
+            "%s is pleased to present this proposal to %s following our "
+            "discussions around \"%s\". It sets out the proposed Odoo ERP "
+            "solution, delivery approach, timeline and commercials."
+        ) % (self.env.company.name, who, lead.name or "your requirements")
+        return vals
+
+    @api.onchange("lead_id")
+    def _onchange_lead_id(self):
+        if self.lead_id:
+            for key, val in self._values_from_lead(self.lead_id).items():
+                if key != "lead_id":
+                    setattr(self, key, val)
+
     def _order_vals(self, order_lines):
         vals = {
             "partner_id": self.partner_id.id,
@@ -53,6 +105,8 @@ class C2pProposalWizard(models.TransientModel):
         SO = self.env["sale.order"]
         if self.template_id and "sale_order_template_id" in SO._fields:
             vals["sale_order_template_id"] = self.template_id.id
+        if self.lead_id and "opportunity_id" in SO._fields:
+            vals["opportunity_id"] = self.lead_id.id
         if self.validity_days and "validity_date" in SO._fields:
             vals["validity_date"] = fields.Date.add(
                 fields.Date.today(), days=self.validity_days)
