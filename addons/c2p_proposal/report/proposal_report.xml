@@ -19,9 +19,9 @@
     <template id="report_proposal_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
+                <t t-set="o" t-value="doc"/>
+                <t t-set="company" t-value="doc.company_id"/>
                 <t t-call="web.external_layout">
-                    <t t-set="o" t-value="doc"/>
-                    <t t-set="company" t-value="doc.company_id"/>
                     <div class="page o_c2p_proposal">
                         <style>
                             .o_c2p_proposal h2 { color:#714B67; border-bottom:2px solid #714B67;
