@@ -202,6 +202,56 @@ STEP_LIBRARY: dict[str, dict] = {
         "emits": "kpi.designed",
         "done_when": "KPI tree with targets and owners defined",
     },
+
+    # --- extended delivery / advisory steps ---
+    "data_migration": {
+        "label": "Data Migration",
+        "agents": ["config"], "documents": ["migration_plan"], "gate": None,
+        "emits": "data.migrated",
+        "done_when": "master and opening data cleaned, mapped, loaded and reconciled",
+    },
+    "training_delivery": {
+        "label": "Training Delivery",
+        "agents": ["docwriter", "director"], "documents": ["training_pack"], "gate": None,
+        "emits": "training.delivered",
+        "done_when": "role-based training run and user manuals handed over",
+    },
+    "health_check": {
+        "label": "Health Check",
+        "agents": ["director", "functional"], "documents": ["health_report"], "gate": None,
+        "emits": "healthcheck.done",
+        "done_when": "existing system audited; prioritised gaps and quick wins listed",
+    },
+    "hypercare": {
+        "label": "Hypercare",
+        "agents": ["director"], "documents": [], "gate": None,
+        "emits": "hypercare.done",
+        "done_when": "post go-live issues triaged and resolved through stabilisation",
+    },
+    "analytics_dashboards": {
+        "label": "Analytics & Dashboards",
+        "agents": ["config"], "documents": ["dashboards"], "gate": "config_apply",
+        "emits": "analytics.done",
+        "done_when": "KPI dashboards and reports built on live data (apply gated)",
+    },
+    "integration_design": {
+        "label": "Integration Design",
+        "agents": ["functional"], "documents": ["integration_spec"], "gate": None,
+        "emits": "integration.designed",
+        "done_when": "endpoints, data contracts and error handling specified",
+    },
+    "change_management": {
+        "label": "Change Management",
+        "agents": ["ba_discovery"], "documents": ["change_plan"], "gate": None,
+        "emits": "change.planned",
+        "done_when": "stakeholders, adoption plan and comms defined",
+    },
+    "budgeting_forecast": {
+        "label": "Budgeting & Forecast",
+        "agents": ["kb:finance_knowledge"], "documents": ["budget"], "gate": None,
+        "emits": "budget.done",
+        "done_when": "annual budget and rolling forecast modelled with drivers",
+    },
 }
 
 

@@ -30,6 +30,11 @@ SERVICE_CATALOG = {
         "odoo_integration": "Integration (APIs / connectors)",
         "odoo_training": "Training & Enablement",
         "odoo_support": "Support & Optimisation (existing Odoo)",
+        "data_migration_service": "Data Migration",
+        "odoo_health_check": "Health Check & Optimisation",
+        "analytics_bi": "Analytics & BI Dashboards",
+        "erp_rescue": "ERP Rescue",
+        "hypercare_support": "Hypercare & AMC",
     },
     "bookkeeper": {
         "bookkeeping": "Monthly Bookkeeping",
@@ -42,12 +47,14 @@ SERVICE_CATALOG = {
         "audit_preparation": "Audit Preparation",
         "financial_reporting": "Financial Reporting (IFRS)",
         "cfo_advisory": "Virtual CFO / Advisory",
+        "budgeting": "Budgeting & Forecasting",
     },
     "management_consultant": {
         "sop_design": "SOP Design",
         "bpr": "Business Process Reengineering",
         "strategy_consulting": "Strategy Consulting",
         "kpi_design": "KPI & Performance Framework",
+        "change_management_service": "Change Management",
     },
 }
 

@@ -941,3 +941,26 @@ The five delivery stages (presales → developer) now render as an Odoo form vie
 - renderRunBtn now keeps both the Run and Document buttons.
 - Verified: JS syntax + no dup names + headless render (5-step statusbar with the
   correct done/current states, form sheet present) — no page errors.
+
+### Embedded knowledge expansion — pitch library, workflows, hub ✅
+Grew the built-in, no-API knowledge so the agents rely less on the LLM:
+- **`pitch_library.py`** — ready-to-use sales pitch scripts: elevator pitches
+  (10/30/60s), value pillars, proof points, six cold-email templates, LinkedIn
+  touches, a discovery question bank (business/pain/finance-VAT/goals), a demo
+  flow, an 18-day follow-up sequence, five ROI talk tracks, seven per-industry
+  pitch angles, and closing/negotiation scripts. Local helpers `pitch_for`,
+  `email`, `questions_for`, `followup_sequence`, `roi_track`; `digest()` embedded
+  into the prospect/outreach/comms/presales/proposal agents (prompts.py).
+- **Workflow library** — six new steps (data_migration, training_delivery,
+  health_check, hypercare, analytics_dashboards, integration_design,
+  change_management, budgeting_forecast) and seven new service workflows
+  (data_migration_service, odoo_health_check, analytics_bi, erp_rescue,
+  hypercare_support, change_management_service, budgeting) registered in the
+  service catalog — 17 → 23 composable workflows.
+- **Knowledge Hub** — `hub.py` aggregates every pack (sales, pitch, workflows,
+  finance, PM, BA, consulting, tech, industry) into one browsable index;
+  `routers/hub.py` serves `GET /hub`, `/hub/section/{key}`, `/hub/export` and
+  `/hub/pitch/{industry}`. Wired into main.py.
+- Verified: py_compile + pyflakes clean; no-API smoke test (pitch fill, hub
+  catalog/section, 23 workflows compose, pitch embedded in outreach/proposal
+  prompts).
