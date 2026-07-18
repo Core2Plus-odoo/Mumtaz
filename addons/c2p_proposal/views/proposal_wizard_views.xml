@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_c2p_proposal_wizard_form" model="ir.ui.view">
+        <field name="name">c2p.proposal.wizard.form</field>
+        <field name="model">c2p.proposal.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Proposal Maker">
+                <sheet>
+                    <group>
+                        <field name="partner_id"/>
+                        <field name="validity_days"/>
+                    </group>
+                    <separator string="Tick the services / modules to include"/>
+                    <field name="service_ids" widget="many2many_checkboxes"/>
+                    <field name="note" placeholder="Optional scope summary shown on the quotation..."/>
+                </sheet>
+                <footer>
+                    <button name="action_generate" type="object"
+                            string="Generate Proposal" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_proposal_wizard" model="ir.actions.act_window">
+        <field name="name">Proposal Maker</field>
+        <field name="res_model">c2p.proposal.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_c2p_proposal"
+              name="Proposal Maker"
+              parent="sale.sale_menu_root"
+              action="action_c2p_proposal_wizard"
+              sequence="4"/>
+</odoo>
