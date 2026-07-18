@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ══════════════════════════════════════════════════════════════════
+         C2P Proposal — branded, multi-section narrative PDF rendered from a
+         sale.order created by the Proposal Maker wizard.
+         ══════════════════════════════════════════════════════════════════ -->
+
+    <record id="action_report_c2p_proposal" model="ir.actions.report">
+        <field name="name">Proposal</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">c2p_proposal.report_proposal_document</field>
+        <field name="report_file">c2p_proposal.report_proposal_document</field>
+        <field name="print_report_name">'Proposal - %s' % (object.partner_id.name or object.name)</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_proposal_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <t t-set="company" t-value="doc.company_id"/>
+                    <div class="page o_c2p_proposal">
+                        <style>
+                            .o_c2p_proposal h2 { color:#714B67; border-bottom:2px solid #714B67;
+                                padding-bottom:4px; margin-top:24px; font-size:16px; }
+                            .o_c2p_proposal h3 { color:#5b3a52; margin-top:14px; font-size:13px; }
+                            .o_c2p_proposal .c2p-cover { text-align:center; padding:40px 0 24px; }
+                            .o_c2p_proposal .c2p-cover .c2p-kicker { letter-spacing:3px;
+                                color:#714B67; font-weight:600; font-size:12px; text-transform:uppercase; }
+                            .o_c2p_proposal .c2p-cover .c2p-title { font-size:28px; font-weight:700;
+                                color:#2b2b2b; margin:8px 0; }
+                            .o_c2p_proposal table.c2p { width:100%; border-collapse:collapse; margin-top:8px; }
+                            .o_c2p_proposal table.c2p th { background:#714B67; color:#fff; text-align:left;
+                                padding:6px 8px; font-size:11px; }
+                            .o_c2p_proposal table.c2p td { border:1px solid #e0d8dd; padding:6px 8px;
+                                font-size:11px; vertical-align:top; }
+                            .o_c2p_proposal table.c2p tr:nth-child(even) td { background:#faf7f9; }
+                            .o_c2p_proposal .c2p-meta td { padding:3px 6px; font-size:12px; border:0; }
+                            .o_c2p_proposal ul { margin:4px 0 4px 18px; }
+                            .o_c2p_proposal li { margin-bottom:3px; font-size:12px; }
+                            .o_c2p_proposal .c2p-sign { margin-top:36px; }
+                            .o_c2p_proposal .c2p-sign td { border-top:1px solid #999; padding-top:6px;
+                                font-size:11px; width:45%; }
+                        </style>
+
+                        <!-- ── Cover ─────────────────────────────────────── -->
+                        <div class="c2p-cover">
+                            <div class="c2p-kicker">Proposal</div>
+                            <div class="c2p-title"><span t-field="doc.c2p_proposal_title"/></div>
+                            <div style="color:#714B67;font-weight:600;">
+                                <span t-field="doc.company_id.name"/>
+                            </div>
+                        </div>
+                        <table class="c2p-meta" style="width:100%;">
+                            <tr>
+                                <td><strong>Prepared for</strong></td>
+                                <td><span t-field="doc.partner_id.name"/></td>
+                                <td><strong>Reference</strong></td>
+                                <td><span t-field="doc.name"/></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Prepared by</strong></td>
+                                <td><span t-field="doc.company_id.name"/></td>
+                                <td><strong>Date</strong></td>
+                                <td><span t-field="doc.date_order" t-options='{"widget": "date"}'/></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Industry</strong></td>
+                                <td><span t-field="doc.c2p_industry"/></td>
+                                <td><strong>Valid until</strong></td>
+                                <td><span t-field="doc.validity_date" t-options='{"widget": "date"}'/></td>
+                            </tr>
+                        </table>
+
+                        <!-- ── Executive Summary ─────────────────────────── -->
+                        <h2>1. Executive Summary</h2>
+                        <p t-if="doc.c2p_exec_summary" style="white-space:pre-line;font-size:12px;">
+                            <span t-field="doc.c2p_exec_summary"/>
+                        </p>
+                        <p t-else="" style="font-size:12px;">
+                            <span t-field="doc.company_id.name"/> is pleased to present this proposal to
+                            <strong><span t-field="doc.partner_id.name"/></strong> for the implementation of a
+                            fully integrated Odoo ERP. This document sets out our understanding of your
+                            requirements, the proposed solution, our delivery methodology, timeline and a
+                            transparent commercial proposal.
+                        </p>
+
+                        <!-- ── Understanding & Objectives ────────────────── -->
+                        <h2>2. Understanding Your Requirements</h2>
+                        <h3>Current challenges</h3>
+                        <ul>
+                            <li t-foreach="doc._c2p_pain_list()" t-as="p"><span t-out="p"/></li>
+                        </ul>
+                        <h3>Objectives of this engagement</h3>
+                        <ul>
+                            <li t-foreach="doc._c2p_objective_list()" t-as="o"><span t-out="o"/></li>
+                        </ul>
+
+                        <!-- ── Solution Architecture ─────────────────────── -->
+                        <h2>3. Proposed Solution &amp; In-Scope Modules</h2>
+                        <p style="font-size:12px;">The following Odoo applications and services are proposed
+                           to address the requirements above. We follow a standard-first approach —
+                           configuring native Odoo before any customisation.</p>
+                        <table class="c2p">
+                            <thead>
+                                <tr><th style="width:55%;">Module / Service</th><th>Scope</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
+                                    <td><span t-field="line.product_id.name"/></td>
+                                    <td><span t-field="line.name"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ── Methodology ───────────────────────────────── -->
+                        <h2>4. Implementation Methodology</h2>
+                        <table class="c2p">
+                            <thead>
+                                <tr><th style="width:5%;">#</th><th style="width:30%;">Phase</th><th>What happens</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc._c2p_methodology()" t-as="ph">
+                                    <td><span t-out="ph['n']"/></td>
+                                    <td><strong><span t-out="ph['name']"/></strong></td>
+                                    <td><span t-out="ph['desc']"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="font-size:12px;margin-top:8px;">Indicative timeline:
+                           <strong><span t-out="doc.c2p_timeline_weeks"/> weeks</strong> from kick-off to
+                           go-live, phased and confirmed during Discovery.</p>
+
+                        <!-- ── Deliverables ──────────────────────────────── -->
+                        <h2>5. Deliverables</h2>
+                        <ul>
+                            <li t-foreach="doc._c2p_deliverables()" t-as="d"><span t-out="d"/></li>
+                        </ul>
+
+                        <!-- ── Roles ─────────────────────────────────────── -->
+                        <h2>6. Roles &amp; Responsibilities</h2>
+                        <table class="c2p">
+                            <thead><tr><th style="width:28%;">Party</th><th>Responsibilities</th></tr></thead>
+                            <tbody>
+                                <tr t-foreach="doc._c2p_roles()" t-as="r">
+                                    <td><strong><span t-out="r['party']"/></strong></td>
+                                    <td><span t-out="r['resp']"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ── Assumptions ───────────────────────────────── -->
+                        <h2>7. Assumptions &amp; Conditions</h2>
+                        <ul>
+                            <li t-foreach="doc._c2p_assumptions()" t-as="a"><span t-out="a"/></li>
+                        </ul>
+
+                        <!-- ── Commercial Proposal ───────────────────────── -->
+                        <h2>8. Commercial Proposal</h2>
+                        <table class="c2p">
+                            <thead>
+                                <tr>
+                                    <th style="width:46%;">Item</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
+                                    <td><span t-field="line.product_id.name"/></td>
+                                    <td class="text-end"><span t-field="line.product_uom_qty"/></td>
+                                    <td class="text-end">
+                                        <span t-field="line.price_unit"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                    <td class="text-end">
+                                        <span t-field="line.price_subtotal"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal</strong></td>
+                                    <td class="text-end">
+                                        <span t-field="doc.amount_untaxed"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end">Taxes</td>
+                                    <td class="text-end">
+                                        <span t-field="doc.amount_tax"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total</strong></td>
+                                    <td class="text-end"><strong>
+                                        <span t-field="doc.amount_total"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
+                                    </strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <p t-if="doc.c2p_hosting_note" style="font-size:11px;color:#666;margin-top:6px;">
+                            <em><span t-field="doc.c2p_hosting_note"/></em>
+                        </p>
+
+                        <!-- ── AMC ───────────────────────────────────────── -->
+                        <div t-if="doc.c2p_amc_monthly">
+                            <h2>9. Annual Maintenance &amp; Support (AMC)</h2>
+                            <p style="font-size:12px;">Post go-live, we recommend an Annual Maintenance
+                               Contract covering functional support, issue resolution, minor enhancements
+                               and periodic health checks.</p>
+                            <table class="c2p">
+                                <tr>
+                                    <th style="width:70%;">Annual Maintenance Contract (billed monthly)</th>
+                                    <th class="text-end">
+                                        <span t-field="doc.c2p_amc_monthly"
+                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/> / month
+                                    </th>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- ── Why C2P ───────────────────────────────────── -->
+                        <h2>Why <span t-field="doc.company_id.name"/></h2>
+                        <table class="c2p">
+                            <tbody>
+                                <tr t-foreach="doc._c2p_why_choose()" t-as="w">
+                                    <td style="width:28%;"><strong><span t-out="w['title']"/></strong></td>
+                                    <td><span t-out="w['desc']"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ── Next Steps ────────────────────────────────── -->
+                        <h2>Conclusion &amp; Next Steps</h2>
+                        <ul>
+                            <li t-foreach="doc._c2p_next_steps()" t-as="s"><span t-out="s"/></li>
+                        </ul>
+
+                        <!-- ── Acceptance ────────────────────────────────── -->
+                        <table class="c2p-sign" style="width:100%;">
+                            <tr>
+                                <td>Accepted for <strong><span t-field="doc.partner_id.name"/></strong><br/><br/>
+                                    Name / Title / Date</td>
+                                <td style="width:10%;"></td>
+                                <td>For <strong><span t-field="doc.company_id.name"/></strong><br/><br/>
+                                    Name / Title / Date</td>
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

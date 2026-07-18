@@ -6,13 +6,43 @@
         <field name="arch" type="xml">
             <form string="Proposal Maker">
                 <sheet>
+                    <div class="oe_title">
+                        <h1><field name="proposal_title" placeholder="Proposal title..."/></h1>
+                    </div>
                     <group>
-                        <field name="partner_id"/>
-                        <field name="validity_days"/>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="industry"/>
+                            <field name="template_id"/>
+                        </group>
+                        <group>
+                            <field name="validity_days"/>
+                            <field name="timeline_weeks"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amc_monthly"/>
+                            <field name="open_pdf"/>
+                        </group>
                     </group>
                     <separator string="Tick the services / modules to include"/>
                     <field name="service_ids" widget="many2many_checkboxes"/>
-                    <field name="note" placeholder="Optional scope summary shown on the quotation..."/>
+                    <notebook>
+                        <page string="Executive summary">
+                            <field name="exec_summary"
+                                   placeholder="Leave blank to auto-generate a summary..."/>
+                        </page>
+                        <page string="Pain points">
+                            <field name="pain_points"
+                                   placeholder="One challenge per line. Blank = sensible defaults."/>
+                        </page>
+                        <page string="Objectives">
+                            <field name="objectives"
+                                   placeholder="One objective per line. Blank = sensible defaults."/>
+                        </page>
+                        <page string="Notes">
+                            <field name="note"
+                                   placeholder="Optional scope summary shown on the quotation..."/>
+                        </page>
+                    </notebook>
                 </sheet>
                 <footer>
                     <button name="action_generate" type="object"
