@@ -68,8 +68,19 @@ class SaleOrder(models.Model):
             "Build a scalable foundation that grows with the business.",
         ]
 
+    @staticmethod
+    def _c2p_pairs(items):
+        """Chunk a flat list into rows of two for a clean 2-column table."""
+        return [items[i:i + 2] for i in range(0, len(items), 2)]
+
+    def _c2p_benefit_rows(self):
+        return self._c2p_pairs(self._c2p_benefits())
+
+    def _c2p_why_rows(self):
+        return self._c2p_pairs(self._c2p_why_choose())
+
     def _c2p_benefits(self):
-        """Key business benefits — rendered as an icon tile grid."""
+        """Key business benefits, rendered as a two-column grid."""
         return [
             {"title": "One unified platform",
              "desc": "Every department on a single source of truth."},

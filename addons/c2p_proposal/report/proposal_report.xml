@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- ══════════════════════════════════════════════════════════════════
-         C2P Proposal — premium, block-based A4 narrative PDF rendered from a
-         sale.order. No standard letterhead: own brand bar + footer.
-         ══════════════════════════════════════════════════════════════════ -->
+    <!-- ==================================================================
+         C2P Proposal - clean corporate A4 PDF. Cover page + numbered
+         sections. Table-based layout (wkhtmltopdf-safe), UTF-8 via
+         web.basic_layout (no letterhead), ASCII-safe glyphs.
+         ================================================================== -->
 
     <record id="paperformat_c2p_proposal" model="report.paperformat">
         <field name="name">C2P Proposal A4</field>
         <field name="format">A4</field>
         <field name="orientation">Portrait</field>
-        <field name="margin_top">12</field>
-        <field name="margin_bottom">14</field>
+        <field name="margin_top">8</field>
+        <field name="margin_bottom">10</field>
         <field name="margin_left">10</field>
         <field name="margin_right">10</field>
         <field name="header_spacing">0</field>
         <field name="header_line" eval="False"/>
-        <field name="dpi">90</field>
+        <field name="dpi">96</field>
     </record>
 
     <record id="action_report_c2p_proposal" model="ir.actions.report">
@@ -36,418 +37,287 @@
                 <t t-set="o" t-value="doc"/>
                 <t t-set="company" t-value="doc.company_id"/>
                 <t t-call="web.basic_layout">
-                <div class="page o_c2p">
+                <div class="o_c2p">
                     <style>
-                        .o_c2p { color:#2f2a2d; font-size:12px; line-height:1.45;
-                            font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-                        .o_c2p .muted { color:#6b626a; }
-                        .o_c2p .accent { color:#714B67; }
-                        .o_c2p .cf::after { content:""; display:block; clear:both; }
-                        /* Brand bar */
-                        .o_c2p .brand td { vertical-align:middle; }
-                        /* Hero */
-                        .o_c2p .hero { background:#714B67; color:#fff; border-radius:10px;
-                            border-left:6px solid #B8862A; padding:22px 26px; margin-bottom:16px; }
-                        .o_c2p .hero-kick { letter-spacing:4px; font-size:11px; opacity:.85;
-                            text-transform:uppercase; }
-                        .o_c2p .hero-title { font-size:27px; font-weight:700; margin:5px 0 3px; }
-                        .o_c2p .hero-sub { font-size:13px; opacity:.92; }
-                        /* Meta cards */
-                        .o_c2p .meta td { width:33%; vertical-align:top; }
-                        .o_c2p .metacard { border:1px solid #e6dbe2; border-radius:8px;
-                            padding:9px 12px; background:#faf6f9; }
-                        .o_c2p .metacard .lbl { font-size:10px; letter-spacing:1px;
-                            text-transform:uppercase; color:#9a8b95; }
-                        .o_c2p .metacard .val { font-size:12px; font-weight:600; color:#3d353b; }
+                        .o_c2p { color:#2b2b2b; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+                            font-size:13px; }
+                        .o_c2p .mut { color:#6b6b6b; }
+                        /* Cover */
+                        .o_c2p .cvtop { background:#6d3f5f; color:#fff; padding:44px 44px 38px; }
+                        .o_c2p .cvtop .lg { font-weight:800; font-size:22px; }
+                        .o_c2p .cvtop .sm { font-weight:400; font-size:10px; letter-spacing:3px;
+                            opacity:.82; margin-top:5px; }
+                        .o_c2p .cvgold { height:5px; background:#B8862A; }
+                        .o_c2p .cvbody { padding:60px 4px 0; }
+                        .o_c2p .cvkick { letter-spacing:6px; font-size:13px; color:#B8862A; font-weight:700; }
+                        .o_c2p .cvtitle { font-size:38px; font-weight:800; color:#2b2b2b; line-height:1.14;
+                            margin:14px 0 10px; }
+                        .o_c2p .cvsub { font-size:15px; color:#6b6b6b; }
+                        .o_c2p .cvfor { margin-top:48px; }
+                        .o_c2p .cvfor .lbl { font-size:11px; letter-spacing:2px; text-transform:uppercase;
+                            color:#9a8b95; }
+                        .o_c2p .cvfor .v { font-size:21px; font-weight:700; color:#6d3f5f; margin-top:3px; }
+                        .o_c2p .cvmeta { margin-top:280px; border-top:1px solid #e2dae0; padding-top:16px;
+                            width:100%; }
+                        .o_c2p .cvmeta td { width:25%; vertical-align:top; padding-right:12px; }
+                        .o_c2p .cvmeta .k { font-size:10px; letter-spacing:1px; text-transform:uppercase;
+                            color:#9a8b95; }
+                        .o_c2p .cvmeta .val { font-weight:600; color:#3d353b; font-size:13px; margin-top:2px; }
                         /* Sections */
-                        .o_c2p .sec { margin-top:18px; page-break-inside:avoid; }
-                        .o_c2p .sec-h { border-bottom:2px solid #eadfe6; padding-bottom:6px;
-                            margin-bottom:10px; }
-                        .o_c2p .num { display:inline-block; width:24px; height:24px; border-radius:50%;
-                            background:#714B67; color:#fff; text-align:center; line-height:24px;
-                            font-weight:700; font-size:12px; margin-right:8px; vertical-align:middle; }
-                        .o_c2p .sec-t { color:#5b3a52; font-size:15px; font-weight:700;
-                            vertical-align:middle; }
-                        .o_c2p .card { border:1px solid #e6dbe2; border-radius:8px; padding:12px 14px;
-                            background:#fff; }
-                        .o_c2p .soft { background:#faf6f9; }
-                        .o_c2p .grid { width:100%; border-collapse:separate; border-spacing:10px 0; }
-                        .o_c2p .grid td { vertical-align:top; }
-                        .o_c2p ul { margin:2px 0; padding:0; list-style:none; }
-                        .o_c2p li { margin-bottom:5px; padding-left:20px; position:relative; }
-                        .o_c2p li .ic { position:absolute; left:0; top:1px; }
-                        /* Float tiles */
-                        .o_c2p .tile { float:left; width:48%; margin:0 2% 10px 0; box-sizing:border-box;
-                            border:1px solid #e6dbe2; border-radius:8px; padding:11px 13px; background:#fff;
-                            min-height:60px; page-break-inside:avoid; }
-                        .o_c2p .tile .tt { font-weight:700; color:#5b3a52; font-size:12px; }
-                        .o_c2p .badge { display:inline-block; width:26px; height:26px; border-radius:6px;
-                            background:#eef5f2; text-align:center; line-height:30px; margin-bottom:4px; }
-                        .o_c2p .badge.p { background:#f3ecf1; }
-                        /* Phase cards */
-                        .o_c2p .ph { float:left; width:48%; margin:0 2% 10px 0; box-sizing:border-box;
-                            border:1px solid #e6dbe2; border-radius:8px; padding:11px 13px; background:#fff;
-                            min-height:78px; page-break-inside:avoid; }
-                        .o_c2p .ph .pn { display:inline-block; width:26px; height:26px; border-radius:50%;
-                            background:#714B67; color:#fff; text-align:center; line-height:26px;
-                            font-weight:700; font-size:12px; margin-right:6px; vertical-align:middle; }
-                        .o_c2p .ph .pt { font-weight:700; color:#5b3a52; font-size:12px; vertical-align:middle; }
-                        /* Data tables */
-                        .o_c2p table.tbl { width:100%; border-collapse:collapse; margin-top:4px; }
-                        .o_c2p table.tbl th { background:#714B67; color:#fff; text-align:left;
-                            padding:7px 9px; font-size:11px; }
-                        .o_c2p table.tbl td { border:1px solid #e6dbe2; padding:7px 9px; font-size:11px;
+                        .o_c2p .sec { margin-top:24px; page-break-inside:avoid; }
+                        .o_c2p .sec-h { border-bottom:1px solid #e2dae0; padding-bottom:7px; margin-bottom:12px; }
+                        .o_c2p .sec-n { font-size:13px; font-weight:800; color:#B8862A; margin-right:10px; }
+                        .o_c2p .sec-t { font-size:16px; font-weight:700; color:#6d3f5f; }
+                        .o_c2p p { line-height:1.6; font-size:13px; margin:0 0 8px; }
+                        .o_c2p .two { width:100%; border-collapse:separate; border-spacing:24px 0; }
+                        .o_c2p .two td { width:50%; vertical-align:top; }
+                        .o_c2p .subh { font-size:11.5px; font-weight:700; color:#54304a; text-transform:uppercase;
+                            letter-spacing:.5px; margin-bottom:8px; }
+                        .o_c2p ul.clean { list-style:none; margin:0; padding:0; }
+                        .o_c2p ul.clean li { padding-left:16px; margin-bottom:7px; font-size:12.5px;
+                            line-height:1.5; position:relative; }
+                        .o_c2p ul.clean li .d { position:absolute; left:0; top:6px; width:6px; height:6px;
+                            background:#B8862A; border-radius:50%; }
+                        .o_c2p .ben { width:100%; border-collapse:separate; border-spacing:24px 12px; }
+                        .o_c2p .ben td { width:50%; vertical-align:top; }
+                        .o_c2p .bt { font-weight:700; font-size:12.5px; color:#54304a; }
+                        .o_c2p .bd { font-size:12px; color:#6b6b6b; line-height:1.5; margin-top:1px; }
+                        .o_c2p table.tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+                        .o_c2p table.tbl th { background:#6d3f5f; color:#fff; text-align:left; padding:9px 12px;
+                            font-weight:600; font-size:12px; }
+                        .o_c2p table.tbl td { border-bottom:1px solid #e2dae0; padding:9px 12px;
                             vertical-align:top; }
-                        .o_c2p table.tbl tr:nth-child(even) td { background:#faf6f9; }
                         .o_c2p .r { text-align:right; }
-                        /* Callouts */
-                        .o_c2p .callout { border-radius:8px; padding:12px 16px; margin-top:8px; }
-                        .o_c2p .callout.teal { background:#eef5f2; border-left:5px solid #0B7A64; }
-                        .o_c2p .callout.gold { background:#f7efdd; border-left:5px solid #B8862A; }
-                        .o_c2p .totbox { background:#714B67; color:#fff; border-radius:8px;
-                            padding:12px 18px; text-align:right; margin-top:8px; }
-                        .o_c2p .totbox .tl { font-size:12px; opacity:.85; }
-                        .o_c2p .totbox .tv { font-size:21px; font-weight:700; }
-                        /* Steps */
-                        .o_c2p .step { float:left; width:31.33%; margin:0 2% 0 0; box-sizing:border-box;
-                            border:1px solid #e6dbe2; border-radius:8px; padding:11px; text-align:center;
-                            background:#faf6f9; min-height:70px; }
-                        .o_c2p .step .sn { display:inline-block; width:26px; height:26px; border-radius:50%;
-                            background:#0B7A64; color:#fff; line-height:26px; font-weight:700; margin-bottom:5px; }
-                        /* Signature */
-                        .o_c2p .sign td { border-top:1px solid #b7abb2; padding-top:6px; font-size:11px;
-                            width:44%; color:#6b626a; }
-                        .o_c2p .foot { margin-top:24px; border-top:2px solid #714B67; padding-top:6px;
-                            text-align:center; font-size:10px; color:#6b626a; }
+                        .o_c2p table.phase { width:100%; border-collapse:collapse; }
+                        .o_c2p table.phase td { padding:10px 0; border-bottom:1px solid #e2dae0;
+                            vertical-align:top; }
+                        .o_c2p .pn { width:28px; height:28px; background:#6d3f5f; color:#fff; border-radius:50%;
+                            text-align:center; line-height:28px; font-weight:700; font-size:13px;
+                            display:inline-block; }
+                        .o_c2p .pt { font-weight:700; font-size:13px; color:#2b2b2b; }
+                        .o_c2p .pd { font-size:12px; color:#6b6b6b; line-height:1.5; margin-top:2px; }
+                        .o_c2p .callout { border-left:3px solid #B8862A; background:#faf6ef; padding:11px 15px;
+                            font-size:12.5px; margin-top:12px; }
+                        .o_c2p .totbox { background:#6d3f5f; color:#fff; padding:11px 20px; border-radius:4px; }
+                        .o_c2p .totbox .tl { font-size:13px; opacity:.9; }
+                        .o_c2p .totbox .tv { font-size:19px; font-weight:800; }
+                        .o_c2p .note { font-size:11px; color:#8a8a8a; font-style:italic; margin-top:9px; }
+                        .o_c2p table.sign { width:100%; border-collapse:separate; border-spacing:44px 0;
+                            margin-top:40px; }
+                        .o_c2p table.sign td { border-top:1px solid #b7abb2; padding-top:8px; font-size:12px;
+                            color:#6b6b6b; width:50%; }
+                        .o_c2p .foot { border-top:1px solid #e2dae0; padding-top:8px; margin-top:28px;
+                            text-align:center; font-size:10px; color:#9a9a9a; }
                     </style>
 
-                    <!-- ══ BRAND BAR (replaces the standard letterhead) ══ -->
-                    <table class="brand" style="width:100%; margin-bottom:12px;">
+                    <!-- ===== COVER ===== -->
+                    <div class="cvtop">
+                        <div class="lg"><span t-field="doc.company_id.name"/></div>
+                        <div class="sm">OFFICIAL ODOO PARTNER &#183; GCC &amp; PAKISTAN</div>
+                    </div>
+                    <div class="cvgold"></div>
+                    <div class="cvbody">
+                        <div class="cvkick">PROPOSAL</div>
+                        <div class="cvtitle"><span t-field="doc.c2p_proposal_title"/></div>
+                        <div class="cvsub">A unified platform for your operations, finance and growth.</div>
+                        <div class="cvfor">
+                            <div class="lbl">Prepared for</div>
+                            <div class="v"><span t-field="doc.partner_id.name"/></div>
+                            <div class="mut" style="font-size:12px; margin-top:2px;" t-if="doc.c2p_industry">
+                                <span t-field="doc.c2p_industry"/></div>
+                        </div>
+                    </div>
+                    <table class="cvmeta">
                         <tr>
-                            <td>
-                                <img t-if="doc.company_id.logo"
-                                     t-att-src="image_data_uri(doc.company_id.logo)"
-                                     style="max-height:44px;"/>
-                                <span t-else="" class="accent" style="font-size:18px; font-weight:700;">
-                                    <span t-field="doc.company_id.name"/></span>
-                            </td>
-                            <td class="muted" style="text-align:right; font-size:10px;">
-                                <span t-field="doc.company_id.name"/><br/>
-                                <span t-if="doc.company_id.email" t-field="doc.company_id.email"/>
-                                <t t-if="doc.company_id.phone"> &#183; <span t-field="doc.company_id.phone"/></t>
-                            </td>
+                            <td><div class="k">Prepared by</div><div class="val"><span t-field="doc.company_id.name"/></div></td>
+                            <td><div class="k">Reference</div><div class="val"><span t-field="doc.name"/></div></td>
+                            <td><div class="k">Date</div><div class="val"><span t-field="doc.date_order" t-options='{"widget": "date"}'/></div></td>
+                            <td><div class="k">Valid until</div><div class="val"><span t-field="doc.validity_date" t-options='{"widget": "date"}'/></div></td>
                         </tr>
                     </table>
 
-                    <!-- ══ HERO ══════════════════════════════════════════ -->
-                    <div class="hero">
-                        <table style="width:100%">
-                            <tr>
-                                <td style="vertical-align:middle;">
-                                    <div class="hero-kick">Proposal</div>
-                                    <div class="hero-title">C2P &#215; <span t-field="doc.partner_id.name"/></div>
-                                    <div class="hero-sub"><span t-field="doc.c2p_proposal_title"/></div>
-                                </td>
-                                <td style="width:90px; text-align:right; vertical-align:middle;">
-                                    <svg viewBox="0 0 24 24" width="60" height="60" fill="none"
-                                         stroke="#ffffff" stroke-width="1.4" opacity="0.9">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M8 9h2"/>
-                                    </svg>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
+                    <p style="page-break-after:always;"></p>
 
-                    <!-- ══ META STRIP ════════════════════════════════════ -->
-                    <table class="grid meta">
-                        <tr>
-                            <td>
-                                <div class="metacard">
-                                    <div class="lbl">Prepared for</div>
-                                    <div class="val"><span t-field="doc.partner_id.name"/></div>
-                                    <div class="muted" style="font-size:11px;" t-if="doc.c2p_industry">
-                                        <span t-field="doc.c2p_industry"/></div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="metacard">
-                                    <div class="lbl">Prepared by</div>
-                                    <div class="val"><span t-field="doc.company_id.name"/></div>
-                                    <div class="muted" style="font-size:11px;">Ref <span t-field="doc.name"/></div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="metacard">
-                                    <div class="lbl">Date / Valid</div>
-                                    <div class="val"><span t-field="doc.date_order" t-options='{"widget": "date"}'/></div>
-                                    <div class="muted" style="font-size:11px;">Valid to
-                                        <span t-field="doc.validity_date" t-options='{"widget": "date"}'/></div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <!-- ══ 1. EXECUTIVE SUMMARY ══════════════════════════ -->
+                    <!-- ===== 01 EXECUTIVE SUMMARY ===== -->
                     <div class="sec">
-                        <div class="sec-h"><span class="num">1</span><span class="sec-t">Executive Summary</span></div>
-                        <div class="card soft">
-                            <p t-if="doc.c2p_exec_summary" style="white-space:pre-line; margin:0;">
-                                <span t-field="doc.c2p_exec_summary"/>
-                            </p>
-                            <p t-else="" style="margin:0;">
-                                <span t-field="doc.company_id.name"/> is pleased to present this proposal to
-                                <strong><span t-field="doc.partner_id.name"/></strong> for the implementation of a
-                                fully integrated Odoo ERP. This document sets out our understanding of your
-                                requirements, the proposed solution, our delivery methodology, timeline and a
-                                transparent commercial proposal.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- ══ 2. UNDERSTANDING ══════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">2</span><span class="sec-t">Understanding Your Requirements</span></div>
-                        <table class="grid">
-                            <tr>
-                                <td style="width:50%;">
-                                    <div class="card" style="border-top:3px solid #B8862A;">
-                                        <div style="color:#8a6a1f; font-weight:700; margin-bottom:6px;">Current challenges</div>
-                                        <ul>
-                                            <li t-foreach="doc._c2p_pain_list()" t-as="p">
-                                                <span class="ic">
-                                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
-                                                         stroke="#B8862A" stroke-width="2.4">
-                                                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                                                        <path d="M12 9v4M12 17h.01"/>
-                                                    </svg>
-                                                </span><span t-out="p"/>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                                <td style="width:50%;">
-                                    <div class="card" style="border-top:3px solid #0B7A64;">
-                                        <div style="color:#0B7A64; font-weight:700; margin-bottom:6px;">Objectives</div>
-                                        <ul>
-                                            <li t-foreach="doc._c2p_objective_list()" t-as="ob">
-                                                <span class="ic">
-                                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
-                                                         stroke="#0B7A64" stroke-width="2.4">
-                                                        <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>
-                                                    </svg>
-                                                </span><span t-out="ob"/>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <!-- ══ 3. KEY BENEFITS ═══════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">3</span><span class="sec-t">Key Business Benefits</span></div>
-                        <div class="cf">
-                            <div class="tile" t-foreach="doc._c2p_benefits()" t-as="b">
-                                <span class="badge">
-                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
-                                         stroke="#0B7A64" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>
-                                </span>
-                                <div class="tt"><span t-out="b['title']"/></div>
-                                <div class="muted" style="font-size:11px;"><span t-out="b['desc']"/></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ══ 4. SOLUTION & MODULES ═════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">4</span><span class="sec-t">Proposed Solution &amp; In-Scope Modules</span></div>
-                        <p class="muted" style="margin:0 0 6px;">We follow a standard-first approach &#8212;
-                           configuring native Odoo before any customisation.</p>
-                        <table class="tbl">
-                            <thead><tr><th style="width:34%;">Module / Service</th><th>Scope</th></tr></thead>
-                            <tbody>
-                                <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
-                                    <td><span class="accent" style="font-weight:700;">&#9642; </span>
-                                        <span t-field="line.product_id.name"/></td>
-                                    <td><span t-field="line.name"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- ══ 5. METHODOLOGY ════════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">5</span><span class="sec-t">Implementation Methodology</span></div>
-                        <div class="cf">
-                            <div class="ph" t-foreach="doc._c2p_methodology()" t-as="ph">
-                                <div><span class="pn"><span t-out="ph['n']"/></span>
-                                     <span class="pt"><span t-out="ph['name']"/></span></div>
-                                <div class="muted" style="font-size:11px; margin-top:4px;"><span t-out="ph['desc']"/></div>
-                            </div>
-                        </div>
-                        <div class="callout teal">
-                            <table style="width:100%"><tr>
-                                <td style="width:34px; vertical-align:middle;">
-                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
-                                         stroke="#0B7A64" stroke-width="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2"/>
-                                        <path d="M16 2v4M8 2v4M3 10h18"/>
-                                    </svg>
-                                </td>
-                                <td style="vertical-align:middle;">
-                                    <strong>Indicative timeline:</strong>
-                                    <span t-out="doc.c2p_timeline_weeks"/> weeks from kick-off to go-live,
-                                    phased and confirmed during Discovery.
-                                </td>
-                            </tr></table>
-                        </div>
-                    </div>
-
-                    <!-- ══ 6. DELIVERABLES ═══════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">6</span><span class="sec-t">Deliverables</span></div>
-                        <div class="card">
-                            <ul>
-                                <li t-foreach="doc._c2p_deliverables()" t-as="d">
-                                    <span class="ic">
-                                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
-                                             stroke="#0B7A64" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg>
-                                    </span><span t-out="d"/>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- ══ 7. ROLES ══════════════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">7</span><span class="sec-t">Roles &amp; Responsibilities</span></div>
-                        <table class="tbl">
-                            <thead><tr><th style="width:26%;">Party</th><th>Responsibilities</th></tr></thead>
-                            <tbody>
-                                <tr t-foreach="doc._c2p_roles()" t-as="r">
-                                    <td><strong><span t-out="r['party']"/></strong></td>
-                                    <td><span t-out="r['resp']"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- ══ 8. ASSUMPTIONS ════════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">8</span><span class="sec-t">Assumptions &amp; Conditions</span></div>
-                        <div class="card soft">
-                            <ul>
-                                <li t-foreach="doc._c2p_assumptions()" t-as="a">
-                                    <span class="ic">
-                                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none"
-                                             stroke="#714B67" stroke-width="2.4">
-                                            <circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>
-                                        </svg>
-                                    </span><span t-out="a"/>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- ══ 9. COMMERCIAL ═════════════════════════════════ -->
-                    <div class="sec">
-                        <div class="sec-h"><span class="num">9</span><span class="sec-t">Commercial Proposal</span></div>
-                        <table class="tbl">
-                            <thead>
-                                <tr><th style="width:46%;">Item</th><th class="r">Qty</th>
-                                    <th class="r">Unit Price</th><th class="r">Amount</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
-                                    <td><span t-field="line.product_id.name"/></td>
-                                    <td class="r"><span t-field="line.product_uom_qty"/></td>
-                                    <td class="r"><span t-field="line.price_unit"
-                                         t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
-                                    <td class="r"><span t-field="line.price_subtotal"
-                                         t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr><td colspan="3" class="r">Subtotal</td>
-                                    <td class="r"><span t-field="doc.amount_untaxed"
-                                         t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
-                                <tr><td colspan="3" class="r">Taxes</td>
-                                    <td class="r"><span t-field="doc.amount_tax"
-                                         t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
-                            </tfoot>
-                        </table>
-                        <div class="totbox">
-                            <span class="tl">Total </span>
-                            <span class="tv"><span t-field="doc.amount_total"
-                                 t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></span>
-                        </div>
-                        <p t-if="doc.c2p_hosting_note" class="muted" style="font-size:10px; margin-top:6px;">
-                            <em><span t-field="doc.c2p_hosting_note"/></em>
+                        <div class="sec-h"><span class="sec-n">01</span><span class="sec-t">Executive Summary</span></div>
+                        <p t-if="doc.c2p_exec_summary" style="white-space:pre-line;"><span t-field="doc.c2p_exec_summary"/></p>
+                        <p t-else="">
+                            <span t-field="doc.company_id.name"/> is pleased to present this proposal to
+                            <b><span t-field="doc.partner_id.name"/></b> for the implementation of a fully
+                            integrated Odoo ERP. This document sets out our understanding of your requirements,
+                            the proposed solution, our delivery methodology, indicative timeline and a
+                            transparent commercial proposal. Our approach is standard-first: we configure native
+                            Odoo before any customisation, keeping cost down and future upgrades smooth.
                         </p>
                     </div>
 
-                    <!-- ══ AMC ═══════════════════════════════════════════ -->
-                    <div class="sec" t-if="doc.c2p_amc_monthly">
-                        <div class="sec-h"><span class="num" style="background:#B8862A;">+</span>
-                            <span class="sec-t">Annual Maintenance &amp; Support (AMC)</span></div>
-                        <div class="callout gold">
-                            <table style="width:100%"><tr>
-                                <td style="vertical-align:middle;">Post go-live support, issue resolution, minor
-                                    enhancements and periodic health checks under an Annual Maintenance Contract.</td>
-                                <td class="r" style="width:150px; vertical-align:middle;">
-                                    <span style="font-size:18px; font-weight:700; color:#8a6a1f;">
-                                        <span t-field="doc.c2p_amc_monthly"
-                                              t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/>
-                                    </span><br/><span class="muted" style="font-size:10px;">per month</span>
+                    <!-- ===== 02 UNDERSTANDING ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">02</span><span class="sec-t">Understanding Your Requirements</span></div>
+                        <table class="two"><tr>
+                            <td>
+                                <div class="subh">Current challenges</div>
+                                <ul class="clean">
+                                    <li t-foreach="doc._c2p_pain_list()" t-as="p"><span class="d"></span><span t-out="p"/></li>
+                                </ul>
+                            </td>
+                            <td>
+                                <div class="subh">Objectives</div>
+                                <ul class="clean">
+                                    <li t-foreach="doc._c2p_objective_list()" t-as="ob"><span class="d"></span><span t-out="ob"/></li>
+                                </ul>
+                            </td>
+                        </tr></table>
+                    </div>
+
+                    <!-- ===== 03 KEY BENEFITS ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">03</span><span class="sec-t">Key Business Benefits</span></div>
+                        <table class="ben">
+                            <tr t-foreach="doc._c2p_benefit_rows()" t-as="row">
+                                <td t-foreach="row" t-as="b">
+                                    <div class="bt"><span t-out="b['title']"/></div>
+                                    <div class="bd"><span t-out="b['desc']"/></div>
                                 </td>
-                            </tr></table>
-                        </div>
+                            </tr>
+                        </table>
                     </div>
 
-                    <!-- ══ WHY C2P ═══════════════════════════════════════ -->
+                    <!-- ===== 04 SOLUTION & MODULES ===== -->
                     <div class="sec">
-                        <div class="sec-h"><span class="num" style="background:#0B7A64;">&#9733;</span>
-                            <span class="sec-t">Why <span t-field="doc.company_id.name"/></span></div>
-                        <div class="cf">
-                            <div class="tile" t-foreach="doc._c2p_why_choose()" t-as="w">
-                                <span class="badge p">
-                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
-                                         stroke="#714B67" stroke-width="2.2">
-                                        <path d="M12 2 15 8l6 .9-4.5 4.4 1 6-5.5-3-5.5 3 1-6L3 8.9 9 8z"/>
-                                    </svg>
-                                </span>
-                                <div class="tt"><span t-out="w['title']"/></div>
-                                <div class="muted" style="font-size:11px;"><span t-out="w['desc']"/></div>
-                            </div>
-                        </div>
+                        <div class="sec-h"><span class="sec-n">04</span><span class="sec-t">Proposed Solution &amp; In-Scope Modules</span></div>
+                        <p class="mut">We follow a standard-first approach &#8212; configuring native Odoo before any customisation.</p>
+                        <table class="tbl">
+                            <tr><th style="width:36%;">Module / Service</th><th>Scope</th></tr>
+                            <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
+                                <td><b><span t-field="line.product_id.name"/></b></td>
+                                <td><span t-field="line.name"/></td>
+                            </tr>
+                        </table>
                     </div>
 
-                    <!-- ══ NEXT STEPS ════════════════════════════════════ -->
+                    <!-- ===== 05 METHODOLOGY ===== -->
                     <div class="sec">
-                        <div class="sec-h"><span class="num" style="background:#0B7A64;">&#8594;</span>
-                            <span class="sec-t">Conclusion &amp; Next Steps</span></div>
-                        <div class="cf">
-                            <div class="step" t-foreach="doc._c2p_next_steps()" t-as="s">
-                                <div><span class="sn"><span t-out="s_index + 1"/></span></div>
-                                <div style="font-size:11px;"><span t-out="s"/></div>
-                            </div>
-                        </div>
+                        <div class="sec-h"><span class="sec-n">05</span><span class="sec-t">Implementation Methodology</span></div>
+                        <table class="phase">
+                            <tr t-foreach="doc._c2p_methodology()" t-as="ph">
+                                <td style="width:44px;"><span class="pn"><span t-out="ph['n']"/></span></td>
+                                <td><div class="pt"><span t-out="ph['name']"/></div>
+                                    <div class="pd"><span t-out="ph['desc']"/></div></td>
+                            </tr>
+                        </table>
+                        <div class="callout"><b>Indicative timeline:</b>
+                            <span t-out="doc.c2p_timeline_weeks"/> weeks from kick-off to go-live, phased and
+                            confirmed during Discovery.</div>
                     </div>
 
-                    <!-- ══ ACCEPTANCE ════════════════════════════════════ -->
-                    <table class="sign" style="width:100%; margin-top:30px;">
-                        <tr>
-                            <td>Accepted for <strong><span t-field="doc.partner_id.name"/></strong><br/><br/>
-                                Name / Title / Date</td>
-                            <td style="width:12%;"></td>
-                            <td>For <strong><span t-field="doc.company_id.name"/></strong><br/><br/>
-                                Name / Title / Date</td>
-                        </tr>
-                    </table>
+                    <!-- ===== 06 DELIVERABLES ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">06</span><span class="sec-t">Deliverables</span></div>
+                        <table class="two"><tr>
+                            <td><ul class="clean">
+                                <li t-foreach="doc._c2p_deliverables()[:3]" t-as="d"><span class="d"></span><span t-out="d"/></li>
+                            </ul></td>
+                            <td><ul class="clean">
+                                <li t-foreach="doc._c2p_deliverables()[3:]" t-as="d"><span class="d"></span><span t-out="d"/></li>
+                            </ul></td>
+                        </tr></table>
+                    </div>
 
-                    <!-- ══ FOOTER ════════════════════════════════════════ -->
+                    <!-- ===== 07 ROLES ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">07</span><span class="sec-t">Roles &amp; Responsibilities</span></div>
+                        <table class="tbl">
+                            <tr><th style="width:26%;">Party</th><th>Responsibilities</th></tr>
+                            <tr t-foreach="doc._c2p_roles()" t-as="r">
+                                <td><b><span t-out="r['party']"/></b></td>
+                                <td><span t-out="r['resp']"/></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- ===== 08 ASSUMPTIONS ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">08</span><span class="sec-t">Assumptions &amp; Conditions</span></div>
+                        <ul class="clean">
+                            <li t-foreach="doc._c2p_assumptions()" t-as="a"><span class="d"></span><span t-out="a"/></li>
+                        </ul>
+                    </div>
+
+                    <!-- ===== 09 COMMERCIAL ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">09</span><span class="sec-t">Commercial Proposal</span></div>
+                        <table class="tbl">
+                            <tr><th style="width:50%;">Item</th><th class="r">Qty</th><th class="r">Unit Price</th><th class="r">Amount</th></tr>
+                            <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
+                                <td><span t-field="line.product_id.name"/></td>
+                                <td class="r"><span t-field="line.product_uom_qty"/></td>
+                                <td class="r"><span t-field="line.price_unit" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
+                                <td class="r"><span t-field="line.price_subtotal" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
+                            </tr>
+                            <tr><td colspan="3" class="r">Subtotal</td>
+                                <td class="r"><span t-field="doc.amount_untaxed" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
+                            <tr><td colspan="3" class="r">Taxes</td>
+                                <td class="r"><span t-field="doc.amount_tax" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
+                        </table>
+                        <table style="width:100%; margin-top:12px;"><tr>
+                            <td></td>
+                            <td style="width:290px;">
+                                <div class="totbox"><table style="width:100%"><tr>
+                                    <td class="tl">Total</td>
+                                    <td class="r tv"><span t-field="doc.amount_total" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
+                                </tr></table></div>
+                            </td>
+                        </tr></table>
+                        <div t-if="doc.c2p_hosting_note" class="note"><span t-field="doc.c2p_hosting_note"/></div>
+                    </div>
+
+                    <!-- ===== AMC (optional) ===== -->
+                    <div class="sec" t-if="doc.c2p_amc_monthly">
+                        <div class="sec-h"><span class="sec-t">Annual Maintenance &amp; Support (AMC)</span></div>
+                        <table style="width:100%;"><tr>
+                            <td style="vertical-align:middle; font-size:12.5px;">Post go-live support, issue
+                                resolution, minor enhancements and periodic health checks under an Annual
+                                Maintenance Contract.</td>
+                            <td class="r" style="width:170px; vertical-align:middle;">
+                                <span style="font-size:18px; font-weight:800; color:#6d3f5f;">
+                                    <span t-field="doc.c2p_amc_monthly" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></span>
+                                <div class="mut" style="font-size:10px;">per month</div>
+                            </td>
+                        </tr></table>
+                    </div>
+
+                    <!-- ===== 10 WHY C2P ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">10</span><span class="sec-t">Why <span t-field="doc.company_id.name"/></span></div>
+                        <table class="ben">
+                            <tr t-foreach="doc._c2p_why_rows()" t-as="row">
+                                <td t-foreach="row" t-as="w">
+                                    <div class="bt"><span t-out="w['title']"/></div>
+                                    <div class="bd"><span t-out="w['desc']"/></div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- ===== 11 NEXT STEPS ===== -->
+                    <div class="sec">
+                        <div class="sec-h"><span class="sec-n">11</span><span class="sec-t">Conclusion &amp; Next Steps</span></div>
+                        <table class="phase">
+                            <tr t-foreach="doc._c2p_next_steps()" t-as="s">
+                                <td style="width:44px;"><span class="pn"><span t-out="s_index + 1"/></span></td>
+                                <td style="vertical-align:middle;"><span t-out="s"/></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- ===== SIGNATURE ===== -->
+                    <table class="sign"><tr>
+                        <td>Accepted for <b><span t-field="doc.partner_id.name"/></b><br/><br/><br/>Name / Title / Date</td>
+                        <td>For <b><span t-field="doc.company_id.name"/></b><br/><br/><br/>Name / Title / Date</td>
+                    </tr></table>
+
                     <div class="foot">
                         <span t-if="doc.company_id.report_footer" t-field="doc.company_id.report_footer"/>
                         <t t-else=""><span t-field="doc.company_id.name"/> &#183; core2plus.com</t>

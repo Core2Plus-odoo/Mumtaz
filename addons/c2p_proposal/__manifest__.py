@@ -1,6 +1,6 @@
 {
     "name": "C2P Proposal Maker",
-    "version": "19.0.3.0.0",
+    "version": "19.0.4.0.0",
     "summary": "One-click proposal builder — tick the services a client needs and "
                "generate a complete, branded, narrative Odoo ERP proposal (PDF).",
     "description": """
