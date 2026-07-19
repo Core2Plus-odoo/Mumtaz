@@ -22,15 +22,33 @@
                             <field name="pricelist_id"/>
                             <field name="currency_id"/>
                             <field name="validity_days"/>
-                            <field name="timeline_weeks"/>
                             <field name="amc_monthly"/>
                             <field name="template_id"/>
                             <field name="open_pdf"/>
                         </group>
                     </group>
+                    <group string="Intelligence">
+                        <group>
+                            <field name="user_count"/>
+                            <field name="include_licenses"/>
+                        </group>
+                        <group>
+                            <field name="package_tier"/>
+                            <field name="est_weeks"/>
+                            <field name="est_effort"/>
+                        </group>
+                    </group>
                     <separator string="Services / modules to include"/>
                     <group>
-                        <field name="service_category_id" options="{'no_create': True}"/>
+                        <group>
+                            <field name="service_category_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <button name="action_recommend_services" type="object"
+                                    string="Recommend for industry" class="btn-secondary"
+                                    icon="fa-magic"
+                                    help="Tick the services typically recommended for the client's industry."/>
+                        </group>
                     </group>
                     <field name="service_ids" widget="many2many_checkboxes"/>
                     <notebook>

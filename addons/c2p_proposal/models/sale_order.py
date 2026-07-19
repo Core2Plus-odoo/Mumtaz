@@ -562,6 +562,22 @@ class SaleOrder(models.Model):
     def _c2p_visual_rows(self):
         return self._c2p_pairs(self._c2p_visuals())
 
+    def _c2p_is_license_line(self, line):
+        n = (line.product_id.name or "").lower()
+        return any(k in n for k in ("licence", "license", "hosting",
+                                    "subscription", "odoo.sh"))
+
+    def _c2p_cost_split(self):
+        """Split the order into implementation vs licences/hosting for a TCO view."""
+        impl = lic = 0.0
+        for line in self.order_line.filtered(lambda l: not l.display_type):
+            if self._c2p_is_license_line(line):
+                lic += line.price_subtotal
+            else:
+                impl += line.price_subtotal
+        return {"implementation": impl, "licences": lic,
+                "tax": self.amount_tax, "total": self.amount_total}
+
     def _c2p_line_scope(self, line):
         """Scope text for a line without repeating the product name."""
         name = (line.product_id.name or "").strip()

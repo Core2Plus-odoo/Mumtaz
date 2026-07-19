@@ -352,8 +352,19 @@
                                         <td class="r"><span t-field="doc.amount_tax" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
                                 </tbody>
                             </table>
+                            <t t-set="cs" t-value="doc._c2p_cost_split()"/>
+                            <table class="tbl" t-if="cs['licences']" style="margin-top:10px;">
+                                <tbody>
+                                    <tr><td style="width:70%;">Implementation &amp; services</td>
+                                        <td class="r"><span t-out="cs['implementation']" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
+                                    <tr><td>Odoo licences &amp; cloud hosting (Year 1)</td>
+                                        <td class="r"><span t-out="cs['licences']" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
+                                    <tr><td>Taxes</td>
+                                        <td class="r"><span t-out="cs['tax']" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td></tr>
+                                </tbody>
+                            </table>
                             <table class="invest"><tr>
-                                <td class="il">TOTAL INVESTMENT &#160;&#183;&#160; incl. taxes</td>
+                                <td class="il"><t t-if="cs['licences']">TOTAL COST OF OWNERSHIP &#160;&#183;&#160; Year 1</t><t t-else="">TOTAL INVESTMENT &#160;&#183;&#160; incl. taxes</t></td>
                                 <td class="iv serif"><span t-field="doc.amount_total" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
                             </tr></table>
                             <t t-set="hn" t-value="doc._c2p_hosting_note()"/>
