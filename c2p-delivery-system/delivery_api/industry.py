@@ -40,13 +40,19 @@ def match_industry(text: Optional[str]) -> Optional[str]:
     data = _load()
     if t in data:
         return t
-    # name or alias appears in the text (or vice-versa)
+    # Score every vertical by its matched name/alias tokens and pick the best;
+    # longer (more specific) matches outweigh short generic ones ("jewellery"
+    # beats "trading", "hotel"+"restaurant" beats a lone "restaurant").
+    best_key, best_score = None, 0
     for k, v in data.items():
         cands = [v["name"].lower(), k.replace("_", " ")] + [a.lower() for a in v.get("aliases", [])]
+        score = 0
         for c in cands:
-            if c and (c in t or t in c):
-                return k
-    return None
+            if c and (c in t or (len(c) > 4 and t in c)):
+                score += len(c)
+        if score > best_score:
+            best_key, best_score = k, score
+    return best_key
 
 
 def playbook_block(industry_text: Optional[str]) -> str:

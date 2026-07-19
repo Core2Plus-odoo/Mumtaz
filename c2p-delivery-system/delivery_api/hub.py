@@ -124,10 +124,8 @@ def _odoo() -> dict:
 def _industry() -> dict:
     try:
         import industry as ind
-        keys = _safe(ind.all_keys, []) if hasattr(ind, "all_keys") else []
-        if not keys and hasattr(ind, "PLAYBOOKS"):
-            keys = list(ind.PLAYBOOKS.keys())
-        return {"verticals": keys, "count": len(keys)}
+        verticals = _safe(ind.list_industries, [])
+        return {"verticals": verticals, "count": len(verticals)}
     except Exception:
         return {"verticals": [], "count": 0}
 

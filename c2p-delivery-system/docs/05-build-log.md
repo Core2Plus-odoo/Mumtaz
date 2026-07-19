@@ -995,3 +995,15 @@ Deepened `odoo_standard.py` (the standard-first per-app catalog):
 - New Knowledge Hub section `odoo` browses the full app reference.
 - Verified: py_compile + pyflakes clean; covered_by() resolves the new apps;
   hub `odoo` section serves all 28 apps.
+
+### Complete knowledge — industry playbooks + matcher ✅
+- Industry playbooks 11 → 18 verticals — added Education, Hospitality
+  (hotels/restaurants), Jewellery & Gold, Oil/Gas/Energy Services, Agency/Media,
+  Pharma & Medical Distribution, and Non-Profit/NGO — each with the full schema
+  (processes, pains, Odoo modules core/recommended/optional, GCC localization,
+  KPIs, common customisations).
+- `match_industry()` rewritten from first-match-wins to best-score (specific
+  aliases outweigh generic ones) so "gold/jewellery" → jewellery and
+  "hotels & restaurants" → hospitality instead of shadowing by older verticals.
+- Fixed the Knowledge Hub `industry` section (was reading 0; now lists all 18).
+- Verified: JSON valid; matcher resolves 10 sample industries correctly.
