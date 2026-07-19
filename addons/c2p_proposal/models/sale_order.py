@@ -562,6 +562,34 @@ class SaleOrder(models.Model):
     def _c2p_visual_rows(self):
         return self._c2p_pairs(self._c2p_visuals())
 
+    def _c2p_kpis(self):
+        """The four cover/summary KPIs (navy band): timeline, modules, users, fee."""
+        lines = self.order_line.filtered(lambda l: not l.display_type and l.product_id)
+        modules = len(lines) - len(lines.filtered(lambda l: self._c2p_is_license_line(l)))
+        users = 0
+        for l in lines:
+            n = (l.product_id.name or "").lower()
+            if "licence" in n or "license" in n:
+                users = int(l.product_uom_qty)
+        weeks = self.c2p_timeline_weeks or 12
+        tl = "%d Weeks" % weeks if weeks < 9 else "%d Months" % max(1, round(weeks / 4.0))
+        return {
+            "timeline": tl,
+            "modules": "%d Module%s" % (modules, "" if modules == 1 else "s"),
+            "users": ("%d Users" % users) if users else "As required",
+            "investment": self._c2p_cost_split()["implementation"],
+        }
+
+    def _c2p_expertise(self):
+        return [
+            "Odoo Enterprise Certified Partner",
+            "End-to-end ERP: sales, stock, finance, manufacturing, HR",
+            "Standard-first configuration, custom only where it adds value",
+            "GCC & Pakistan: AED/PKR, IFRS, VAT/ZATCA, multi-company",
+            "Data migration, training and gated go-live",
+            "Post go-live support & AMC",
+        ]
+
     def _c2p_is_license_line(self, line):
         n = (line.product_id.name or "").lower()
         return any(k in n for k in ("licence", "license", "hosting",
