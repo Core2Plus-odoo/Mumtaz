@@ -76,8 +76,9 @@ class C2pProposalWizard(models.TransientModel):
              "find and tick the relevant services. Leave empty to see all.")
     service_ids = fields.Many2many(
         "product.product", string="Services / Modules",
-        domain=[("sale_ok", "=", True)],
-        help="Tick every service or module this proposal should include.")
+        domain=[("sale_ok", "=", True), ("c2p_is_service", "=", True)],
+        help="Pick the C2P services this proposal should include. Prices are "
+             "indicative defaults and can be edited on the generated quotation.")
     template_id = fields.Many2one(
         "sale.order.template", string="Start from template",
         help="Optionally seed the proposal from a saved quotation template; "
@@ -178,7 +179,7 @@ class C2pProposalWizard(models.TransientModel):
     def _onchange_service_category(self):
         """Narrow the service checklist to the chosen category (ticked services
         in other categories stay selected)."""
-        dom = [("sale_ok", "=", True)]
+        dom = [("sale_ok", "=", True), ("c2p_is_service", "=", True)]
         if self.service_category_id:
             dom.append(("categ_id", "child_of", self.service_category_id.id))
         return {"domain": {"service_ids": dom}}
@@ -278,7 +279,8 @@ class C2pProposalWizard(models.TransientModel):
                 break
         if not keys:
             keys = ["erp", "implementation", "support"]
-        prods = self.env["product.product"].search([("sale_ok", "=", True)])
+        prods = self.env["product.product"].search(
+            [("sale_ok", "=", True), ("c2p_is_service", "=", True)])
         picked = prods.filtered(
             lambda p: any(kw in (p.name or "").lower() for kw in keys))
         if picked:

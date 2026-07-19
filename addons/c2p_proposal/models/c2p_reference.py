@@ -1,6 +1,18 @@
 from odoo import fields, models
 
 
+class ProductTemplate(models.Model):
+    """Flag the handful of products that are C2P proposal services, so the
+    Proposal Maker offers a short curated list instead of every sellable
+    product."""
+
+    _inherit = "product.template"
+
+    c2p_is_service = fields.Boolean(
+        string="C2P Proposal Service", default=False,
+        help="Show this product in the Proposal Maker service picker.")
+
+
 class C2pOdooModule(models.Model):
     """Catalog of standard Odoo applications the salesperson can tick when an
     ERP implementation is in scope, so the proposal states exactly which apps

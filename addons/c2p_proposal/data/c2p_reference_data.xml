@@ -1,5 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ================= Curated C2P proposal services =================
+         A short, editable catalog. list_price is an INDICATIVE default in the
+         company currency; the salesperson can edit the price on the generated
+         quotation. noupdate=1 so edited prices are never overwritten on upgrade. -->
+    <data noupdate="1">
+        <record id="svc_erp_impl" model="product.template">
+            <field name="name">Odoo ERP Implementation (per module)</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">4000</field>
+        </record>
+        <record id="svc_discovery" model="product.template">
+            <field name="name">Discovery &amp; Requirements Study</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">3500</field>
+        </record>
+        <record id="svc_finance" model="product.template">
+            <field name="name">Finance &amp; Tax (VAT / Corporate Tax) Setup</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">5000</field>
+        </record>
+        <record id="svc_bi" model="product.template">
+            <field name="name">Business Intelligence &amp; Dashboards</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">6000</field>
+        </record>
+        <record id="svc_migration" model="product.template">
+            <field name="name">Data Migration</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">3000</field>
+        </record>
+        <record id="svc_integration" model="product.template">
+            <field name="name">System Integration</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">4500</field>
+        </record>
+        <record id="svc_custom" model="product.template">
+            <field name="name">Custom Development (per module)</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">5000</field>
+        </record>
+        <record id="svc_training" model="product.template">
+            <field name="name">Training (per session)</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">1500</field>
+        </record>
+        <record id="svc_support" model="product.template">
+            <field name="name">Annual Support &amp; AMC</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/>
+            <field name="c2p_is_service">True</field><field name="list_price">6000</field>
+        </record>
+    </data>
+
     <!-- ================= Standard Odoo applications ================= -->
     <!-- Sales & CRM -->
     <record id="mod_crm" model="c2p.odoo.module"><field name="name">CRM</field><field name="category">sales</field><field name="sequence">10</field></record>

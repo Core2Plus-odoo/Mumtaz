@@ -314,6 +314,9 @@
                         <!-- ===== 7. COMMERCIAL ===== -->
                         <div class="sec">
                             <div class="sech">7.&#160; Commercial Proposal</div>
+                            <p class="mut" style="font-size:11px; margin:0 0 8px;">Pricing below is
+                               <b>indicative</b> and confirmed against final scope. All amounts are in
+                               <span t-field="doc.currency_id.name"/> and exclusive of items listed as out of scope.</p>
                             <table class="tbl">
                                 <thead><tr><th style="width:52%;">Item</th><th class="r">Qty</th><th class="r">Unit Price</th><th class="r">Amount</th></tr></thead>
                                 <tbody>
