@@ -112,6 +112,15 @@ def _tech() -> dict:
     return {"digest": _safe(tk.digest, "")}
 
 
+def _odoo() -> dict:
+    import odoo_standard as os_
+    return {
+        "apps": _safe(os_.full_reference, []),
+        "also": getattr(os_, "ALSO", {}),
+        "app_count": len(getattr(os_, "STANDARD", {})),
+    }
+
+
 def _industry() -> dict:
     try:
         import industry as ind
@@ -138,6 +147,8 @@ _SECTIONS = {
     "ba": ("Business Analysis", "Per-area discovery frameworks: questions, data, pains, KPIs.", _ba),
     "consulting": ("Consulting Frameworks", "Strategy frameworks, SOP structure and KPI trees.", _consulting),
     "tech": ("Odoo Development Standards", "Module anatomy, ORM/security/performance rules.", _tech),
+    "odoo": ("Odoo App Reference", "Per-app standard features, settings and the "
+             "customisations that are really config / Studio.", _odoo),
     "industry": ("Industry Playbooks", "Per-vertical functional and go-to-market playbooks.", _industry),
 }
 

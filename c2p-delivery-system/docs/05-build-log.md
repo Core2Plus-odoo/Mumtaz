@@ -980,3 +980,18 @@ Deepened `finance_knowledge.py` toward a complete GCC/PK CA reference (no-API):
   Hub `finance` section expose the full structure.
 - Verified: py_compile + pyflakes clean; no-API smoke test (CT/ESR/EOSB advice,
   hub finance section browses all structures).
+
+### Complete knowledge — Odoo app reference deepening ✅
+Deepened `odoo_standard.py` (the standard-first per-app catalog):
+- **Apps 15 → 28** — added Payroll, Rental, Field Service, Quality, Maintenance,
+  Marketing, Events, Documents/DMS, Knowledge, Planning, eLearning, Barcode and
+  Spreadsheet/Dashboards as full entries (features + settings); refreshed ALSO
+  with Timesheets, Expenses, Recruitment, Appraisal, Fleet, IoT, WhatsApp, VoIP,
+  and PK/AE/SA localizations.
+- **COMMON_CUSTOMS** — new per-app map of the customisations clients typically
+  ask for and the standard-first route each takes (Studio / approvals /
+  automation / thin custom), with a `common_customs()` accessor. Pre-empts
+  over-eager custom verdicts; surfaced in `digest()` and `full_reference()`.
+- New Knowledge Hub section `odoo` browses the full app reference.
+- Verified: py_compile + pyflakes clean; covered_by() resolves the new apps;
+  hub `odoo` section serves all 28 apps.
