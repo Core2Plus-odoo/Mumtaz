@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ── Appointment Type ── -->
+  <record id="view_appointment_type_list" model="ir.ui.view">
+    <field name="name">c2p.appointment.type.list</field>
+    <field name="model">c2p.appointment.type</field>
+    <field name="arch" type="xml">
+      <list string="Appointment Types">
+        <field name="sequence" widget="handle"/>
+        <field name="name"/>
+        <field name="slug"/>
+        <field name="duration" widget="float_time"/>
+        <field name="staff_ids" widget="many2many_tags"/>
+        <field name="tz"/>
+        <field name="is_published"/>
+        <field name="booking_count" string="Bookings"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_appointment_type_form" model="ir.ui.view">
+    <field name="name">c2p.appointment.type.form</field>
+    <field name="model">c2p.appointment.type</field>
+    <field name="arch" type="xml">
+      <form string="Appointment Type">
+        <header>
+          <button name="action_view_bookings" type="object" string="Bookings" class="btn-secondary"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <label for="name"/>
+            <h1><field name="name" placeholder="e.g. Discovery Call"/></h1>
+            <label for="slug" string="Public URL"/>
+            <div>/appointment/<field name="slug" class="oe_inline" placeholder="discovery-call"/></div>
+          </div>
+          <group>
+            <group string="Timing">
+              <field name="duration" widget="float_time"/>
+              <field name="slot_interval" widget="float_time"/>
+              <field name="buffer_after" widget="float_time"/>
+              <field name="min_lead_hours"/>
+              <field name="max_days_ahead"/>
+            </group>
+            <group string="Availability">
+              <field name="staff_ids" widget="many2many_tags" options="{'no_create': True}"/>
+              <field name="resource_calendar_id"/>
+              <field name="tz"/>
+              <field name="location"/>
+              <field name="is_published"/>
+              <field name="active" invisible="1"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Description">
+              <field name="description" placeholder="Shown to visitors on the booking page..."/>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_appointment_type" model="ir.actions.act_window">
+    <field name="name">Appointment Types</field>
+    <field name="res_model">c2p.appointment.type</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ── Booking ── -->
+  <record id="view_appointment_booking_list" model="ir.ui.view">
+    <field name="name">c2p.appointment.booking.list</field>
+    <field name="model">c2p.appointment.booking</field>
+    <field name="arch" type="xml">
+      <list string="Bookings" decoration-muted="state == 'cancelled'"
+            decoration-success="state == 'attended'" decoration-danger="state == 'no_show'">
+        <field name="start_datetime"/>
+        <field name="name"/>
+        <field name="company_name"/>
+        <field name="email"/>
+        <field name="phone" optional="show"/>
+        <field name="appointment_type_id"/>
+        <field name="staff_id"/>
+        <field name="state" widget="badge"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_appointment_booking_form" model="ir.ui.view">
+    <field name="name">c2p.appointment.booking.form</field>
+    <field name="model">c2p.appointment.booking</field>
+    <field name="arch" type="xml">
+      <form string="Booking">
+        <header>
+          <button name="action_mark_attended" type="object" string="Mark Attended"
+                  class="btn-primary" invisible="state != 'confirmed'"/>
+          <button name="action_mark_no_show" type="object" string="No Show"
+                  invisible="state != 'confirmed'"/>
+          <button name="action_cancel" type="object" string="Cancel"
+                  invisible="state != 'confirmed'"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="confirmed,attended"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button name="action_view_lead" type="object" class="oe_stat_button"
+                    icon="fa-star" invisible="not lead_id">
+              <span class="o_stat_text">CRM Lead</span>
+            </button>
+          </div>
+          <div class="oe_title">
+            <h1><field name="display_name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group string="Appointment">
+              <field name="appointment_type_id"/>
+              <field name="start_datetime"/>
+              <field name="stop_datetime" readonly="1"/>
+              <field name="staff_id"/>
+              <field name="calendar_event_id" readonly="1"/>
+            </group>
+            <group string="Contact">
+              <field name="name"/>
+              <field name="email" widget="email"/>
+              <field name="phone" widget="phone"/>
+              <field name="company_name"/>
+              <field name="partner_id" readonly="1"/>
+              <field name="lead_id" readonly="1"/>
+            </group>
+          </group>
+          <group string="Notes">
+            <field name="notes" nolabel="1"/>
+          </group>
+          <field name="access_token" invisible="1"/>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_appointment_booking_calendar" model="ir.ui.view">
+    <field name="name">c2p.appointment.booking.calendar</field>
+    <field name="model">c2p.appointment.booking</field>
+    <field name="arch" type="xml">
+      <calendar string="Bookings" date_start="start_datetime" date_stop="stop_datetime"
+                color="appointment_type_id" mode="week">
+        <field name="name"/>
+        <field name="staff_id"/>
+      </calendar>
+    </field>
+  </record>
+
+  <record id="view_appointment_booking_search" model="ir.ui.view">
+    <field name="name">c2p.appointment.booking.search</field>
+    <field name="model">c2p.appointment.booking</field>
+    <field name="arch" type="xml">
+      <search string="Bookings">
+        <field name="name"/>
+        <field name="email"/>
+        <field name="company_name"/>
+        <field name="appointment_type_id"/>
+        <field name="staff_id"/>
+        <filter name="upcoming" string="Upcoming"
+                domain="[('start_datetime','&gt;=',context_today().strftime('%Y-%m-%d'))]"/>
+        <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
+        <filter name="cancelled" string="Cancelled" domain="[('state','=','cancelled')]"/>
+        <group expand="0" string="Group By">
+          <filter name="gb_type" string="Type" context="{'group_by':'appointment_type_id'}"/>
+          <filter name="gb_staff" string="Staff" context="{'group_by':'staff_id'}"/>
+          <filter name="gb_state" string="Status" context="{'group_by':'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_appointment_booking" model="ir.actions.act_window">
+    <field name="name">Bookings</field>
+    <field name="res_model">c2p.appointment.booking</field>
+    <field name="view_mode">calendar,list,form</field>
+    <field name="context">{'search_default_upcoming': 1}</field>
+  </record>
+
+</odoo>
