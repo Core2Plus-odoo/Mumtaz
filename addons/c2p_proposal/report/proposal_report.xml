@@ -58,12 +58,12 @@
                             @font-face { font-family:'C2P Serif'; font-weight:700; font-style:normal;
                                 src:url('/c2p_proposal/static/fonts/IBMPlexSerif-Bold.ttf') format('truetype'); }
                             .o_c2p { color:#3a4150; font-family:'C2P Sans','Helvetica Neue',Arial,sans-serif;
-                                font-size:13px; line-height:1.7; }
+                                font-size:12.5px; line-height:1.5; }
                             .o_c2p .serif { font-family:'C2P Serif',Georgia,'Times New Roman',serif; }
                             .o_c2p .ink { color:#1e2a33; } .o_c2p .teal { color:#0e8378; }
                             .o_c2p .mut { color:#6b7280; }
                             /* Kill Odoo's default table borders; re-add only intended ones below. */
-                            .o_c2p table td, .o_c2p table th { border:0 !important; }
+                            .o_c2p table, .o_c2p table td, .o_c2p table th, .o_c2p table tr { border:0 !important; }
                             /* Cover */
                             .o_c2p .cover { background:#1e2a33; color:#fff; min-height:1015px;
                                 position:relative; padding:64px 60px; }
@@ -97,33 +97,33 @@
                                 padding:15px 20px; margin:14px 0; font-size:13px; color:#4a4f5a;
                                 font-style:italic; }
                             /* Section header */
-                            .o_c2p .sec { page-break-inside:avoid; margin-bottom:38px; }
+                            .o_c2p .sec { margin-bottom:18px; }
                             .o_c2p .sec-head td { vertical-align:top; }
-                            .o_c2p .secnum { font-size:40px; font-weight:700; color:#bfe6e2; line-height:.9; }
-                            .o_c2p .sect { font-size:21px; font-weight:600; color:#1e2a33; padding-top:6px; }
+                            .o_c2p .secnum { font-size:32px; font-weight:700; color:#bfe6e2; line-height:.9; }
+                            .o_c2p .sect { font-size:19px; font-weight:600; color:#1e2a33; padding-top:2px; }
                             .o_c2p .u { width:52px; height:3px; background:#14b3a8; margin-top:10px; }
-                            .o_c2p p { font-size:13.5px; line-height:1.75; margin:0 0 11px; }
-                            .o_c2p .lead { font-size:14px; color:#2a2f3a; }
-                            .o_c2p .two { width:100%; border-collapse:separate; border-spacing:36px 0; }
+                            .o_c2p p { font-size:12.5px; line-height:1.55; margin:0 0 7px; }
+                            .o_c2p .lead { font-size:13px; color:#2a2f3a; line-height:1.6; }
+                            .o_c2p .two { width:100%; border-collapse:separate; border-spacing:28px 0; }
                             .o_c2p .two td { width:50%; vertical-align:top; }
                             .o_c2p .eyebrow2 { font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase;
                                 color:#1e2a33; font-weight:700; margin-bottom:10px; border-bottom:2px solid #eceae2;
                                 padding-bottom:6px; }
                             .o_c2p ul.dash { list-style:none; margin:0; padding:0; }
-                            .o_c2p ul.dash li { position:relative; padding-left:20px; margin-bottom:9px;
-                                font-size:13px; line-height:1.55; color:#3a4150; }
+                            .o_c2p ul.dash li { position:relative; padding-left:18px; margin-bottom:6px;
+                                font-size:12.5px; line-height:1.5; color:#3a4150; }
                             .o_c2p ul.dash li .b { position:absolute; left:0; top:8px; width:9px; height:2px;
                                 background:#14b3a8; }
                             /* cards */
                             .o_c2p .cards { width:100%; border-collapse:separate; border-spacing:16px 16px;
                                 margin:-4px -16px; }
-                            .o_c2p .cards td { width:50%; vertical-align:top; border:1px solid #ececee !important;
+                            .o_c2p .cards td { width:50%; vertical-align:top; page-break-inside:avoid; border:1px solid #ececee !important;
                                 border-top:3px solid #1e2a33 !important; padding:14px 16px; }
                             .o_c2p .ct { font-weight:700; color:#1e2a33; font-size:13.5px; margin-bottom:3px; }
                             .o_c2p .cd { font-size:12px; color:#6b7280; line-height:1.5; }
                             /* phases */
-                            .o_c2p .phase td { padding:14px 0; border-bottom:1px solid #f0f0f2 !important;
-                                vertical-align:top; }
+                            .o_c2p .phase td { padding:9px 0; border-bottom:1px solid #f0f0f2 !important;
+                                vertical-align:top; page-break-inside:avoid; }
                             .o_c2p .pnum { width:44px; font-size:20px; color:#0e8378; }
                             .o_c2p .pt { font-weight:700; color:#1e2a33; font-size:13.5px; }
                             .o_c2p .pd { font-size:12.5px; color:#6b7280; line-height:1.55; margin-top:2px; }
@@ -233,7 +233,7 @@
                                 <tbody>
                                     <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
                                         <td><b><span t-field="line.product_id.name"/></b></td>
-                                        <td><span t-field="line.name"/></td>
+                                        <td><span t-out="doc._c2p_line_scope(line)"/></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -262,6 +262,20 @@
                                         <b><span t-out="b['title']"/></b> &#8212; <span t-out="b['desc']"/></li>
                                 </ul></td>
                             </tr></table>
+                            <table class="two" style="margin-top:6px;"><tr>
+                                <td>
+                                    <div class="eyebrow2">In Scope</div>
+                                    <ul class="dash">
+                                        <li t-foreach="doc._c2p_scope_in()" t-as="si"><span class="b"></span><span t-out="si"/></li>
+                                    </ul>
+                                </td>
+                                <td>
+                                    <div class="eyebrow2">Out of Scope</div>
+                                    <ul class="dash">
+                                        <li t-foreach="doc._c2p_scope_out()" t-as="so"><span class="b"></span><span t-out="so"/></li>
+                                    </ul>
+                                </td>
+                            </tr></table>
                         </div>
 
                         <!-- ===== 04 METHODOLOGY ===== -->
@@ -277,8 +291,20 @@
                                         <div class="pd"><span t-out="ph['desc']"/></div></td>
                                 </tr>
                             </table>
-                            <div class="quote">Indicative timeline: <b><span t-out="doc.c2p_timeline_weeks"/> weeks</b>
-                                from kick-off to go-live, phased and confirmed during Discovery.</div>
+                            <div class="eyebrow2" style="margin-top:16px;">Indicative Timeline
+                                (~<span t-out="doc.c2p_timeline_weeks"/> weeks)</div>
+                            <table class="tbl">
+                                <thead><tr><th style="width:30%;">Stage</th><th style="width:22%;">Duration</th><th>Key milestone</th></tr></thead>
+                                <tbody>
+                                    <tr t-foreach="doc._c2p_timeline()" t-as="ts">
+                                        <td><b><span t-out="ts['stage']"/></b></td>
+                                        <td><span t-out="ts['weeks']"/></td>
+                                        <td><span t-out="ts['milestone']"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="mut" style="margin-top:6px; font-size:11px;">Timeline is indicative and
+                                confirmed during Discovery; phases may overlap to compress delivery.</p>
                         </div>
 
                         <!-- ===== 05 DELIVERABLES & ROLES ===== -->
@@ -332,6 +358,17 @@
                             </tr></table>
                             <t t-set="hn" t-value="doc._c2p_hosting_note()"/>
                             <div t-if="hn" class="note"><span t-out="hn"/></div>
+                            <div class="eyebrow2" style="margin-top:16px;">Payment Schedule</div>
+                            <table class="tbl">
+                                <thead><tr><th>Milestone</th><th class="r">%</th><th class="r">Amount</th></tr></thead>
+                                <tbody>
+                                    <tr t-foreach="doc._c2p_payment_schedule()" t-as="ps">
+                                        <td><span t-out="ps['milestone']"/></td>
+                                        <td class="r"><span t-out="ps['pct']"/>%</td>
+                                        <td class="r"><span t-out="ps['amount']" t-options='{"widget": "monetary", "display_currency": doc.currency_id}'/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
                             <div t-if="doc.c2p_amc_monthly" style="margin-top:14px;">
                                 <div class="eyebrow2">Annual Maintenance &amp; Support (AMC)</div>
                                 <table style="width:100%;"><tr>

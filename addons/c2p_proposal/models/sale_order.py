@@ -117,7 +117,7 @@ VISUALS = {
     "finance": ("Compliant Invoicing", _win("Accounting", _FIN)),
     "consulting": ("Process & SOPs", _win("Process Design", _CON)),
     "training": ("Training & Enablement", _win("Learning", _TRN)),
-    "support": ("Support &amp; SLA Desk", _win("Helpdesk", _SUP)),
+    "support": ("Support & SLA Desk", _win("Helpdesk", _SUP)),
 }
 
 # ── Service domains ─────────────────────────────────────────────────────────
@@ -561,6 +561,61 @@ class SaleOrder(models.Model):
 
     def _c2p_visual_rows(self):
         return self._c2p_pairs(self._c2p_visuals())
+
+    def _c2p_line_scope(self, line):
+        """Scope text for a line without repeating the product name."""
+        name = (line.product_id.name or "").strip()
+        txt = (line.name or "").strip()
+        if name and txt.startswith(name):
+            txt = txt[len(name):].strip(" -\n\t")
+        return txt or "Configured and delivered as part of this engagement."
+
+    def _c2p_timeline(self):
+        """Phased delivery timeline (week ranges) sized to the indicative weeks."""
+        w = max(self.c2p_timeline_weeks or 12, 5)
+        stages = [("Discovery & Design", 0.20, "BRD & FRS signed off"),
+                  ("Configuration & Build", 0.35, "System configured & customised"),
+                  ("Data Migration", 0.15, "Data loaded & reconciled"),
+                  ("Training & UAT", 0.20, "UAT sign-off"),
+                  ("Go-Live & Hypercare", 0.10, "Production go-live")]
+        out, start = [], 1
+        for i, (name, frac, ms) in enumerate(stages):
+            dur = max(1, round(w * frac)) if i < len(stages) - 1 else max(1, w - start + 1)
+            end = start + dur - 1
+            span = "Week %d" % start if dur == 1 else "Weeks %d-%d" % (start, end)
+            out.append({"stage": name, "weeks": span, "milestone": ms})
+            start = end + 1
+        return out
+
+    def _c2p_scope_in(self):
+        items = [self._c2p_line_scope(l) if False else (l.product_id.name or "")
+                 for l in self.order_line.filtered(lambda x: not x.display_type and x.product_id)]
+        items += ["Configuration, testing and go-live of the above.",
+                  "Documentation (BRD/FRS), training and hypercare support."]
+        # de-dup while preserving order
+        seen, out = set(), []
+        for i in items:
+            if i and i not in seen:
+                seen.add(i)
+                out.append(i)
+        return out
+
+    def _c2p_scope_out(self):
+        return [
+            "Third-party software licences (billed directly by the vendor).",
+            "Hardware, servers, network and infrastructure procurement.",
+            "Data cleansing beyond the agreed migration template.",
+            "Processes, modules or integrations not listed in this proposal.",
+            "Support beyond the hypercare window (covered under a separate AMC).",
+        ]
+
+    def _c2p_payment_schedule(self):
+        total = self.amount_total or 0.0
+        rows = [("On engagement / mobilisation", 0.40),
+                ("On UAT sign-off", 0.40),
+                ("On production go-live", 0.20)]
+        return [{"milestone": m, "pct": int(round(f * 100)), "amount": total * f}
+                for m, f in rows]
 
     def _c2p_solution_intro(self):
         scopes = [DOMAINS[d]["scope"] for d in self._c2p_domain_keys()]
