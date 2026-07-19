@@ -249,6 +249,68 @@ _BASE_BENEFITS = [
      "desc": "Clear scope, sign-off gates and knowledge transfer."},
 ]
 
+# Per-domain pain points and objectives used to auto-generate proposal content.
+DOMAIN_TEXT = {
+    "erp": {
+        "pains": ["Disconnected spreadsheets and apps with no single source of truth.",
+                  "Manual, error-prone data entry duplicated across departments.",
+                  "Limited real-time visibility into operations and finance."],
+        "objectives": ["Unify core operations on a single integrated platform.",
+                       "Automate cross-department workflows and reporting.",
+                       "Give management real-time dashboards and control."]},
+    "development": {
+        "pains": ["Off-the-shelf tools don't fit the way you actually work.",
+                  "Manual, repetitive tasks that should be automated.",
+                  "Systems that don't talk to each other."],
+        "objectives": ["Deliver software built precisely to your process.",
+                       "Automate the manual, repetitive work.",
+                       "Integrate your systems into one reliable flow."]},
+    "consulting": {
+        "pains": ["Processes undocumented and inconsistent between people.",
+                  "Bottlenecks and rework nobody has quantified.",
+                  "Change initiatives that don't stick."],
+        "objectives": ["Map and streamline the priority processes.",
+                       "Remove bottlenecks with quantified improvements.",
+                       "Embed change with SOPs and enablement."]},
+    "analytics": {
+        "pains": ["Reporting is manual, slow and inconsistent.",
+                  "No single, trusted version of the numbers.",
+                  "Decisions made on stale data."],
+        "objectives": ["Build trusted, real-time dashboards.",
+                       "Consolidate data into one reliable model.",
+                       "Enable faster, evidence-based decisions."]},
+    "finance": {
+        "pains": ["Tax/VAT and statutory work assembled late and by hand.",
+                  "Uncertainty over compliance and exposure.",
+                  "Management accounts that are never quite current."],
+        "objectives": ["Ensure accurate, on-time tax and statutory compliance.",
+                       "Assess and close exposure against the regime.",
+                       "Produce reliable, timely management reporting."]},
+    "training": {
+        "pains": ["Users under-trained, so the system is under-used.",
+                  "Knowledge concentrated in a few people.",
+                  "Slow, painful adoption after go-live."],
+        "objectives": ["Build confident, capable users across roles.",
+                       "Document and spread knowledge.",
+                       "Accelerate adoption and reduce support load."]},
+    "support": {
+        "pains": ["Issues linger without a clear owner or SLA.",
+                  "No proactive maintenance or health checks.",
+                  "Unpredictable, reactive support costs."],
+        "objectives": ["Resolve issues quickly under a clear SLA.",
+                       "Keep the platform healthy with proactive checks.",
+                       "Make support cost predictable."]},
+}
+
+
+def classify_domains(texts):
+    """Domain keys present in a list of free-text strings (product/category
+    names). Shared by the sale.order report and the Proposal Maker wizard."""
+    low = [(t or "").lower() for t in texts]
+    found = [k for k in _DOMAIN_ORDER
+             if any(any(kw in t for kw in DOMAINS[k]["keywords"]) for t in low)]
+    return found or ["erp"]
+
 
 class SaleOrder(models.Model):
     """Proposal-specific narrative fields layered on top of a quotation.
@@ -292,13 +354,8 @@ class SaleOrder(models.Model):
             if line.display_type or not line.product_id:
                 continue
             cat = line.product_id.categ_id.name if line.product_id.categ_id else ""
-            texts.append(((line.product_id.name or "") + " " + (cat or "")).lower())
-        found = []
-        for key in _DOMAIN_ORDER:
-            kws = DOMAINS[key]["keywords"]
-            if any(any(k in t for k in kws) for t in texts):
-                found.append(key)
-        return found or ["erp"]
+            texts.append((line.product_id.name or "") + " " + (cat or ""))
+        return classify_domains(texts)
 
     def _c2p_anchor(self):
         return self._c2p_domain_keys()[0]

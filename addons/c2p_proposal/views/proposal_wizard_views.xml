@@ -55,6 +55,9 @@
                 <footer>
                     <button name="action_generate" type="object"
                             string="Generate Proposal" class="btn-primary"/>
+                    <button name="action_regenerate_content" type="object"
+                            string="Regenerate content" class="btn-secondary"
+                            help="Rewrite the executive summary, pain points and objectives from the current service selection."/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

@@ -3,6 +3,9 @@ import re
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
+from odoo.addons.c2p_proposal.models.sale_order import (
+    DOMAINS, DOMAIN_TEXT, classify_domains)
+
 
 def _strip_html(value):
     """Flatten an HTML field to plain text for the notes box."""
@@ -108,6 +111,61 @@ class C2pProposalWizard(models.TransientModel):
         if self.service_category_id:
             dom.append(("categ_id", "child_of", self.service_category_id.id))
         return {"domain": {"service_ids": dom}}
+
+    # ── Auto-generated narrative content ────────────────────────────────────
+    def _service_domains(self):
+        names = [(p.name or "") + " " + (p.categ_id.name or "")
+                 for p in self.service_ids]
+        return classify_domains(names)
+
+    def _gen_texts(self):
+        """Generate exec summary, pain points and objectives from the selected
+        services (+ client/industry) — deterministic, no API."""
+        doms = self._service_domains()
+        company = self.env.company.name
+        partner = self.partner_id.name or "your organisation"
+        scopes = [DOMAINS[d]["scope"] for d in doms]
+        scope_txt = (scopes[0] if len(scopes) == 1
+                     else ", ".join(scopes[:-1]) + " and " + scopes[-1])
+        ind = (" in the %s sector" % self.industry) if self.industry else ""
+        exec_summary = (
+            "%s is pleased to present this proposal to %s%s for %s. Following our "
+            "understanding of your requirements, this document sets out the proposed "
+            "solution, our delivery approach, an indicative timeline and a transparent "
+            "commercial proposal — delivered standard-first, phased and fully documented."
+            % (company, partner, ind, scope_txt))
+        pains, objs = [], []
+        for d in doms:
+            for p in DOMAIN_TEXT.get(d, {}).get("pains", []):
+                if p not in pains:
+                    pains.append(p)
+            for o in DOMAIN_TEXT.get(d, {}).get("objectives", []):
+                if o not in objs:
+                    objs.append(o)
+        return {"exec_summary": exec_summary,
+                "pain_points": "\n".join(pains[:6]),
+                "objectives": "\n".join(objs[:6])}
+
+    @api.onchange("service_ids", "partner_id", "industry")
+    def _onchange_generate_content(self):
+        """Fill the narrative tabs from the selection (only where still empty, so
+        manual edits survive). Use 'Regenerate content' to force a refresh."""
+        if not self.service_ids:
+            return
+        gen = self._gen_texts()
+        if not self.exec_summary:
+            self.exec_summary = gen["exec_summary"]
+        if not self.pain_points:
+            self.pain_points = gen["pain_points"]
+        if not self.objectives:
+            self.objectives = gen["objectives"]
+
+    def action_regenerate_content(self):
+        """Force-regenerate the narrative tabs from the current selection."""
+        self.ensure_one()
+        self.update(self._gen_texts())
+        return {"type": "ir.actions.act_window", "res_model": self._name,
+                "res_id": self.id, "view_mode": "form", "target": "new"}
 
     # ── Pull context from a source record (order / opportunity) ─────────────
     @api.model
