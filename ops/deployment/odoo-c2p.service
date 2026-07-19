@@ -1,0 +1,17 @@
+[Unit]
+Description=Odoo (C2P — core2plus.com, locked to Mumtaz_C2P)
+Requires=postgresql.service
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+# Adjust the odoo binary path if different (check: which odoo  /  cat /etc/systemd/system/odoo.service)
+ExecStart=/usr/bin/odoo --config /etc/odoo-c2p.conf
+KillMode=mixed
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -596,6 +596,8 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         import sales_knowledge as _sk
         import tech_knowledge as _tk
         import consulting_knowledge as _con
+        import pitch_library as _pl
+        import skills_knowledge as _skl
 
         _ODOO = _ok.capability_digest()
         _STD = _os_.digest()               # comprehensive standard-first reference
@@ -607,24 +609,26 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         _SALES = _sk.digest()              # sales & marketing playbook
         _TECH = _tk.digest()               # Odoo development standards
         _CON = _con.digest()               # management-consulting frameworks/SOP/KPI
+        _PITCH = _pl.digest()              # ready-to-use sales pitch scripts
+        _SKILL = _skl.digest()             # senior-practitioner skills overlay
 
         _AGENT_KNOWLEDGE = {
-            "functional": _STD + "\n\n" + _AUTO + "\n\n" + _FIN + "\n\n" + _CON,
-            "ba": _STD + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA + "\n\n" + _CON,
-            "ba_discovery": _BA + "\n\n" + _STD + "\n\n" + _CON,
-            "developer": _TECH + "\n\n" + _STD + "\n\n" + _AUTO,
-            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD + "\n\n" + _SALES + "\n\n" + _CON,
-            "project": _PM + "\n\n" + _METH + "\n\n" + _ODOO,
-            "config": _STD + "\n\n" + _AUTO + "\n\n" + _FIN,
-            "docwriter": _CON + "\n\n" + _FIN + "\n\n" + _STD,
-            "director": _PM + "\n\n" + _METH + "\n\n" + _CON,
+            "functional": _STD + "\n\n" + _AUTO + "\n\n" + _FIN + "\n\n" + _CON + "\n\n" + _SKILL,
+            "ba": _STD + "\n\n" + _FIN + "\n\n" + _PM + "\n\n" + _BA + "\n\n" + _CON + "\n\n" + _SKILL,
+            "ba_discovery": _BA + "\n\n" + _STD + "\n\n" + _CON + "\n\n" + _SKILL,
+            "developer": _TECH + "\n\n" + _STD + "\n\n" + _AUTO + "\n\n" + _SKILL,
+            "proposal": _PM + "\n\n" + _METH + "\n\n" + _STD + "\n\n" + _SALES + "\n\n" + _PITCH + "\n\n" + _CON + "\n\n" + _SKILL,
+            "project": _PM + "\n\n" + _METH + "\n\n" + _ODOO + "\n\n" + _SKILL,
+            "config": _STD + "\n\n" + _AUTO + "\n\n" + _FIN + "\n\n" + _SKILL,
+            "docwriter": _CON + "\n\n" + _FIN + "\n\n" + _STD + "\n\n" + _SKILL,
+            "director": _PM + "\n\n" + _METH + "\n\n" + _CON + "\n\n" + _SKILL,
             "dispatch": _ODOO,
-            "presales": _SALES + "\n\n" + _STD + "\n\n" + _BA,
-            "pm": _PM + "\n\n" + _METH + "\n\n" + _CON,
-            "prospect": _SALES,
-            "outreach": _SALES,
-            "comms": _SALES,
-            "research": _SALES + "\n\n" + _CON,
+            "presales": _SALES + "\n\n" + _PITCH + "\n\n" + _STD + "\n\n" + _BA + "\n\n" + _SKILL,
+            "pm": _PM + "\n\n" + _METH + "\n\n" + _CON + "\n\n" + _SKILL,
+            "prospect": _SALES + "\n\n" + _PITCH + "\n\n" + _SKILL,
+            "outreach": _SALES + "\n\n" + _PITCH + "\n\n" + _SKILL,
+            "comms": _SALES + "\n\n" + _PITCH + "\n\n" + _SKILL,
+            "research": _SALES + "\n\n" + _CON + "\n\n" + _SKILL,
         }
         for _k, _v in _AGENT_KNOWLEDGE.items():
             if _k in PROMPTS:

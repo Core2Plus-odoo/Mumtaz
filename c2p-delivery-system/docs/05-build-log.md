@@ -941,3 +941,89 @@ The five delivery stages (presales → developer) now render as an Odoo form vie
 - renderRunBtn now keeps both the Run and Document buttons.
 - Verified: JS syntax + no dup names + headless render (5-step statusbar with the
   correct done/current states, form sheet present) — no page errors.
+
+### Embedded knowledge expansion — pitch library, workflows, hub ✅
+Grew the built-in, no-API knowledge so the agents rely less on the LLM:
+- **`pitch_library.py`** — ready-to-use sales pitch scripts: elevator pitches
+  (10/30/60s), value pillars, proof points, six cold-email templates, LinkedIn
+  touches, a discovery question bank (business/pain/finance-VAT/goals), a demo
+  flow, an 18-day follow-up sequence, five ROI talk tracks, seven per-industry
+  pitch angles, and closing/negotiation scripts. Local helpers `pitch_for`,
+  `email`, `questions_for`, `followup_sequence`, `roi_track`; `digest()` embedded
+  into the prospect/outreach/comms/presales/proposal agents (prompts.py).
+- **Workflow library** — six new steps (data_migration, training_delivery,
+  health_check, hypercare, analytics_dashboards, integration_design,
+  change_management, budgeting_forecast) and seven new service workflows
+  (data_migration_service, odoo_health_check, analytics_bi, erp_rescue,
+  hypercare_support, change_management_service, budgeting) registered in the
+  service catalog — 17 → 23 composable workflows.
+- **Knowledge Hub** — `hub.py` aggregates every pack (sales, pitch, workflows,
+  finance, PM, BA, consulting, tech, industry) into one browsable index;
+  `routers/hub.py` serves `GET /hub`, `/hub/section/{key}`, `/hub/export` and
+  `/hub/pitch/{industry}`. Wired into main.py.
+- Verified: py_compile + pyflakes clean; no-API smoke test (pitch fill, hub
+  catalog/section, 23 workflows compose, pitch embedded in outreach/proposal
+  prompts).
+
+### Complete knowledge — finance/tax deepening ✅
+Deepened `finance_knowledge.py` toward a complete GCC/PK CA reference (no-API):
+- **Corporate/direct tax** — new `CORPORATE_TAX` for UAE (9% CT, QFZP, Small
+  Business Relief), Saudi (CIT/Zakat), Qatar, Bahrain (DMTT/Pillar Two) and
+  Pakistan; `corporate_tax()` accessor.
+- **Regulatory compliance** — new `COMPLIANCE` (ESR, Transfer Pricing, CbCR /
+  Pillar Two, UBO register, AML/goAML) surfaced by `advise()`.
+- **IFRS** 9 → 14 treatments (added IAS 12 deferred tax, IAS 19 EOSB/gratuity,
+  IFRS 3, IAS 38 intangibles, IAS 7 cash flow, IFRS 8 segments).
+- **Processes** 9 → 17 (EOSB/gratuity, prepayments/accruals, expenses, deferred
+  tax, fixed-asset register, payroll/WPS, month-end close, revenue schedules).
+- `advise()` now returns corporate_tax + compliance; `digest()` and the Knowledge
+  Hub `finance` section expose the full structure.
+- Verified: py_compile + pyflakes clean; no-API smoke test (CT/ESR/EOSB advice,
+  hub finance section browses all structures).
+
+### Complete knowledge — Odoo app reference deepening ✅
+Deepened `odoo_standard.py` (the standard-first per-app catalog):
+- **Apps 15 → 28** — added Payroll, Rental, Field Service, Quality, Maintenance,
+  Marketing, Events, Documents/DMS, Knowledge, Planning, eLearning, Barcode and
+  Spreadsheet/Dashboards as full entries (features + settings); refreshed ALSO
+  with Timesheets, Expenses, Recruitment, Appraisal, Fleet, IoT, WhatsApp, VoIP,
+  and PK/AE/SA localizations.
+- **COMMON_CUSTOMS** — new per-app map of the customisations clients typically
+  ask for and the standard-first route each takes (Studio / approvals /
+  automation / thin custom), with a `common_customs()` accessor. Pre-empts
+  over-eager custom verdicts; surfaced in `digest()` and `full_reference()`.
+- New Knowledge Hub section `odoo` browses the full app reference.
+- Verified: py_compile + pyflakes clean; covered_by() resolves the new apps;
+  hub `odoo` section serves all 28 apps.
+
+### Complete knowledge — industry playbooks + matcher ✅
+- Industry playbooks 11 → 18 verticals — added Education, Hospitality
+  (hotels/restaurants), Jewellery & Gold, Oil/Gas/Energy Services, Agency/Media,
+  Pharma & Medical Distribution, and Non-Profit/NGO — each with the full schema
+  (processes, pains, Odoo modules core/recommended/optional, GCC localization,
+  KPIs, common customisations).
+- `match_industry()` rewritten from first-match-wins to best-score (specific
+  aliases outweigh generic ones) so "gold/jewellery" → jewellery and
+  "hotels & restaurants" → hospitality instead of shadowing by older verticals.
+- Fixed the Knowledge Hub `industry` section (was reading 0; now lists all 18).
+- Verified: JSON valid; matcher resolves 10 sample industries correctly.
+
+## Senior-practitioner skills knowledge (high-end)
+
+- New `skills_knowledge.py`: 18 expert-level delivery skills across 9 areas
+  (solution architecture, integration, data model, performance, data migration,
+  requirements engineering, process redesign, estimation, risk, scope control,
+  executive stakeholder management, facilitation, change & adoption, commercial
+  acumen, negotiation, consultative discovery, executive communication, quality
+  gates). Each carries the senior technique, a one-line reflex heuristic and the
+  junior anti-pattern it avoids. Plus `SENIOR_PRINCIPLES` (10 cross-cutting
+  operating rules), a `ROLE_SKILLS` map (15 roles) and a `MATURITY` ladder
+  (junior → consultant → senior → principal).
+- Accessors: `digest()` (prompt overlay), `skills_for(text)`, `for_role(role)`,
+  `advise(requirement)`, `areas()` — all deterministic, no API.
+- Embedded into every delivery agent prompt via `prompts.py` (`_SKILL` overlay
+  appended to functional/ba/developer/proposal/project/config/docwriter/director/
+  presales/pm/prospect/outreach/comms/research).
+- Surfaced in the Knowledge Hub as the new `skills` section (`hub.py`).
+- Verified: py_compile + pyflakes clean; digest 3.1k chars; hub section renders;
+  overlay confirmed present in proposal/pm/functional/developer/presales prompts.

@@ -113,23 +113,125 @@ STANDARD = {
         "Server actions: set field, create/update record, send email, webhook",
         "Scheduled actions (cron) for recurring logic"],
         settings=["Automation rules", "Scheduled actions"]),
+    "payroll": dict(name="Payroll", module="hr_payroll", features=[
+        "Salary structures, rules & structure types per country",
+        "Payslips (batches), inputs, allowances/deductions, end-of-service",
+        "Contracts drive pay; integrates Time Off, Attendance, Work Entries",
+        "Posts to accounting; bank/WPS/SIF payment file export"],
+        settings=["Salary structures", "Salary rules", "Work entry types", "Payslip batches"]),
+    "rental": dict(name="Rental", module="sale_renting", features=[
+        "Rental orders with durations, pickup/return, availability calendar",
+        "Time-based pricing (hour/day/week), late fees, security deposits",
+        "Stock reservation for rented products, condition checks"],
+        settings=["Rental pricing", "Return/late fees", "Rentable products"]),
+    "fsm": dict(name="Field Service", module="industry_fsm", features=[
+        "On-site tasks, scheduling & dispatch, mobile worksheets",
+        "Track time & materials on task, sign-off, invoice from task",
+        "Recurring interventions, GPS/route, product usage on-site"],
+        settings=["Worksheet templates", "Task types", "Billing from tasks"]),
+    "quality": dict(name="Quality", module="quality_control", features=[
+        "Control points on receipts/manufacturing/delivery operations",
+        "Check types (pass-fail, measure, picture, instructions)",
+        "Quality alerts, root-cause, non-conformance workflow"],
+        settings=["Control points", "Quality teams", "Check types"]),
+    "maintenance": dict(name="Maintenance", module="maintenance", features=[
+        "Equipment register, preventive & corrective requests",
+        "Maintenance teams, stages, calendar & Kanban, MTBF/MTTR KPIs",
+        "Trigger from Manufacturing/Quality; scheduled preventive plans"],
+        settings=["Equipment categories", "Maintenance teams", "Preventive frequency"]),
+    "marketing": dict(name="Marketing", module="marketing_automation", features=[
+        "Email/SMS marketing: lists, segmentation, A/B, analytics (mass_mailing)",
+        "Automation flows: multi-step drip campaigns with conditions & scoring",
+        "Landing pages/forms, UTM tracking, lead nurturing to CRM"],
+        settings=["Mailing lists", "Campaigns", "Marketing flows"]),
+    "events": dict(name="Events", module="event", features=[
+        "Event registration, multiple ticket types, online & on-site",
+        "Tracks/agenda, sponsors, badges, check-in (barcode)",
+        "Sell tickets via eCommerce, email/SMS reminders, community"],
+        settings=["Event types", "Ticket types", "Registration questions"]),
+    "documents": dict(name="Documents (DMS)", module="documents", features=[
+        "Workspaces with access rights, tags, versions & split/merge",
+        "Automated workflows/actions on files (approve, create record)",
+        "Capture from email/scan; share links; e-sign integration"],
+        settings=["Workspaces", "Tags", "File workflows"]),
+    "knowledge": dict(name="Knowledge", module="knowledge", features=[
+        "Nested articles, rich content, templates, item/kanban embeds",
+        "Access control, favourites, search; internal + shared articles"],
+        settings=["Articles", "Access rights", "Templates"]),
+    "planning": dict(name="Planning", module="planning", features=[
+        "Shift planning by role/resource, templates & recurrences",
+        "Publish/send shifts, open shifts, workload & availability",
+        "Integrates timesheets, sales orders (plan billable work)"],
+        settings=["Roles", "Shift templates", "Working schedules"]),
+    "elearning": dict(name="eLearning", module="website_slides", features=[
+        "Courses, lessons (video/PDF/quiz), certifications & badges",
+        "Paid courses via eCommerce, forums, progress tracking"],
+        settings=["Courses", "Certification", "Access rules"]),
+    "barcode": dict(name="Barcode", module="stock_barcode", features=[
+        "Barcode-driven receipts, deliveries, transfers, inventory counts",
+        "Scan lots/serials & locations; batch/cluster picking on device"],
+        settings=["Barcode nomenclature", "Operation defaults"]),
+    "dashboards": dict(name="Spreadsheet & Dashboards", module="spreadsheet_dashboard",
+        features=[
+        "Live spreadsheets on Odoo data (pivot, formulas, charts)",
+        "Shareable dashboards; insert list/pivot from any report",
+        "The standard route for custom management reporting layouts"],
+        settings=["Dashboards", "Spreadsheet templates"]),
 }
 
 # extra apps worth naming for completeness (feature-lite)
 ALSO = {
-    "sale_renting": "Rental — rental orders, durations, availability, pricing.",
-    "industry_fsm": "Field Service — on-site tasks, scheduling, worksheets.",
     "appointment": "Appointments — online booking with availability rules.",
-    "quality": "Quality — control points, checks, alerts on operations.",
-    "maintenance": "Maintenance — equipment, preventive/corrective requests.",
-    "marketing_automation": "Marketing Automation — campaigns, drip flows, scoring.",
-    "mass_mailing": "Email Marketing — mailing lists, campaigns, A/B, analytics.",
-    "event": "Events — registration, tracks, tickets, online events.",
-    "documents": "Documents — DMS workspaces, workflows, sharing.",
-    "planning": "Planning — shift planning, resource scheduling.",
-    "l10n_ae": "UAE localization — CoA, 5% VAT, FTA report.",
-    "l10n_sa": "Saudi localization — ZATCA/Fatoora e-invoicing.",
+    "timesheet": "Timesheets — time logging on tasks; feeds billing & payroll.",
+    "expense": "Expenses — claims, approval, reimbursement, reinvoicing.",
+    "recruitment": "Recruitment — job posts, application pipeline, referrals.",
+    "appraisal": "Appraisals — review cycles, goals, 360 feedback.",
+    "fleet": "Fleet — vehicles, contracts, costs, assignments.",
+    "lunch": "Lunch — internal meal ordering & vendor management.",
+    "iot": "IoT — connect scales, printers, scanners, cameras to Odoo.",
+    "whatsapp": "WhatsApp — templated messaging integrated with records.",
+    "voip": "VoIP — click-to-call, call queues from CRM/Helpdesk.",
+    "l10n_ae": "UAE localization — CoA, 5% VAT, FTA report, e-invoicing (2026).",
+    "l10n_sa": "Saudi localization — CoA, 15% VAT, ZATCA/Fatoora e-invoicing.",
+    "l10n_pk": "Pakistan localization — CoA and tax scaffolding (FBR).",
 }
+
+# app key -> the customisations clients TYPICALLY ask for beyond config, and the
+# right standard-first route. Used to pre-empt over-eager custom verdicts:
+# most of these are Studio/automation, not custom code.
+COMMON_CUSTOMS = {
+    "crm": [("Custom lead qualification fields/score", "studio + automation"),
+            ("Approval on discount/quotation", "approvals / automation"),
+            ("Territory or product-based auto-assignment", "automation rules")],
+    "sale": [("Bespoke quotation PDF layout", "studio report designer"),
+             ("Multi-level quote approval by margin/amount", "approvals"),
+             ("Custom pricing beyond pricelist rules", "custom (thin, on top)")],
+    "purchase": [("Extra approval tiers / delegation", "approvals / automation"),
+                 ("Vendor scorecard fields", "studio")],
+    "stock": [("Custom picking/label formats", "studio report designer"),
+              ("Special reservation/allocation logic", "custom (route + rules first)"),
+              ("Barcode flow tweaks", "barcode config / studio")],
+    "mrp": [("Shop-floor terminal tweaks", "studio"),
+            ("Custom costing beyond std/AVCO/FIFO", "analytic + custom (last resort)")],
+    "account": [("Statutory report layouts (P&L/BS)", "spreadsheet dashboards / studio"),
+                ("Localised e-invoicing formats", "localization module / EDI"),
+                ("CT / deferred-tax computation", "analytic + provision JE")],
+    "project": [("Custom billing rules", "config first, then thin custom"),
+                ("Client-specific task portal fields", "studio")],
+    "hr": [("Local contract/leave rules", "config + studio"),
+           ("Custom appraisal templates", "studio")],
+    "payroll": [("Country salary rules (EOSB, WPS)", "salary rules config first"),
+                ("Custom payslip layout", "studio report designer")],
+    "pos": [("Custom receipt/loyalty rules", "config + studio"),
+            ("Hardware/IoT integration", "iot / interface module")],
+    "website": [("Bespoke theme/blocks", "website builder + snippets"),
+                ("Custom checkout steps", "studio / thin custom")],
+}
+
+
+def common_customs(app_key: str) -> list:
+    """Typical customisations for an app and the standard-first route each takes."""
+    return [{"ask": a, "route": r} for a, r in COMMON_CUSTOMS.get(app_key, [])]
 
 
 def _norm(s: str) -> str:
@@ -156,10 +258,14 @@ def digest() -> str:
     lines = [f"- {a['name']} ({a['module']}): " + "; ".join(a["features"][:4])
              for a in STANDARD.values()]
     also = "; ".join(ALSO.values())
+    customs = "; ".join(
+        f"{STANDARD[k]['name']}: " + ", ".join(f"{a}→{r}" for a, r in v[:2])
+        for k, v in COMMON_CUSTOMS.items() if k in STANDARD)
     return ("ODOO STANDARD FUNCTIONALITY REFERENCE (v17–v19) — the house rule is "
             "STANDARD-FIRST: fully exhaust standard configuration, then Studio (no-code), "
             "before proposing ANY custom code. Standard Odoo already covers:\n"
             + "\n".join(lines) + "\nAlso standard/enterprise: " + also +
+            "\nCommonly-asked 'customs' that are really config/Studio: " + customs +
             "\nWhen analysing a requirement: (1) name the standard capability & settings "
             "that meet it, (2) if partly met, use Studio/automation, (3) ONLY if neither "
             "works, specify a minimal custom module on TOP of standard — never replacing it.")
@@ -168,7 +274,8 @@ def digest() -> str:
 def full_reference() -> list:
     """The detailed catalog (for a reference view / document)."""
     out = []
-    for a in STANDARD.values():
+    for key, a in STANDARD.items():
         out.append({"app": a["name"], "module": a["module"],
-                    "features": a["features"], "settings": a["settings"]})
+                    "features": a["features"], "settings": a["settings"],
+                    "common_customs": common_customs(key)})
     return out

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="1">
+    <record id="appointment_type_discovery" model="c2p.appointment.type">
+      <field name="name">Discovery Call</field>
+      <field name="slug">discovery-call</field>
+      <field name="duration">0.5</field>
+      <field name="slot_interval">0.5</field>
+      <field name="min_lead_hours">4</field>
+      <field name="max_days_ahead">30</field>
+      <field name="tz">Asia/Dubai</field>
+      <field name="location">Online — Google Meet link sent on confirmation</field>
+      <field name="sequence">10</field>
+      <field name="description" type="html">
+        <p>A short, no-obligation conversation to understand your requirements and tell you
+        honestly whether Odoo is the right fit. We'll cover your current systems, the problems
+        you're trying to solve, and what an implementation would realistically involve.</p>
+      </field>
+    </record>
+
+    <record id="appointment_type_demo" model="c2p.appointment.type">
+      <field name="name">Odoo Demo</field>
+      <field name="slug">odoo-demo</field>
+      <field name="duration">1.0</field>
+      <field name="slot_interval">0.5</field>
+      <field name="min_lead_hours">24</field>
+      <field name="max_days_ahead">30</field>
+      <field name="tz">Asia/Dubai</field>
+      <field name="location">Online — screen share</field>
+      <field name="sequence">20</field>
+      <field name="description" type="html">
+        <p>A working demonstration of Odoo configured for your industry — sales, inventory,
+        manufacturing, accounting or whichever modules matter to you. Bring your team;
+        questions welcome throughout.</p>
+      </field>
+    </record>
+
+    <record id="appointment_type_scoping" model="c2p.appointment.type">
+      <field name="name">Scoping Session</field>
+      <field name="slug">scoping-session</field>
+      <field name="duration">1.0</field>
+      <field name="slot_interval">1.0</field>
+      <field name="min_lead_hours">48</field>
+      <field name="max_days_ahead">45</field>
+      <field name="tz">Asia/Dubai</field>
+      <field name="location">Online or at your offices — Ajman / Dubai / Karachi</field>
+      <field name="sequence">30</field>
+      <field name="description" type="html">
+        <p>A detailed working session to define scope, timeline and commercials. We'll map your
+        processes, identify the gaps, and leave you with a clear view of effort and cost.
+        Suitable once you've decided Odoo is the direction.</p>
+      </field>
+    </record>
+  </data>
+</odoo>

@@ -30,6 +30,14 @@ SERVICE_WORKFLOW: dict[str, list[str]] = {
     "odoo_training": ["discovery", "proposal", "documentation", "reporting"],
     "odoo_support": ["lead_qualification", "proposal", "configuration",
                      "qa_uat", "reporting"],
+    "data_migration_service": ["discovery", "data_collection", "data_migration",
+                               "qa_uat", "reporting"],
+    "odoo_health_check": ["discovery", "health_check", "advisory_report", "reporting"],
+    "analytics_bi": ["discovery", "requirements", "analytics_dashboards",
+                     "documentation", "reporting"],
+    "erp_rescue": ["discovery", "gap_analysis", "process_redesign", "configuration",
+                   "qa_uat", "reporting"],
+    "hypercare_support": ["health_check", "hypercare", "reporting"],
     # Bookkeeper (recurring cadence)
     "bookkeeping": ["client_onboarding", "data_collection", "bookkeeping_close",
                     "reconciliation", "financial_statements", "reporting"],
@@ -49,6 +57,10 @@ SERVICE_WORKFLOW: dict[str, list[str]] = {
             "documentation"],
     "strategy_consulting": ["discovery", "strategy_analysis", "advisory_report"],
     "kpi_design": ["discovery", "kpi_framework", "documentation"],
+    "change_management_service": ["discovery", "change_management", "documentation",
+                                  "reporting"],
+    # Chartered accountant
+    "budgeting": ["data_collection", "budgeting_forecast", "advisory_report", "reporting"],
 }
 
 # Fallback chain for any service without an explicit workflow.

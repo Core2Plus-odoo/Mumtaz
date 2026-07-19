@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_c2p_proposal_wizard_form" model="ir.ui.view">
+        <field name="name">c2p.proposal.wizard.form</field>
+        <field name="model">c2p.proposal.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Proposal Maker">
+                <field name="has_erp" invisible="1"/>
+                <sheet>
+                    <div class="alert alert-info mb-3" role="status"
+                         style="border-left:4px solid #b31f2d;">
+                        <strong>C2P Proposal Maker.</strong>
+                        Pick the client, choose the services, answer a few scope
+                        questions and generate a complete, branded proposal PDF.
+                        Selecting an Odoo ERP implementation reveals the ERP scope
+                        questions below.
+                    </div>
+                    <div class="oe_title" style="width:100%;">
+                        <label for="proposal_title" class="oe_edit_only"/>
+                        <h1><field name="proposal_title" placeholder="Proposal title (auto-generated if blank)..."/></h1>
+                    </div>
+                    <group>
+                        <group string="Client">
+                            <field name="order_id" invisible="not order_id" readonly="1"/>
+                            <field name="lead_id" invisible="not lead_id" readonly="1"/>
+                            <field name="partner_id"/>
+                            <field name="industry" placeholder="e.g. Manufacturing, Retail, Education"/>
+                        </group>
+                        <group string="Commercial">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="pricelist_id"/>
+                            <field name="currency_id"/>
+                            <field name="validity_days"/>
+                            <field name="amc_monthly"/>
+                            <field name="template_id"/>
+                        </group>
+                    </group>
+
+                    <separator string="1.  Services &amp; modules"/>
+                    <group>
+                        <group>
+                            <field name="service_category_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <button name="action_recommend_services" type="object"
+                                    string="Recommend for industry" class="btn-secondary"
+                                    icon="fa-magic"
+                                    help="Tick the services typically recommended for the client's industry."/>
+                        </group>
+                    </group>
+                    <field name="service_ids" widget="many2many_tags"
+                           options="{'no_create': True}"
+                           placeholder="Pick services / modules from the dropdown..."/>
+
+                    <!-- ============ 2. ERP scope questions (conditional) ============ -->
+                    <div invisible="not has_erp">
+                        <separator string="2.  ERP implementation scope"/>
+                        <group>
+                            <group string="Applications &amp; data">
+                                <field name="erp_module_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       placeholder="Which Odoo apps? Sales, Inventory, Accounting..."/>
+                                <field name="current_system"
+                                       placeholder="e.g. Tally, QuickBooks, spreadsheets"/>
+                                <field name="needs_migration"/>
+                                <field name="migration_source"
+                                       invisible="not needs_migration"
+                                       placeholder="Migrate data from which system?"/>
+                            </group>
+                            <group string="Environment &amp; delivery">
+                                <field name="num_companies"/>
+                                <field name="num_warehouses"/>
+                                <field name="deployment"/>
+                                <field name="needs_integrations"/>
+                                <field name="integration_ids" widget="many2many_tags"
+                                       options="{'no_create': True}"
+                                       invisible="not needs_integrations"
+                                       placeholder="Pick integrations..."/>
+                                <field name="needs_training"/>
+                                <field name="go_live_target" placeholder="e.g. Q4 2026"/>
+                            </group>
+                        </group>
+                    </div>
+
+                    <separator string="3.  Sizing &amp; licensing"/>
+                    <group>
+                        <group>
+                            <field name="user_count"/>
+                            <field name="include_licenses"/>
+                        </group>
+                        <group>
+                            <field name="package_tier"/>
+                            <field name="est_weeks"/>
+                            <field name="est_effort"/>
+                            <field name="timeline_weeks"/>
+                        </group>
+                    </group>
+
+                    <separator string="4.  Narrative (auto-generated — edit if needed)"/>
+                    <notebook>
+                        <page string="Executive summary">
+                            <field name="exec_summary"
+                                   placeholder="Leave blank to auto-generate a summary from the client and scope..."/>
+                        </page>
+                        <page string="Pain points">
+                            <field name="pain_points"
+                                   placeholder="One challenge per line. Blank = sensible defaults."/>
+                        </page>
+                        <page string="Objectives">
+                            <field name="objectives"
+                                   placeholder="One objective per line. Blank = sensible defaults."/>
+                        </page>
+                        <page string="Notes">
+                            <field name="note"
+                                   placeholder="Optional scope summary shown on the quotation..."/>
+                        </page>
+                        <page string="Output">
+                            <group>
+                                <field name="open_pdf"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_generate" type="object"
+                            string="Generate Proposal" class="btn-primary"/>
+                    <button name="action_regenerate_content" type="object"
+                            string="Regenerate content" class="btn-secondary"
+                            help="Rewrite the executive summary, pain points and objectives from the current service selection."/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_proposal_wizard" model="ir.actions.act_window">
+        <field name="name">Proposal Maker</field>
+        <field name="res_model">c2p.proposal.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

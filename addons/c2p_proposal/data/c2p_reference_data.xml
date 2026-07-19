@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================= C2P service categories =================
+         Proper product categories so the Proposal Maker's "Filter by category"
+         segments the curated service list. -->
+    <record id="categ_c2p_services" model="product.category">
+        <field name="name">C2P Services</field>
+    </record>
+    <record id="categ_c2p_erp" model="product.category">
+        <field name="name">ERP Implementation</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_advisory" model="product.category">
+        <field name="name">Advisory &amp; Discovery</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_finance" model="product.category">
+        <field name="name">Finance &amp; Tax</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_bi" model="product.category">
+        <field name="name">BI &amp; Analytics</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_data" model="product.category">
+        <field name="name">Data &amp; Integration</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_dev" model="product.category">
+        <field name="name">Development</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_support" model="product.category">
+        <field name="name">Training &amp; Support</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+
+    <!-- ================= Curated C2P proposal services =================
+         A short, editable catalog. list_price is an INDICATIVE default in the
+         company currency; the salesperson can edit the price on the generated
+         quotation. noupdate=1 so edited prices are never overwritten on upgrade.
+         (Existing installs are re-categorised by the 19.0.17.0.0 migration.) -->
+    <data noupdate="1">
+        <record id="svc_erp_impl" model="product.template">
+            <field name="name">Odoo ERP Implementation (per module)</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_erp"/>
+            <field name="c2p_is_service">True</field><field name="list_price">4000</field>
+        </record>
+        <record id="svc_discovery" model="product.template">
+            <field name="name">Discovery &amp; Requirements Study</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_advisory"/>
+            <field name="c2p_is_service">True</field><field name="list_price">3500</field>
+        </record>
+        <record id="svc_finance" model="product.template">
+            <field name="name">Finance &amp; Tax (VAT / Corporate Tax) Setup</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_finance"/>
+            <field name="c2p_is_service">True</field><field name="list_price">5000</field>
+        </record>
+        <record id="svc_bi" model="product.template">
+            <field name="name">Business Intelligence &amp; Dashboards</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_bi"/>
+            <field name="c2p_is_service">True</field><field name="list_price">6000</field>
+        </record>
+        <record id="svc_migration" model="product.template">
+            <field name="name">Data Migration</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_data"/>
+            <field name="c2p_is_service">True</field><field name="list_price">3000</field>
+        </record>
+        <record id="svc_integration" model="product.template">
+            <field name="name">System Integration</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_data"/>
+            <field name="c2p_is_service">True</field><field name="list_price">4500</field>
+        </record>
+        <record id="svc_custom" model="product.template">
+            <field name="name">Custom Development (per module)</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_dev"/>
+            <field name="c2p_is_service">True</field><field name="list_price">5000</field>
+        </record>
+        <record id="svc_training" model="product.template">
+            <field name="name">Training (per session)</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_support"/>
+            <field name="c2p_is_service">True</field><field name="list_price">1500</field>
+        </record>
+        <record id="svc_support" model="product.template">
+            <field name="name">Annual Support &amp; AMC</field>
+            <field name="type">service</field><field name="sale_ok">True</field>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_support"/>
+            <field name="c2p_is_service">True</field><field name="list_price">6000</field>
+        </record>
+    </data>
+
+    <!-- ================= Standard Odoo applications ================= -->
+    <!-- Sales & CRM -->
+    <record id="mod_crm" model="c2p.odoo.module"><field name="name">CRM</field><field name="category">sales</field><field name="sequence">10</field></record>
+    <record id="mod_sales" model="c2p.odoo.module"><field name="name">Sales</field><field name="category">sales</field><field name="sequence">11</field></record>
+    <record id="mod_pos" model="c2p.odoo.module"><field name="name">Point of Sale</field><field name="category">sales</field><field name="sequence">12</field></record>
+    <record id="mod_subscription" model="c2p.odoo.module"><field name="name">Subscriptions</field><field name="category">sales</field><field name="sequence">13</field></record>
+    <record id="mod_rental" model="c2p.odoo.module"><field name="name">Rental</field><field name="category">sales</field><field name="sequence">14</field></record>
+
+    <!-- Finance -->
+    <record id="mod_accounting" model="c2p.odoo.module"><field name="name">Accounting / Invoicing</field><field name="category">finance</field><field name="sequence">20</field></record>
+    <record id="mod_expenses" model="c2p.odoo.module"><field name="name">Expenses</field><field name="category">finance</field><field name="sequence">21</field></record>
+
+    <!-- Supply Chain & Manufacturing -->
+    <record id="mod_inventory" model="c2p.odoo.module"><field name="name">Inventory</field><field name="category">supply</field><field name="sequence">30</field></record>
+    <record id="mod_purchase" model="c2p.odoo.module"><field name="name">Purchase</field><field name="category">supply</field><field name="sequence">31</field></record>
+    <record id="mod_manufacturing" model="c2p.odoo.module"><field name="name">Manufacturing (MRP)</field><field name="category">supply</field><field name="sequence">32</field></record>
+    <record id="mod_quality" model="c2p.odoo.module"><field name="name">Quality</field><field name="category">supply</field><field name="sequence">33</field></record>
+    <record id="mod_maintenance" model="c2p.odoo.module"><field name="name">Maintenance</field><field name="category">supply</field><field name="sequence">34</field></record>
+    <record id="mod_plm" model="c2p.odoo.module"><field name="name">PLM</field><field name="category">supply</field><field name="sequence">35</field></record>
+
+    <!-- Services & Operations -->
+    <record id="mod_project" model="c2p.odoo.module"><field name="name">Project</field><field name="category">services</field><field name="sequence">40</field></record>
+    <record id="mod_timesheets" model="c2p.odoo.module"><field name="name">Timesheets</field><field name="category">services</field><field name="sequence">41</field></record>
+    <record id="mod_fieldservice" model="c2p.odoo.module"><field name="name">Field Service</field><field name="category">services</field><field name="sequence">42</field></record>
+    <record id="mod_helpdesk" model="c2p.odoo.module"><field name="name">Helpdesk</field><field name="category">services</field><field name="sequence">43</field></record>
+    <record id="mod_planning" model="c2p.odoo.module"><field name="name">Planning</field><field name="category">services</field><field name="sequence">44</field></record>
+
+    <!-- Human Resources -->
+    <record id="mod_employees" model="c2p.odoo.module"><field name="name">Employees</field><field name="category">hr</field><field name="sequence">50</field></record>
+    <record id="mod_recruitment" model="c2p.odoo.module"><field name="name">Recruitment</field><field name="category">hr</field><field name="sequence">51</field></record>
+    <record id="mod_timeoff" model="c2p.odoo.module"><field name="name">Time Off</field><field name="category">hr</field><field name="sequence">52</field></record>
+    <record id="mod_payroll" model="c2p.odoo.module"><field name="name">Payroll</field><field name="category">hr</field><field name="sequence">53</field></record>
+    <record id="mod_appraisals" model="c2p.odoo.module"><field name="name">Appraisals</field><field name="category">hr</field><field name="sequence">54</field></record>
+    <record id="mod_fleet" model="c2p.odoo.module"><field name="name">Fleet</field><field name="category">hr</field><field name="sequence">55</field></record>
+
+    <!-- Website & eCommerce -->
+    <record id="mod_website" model="c2p.odoo.module"><field name="name">Website</field><field name="category">website</field><field name="sequence">60</field></record>
+    <record id="mod_ecommerce" model="c2p.odoo.module"><field name="name">eCommerce</field><field name="category">website</field><field name="sequence">61</field></record>
+    <record id="mod_elearning" model="c2p.odoo.module"><field name="name">eLearning</field><field name="category">website</field><field name="sequence">62</field></record>
+    <record id="mod_events" model="c2p.odoo.module"><field name="name">Events</field><field name="category">website</field><field name="sequence">63</field></record>
+
+    <!-- Marketing -->
+    <record id="mod_email_marketing" model="c2p.odoo.module"><field name="name">Email Marketing</field><field name="category">marketing</field><field name="sequence">70</field></record>
+    <record id="mod_marketing_automation" model="c2p.odoo.module"><field name="name">Marketing Automation</field><field name="category">marketing</field><field name="sequence">71</field></record>
+    <record id="mod_social" model="c2p.odoo.module"><field name="name">Social Marketing</field><field name="category">marketing</field><field name="sequence">72</field></record>
+    <record id="mod_surveys" model="c2p.odoo.module"><field name="name">Surveys</field><field name="category">marketing</field><field name="sequence">73</field></record>
+
+    <!-- Productivity -->
+    <record id="mod_documents" model="c2p.odoo.module"><field name="name">Documents</field><field name="category">productivity</field><field name="sequence">80</field></record>
+    <record id="mod_sign" model="c2p.odoo.module"><field name="name">Sign</field><field name="category">productivity</field><field name="sequence">81</field></record>
+    <record id="mod_knowledge" model="c2p.odoo.module"><field name="name">Knowledge</field><field name="category">productivity</field><field name="sequence">82</field></record>
+
+    <!-- ================= Common integrations ================= -->
+    <record id="int_payment" model="c2p.integration"><field name="name">Online payment gateway (Stripe / Telr / PayTabs)</field><field name="sequence">10</field></record>
+    <record id="int_bank" model="c2p.integration"><field name="name">Bank statement sync / reconciliation</field><field name="sequence">11</field></record>
+    <record id="int_einvoice" model="c2p.integration"><field name="name">E-invoicing (ZATCA / FTA / FBR)</field><field name="sequence">12</field></record>
+    <record id="int_whatsapp" model="c2p.integration"><field name="name">WhatsApp Business</field><field name="sequence">13</field></record>
+    <record id="int_shipping" model="c2p.integration"><field name="name">Shipping / courier (Aramex / DHL / SMSA)</field><field name="sequence">14</field></record>
+    <record id="int_marketplace" model="c2p.integration"><field name="name">Marketplace / storefront (Shopify / WooCommerce / Amazon)</field><field name="sequence">15</field></record>
+    <record id="int_wps" model="c2p.integration"><field name="name">Payroll WPS bank file</field><field name="sequence">16</field></record>
+    <record id="int_email_cal" model="c2p.integration"><field name="name">Email &amp; calendar (Google / Outlook 365)</field><field name="sequence">17</field></record>
+    <record id="int_api" model="c2p.integration"><field name="name">Custom REST / API to another system</field><field name="sequence">18</field></record>
+    <record id="int_bi" model="c2p.integration"><field name="name">External BI tool (Power BI / Tableau)</field><field name="sequence">19</field></record>
+</odoo>
