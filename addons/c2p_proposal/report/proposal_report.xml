@@ -118,7 +118,7 @@
                     <div class="cvgold"></div>
                     <div class="cvbody">
                         <div class="cvkick">PROPOSAL</div>
-                        <div class="cvtitle"><span t-field="doc.c2p_proposal_title"/></div>
+                        <div class="cvtitle"><span t-out="doc._c2p_title()"/></div>
                         <div class="cvsub">A unified platform for your operations, finance and growth.</div>
                         <div class="cvfor">
                             <div class="lbl">Prepared for</div>
@@ -142,14 +142,7 @@
                     <div class="sec">
                         <div class="sec-h"><span class="sec-n">01</span><span class="sec-t">Executive Summary</span></div>
                         <p t-if="doc.c2p_exec_summary" style="white-space:pre-line;"><span t-field="doc.c2p_exec_summary"/></p>
-                        <p t-else="">
-                            <span t-field="doc.company_id.name"/> is pleased to present this proposal to
-                            <b><span t-field="doc.partner_id.name"/></b> for the implementation of a fully
-                            integrated Odoo ERP. This document sets out our understanding of your requirements,
-                            the proposed solution, our delivery methodology, indicative timeline and a
-                            transparent commercial proposal. Our approach is standard-first: we configure native
-                            Odoo before any customisation, keeping cost down and future upgrades smooth.
-                        </p>
+                        <p t-else=""><span t-out="doc._c2p_exec_default()"/></p>
                     </div>
 
                     <!-- ===== 02 UNDERSTANDING ===== -->
@@ -187,7 +180,7 @@
                     <!-- ===== 04 SOLUTION & MODULES ===== -->
                     <div class="sec">
                         <div class="sec-h"><span class="sec-n">04</span><span class="sec-t">Proposed Solution &amp; In-Scope Modules</span></div>
-                        <p class="mut">We follow a standard-first approach &#8212; configuring native Odoo before any customisation.</p>
+                        <p class="mut"><span t-out="doc._c2p_solution_intro()"/></p>
                         <table class="tbl">
                             <tr><th style="width:36%;">Module / Service</th><th>Scope</th></tr>
                             <tr t-foreach="doc.order_line.filtered(lambda l: not l.display_type)" t-as="line">
@@ -270,7 +263,8 @@
                                 </tr></table></div>
                             </td>
                         </tr></table>
-                        <div t-if="doc.c2p_hosting_note" class="note"><span t-field="doc.c2p_hosting_note"/></div>
+                        <t t-set="hn" t-value="doc._c2p_hosting_note()"/>
+                        <div t-if="hn" class="note"><span t-out="hn"/></div>
                     </div>
 
                     <!-- ===== AMC (optional) ===== -->

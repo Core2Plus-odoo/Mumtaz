@@ -29,7 +29,8 @@ class C2pProposalWizard(models.TransientModel):
     partner_id = fields.Many2one(
         "res.partner", string="Customer", required=True)
     proposal_title = fields.Char(
-        string="Proposal Title", default="Odoo ERP Implementation Proposal")
+        string="Proposal Title",
+        help="Leave blank to auto-title from the selected services.")
     industry = fields.Char(string="Client Industry")
     service_ids = fields.Many2many(
         "product.product", string="Services / Modules",
@@ -162,8 +163,8 @@ class C2pProposalWizard(models.TransientModel):
         who = lead.partner_id.name or lead.partner_name or lead.contact_name or "the client"
         vals["exec_summary"] = (
             "%s is pleased to present this proposal to %s following our "
-            "discussions around \"%s\". It sets out the proposed Odoo ERP "
-            "solution, delivery approach, timeline and commercials."
+            "discussions around \"%s\". It sets out the proposed solution, "
+            "delivery approach, timeline and commercials."
         ) % (self.env.company.name, who, lead.name or "your requirements")
         return vals
 

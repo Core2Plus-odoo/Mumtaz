@@ -1,15 +1,262 @@
 from odoo import fields, models
 
+# ── Service domains ─────────────────────────────────────────────────────────
+# Each order line's product is classified into one or more domains by keyword
+# (product name + category). The proposal's methodology, deliverables, benefits,
+# solution intro and title are then composed from the domains actually selected —
+# so the document reads correctly for ERP, development, analytics, consulting,
+# finance, training or support engagements (or any mix), not just Odoo ERP.
+_DOMAIN_ORDER = ["erp", "development", "consulting", "analytics",
+                 "finance", "training", "support"]
+
+DOMAINS = {
+    "erp": {
+        "keywords": ["erp", "implementation", "brd", "professional package",
+                     "starter package", "customization", "customisation",
+                     "odoo consulting", "go-live", "migration"],
+        "scope": "a fully integrated Odoo ERP configured standard-first",
+        "title": "Odoo ERP Implementation Proposal",
+        "phases": [
+            ("Discovery & Requirement Analysis",
+             "Structured workshops to document current processes, pains, data "
+             "sources and success criteria; sign-off on a Business Requirements "
+             "Document (BRD)."),
+            ("Solution Design & Gap-Fit",
+             "Map requirements to standard Odoo, identify configuration vs. "
+             "customisation, and agree the target process design (FRS)."),
+            ("Configuration & Base Setup",
+             "Company, chart of accounts, taxes, users, security and the in-scope "
+             "apps configured on a dedicated environment."),
+            ("Customisation & Development",
+             "Any approved custom modules, reports and integrations built on top "
+             "of standard Odoo - inherited, never forked."),
+            ("Data Migration",
+             "Clean, map and load master and opening data (customers, vendors, "
+             "products, balances) with validation and reconciliation."),
+            ("Training & UAT",
+             "Role-based user training and a formal User Acceptance Testing cycle "
+             "against the agreed test scripts."),
+            ("Go-Live & Cutover",
+             "Final data load, go/no-go checklist, production cutover and "
+             "hyper-care support in the first weeks of operation."),
+            ("Post Go-Live Support & AMC",
+             "Ongoing support, issue resolution, enhancements and periodic health "
+             "checks under the Annual Maintenance Contract."),
+        ],
+        "deliverables": [
+            "Business Requirements Document (BRD) and Functional Requirements Spec (FRS).",
+            "Configured Odoo environment for every in-scope application.",
+            "Migrated and reconciled master and opening data.",
+            "UAT sign-off, go-live cutover and hyper-care support.",
+        ],
+        "benefits": [
+            {"title": "One unified platform",
+             "desc": "Every department on a single source of truth."},
+            {"title": "Automation",
+             "desc": "Manual, repetitive work eliminated across processes."},
+        ],
+        "erp": True,
+    },
+    "development": {
+        "keywords": ["development", "web", "mobile", "ecommerce", "e-commerce",
+                     "apex", "integration", "api", " ai", "agent", "automation",
+                     "application", "software", "portal"],
+        "scope": "custom software built to your requirements",
+        "title": "Software Development Proposal",
+        "phases": [
+            ("Discovery & Requirements",
+             "Workshops to capture requirements, users and success criteria; a "
+             "signed-off scope."),
+            ("Solution & UX Design",
+             "Architecture, data model and UX / wireframes agreed before build."),
+            ("Development",
+             "Built in iterative sprints with regular demos and feedback."),
+            ("QA & Testing",
+             "Functional, integration and performance testing against acceptance "
+             "criteria."),
+            ("UAT & Acceptance",
+             "Client testing against agreed scripts and formal sign-off."),
+            ("Deployment & Handover",
+             "Production release, documentation and knowledge transfer."),
+            ("Support & Enhancements",
+             "Warranty support and a managed backlog for future enhancements."),
+        ],
+        "deliverables": [
+            "Signed-off requirements and UX / wireframes.",
+            "The built and tested application or integration.",
+            "Test reports and UAT sign-off.",
+            "Deployment, source handover and documentation.",
+        ],
+        "benefits": [
+            {"title": "Purpose-built",
+             "desc": "Fits your exact workflow, not a generic template."},
+            {"title": "Automation that scales",
+             "desc": "Manual steps replaced with reliable, repeatable software."},
+        ],
+    },
+    "consulting": {
+        "keywords": ["process", "sop", "reengineering", "re-engineering", "bpr",
+                     "change management", "gap analysis", "business process", "audit"],
+        "scope": "process re-engineering with documented SOPs",
+        "title": "Business Process Consulting Proposal",
+        "phases": [
+            ("Discovery & As-Is Mapping",
+             "Map current processes with owners, inputs, outputs and pain points."),
+            ("Gap Analysis",
+             "Compare as-is against best practice and the target operating model."),
+            ("To-Be Design",
+             "Design improved processes with quantified benefits."),
+            ("SOPs & Change Plan",
+             "Author standard operating procedures and an adoption / change plan."),
+            ("Handover & Enablement",
+             "Train process owners and hand over the documented processes."),
+        ],
+        "deliverables": [
+            "As-is process maps with owners and pain points.",
+            "Gap analysis against best practice.",
+            "To-be process design with quantified improvements.",
+            "Standard Operating Procedures (SOPs) and a change plan.",
+        ],
+        "benefits": [
+            {"title": "Leaner processes",
+             "desc": "Waste and manual effort removed from day-to-day operations."},
+            {"title": "Change that sticks",
+             "desc": "Documented SOPs and enablement drive real adoption."},
+        ],
+    },
+    "analytics": {
+        "keywords": ["dashboard", "analytics", "reporting", "business intelligence",
+                     "power bi", "insight"],
+        "scope": "KPI dashboards and BI on your live data",
+        "title": "Analytics & BI Proposal",
+        "phases": [
+            ("Discovery & KPI Definition",
+             "Agree the questions, KPIs and metrics that matter."),
+            ("Data Modelling",
+             "Connect and model the source data into a reliable dataset."),
+            ("Dashboard Build",
+             "Build interactive dashboards and reports on the model."),
+            ("Validation & UAT",
+             "Validate numbers against source and get user sign-off."),
+            ("Rollout & Training",
+             "Publish, secure and train users on the dashboards."),
+        ],
+        "deliverables": [
+            "Agreed KPI and metric framework.",
+            "Connected and modelled dataset.",
+            "Interactive dashboards and reports.",
+            "User training and access setup.",
+        ],
+        "benefits": [
+            {"title": "Real-time insight",
+             "desc": "Decisions on current data, not last month's guess."},
+            {"title": "One version of the truth",
+             "desc": "Everyone works from the same trusted numbers."},
+        ],
+    },
+    "finance": {
+        "keywords": ["vat", "zatca", "tax", "finance", "advisory", "cfo", "ifrs",
+                     "bookkeeping", "compliance", "fta"],
+        "scope": "GCC tax, VAT and IFRS advisory",
+        "title": "Finance & Compliance Advisory Proposal",
+        "phases": [
+            ("Discovery & Scoping",
+             "Understand the entity, records, regime and obligations."),
+            ("Records & Data Review",
+             "Review books, transactions and supporting documents for the period."),
+            ("Analysis & Computation",
+             "Compute tax / VAT positions and analyse against the regime."),
+            ("Report & Recommendations",
+             "Document findings, exposures and recommended actions."),
+            ("Filing & Sign-off Support",
+             "Prepare returns / working papers and support submission (client-approved)."),
+        ],
+        "deliverables": [
+            "Compliance and exposure assessment.",
+            "Computations and working papers.",
+            "Advisory report with recommendations.",
+            "Return preparation and filing support.",
+        ],
+        "benefits": [
+            {"title": "Compliant & audit-ready",
+             "desc": "Positions assessed against FTA / ZATCA and IFRS."},
+            {"title": "Accurate, on-time",
+             "desc": "Returns and reports prepared right, on schedule."},
+        ],
+    },
+    "training": {
+        "keywords": ["training", "enablement", "workshop", "adoption"],
+        "scope": "role-based training and enablement",
+        "title": "Training & Enablement Proposal",
+        "phases": [
+            ("Training Needs Analysis",
+             "Identify roles, skill gaps and learning objectives."),
+            ("Material Preparation",
+             "Prepare role-based curricula, guides and exercises."),
+            ("Delivery",
+             "Run instructor-led sessions, on-site or remote."),
+            ("Assessment & Handover",
+             "Assess competency and hand over materials for reuse."),
+        ],
+        "deliverables": [
+            "Training plan and curriculum.",
+            "Role-based materials and user manuals.",
+            "Delivered training sessions.",
+            "Competency assessment and handover.",
+        ],
+        "benefits": [
+            {"title": "Confident users",
+             "desc": "Teams that actually use the system well."},
+            {"title": "Faster adoption",
+             "desc": "Less post go-live friction and support load."},
+        ],
+    },
+    "support": {
+        "keywords": ["support", "amc", "maintenance", "hypercare", "sla"],
+        "scope": "ongoing SLA-backed support and maintenance",
+        "title": "Support & AMC Proposal",
+        "phases": [
+            ("Onboarding & Baseline",
+             "Document the environment, access and support scope."),
+            ("Issue Triage & Resolution",
+             "Log, prioritise and resolve issues within SLA."),
+            ("Enhancements",
+             "Deliver small changes and improvements from a managed backlog."),
+            ("Health Checks & Reporting",
+             "Periodic system health checks and a support report."),
+        ],
+        "deliverables": [
+            "SLA-backed support desk.",
+            "Resolved issues and change log.",
+            "Periodic health checks.",
+            "Support and usage reporting.",
+        ],
+        "benefits": [
+            {"title": "System kept healthy",
+             "desc": "Proactive checks catch issues before they bite."},
+            {"title": "Predictable cost",
+             "desc": "A fixed monthly envelope for peace of mind."},
+        ],
+    },
+}
+
+_BASE_BENEFITS = [
+    {"title": "GCC-native",
+     "desc": "AED / PKR, IFRS, 5% VAT and ZATCA-aware from day one."},
+    {"title": "One accountable partner",
+     "desc": "Business and technical expertise under one roof."},
+    {"title": "Documented & governed",
+     "desc": "Clear scope, sign-off gates and knowledge transfer."},
+]
+
 
 class SaleOrder(models.Model):
     """Proposal-specific narrative fields layered on top of a quotation.
 
     The Proposal Maker wizard creates a normal ``sale.order`` (so pricing,
     taxes, templates and the CRM pipeline all keep working) and stores the
-    narrative context here.  The branded ``c2p_proposal`` QWeb report then
-    renders a full document — executive summary, solution architecture,
-    methodology, commercial table, AMC and next steps — instead of a bare
-    quotation PDF.
+    narrative context here. The branded ``c2p_proposal`` QWeb report then
+    renders a full document whose sections adapt to the services selected.
     """
 
     _inherit = "sale.order"
@@ -19,7 +266,8 @@ class SaleOrder(models.Model):
         help="Marks orders created through the Proposal Maker so the branded "
              "proposal report is offered.")
     c2p_proposal_title = fields.Char(
-        string="Proposal Title", default="Odoo ERP Implementation Proposal")
+        string="Proposal Title",
+        help="Leave blank to auto-title from the selected services.")
     c2p_exec_summary = fields.Text(string="Executive Summary")
     c2p_pain_points = fields.Text(
         string="Pain Points / Requirements",
@@ -33,13 +281,33 @@ class SaleOrder(models.Model):
         help="Optional post go-live annual maintenance contract, billed monthly.")
     c2p_hosting_note = fields.Text(
         string="Licensing & Hosting Note",
-        default="Odoo Enterprise licences and Odoo.sh / cloud hosting are billed "
-                "separately by Odoo S.A. at published rates and are not included "
-                "in the implementation fees above.")
+        help="Leave blank to auto-add the Odoo licence note when an ERP is in scope.")
 
-    # ── Structured content the report iterates over ─────────────────────────
+    # ── Service-domain classification ───────────────────────────────────────
+    def _c2p_domain_keys(self):
+        """Ordered list of service domains present in the order lines."""
+        self.ensure_one()
+        texts = []
+        for line in self.order_line:
+            if line.display_type or not line.product_id:
+                continue
+            cat = line.product_id.categ_id.name if line.product_id.categ_id else ""
+            texts.append(((line.product_id.name or "") + " " + (cat or "")).lower())
+        found = []
+        for key in _DOMAIN_ORDER:
+            kws = DOMAINS[key]["keywords"]
+            if any(any(k in t for k in kws) for t in texts):
+                found.append(key)
+        return found or ["erp"]
+
+    def _c2p_anchor(self):
+        return self._c2p_domain_keys()[0]
+
+    def _c2p_has_erp(self):
+        return "erp" in self._c2p_domain_keys()
+
+    # ── Composed narrative (adapts to the selected services) ────────────────
     def _c2p_lines_to_bullets(self, text):
-        """Split a textarea into clean non-empty lines."""
         return [ln.strip() for ln in (text or "").splitlines() if ln.strip()]
 
     def _c2p_pain_list(self):
@@ -50,7 +318,7 @@ class SaleOrder(models.Model):
         return [
             "Disconnected spreadsheets and standalone apps with no single source of truth.",
             "Manual, error-prone data entry duplicated across departments.",
-            "Limited real-time visibility into sales, inventory and finance.",
+            "Limited real-time visibility into operations and finance.",
             "Compliance and reporting handled outside the system, late and by hand.",
             "No scalable platform to support growth into new markets or entities.",
         ]
@@ -61,16 +329,15 @@ class SaleOrder(models.Model):
         if objs:
             return objs
         return [
-            "Unify core operations on a single, integrated Odoo platform.",
+            "Unify and streamline core operations.",
             "Automate cross-department workflows to cut manual effort and errors.",
             "Give management real-time dashboards and reliable reporting.",
-            "Ensure statutory and tax compliance is handled inside the system.",
+            "Ensure statutory and tax compliance is handled reliably.",
             "Build a scalable foundation that grows with the business.",
         ]
 
     @staticmethod
     def _c2p_pairs(items):
-        """Chunk a flat list into rows of two for a clean 2-column table."""
         return [items[i:i + 2] for i in range(0, len(items), 2)]
 
     def _c2p_benefit_rows(self):
@@ -80,108 +347,115 @@ class SaleOrder(models.Model):
         return self._c2p_pairs(self._c2p_why_choose())
 
     def _c2p_benefits(self):
-        """Key business benefits, rendered as a two-column grid."""
-        return [
-            {"title": "One unified platform",
-             "desc": "Every department on a single source of truth."},
-            {"title": "Automation",
-             "desc": "Manual, repetitive work eliminated across processes."},
-            {"title": "Real-time insight",
-             "desc": "Live dashboards for sales, inventory and finance."},
-            {"title": "Built-in compliance",
-             "desc": "VAT / tax and statutory reporting inside the system."},
-            {"title": "Scalable foundation",
-             "desc": "Grows with new users, branches and entities."},
-            {"title": "Anywhere access",
-             "desc": "Secure web and mobile access for teams on the go."},
-        ]
+        """Benefits composed from the selected domains, padded with base ones."""
+        out = []
+        for dom in self._c2p_domain_keys():
+            for b in DOMAINS[dom]["benefits"]:
+                if b not in out:
+                    out.append(b)
+        for b in _BASE_BENEFITS:
+            if len(out) >= 6:
+                break
+            if b not in out:
+                out.append(b)
+        return out[:6]
 
     def _c2p_methodology(self):
-        """The C2P eight-phase delivery methodology."""
-        return [
-            {"n": 1, "name": "Discovery & Requirement Analysis",
-             "desc": "Structured workshops to document current processes, pains, "
-                     "data sources and success criteria; sign-off on a Business "
-                     "Requirements Document (BRD)."},
-            {"n": 2, "name": "Solution Design & Gap-Fit",
-             "desc": "Map requirements to standard Odoo, identify configuration vs. "
-                     "customisation, and agree the target process design (FRS)."},
-            {"n": 3, "name": "Configuration & Base Setup",
-             "desc": "Company, chart of accounts, taxes, users, security and the "
-                     "in-scope apps configured on a dedicated environment."},
-            {"n": 4, "name": "Customisation & Development",
-             "desc": "Any approved custom modules, reports and integrations built "
-                     "on top of standard Odoo - inherited, never forked."},
-            {"n": 5, "name": "Data Migration",
-             "desc": "Clean, map and load master and opening data (customers, "
-                     "vendors, products, balances) with validation and reconciliation."},
-            {"n": 6, "name": "Training & UAT",
-             "desc": "Role-based user training and a formal User Acceptance Testing "
-                     "cycle against the agreed test scripts."},
-            {"n": 7, "name": "Go-Live & Cutover",
-             "desc": "Final data load, go/no-go checklist, production cutover and "
-                     "hyper-care support in the first weeks of operation."},
-            {"n": 8, "name": "Post Go-Live Support & AMC",
-             "desc": "Ongoing support, issue resolution, enhancements and periodic "
-                     "health checks under the Annual Maintenance Contract."},
-        ]
+        """Delivery methodology of the anchor (primary) domain."""
+        phases = DOMAINS[self._c2p_anchor()]["phases"]
+        return [{"n": i + 1, "name": name, "desc": desc}
+                for i, (name, desc) in enumerate(phases)]
 
     def _c2p_deliverables(self):
-        return [
-            "Business Requirements Document (BRD) and Functional Requirements Spec (FRS).",
-            "Configured Odoo environment for every in-scope application.",
-            "Approved custom modules, reports and integrations (where in scope).",
-            "Migrated and reconciled master and opening data.",
-            "Role-based training sessions and user manuals.",
-            "UAT sign-off, go-live cutover and hyper-care support.",
-        ]
+        out = []
+        for dom in self._c2p_domain_keys():
+            for d in DOMAINS[dom]["deliverables"]:
+                if d not in out:
+                    out.append(d)
+        return out[:8]
+
+    def _c2p_solution_intro(self):
+        scopes = [DOMAINS[d]["scope"] for d in self._c2p_domain_keys()]
+        if len(scopes) == 1:
+            body = scopes[0]
+        else:
+            body = ", ".join(scopes[:-1]) + " and " + scopes[-1]
+        return "This engagement delivers %s." % body
+
+    def _c2p_default_title(self):
+        doms = self._c2p_domain_keys()
+        if len(doms) >= 3:
+            return "Digital Transformation Proposal"
+        return DOMAINS[self._c2p_anchor()]["title"]
+
+    def _c2p_title(self):
+        return self.c2p_proposal_title or self._c2p_default_title()
+
+    def _c2p_exec_default(self):
+        company = self.company_id.name or "We"
+        partner = self.partner_id.name or "your organisation"
+        return ("%s is pleased to present this proposal to %s. It sets out our "
+                "understanding of your requirements, the proposed solution, our "
+                "delivery approach, indicative timeline and a transparent "
+                "commercial proposal." % (company, partner))
+
+    def _c2p_hosting_note(self):
+        if self.c2p_hosting_note:
+            return self.c2p_hosting_note
+        if self._c2p_has_erp():
+            return ("Odoo Enterprise licences and Odoo.sh / cloud hosting are "
+                    "billed separately by Odoo S.A. at published rates and are "
+                    "not included in the fees above.")
+        return ""
 
     def _c2p_roles(self):
-        return [
-            {"party": "C2P Consultants", "resp":
-                "Project management, solution design, configuration, custom "
-                "development, data migration support, training and go-live."},
+        roles = [
+            {"party": self.company_id.name or "C2P Consultants", "resp":
+                "Project management, solution design, delivery, testing, training "
+                "and go-live / handover."},
             {"party": "Client", "resp":
-                "Nominate a project sponsor and key users, provide timely access "
-                "to data and SMEs, validate designs, and complete UAT sign-off."},
-            {"party": "Odoo S.A.", "resp":
-                "Enterprise licensing, the Odoo.sh / cloud hosting platform and "
-                "underlying product maintenance."},
+                "Nominate a sponsor and key users, provide timely access to data "
+                "and SMEs, validate designs and complete UAT sign-off."},
         ]
+        if self._c2p_has_erp():
+            roles.append({"party": "Odoo S.A.", "resp":
+                "Enterprise licensing, the Odoo.sh / cloud hosting platform and "
+                "underlying product maintenance."})
+        return roles
 
     def _c2p_assumptions(self):
         return [
-            "Pricing is based on the scope and modules listed in this proposal; "
+            "Pricing is based on the scope and services listed in this proposal; "
             "material changes will be handled through a change request.",
-            "The client provides clean master data in the agreed template and "
-            "timely feedback at each sign-off gate.",
-            "One production and one staging environment are assumed unless stated.",
-            "Odoo Enterprise licences and hosting are contracted separately with Odoo S.A.",
+            "The client provides timely inputs, data and feedback at each "
+            "sign-off gate.",
+            "Environments and access required for delivery are made available.",
+            "Third-party licences and hosting are contracted separately unless stated.",
             "Work is delivered remotely with on-site visits as mutually agreed.",
         ]
 
     def _c2p_why_choose(self):
         return [
-            {"title": "Certified Odoo expertise",
-             "desc": "A dedicated Odoo practice delivering end-to-end ERP across "
-                     "the GCC and Pakistan."},
-            {"title": "Standard-first discipline",
-             "desc": "We configure standard Odoo first and customise only where it "
-                     "adds real value - lower cost, easier upgrades."},
             {"title": "Business + technical depth",
              "desc": "Finance, tax and process consultants working alongside "
                      "developers, not just coders."},
-            {"title": "Compliance built in",
-             "desc": "VAT / tax and statutory reporting configured inside the "
-                     "system, not bolted on afterwards."},
+            {"title": "Standard-first discipline",
+             "desc": "We use proven best practice first and build custom only "
+                     "where it adds real value - lower cost, easier upgrades."},
+            {"title": "GCC & Pakistan expertise",
+             "desc": "AED / PKR, IFRS, VAT / ZATCA and multi-company handled "
+                     "natively."},
+            {"title": "Method, not heroics",
+             "desc": "Documented scope, sign-off gates and knowledge transfer on "
+                     "every engagement."},
             {"title": "Long-term partnership",
-             "desc": "Structured AMC and advisory retainers keep the platform "
-                     "healthy and evolving after go-live."},
+             "desc": "Support, AMC and advisory retainers keep things healthy "
+                     "after go-live."},
         ]
 
     def _c2p_next_steps(self):
         return [
             "Confirm acceptance of this proposal and commercial terms.",
             "Sign the engagement and raise the mobilisation invoice.",
-            "Schedule the Discovery workshops and kick off the project.",
+            "Schedule the kick-off and discovery.",
         ]
