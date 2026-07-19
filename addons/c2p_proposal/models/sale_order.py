@@ -1,4 +1,120 @@
+from markupsafe import Markup
+
 from odoo import fields, models
+
+
+def _win(title, body):
+    """Wrap SVG body in a consistent charcoal 'application window' frame."""
+    return Markup(
+        '<svg viewBox="0 0 340 150" width="100%%" height="150" '
+        'preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" '
+        'style="display:block;background:#fff;border:1px solid #e2e6ea;border-radius:6px;">'
+        '<rect x="0" y="0" width="340" height="24" fill="#1e2a33"/>'
+        '<circle cx="14" cy="12" r="3" fill="#e0575b"/>'
+        '<circle cx="25" cy="12" r="3" fill="#e6b34d"/>'
+        '<circle cx="36" cy="12" r="3" fill="#14b3a8"/>'
+        '<text x="170" y="16" fill="#c3cad6" font-family="Segoe UI,Arial" '
+        'font-size="9" text-anchor="middle">%s</text>%s</svg>' % (title, body))
+
+
+# On-brand "system preview" illustrations per service domain (inline SVG, no
+# external assets — print-safe). Swap the body of any entry for a real product
+# screenshot later without touching the report.
+def _kpi(x, val, lbl):
+    return ('<rect x="%d" y="34" width="98" height="34" rx="4" fill="#f4f7f8" stroke="#e8ecef"/>'
+            '<text x="%d" y="51" fill="#1e2a33" font-family="Segoe UI,Arial" font-size="12" '
+            'font-weight="bold">%s</text><text x="%d" y="62" fill="#9aa1ac" '
+            'font-family="Segoe UI,Arial" font-size="7">%s</text>' % (x, x + 8, val, x + 8, lbl))
+
+
+def _bars(x0, y0, heights, col="#14b3a8"):
+    out = ""
+    for i, h in enumerate(heights):
+        out += '<rect x="%d" y="%d" width="12" height="%d" rx="1" fill="%s"/>' % (
+            x0 + i * 18, y0 - h, h, col)
+    return out
+
+
+_ERP = _kpi(12, "1.2M", "Revenue") + _kpi(121, "3 d", "Close") + _kpi(230, "98%", "On-time") \
+    + _bars(20, 138, [18, 30, 24, 40, 34, 46], "#14b3a8") \
+    + '<circle cx="270" cy="112" r="24" fill="none" stroke="#e8ecef" stroke-width="8"/>' \
+      '<path d="M270 88 A24 24 0 0 1 291 124" fill="none" stroke="#14b3a8" stroke-width="8"/>' \
+    + '<text x="150" y="90" fill="#9aa1ac" font-family="Segoe UI,Arial" font-size="8">Sales &#183; Stock &#183; Finance</text>'
+
+_DEV = '<rect x="12" y="34" width="150" height="104" rx="4" fill="#1e2a33"/>' \
+    + "".join('<rect x="24" y="%d" width="%d" height="5" rx="2" fill="%s"/>' % (
+        46 + i * 14, w, c) for i, (w, c) in enumerate(
+        [(70, "#14b3a8"), (110, "#5b6b78"), (90, "#5b6b78"), (120, "#14b3a8"),
+         (80, "#5b6b78"), (100, "#5b6b78")])) \
+    + '<rect x="188" y="34" width="70" height="104" rx="8" fill="#f4f7f8" stroke="#cfd6db"/>' \
+      '<rect x="196" y="44" width="54" height="7" rx="3" fill="#1e2a33"/>' \
+      '<rect x="196" y="58" width="54" height="20" rx="3" fill="#bfe6e2"/>' \
+      '<rect x="196" y="84" width="54" height="7" rx="3" fill="#cfd6db"/>' \
+      '<rect x="196" y="96" width="54" height="7" rx="3" fill="#cfd6db"/>' \
+      '<circle cx="223" cy="126" r="9" fill="#14b3a8"/>' \
+    + '<text x="300" y="90" fill="#9aa1ac" font-family="Segoe UI,Arial" font-size="8" text-anchor="middle">App</text>'
+
+_BI = '<polyline points="14,120 60,96 106,104 152,72 198,84 244,50 300,40" fill="none" ' \
+      'stroke="#14b3a8" stroke-width="3"/>' \
+    + "".join('<circle cx="%d" cy="%d" r="3" fill="#1e2a33"/>' % p for p in
+              [(60, 96), (152, 72), (244, 50), (300, 40)]) \
+    + _bars(20, 138, [10, 16, 12, 20, 15, 22, 18], "#bfe6e2") \
+    + '<circle cx="290" cy="112" r="22" fill="none" stroke="#e8ecef" stroke-width="7"/>' \
+      '<path d="M290 90 A22 22 0 1 1 271 123" fill="none" stroke="#14b3a8" stroke-width="7"/>' \
+    + '<text x="20" y="46" fill="#9aa1ac" font-family="Segoe UI,Arial" font-size="8">KPI Dashboard</text>'
+
+_FIN = '<rect x="60" y="34" width="220" height="104" rx="4" fill="#fff" stroke="#e8ecef"/>' \
+      '<rect x="60" y="34" width="220" height="18" fill="#f4f7f8"/>' \
+      '<text x="70" y="46" fill="#1e2a33" font-family="Segoe UI,Arial" font-size="8" font-weight="bold">TAX INVOICE</text>' \
+    + "".join('<rect x="70" y="%d" width="130" height="5" rx="2" fill="#dfe4e8"/>'
+              '<rect x="230" y="%d" width="40" height="5" rx="2" fill="#cfd6db"/>' % (y, y)
+              for y in [64, 78, 92]) \
+    + '<line x1="70" y1="108" x2="270" y2="108" stroke="#e8ecef"/>' \
+      '<rect x="170" y="116" width="100" height="16" rx="3" fill="#1e2a33"/>' \
+      '<text x="220" y="127" fill="#fff" font-family="Segoe UI,Arial" font-size="8" text-anchor="middle">Total  VAT 5%</text>'
+
+_CON = "".join(
+    '<rect x="%d" y="60" width="60" height="30" rx="4" fill="#f4f7f8" stroke="#cfd6db"/>' % x
+    for x in [16, 96, 176, 256]) \
+    + "".join('<line x1="%d" y1="75" x2="%d" y2="75" stroke="#14b3a8" stroke-width="2"/>'
+              '<polygon points="%d,71 %d,75 %d,79" fill="#14b3a8"/>' % (x + 60, x + 96, x + 92, x + 96, x + 92)
+              for x in [16, 96, 176]) \
+    + "".join('<text x="%d" y="78" fill="#6b7280" font-family="Segoe UI,Arial" font-size="7" '
+              'text-anchor="middle">%s</text>' % (x + 30, t)
+              for x, t in [(16, "As-Is"), (96, "Gap"), (176, "To-Be"), (256, "SOP")]) \
+    + "".join('<rect x="16" y="%d" width="10" height="10" rx="2" fill="#14b3a8"/>'
+              '<rect x="32" y="%d" width="%d" height="4" rx="2" fill="#dfe4e8"/>' % (y, y + 3, w)
+              for y, w in [(104, 150), (120, 120)])
+
+_TRN = '<rect x="12" y="34" width="150" height="90" rx="4" fill="#1e2a33"/>' \
+      '<polygon points="78,68 78,90 98,79" fill="#14b3a8"/>' \
+      '<rect x="24" y="104" width="126" height="5" rx="2" fill="#5b6b78"/>' \
+      '<rect x="24" y="104" width="80" height="5" rx="2" fill="#14b3a8"/>' \
+    + "".join('<circle cx="188" cy="%d" r="6" fill="none" stroke="#14b3a8" stroke-width="2"/>'
+              '<path d="M185 %d l2 2 4 -4" stroke="#14b3a8" stroke-width="2" fill="none"/>'
+              '<rect x="202" y="%d" width="%d" height="5" rx="2" fill="#dfe4e8"/>' % (y, y, y - 3, w)
+              for y, w in [(46, 120), (66, 100), (86, 130), (106, 90)])
+
+_SUP = "".join(
+    '<rect x="14" y="%d" width="312" height="22" rx="4" fill="#f4f7f8" stroke="#e8ecef"/>'
+    '<circle cx="28" cy="%d" r="4" fill="%s"/>'
+    '<rect x="42" y="%d" width="150" height="5" rx="2" fill="#cfd6db"/>'
+    '<rect x="250" y="%d" width="62" height="12" rx="6" fill="%s"/>'
+    '<text x="281" y="%d" fill="#fff" font-family="Segoe UI,Arial" font-size="7" text-anchor="middle">%s</text>'
+    % (y, y + 11, col, y + 9, y + 5, pill, y + 14, lbl)
+    for y, col, pill, lbl in [
+        (34, "#e0575b", "#14b3a8", "Resolved"), (60, "#e6b34d", "#e6b34d", "In SLA"),
+        (86, "#14b3a8", "#14b3a8", "Resolved"), (112, "#e6b34d", "#6b7280", "Open")])
+
+VISUALS = {
+    "erp": ("Unified ERP Dashboard", _win("Dashboard", _ERP)),
+    "development": ("Custom Application", _win("Application", _DEV)),
+    "analytics": ("Live BI Dashboard", _win("Analytics", _BI)),
+    "finance": ("Compliant Invoicing", _win("Accounting", _FIN)),
+    "consulting": ("Process & SOPs", _win("Process Design", _CON)),
+    "training": ("Training & Enablement", _win("Learning", _TRN)),
+    "support": ("Support &amp; SLA Desk", _win("Helpdesk", _SUP)),
+}
 
 # ── Service domains ─────────────────────────────────────────────────────────
 # Each order line's product is classified into one or more domains by keyword
@@ -430,6 +546,17 @@ class SaleOrder(models.Model):
                 if d not in out:
                     out.append(d)
         return out[:8]
+
+    def _c2p_visuals(self):
+        """On-brand system-preview panels for the selected service domains."""
+        out = []
+        for d in self._c2p_domain_keys():
+            if d in VISUALS:
+                out.append({"title": VISUALS[d][0], "svg": VISUALS[d][1]})
+        return out[:4]
+
+    def _c2p_visual_rows(self):
+        return self._c2p_pairs(self._c2p_visuals())
 
     def _c2p_solution_intro(self):
         scopes = [DOMAINS[d]["scope"] for d in self._c2p_domain_keys()]

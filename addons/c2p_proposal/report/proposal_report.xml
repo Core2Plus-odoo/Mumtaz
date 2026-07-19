@@ -49,11 +49,21 @@
                 <div class="article" t-att-data-oe-model="'sale.order'" t-att-data-oe-id="doc.id">
                     <div class="o_c2p">
                         <style>
-                            .o_c2p { color:#3a4150; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-                                font-size:13.5px; line-height:1.7; }
-                            .o_c2p .serif { font-family:Georgia,'Times New Roman',serif; }
+                            @font-face { font-family:'C2P Sans'; font-weight:400; font-style:normal;
+                                src:url('/c2p_proposal/static/fonts/WorkSans-Regular.ttf') format('truetype'); }
+                            @font-face { font-family:'C2P Sans'; font-weight:700; font-style:normal;
+                                src:url('/c2p_proposal/static/fonts/WorkSans-Bold.ttf') format('truetype'); }
+                            @font-face { font-family:'C2P Serif'; font-weight:400; font-style:normal;
+                                src:url('/c2p_proposal/static/fonts/IBMPlexSerif-Regular.ttf') format('truetype'); }
+                            @font-face { font-family:'C2P Serif'; font-weight:700; font-style:normal;
+                                src:url('/c2p_proposal/static/fonts/IBMPlexSerif-Bold.ttf') format('truetype'); }
+                            .o_c2p { color:#3a4150; font-family:'C2P Sans','Helvetica Neue',Arial,sans-serif;
+                                font-size:13px; line-height:1.7; }
+                            .o_c2p .serif { font-family:'C2P Serif',Georgia,'Times New Roman',serif; }
                             .o_c2p .ink { color:#1e2a33; } .o_c2p .teal { color:#0e8378; }
                             .o_c2p .mut { color:#6b7280; }
+                            /* Kill Odoo's default table borders; re-add only intended ones below. */
+                            .o_c2p table td, .o_c2p table th { border:0 !important; }
                             /* Cover */
                             .o_c2p .cover { background:#1e2a33; color:#fff; min-height:1015px;
                                 position:relative; padding:64px 60px; }
@@ -71,25 +81,26 @@
                             .o_c2p .cover .csub { position:relative; margin-top:18px; font-size:15px;
                                 color:#c3cad6; width:80%; }
                             .o_c2p .cover .cfoot { position:absolute; left:60px; right:60px; bottom:96px; }
-                            .o_c2p .cover .cfoot td { vertical-align:top; padding-right:26px; }
+                            .o_c2p .cover .cfoot td { vertical-align:top; padding-right:22px; }
                             .o_c2p .cover .cfoot .l { font-size:9px; letter-spacing:2px; text-transform:uppercase;
-                                color:#8a94a6; }
-                            .o_c2p .cover .cfoot .v { font-size:13px; color:#fff; font-weight:600; margin-top:4px; }
+                                color:#8a94a6; white-space:nowrap; }
+                            .o_c2p .cover .cfoot .v { font-size:12.5px; color:#fff; font-weight:600;
+                                margin-top:5px; line-height:1.35; }
                             /* Contents */
                             .o_c2p .toc-eyebrow { font-size:12px; letter-spacing:4px; color:#0e8378;
                                 font-weight:700; text-transform:uppercase; }
                             .o_c2p .toc-t { font-size:30px; font-weight:600; color:#1e2a33; margin:6px 0 26px; }
-                            .o_c2p .toc td { padding:13px 0; border-bottom:1px solid #ececee; }
+                            .o_c2p .toc td { padding:14px 0; border-bottom:1px solid #ececee !important; }
                             .o_c2p .toc .n { width:52px; font-size:17px; color:#0e8378; }
                             .o_c2p .toc .nm { font-size:15px; color:#1f2733; font-weight:600; }
                             .o_c2p .quote { border-left:3px solid #14b3a8; background:#eef8f7;
                                 padding:15px 20px; margin:14px 0; font-size:13px; color:#4a4f5a;
                                 font-style:italic; }
                             /* Section header */
-                            .o_c2p .sec { page-break-inside:avoid; margin-bottom:28px; }
+                            .o_c2p .sec { page-break-inside:avoid; margin-bottom:38px; }
                             .o_c2p .sec-head td { vertical-align:top; }
                             .o_c2p .secnum { font-size:40px; font-weight:700; color:#bfe6e2; line-height:.9; }
-                            .o_c2p .sect { font-size:22px; font-weight:600; color:#1e2a33; padding-top:6px; }
+                            .o_c2p .sect { font-size:21px; font-weight:600; color:#1e2a33; padding-top:6px; }
                             .o_c2p .u { width:52px; height:3px; background:#14b3a8; margin-top:10px; }
                             .o_c2p p { font-size:13.5px; line-height:1.75; margin:0 0 11px; }
                             .o_c2p .lead { font-size:14px; color:#2a2f3a; }
@@ -106,12 +117,12 @@
                             /* cards */
                             .o_c2p .cards { width:100%; border-collapse:separate; border-spacing:16px 16px;
                                 margin:-4px -16px; }
-                            .o_c2p .cards td { width:50%; vertical-align:top; border:1px solid #ececee;
-                                border-top:3px solid #1e2a33; padding:14px 16px; }
+                            .o_c2p .cards td { width:50%; vertical-align:top; border:1px solid #ececee !important;
+                                border-top:3px solid #1e2a33 !important; padding:14px 16px; }
                             .o_c2p .ct { font-weight:700; color:#1e2a33; font-size:13.5px; margin-bottom:3px; }
                             .o_c2p .cd { font-size:12px; color:#6b7280; line-height:1.5; }
                             /* phases */
-                            .o_c2p .phase td { padding:13px 0; border-bottom:1px solid #f0f0f2;
+                            .o_c2p .phase td { padding:14px 0; border-bottom:1px solid #f0f0f2 !important;
                                 vertical-align:top; }
                             .o_c2p .pnum { width:44px; font-size:20px; color:#0e8378; }
                             .o_c2p .pt { font-weight:700; color:#1e2a33; font-size:13.5px; }
@@ -120,7 +131,7 @@
                             .o_c2p table.tbl { width:100%; border-collapse:collapse; font-size:13px; }
                             .o_c2p table.tbl thead th { background:#1e2a33; color:#fff; text-align:left;
                                 padding:11px 13px; font-weight:600; font-size:12px; }
-                            .o_c2p table.tbl td { padding:11px 13px; border-bottom:1px solid #ededf0;
+                            .o_c2p table.tbl td { padding:11px 13px; border-bottom:1px solid #ededf0 !important;
                                 color:#3a4150; vertical-align:top; }
                             .o_c2p .r { text-align:right; }
                             .o_c2p .invest { width:100%; background:#1e2a33; color:#fff; margin-top:16px; }
@@ -130,7 +141,7 @@
                             .o_c2p .note { font-size:10.5px; color:#9aa1ac; font-style:italic; margin-top:9px; }
                             .o_c2p .sign { width:100%; border-collapse:separate; border-spacing:48px 0;
                                 margin-top:38px; }
-                            .o_c2p .sign td { border-top:1px solid #b9bdc6; padding-top:8px; font-size:12px;
+                            .o_c2p .sign td { border-top:1px solid #b9bdc6 !important; padding-top:8px; font-size:12px;
                                 color:#6b7280; width:50%; }
                         </style>
 
@@ -143,15 +154,18 @@
                             <div class="ctitle serif"><span t-out="doc._c2p_title()"/></div>
                             <div class="csub">A unified platform for operations, finance and growth &#8212; delivered
                                 standard-first, phased and fully documented.</div>
-                            <table class="cfoot" style="width:88%;">
+                            <table class="cfoot" style="width:94%;">
                                 <tr>
-                                    <td><div class="l">Prepared for</div>
-                                        <div class="v"><span t-field="doc.partner_id.name"/></div></td>
-                                    <td><div class="l">Prepared by</div>
+                                    <td colspan="3" style="padding-bottom:18px;">
+                                        <div class="l">Prepared for</div>
+                                        <div class="v" style="font-size:14px;"><span t-field="doc.partner_id.name"/></div></td>
+                                </tr>
+                                <tr>
+                                    <td style="width:46%;"><div class="l">Prepared by</div>
                                         <div class="v"><span t-field="doc.company_id.name"/></div></td>
-                                    <td><div class="l">Date</div>
+                                    <td style="width:30%;"><div class="l">Date</div>
                                         <div class="v"><span t-field="doc.date_order" t-options='{"widget": "date"}'/></div></td>
-                                    <td><div class="l">Reference</div>
+                                    <td style="width:24%;"><div class="l">Reference</div>
                                         <div class="v"><span t-field="doc.name"/></div></td>
                                 </tr>
                             </table>
@@ -223,6 +237,20 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <t t-set="vis" t-value="doc._c2p_visuals()"/>
+                            <div t-if="vis">
+                                <div class="eyebrow2" style="margin-top:20px;">Solution Preview</div>
+                                <table style="width:100%; border-collapse:separate;
+                                              border-spacing:16px 14px; margin:0 -16px;">
+                                    <tr t-foreach="doc._c2p_visual_rows()" t-as="vr">
+                                        <td t-foreach="vr" t-as="v" style="width:50%; vertical-align:top;">
+                                            <t t-out="v['svg']"/>
+                                            <div style="font-size:11px; color:#6b7280; margin-top:6px;
+                                                        text-align:center;"><span t-out="v['title']"/></div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
                             <div class="eyebrow2" style="margin-top:20px;">Key Business Benefits</div>
                             <table class="two"><tr>
                                 <td><ul class="dash">
