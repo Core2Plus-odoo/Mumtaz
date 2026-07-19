@@ -1,62 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ================= C2P service categories =================
+         Proper product categories so the Proposal Maker's "Filter by category"
+         segments the curated service list. -->
+    <record id="categ_c2p_services" model="product.category">
+        <field name="name">C2P Services</field>
+    </record>
+    <record id="categ_c2p_erp" model="product.category">
+        <field name="name">ERP Implementation</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_advisory" model="product.category">
+        <field name="name">Advisory &amp; Discovery</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_finance" model="product.category">
+        <field name="name">Finance &amp; Tax</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_bi" model="product.category">
+        <field name="name">BI &amp; Analytics</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_data" model="product.category">
+        <field name="name">Data &amp; Integration</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_dev" model="product.category">
+        <field name="name">Development</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+    <record id="categ_c2p_support" model="product.category">
+        <field name="name">Training &amp; Support</field>
+        <field name="parent_id" ref="categ_c2p_services"/>
+    </record>
+
     <!-- ================= Curated C2P proposal services =================
          A short, editable catalog. list_price is an INDICATIVE default in the
          company currency; the salesperson can edit the price on the generated
-         quotation. noupdate=1 so edited prices are never overwritten on upgrade. -->
+         quotation. noupdate=1 so edited prices are never overwritten on upgrade.
+         (Existing installs are re-categorised by the 19.0.17.0.0 migration.) -->
     <data noupdate="1">
         <record id="svc_erp_impl" model="product.template">
             <field name="name">Odoo ERP Implementation (per module)</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_erp"/>
             <field name="c2p_is_service">True</field><field name="list_price">4000</field>
         </record>
         <record id="svc_discovery" model="product.template">
             <field name="name">Discovery &amp; Requirements Study</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_advisory"/>
             <field name="c2p_is_service">True</field><field name="list_price">3500</field>
         </record>
         <record id="svc_finance" model="product.template">
             <field name="name">Finance &amp; Tax (VAT / Corporate Tax) Setup</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_finance"/>
             <field name="c2p_is_service">True</field><field name="list_price">5000</field>
         </record>
         <record id="svc_bi" model="product.template">
             <field name="name">Business Intelligence &amp; Dashboards</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_bi"/>
             <field name="c2p_is_service">True</field><field name="list_price">6000</field>
         </record>
         <record id="svc_migration" model="product.template">
             <field name="name">Data Migration</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_data"/>
             <field name="c2p_is_service">True</field><field name="list_price">3000</field>
         </record>
         <record id="svc_integration" model="product.template">
             <field name="name">System Integration</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_data"/>
             <field name="c2p_is_service">True</field><field name="list_price">4500</field>
         </record>
         <record id="svc_custom" model="product.template">
             <field name="name">Custom Development (per module)</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_dev"/>
             <field name="c2p_is_service">True</field><field name="list_price">5000</field>
         </record>
         <record id="svc_training" model="product.template">
             <field name="name">Training (per session)</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_support"/>
             <field name="c2p_is_service">True</field><field name="list_price">1500</field>
         </record>
         <record id="svc_support" model="product.template">
             <field name="name">Annual Support &amp; AMC</field>
             <field name="type">service</field><field name="sale_ok">True</field>
-            <field name="purchase_ok" eval="False"/>
+            <field name="purchase_ok" eval="False"/><field name="categ_id" ref="categ_c2p_support"/>
             <field name="c2p_is_service">True</field><field name="list_price">6000</field>
         </record>
     </data>
