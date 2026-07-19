@@ -29,6 +29,9 @@
                         </group>
                     </group>
                     <separator string="Services / modules to include"/>
+                    <group>
+                        <field name="service_category_id" options="{'no_create': True}"/>
+                    </group>
                     <field name="service_ids" widget="many2many_checkboxes"/>
                     <notebook>
                         <page string="Executive summary">

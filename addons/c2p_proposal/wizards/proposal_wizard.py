@@ -32,6 +32,10 @@ class C2pProposalWizard(models.TransientModel):
         string="Proposal Title",
         help="Leave blank to auto-title from the selected services.")
     industry = fields.Char(string="Client Industry")
+    service_category_id = fields.Many2one(
+        "product.category", string="Filter by category",
+        help="Narrow the list below to one service category so it is easy to "
+             "find and tick the relevant services. Leave empty to see all.")
     service_ids = fields.Many2many(
         "product.product", string="Services / Modules",
         domain=[("sale_ok", "=", True)],
@@ -95,6 +99,15 @@ class C2pProposalWizard(models.TransientModel):
         pl = self.pricelist_id
         if not pl or (pl.company_id and pl.company_id != self.company_id):
             self.pricelist_id = self._default_pricelist()
+
+    @api.onchange("service_category_id")
+    def _onchange_service_category(self):
+        """Narrow the service checklist to the chosen category (ticked services
+        in other categories stay selected)."""
+        dom = [("sale_ok", "=", True)]
+        if self.service_category_id:
+            dom.append(("categ_id", "child_of", self.service_category_id.id))
+        return {"domain": {"service_ids": dom}}
 
     # ── Pull context from a source record (order / opportunity) ─────────────
     @api.model
