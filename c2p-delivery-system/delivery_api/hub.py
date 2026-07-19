@@ -112,6 +112,21 @@ def _tech() -> dict:
     return {"digest": _safe(tk.digest, "")}
 
 
+def _skills() -> dict:
+    import skills_knowledge as skl
+    return {
+        "digest": _safe(skl.digest, ""),
+        "principles": getattr(skl, "SENIOR_PRINCIPLES", []),
+        "skills": [{"area": s["area"], "skill": s["skill"], "level": s["level"],
+                    "how": s["expert"], "heuristic": s["heuristic"],
+                    "avoid": s["antipattern"]}
+                   for s in getattr(skl, "SKILLS", [])],
+        "by_role": getattr(skl, "ROLE_SKILLS", {}),
+        "maturity": [{"level": lv, "how": how}
+                     for lv, how in getattr(skl, "MATURITY", [])],
+    }
+
+
 def _odoo() -> dict:
     import odoo_standard as os_
     return {
@@ -145,6 +160,10 @@ _SECTIONS = {
     "ba": ("Business Analysis", "Per-area discovery frameworks: questions, data, pains, KPIs.", _ba),
     "consulting": ("Consulting Frameworks", "Strategy frameworks, SOP structure and KPI trees.", _consulting),
     "tech": ("Odoo Development Standards", "Module anatomy, ORM/security/performance rules.", _tech),
+    "skills": ("Senior Practitioner Skills",
+               "High-end delivery skills: solution architecture, migration, estimation, "
+               "stakeholder leadership, negotiation and communication — with senior "
+               "heuristics and anti-patterns.", _skills),
     "odoo": ("Odoo App Reference", "Per-app standard features, settings and the "
              "customisations that are really config / Studio.", _odoo),
     "industry": ("Industry Playbooks", "Per-vertical functional and go-to-market playbooks.", _industry),

@@ -1007,3 +1007,23 @@ Deepened `odoo_standard.py` (the standard-first per-app catalog):
   "hotels & restaurants" → hospitality instead of shadowing by older verticals.
 - Fixed the Knowledge Hub `industry` section (was reading 0; now lists all 18).
 - Verified: JSON valid; matcher resolves 10 sample industries correctly.
+
+## Senior-practitioner skills knowledge (high-end)
+
+- New `skills_knowledge.py`: 18 expert-level delivery skills across 9 areas
+  (solution architecture, integration, data model, performance, data migration,
+  requirements engineering, process redesign, estimation, risk, scope control,
+  executive stakeholder management, facilitation, change & adoption, commercial
+  acumen, negotiation, consultative discovery, executive communication, quality
+  gates). Each carries the senior technique, a one-line reflex heuristic and the
+  junior anti-pattern it avoids. Plus `SENIOR_PRINCIPLES` (10 cross-cutting
+  operating rules), a `ROLE_SKILLS` map (15 roles) and a `MATURITY` ladder
+  (junior → consultant → senior → principal).
+- Accessors: `digest()` (prompt overlay), `skills_for(text)`, `for_role(role)`,
+  `advise(requirement)`, `areas()` — all deterministic, no API.
+- Embedded into every delivery agent prompt via `prompts.py` (`_SKILL` overlay
+  appended to functional/ba/developer/proposal/project/config/docwriter/director/
+  presales/pm/prospect/outreach/comms/research).
+- Surfaced in the Knowledge Hub as the new `skills` section (`hub.py`).
+- Verified: py_compile + pyflakes clean; digest 3.1k chars; hub section renders;
+  overlay confirmed present in proposal/pm/functional/developer/presales prompts.
