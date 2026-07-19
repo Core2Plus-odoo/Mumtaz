@@ -18,6 +18,8 @@
                             <field name="industry" placeholder="e.g. Manufacturing, Retail, Education"/>
                         </group>
                         <group string="Commercial">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="pricelist_id"/>
                             <field name="currency_id"/>
                             <field name="validity_days"/>
                             <field name="timeline_weeks"/>

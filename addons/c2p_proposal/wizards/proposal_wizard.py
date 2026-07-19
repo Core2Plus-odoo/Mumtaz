@@ -41,13 +41,24 @@ class C2pProposalWizard(models.TransientModel):
              "ticked services are added on top.")
     validity_days = fields.Integer(string="Valid for (days)", default=30)
     timeline_weeks = fields.Integer(string="Indicative timeline (weeks)", default=12)
+    company_id = fields.Many2one(
+        "res.company", string="Company", required=True,
+        default=lambda self: self.env.company,
+        help="The proposal is issued by this company; its base currency and "
+             "pricelist drive the pricing (AED for C2P Consultants, PKR for "
+             "Core 2 Plus / C2P Solutions).")
+    pricelist_id = fields.Many2one(
+        "product.pricelist", string="Pricelist",
+        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        help="Drives the proposal currency. Pick a multi-currency pricelist to "
+             "quote the client in another currency.")
     amc_monthly = fields.Monetary(
         string="Monthly AMC", currency_field="currency_id",
         help="Optional post go-live maintenance, billed monthly. Shown as a "
              "separate AMC section on the proposal.")
     currency_id = fields.Many2one(
-        "res.currency", string="Currency",
-        default=lambda self: self.env.company.currency_id.id)
+        "res.currency", string="Currency", compute="_compute_currency",
+        store=True, readonly=True)
     exec_summary = fields.Text(string="Executive Summary (optional)")
     pain_points = fields.Text(
         string="Pain points (one per line)",
@@ -56,6 +67,33 @@ class C2pProposalWizard(models.TransientModel):
     note = fields.Text(string="Notes / scope summary")
     open_pdf = fields.Boolean(
         string="Open proposal PDF immediately", default=True)
+
+    # ── Company / pricelist / currency ──────────────────────────────────────
+    @api.depends("pricelist_id", "company_id")
+    def _compute_currency(self):
+        for w in self:
+            w.currency_id = (w.pricelist_id.currency_id
+                             or w.company_id.currency_id
+                             or self.env.company.currency_id)
+
+    def _default_pricelist(self, company=None, partner=None):
+        """The right sale pricelist for a company/partner (customer's own if it
+        belongs to the company, else the company's first pricelist)."""
+        company = company or self.company_id or self.env.company
+        partner = partner or self.partner_id
+        PL = self.env["product.pricelist"]
+        if partner and partner.property_product_pricelist:
+            pl = partner.property_product_pricelist
+            if not pl.company_id or pl.company_id == company:
+                return pl
+        return PL.search(["|", ("company_id", "=", False),
+                          ("company_id", "=", company.id)], limit=1)
+
+    @api.onchange("company_id", "partner_id")
+    def _onchange_company_partner(self):
+        pl = self.pricelist_id
+        if not pl or (pl.company_id and pl.company_id != self.company_id):
+            self.pricelist_id = self._default_pricelist()
 
     # ── Pull context from a source record (order / opportunity) ─────────────
     @api.model
@@ -76,6 +114,16 @@ class C2pProposalWizard(models.TransientModel):
             lead = self.env["crm.lead"].browse(lead_id)
             if lead.exists():
                 res.update(self._values_from_lead(lead))
+        # Fill the company's default pricelist if nothing set one yet.
+        if not res.get("pricelist_id"):
+            company = (self.env["res.company"].browse(res["company_id"])
+                       if res.get("company_id") else self.env.company)
+            partner = (self.env["res.partner"].browse(res["partner_id"])
+                       if res.get("partner_id") else None)
+            pl = self._default_pricelist(company=company, partner=partner)
+            if pl:
+                res["pricelist_id"] = pl.id
+                res.setdefault("company_id", company.id)
         return res
 
     def _values_from_order(self, order):
@@ -86,8 +134,10 @@ class C2pProposalWizard(models.TransientModel):
             "service_ids": [(6, 0, order.order_line.filtered(
                 lambda l: not l.display_type and l.product_id).mapped("product_id").ids)],
         }
-        if "currency_id" in order._fields and order.currency_id:
-            vals["currency_id"] = order.currency_id.id
+        if order.company_id:
+            vals["company_id"] = order.company_id.id
+        if "pricelist_id" in order._fields and order.pricelist_id:
+            vals["pricelist_id"] = order.pricelist_id.id
         # Carry any previously saved proposal context.
         for src, dst in [("c2p_proposal_title", "proposal_title"),
                          ("c2p_industry", "industry"),
@@ -131,18 +181,6 @@ class C2pProposalWizard(models.TransientModel):
                 if key != "lead_id":
                     setattr(self, key, val)
 
-    # ── Currency / pricelist ────────────────────────────────────────────────
-    def _proposal_pricelist(self):
-        """A pricelist in the wizard's currency so proposals price consistently
-        (defaults to the company currency, e.g. AED)."""
-        cur = self.currency_id or self.env.company.currency_id
-        PL = self.env["product.pricelist"]
-        pl = PL.search([("currency_id", "=", cur.id)], order="id", limit=1)
-        if not pl:
-            pl = PL.create({"name": "C2P Proposals (%s)" % cur.name,
-                            "currency_id": cur.id})
-        return pl
-
     # ── Values ──────────────────────────────────────────────────────────────
     def _narrative_vals(self):
         vals = {
@@ -168,8 +206,11 @@ class C2pProposalWizard(models.TransientModel):
         vals["partner_id"] = self.partner_id.id
         vals["order_line"] = order_lines
         SO = self.env["sale.order"]
-        if "pricelist_id" in SO._fields:
-            vals["pricelist_id"] = self._proposal_pricelist().id
+        if self.company_id:
+            vals["company_id"] = self.company_id.id
+        pricelist = self.pricelist_id or self._default_pricelist()
+        if pricelist and "pricelist_id" in SO._fields:
+            vals["pricelist_id"] = pricelist.id
         if self.template_id and "sale_order_template_id" in SO._fields:
             vals["sale_order_template_id"] = self.template_id.id
         if self.lead_id and "opportunity_id" in SO._fields:
