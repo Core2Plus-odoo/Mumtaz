@@ -75,7 +75,17 @@ def _workflows() -> dict:
 
 def _finance() -> dict:
     import finance_knowledge as fk
-    return {"digest": _safe(fk.digest, "")}
+    return {
+        "digest": _safe(fk.digest, ""),
+        "indirect_tax": getattr(fk, "TAX_REGIMES", {}),
+        "corporate_tax": getattr(fk, "CORPORATE_TAX", {}),
+        "compliance": getattr(fk, "COMPLIANCE", []),
+        "ifrs": [{"standard": e["std"], "topic": e["keys"][0],
+                  "treatment": e["treatment"], "odoo": e["odoo"]}
+                 for e in getattr(fk, "IFRS", [])],
+        "processes": [{"topic": p["keys"][0], "odoo": p["odoo"], "fit": p["fit"]}
+                      for p in getattr(fk, "PROCESSES", [])],
+    }
 
 
 def _pm() -> dict:

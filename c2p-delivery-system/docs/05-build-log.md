@@ -964,3 +964,19 @@ Grew the built-in, no-API knowledge so the agents rely less on the LLM:
 - Verified: py_compile + pyflakes clean; no-API smoke test (pitch fill, hub
   catalog/section, 23 workflows compose, pitch embedded in outreach/proposal
   prompts).
+
+### Complete knowledge — finance/tax deepening ✅
+Deepened `finance_knowledge.py` toward a complete GCC/PK CA reference (no-API):
+- **Corporate/direct tax** — new `CORPORATE_TAX` for UAE (9% CT, QFZP, Small
+  Business Relief), Saudi (CIT/Zakat), Qatar, Bahrain (DMTT/Pillar Two) and
+  Pakistan; `corporate_tax()` accessor.
+- **Regulatory compliance** — new `COMPLIANCE` (ESR, Transfer Pricing, CbCR /
+  Pillar Two, UBO register, AML/goAML) surfaced by `advise()`.
+- **IFRS** 9 → 14 treatments (added IAS 12 deferred tax, IAS 19 EOSB/gratuity,
+  IFRS 3, IAS 38 intangibles, IAS 7 cash flow, IFRS 8 segments).
+- **Processes** 9 → 17 (EOSB/gratuity, prepayments/accruals, expenses, deferred
+  tax, fixed-asset register, payroll/WPS, month-end close, revenue schedules).
+- `advise()` now returns corporate_tax + compliance; `digest()` and the Knowledge
+  Hub `finance` section expose the full structure.
+- Verified: py_compile + pyflakes clean; no-API smoke test (CT/ESR/EOSB advice,
+  hub finance section browses all structures).
