@@ -35,12 +35,12 @@
             <t t-foreach="docs" t-as="doc">
                 <!-- Running header -->
                 <div class="header" style="font-family:Arial,sans-serif;">
-                    <table style="width:100%; font-size:8.5px; color:#6b7280;
+                    <table style="width:100%; table-layout:fixed; font-size:8.5px; color:#6b7280;
                                   border-bottom:2px solid #b31f2d; padding-bottom:3px;">
                         <tr>
-                            <td style="text-align:left;"><b style="color:#1e2636;"><span t-field="doc.company_id.name"/></b>
-                                &#160;|&#160; Odoo ERP Implementation Proposal</td>
-                            <td style="text-align:right;"><span t-field="doc.partner_id.name"/> &#160;|&#160; Confidential</td>
+                            <td style="text-align:left; white-space:nowrap; overflow:hidden;"><b style="color:#1e2636;"><span t-field="doc.company_id.name"/></b>
+                                &#160;|&#160; <span t-out="doc._c2p_title()"/></td>
+                            <td style="text-align:right; white-space:nowrap; width:90px;">Confidential</td>
                         </tr>
                     </table>
                 </div>
@@ -83,6 +83,15 @@
                             .o_c2p .infobox { background:#f2f4f6; text-align:center; padding:14px; margin:22px auto 0;
                                 width:70%; }
                             .o_c2p .infobox .a { font-weight:700; color:#1e2636; }
+                            .o_c2p .cvcontents { width:70%; margin:30px auto 0; }
+                            .o_c2p .cvcontents > tr > td { border-top:1px solid #e2e6ea; border-bottom:1px solid #e2e6ea;
+                                padding:18px 0; }
+                            .o_c2p .cvch { text-align:center; text-transform:uppercase; letter-spacing:1.5px;
+                                font-size:11px; font-weight:700; color:#b31f2d; margin-bottom:14px; }
+                            .o_c2p .cvci { font-size:12px; color:#1e2636; padding:5px 0; }
+                            .o_c2p .cvcn { display:inline-block; width:20px; height:20px; line-height:20px;
+                                background:#1e2636; color:#fff; border-radius:50%; text-align:center;
+                                font-size:10px; font-weight:700; margin-right:8px; }
                             .o_c2p .cvfootline { text-align:center; color:#6b7280; font-size:10px; margin-top:14px; }
                             /* ---- sections ---- */
                             .o_c2p .sec { margin-bottom:20px; }
@@ -159,7 +168,24 @@
                                 Date: <span t-field="doc.date_order" t-options='{"widget": "date"}'/> &#160;&#160;|&#160;&#160;
                                 Valid until: <span t-field="doc.validity_date" t-options='{"widget": "date"}'/></div>
                         </td></tr></table>
-                        <hr class="redrule" style="margin-top:22px;"/>
+                        <table class="cvcontents"><tr><td>
+                            <div class="cvch">What This Proposal Covers</div>
+                            <table style="width:100%;"><tr>
+                                <td style="width:50%; vertical-align:top; padding-right:14px;">
+                                    <div class="cvci"><span class="cvcn">1</span> Executive Summary</div>
+                                    <div class="cvci"><span class="cvcn">2</span> About <span t-field="doc.company_id.name"/></div>
+                                    <div class="cvci"><span class="cvcn">3</span> Understanding of Requirements</div>
+                                    <div class="cvci"><span class="cvcn">4</span> Proposed Solution &amp; Scope</div>
+                                </td>
+                                <td style="width:50%; vertical-align:top; padding-left:14px;">
+                                    <div class="cvci"><span class="cvcn">5</span> Implementation Methodology</div>
+                                    <div class="cvci"><span class="cvcn">6</span> Deliverables &amp; Roles</div>
+                                    <div class="cvci"><span class="cvcn">7</span> Commercial Proposal</div>
+                                    <div class="cvci"><span class="cvcn">8</span> Assumptions &amp; Next Steps</div>
+                                </td>
+                            </tr></table>
+                        </td></tr></table>
+                        <hr class="redrule" style="margin-top:26px;"/>
                         <div class="cvfootline"><span t-field="doc.company_id.name"/> &#160;|&#160; ERP Implementation Specialists
                             <t t-if="doc.company_id.email"> &#160;|&#160; <span t-field="doc.company_id.email"/></t></div>
                         <p style="page-break-after:always; margin:0;"> </p>
@@ -233,7 +259,7 @@
                                 </tbody>
                             </table>
                             <t t-set="vis" t-value="doc._c2p_visuals()"/>
-                            <div t-if="vis">
+                            <div t-if="vis" style="page-break-inside:avoid;">
                                 <div class="bt-dark" style="margin-top:14px; font-size:11px;">SOLUTION PREVIEW</div>
                                 <table style="width:100%; border-collapse:separate; border-spacing:14px 12px; margin:0 -14px;">
                                     <tr t-foreach="doc._c2p_visual_rows()" t-as="vr">

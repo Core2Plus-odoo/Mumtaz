@@ -88,10 +88,4 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
-
-    <menuitem id="menu_c2p_proposal"
-              name="Proposal Maker"
-              parent="sale.sale_menu_root"
-              action="action_c2p_proposal_wizard"
-              sequence="4"/>
 </odoo>
