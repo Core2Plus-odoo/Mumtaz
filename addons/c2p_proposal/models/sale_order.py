@@ -464,6 +464,15 @@ class SaleOrder(models.Model):
     c2p_hosting_note = fields.Text(
         string="Licensing & Hosting Note",
         help="Leave blank to auto-add the Odoo licence note when an ERP is in scope.")
+    # ── ERP discovery answers (captured by the Proposal Maker) ──────────────
+    c2p_modules = fields.Char(
+        string="Odoo Applications", help="Comma-separated Odoo apps in scope.")
+    c2p_integrations = fields.Char(
+        string="Integrations", help="Comma-separated integrations in scope.")
+    c2p_migration_note = fields.Char(string="Data Migration")
+    c2p_current_system = fields.Char(string="Current System")
+    c2p_deployment = fields.Char(string="Deployment")
+    c2p_companies = fields.Integer(string="Companies / Entities", default=1)
 
     # ── Service-domain classification ───────────────────────────────────────
     def _c2p_domain_keys(self):
@@ -632,8 +641,17 @@ class SaleOrder(models.Model):
         return out
 
     def _c2p_scope_in(self):
-        items = [self._c2p_line_scope(l) if False else (l.product_id.name or "")
-                 for l in self.order_line.filtered(lambda x: not x.display_type and x.product_id)]
+        items = []
+        if self.c2p_modules:
+            items.append("Odoo applications: %s." % self.c2p_modules)
+        items += [(l.product_id.name or "")
+                  for l in self.order_line.filtered(
+                      lambda x: not x.display_type and x.product_id
+                      and not self._c2p_is_license_line(x))]
+        if self.c2p_migration_note:
+            items.append("Data migration: %s." % self.c2p_migration_note)
+        if self.c2p_integrations:
+            items.append("Integrations: %s." % self.c2p_integrations)
         items += ["Configuration, testing and go-live of the above.",
                   "Documentation (BRD/FRS), training and hypercare support."]
         # de-dup while preserving order
@@ -711,7 +729,16 @@ class SaleOrder(models.Model):
         return roles
 
     def _c2p_assumptions(self):
-        return [
+        out = []
+        if self.c2p_deployment:
+            out.append("Deployment on %s." % self.c2p_deployment)
+        if self.c2p_current_system:
+            out.append("Client currently runs %s; historical data is migrated "
+                       "per the agreed template." % self.c2p_current_system)
+        if self.c2p_companies and self.c2p_companies > 1:
+            out.append("Configured for %d companies / legal entities in one "
+                       "database." % self.c2p_companies)
+        out += [
             "Pricing is based on the scope and services listed in this proposal; "
             "material changes will be handled through a change request.",
             "The client provides timely inputs, data and feedback at each "
@@ -720,6 +747,7 @@ class SaleOrder(models.Model):
             "Third-party licences and hosting are contracted separately unless stated.",
             "Work is delivered remotely with on-site visits as mutually agreed.",
         ]
+        return out
 
     def _c2p_why_choose(self):
         return [

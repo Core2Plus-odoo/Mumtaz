@@ -1,6 +1,6 @@
 {
     "name": "C2P Proposal Maker",
-    "version": "19.0.14.0.0",
+    "version": "19.0.15.0.0",
     "summary": "One-click proposal builder — tick the services a client needs and "
                "generate a complete, branded, narrative Odoo ERP proposal (PDF).",
     "description": """
@@ -19,6 +19,7 @@ QWeb PDF on top of a real Odoo quotation.
     "depends": ["sale_management", "crm"],
     "data": [
         "security/ir.model.access.csv",
+        "data/c2p_reference_data.xml",
         "report/proposal_report.xml",
         "views/proposal_wizard_views.xml",
         "views/crm_lead_views.xml",

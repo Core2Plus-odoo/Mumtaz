@@ -97,6 +97,29 @@ class C2pProposalWizard(models.TransientModel):
         string="Suggested package", compute="_compute_intel")
     est_weeks = fields.Integer(string="Estimated timeline (weeks)", compute="_compute_intel")
     est_effort = fields.Char(string="Estimated effort", compute="_compute_intel")
+    # ── ERP discovery (shown only when an ERP implementation is selected) ────
+    has_erp = fields.Boolean(compute="_compute_has_erp")
+    erp_module_ids = fields.Many2many(
+        "c2p.odoo.module", string="Odoo applications to implement",
+        help="Tick the standard Odoo apps to configure. Listed on the proposal "
+             "and factored into the effort estimate.")
+    needs_migration = fields.Boolean(string="Data migration required?")
+    migration_source = fields.Char(
+        string="Migrate data from",
+        help="e.g. Tally, QuickBooks, SAP, spreadsheets, a legacy in-house system.")
+    current_system = fields.Char(string="Current system(s) in use")
+    needs_integrations = fields.Boolean(string="Integrations required?")
+    integration_ids = fields.Many2many(
+        "c2p.integration", string="Integrations")
+    num_companies = fields.Integer(string="Companies / legal entities", default=1)
+    num_warehouses = fields.Integer(string="Warehouses / branches", default=1)
+    deployment = fields.Selection(
+        [("odoo_sh", "Odoo.sh (cloud)"), ("odoo_online", "Odoo Online"),
+         ("on_premise", "On-premise / private server")],
+        string="Deployment", default="odoo_sh")
+    needs_training = fields.Boolean(string="On-site / role-based training?", default=True)
+    go_live_target = fields.Char(
+        string="Target go-live", help="Optional target month/date for go-live.")
     company_id = fields.Many2one(
         "res.company", string="Company", required=True,
         default=lambda self: self.env.company,
@@ -215,19 +238,31 @@ class C2pProposalWizard(models.TransientModel):
         return {"type": "ir.actions.act_window", "res_model": self._name,
                 "res_id": self.id, "view_mode": "form", "target": "new"}
 
+    @api.depends("service_ids")
+    def _compute_has_erp(self):
+        for w in self:
+            w.has_erp = "erp" in w._service_domains()
+
     # ── Intelligence: estimation, recommendation, licences ──────────────────
-    @api.depends("service_ids", "user_count")
+    @api.depends("service_ids", "user_count", "erp_module_ids",
+                 "integration_ids", "needs_integrations", "needs_migration")
     def _compute_intel(self):
         for w in self:
-            n_mod = len(w.service_ids)
+            n_mod = len(w.service_ids) + len(w.erp_module_ids)
+            n_int = len(w.integration_ids) if w.needs_integrations else 0
             users = w.user_count or 0
-            weeks = min(40, 4 + int(round(1.6 * n_mod)) + (2 if users > 50 else 0))
+            weeks = 4 + int(round(1.6 * n_mod)) + 2 * n_int
+            if w.needs_migration:
+                weeks += 2
+            if users > 50:
+                weeks += 2
+            weeks = min(52, weeks)
             w.est_weeks = weeks
             lo = max(2, int(weeks * 0.7))
             w.est_effort = "%d-%d person-weeks" % (lo, int(weeks * 1.2))
-            if users >= 50 or n_mod >= 6:
+            if users >= 50 or n_mod >= 8 or n_int >= 3:
                 w.package_tier = "enterprise"
-            elif users >= 15 or n_mod >= 3:
+            elif users >= 15 or n_mod >= 4 or n_int >= 1:
                 w.package_tier = "professional"
             else:
                 w.package_tier = "starter"
@@ -361,6 +396,9 @@ class C2pProposalWizard(models.TransientModel):
                     setattr(self, key, val)
 
     # ── Values ──────────────────────────────────────────────────────────────
+    def _deployment_label(self):
+        return dict(self._fields["deployment"].selection).get(self.deployment)
+
     def _narrative_vals(self):
         vals = {
             "c2p_is_proposal": True,
@@ -375,6 +413,19 @@ class C2pProposalWizard(models.TransientModel):
             "c2p_pain_points": self.pain_points,
             "c2p_objectives": self.objectives,
         }
+        # ERP discovery answers → proposal scope / assumptions.
+        if self.has_erp:
+            vals["c2p_modules"] = ", ".join(self.erp_module_ids.mapped("name"))
+            vals["c2p_current_system"] = self.current_system or False
+            vals["c2p_deployment"] = self._deployment_label() or False
+            vals["c2p_companies"] = self.num_companies or 1
+            if self.needs_migration:
+                vals["c2p_migration_note"] = (
+                    "from %s" % self.migration_source if self.migration_source
+                    else "master and opening data migrated")
+            if self.needs_integrations and self.integration_ids:
+                vals["c2p_integrations"] = ", ".join(
+                    self.integration_ids.mapped("name"))
         SO = self.env["sale.order"]
         if self.validity_days and "validity_date" in SO._fields:
             vals["validity_date"] = fields.Date.add(
