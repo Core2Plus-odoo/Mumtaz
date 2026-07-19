@@ -4,8 +4,12 @@ from odoo import fields, models
 
 
 def _win(title, body):
-    """Wrap SVG body in a consistent charcoal 'application window' frame."""
-    return Markup(
+    """Wrap SVG body in a consistent charcoal 'application window' frame.
+
+    ``title``/``body`` are hardcoded, module-internal SVG constants (never user
+    input), so wrapping them in Markup is safe. nosec silences bandit B704.
+    """
+    return Markup(  # nosec B704
         '<svg viewBox="0 0 340 150" width="100%%" height="150" '
         'preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" '
         'style="display:block;background:#fff;border:1px solid #e2e6ea;border-radius:6px;">'
