@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_financial" model="ir.actions.report">
+        <field name="name">Financial Statement</field>
+        <field name="model">mumtaz.financial.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mumtaz_financial_reports.report_financial</field>
+        <field name="report_file">mumtaz_financial_reports.report_financial</field>
+        <field name="print_report_name">object._report_filename()</field>
+    </record>
+</odoo>

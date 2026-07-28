@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mumtaz_financial_report_wizard_form" model="ir.ui.view">
+        <field name="name">mumtaz.financial.report.wizard.form</field>
+        <field name="model">mumtaz.financial.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Financial Statements">
+                <group>
+                    <group>
+                        <field name="report_type"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                        <field name="target_move" widget="radio"/>
+                    </group>
+                    <group>
+                        <field name="date_from" invisible="report_type == 'balance_sheet'"
+                               required="report_type != 'balance_sheet'"/>
+                        <field name="date_to"/>
+                        <field name="hide_zero"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_print" type="object" string="Print PDF" class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mumtaz_financial_report" model="ir.actions.act_window">
+        <field name="name">Financial Statements</field>
+        <field name="res_model">mumtaz.financial.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_mumtaz_financial_report"
+              name="Mumtaz Financial Statements"
+              parent="account.menu_finance_reports"
+              action="action_mumtaz_financial_report"
+              sequence="90"/>
+</odoo>

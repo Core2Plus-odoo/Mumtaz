@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_financial">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="company" t-value="o.company_id"/>
+                    <t t-set="cur" t-value="o.company_id.currency_id"/>
+                    <div class="page">
+                        <style>
+                            .mfr-title { text-align:center; font-size:20px; font-weight:bold;
+                                         color:#1e2636; margin:0; }
+                            .mfr-sub { text-align:center; color:#6b7280; font-size:11px;
+                                       margin:2px 0 14px; }
+                            .mfr-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+                            .mfr-tbl td, .mfr-tbl th { padding:5px 8px; }
+                            .mfr-sec { background:#1e2636; color:#fff; font-weight:bold;
+                                       text-transform:uppercase; font-size:11px; letter-spacing:.5px; }
+                            .mfr-row td { border-bottom:1px solid #eef0f2; }
+                            .mfr-tot td { border-top:1px solid #1e2636; font-weight:bold; }
+                            .mfr-net td { background:#f2f4f6; font-weight:bold; font-size:13px;
+                                          border-top:2px solid #1e2636; }
+                            .r { text-align:right; }
+                            .code { color:#6b7280; width:80px; }
+                        </style>
+
+                        <h2 class="mfr-title" t-out="report.get('title')"/>
+                        <div class="mfr-sub">
+                            <span t-out="report.get('company')"/>
+                            <t t-if="report.get('type') == 'balance_sheet'">
+                                &#160;&#183;&#160; As of <span t-out="report.get('date_to')" t-options="{'widget': 'date'}"/>
+                            </t>
+                            <t t-else="">
+                                &#160;&#183;&#160; <span t-out="report.get('date_from')" t-options="{'widget': 'date'}"/>
+                                to <span t-out="report.get('date_to')" t-options="{'widget': 'date'}"/>
+                            </t>
+                            &#160;&#183;&#160; <span t-out="report.get('target_move')"/>
+                        </div>
+
+                        <!-- ===== Profit & Loss / Balance Sheet (sectioned) ===== -->
+                        <t t-if="report.get('type') in ('profit_loss', 'balance_sheet')">
+                            <table class="mfr-tbl">
+                                <t t-foreach="report.get('sections', [])" t-as="sec">
+                                    <tr class="mfr-sec">
+                                        <td colspan="2" t-out="sec['name']"/>
+                                        <td class="r">Amount</td>
+                                    </tr>
+                                    <tr t-foreach="sec['lines']" t-as="ln" class="mfr-row">
+                                        <td class="code" t-out="ln['code']"/>
+                                        <td t-out="ln['name']"/>
+                                        <td class="r">
+                                            <span t-out="ln['amount']" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="not sec['lines']" class="mfr-row">
+                                        <td class="code"/><td class="text-muted">No movement in this period.</td><td class="r"/>
+                                    </tr>
+                                    <tr class="mfr-tot">
+                                        <td colspan="2">Total <span t-out="sec['name']"/></td>
+                                        <td class="r">
+                                            <span t-out="sec['total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr class="mfr-net">
+                                    <td colspan="2" t-out="report.get('net_label')"/>
+                                    <td class="r">
+                                        <span t-out="report.get('net')" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                    </td>
+                                </tr>
+                                <tr t-if="report.get('type') == 'balance_sheet'" class="mfr-net">
+                                    <td colspan="2" t-out="report.get('check_label')"/>
+                                    <td class="r">
+                                        <span t-out="report.get('check')" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p t-if="report.get('type') == 'balance_sheet' and not report.get('balanced')"
+                               style="color:#b31f2d; font-size:11px; margin-top:8px;">
+                                Note: assets do not equal liabilities + equity &#8212; check for unposted entries
+                                or a mismatched fiscal-year start.
+                            </p>
+                        </t>
+
+                        <!-- ===== Trial Balance ===== -->
+                        <t t-if="report.get('type') == 'trial_balance'">
+                            <table class="mfr-tbl">
+                                <tr class="mfr-sec">
+                                    <td>Code</td><td>Account</td>
+                                    <td class="r">Debit</td><td class="r">Credit</td><td class="r">Balance</td>
+                                </tr>
+                                <tr t-foreach="report.get('rows', [])" t-as="ln" class="mfr-row">
+                                    <td class="code" t-out="ln['code']"/>
+                                    <td t-out="ln['name']"/>
+                                    <td class="r"><span t-out="ln['debit']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    <td class="r"><span t-out="ln['credit']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    <td class="r"><span t-out="ln['balance']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                </tr>
+                                <tr t-if="not report.get('rows')" class="mfr-row">
+                                    <td class="code"/><td class="text-muted">No movement in this period.</td>
+                                    <td class="r"/><td class="r"/><td class="r"/>
+                                </tr>
+                                <tr class="mfr-tot">
+                                    <td colspan="2">Total</td>
+                                    <td class="r"><span t-out="report.get('total_debit')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    <td class="r"><span t-out="report.get('total_credit')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    <td class="r"><span t-out="report.get('total_balance')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                </tr>
+                            </table>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
