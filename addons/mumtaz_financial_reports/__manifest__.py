@@ -20,6 +20,7 @@ currency, and can hide zero-balance accounts. Depends only on ``account``.
     "website": "https://core2plus.com",
     "license": "LGPL-3",
     "depends": ["account"],
+    "external_dependencies": {"python": ["xlsxwriter"]},
     "data": [
         "security/ir.model.access.csv",
         "report/financial_report_templates.xml",
