@@ -237,10 +237,29 @@ systemctl daemon-reload
 systemctl enable faizy-odoo >/dev/null
 
 # ── 8. Modules ──────────────────────────────────────────────────────────────
+#
+# Captured rather than streamed. Odoo prints a lot of docutils noise from its own
+# core modules' descriptions, and under `set -e` a real failure would otherwise
+# scroll past as the script died silently — leaving that harmless noise as the
+# last thing on screen and looking like the cause.
 log "Installing faizy_core and faizy_website (Odoo must be stopped for this)"
 systemctl stop faizy-odoo 2>/dev/null || true
-sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/python3" "$FAIZY_HOME/odoo/odoo-bin" \
-  -c "$CONF" -d "$FAIZY_DB" -i faizy_core,faizy_website --stop-after-init
+
+INSTALL_LOG="/var/log/faizy/module-install.log"
+if sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/python3" "$FAIZY_HOME/odoo/odoo-bin" \
+     -c "$CONF" -d "$FAIZY_DB" -i faizy_core,faizy_website --stop-after-init \
+     > "$INSTALL_LOG" 2>&1; then
+  log "Modules installed"
+else
+  warn "Module installation failed. Last 40 lines of $INSTALL_LOG:"
+  echo "------------------------------------------------------------"
+  # Skip the docutils chatter so the genuine traceback is what you see.
+  grep -vE '^<string>:[0-9]+: \((ERROR|WARNING|INFO)/' "$INSTALL_LOG" | tail -40
+  echo "------------------------------------------------------------"
+  warn "Full log: $INSTALL_LOG"
+  exit 1
+fi
+
 systemctl start faizy-odoo
 
 # ── 9. nginx ────────────────────────────────────────────────────────────────

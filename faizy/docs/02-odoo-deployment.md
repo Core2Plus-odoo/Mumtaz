@@ -111,7 +111,9 @@ addons_path = /opt/faizy/odoo/addons,/opt/faizy/src/faizy/odoo/addons
 data_dir = /opt/faizy/data
 
 http_port = 8079
-longpolling_port = 8078
+; Named gevent_port since Odoo 16 — longpolling_port is the pre-16 spelling and
+; is silently ignored, which shows up later as realtime updates that never arrive.
+gevent_port = 8078
 ; Bind to loopback only — nginx is the sole public entrance.
 http_interface = 127.0.0.1
 
