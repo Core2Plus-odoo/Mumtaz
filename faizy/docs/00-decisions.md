@@ -1,13 +1,55 @@
 # Faizy — Technical Decision Memo
 
 **For:** Muhammad (CEO), Shafat Ali (CTO)
-**Status:** recommendations — three items marked **DECIDE** need your sign-off before I wire them in
-**Scope:** answers every question in §8 of the build brief, plus two corrections to §5 that are
-expensive to reverse later.
+**Scope:** answers every question in §8 of the build brief, plus corrections to §5.
+
+---
+
+## ⚠️ DECIDED: Odoo Community, full stack
+
+**Muhammad's call. Faizy runs on Odoo Community — a separate instance, its own
+database, its own domain. Not Next.js + Supabase.**
+
+This reverses the recommendation in §1 below, which argued for dropping Odoo. The
+reasoning in that section is kept as the record of what was weighed, but it is
+**superseded** — do not build from it.
+
+**The argument that decided it, and which §1 under-weighted:** Odoo *is* the admin
+panel. The orders kanban, the customer CRM with segmentation, the applications
+pipeline, vendor bills and analytics all come out of the box. That is 5–7 days of
+build that simply disappears, for a four-person team whose company already runs an
+Odoo practice. Add the website builder and the customer portal and the surface
+area that would have been hand-built shrinks dramatically.
+
+**What was traded away, so nobody is surprised later:**
+
+1. **Odoo Community has no Subscriptions app** — `sale_subscription` is Enterprise.
+   The recurring cycle is therefore built in `faizy_core`: a daily cron closes each
+   period, raises the invoice through `account.move` with an overage line, and
+   rolls the allowance. It works, it is tested, and it is ours to maintain.
+2. **The customer experience is a web portal, not an installable phone app.**
+   Faizy's edge over Mohsyn is transparency, and the portal delivers it — live
+   status, receipts, photo proof. But it will not feel like a native app on a
+   phone in Dubai. If that becomes the complaint, the answer is a thin PWA over
+   Odoo's JSON-RPC, not a rebuild.
+
+**What carried over unchanged:** the brand system, the FMB ID scheme, the fee
+model (5% platform, 10% commission), the free-activity grant and paywall, and the
+WhatsApp-queue design. The business logic was never the part in question.
+
+**Superseded by this decision:** §1 (Odoo vs Supabase), §5 (Vercel hosting), §6
+(Supabase region), §7 (auth.users vs profiles). Sections 2, 3, 4, 8.1, 9 and 10
+still stand — WhatsApp provider, payment gateway, the worker-app question, the
+repo split, and what is still needed from you.
+
+Deployment: `docs/02-odoo-deployment.md`.
 
 ---
 
 ## TL;DR
+
+*(Sections below predate the decision above. Kept as the record of the analysis;
+read the banner first.)*
 
 | # | Question | Recommendation | Reversibility |
 |---|---|---|---|

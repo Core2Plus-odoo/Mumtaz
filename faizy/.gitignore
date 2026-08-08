@@ -1,36 +1,23 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+# Python / Odoo
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
 
-# Builds
-.next/
-out/
-dist/
-build/
-.turbo/
+# Odoo runtime
+*.log
+filestore/
+sessions/
+odoo.conf
+!odoo.conf.example
 
-# Env — only .env.example is tracked
+# Secrets — never commit a filled-in config
 .env
 .env.local
-.env.*.local
-!.env.example
-
-# Supabase local state
-supabase/.branches/
-supabase/.temp/
-supabase/.env
 
 # Editors / OS
 .DS_Store
 *.swp
 .idea/
 .vscode/
-
-# Logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-
-# Test scratch
-/tmp/
-*.tsbuildinfo

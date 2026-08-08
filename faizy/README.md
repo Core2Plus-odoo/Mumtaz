@@ -6,96 +6,91 @@ provide care for their family back home.
 
 Operated by **C2P Consultants FZC LLC**.
 
-> **Read `docs/00-decisions.md` first.** It answers every open question from the
-> build brief and flags three decisions that need sign-off before the relevant
-> code can be written.
+**Built on Odoo Community 19** — a separate instance with its own database and
+its own domain. See `docs/00-decisions.md` for why, and
+`docs/02-odoo-deployment.md` for how to stand it up.
 
 ---
 
-## Status
-
-| Layer | State |
-|---|---|
-| Monorepo, brand system, database, data layer, WhatsApp queue | **Built** |
-| Database schema | **Verified** — applies cleanly, 36/36 business-rule checks pass |
-| Customer / admin / worker apps | **Scaffolded** — feature work blocked, see below |
-| Payments | **Not started** — awaiting gateway decision |
-
-### Blocked on missing files
-
-The prototypes named in the brief (`faizy-final.html`, the Faizy `admin.html`,
-`vendor-onboarding.html`, `schema.sql`, `supabase-integration.js`,
-`DEPLOYMENT_GUIDE.md`) **are not in this repository** — checked across every
-branch and the full commit history. The customer app, admin panel and worker
-onboarding wizard have deliberately not been rebuilt from guesswork, because the
-brief states those files encode decisions that should not be re-litigated.
-
-Everything that does not depend on them is built and tested.
-
----
-
-## Layout
+## What's here
 
 ```
 faizy/
-├── apps/
-│   ├── customer/          Customer PWA (Next.js, port 3000)
-│   ├── admin/             Internal ops console (port 3001)
-│   └── worker/            Faizy ground-staff PWA (port 3002)
-├── packages/
-│   ├── brand/             Design tokens + Tailwind preset  ← single source of truth
-│   ├── ui/                Shared components (logo, buttons, FMB chip, status badges)
-│   └── db/                Typed Supabase client, auth, orders, money
-├── supabase/
-│   ├── migrations/        8 migrations — schema, RLS, storage
-│   ├── functions/         Edge Functions (WhatsApp queue drain)
-│   ├── tests/             Shim + business-rule regression tests
-│   └── seed.sql           Plans and demo Faizies
-├── scripts/verify-db.sh   Verify the schema on any Postgres, no Docker needed
+├── odoo/
+│   ├── addons/
+│   │   ├── faizy_core/       Plans, subscriptions, family, network, orders, wallet, WhatsApp
+│   │   └── faizy_website/    Public site, pricing, worker sign-up, customer portal
+│   └── tools/
+│       ├── validate_modules.py   Static checks — run before every push
+│       └── make_icon.py          Renders the brand mark to the module icon
+├── brand/                    The mark and the brand rules
 └── docs/
-    ├── 00-decisions.md    ← START HERE
-    └── 01-milestones.md   Plan and estimates
+    ├── 00-decisions.md       Architecture decisions and open questions
+    ├── 01-milestones.md      Plan and estimates
+    └── 02-odoo-deployment.md Provisioning the instance and the domain
 ```
 
-## Getting started
+## The business, as modelled
 
-```bash
-pnpm install
-
-# Verify the database logic without any cloud dependency:
-./scripts/verify-db.sh
-
-# Run an app (needs a Supabase project — see docs/01-milestones.md M1):
-pnpm --filter @faizy/customer dev
-```
-
-Copy `.env.example` and fill it in. Nothing secret is committed.
+| Concept | Model |
+|---|---|
+| Subscription tiers | `faizy.plan` — price, monthly activity allowance, overage rate |
+| A customer's plan and meter | `faizy.subscription` |
+| Every activity consumed | `faizy.activity.log` (append-only) |
+| Family back home | `faizy.family.member` — permanent FMB IDs |
+| Ground workers | `faizy.worker`, `faizy.area`, `faizy.service` |
+| Worker recruitment | `faizy.application` → promotes to a worker |
+| Care tasks | `faizy.order` — kanban, assignment, photo proof, ratings |
+| Conversations and sourcing | `faizy.bridge.request`, `faizy.product.request` |
+| Money movement | `faizy.wallet.transaction` (append-only) |
+| Outbound messaging | `faizy.whatsapp.message` (queue) |
 
 ## Ground rules
 
-**The database is authoritative for money and entitlements.** Platform fee (5%),
-vendor commission (10%), activity counting and the paywall are computed by
-Postgres triggers and `SECURITY DEFINER` functions. The columns behind them are
-`REVOKE`d from client roles. Client-side helpers like `previewOrderTotals()` are
-display conveniences — if they ever disagree with the database, the database is
-right.
+**Money is computed, never entered.** The platform fee (5%) and vendor commission
+(10%) are derived from purchase value by `_compute_amounts`, and the rates live on
+`res.company` so ops changes them in Settings rather than waiting for a release.
+Order amounts are stored, so a historical order keeps the rate it was actually
+computed with.
 
-**The anon key is public.** It ships in every browser and installed PWA. RLS is
-the only thing protecting one customer's family records, medical notes and CNIC
-scans from another's. Every table is deny-by-default; see
-`supabase/migrations/*_rls.sql`.
+**The meter is server-side.** Activities are spent through
+`subscription.consume_activity()`, in the order free grant → plan allowance →
+overage. A booking with neither free activities nor a subscription is refused at
+`action_confirm`. Nothing customer-facing writes `activities_used`.
 
-**The service-role key never reaches a browser.** `createFaizyAdminClient()`
-throws if called client-side. Admin privileged reads go through server route
-handlers.
+**Odoo Community has no Subscriptions app.** `sale_subscription` is Enterprise, so
+the recurring cycle is ours: `_cron_recurring_invoice` closes the period, invoices
+through `account.move` with an overage line, and rolls the allowance.
 
-**Brand tokens live in one place.** `packages/brand/src/tokens.ts`. The old
-blue/gold + Cormorant Garamond identity is gone; nothing should reintroduce it.
+**Sensitive data is scoped.** Medical notes are restricted to the Operations
+group. Portal record rules limit a customer to their own family and orders, and a
+Faizy to their own assignments. Orders can be marked private, which hides the
+member's identity from the assigned worker.
 
-## Verifying the database
+**The brand is one thing in one place.** `brand/` holds the mark and the rules —
+including the contrast rule that orange is a background colour, never a text
+colour.
 
-`./scripts/verify-db.sh` applies a Supabase shim, all migrations, the seed, and a
-36-check regression suite covering fee computation, the free-activity grant, the
-paywall, overage billing, order lifecycle, notification queueing, rating averages
-and constraint enforcement. It needs only PostgreSQL and psql — no Docker, no
-network, no Supabase project. Run it before every migration PR.
+## Before you push
+
+```bash
+python3 odoo/tools/validate_modules.py
+```
+
+Checks manifests against the files on disk, parses every XML, verifies every
+model has an ACL and every ACL resolves, and catches views referencing fields the
+model never declares. CI runs the same thing, plus flake8 and a check that the
+committed icon still matches its generator.
+
+It is a smoke test, not a substitute for installing the module — do that on a
+staging database before releasing.
+
+## Known open items
+
+- **Placeholder numbers.** `activities_included` per tier and the overage price
+  are guesses; the brief never states them. Settings → Faizy → Plans.
+- **The logo is hand-built, not traced.** See `brand/README.md`.
+- **WhatsApp does not send yet.** Messages queue correctly and wait for a
+  provider — `docs/00-decisions.md` §2.
+- **`/join` needs a CAPTCHA or rate limit** before it is announced.
+- **Payment gateway is still undecided** — `docs/00-decisions.md` §3.

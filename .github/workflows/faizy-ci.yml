@@ -1,9 +1,8 @@
 name: Faizy CI
 
-# Faizy is a separate product from Mumtaz (Node/Next + Supabase, not Odoo), so it
-# needs its own checks — the Mumtaz CI jobs pass on Faizy PRs only because they
-# find no Python or Odoo modules to inspect, which reads as coverage where there
-# is none.
+# Faizy is a separate product from Mumtaz — its own Odoo Community instance,
+# its own database, its own domain — so it gets its own checks rather than
+# relying on the Mumtaz jobs, which scan different paths.
 #
 # This workflow lives at the repo root because GitHub only reads workflows from
 # .github/workflows/. It moves with the code when Faizy is split into its own
@@ -21,72 +20,38 @@ on:
       - "faizy/**"
       - ".github/workflows/faizy-ci.yml"
 
-defaults:
-  run:
-    working-directory: faizy
-
 jobs:
-  build:
-    name: Typecheck & Build
+  modules:
+    name: Odoo Module Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-python@v5
         with:
-          version: 10
+          python-version: "3.12"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: faizy/pnpm-lock.yaml
+      - name: Compile all Python
+        run: python -m compileall -q faizy/odoo
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      # Catches the things that actually break a module install: a manifest
+      # listing a file that was renamed, malformed XML, a model with no ACL, an
+      # ACL pointing at a model that does not exist, or a view referencing a
+      # field the model never declares.
+      - name: Validate manifests, XML, ACLs and view fields
+        run: python3 faizy/odoo/tools/validate_modules.py
 
-      - name: Typecheck
-        run: pnpm turbo run typecheck
-
-      - name: Build
-        run: pnpm turbo run build
-
-  database:
-    name: Schema & Business Rules
-    runs-on: ubuntu-latest
-
-    # Real Postgres rather than mocks: the fee arithmetic, the activity paywall
-    # and the RLS-adjacent constraints are all enforced BY the database, so
-    # testing them anywhere else tests nothing.
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install psql client
+      - name: Lint
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client
+          pip install --quiet flake8
+          flake8 faizy/odoo --max-line-length=120 \
+            --extend-ignore=E203,W503 \
+            --exclude=__pycache__
 
-      - name: Apply migrations and run business-rule tests
-        env:
-          PGHOST: localhost
-          PGPORT: "5432"
-          PGUSER: postgres
-          PGPASSWORD: postgres
+      # The brand mark is generated, not hand-edited. If the committed icon
+      # differs from what the generator produces, someone edited the wrong file.
+      - name: Brand icon is reproducible
         run: |
-          chmod +x scripts/verify-db.sh
-          ./scripts/verify-db.sh
+          python3 faizy/odoo/tools/make_icon.py
+          git diff --exit-code -- faizy/odoo/addons/faizy_core/static/description/icon.png \
+            || { echo "::error::icon.png is out of sync with tools/make_icon.py — regenerate and commit it"; exit 1; }
