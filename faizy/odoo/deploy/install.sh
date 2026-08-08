@@ -246,6 +246,8 @@ log "Installing faizy_core and faizy_website (Odoo must be stopped for this)"
 systemctl stop faizy-odoo 2>/dev/null || true
 
 INSTALL_LOG="/var/log/faizy/module-install.log"
+# shellcheck disable=SC2024  # the whole script runs as root, so root owns the
+# redirect while only the Odoo process drops to $FAIZY_USER. That is intended.
 if sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/python3" "$FAIZY_HOME/odoo/odoo-bin" \
      -c "$CONF" -d "$FAIZY_DB" -i faizy_core,faizy_website --stop-after-init \
      > "$INSTALL_LOG" 2>&1; then
