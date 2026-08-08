@@ -1,0 +1,92 @@
+name: Faizy CI
+
+# Faizy is a separate product from Mumtaz (Node/Next + Supabase, not Odoo), so it
+# needs its own checks — the Mumtaz CI jobs pass on Faizy PRs only because they
+# find no Python or Odoo modules to inspect, which reads as coverage where there
+# is none.
+#
+# This workflow lives at the repo root because GitHub only reads workflows from
+# .github/workflows/. It moves with the code when Faizy is split into its own
+# repository (see faizy/docs/00-decisions.md §8.1).
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "faizy/**"
+      - ".github/workflows/faizy-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "faizy/**"
+      - ".github/workflows/faizy-ci.yml"
+
+defaults:
+  run:
+    working-directory: faizy
+
+jobs:
+  build:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: faizy/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm turbo run typecheck
+
+      - name: Build
+        run: pnpm turbo run build
+
+  database:
+    name: Schema & Business Rules
+    runs-on: ubuntu-latest
+
+    # Real Postgres rather than mocks: the fee arithmetic, the activity paywall
+    # and the RLS-adjacent constraints are all enforced BY the database, so
+    # testing them anywhere else tests nothing.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Apply migrations and run business-rule tests
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: |
+          chmod +x scripts/verify-db.sh
+          ./scripts/verify-db.sh

@@ -18,6 +18,7 @@ expensive to reverse later.
 | 5 | Hosting | **Vercel**, not Netlify — conflicts with the existing guide | Cheap |
 | 6 | Supabase region | **NOT Singapore.** Frankfurt or Mumbai — see §6 | **DECIDE** — near-irreversible |
 | 7 | Data model | Supabase Auth owns identity; `public.users` is a *profile* table — see §7 | **DECIDE** — costly |
+| 8 | Where this code lives | **Move to its own repo.** It is currently inside `Core2Plus-odoo/Mumtaz` — see §8.1 | Cheap now, annoying later |
 
 Everything not marked **DECIDE** I've already defaulted on and started building.
 
@@ -264,6 +265,30 @@ One addition you didn't ask for but will want: **the admin panel must never hold
 role key in the browser.** That key bypasses RLS entirely. Admin privileged reads go through
 server-side route handlers with the key server-only. I've structured `apps/admin` accordingly — worth
 knowing since it's the single most common way a Supabase app gets fully compromised.
+
+### 8.1 Where this code lives — *recommendation: give Faizy its own repository*
+
+Right now this sits in `Core2Plus-odoo/Mumtaz`, under a top-level `faizy/` directory. That is where
+the work was commissioned, not where it belongs.
+
+Mumtaz is a different product — an Odoo marketplace and the C2P Agency OS, with its own Python
+tooling, its own CI, and its own deployment path to a Hostinger VPS. Faizy is a separate company's
+product with a Node/Next toolchain deploying to Vercel and Supabase. Keeping them together means:
+
+- **CI runs the wrong checks.** Every Faizy PR triggers flake8, bandit, pip-audit, Odoo manifest
+  validation and hadolint. They pass — because they find nothing to inspect — which is worse than
+  failing: it looks like coverage where none exists. Faizy currently has *no* CI of its own.
+- **Access control gets awkward.** Anyone who can commit to Faizy can commit to Mumtaz. If Shafat
+  or a contractor works on Faizy, they get the Odoo delivery practice too.
+- **The histories tangle**, and separating them later costs more the longer you wait.
+
+**Recommendation: `Core2Plus-odoo/faizy`, split before feature work starts.** Nothing here depends on
+anything outside `faizy/`, so `git subtree split` moves it with history intact, and a proper CI
+workflow (typecheck, build, `verify-db.sh`) can be added at the same time. It is an hour of work now
+and a bad afternoon in three months.
+
+Until that happens, treat `faizy/` as self-contained: no imports across the boundary in either
+direction.
 
 ---
 
