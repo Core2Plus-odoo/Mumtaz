@@ -60,3 +60,10 @@ psql -v ON_ERROR_STOP=1 -d "$DB" -f "$ROOT/supabase/tests/01_business_rules.sql"
 
 echo
 echo "==> OK — schema applies cleanly and all business rules hold."
+echo
+# The database is left in place so you can inspect the result. It is dropped and
+# recreated at the START of each run, so it never accumulates — but say so
+# explicitly, since on a shared or production cluster a stray database that
+# nobody remembers creating is exactly the kind of thing that worries people.
+echo "    Database '$DB' was left in place for inspection."
+echo "    Remove it with:  dropdb $DB"
