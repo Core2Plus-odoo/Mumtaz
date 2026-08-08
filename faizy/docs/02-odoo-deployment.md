@@ -12,6 +12,38 @@ Nothing here touches the existing Mumtaz or C2P delivery deployment.
 
 ---
 
+## The fast path
+
+Everything below is automated by `faizy/odoo/deploy/install.sh`. On the server:
+
+```bash
+git clone -b claude/repo-audit-faizy-instance-fck6o3 \
+  https://github.com/Core2Plus-odoo/Mumtaz.git ~/faizy-src
+sudo bash ~/faizy-src/faizy/odoo/deploy/install.sh
+```
+
+It prints a working URL when it finishes — `http://<server-ip>:8080` while there
+is no domain. Re-running it is safe; every step checks before it acts.
+
+Once DNS points at the server:
+
+```bash
+sudo FAIZY_DOMAIN=faizy.example bash ~/faizy-src/faizy/odoo/deploy/install.sh
+sudo certbot --nginx -d faizy.example
+```
+
+Generated passwords land in `/root/faizy-credentials.txt`, readable by root only.
+
+**Read the rest of this document anyway.** The script encodes these decisions but
+does not explain them, and when something breaks at 2am the explanation is what
+you need.
+
+⚠️ **Serving on a bare IP means plain HTTP**, so the login password crosses the
+network in the clear. That is fine for an internal look and not fine once real
+customer data exists. Move to the domain with TLS before anyone else signs in.
+
+---
+
 ## 0. Before you start
 
 | Need | Why |
