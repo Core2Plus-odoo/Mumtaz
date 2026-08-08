@@ -246,19 +246,36 @@ log "Installing faizy_core and faizy_website (Odoo must be stopped for this)"
 systemctl stop faizy-odoo 2>/dev/null || true
 
 INSTALL_LOG="/var/log/faizy/module-install.log"
+ODOO_LOG="$(awk -F' *= *' '/^logfile/ {print $2}' "$CONF")"
+
+# `--logfile=` (empty) overrides the config file and sends Odoo's logging to
+# stderr, so the redirect below actually captures it. Without this, odoo.conf's
+# logfile swallows every real error and the capture catches only the docutils
+# chatter Odoo prints to stdout — which is exactly how this failed silently.
 # shellcheck disable=SC2024  # the whole script runs as root, so root owns the
 # redirect while only the Odoo process drops to $FAIZY_USER. That is intended.
 if sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/python3" "$FAIZY_HOME/odoo/odoo-bin" \
-     -c "$CONF" -d "$FAIZY_DB" -i faizy_core,faizy_website --stop-after-init \
+     -c "$CONF" --logfile= -d "$FAIZY_DB" -i faizy_core,faizy_website --stop-after-init \
      > "$INSTALL_LOG" 2>&1; then
   log "Modules installed"
 else
-  warn "Module installation failed. Last 40 lines of $INSTALL_LOG:"
+  # Drop the docutils noise from Odoo's own core module descriptions so the
+  # genuine traceback is what you see.
+  DETAIL="$(grep -vE '^<string>:[0-9]+: \((ERROR|WARNING|INFO)/' "$INSTALL_LOG" | tail -40)"
+
+  warn "Module installation failed."
   echo "------------------------------------------------------------"
-  # Skip the docutils chatter so the genuine traceback is what you see.
-  grep -vE '^<string>:[0-9]+: \((ERROR|WARNING|INFO)/' "$INSTALL_LOG" | tail -40
+  if [[ -n "${DETAIL// /}" ]]; then
+    echo "$DETAIL"
+  else
+    echo "(nothing useful on stdout)"
+    if [[ -n "$ODOO_LOG" && -f "$ODOO_LOG" ]]; then
+      echo "--- last 40 lines of $ODOO_LOG ---"
+      tail -40 "$ODOO_LOG"
+    fi
+  fi
   echo "------------------------------------------------------------"
-  warn "Full log: $INSTALL_LOG"
+  warn "Full logs: $INSTALL_LOG and ${ODOO_LOG:-<none configured>}"
   exit 1
 fi
 
