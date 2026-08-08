@@ -1,138 +1,452 @@
-// Faizy brand, applied to the website and portal.
+// Faizy — website and portal styling.
 //
-// The identity is orange #F69E22 + black #0A0A0A + Poppins — this replaces the
-// Royal Blue / Gold / Cormorant Garamond system from the early prototypes.
+// The identity is orange #F69E22 + black #0A0A0A + Poppins. Vibrant, but built
+// on one disciplined rule, because "vibrant" done carelessly turns into noise:
 //
-// The contrast rule that drives everything below: brand orange on white is
-// ~2.2:1 and FAILS WCAG for text; black on brand orange is ~9:1 and passes. So
-// orange is a background colour, not a text colour. Buttons are
-// orange-background / black-text, which is also the logo pairing.
+//   ORANGE IS A BACKGROUND COLOUR, NEVER A TEXT COLOUR.
+//
+// Brand orange on white is ~2.2:1 and fails WCAG for text; black on brand orange
+// is ~9:1 and passes. So the energy comes from large saturated FIELDS — gradient
+// hero, colour-washed tiles, banded sections — with type sitting in black or
+// cream on top of them. That is what keeps it premium rather than garish.
+//
+// The secondary hues below are used only as accents on tiles and icons, never
+// as the primary brand signal.
 
-$faizy-orange: #f69e22;
-$faizy-orange-dark: #e08410;
-$faizy-orange-light: #fdeacc;
-$faizy-black: #0a0a0a;
-$faizy-cream: #fdfbf7;
-$faizy-cream-100: #faf6ef;
-$faizy-ink-muted: #515151;
+$fz-orange:        #f69e22;
+$fz-orange-600:    #e08410;
+$fz-orange-700:    #b9670d;
+$fz-orange-100:    #fdeacc;
+$fz-orange-50:     #fef6ea;
+$fz-black:         #0a0a0a;
+$fz-ink-900:       #1a1a1a;
+$fz-ink-600:       #515151;
+$fz-ink-400:       #818181;
+$fz-cream:         #fdfbf7;
+$fz-cream-100:     #faf6ef;
+$fz-cream-200:     #f4ede0;
+
+// Accent hues for service tiles. Deliberately warm-leaning so they sit beside
+// the orange instead of fighting it.
+$fz-accent-rose:   #f0567a;
+$fz-accent-violet: #7c5cff;
+$fz-accent-teal:   #12b3a6;
+$fz-accent-blue:   #2e90fa;
+$fz-accent-green:  #12b76a;
+$fz-accent-amber:  #f7b209;
 
 :root {
-  --faizy-orange: #{$faizy-orange};
-  --faizy-black: #{$faizy-black};
-  --faizy-cream: #{$faizy-cream};
+  --fz-orange: #{$fz-orange};
+  --fz-black: #{$fz-black};
+  --fz-cream: #{$fz-cream};
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  Base
+// ════════════════════════════════════════════════════════════════════════
 
 .faizy-page {
   font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: $faizy-black;
-  background: $faizy-cream;
+  color: $fz-black;
+  background: $fz-cream;
+  overflow-x: hidden;      // gradient blooms extend past the viewport edge
+
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  p { line-height: 1.65; }
+
+  ::selection {
+    background: $fz-orange;
+    color: $fz-black;
+  }
 }
 
-// Headlines are tight and bold — the tone is sporty-confident, not elegant.
-.faizy-page h1,
-.faizy-page h2,
-.faizy-page h3 {
+.fz-display {
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.fz-eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $fz-orange-700;
+}
+
+.fz-lead {
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  color: $fz-ink-600;
+}
+
+.fz-section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
+.fz-section--tight { padding: clamp(2.5rem, 5vw, 4rem) 0; }
+.fz-section--cream { background: $fz-cream-100; }
+.fz-section--dark { background: $fz-black; color: $fz-cream; }
+
+.fz-section--dark {
+  h1, h2, h3, h4 { color: $fz-cream; }
+  .fz-lead { color: rgba(253, 251, 247, 0.72); }
+  .fz-eyebrow { color: $fz-orange; }
 }
 
 // ── Urdu ────────────────────────────────────────────────────────────────
-// Nastaliq needs a face built for it; a generic serif fallback renders Naskh
+// Nastaliq needs a face built for it — a generic serif fallback renders Naskh
 // shaping, which reads as wrong to a native speaker. It also needs far more
-// line-height than Latin — the steep descending baseline collides otherwise.
+// line-height than Latin: the steep descending baseline collides otherwise.
 .faizy-urdu {
   font-family: "Noto Nastaliq Urdu", serif;
   direction: rtl;
   line-height: 2.1;
   unicode-bidi: isolate;
+  font-weight: 400;
 }
 
-// ── Buttons ─────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+//  Buttons
+// ════════════════════════════════════════════════════════════════════════
+
 .btn-faizy {
-  background-color: $faizy-orange;
-  border-color: $faizy-orange;
-  color: $faizy-black;
+  --shadow: 0 8px 24px -8px rgba(246, 158, 34, 0.65);
+  background: linear-gradient(135deg, $fz-orange 0%, #ffb648 100%);
+  border: none;
+  color: $fz-black;
   font-weight: 600;
-  border-radius: 0.625rem;
-  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  padding: 0.8rem 1.8rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 
-  &:hover,
-  &:focus {
-    background-color: $faizy-orange-dark;
-    border-color: $faizy-orange-dark;
-    color: $faizy-black;
+  &:hover, &:focus {
+    color: $fz-black;
+    transform: translateY(-2px);
+    filter: brightness(1.03);
+    box-shadow: 0 14px 32px -10px rgba(246, 158, 34, 0.8);
   }
-
+  &:active { transform: translateY(0); }
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px rgba(246, 158, 34, 0.35);
+    box-shadow: 0 0 0 4px rgba(246, 158, 34, 0.4), var(--shadow);
   }
 }
 
-.btn-faizy-outline {
+.btn-faizy-ghost {
   background: transparent;
-  border: 1px solid rgba(10, 10, 10, 0.2);
-  color: $faizy-black;
+  border: 1.5px solid rgba(10, 10, 10, 0.18);
+  color: $fz-black;
   font-weight: 500;
-  border-radius: 0.625rem;
-  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  padding: 0.8rem 1.8rem;
+  transition: background 0.18s ease, border-color 0.18s ease;
 
-  &:hover {
-    background: $faizy-cream-100;
-    color: $faizy-black;
+  &:hover { background: $fz-cream-200; color: $fz-black; border-color: rgba(10,10,10,.28); }
+
+  .fz-section--dark &, .fz-hero & {
+    border-color: rgba(253, 251, 247, 0.28);
+    color: $fz-cream;
+    &:hover { background: rgba(253, 251, 247, 0.08); color: $fz-cream; }
   }
 }
 
-// ── Hero ────────────────────────────────────────────────────────────────
-.faizy-hero {
-  background: $faizy-black;
-  color: $faizy-cream;
-  padding: 5rem 0 4.5rem;
+// ════════════════════════════════════════════════════════════════════════
+//  Hero — the one place the brand goes full volume
+// ════════════════════════════════════════════════════════════════════════
 
-  h1 {
-    font-size: clamp(2.25rem, 6vw, 3.75rem);
-    line-height: 1.05;
+.fz-hero {
+  position: relative;
+  background: $fz-black;
+  color: $fz-cream;
+  padding: clamp(4rem, 11vw, 8rem) 0 clamp(3.5rem, 8vw, 6rem);
+  isolation: isolate;
+  overflow: hidden;
+
+  // Two soft colour blooms rather than a flat panel — this is what stops a
+  // black hero reading as a void.
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  &::before {
+    width: 46rem; height: 46rem;
+    top: -18rem; right: -12rem;
+    background: radial-gradient(circle, rgba(246,158,34,.55) 0%, rgba(246,158,34,0) 70%);
+  }
+  &::after {
+    width: 34rem; height: 34rem;
+    bottom: -16rem; left: -10rem;
+    background: radial-gradient(circle, rgba(124,92,255,.30) 0%, rgba(124,92,255,0) 70%);
   }
 
-  .faizy-hero-tagline {
-    color: $faizy-orange;
-    font-size: clamp(1.5rem, 4vw, 2.25rem);
+  .fz-hero-tagline {
+    color: $fz-orange;
+    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+    display: inline-block;
+  }
+
+  .fz-hero-sub {
+    color: rgba(253, 251, 247, 0.78);
+    max-width: 34rem;
   }
 }
 
-// ── Cards ───────────────────────────────────────────────────────────────
-.faizy-card {
+// Thin credibility strip under the hero copy.
+.fz-trustbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.25rem, 4vw, 3rem);
+  align-items: center;
+
+  .fz-trustbar-item {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+  .fz-trustbar-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $fz-orange;
+  }
+  .fz-trustbar-label {
+    font-size: 0.8125rem;
+    color: rgba(253, 251, 247, 0.6);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Cards
+// ════════════════════════════════════════════════════════════════════════
+
+.fz-card {
   background: #fff;
-  border: 1px solid rgba(10, 10, 10, 0.08);
-  border-radius: 1rem;
-  padding: 1.5rem;
+  // Must set its own colour, not inherit. A card placed inside .fz-hero or
+  // .fz-section--dark would otherwise render cream text on a white background
+  // — invisible. Anything inverting this (.is-featured, --new) is more specific
+  // and still wins.
+  color: $fz-black;
+  border: 1px solid rgba(10, 10, 10, 0.07);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
   height: 100%;
-  box-shadow: 0 1px 3px rgba(10, 10, 10, 0.06);
+  box-shadow: 0 1px 2px rgba(10, 10, 10, 0.04);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+
+  h1, h2, h3, h4, h5, h6 { color: inherit; }
 }
 
-.faizy-plan-card {
-  @extend .faizy-card;
+.fz-card--hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(246, 158, 34, 0.35);
+  box-shadow: 0 18px 40px -18px rgba(10, 10, 10, 0.22);
+}
+
+// Service tiles. Each carries its own accent via --fz-tile, set inline from the
+// service's sequence, so the grid reads as a vibrant set rather than a list.
+.fz-tile {
+  @extend .fz-card;
+  @extend .fz-card--hover;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 4px;
+    background: var(--fz-tile, #{$fz-orange});
+  }
+
+  .fz-tile-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.875rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.875rem;
+    background: color-mix(in srgb, var(--fz-tile, #{$fz-orange}) 14%, white);
+  }
+}
+
+// ── Numbered steps ──────────────────────────────────────────────────────
+.fz-step {
+  position: relative;
+  padding-left: 4rem;
+
+  .fz-step-num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    background: linear-gradient(135deg, $fz-orange, #ffb648);
+    color: $fz-black;
+    box-shadow: 0 6px 18px -6px rgba(246, 158, 34, 0.7);
+  }
+}
+
+// ── Pricing ─────────────────────────────────────────────────────────────
+.fz-plan {
+  @extend .fz-card;
   display: flex;
   flex-direction: column;
+  position: relative;
 
-  &.is-featured {
-    border-color: $faizy-orange;
-    border-width: 2px;
-  }
-
-  .faizy-plan-price {
-    font-size: 2.5rem;
+  .fz-plan-price {
+    font-size: 2.75rem;
     font-weight: 700;
     line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  &.is-featured {
+    border: none;
+    background: $fz-black;
+    color: $fz-cream;
+    box-shadow: 0 24px 60px -24px rgba(10, 10, 10, 0.55);
+
+    h3, .fz-plan-price { color: $fz-cream; }
+    .text-muted { color: rgba(253,251,247,.6) !important; }
+    .fz-plan-feature i { color: $fz-orange; }
   }
 }
 
-// ── Chips and badges ────────────────────────────────────────────────────
+.fz-plan-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, $fz-orange, #ffb648);
+  color: $fz-black;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.fz-plan-feature {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 0.55rem;
+  font-size: 0.9375rem;
+}
+
+// ── Comparison ──────────────────────────────────────────────────────────
+.fz-compare {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) { grid-template-columns: 1fr 1fr; }
+
+  .fz-compare-col {
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+  }
+  .fz-compare-col--old {
+    background: $fz-cream-200;
+    color: $fz-ink-600;
+  }
+  .fz-compare-col--new {
+    background: $fz-black;
+    color: $fz-cream;
+    box-shadow: 0 24px 60px -28px rgba(10, 10, 10, 0.6);
+  }
+  li { margin-bottom: 0.6rem; }
+}
+
+// ── Stats band ──────────────────────────────────────────────────────────
+.fz-stats {
+  background: linear-gradient(120deg, $fz-orange 0%, #ffb648 55%, #ffcf7a 100%);
+  color: $fz-black;
+  border-radius: 1.5rem;
+  padding: clamp(2rem, 5vw, 3rem);
+
+  .fz-stat-value { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; line-height: 1; }
+  .fz-stat-label { font-size: 0.9375rem; opacity: 0.75; }
+}
+
+// ── Testimonials ────────────────────────────────────────────────────────
+.fz-quote {
+  @extend .fz-card;
+
+  .fz-quote-mark {
+    font-size: 2.5rem;
+    line-height: 1;
+    color: $fz-orange;
+    font-weight: 700;
+  }
+  .fz-quote-author {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .fz-quote-meta { font-size: 0.8125rem; color: $fz-ink-400; }
+}
+
+// ── FAQ ─────────────────────────────────────────────────────────────────
+.fz-faq {
+  .accordion-item {
+    border: 1px solid rgba(10, 10, 10, 0.08);
+    border-radius: 1rem !important;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  .accordion-button {
+    font-weight: 600;
+    background: #fff;
+    &:not(.collapsed) { background: $fz-orange-50; color: $fz-black; box-shadow: none; }
+    &:focus { box-shadow: 0 0 0 3px rgba(246,158,34,.3); }
+  }
+}
+
+// ── CTA band ────────────────────────────────────────────────────────────
+.fz-cta {
+  position: relative;
+  background: $fz-black;
+  color: $fz-cream;
+  border-radius: 1.75rem;
+  padding: clamp(2.5rem, 6vw, 4rem);
+  overflow: hidden;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    width: 32rem; height: 32rem;
+    top: -14rem; right: -10rem;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    background: radial-gradient(circle, rgba(246,158,34,.5) 0%, rgba(246,158,34,0) 70%);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Chips, badges, portal
+// ════════════════════════════════════════════════════════════════════════
+
 .faizy-fmb {
   display: inline-flex;
   align-items: center;
-  background: $faizy-orange-light;
-  color: #925114;
+  background: $fz-orange-100;
+  color: $fz-orange-700;
   border: 1px solid rgba(246, 158, 34, 0.35);
   border-radius: 999px;
   padding: 0.15rem 0.6rem;
@@ -149,32 +463,54 @@ $faizy-ink-muted: #515151;
   padding: 0.2rem 0.7rem;
   font-size: 0.8rem;
   font-weight: 500;
+  white-space: nowrap;
 
-  &.is-pending { background: #e3e3e3; color: #434343; }
-  &.is-assigned { background: #d1e9ff; color: #175cd3; }
-  &.is-in_progress { background: $faizy-orange-light; color: #925114; }
-  &.is-completed { background: #d1fadf; color: #027a48; }
-  &.is-cancelled { background: #fee4e2; color: #b42318; }
+  &.is-pending     { background: #e3e3e3; color: #434343; }
+  &.is-assigned    { background: #d1e9ff; color: #175cd3; }
+  &.is-in_progress { background: $fz-orange-100; color: $fz-orange-700; }
+  &.is-completed   { background: #d1fadf; color: #027a48; }
+  &.is-cancelled   { background: #fee4e2; color: #b42318; }
 }
 
-// Meter for remaining care activities.
 .faizy-meter {
-  height: 0.5rem;
+  height: 0.55rem;
   background: rgba(10, 10, 10, 0.08);
   border-radius: 999px;
   overflow: hidden;
 
   .faizy-meter-fill {
     height: 100%;
-    background: $faizy-orange;
+    background: linear-gradient(90deg, $fz-orange, #ffb648);
     border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
 
-// Respect the OS setting rather than animating regardless.
+// Kept as aliases so the portal templates written against the first pass
+// keep working.
+.faizy-card { @extend .fz-card; }
+.faizy-page .btn-faizy-outline { @extend .btn-faizy-ghost; }
+
+// ════════════════════════════════════════════════════════════════════════
+//  Motion — subtle, and switched off when the OS asks
+// ════════════════════════════════════════════════════════════════════════
+
+@keyframes fz-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fz-rise { animation: fz-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.fz-rise-2 { animation-delay: 0.08s; }
+.fz-rise-3 { animation-delay: 0.16s; }
+
 @media (prefers-reduced-motion: reduce) {
-  .faizy-page * {
-    transition-duration: 0.01ms !important;
+  .faizy-page *,
+  .faizy-page *::before,
+  .faizy-page *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
   }
+  .fz-card--hover:hover, .btn-faizy:hover { transform: none; }
 }
