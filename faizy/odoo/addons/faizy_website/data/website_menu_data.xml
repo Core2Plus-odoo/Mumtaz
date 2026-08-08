@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Website navigation. noupdate so marketing can rename or reorder these in
+     the website editor without a module upgrade putting them back. -->
+<odoo noupdate="1">
+
+    <record id="menu_faizy_pricing" model="website.menu">
+        <field name="name">Plans</field>
+        <field name="url">/pricing</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="menu_faizy_join" model="website.menu">
+        <field name="name">Become a Faizy</field>
+        <field name="url">/join</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">30</field>
+    </record>
+
+</odoo>

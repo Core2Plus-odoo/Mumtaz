@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Cards on the portal home. -->
+    <template id="portal_my_home_faizy" name="Portal: Faizy entries"
+              inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/faizy_core/static/description/icon.png'"/>
+                <t t-set="title">My Family</t>
+                <t t-set="text">Who we are caring for</t>
+                <t t-set="url" t-value="'/my/care'"/>
+                <t t-set="placeholder_count" t-value="'faizy_family_count'"/>
+            </t>
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/faizy_core/static/description/icon.png'"/>
+                <t t-set="title">Care Orders</t>
+                <t t-set="text">Every task, with proof</t>
+                <t t-set="url" t-value="'/my/orders'"/>
+                <t t-set="placeholder_count" t-value="'faizy_order_count'"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- ── One screen: how the family is, and what's left this month ──── -->
+    <template id="portal_care_home" name="Faizy — My Care">
+        <t t-call="portal.portal_layout">
+            <div class="faizy-page">
+                <t t-call="portal.portal_back_in_edit_mode"/>
+
+                <div t-if="subscription" class="faizy-card mb-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <p class="text-muted small mb-1">Your plan</p>
+                            <h2 class="h4 mb-0" t-out="subscription.plan_id.name"/>
+                        </div>
+                        <div class="text-end">
+                            <p class="text-muted small mb-1">Renews</p>
+                            <p class="mb-0" t-out="subscription.period_end"
+                               t-options="{'widget': 'date'}"/>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Care activities used</span>
+                            <span>
+                                <span t-out="subscription.activities_used"/> of
+                                <span t-out="subscription.activities_included"/>
+                            </span>
+                        </div>
+                        <div class="faizy-meter">
+                            <!-- Capped at 100% so an overage month does not
+                                 render a bar wider than its track. -->
+                            <div class="faizy-meter-fill"
+                                 t-attf-style="width: #{min(100, subscription.activities_included and round(100.0 * subscription.activities_used / subscription.activities_included) or 0)}%;"/>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0"
+                           t-if="subscription.activities_used &gt; subscription.activities_included">
+                            You are past this month's allowance. Extra activities are billed at
+                            <span t-out="subscription.plan_id.currency_id.symbol"/><!--
+                            --><span t-out="'%.2f' % subscription.plan_id.overage_price"/> each.
+                        </p>
+                    </div>
+                </div>
+
+                <div t-else="" class="faizy-card mb-4">
+                    <h2 class="h5 mb-1">Free activities</h2>
+                    <p class="mb-0">
+                        You have <strong t-out="partner.faizy_free_activities"/> free care
+                        activities remaining. Choose a plan when you are ready.
+                    </p>
+                    <a href="/pricing" class="btn btn-faizy mt-3">See plans</a>
+                </div>
+
+                <h2 class="h5 mb-3">Your family</h2>
+                <div class="row g-3 mb-4">
+                    <t t-foreach="family" t-as="member">
+                        <div class="col-12 col-md-6">
+                            <div class="faizy-card">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h3 class="h6 mb-1" t-out="member.name"/>
+                                        <p class="text-muted small mb-2">
+                                            <span t-out="dict(member._fields['relationship'].selection).get(member.relationship)"/>
+                                            · <span t-out="member.city"/>
+                                        </p>
+                                    </div>
+                                    <span class="faizy-fmb" t-out="member.fmb_id"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <div t-if="not family" class="col-12">
+                        <div class="faizy-card text-muted">
+                            No family members added yet. Message us on WhatsApp and we will
+                            set them up for you.
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="h5 mb-3">Recent care</h2>
+                <t t-call="faizy_website.portal_order_table">
+                    <t t-set="orders" t-value="recent_orders"/>
+                </t>
+                <a href="/my/orders" class="btn btn-faizy-outline mt-3">See all orders</a>
+            </div>
+        </t>
+    </template>
+
+    <!-- Shared table so the list and the summary cannot drift. -->
+    <template id="portal_order_table" name="Faizy — Order Table">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Task</th>
+                        <th class="d-none d-md-table-cell">For</th>
+                        <th class="d-none d-md-table-cell">Date</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="orders" t-as="order">
+                        <tr>
+                            <td>
+                                <a t-attf-href="/my/orders/#{order.id}" t-out="order.name"/>
+                            </td>
+                            <td t-out="order.title"/>
+                            <td class="d-none d-md-table-cell">
+                                <span t-if="order.family_member_id" class="faizy-fmb"
+                                      t-out="order.family_member_id.fmb_id"/>
+                            </td>
+                            <td class="d-none d-md-table-cell" t-out="order.create_date"
+                                t-options="{'widget': 'date'}"/>
+                            <td class="text-end" t-out="order.amount_total"
+                                t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+                            <td class="text-end">
+                                <span t-attf-class="faizy-status is-#{order.state}"
+                                      t-out="dict(order._fields['state'].selection).get(order.state)"/>
+                            </td>
+                        </tr>
+                    </t>
+                    <tr t-if="not orders">
+                        <td colspan="6" class="text-muted text-center py-4">
+                            Nothing here yet.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </template>
+
+    <template id="portal_orders" name="Faizy — My Orders">
+        <t t-call="portal.portal_layout">
+            <div class="faizy-page">
+                <h2 class="h4 mb-3">Care orders</h2>
+                <t t-call="faizy_website.portal_order_table"/>
+                <div class="o_portal_pager text-center">
+                    <t t-call="portal.pager"/>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="portal_order_detail" name="Faizy — Order Detail">
+        <t t-call="portal.portal_layout">
+            <div class="faizy-page">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <h2 class="h4 mb-1" t-out="order.title"/>
+                        <p class="text-muted mb-0" t-out="order.name"/>
+                    </div>
+                    <span t-attf-class="faizy-status is-#{order.state}"
+                          t-out="dict(order._fields['state'].selection).get(order.state)"/>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-lg-7">
+                        <div class="faizy-card">
+                            <h3 class="h6 text-muted mb-3">Details</h3>
+                            <dl class="row mb-0">
+                                <dt class="col-5 col-sm-4 fw-normal text-muted">Service</dt>
+                                <dd class="col-7 col-sm-8" t-out="order.service_id.name"/>
+
+                                <dt class="col-5 col-sm-4 fw-normal text-muted">For</dt>
+                                <dd class="col-7 col-sm-8">
+                                    <span t-if="order.family_member_id">
+                                        <span t-out="order.family_member_id.name"/>
+                                        <span class="faizy-fmb ms-1" t-out="order.family_member_id.fmb_id"/>
+                                    </span>
+                                    <span t-else="" class="text-muted">The household</span>
+                                </dd>
+
+                                <dt class="col-5 col-sm-4 fw-normal text-muted">Where</dt>
+                                <dd class="col-7 col-sm-8" t-out="order.city"/>
+
+                                <dt class="col-5 col-sm-4 fw-normal text-muted">Your Faizy</dt>
+                                <dd class="col-7 col-sm-8">
+                                    <span t-if="order.worker_id" t-out="order.worker_id.name"/>
+                                    <span t-else="" class="text-muted">Being assigned</span>
+                                </dd>
+                            </dl>
+                            <div t-if="order.description" class="mt-3">
+                                <h3 class="h6 text-muted mb-1">Notes</h3>
+                                <p class="mb-0" t-out="order.description"/>
+                            </div>
+                        </div>
+
+                        <div t-if="order.proof_image" class="faizy-card mt-3">
+                            <h3 class="h6 text-muted mb-3">Proof of delivery</h3>
+                            <img t-attf-src="/web/image/faizy.order/#{order.id}/proof_image"
+                                 class="img-fluid rounded" alt="Proof of delivery"/>
+                            <p t-if="order.completion_note" class="text-muted small mt-2 mb-0"
+                               t-out="order.completion_note"/>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-5">
+                        <div class="faizy-card">
+                            <h3 class="h6 text-muted mb-3">Charges</h3>
+                            <dl class="row mb-0">
+                                <dt class="col-7 fw-normal text-muted">Purchases</dt>
+                                <dd class="col-5 text-end" t-out="order.purchase_value"
+                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+
+                                <dt class="col-7 fw-normal text-muted">Service fee</dt>
+                                <dd class="col-5 text-end" t-out="order.service_fee"
+                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+
+                                <dt class="col-7 fw-normal text-muted">Platform fee</dt>
+                                <dd class="col-5 text-end" t-out="order.platform_fee"
+                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+
+                                <dt class="col-7 fw-bold border-top pt-2">Total</dt>
+                                <dd class="col-5 text-end fw-bold border-top pt-2" t-out="order.amount_total"
+                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="/my/orders" class="btn btn-faizy-outline mt-4">Back to orders</a>
+            </div>
+        </t>
+    </template>
+
+</odoo>

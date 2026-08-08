@@ -1,0 +1,180 @@
+// Faizy brand, applied to the website and portal.
+//
+// The identity is orange #F69E22 + black #0A0A0A + Poppins — this replaces the
+// Royal Blue / Gold / Cormorant Garamond system from the early prototypes.
+//
+// The contrast rule that drives everything below: brand orange on white is
+// ~2.2:1 and FAILS WCAG for text; black on brand orange is ~9:1 and passes. So
+// orange is a background colour, not a text colour. Buttons are
+// orange-background / black-text, which is also the logo pairing.
+
+$faizy-orange: #f69e22;
+$faizy-orange-dark: #e08410;
+$faizy-orange-light: #fdeacc;
+$faizy-black: #0a0a0a;
+$faizy-cream: #fdfbf7;
+$faizy-cream-100: #faf6ef;
+$faizy-ink-muted: #515151;
+
+:root {
+  --faizy-orange: #{$faizy-orange};
+  --faizy-black: #{$faizy-black};
+  --faizy-cream: #{$faizy-cream};
+}
+
+.faizy-page {
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: $faizy-black;
+  background: $faizy-cream;
+}
+
+// Headlines are tight and bold — the tone is sporty-confident, not elegant.
+.faizy-page h1,
+.faizy-page h2,
+.faizy-page h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+// ── Urdu ────────────────────────────────────────────────────────────────
+// Nastaliq needs a face built for it; a generic serif fallback renders Naskh
+// shaping, which reads as wrong to a native speaker. It also needs far more
+// line-height than Latin — the steep descending baseline collides otherwise.
+.faizy-urdu {
+  font-family: "Noto Nastaliq Urdu", serif;
+  direction: rtl;
+  line-height: 2.1;
+  unicode-bidi: isolate;
+}
+
+// ── Buttons ─────────────────────────────────────────────────────────────
+.btn-faizy {
+  background-color: $faizy-orange;
+  border-color: $faizy-orange;
+  color: $faizy-black;
+  font-weight: 600;
+  border-radius: 0.625rem;
+  padding: 0.65rem 1.4rem;
+
+  &:hover,
+  &:focus {
+    background-color: $faizy-orange-dark;
+    border-color: $faizy-orange-dark;
+    color: $faizy-black;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(246, 158, 34, 0.35);
+  }
+}
+
+.btn-faizy-outline {
+  background: transparent;
+  border: 1px solid rgba(10, 10, 10, 0.2);
+  color: $faizy-black;
+  font-weight: 500;
+  border-radius: 0.625rem;
+  padding: 0.65rem 1.4rem;
+
+  &:hover {
+    background: $faizy-cream-100;
+    color: $faizy-black;
+  }
+}
+
+// ── Hero ────────────────────────────────────────────────────────────────
+.faizy-hero {
+  background: $faizy-black;
+  color: $faizy-cream;
+  padding: 5rem 0 4.5rem;
+
+  h1 {
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+    line-height: 1.05;
+  }
+
+  .faizy-hero-tagline {
+    color: $faizy-orange;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+  }
+}
+
+// ── Cards ───────────────────────────────────────────────────────────────
+.faizy-card {
+  background: #fff;
+  border: 1px solid rgba(10, 10, 10, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  height: 100%;
+  box-shadow: 0 1px 3px rgba(10, 10, 10, 0.06);
+}
+
+.faizy-plan-card {
+  @extend .faizy-card;
+  display: flex;
+  flex-direction: column;
+
+  &.is-featured {
+    border-color: $faizy-orange;
+    border-width: 2px;
+  }
+
+  .faizy-plan-price {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+}
+
+// ── Chips and badges ────────────────────────────────────────────────────
+.faizy-fmb {
+  display: inline-flex;
+  align-items: center;
+  background: $faizy-orange-light;
+  color: #925114;
+  border: 1px solid rgba(246, 158, 34, 0.35);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.faizy-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+
+  &.is-pending { background: #e3e3e3; color: #434343; }
+  &.is-assigned { background: #d1e9ff; color: #175cd3; }
+  &.is-in_progress { background: $faizy-orange-light; color: #925114; }
+  &.is-completed { background: #d1fadf; color: #027a48; }
+  &.is-cancelled { background: #fee4e2; color: #b42318; }
+}
+
+// Meter for remaining care activities.
+.faizy-meter {
+  height: 0.5rem;
+  background: rgba(10, 10, 10, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+
+  .faizy-meter-fill {
+    height: 100%;
+    background: $faizy-orange;
+    border-radius: 999px;
+  }
+}
+
+// Respect the OS setting rather than animating regardless.
+@media (prefers-reduced-motion: reduce) {
+  .faizy-page * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
