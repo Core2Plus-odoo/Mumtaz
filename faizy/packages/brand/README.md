@@ -43,20 +43,44 @@ Nastaliq also needs far more line-height than Latin — `[lang="ur"]` is set to
 
 The `<UrduTagline />` component in `@faizy/ui` handles all of this.
 
-## ⚠️ The logo is interim
+## ⚠️ The logo is hand-built, not traced
 
-`FaizyLogo` is a geometric reconstruction built to the written description of the
-mark, **not a trace of the official artwork**. It must be replaced before launch.
+`FaizyLogo` (and `assets/faizy-mark.svg`) follow the real mark's construction —
+hollow angled wing for the top arm, solid mid bar flowing into a bowl counter,
+tapering blade descender to a sharp point at lower-left — but the coordinates
+were eyeballed from a reference image rather than traced. Expect a few percent of
+drift on edge angles and terminal positions.
 
-To finish it:
+**Make it definitive before launch.** Five minutes:
 
-1. Drop the source PNG from facebook.com/faizy.pk at `assets/logo-source.png`.
-2. Trace it to clean vectors.
-3. Replace the paths in `packages/ui/src/FaizyLogo.tsx` — the `FGlyph` component
-   is the only thing that changes.
+1. Commit the source artwork at `assets/logo-source.png`.
+2. Trace it, keeping corners sharp:
 
-Sizing, colour variants (`circle` / `mono` / `inverse`), the lockup, and the
-favicon/PWA icon pipeline are already wired, so it is a paths-only swap.
+   ```bash
+   convert logo-source.png -alpha remove -threshold 50% pbm:- \
+     | potrace --svg --alphamax 0 --turdsize 8 -o traced.svg
+   ```
+
+   `--alphamax 0` disables curve smoothing. The default rounds off this mark's
+   points, which is precisely what gives it its character.
+
+3. Replace the two `<path>` elements in `FGlyph` (`packages/ui/src/FaizyLogo.tsx`)
+   and in `assets/faizy-mark.svg`. Keep the two in sync — the standalone SVG is
+   the source for icon generation.
+
+Sizing, the three colour variants (`circle` / `mono` / `inverse`), the lockup and
+the favicon pipeline all read from the component, so it is a paths-only swap.
+
+**PWA icons are still missing** — `icon-192.png`, `icon-512.png` and
+`maskable-512.png` are referenced by both manifests. Generate them from
+`assets/faizy-mark.svg` once the paths are final:
+
+```bash
+for s in 192 512; do rsvg-convert -w $s -h $s assets/faizy-mark.svg -o icon-$s.png; done
+```
+
+For the maskable variant, scale the mark to ~80% inside the canvas so it survives
+Android's circular crop.
 
 **PWA icons are also still missing** — `icon-192.png`, `icon-512.png` and
 `maskable-512.png` are referenced by both manifests and need generating from the

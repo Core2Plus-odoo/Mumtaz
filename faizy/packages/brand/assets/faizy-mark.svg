@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080" role="img" aria-label="Faizy">
+  <!--
+    Faizy mark — standalone SVG.
+
+    HAND-BUILT FROM THE RASTER, NOT A VECTOR TRACE. Follows the real mark's
+    construction (hollow angled wing, solid mid bar into a bowl counter,
+    tapering blade descender) with eyeballed coordinates.
+
+    Replace with a proper trace before launch — see packages/brand/README.md.
+    Keep this file and packages/ui/src/FaizyLogo.tsx in sync; this one is the
+    source for favicon and PWA icon generation.
+  -->
+  <circle cx="540" cy="540" r="505" fill="#F69E22"/>
+  <g fill="#0A0A0A" fill-rule="evenodd" clip-rule="evenodd">
+    <path d="M852 345 L548 345 L448 452 L302 452
+             A24 24 0 0 0 302 500
+             L742 500 Z
+             M796 396 L566 396 L512 449 L745 449 Z"/>
+    <path d="M320 518 L700 518 L634 664 L494 664 L408 742 L332 845
+             L430 574 L320 574
+             A28 28 0 0 1 320 518 Z
+             M600 582 L516 582 L474 646 L566 646 Z"/>
+  </g>
+</svg>

@@ -2,18 +2,27 @@ import * as React from "react";
 import { BLACK, ORANGE } from "@faizy/brand/tokens";
 
 /**
- * ⚠️ INTERIM MARK — must be replaced before launch.
+ * The Faizy mark — black angular "F" monogram on a solid orange disc.
  *
- * This is a geometric reconstruction built to the written description of the
- * live Faizy mark (bold black angular "F" with flag/speed-line styling, on a
- * solid orange circle). It is NOT a trace of the official artwork.
+ * ⚠️ HAND-BUILT FROM THE RASTER, NOT A VECTOR TRACE.
  *
- * To finish this properly: drop the source PNG from facebook.com/faizy.pk into
- * `packages/brand/assets/logo-source.png`, trace it to clean vectors, and replace
- * the paths below. Everything else — sizing, colour handling, the lockup, the
- * favicon/PWA icon pipeline — is already wired, so it is a paths-only swap.
+ * The geometry below follows the real mark's construction — hollow angled wing
+ * for the top arm, solid mid bar flowing into a bowl counter, tapering blade
+ * descender to a sharp point at lower-left — but the coordinates are eyeballed
+ * from a reference image, not traced. Expect a few percent of drift on edge
+ * angles and terminal positions.
  *
- * See packages/brand/README.md.
+ * TO MAKE IT DEFINITIVE (5 minutes, worth doing before launch):
+ *   1. Commit the source artwork to packages/brand/assets/logo-source.png
+ *   2. potrace it:
+ *        convert logo-source.png -alpha remove -threshold 50% pbm:- \
+ *          | potrace --svg --alphamax 0 --turdsize 8 -o traced.svg
+ *      (--alphamax 0 keeps corners sharp — this mark has no curves except the
+ *      rounded bar cap, and the default smoothing rounds off its points.)
+ *   3. Replace the two <path> elements in FGlyph with the traced ones.
+ *
+ * Nothing else changes: sizing, the three colour variants, the lockup, and the
+ * favicon/PWA pipeline all read from this one component.
  */
 
 export type FaizyLogoProps = {
@@ -21,9 +30,9 @@ export type FaizyLogoProps = {
   size?: number;
   /**
    * `circle`  — black F on the orange disc (default, primary usage)
-   * `mono`    — single-colour F, no disc (for tight/monochrome contexts)
-   * `inverse` — orange F on black disc (for use on cream/light surfaces where
-   *             an orange disc would vibrate against a warm background)
+   * `mono`    — single-colour F, no disc (tight or monochrome contexts)
+   * `inverse` — orange F on a black disc, for cream/light surfaces where an
+   *             orange disc vibrates against the warm background
    */
   variant?: "circle" | "mono" | "inverse";
   /** Only used by `mono`. Defaults to brand black. */
@@ -33,19 +42,30 @@ export type FaizyLogoProps = {
   className?: string;
 };
 
-/** The F glyph itself, in a 0 0 100 100 space. Shared by every variant. */
+/**
+ * The F glyph in a 0 0 1080 1080 space, matching the source artwork's canvas.
+ *
+ * Two paths, both fill-rule="evenodd" so their counters punch through:
+ *   1. The top wing, with its long horizontal slot.
+ *   2. Mid bar + bowl + descender as one connected form, with the bowl counter.
+ */
 function FGlyph({ fill }: { fill: string }) {
   return (
-    <g fill={fill}>
-      {/* Stem — leans right at the top for forward motion. */}
-      <polygon points="40,24 54,24 46,76 32,76" />
-      {/* Top arm. */}
-      <polygon points="42,24 78,24 75.5,37 39.5,37" />
-      {/* Mid arm — shorter, per standard F proportions. */}
-      <polygon points="36.5,45 67,45 64.5,58 34,58" />
-      {/* Speed lines trailing the stem, aligned to the arms. */}
-      <polygon points="14,45 30,45 27.5,58 11.5,58" />
-      <polygon points="21,24 36,24 33.5,37 18.5,37" />
+    <g fill={fill} fillRule="evenodd" clipRule="evenodd">
+      {/* Top arm: angled wing, rounded cap on the lower-left, diagonal right terminal. */}
+      <path
+        d="M852 345 L548 345 L448 452 L302 452
+           A24 24 0 0 0 302 500
+           L742 500 Z
+           M796 396 L566 396 L512 449 L745 449 Z"
+      />
+      {/* Mid bar flowing into the bowl, then the tapering blade to its point. */}
+      <path
+        d="M320 518 L700 518 L634 664 L494 664 L408 742 L332 845
+           L430 574 L320 574
+           A28 28 0 0 1 320 518 Z
+           M600 582 L516 582 L474 646 L566 646 Z"
+      />
     </g>
   );
 }
@@ -64,7 +84,7 @@ export function FaizyLogo({
 
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 1080 1080"
       width={size}
       height={size}
       className={className}
@@ -73,13 +93,13 @@ export function FaizyLogo({
     >
       {variant === "circle" && (
         <>
-          <circle cx="50" cy="50" r="50" fill={ORANGE} />
+          <circle cx="540" cy="540" r="505" fill={ORANGE} />
           <FGlyph fill={BLACK} />
         </>
       )}
       {variant === "inverse" && (
         <>
-          <circle cx="50" cy="50" r="50" fill={BLACK} />
+          <circle cx="540" cy="540" r="505" fill={BLACK} />
           <FGlyph fill={ORANGE} />
         </>
       )}
@@ -105,7 +125,7 @@ export function FaizyLockup({
 }) {
   return (
     <div className={["flex items-center gap-2.5", className].filter(Boolean).join(" ")}>
-      <FaizyLogo size={size} variant={onDark ? "circle" : "circle"} title={null} />
+      <FaizyLogo size={size} variant="circle" title={null} />
       <div className="flex flex-col leading-none">
         <span
           className={[
