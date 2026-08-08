@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+
+    <!-- Recurring invoicing. Odoo Community has no Subscriptions app, so this
+         is what actually bills the business: it closes each period, raises the
+         invoice with any overage, and rolls the allowance. -->
+    <record id="cron_faizy_recurring_invoice" model="ir.cron">
+        <field name="name">Faizy: recurring subscription invoicing</field>
+        <field name="model_id" ref="model_faizy_subscription"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_recurring_invoice()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Drains the WhatsApp queue. Every 15 minutes rather than hourly:
+         a booking confirmation that lands an hour late reads as no confirmation
+         at all. -->
+    <record id="cron_faizy_whatsapp_queue" model="ir.cron">
+        <field name="name">Faizy: send queued WhatsApp messages</field>
+        <field name="model_id" ref="model_faizy_whatsapp_message"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_send_queued()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="active" eval="True"/>
+    </record>
+
+</odoo>

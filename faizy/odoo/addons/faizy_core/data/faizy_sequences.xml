@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Reference numbers. noupdate so a module upgrade never rewinds a counter —
+  that would hand two family members the same FMB ID.
+-->
+<odoo noupdate="1">
+
+    <!-- FMB-000001. The customer-facing family member ID. -->
+    <record id="seq_faizy_family_member" model="ir.sequence">
+        <field name="name">Faizy Family Member (FMB)</field>
+        <field name="code">faizy.family.member</field>
+        <field name="prefix">FMB-</field>
+        <field name="padding">6</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="implementation">standard</field>
+    </record>
+
+    <!-- FZO-100001 -->
+    <record id="seq_faizy_order" model="ir.sequence">
+        <field name="name">Faizy Order</field>
+        <field name="code">faizy.order</field>
+        <field name="prefix">FZO-</field>
+        <field name="padding">6</field>
+        <field name="number_next">100001</field>
+    </record>
+
+    <!-- FZY-10001. Quoted back to the applicant so they can track progress. -->
+    <record id="seq_faizy_application" model="ir.sequence">
+        <field name="name">Faizy Worker Application</field>
+        <field name="code">faizy.application</field>
+        <field name="prefix">FZY-</field>
+        <field name="padding">5</field>
+        <field name="number_next">10001</field>
+    </record>
+
+    <record id="seq_faizy_worker" model="ir.sequence">
+        <field name="name">Faizy (Ground Worker)</field>
+        <field name="code">faizy.worker</field>
+        <field name="prefix">FZW-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1001</field>
+    </record>
+
+    <record id="seq_faizy_subscription" model="ir.sequence">
+        <field name="name">Faizy Subscription</field>
+        <field name="code">faizy.subscription</field>
+        <field name="prefix">FZS-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1001</field>
+    </record>
+
+    <record id="seq_faizy_bridge" model="ir.sequence">
+        <field name="name">Faizy Bridge Request</field>
+        <field name="code">faizy.bridge</field>
+        <field name="prefix">FZB-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1001</field>
+    </record>
+
+    <record id="seq_faizy_product_request" model="ir.sequence">
+        <field name="name">Faizy Product Request</field>
+        <field name="code">faizy.product.request</field>
+        <field name="prefix">FZP-</field>
+        <field name="padding">5</field>
+        <field name="number_next">1001</field>
+    </record>
+
+    <record id="seq_faizy_wallet" model="ir.sequence">
+        <field name="name">Faizy Wallet Transaction</field>
+        <field name="code">faizy.wallet</field>
+        <field name="prefix">FZL-</field>
+        <field name="padding">6</field>
+        <field name="number_next">1</field>
+    </record>
+
+</odoo>

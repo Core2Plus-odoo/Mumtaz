@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The care catalogue. noupdate so ops can rename or retire services without
+     a module upgrade putting them back. -->
+<odoo noupdate="1">
+
+    <record id="service_groceries" model="faizy.service">
+        <field name="name">Groceries</field>
+        <field name="code">groceries</field>
+        <field name="sequence">10</field>
+        <field name="icon">🛒</field>
+        <field name="description">Weekly shopping delivered to the family's door, with receipts and photo proof.</field>
+    </record>
+
+    <record id="service_medicine" model="faizy.service">
+        <field name="name">Medicine Run</field>
+        <field name="code">medicine</field>
+        <field name="sequence">20</field>
+        <field name="icon">💊</field>
+        <field name="description">Prescription collection and delivery, including repeat medication.</field>
+    </record>
+
+    <record id="service_doctor_visit" model="faizy.service">
+        <field name="name">Doctor Visit</field>
+        <field name="code">doctor_visit</field>
+        <field name="sequence">30</field>
+        <field name="icon">🩺</field>
+        <field name="description">Accompaniment to appointments, with a report back to you afterwards.</field>
+    </record>
+
+    <record id="service_documents" model="faizy.service">
+        <field name="name">Documents &amp; NADRA</field>
+        <field name="code">documents</field>
+        <field name="sequence">40</field>
+        <field name="icon">📄</field>
+        <field name="description">NADRA, utility and paperwork errands handled on the ground.</field>
+    </record>
+
+    <record id="service_companionship" model="faizy.service">
+        <field name="name">Companionship Visit</field>
+        <field name="code">companionship</field>
+        <field name="sequence">50</field>
+        <field name="icon">🤝</field>
+        <field name="description">A check-in visit — tea, conversation, and a note on how they really are.</field>
+    </record>
+
+    <record id="service_gift_delivery" model="faizy.service">
+        <field name="name">Gift Delivery</field>
+        <field name="code">gift_delivery</field>
+        <field name="sequence">60</field>
+        <field name="icon">🎁</field>
+        <field name="description">Chosen, wrapped and delivered for birthdays and Eid.</field>
+    </record>
+
+    <!-- Emergencies are deliberately NOT metered. Making a family hesitate over
+         their allowance during a crisis would be the wrong product. -->
+    <record id="service_emergency" model="faizy.service">
+        <field name="name">Emergency Response</field>
+        <field name="code">emergency</field>
+        <field name="sequence">70</field>
+        <field name="icon">🚨</field>
+        <field name="consumes_activity" eval="False"/>
+        <field name="description">Urgent help when something goes wrong. Never counted against your monthly activities.</field>
+    </record>
+
+    <record id="service_product_request" model="faizy.service">
+        <field name="name">Product Sourcing</field>
+        <field name="code">product_request</field>
+        <field name="sequence">80</field>
+        <field name="icon">🔎</field>
+        <field name="description">Find and buy something specific, quoted for approval before purchase.</field>
+    </record>
+
+    <record id="service_other" model="faizy.service">
+        <field name="name">Other</field>
+        <field name="code">other</field>
+        <field name="sequence">90</field>
+        <field name="icon">✨</field>
+    </record>
+
+</odoo>

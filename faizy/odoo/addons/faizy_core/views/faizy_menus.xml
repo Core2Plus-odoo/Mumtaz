@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Ordered by what ops touches most, not by data model tidiness.
+         "Needs Assignment" is first because it is the one screen that
+         represents work waiting on a human. -->
+    <menuitem id="menu_faizy_root" name="Faizy" sequence="15"
+              web_icon="faizy_core,static/description/icon.png"
+              groups="faizy_core.group_faizy_user"/>
+
+    <menuitem id="menu_faizy_operations" name="Operations"
+              parent="menu_faizy_root" sequence="10"/>
+    <menuitem id="menu_faizy_needs_assignment" name="Needs Assignment"
+              parent="menu_faizy_operations" action="action_faizy_order_needs_assignment"
+              sequence="5"/>
+    <menuitem id="menu_faizy_orders" name="Orders"
+              parent="menu_faizy_operations" action="action_faizy_order" sequence="10"/>
+    <menuitem id="menu_faizy_bridge_requests" name="Bridge Requests"
+              parent="menu_faizy_operations" action="action_faizy_bridge_request" sequence="20"/>
+    <menuitem id="menu_faizy_product_requests" name="Product Requests"
+              parent="menu_faizy_operations" action="action_faizy_product_request" sequence="30"/>
+
+    <menuitem id="menu_faizy_customers_root" name="Customers"
+              parent="menu_faizy_root" sequence="20"/>
+    <menuitem id="menu_faizy_customers" name="Customers"
+              parent="menu_faizy_customers_root" action="action_faizy_customer" sequence="10"/>
+    <menuitem id="menu_faizy_family_members" name="Family Members"
+              parent="menu_faizy_customers_root" action="action_faizy_family_member" sequence="20"/>
+    <menuitem id="menu_faizy_subscriptions" name="Subscriptions"
+              parent="menu_faizy_customers_root" action="action_faizy_subscription" sequence="30"/>
+
+    <menuitem id="menu_faizy_network" name="Network"
+              parent="menu_faizy_root" sequence="30"/>
+    <menuitem id="menu_faizy_workers" name="Faizies"
+              parent="menu_faizy_network" action="action_faizy_worker" sequence="10"/>
+    <menuitem id="menu_faizy_applications" name="Applications"
+              parent="menu_faizy_network" action="action_faizy_application" sequence="20"
+              groups="faizy_core.group_faizy_ops"/>
+
+    <menuitem id="menu_faizy_billing" name="Billing"
+              parent="menu_faizy_root" sequence="40"
+              groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_faizy_wallet" name="Wallet Ledger"
+              parent="menu_faizy_billing" action="action_faizy_wallet" sequence="10"/>
+
+    <menuitem id="menu_faizy_messaging" name="Messaging"
+              parent="menu_faizy_root" sequence="50"
+              groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_faizy_whatsapp" name="WhatsApp Queue"
+              parent="menu_faizy_messaging" action="action_faizy_whatsapp" sequence="10"/>
+
+    <menuitem id="menu_faizy_config" name="Configuration"
+              parent="menu_faizy_root" sequence="90"
+              groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_faizy_plans" name="Plans"
+              parent="menu_faizy_config" action="action_faizy_plan" sequence="10"/>
+    <menuitem id="menu_faizy_services" name="Services"
+              parent="menu_faizy_config" action="action_faizy_service" sequence="20"/>
+    <menuitem id="menu_faizy_areas" name="Coverage Areas"
+              parent="menu_faizy_config" action="action_faizy_area" sequence="30"/>
+</odoo>

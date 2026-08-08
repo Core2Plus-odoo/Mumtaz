@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_wallet_list" model="ir.ui.view">
+        <field name="name">faizy.wallet.transaction.list</field>
+        <field name="model">faizy.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <list decoration-success="amount &gt; 0" decoration-danger="amount &lt; 0">
+                <field name="name"/>
+                <field name="create_date" string="Date" widget="date"/>
+                <field name="partner_id"/>
+                <field name="worker_id"/>
+                <field name="txn_type" widget="badge"/>
+                <field name="order_id" optional="hide"/>
+                <field name="reference" optional="hide"/>
+                <field name="amount" sum="Balance"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_wallet_form" model="ir.ui.view">
+        <field name="name">faizy.wallet.transaction.form</field>
+        <field name="model">faizy.wallet.transaction</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="worker_id"/>
+                            <field name="order_id"/>
+                        </group>
+                        <group>
+                            <field name="txn_type"/>
+                            <field name="amount"/>
+                            <field name="currency_id"/>
+                            <field name="reference"/>
+                        </group>
+                    </group>
+                    <field name="note"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_wallet" model="ir.actions.act_window">
+        <field name="name">Wallet Ledger</field>
+        <field name="res_model">faizy.wallet.transaction</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

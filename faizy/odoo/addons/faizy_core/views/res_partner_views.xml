@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Faizy customer data on the standard contact form. Extending res.partner
+         rather than inventing a parallel customer model means invoicing,
+         messaging and the portal all work with no translation layer. -->
+    <record id="view_partner_form_faizy" model="ir.ui.view">
+        <field name="name">res.partner.form.faizy</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_family_members" type="object"
+                        class="oe_stat_button" icon="fa-users"
+                        invisible="not is_faizy_customer">
+                    <field name="family_member_count" widget="statinfo" string="Family"/>
+                </button>
+                <button name="action_view_faizy_orders" type="object"
+                        class="oe_stat_button" icon="fa-list"
+                        invisible="not is_faizy_customer">
+                    <field name="faizy_order_count" widget="statinfo" string="Orders"/>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Faizy" name="faizy" invisible="not is_faizy_customer">
+                    <group>
+                        <group string="Subscription">
+                            <field name="faizy_subscription_id" readonly="1"/>
+                            <field name="faizy_plan_id" readonly="1"/>
+                            <field name="faizy_segment" readonly="1" widget="badge"/>
+                            <field name="faizy_free_activities" readonly="1"/>
+                        </group>
+                        <group string="Wallet">
+                            <field name="wallet_balance" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="family_member_ids" readonly="1">
+                        <list>
+                            <field name="fmb_id"/>
+                            <field name="name"/>
+                            <field name="relationship"/>
+                            <field name="city"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="is_faizy_customer"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_faizy_customer" model="ir.actions.act_window">
+        <field name="name">Customers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_faizy_customer', '=', True)]</field>
+        <field name="context">{'default_is_faizy_customer': True}</field>
+    </record>
+
+    <!-- Revenue policy: rates in Settings, not in code. -->
+    <record id="res_config_settings_view_form_faizy" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.faizy</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='companies']" position="after">
+                <block title="Faizy" name="faizy_settings" groups="faizy_core.group_faizy_manager">
+                    <setting string="Platform Fee Rate"
+                             help="Share of purchase value added to the customer invoice.">
+                        <field name="faizy_platform_fee_rate" widget="percentage"/>
+                    </setting>
+                    <setting string="Vendor Commission Rate"
+                             help="Retained from the vendor on vendor-fulfilled orders.">
+                        <field name="faizy_vendor_commission_rate" widget="percentage"/>
+                    </setting>
+                    <setting string="Free Activities on Signup"
+                             help="Care activities a new customer gets before the paywall.">
+                        <field name="faizy_free_activity_grant"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>
