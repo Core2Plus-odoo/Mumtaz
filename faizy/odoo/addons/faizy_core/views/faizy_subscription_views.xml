@@ -75,7 +75,7 @@
                     </group>
                     <notebook>
                         <page string="Activity Log" name="activity_log">
-                            <field name="activity_ids" readonly="1">
+                            <field name="care_activity_ids" readonly="1">
                                 <list>
                                     <field name="create_date" string="When"/>
                                     <field name="order_id"/>

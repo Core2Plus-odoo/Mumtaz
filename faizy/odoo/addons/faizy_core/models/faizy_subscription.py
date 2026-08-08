@@ -67,7 +67,11 @@ class FaizySubscription(models.Model):
     )
     activities_used = fields.Integer(readonly=True, copy=False)
     activities_remaining = fields.Integer(compute="_compute_activities_remaining")
-    activity_ids = fields.One2many("faizy.activity.log", "subscription_id")
+    # NOT `activity_ids` — that name belongs to mail.activity.mixin, and
+    # shadowing it breaks the mixin's related fields (activity_type_id and
+    # friends resolve through it), which fails the registry at install time.
+    # "care activity" is also the customer-facing term, so this reads better.
+    care_activity_ids = fields.One2many("faizy.activity.log", "subscription_id")
 
     invoice_ids = fields.Many2many("account.move", string="Invoices", copy=False)
     invoice_count = fields.Integer(compute="_compute_invoice_count")
