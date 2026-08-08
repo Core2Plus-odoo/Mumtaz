@@ -47,14 +47,52 @@ if ss -ltn 2>/dev/null | grep -q ":${FAIZY_ODOO_PORT}\b"; then
 fi
 
 # ── 1. Packages ─────────────────────────────────────────────────────────────
+#
+# apt aborts an entire batch when one name is unresolvable, which turns a single
+# renamed package into "held broken packages" with no clue which one. So batches
+# are retried one package at a time to name the culprit, and only the core set is
+# fatal — the -dev headers merely let pip fall back to compiling from source when
+# no wheel exists, which on a current distro is rare.
+
+# Core: without these nothing works.
+CORE_PKGS=(git python3-venv python3-dev python3-pip build-essential
+           libpq-dev nginx postgresql-client)
+
+# Build headers for the Python extensions Odoo pulls in (lxml, Pillow, ldap).
+# Package names drift between releases — libtiff5-dev became libtiff-dev in
+# Ubuntu 24.04, node-less was dropped entirely.
+BUILD_PKGS=(libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev
+            libtiff-dev libjpeg-dev libopenjp2-7-dev zlib1g-dev
+            libfreetype6-dev liblcms2-dev libwebp-dev libharfbuzz-dev
+            libfribidi-dev libxcb1-dev)
+
+install_pkgs() {
+  local fatal="$1"; shift
+  local pkgs=("$@") missing=()
+
+  if apt-get install -y -qq "${pkgs[@]}" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  for p in "${pkgs[@]}"; do
+    apt-get install -y -qq "$p" >/dev/null 2>&1 || missing+=("$p")
+  done
+
+  if ((${#missing[@]})); then
+    if [[ "$fatal" == "fatal" ]]; then
+      warn "Could not install required packages: ${missing[*]}"
+      warn "Check the names for this release: apt-cache search <name>"
+      exit 1
+    fi
+    warn "Skipped unavailable build headers: ${missing[*]}"
+    warn "Only matters if pip has to compile a package from source."
+  fi
+}
+
 log "Installing system packages"
 apt-get update -qq
-apt-get install -y -qq \
-  git python3-venv python3-dev python3-pip build-essential \
-  libxml2-dev libxslt1-dev libldap2-dev libsasl2-dev libtiff5-dev \
-  libjpeg-dev libopenjp2-7-dev zlib1g-dev libfreetype6-dev liblcms2-dev \
-  libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev libpq-dev \
-  nginx postgresql-client node-less >/dev/null
+install_pkgs fatal "${CORE_PKGS[@]}"
+install_pkgs optional "${BUILD_PKGS[@]}"
 
 # wkhtmltopdf powers PDF invoices. Odoo works without it; PDFs just fail.
 if ! command -v wkhtmltopdf >/dev/null; then
