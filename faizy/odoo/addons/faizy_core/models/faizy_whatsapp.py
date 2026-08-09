@@ -119,7 +119,6 @@ class FaizyWhatsappMessage(models.Model):
         return self.env._("Faizy update.")
 
     @api.model
-    @api.model
     def contact_number(self):
         """The number customers and family members are told to write to.
 
@@ -134,6 +133,7 @@ class FaizyWhatsappMessage(models.Model):
         """
         return (self.env.company.phone or "").strip()
 
+    @api.model
     def queue_message(
         self,
         partner=None,
