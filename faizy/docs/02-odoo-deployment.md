@@ -177,9 +177,17 @@ Upgrading after a code change is the same command with `-u` instead of `-i`:
 sudo systemctl stop faizy-odoo
 sudo -u faizy git -C /opt/faizy/src pull
 sudo -u faizy /opt/faizy/venv/bin/python3 /opt/faizy/odoo/odoo-bin \
-  -c /opt/faizy/odoo.conf -d faizy_prod -u faizy_core,faizy_website --stop-after-init
+  -c /opt/faizy/odoo.conf --logfile= \
+  -d faizy_prod -u faizy_core,faizy_website --stop-after-init
+echo "upgrade exit: $?"
 sudo systemctl start faizy-odoo
 ```
+
+**`--logfile=` (empty) matters.** odoo.conf sets `logfile`, so without the
+override every line — including the traceback you need — goes to
+`/var/log/faizy/odoo.log` and the terminal stays silent. A failed upgrade then
+looks exactly like a successful one. If you already ran it without the override,
+`sudo tail -50 /var/log/faizy/odoo.log` has the answer.
 
 **Back up first** (§8) — an upgrade runs migration scripts, and those write.
 
