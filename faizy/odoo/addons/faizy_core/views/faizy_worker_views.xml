@@ -126,10 +126,14 @@
                 <filter name="assignable" string="Available Now"
                         domain="[('state', '=', 'active'), ('is_available', '=', True)]"/>
                 <filter name="active_workers" string="Active" domain="[('state', '=', 'active')]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_city" string="City" context="{'group_by': 'city'}"/>
-                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
-                </group>
+                <!-- Group-by filters sit directly in the search view. Odoo 19's
+                     schema allows only <field> inside <group>, so the old
+                     <group expand="0" string="Group By"> wrapper is invalid;
+                     the client collects context group_by filters into the
+                     Group By menu on its own. -->
+                <separator/>
+                <filter name="group_city" string="City" context="{'group_by': 'city'}"/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
             </search>
         </field>
     </record>

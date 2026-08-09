@@ -194,13 +194,17 @@
                 <filter name="today" string="Scheduled Today"
                         domain="[('scheduled_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0))),
                                  ('scheduled_date', '&lt;=', datetime.datetime.combine(context_today(), datetime.time(23,59,59)))]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
-                    <filter name="group_worker" string="Faizy" context="{'group_by': 'worker_id'}"/>
-                    <filter name="group_service" string="Service" context="{'group_by': 'service_id'}"/>
-                    <filter name="group_city" string="City" context="{'group_by': 'city'}"/>
-                    <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
-                </group>
+                <!-- Group-by filters sit directly in the search view. Odoo 19's
+                     schema allows only <field> inside <group>, so the old
+                     <group expand="0" string="Group By"> wrapper is invalid;
+                     the client collects context group_by filters into the
+                     Group By menu on its own. -->
+                <separator/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                <filter name="group_worker" string="Faizy" context="{'group_by': 'worker_id'}"/>
+                <filter name="group_service" string="Service" context="{'group_by': 'service_id'}"/>
+                <filter name="group_city" string="City" context="{'group_by': 'city'}"/>
+                <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
             </search>
         </field>
     </record>
