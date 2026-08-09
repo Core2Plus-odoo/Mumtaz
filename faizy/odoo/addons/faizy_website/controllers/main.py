@@ -1,8 +1,11 @@
+import logging
 import re
 from urllib.parse import quote
 
 from odoo import fields, http
 from odoo.http import request
+
+_logger = logging.getLogger(__name__)
 
 # 00000-0000000-0
 CNIC_RE = re.compile(r"^\d{5}-\d{7}-\d$")
@@ -141,13 +144,37 @@ class FaizyWebsite(http.Controller):
         welcome message and the footer read. Change it in Settings and every
         surface follows.
 
-        Falls back to the contact page rather than 404ing: a header button that
-        dead-ends because nobody filled in the company phone is worse than one
-        that lands somewhere a human can still be reached.
+        `sudo()` is load-bearing. Visitors are the public user, and reading
+        res.company from that env comes back empty — so the number was blank,
+        the guard below fired, and the button quietly landed on /contactus
+        instead of opening WhatsApp. The footer never showed the symptom
+        because QWeb reads `website.company_id`, which is already sudo'd.
+        Nothing secret is exposed: this is the number printed in the footer.
+
+        Falls back to the contact page rather than 404ing, but says so in the
+        log — a header button that dead-ends because nobody filled in the
+        company phone is worse than one that lands somewhere a human can still
+        be reached, and a silent fallback is how this went unnoticed.
         """
-        number = re.sub(r"\D", "", request.env.company.phone or "")
-        if not number:
+        company = request.website.sudo().company_id or request.env.company.sudo()
+        number = re.sub(r"\D", "", company.phone or "")
+        # wa.me wants the full international number, digits only, no leading
+        # zeros: "0092 334..." and "+92 334..." are the same number written two
+        # ways and only one of them works.
+        number = re.sub(r"^0+", "", number)
+
+        # A country code plus a subscriber number is 8 digits at the very
+        # least and 15 at most (E.164). Anything outside that is a typo, and
+        # sending someone to a wa.me page for a number that does not exist is
+        # worse than sending them to the contact form.
+        if not 8 <= len(number) <= 15:
+            _logger.warning(
+                "Faizy: /whatsapp has no usable company phone (%r), sending the "
+                "visitor to /contactus instead. Set it in Settings > Companies.",
+                company.phone,
+            )
             return request.redirect("/contactus")
+
         message = text or self.WHATSAPP_OPENER
         return request.redirect(
             f"https://wa.me/{number}?text={quote(message)}", local=False
