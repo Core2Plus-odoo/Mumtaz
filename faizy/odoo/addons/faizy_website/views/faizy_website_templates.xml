@@ -367,13 +367,16 @@
                             </h2>
                         </div>
                         <div class="fz-contact">
-                            <a t-if="company.mobile"
-                               t-attf-href="https://wa.me/#{company.mobile.replace('+','').replace(' ','')}"
+                            <!-- company.phone, not company.mobile: res.company
+                                 has no mobile field in Odoo 19, and reading it
+                                 raised on every render of this page. -->
+                            <a t-if="company.phone"
+                               t-attf-href="https://wa.me/#{company.phone.replace('+','').replace(' ','').replace('-','')}"
                                class="fz-contact-item" rel="noopener" target="_blank">
                                 <span class="fz-contact-icon" aria-hidden="true">💬</span>
                                 <span>
                                     <span class="fz-contact-label">WhatsApp</span>
-                                    <span class="fz-contact-value" t-out="company.mobile"/>
+                                    <span class="fz-contact-value" t-out="company.phone"/>
                                 </span>
                             </a>
                             <a t-if="company.email"

@@ -45,6 +45,8 @@ CORE_SOURCES = [
     "odoo/addons/base/models/res_currency.py",
     "odoo/addons/base/models/ir_actions.py",
     "addons/website/models/website_menu.py",
+    "odoo/addons/base/models/res_company.py",
+    "addons/social_media/models/res_company.py",  # social_facebook et al
 ]
 
 # ir.cron delegates to ir.actions.server via _inherits, so these are legal on a
@@ -62,6 +64,14 @@ DELEGATED_FIELDS = {
 # act_window declares only its own fields and gets `name`, `type` and friends
 # from ir.actions.actions.
 SKIP_MODELS = {"ir.ui.view", "ir.model.access"}
+
+# Attribute access that is the ORM rather than a field, so absence from the
+# field index means nothing.
+ORM_ATTRS = {
+    "id", "ids", "env", "sudo", "with_context", "with_user", "browse",
+    "search", "search_count", "read", "write", "create", "mapped",
+    "filtered", "sorted", "exists", "ensure_one", "display_name",
+}
 
 
 def load_sources(odoo_root: Path | None) -> dict[str, str]:
@@ -219,6 +229,39 @@ def main() -> int:
                         f"Odoo {ODOO_VERSION} — allowed: "
                         f"{', '.join(sorted(options))}"
                     )
+
+    # ── QWeb templates ──────────────────────────────────────────────────
+    #
+    # `company.mobile` in a website template took the home page down with a
+    # 500 on every render: res.company has `phone` and `email` in Odoo 19, and
+    # no `mobile` at all. Nothing caught it, because the view-field check only
+    # covers <field name="..."> against our own models, and this was an
+    # attribute access inside a QWeb expression on a CORE model.
+    #
+    # Narrow on purpose. It only looks at attribute access on names that are
+    # unambiguously a res.company, and only flags an attribute that is neither
+    # a field nor plausibly a method. Anything cleverer would need to evaluate
+    # the template.
+    COMPANY_EXPRS = re.compile(
+        r"\b(?:company|website\.company_id|res_company)\.([a-z_][a-z0-9_]*)\b"
+    )
+    company_fields = index.get("res.company", set())
+    if company_fields:
+        for xml_file in sorted(ADDONS.glob("*/views/*.xml")):
+            # Comments first. The fix for this very bug carries the words
+            # "company.mobile" in a comment explaining why not to use it, and
+            # a checker that flags its own documentation is a checker people
+            # start ignoring.
+            text = re.sub(r"<!--.*?-->", "", xml_file.read_text(), flags=re.S)
+            for attr in sorted(set(COMPANY_EXPRS.findall(text))):
+                if attr in company_fields or attr in ORM_ATTRS:
+                    continue
+                problems.append(
+                    f"{xml_file.relative_to(ADDONS)}: res.company has no "
+                    f"{attr!r} in Odoo {ODOO_VERSION} — a QWeb template reading "
+                    f"it raises at render, not at install"
+                )
+        checked.add("res.company (templates)")
 
     print("Checked against:", ", ".join(sorted(checked)) or "nothing")
     if problems:

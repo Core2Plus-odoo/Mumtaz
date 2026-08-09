@@ -103,5 +103,17 @@ def apply_company_profile(env, overwrite_name=True):
             LOGO,
         )
 
+    # social_facebook belongs to the `social_media` module, which faizy_core
+    # does not depend on — it arrives via faizy_website -> website. Today the
+    # load order means it is always present by the time this runs, but that is
+    # a coincidence of the dependency graph, not a guarantee, and writing a
+    # field that does not exist would take the whole install down.
+    missing = [k for k in values if k not in company._fields]
+    for key in missing:
+        _logger.info(
+            "faizy_core: res.company has no %r on this install — skipping it", key
+        )
+        values.pop(key)
+
     company.write({k: v for k, v in values.items() if v})
     _logger.info("faizy_core: company profile applied to %s", company.name)
