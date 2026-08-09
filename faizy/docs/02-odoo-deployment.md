@@ -213,67 +213,53 @@ Afterwards, check the log for the warning above, then confirm in
 
 ## 6. The dedicated domain
 
-DNS first: an **A record** for the domain pointing at the server's IP. Wait for
-`dig +short faizy.example` to return it before requesting a certificate — Let's
-Encrypt validates over HTTP and fails if DNS has not propagated.
-
-`/etc/nginx/sites-available/faizy`:
-
-```nginx
-upstream faizy_odoo      { server 127.0.0.1:8079; }
-upstream faizy_longpoll  { server 127.0.0.1:8078; }
-
-server {
-    listen 80;
-    server_name faizy.example www.faizy.example;
-
-    access_log /var/log/nginx/faizy.access.log;
-    error_log  /var/log/nginx/faizy.error.log;
-
-    client_max_body_size 25M;   # CNIC scans and proof-of-delivery photos
-
-    proxy_set_header Host              $host;
-    proxy_set_header X-Real-IP         $remote_addr;
-    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_read_timeout 720s;
-
-    # Long-polling must go to its own port or realtime updates stall.
-    location /longpolling { proxy_pass http://faizy_longpoll; }
-    location /websocket   { proxy_pass http://faizy_longpoll; }
-
-    location / {
-        proxy_pass http://faizy_odoo;
-        proxy_redirect off;
-    }
-
-    # Odoo fingerprints static assets, so they can be cached hard.
-    location ~* /web/static/ {
-        proxy_cache_valid 200 90m;
-        proxy_pass http://faizy_odoo;
-        expires 864000;
-    }
-
-    gzip on;
-    gzip_types text/css text/plain application/javascript application/json image/svg+xml;
-}
-```
+One command, once DNS points here:
 
 ```bash
-sudo ln -sf /etc/nginx/sites-available/faizy /etc/nginx/sites-enabled/faizy
-sudo nginx -t && sudo systemctl reload nginx
-
-sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d faizy.example -d www.faizy.example
+sudo CERTBOT_EMAIL=you@example.com \
+  bash /opt/faizy/src/faizy/odoo/deploy/setup-domain.sh myfaizy.com
 ```
 
-Then tell Odoo its own address, or generated links and emails will point at
-`localhost`:
+It writes the nginx vhost, gets a certificate, tells Odoo its own address and
+health-checks the result. Safe to re-run.
 
-**Settings → Website → Domain** = `https://faizy.example`
-**Settings → General → Technical → System Parameters** → `web.base.url` =
-`https://faizy.example`, and add `web.base.url.freeze` = `True` so the next admin
-login from another host does not silently overwrite it.
+### DNS first — the script refuses without it
+
+certbot proves control of the domain by answering an HTTP challenge sent to
+whatever IP the A record names. Point it at the wrong host and the challenge
+lands on the wrong server; **five failures in an hour trips a Let's Encrypt
+rate limit** that locks the domain out for the rest of the hour. So the script
+checks DNS before touching anything and exits if it does not match.
+
+In Hostinger hPanel: **Domains → myfaizy.com → DNS / Nameservers → DNS records**.
+
+Check the nameservers on that page first. Hostinger's own are
+`*.dns-parking.com`; if they say anything else, this page does nothing and the
+change belongs wherever those nameservers are managed.
+
+The apex must be an A record pointing at the VPS. For `www`, a CNAME to the
+apex is the better of the two options — it follows the A record, so there is
+nothing to update the next time the server moves. Keep whichever record already
+exists rather than adding a second: two records for one name is the failure that
+looks exactly like a propagation delay.
+
+### What it does on the box
+
+- nginx serves `myfaizy.com` by name on 80/443, sharing those ports with the
+  Mumtaz vhost. The block is never `default_server`, so nothing else is
+  affected.
+- The old `IP:8080` preview stops serving the app and 301s to the domain. It
+  was handing out the login form over plain HTTP, and a bookmark should not
+  keep doing that once a real hostname exists.
+- `web.base.url` is set **and frozen**. The freeze is the part people miss:
+  without it Odoo rewrites the base URL to whatever host the next admin logged
+  in through, so one session over the raw IP sends every password-reset link,
+  portal link and invoice PDF back to the IP.
+- The website record's domain is set to match, which is what the sitemap and
+  canonical tags use.
+
+Change the admin password afterwards. Every session before the certificate
+existed crossed the network in the clear.
 
 ## 7. After install
 
