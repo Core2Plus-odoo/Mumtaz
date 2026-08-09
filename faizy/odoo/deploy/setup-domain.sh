@@ -8,10 +8,15 @@
 # from scratch, certbot skips a certificate that is still valid, and the Odoo
 # settings are writes of the same values.
 #
-# What it does NOT do is touch any other site on this box. The Mumtaz/C2P vhost
-# shares ports 80 and 443 through name-based virtual hosting; the block written
-# here carries an explicit server_name and is never `default_server`, so a
-# request for delivery.mumtaz.digital still goes where it always did.
+# It does not disturb the other sites on this box — C2P/Mumtaz and IG2 share
+# ports 80 and 443 through name-based virtual hosting, and the block written
+# here carries an explicit server_name and is never `default_server`.
+#
+# It does not ask you to take that on trust. Before touching anything it
+# records how every other vhost on the box answers, backs up /etc/nginx, and
+# re-checks all of them at the end — reporting a difference and pointing at the
+# backup rather than leaving you to find out from their users. It also refuses
+# outright if the domain you asked for is already served by another site.
 #
 # Run it only once DNS is pointing here — there is a preflight check below that
 # refuses otherwise, because a certbot failure at that point leaves a
@@ -108,7 +113,54 @@ else
   SERVER_NAMES="$DOMAIN"
 fi
 
-# ── 2. nginx ────────────────────────────────────────────────────────────────
+# ── 2. Protect the neighbours ───────────────────────────────────────────────
+#
+# This box also serves C2P/Mumtaz and IG2. nginx routes by hostname, so a new
+# named vhost cannot steal their traffic — but "cannot" is a claim, and the
+# whole point of a deploy script is to not need claims. So: record how every
+# other site answers right now, and check the same answers again at the end.
+#
+# The probes go to 127.0.0.1 with an explicit Host header, which tests nginx's
+# own routing without depending on DNS or leaving the machine.
+
+NEIGHBOUR_NAMES=()
+for site in /etc/nginx/sites-enabled/*; do
+  [[ -e "$site" ]] || continue
+  [[ "$(basename "$site")" == "faizy" ]] && continue
+  while read -r name; do
+    [[ "$name" == "_" || -z "$name" ]] && continue
+    [[ "$name" == "$DOMAIN" || "$name" == "www.$DOMAIN" ]] && {
+      warn "$name is already served by $(basename "$site") — refusing to fight over it."
+      exit 1
+    }
+    NEIGHBOUR_NAMES+=("$name")
+  done < <(grep -hoP '^\s*server_name\s+\K[^;]+' "$site" 2>/dev/null | tr ' ' '\n' | sort -u)
+done
+
+probe() {  # probe <hostname> -> "http_code/https_code"
+  local host="$1" http https
+  http="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 \
+          -H "Host: $host" http://127.0.0.1/ 2>/dev/null || echo 000)"
+  https="$(curl -ksS -o /dev/null -w '%{http_code}' --max-time 10 \
+           -H "Host: $host" https://127.0.0.1/ 2>/dev/null || echo 000)"
+  echo "$http/$https"
+}
+
+declare -A BEFORE=()
+if [[ ${#NEIGHBOUR_NAMES[@]} -gt 0 ]]; then
+  log "Recording how the other sites answer, so we can prove we did not break them"
+  for name in "${NEIGHBOUR_NAMES[@]}"; do
+    BEFORE["$name"]="$(probe "$name")"
+    echo "    $name -> ${BEFORE[$name]}"
+  done
+fi
+
+# certbot edits nginx config in place. A dated copy costs nothing and is the
+# difference between "restore it" and "reconstruct it from memory".
+BACKUP="/root/nginx-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+tar czf "$BACKUP" -C /etc nginx 2>/dev/null && log "nginx config backed up to $BACKUP"
+
+# ── 3. nginx ────────────────────────────────────────────────────────────────
 log "Writing the nginx site for $SERVER_NAMES"
 
 cat > /etc/nginx/sites-available/faizy <<EOF
@@ -175,7 +227,7 @@ if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q "Status: active
   ufw allow 443/tcp >/dev/null || true
 fi
 
-# ── 3. TLS ──────────────────────────────────────────────────────────────────
+# ── 4. TLS ──────────────────────────────────────────────────────────────────
 log "Requesting a certificate"
 if ! command -v certbot >/dev/null; then
   apt-get install -y --no-install-recommends certbot python3-certbot-nginx
@@ -209,7 +261,7 @@ fi
 
 systemctl reload nginx
 
-# ── 4. Tell Odoo its own address ────────────────────────────────────────────
+# ── 5. Tell Odoo its own address ────────────────────────────────────────────
 #
 # Odoo builds absolute URLs — password resets, portal links, invoice PDFs, the
 # WhatsApp messages this app sends — from web.base.url. Left unset it stays at
@@ -239,7 +291,34 @@ PY
 
 systemctl restart faizy-odoo
 
-# ── 5. Health ───────────────────────────────────────────────────────────────
+# ── 6. Did we break the neighbours? ─────────────────────────────────────────
+#
+# Checked after certbot, because certbot is the step that rewrites config it
+# did not write. If any other site answers differently than it did at the
+# start, say so loudly and point at the backup — a silent regression on C2P or
+# IG2 would be found by their users, not by us.
+
+if [[ ${#NEIGHBOUR_NAMES[@]} -gt 0 ]]; then
+  log "Re-checking the other sites"
+  REGRESSED=0
+  for name in "${NEIGHBOUR_NAMES[@]}"; do
+    after="$(probe "$name")"
+    if [[ "$after" == "${BEFORE[$name]}" ]]; then
+      echo "    $name -> $after  (unchanged)"
+    else
+      warn "$name changed: ${BEFORE[$name]} -> $after"
+      REGRESSED=1
+    fi
+  done
+  if [[ "$REGRESSED" == "1" ]]; then
+    warn "Another site on this box now answers differently."
+    warn "Restore with:  tar xzf $BACKUP -C /etc && nginx -t && systemctl reload nginx"
+    exit 1
+  fi
+  log "Every other site answers exactly as before"
+fi
+
+# ── 7. Health ───────────────────────────────────────────────────────────────
 log "Checking $BASE_URL"
 sleep 3
 CODE="$(curl -fsS -o /dev/null -w '%{http_code}' --max-time 20 "$BASE_URL" || echo 000)"
