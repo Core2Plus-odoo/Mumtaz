@@ -1233,3 +1233,229 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 
   .faizy-urdu { color: $fz-orange; }
 }
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  WhatsApp in the header
+// ════════════════════════════════════════════════════════════════════════
+//
+// The service runs on WhatsApp, so the header carries the same door. Selected
+// by href, like "Start free" — the menu is marketing's to reorder, and an
+// nth-child rule would silently move to the wrong item the first time they do.
+//
+// Deliberately an OUTLINE pill, not a filled one. Two solid pills side by side
+// is two primary actions, which is none: "Start free" stays the filled orange
+// and this reads as the second, quieter way in.
+//
+// #0b7a68 rather than WhatsApp's own #25D366 — the brand green measures 1.88:1
+// on this header, which is decoration, not text. This is the same hue family
+// two steps darker: 4.97:1 as text, 5.25:1 white-on-green when it fills.
+$fz-whatsapp:      #0b7a68;
+$fz-whatsapp-deep: #075e54;
+
+#wrapwrap > header a[href="/whatsapp"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1.5px solid rgba(11, 122, 104, 0.45);
+  border-radius: 999px;
+  padding: 0.4rem 1rem !important;
+  font-weight: 600;
+  color: $fz-whatsapp !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  // FontAwesome 4.7.0 ships with Odoo and \f232 is fa-whatsapp — checked
+  // against addons/web/static/src/libs/fontawesome, not remembered.
+  &::before {
+    font: normal normal normal 1.05em/1 FontAwesome;
+    content: "\f232";
+  }
+
+  &:hover {
+    background: $fz-whatsapp-deep;
+    border-color: $fz-whatsapp-deep;
+    color: #fff !important;
+  }
+
+  // The active-page underline marker would sit outside the pill.
+  &.active { box-shadow: none; }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  Legal pages
+// ════════════════════════════════════════════════════════════════════════
+//
+// A privacy policy nobody can read is a compliance artefact, not a promise.
+// Narrow measure, generous leading, real heading hierarchy — the same care as
+// the marketing pages, because this is the page that decides whether somebody
+// hands over their mother's address.
+.fz-legal {
+  max-width: 46rem;
+  margin: 0 auto;
+
+  // Inline links in prose. Without this they fall back to Bootstrap's blue,
+  // which on a warm sand page reads as an unstyled page rather than a design
+  // choice. 6.29:1 on the card, 5.68:1 on sand.
+  p a, li a { color: $fz-clay; text-underline-offset: 2px; }
+
+  // ~70 characters. Long lines are where legal text loses people.
+  p, li { line-height: 1.8; }
+
+  h2 {
+    font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+    margin-top: 2.25rem;
+    margin-bottom: 0.6rem;
+    scroll-margin-top: 5rem;    // so the contents links don't land under the header
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.35rem;
+  }
+
+  ul { padding-left: 1.15rem; }
+  li { margin-bottom: 0.35rem; }
+
+  // The plain-language summary that opens each section. Set apart so a reader
+  // who only reads these still knows what they agreed to.
+  .fz-legal-plain {
+    border-left: 3px solid $fz-orange;
+    background: rgba(246, 158, 34, 0.07);
+    padding: 0.8rem 1rem;
+    border-radius: 0 var(--fz-r-sm, 0.75rem) var(--fz-r-sm, 0.75rem) 0;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .fz-legal-updated {
+    font-size: 0.875rem;
+    color: $fz-ink-400;
+  }
+
+  .fz-legal-toc {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    columns: 2;
+    column-gap: 1.5rem;
+    font-size: 0.9375rem;
+
+    li { margin-bottom: 0.3rem; break-inside: avoid; }
+    a { color: $fz-clay; text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 2px; }
+  }
+
+  @media (max-width: 575.98px) {
+    .fz-legal-toc { columns: 1; }
+  }
+
+  table {
+    width: 100%;
+    font-size: 0.9375rem;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid rgba(43, 38, 34, 0.1);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { font-weight: 600; }
+  }
+
+  // Tables carry the retention schedule and would otherwise push the page
+  // sideways on a phone.
+  .fz-legal-table { overflow-x: auto; }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  Contact
+// ════════════════════════════════════════════════════════════════════════
+//
+// WhatsApp first and the form second, because that is the honest order: this
+// is a WhatsApp business, and a contact form that takes a day to answer should
+// not be the biggest thing on the page.
+.fz-contact-page {
+  // The polish layer gives .fz-card height:100% so tiles in a row line up.
+  // Here that is wrong: the channels column is short and the form column is
+  // long, so the card stretched into a mostly-empty white box the height of
+  // the form. Cards on this page size to their content.
+  .fz-card { height: auto; }
+  .fz-card p a { color: $fz-clay; text-underline-offset: 2px; }
+
+  .fz-contact-primary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-radius: var(--fz-r-lg, 1.35rem);
+    background: $fz-whatsapp-deep;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 10px 26px -18px rgba(7, 94, 84, 0.9);
+    transition: transform 0.18s ease, filter 0.18s ease;
+
+    &:hover { transform: translateY(-2px); filter: brightness(1.06); color: #fff; }
+
+    .fz-contact-primary-icon { font-size: 1.75rem; line-height: 1; }
+    .fz-contact-primary-label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      // 7.42:1 on #075e54 at full cream; held above AA at 78%.
+      color: rgba(253, 251, 247, 0.82);
+    }
+    .fz-contact-primary-value { display: block; font-weight: 600; font-size: 1.05rem; }
+  }
+
+  .fz-contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(43, 38, 34, 0.08);
+      font-size: 0.9375rem;
+    }
+    li:last-child { border-bottom: 0; }
+
+    i { color: $fz-clay; width: 1.1rem; text-align: center; margin-top: 0.15rem; }
+    a { color: $fz-ink; text-decoration: none; }
+    a:hover { color: $fz-clay; text-decoration: underline; text-underline-offset: 2px; }
+  }
+
+  // Odoo's form snippet ships Bootstrap defaults and its own purple submit.
+  // Restyled here rather than in the template so the website editor can add a
+  // field without it arriving unstyled.
+  .s_website_form {
+    .form-control, .form-select {
+      border-radius: var(--fz-r-sm, 0.75rem);
+      border: 1px solid rgba(43, 38, 34, 0.16);
+      padding: 0.6rem 0.85rem;
+      background: #fffdfa;
+    }
+
+    .s_website_form_label { font-weight: 500; font-size: 0.9375rem; margin-bottom: 0.3rem; }
+    .s_website_form_mark { color: $fz-clay; }
+
+    .s_website_form_send, .s_website_form_send:hover {
+      background: $fz-orange;
+      border-color: $fz-orange;
+      color: $fz-black;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 0.55rem 1.5rem;
+    }
+    .s_website_form_send:hover { background: $fz-orange-600; border-color: $fz-orange-600; }
+  }
+}

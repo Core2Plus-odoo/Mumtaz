@@ -12,6 +12,18 @@
         </xpath>
     </template>
 
+    <!-- No search in the header. Odoo's own toggle rather than CSS that hides
+         it: the magnifier searched five pages, which is not a feature, it is a
+         dead end wearing the same weight as "Start free". Deactivating the
+         view also drops the search modal and its JS from every page.
+
+         `website.header_search_box` is a real extension template shipped
+         active="True" — this is the same switch the website editor's header
+         options flip, so an editor can put it back without a release. -->
+    <record id="website.header_search_box" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
+
     <!-- ════════════════════════════════════════════════════════════════
          HOME
          ════════════════════════════════════════════════════════════════ -->
@@ -548,6 +560,428 @@
     </template>
 
     <!-- ════════════════════════════════════════════════════════════════
+         CONTACT US
+         Odoo's stock page is a parallax banner over stock photography, a
+         six-field form, and "3575 Fake Buena Vista Avenue / +1 555-555-5556".
+         The address block is placeholder text that ships visible, which is the
+         single worst thing a contact page can do.
+
+         Inherited and replaced rather than rewritten as a new route: /contactus
+         is a real website.page, the header CTA points at it, and Odoo's form
+         builder needs the form markup it recognises. So the s_website_form
+         block is kept intact — same ids, same classes, same action — and only
+         the page around it changes.
+
+         WhatsApp is first. This is a WhatsApp business; a contact form that
+         gets answered in a day should not outrank the channel that answers in
+         minutes.
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="faizy_contactus" inherit_id="website.contactus" name="Faizy — Contact Us">
+        <xpath expr="//div[@id='wrap']" position="replace">
+            <div id="wrap" class="faizy-page fz-contact-page">
+                <section class="fz-hero" style="padding-bottom: clamp(1.25rem, 3vw, 2rem);">
+                    <div class="container text-center position-relative">
+                        <p class="fz-eyebrow mb-2">Talk to us</p>
+                        <h1 class="mb-3">There is always someone on the other end</h1>
+                        <p class="fz-lead mx-auto" style="max-width: 38rem;">
+                            Whether your mother needs her medicine today or you just
+                            want to know how this works before you sign up — write to
+                            us. We answer in Urdu or English, whichever is easier.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="fz-section fz-section--tight">
+                    <div class="container">
+                        <div class="row g-4 justify-content-center">
+
+                            <!-- Channels first, form second. -->
+                            <div class="col-12 col-lg-4">
+                                <a t-if="res_company.phone" href="/whatsapp" class="fz-contact-primary mb-3" rel="noopener">
+                                    <i class="fa fa-whatsapp fz-contact-primary-icon"
+                                       title="WhatsApp" aria-label="WhatsApp" role="img"/>
+                                    <span>
+                                        <span class="fz-contact-primary-label">WhatsApp — fastest</span>
+                                        <span class="fz-contact-primary-value o_force_ltr" t-out="res_company.phone"/>
+                                    </span>
+                                </a>
+
+                                <div class="fz-card">
+                                    <p class="fz-footer-head mb-2" style="color: inherit; opacity: 0.6;">Other ways</p>
+                                    <ul class="fz-contact-list">
+                                        <!-- Every row is conditional. A contact page
+                                             that lists a channel nobody answers is
+                                             worse than one with a single line on it,
+                                             and that is exactly how the stock page
+                                             ships. -->
+                                        <li t-if="res_company.email">
+                                            <i class="fa fa-envelope-o" title="Email" aria-label="Email" role="img"/>
+                                            <a t-attf-href="mailto:#{res_company.email}" t-out="res_company.email"/>
+                                        </li>
+                                        <li t-if="res_company.social_facebook">
+                                            <i class="fa fa-facebook-square" title="Facebook" aria-label="Facebook" role="img"/>
+                                            <a t-att-href="res_company.social_facebook" target="_blank" rel="noopener">Faizy on Facebook</a>
+                                        </li>
+                                        <li t-if="res_company.website">
+                                            <i class="fa fa-globe" title="Website" aria-label="Website" role="img"/>
+                                            <a t-att-href="res_company.website" t-out="res_company.website"/>
+                                        </li>
+                                        <li>
+                                            <i class="fa fa-user-plus" title="Join as a Faizy" aria-label="Join as a Faizy" role="img"/>
+                                            <a href="/join">Want to work with us? Apply here</a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="fz-card mt-3" t-if="res_company.street or res_company.city">
+                                    <p class="fz-footer-head mb-2" style="color: inherit; opacity: 0.6;">Registered office</p>
+                                    <address class="mb-0" style="font-size: 0.9375rem; line-height: 1.7;">
+                                        <span t-field="res_company.partner_id"
+                                              t-options='{"widget": "contact", "fields": ["address"], "no_marker": true}'/>
+                                    </address>
+                                </div>
+                            </div>
+
+                            <!-- The form. Markup preserved from website.contactus so
+                                 the form builder, the pre-fill and /website/form/
+                                 all keep working; only the wrapper is ours. -->
+                            <div class="col-12 col-lg-7">
+                                <div class="fz-card">
+                                    <h2 class="h5 mb-1">Send us a message</h2>
+                                    <p class="text-muted mb-3" style="font-size: 0.9375rem;">
+                                        We reply within one working day. For anything
+                                        urgent, use WhatsApp.
+                                    </p>
+                                    <section class="s_website_form" data-vcss="001" data-snippet="s_website_form">
+                                        <form id="contactus_form" action="/website/form/" method="post"
+                                              enctype="multipart/form-data" class="o_mark_required" data-mark="*"
+                                              data-model_name="mail.mail" data-success-mode="redirect"
+                                              data-success-page="/contactus-thank-you" data-pre-fill="true">
+                                            <div class="s_website_form_rows row s_col_no_bgcolor">
+                                                <div class="mb-3 col-lg-6 s_website_form_field s_website_form_custom s_website_form_required" data-type="char" data-name="Field">
+                                                    <label class="s_website_form_label" for="contact1">
+                                                        <span class="s_website_form_label_content">Your name</span>
+                                                        <span class="s_website_form_mark"> *</span>
+                                                    </label>
+                                                    <input id="contact1" type="text" class="form-control s_website_form_input" name="name" required="required" data-fill-with="name"/>
+                                                </div>
+                                                <div class="mb-3 col-lg-6 s_website_form_field s_website_form_custom" data-type="char" data-name="Field">
+                                                    <label class="s_website_form_label" for="contact2">
+                                                        <span class="s_website_form_label_content">WhatsApp number</span>
+                                                    </label>
+                                                    <input id="contact2" type="tel" class="form-control s_website_form_input" name="phone" data-fill-with="phone"/>
+                                                </div>
+                                                <div class="mb-3 col-12 s_website_form_field s_website_form_required s_website_form_model_required" data-type="email" data-name="Field">
+                                                    <label class="s_website_form_label" for="contact3">
+                                                        <span class="s_website_form_label_content">Email</span>
+                                                        <span class="s_website_form_mark"> *</span>
+                                                    </label>
+                                                    <input id="contact3" type="email" class="form-control s_website_form_input" name="email_from" required="required" data-fill-with="email"/>
+                                                </div>
+                                                <div class="mb-3 col-12 s_website_form_field s_website_form_required s_website_form_model_required" data-type="char" data-name="Field">
+                                                    <label class="s_website_form_label" for="contact5">
+                                                        <span class="s_website_form_label_content">What is it about?</span>
+                                                        <span class="s_website_form_mark"> *</span>
+                                                    </label>
+                                                    <input id="contact5" type="text" class="form-control s_website_form_input" name="subject" required="required"/>
+                                                </div>
+                                                <div class="mb-3 col-12 s_website_form_field s_website_form_custom s_website_form_required" data-type="text" data-name="Field">
+                                                    <label class="s_website_form_label" for="contact6">
+                                                        <span class="s_website_form_label_content">How can we help?</span>
+                                                        <span class="s_website_form_mark"> *</span>
+                                                    </label>
+                                                    <!-- Written open-and-close, not self-closed: a
+                                                         serialiser that emits <textarea/> makes an HTML
+                                                         parser swallow the rest of the document. -->
+                                                    <textarea id="contact6" class="form-control s_website_form_input" name="description" required="required" rows="6"></textarea>
+                                                </div>
+                                                <div class="mb-3 col-12 s_website_form_field s_website_form_dnone">
+                                                    <div class="row s_col_no_resize s_col_no_bgcolor">
+                                                        <label class="col-form-label col-sm-auto s_website_form_label" for="contact7">
+                                                            <span class="s_website_form_label_content">Email To</span>
+                                                        </label>
+                                                        <div class="col-sm">
+                                                            <input id="contact7" type="hidden" class="form-control s_website_form_input" name="email_to"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-0 py-2 col-12 s_website_form_submit s_website_form_no_submit_label" data-name="Submit Button">
+                                                    <a href="#" role="button" class="btn btn-primary s_website_form_send">Send message</a>
+                                                    <span id="s_website_form_result"/>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </section>
+                                    <p class="text-muted mt-3 mb-0" style="font-size: 0.8125rem;">
+                                        What you send us is handled as described in our
+                                        <a href="/privacy">privacy policy</a>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="oe_structure" id="oe_structure_faizy_contactus_end"/>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         PRIVACY POLICY
+         Written from what the software actually does, not from a template.
+         Faizy holds a family's home address, a mother's prescription and a
+         worker's CNIC, and moves all of it over WhatsApp — so every claim here
+         is one that can be checked against the models in faizy_core.
+
+         Each section opens with a plain-language line before the careful one.
+         A policy only does its job if somebody reads it.
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="privacy" name="Faizy — Privacy Policy">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Privacy policy</t>
+            <t t-set="website_meta_description">How Faizy handles your family's information — what we collect, who can see it, how long we keep it, and how to ask us to delete it.</t>
+
+            <div id="wrap" class="faizy-page">
+                <section class="fz-hero" style="padding-bottom: clamp(1.25rem, 3vw, 2rem);">
+                    <div class="container text-center position-relative">
+                        <p class="fz-eyebrow mb-2">Privacy</p>
+                        <h1 class="mb-3">Your family's information, and what we do with it</h1>
+                        <p class="fz-lead mx-auto" style="max-width: 40rem;">
+                            You are trusting us with your mother's address and her
+                            prescriptions. This page says exactly what we hold, who
+                            can see it, and how to make us delete it.
+                        </p>
+                        <p class="fz-legal-updated mt-3 mb-0">Last updated 9 August 2026</p>
+                    </div>
+                </section>
+
+                <section class="fz-section fz-section--tight">
+                    <div class="container">
+                        <div class="fz-legal">
+
+                            <div class="fz-card mb-4">
+                                <p class="fz-footer-head mb-2" style="color: inherit; opacity: 0.6;">On this page</p>
+                                <ul class="fz-legal-toc">
+                                    <li><a href="#who">Who we are</a></li>
+                                    <li><a href="#collect">What we collect</a></li>
+                                    <li><a href="#why">Why we hold it</a></li>
+                                    <li><a href="#who-sees">Who can see it</a></li>
+                                    <li><a href="#whatsapp">WhatsApp and Meta</a></li>
+                                    <li><a href="#payments">Payments</a></li>
+                                    <li><a href="#keep">How long we keep it</a></li>
+                                    <li><a href="#rights">Your choices</a></li>
+                                    <li><a href="#changes">Changes</a></li>
+                                    <li><a href="#contact">Contacting us</a></li>
+                                </ul>
+                            </div>
+
+                            <h2 id="who">Who we are</h2>
+                            <p>
+                                Faizy is a family-care service for Pakistanis living
+                                abroad. You tell us on WhatsApp what your family in
+                                Pakistan needs — groceries, medicines, a doctor's
+                                visit, a utility bill, paperwork — and one of our
+                                vetted Faizies does it and sends back a photo.
+                            </p>
+                            <p t-if="company.report_footer" t-out="company.report_footer"/>
+                            <p>
+                                We are the controller of the information described
+                                below: we decide what is collected and why.
+                            </p>
+
+                            <h2 id="collect">What we collect</h2>
+                            <p class="fz-legal-plain">
+                                Three groups of people: you, the family you are
+                                caring for, and the Faizy who does the work. We
+                                collect different things about each.
+                            </p>
+
+                            <h3>You, the subscriber</h3>
+                            <ul>
+                                <li>Your name, WhatsApp number, email address and the country you live in.</li>
+                                <li>Your plan, your invoices, and how many care activities you have used.</li>
+                                <li>Your wallet balance and every top-up, charge and refund that made it.</li>
+                                <li>The messages you send us on WhatsApp, and the ones we send you.</li>
+                            </ul>
+
+                            <h3>The family you are caring for</h3>
+                            <ul>
+                                <li>Their name, their relationship to you, and their permanent Faizy ID.</li>
+                                <li>Their address, city and phone number — we cannot deliver to a family we cannot find.</li>
+                                <li>Anything you tell us that helps us look after them properly, including health notes, medicines and mobility needs.</li>
+                                <li>Documents you choose to store with us — a prescription, a utility bill, a copy of an ID for paperwork we are doing on your behalf.</li>
+                                <li>What was asked for on each task, the photo the Faizy takes when it is done, and the rating you give afterwards.</li>
+                            </ul>
+                            <p>
+                                We ask you for a family member's information, but it is
+                                theirs. Please tell them they are on the service and what
+                                we hold. If they would rather we did not, tell us and we
+                                will remove them.
+                            </p>
+
+                            <h3>Faizies and applicants</h3>
+                            <ul>
+                                <li>Name, phone number, email, city and the areas they cover.</li>
+                                <li>CNIC number and identity documents, because somebody entering a family's home is vetted first.</li>
+                                <li>References, work history and the outcome of the application.</li>
+                                <li>Their completed tasks, ratings and payouts.</li>
+                            </ul>
+
+                            <h2 id="why">Why we hold it</h2>
+                            <p class="fz-legal-plain">
+                                To do the job you asked for, to bill you correctly, and
+                                to keep your family safe. Nothing here is collected to
+                                sell.
+                            </p>
+                            <ul>
+                                <li><strong>To run the service</strong> — an address to deliver to, a phone to call, a note about a medicine that matters.</li>
+                                <li><strong>To bill you</strong> — plan price, activities used, overage, wallet movements and invoices.</li>
+                                <li><strong>To keep people safe</strong> — vetting Faizies, and a proof-of-delivery photo so you can see what actually happened.</li>
+                                <li><strong>To answer you</strong> — the WhatsApp thread is the service, so we keep it.</li>
+                            </ul>
+                            <p>
+                                <strong>We do not sell your information, and we do not
+                                share it for anyone else's advertising.</strong>
+                            </p>
+
+                            <h2 id="who-sees">Who can see it</h2>
+                            <p class="fz-legal-plain">
+                                Less than you might expect. The Faizy running your
+                                errand does not automatically get your mother's name
+                                and phone number.
+                            </p>
+                            <p>
+                                Every task carries a privacy setting. With it on, the
+                                assigned Faizy sees the task and the address — enough
+                                to do the work — and not the family member's name,
+                                phone number or notes. That is enforced in the
+                                software, not by asking people to be discreet.
+                            </p>
+                            <ul>
+                                <li><strong>Our operations team</strong> sees what it needs to assign, check and support the work.</li>
+                                <li><strong>The assigned Faizy</strong> sees the task, the address and whatever you chose to share.</li>
+                                <li><strong>A vendor</strong> — a pharmacy, a lab, a shop — sees only what is needed to fulfil that one order.</li>
+                                <li><strong>Nobody else</strong>, unless the law requires it of us.</li>
+                            </ul>
+
+                            <h2 id="whatsapp">WhatsApp and Meta</h2>
+                            <p class="fz-legal-plain">
+                                We talk to you on WhatsApp, so Meta carries those
+                                messages. Their privacy terms apply to that carriage
+                                as well as ours.
+                            </p>
+                            <p>
+                                Messages between you and Faizy travel over WhatsApp,
+                                operated by Meta. We keep our own copy of what was
+                                sent and when, so that we can answer "was my family
+                                actually told?". If you would rather not use WhatsApp,
+                                write to us and we will arrange another way.
+                            </p>
+
+                            <h2 id="payments">Payments</h2>
+                            <p class="fz-legal-plain">
+                                We never see your full card number.
+                            </p>
+                            <p>
+                                Card details are handled by the payment provider, not
+                                by us. We store the invoice, the amount, the currency
+                                and whether it was paid. When a provider is in place
+                                we will name it on this page.
+                            </p>
+
+                            <h2 id="keep">How long we keep it</h2>
+                            <p class="fz-legal-plain">
+                                Roughly: as long as you are a customer, plus what the
+                                tax people require.
+                            </p>
+                            <div class="fz-legal-table">
+                                <table>
+                                    <tr>
+                                        <th>What</th>
+                                        <th>How long</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Your account and family records</td>
+                                        <td>While your subscription is live, then 12 months</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Task history and proof-of-delivery photos</td>
+                                        <td>24 months</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Documents you stored with us</td>
+                                        <td>Until you delete them, or 12 months after you leave</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Invoices, wallet ledger and accounting records</td>
+                                        <td>As long as tax law requires — normally 7 years</td>
+                                    </tr>
+                                    <tr>
+                                        <td>WhatsApp message log</td>
+                                        <td>24 months</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Faizy vetting records, unsuccessful applicants</td>
+                                        <td>12 months after the decision</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <h2 id="rights">Your choices</h2>
+                            <p class="fz-legal-plain">
+                                Ask us and we will show you what we hold, correct it,
+                                or delete it.
+                            </p>
+                            <ul>
+                                <li>Ask for a copy of what we hold about you or your family.</li>
+                                <li>Correct anything that is wrong — an old address, a changed number.</li>
+                                <li>Remove a family member, or delete a stored document, at any time.</li>
+                                <li>Close your account. We delete what we are allowed to and keep only what accounting law requires.</li>
+                                <li>Turn on the privacy setting for any task so the Faizy sees less.</li>
+                            </ul>
+                            <p>
+                                Message us on WhatsApp and say what you want done. We
+                                aim to answer within seven days.
+                            </p>
+
+                            <h2 id="changes">Changes</h2>
+                            <p>
+                                If we change how we handle your information in a way
+                                that matters, we will say so on WhatsApp rather than
+                                quietly editing this page. The date at the top always
+                                shows when it last changed.
+                            </p>
+
+                            <h2 id="contact">Contacting us</h2>
+                            <p>
+                                Questions about anything on this page, or a request
+                                about your information:
+                            </p>
+                            <ul class="fz-contact-list">
+                                <li t-if="whatsapp_number">
+                                    <i class="fa fa-whatsapp" title="WhatsApp" aria-label="WhatsApp" role="img"/>
+                                    <a href="/whatsapp" rel="noopener">WhatsApp <span t-out="whatsapp_number"/></a>
+                                </li>
+                                <li t-if="company.email">
+                                    <i class="fa fa-envelope-o" title="Email" aria-label="Email" role="img"/>
+                                    <a t-attf-href="mailto:#{company.email}" t-out="company.email"/>
+                                </li>
+                                <li>
+                                    <i class="fa fa-comments-o" title="Contact form" aria-label="Contact form" role="img"/>
+                                    <a href="/contactus">Send us a message</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="oe_structure" id="oe_structure_faizy_privacy_end"/>
+            </div>
+        </t>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
          FOOTER
          Odoo's default footer is a snippet full of placeholder copy —
          "disruptive products", info@yourcompany.example.com, an X and a
@@ -585,6 +1019,8 @@
                                 <li><a href="/pricing">Plans</a></li>
                                 <li><a href="/start">Start free</a></li>
                                 <li><a href="/join">Become a Faizy</a></li>
+                                <li><a href="/contactus">Contact us</a></li>
+                                <li><a href="/privacy">Privacy policy</a></li>
                             </ul>
                         </div>
 

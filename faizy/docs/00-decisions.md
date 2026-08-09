@@ -100,6 +100,71 @@ with the row they are the fallback for.
 
 ---
 
+## ⚠️ DECIDED: vendors are a segment of contacts, not a model
+
+**Muhammad's call: "make vendor segment in faizy core."** Built as fields on
+`res.partner` behind an `is_faizy_vendor` flag, with its own kanban/list/form
+and a *Faizy → Network → Vendors* menu.
+
+**Why not a `faizy.vendor` model.** `faizy.order.vendor_id` already pointed at
+`res.partner`, and so do vendor bills, payments and anything the accountant
+will eventually want to reconcile. A separate table would mean the same
+pharmacy exists twice, and the day the two rows disagree nobody can say which
+is right. That is the failure this codebase avoids everywhere else — customers
+are `res.partner` too — so vendors follow the same rule. Flagging a partner as
+a vendor also sets `supplier_rank`, so they are a vendor everywhere in Odoo,
+not only on our screens.
+
+**Commission is per vendor now.** The company rate in Settings is still the
+default; `faizy_vendor_custom_commission` + `faizy_vendor_commission_rate` is
+the exception. A boolean rather than "0.0 means inherit", because 0% is a real
+arrangement — a partner clinic we take nothing from — and "blank means inherit"
+would make it impossible to express.
+
+The rate is deliberately **not** in `_compute_amounts`'s `@api.depends`.
+Renegotiating terms must not silently rewrite the commission on orders already
+delivered and reconciled; new orders pick up the new rate, old ones keep the
+figure they were actually computed with. Same principle as the company rate.
+
+**One bug this surfaced.** The sample-data loader's `order()` helper took a
+`vendor=None` parameter and never wrote it. Every sample order therefore had
+zero commission — the one number that proves the revenue model was the one the
+demo could not show. Four sample vendors now exist, three of them attached to
+completed orders, one on a negotiated 15%.
+
+---
+
+## Privacy policy — published, and three numbers need your sign-off
+
+`/privacy` is live in `faizy_website`, linked from the footer and from the
+contact form. It is written from what the software actually does — every claim
+maps to a model in `faizy_core`, including the per-task privacy setting that
+hides the family member's name, phone and notes from the assigned Faizy.
+
+**The retention periods are mine, not yours.** I picked working defaults so the
+page could say something concrete rather than "TBD", which is worse than
+useless on a privacy policy. Confirm or change:
+
+| What | Currently says |
+|---|---|
+| Account and family records | While subscribed, then 12 months |
+| Task history and proof-of-delivery photos | 24 months |
+| Stored documents | Until deleted, or 12 months after leaving |
+| Invoices, wallet ledger, accounting | 7 years (tax) |
+| WhatsApp message log | 24 months |
+| Vetting records, unsuccessful applicants | 12 months after the decision |
+
+Two other lines are deliberately non-committal until you decide: the payment
+processor is unnamed ("when a provider is in place we will name it"), and there
+is no privacy email address because the company record has no email set — the
+page routes those requests to WhatsApp and the contact form instead.
+
+Nothing on that page is enforced by code yet. A retention promise without a
+cron that deletes is a promise, not a control — worth building before the
+customer base is large enough for anyone to ask.
+
+---
+
 ## TL;DR
 
 *(Sections below predate the decision above. Kept as the record of the analysis;

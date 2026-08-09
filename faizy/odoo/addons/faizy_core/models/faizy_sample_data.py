@@ -62,6 +62,42 @@ class FaizySampleData(models.TransientModel):
              "base_rate": 1800, "is_sample": True},
         ])
 
+        # ── The vendors we buy through ───────────────────────────────────
+        # The supply side of an order. Without at least one, the commission
+        # figures on the dashboard are all zero and the revenue model looks
+        # like it does not work.
+        vendors = env["res.partner"].create([
+            {"name": "Al-Shifa Pharmacy", "is_company": True,
+             "phone": "+924235559001", "city": "Lahore",
+             "country_id": env.ref("base.pk").id,
+             "is_faizy_vendor": True, "faizy_vendor_type": "pharmacy",
+             "faizy_vendor_state": "active", "faizy_vendor_onboarded": today,
+             "faizy_vendor_note": "Delivers Model Town before noon. Ask for Adnan.",
+             "is_sample": True},
+            {"name": "Green Valley Kiryana", "is_company": True,
+             "phone": "+922134559002", "city": "Karachi",
+             "country_id": env.ref("base.pk").id,
+             "is_faizy_vendor": True, "faizy_vendor_type": "grocery",
+             "faizy_vendor_state": "active", "faizy_vendor_onboarded": today,
+             "is_sample": True},
+            # A negotiated rate, so the override path is visible on a real
+            # record rather than only in the field's help text.
+            {"name": "Islamabad Diagnostics", "is_company": True,
+             "phone": "+925135559003", "city": "Islamabad",
+             "country_id": env.ref("base.pk").id,
+             "is_faizy_vendor": True, "faizy_vendor_type": "lab",
+             "faizy_vendor_state": "active", "faizy_vendor_onboarded": today,
+             "faizy_vendor_custom_commission": True,
+             "faizy_vendor_commission_rate": 0.15,
+             "is_sample": True},
+            {"name": "Rahat Medical Store", "is_company": True,
+             "phone": "+924235559004", "city": "Lahore",
+             "country_id": env.ref("base.pk").id,
+             "is_faizy_vendor": True, "faizy_vendor_type": "pharmacy",
+             "faizy_vendor_state": "prospect", "is_sample": True},
+        ])
+        shifa, kiryana, diagnostics, _prospect = vendors
+
         # ── Customers, wherever they are ─────────────────────────────────
         # Two in the Gulf and one in the UK, because that is the shape of the
         # real book — anyone demoing on sample data should see a non-AED
@@ -121,6 +157,10 @@ class FaizySampleData(models.TransientModel):
                 "purchase_value": purchase,
                 "service_fee": fee,
                 "worker_id": worker.id if worker else False,
+                # This parameter existed and was never written, so every sample
+                # order had zero commission — the one number that proves the
+                # revenue model was the one the sample data could not show.
+                "vendor_id": vendor.id if vendor else False,
                 "is_sample": True,
             }
             rec = env["faizy.order"].create(vals)
@@ -138,18 +178,21 @@ class FaizySampleData(models.TransientModel):
             return rec
 
         order(bilal, nasreen, "medicine", "Monthly BP medication", "completed", 3,
-              84.0, 15.0, workers[1], "5")
+              84.0, 15.0, workers[1], "5", vendor=shifa)
         order(bilal, nasreen, "groceries", "Weekly groceries", "completed", 10,
-              210.0, 20.0, workers[1], "4")
+              210.0, 20.0, workers[1], "4", vendor=kiryana)
         order(bilal, imran, "documents", "NADRA card renewal", "in_progress", 1,
               0.0, 45.0, workers[1])
         order(ayesha, zubaida, "doctor_visit", "Diabetes clinic — accompany", "completed", 5,
               0.0, 60.0, workers[0], "5")
         order(ayesha, zubaida, "medicine", "Metformin refill", "assigned", 0,
-              66.0, 15.0, workers[0])
+              66.0, 15.0, workers[0], vendor=shifa)
         order(ayesha, zubaida, "companionship", "Afternoon visit", "pending", 0)
         order(hamza, abdul, "groceries", "Eid grocery run", "completed", 20,
-              340.0, 25.0, workers[2], "4")
+              340.0, 25.0, workers[2], "4", vendor=kiryana)
+        # The 15% vendor, so a negotiated rate shows a different figure.
+        order(hamza, abdul, "doctor_visit", "Blood panel at the lab", "completed", 14,
+              120.0, 20.0, workers[2], "5", vendor=diagnostics)
         order(hamza, sana, "documents", "University transcript collection", "pending", 0)
         order(hamza, abdul, "emergency", "Welfare check after storm", "cancelled", 7)
 
@@ -214,8 +257,8 @@ class FaizySampleData(models.TransientModel):
             "params": {
                 "title": self.env._("Sample data loaded"),
                 "message": self.env._(
-                    "3 customers, 5 family members, 3 Faizies and 10 orders. "
-                    "Remove it any time from Configuration."
+                    "3 customers, 5 family members, 3 Faizies, 4 vendors and "
+                    "11 orders. Remove it any time from Configuration."
                 ),
                 "type": "success",
                 "sticky": False,

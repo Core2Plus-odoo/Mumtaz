@@ -140,7 +140,7 @@ class FaizyOrder(models.Model):
     vendor_id = fields.Many2one(
         "res.partner",
         string="Vendor",
-        domain=[("supplier_rank", ">", 0)],
+        domain=[("is_faizy_vendor", "=", True)],
         help="Set when a third party fulfils the order. Triggers commission.",
     )
     vendor_commission = fields.Monetary(
@@ -189,7 +189,19 @@ class FaizyOrder(models.Model):
         for order in self:
             company = order.company_id or self.env.company
             platform_rate = company.faizy_platform_fee_rate
-            commission_rate = company.faizy_vendor_commission_rate
+
+            # A vendor may be on a negotiated rate — a partner clinic we take
+            # nothing from, a pharmacy that gives us more. The rate itself is
+            # deliberately NOT in @api.depends: changing a vendor's terms must
+            # not silently rewrite the commission on orders already delivered
+            # and reconciled. New orders pick up the new rate; old ones keep
+            # the figure they were actually computed with.
+            vendor = order.vendor_id
+            commission_rate = (
+                vendor.faizy_vendor_commission_rate
+                if vendor.faizy_vendor_custom_commission
+                else company.faizy_vendor_commission_rate
+            )
 
             order.platform_fee = order.currency_id.round(
                 order.purchase_value * platform_rate

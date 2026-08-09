@@ -35,10 +35,18 @@ CLAY = "#8f4f08"
 ORANGE = "#f69e22"
 BLACK = "#0a0a0a"
 CREAM = "#fdfbf7"
+HEADER = "#fdf8f0"
+WHITE = "#ffffff"
+
+# WhatsApp's own #25D366 measures 1.88:1 on the header — a brand colour, not a
+# text colour. These are the same hue two steps darker.
+WHATSAPP = "#0b7a68"
+WHATSAPP_DEEP = "#075e54"
 
 # Alpha-composited text colours, since CSS uses rgba() over a known ground.
 INK_72_ON_SAND = "#6b625b"
 CREAM_78_ON_BLACK = "#c6c2bd"
+CREAM_82_ON_WHATSAPP_DEEP = "#d1dfda"
 
 # (label, foreground, background, is_large_text)
 # "Large" is WCAG's definition — 24px regular or 18.66px bold — not "looks big".
@@ -53,6 +61,10 @@ PAIRS = [
     ("heading on the dark CTA",      CREAM,             BLACK,     True),
     ("sub-copy on the dark CTA",     CREAM_78_ON_BLACK, BLACK,     False),
     ("tagline on the dark CTA",      ORANGE,            BLACK,     True),
+    ("WhatsApp pill in the header",  WHATSAPP,          HEADER,    False),
+    ("WhatsApp pill, hovered",       WHITE,             WHATSAPP_DEEP, False),
+    ("contact banner label",         CREAM_82_ON_WHATSAPP_DEEP, WHATSAPP_DEEP, False),
+    ("contact banner number",        WHITE,             WHATSAPP_DEEP, False),
 ]
 
 

@@ -1,4 +1,5 @@
 import re
+from urllib.parse import quote
 
 from odoo import fields, http
 from odoo.http import request
@@ -9,6 +10,11 @@ CNIC_RE = re.compile(r"^\d{5}-\d{7}-\d$")
 
 class FaizyWebsite(http.Controller):
     """Public pages: the pitch, the pricing, and the worker sign-up."""
+
+    # Prefilled so the first message is already a sentence. Someone opening
+    # WhatsApp to a blank compose box has to decide how to introduce
+    # themselves, and a good share of them simply close it.
+    WHATSAPP_OPENER = "Assalam o Alaikum! I'd like to know more about Faizy."
 
     # ── Currency ─────────────────────────────────────────────────────────
 
@@ -101,6 +107,46 @@ class FaizyWebsite(http.Controller):
     @http.route("/pricing", type="http", auth="public", website=True, sitemap=True)
     def faizy_pricing(self, currency=None, **kw):
         return request.render("faizy_website.pricing", self._pricing_values(currency))
+
+    @http.route("/privacy", type="http", auth="public", website=True, sitemap=True)
+    def faizy_privacy(self, **kw):
+        """The privacy policy.
+
+        Not optional paperwork for this product. We hold a family's home
+        address, a mother's prescription and a worker's CNIC, and we send it
+        all over WhatsApp — people are entitled to read what happens to that
+        before they hand it over.
+        """
+        return request.render(
+            "faizy_website.privacy",
+            {
+                "company": request.env.company,
+                "whatsapp_number": request.env[
+                    "faizy.whatsapp.message"
+                ].sudo().contact_number(),
+            },
+        )
+
+    @http.route("/whatsapp", type="http", auth="public", website=True, sitemap=False)
+    def faizy_whatsapp(self, text=None, **kw):
+        """Open a WhatsApp chat with us.
+
+        A redirect rather than a wa.me link in the menu record, so the number
+        has exactly one home — res.company.phone, the same field the FMB
+        welcome message and the footer read. Change it in Settings and every
+        surface follows.
+
+        Falls back to the contact page rather than 404ing: a header button that
+        dead-ends because nobody filled in the company phone is worse than one
+        that lands somewhere a human can still be reached.
+        """
+        number = re.sub(r"\D", "", request.env.company.phone or "")
+        if not number:
+            return request.redirect("/contactus")
+        message = text or self.WHATSAPP_OPENER
+        return request.redirect(
+            f"https://wa.me/{number}?text={quote(message)}", local=False
+        )
 
     @http.route(
         "/faizy/worker/<int:worker_id>/photo",

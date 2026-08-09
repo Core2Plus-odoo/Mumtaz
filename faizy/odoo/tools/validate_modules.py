@@ -47,6 +47,28 @@ INHERITED_FIELDS = {
 }
 
 
+# Core models that already carry mail.thread, so a module extending them may
+# set tracking=True without declaring the mixin itself. Without this the check
+# below fires on every `_inherit = "res.partner"` field, which is a false
+# failure — and a checker that cries wolf gets switched off.
+#
+# Only models checked against 19.0 source are listed. A wrong entry here does
+# not fail loudly — it quietly switches the check off for that model — so
+# "probably has a chatter" is not good enough:
+#   addons/mail/models/res_partner.py     _inherit = ['res.partner',
+#       'mail.activity.mixin', 'mail.thread.blacklist'], and
+#       mail_thread_blacklist.py is _inherit = ['mail.thread'].
+#   addons/account/models/account_move.py _inherit = [...,
+#       'mail.thread.main.attachment', ...]
+# res.users and res.company were checked and are NOT mail.thread — res.users
+# only reaches res.partner through _inherits delegation, which does not carry
+# a mixin. So tracking=True on a res.users field really would be ignored.
+CORE_MAIL_THREAD_MODELS = {
+    "res.partner",
+    "account.move",
+}
+
+
 # Fields removed from Odoo core models in 19.0. Writing one in a data file is
 # accepted by every static check and then fails at install with
 # "Invalid field 'x' in 'model'" — from inside XML parsing, so the traceback
@@ -229,7 +251,11 @@ def check_field_definitions(module: Path, failures: list[str]) -> None:
     #    "Field x.y: unknown parameter 'tracking'". You believe you have an
     #    audit trail and you have nothing.
     for entry in definitions:
-        if entry["kwargs"].get("tracking") and "mail.thread" not in entry["inherits"]:
+        tracked = (
+            "mail.thread" in entry["inherits"]
+            or entry["model"] in CORE_MAIL_THREAD_MODELS
+        )
+        if entry["kwargs"].get("tracking") and not tracked:
             failures.append(
                 f"{module.name}: {entry['file']}:{entry['line']} "
                 f"{entry['model']}.{entry['field']} sets tracking=True but the "
