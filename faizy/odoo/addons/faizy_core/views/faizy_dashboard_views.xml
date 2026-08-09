@@ -107,7 +107,6 @@
         <field name="name">Dashboard</field>
         <field name="res_model">faizy.dashboard</field>
         <field name="view_mode">form</field>
-        <field name="target">inline</field>
     </record>
 
 </odoo>

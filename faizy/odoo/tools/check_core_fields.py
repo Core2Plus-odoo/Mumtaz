@@ -43,6 +43,7 @@ CORE_SOURCES = [
     "odoo/addons/base/models/res_users.py",       # res.groups lives here
     "odoo/addons/base/models/ir_module.py",
     "odoo/addons/base/models/res_currency.py",
+    "odoo/addons/base/models/ir_actions.py",
     "addons/website/models/website_menu.py",
 ]
 
@@ -53,8 +54,14 @@ DELEGATED_FIELDS = {
 }
 
 # Models we deliberately never check: ours, and the ones whose "fields" are
-# really view/action plumbing rather than a model schema.
-SKIP_MODELS = {"ir.ui.view", "ir.actions.act_window", "ir.model.access"}
+# really view plumbing rather than a model schema.
+#
+# ir.actions.act_window used to be here. It should not have been — its fields
+# are ordinary, and skipping it is exactly why target="inline" reached
+# production. Removing it needs the inheritance merge below, because
+# act_window declares only its own fields and gets `name`, `type` and friends
+# from ir.actions.actions.
+SKIP_MODELS = {"ir.ui.view", "ir.model.access"}
 
 
 def load_sources(odoo_root: Path | None) -> dict[str, str]:
@@ -73,19 +80,83 @@ def load_sources(odoo_root: Path | None) -> dict[str, str]:
     return sources
 
 
+# Both spellings: `_inherit = "x"` and `_inherit = ["x", "y"]`. Odoo core uses
+# the list form for ir.actions.act_window, and a regex that only handled the
+# bare string quietly credited act_window with none of ir.actions.actions'
+# fields — which showed up as `name does not exist`, a false alarm that would
+# have taught everyone to ignore this tool.
+def _model_names(block: str, attr: str) -> list[str]:
+    match = re.search(
+        rf'{attr}\s*=\s*(\[[^\]]*\]|["\'][\w.]+["\'])', block
+    )
+    if not match:
+        return []
+    return re.findall(r'["\']([\w.]+)["\']', match.group(1))
+
+
 def index_fields(sources: dict[str, str]) -> dict[str, set[str]]:
     """model name -> declared field names, parsed from the core source."""
     index: dict[str, set[str]] = {}
+    parents: dict[str, set[str]] = {}
     for text in sources.values():
         for block in re.split(r"\nclass\s+\w+\(", text)[1:]:
-            names = re.findall(r'_name\s*=\s*["\']([\w.]+)["\']', block)
-            inherits = re.findall(r'_inherit\s*=\s*["\']([\w.]+)["\']', block)
+            names = _model_names(block, "_name")
+            inherits = _model_names(block, "_inherit")
             targets = names or inherits
             if not targets:
                 continue
             fields = set(re.findall(r"^    ([a-z_]+)\s*=\s*fields\.", block, re.M))
             for target in targets:
                 index.setdefault(target, set()).update(fields)
+            # `_name = X` alongside `_inherit = Y` is Odoo's "extend Y into a
+            # new model X". X therefore has Y's fields too, and without this
+            # every <field name="name"> on an act_window looks undeclared.
+            if names and inherits:
+                for child in names:
+                    parents.setdefault(child, set()).update(inherits)
+
+    for child, ancestors in parents.items():
+        seen, queue = set(), list(ancestors)
+        while queue:
+            ancestor = queue.pop()
+            if ancestor in seen:
+                continue
+            seen.add(ancestor)
+            index.setdefault(child, set()).update(index.get(ancestor, set()))
+            queue.extend(parents.get(ancestor, ()))
+    return index
+
+
+# A Selection whose options are a literal list on one logical line. Anything
+# computed, or built from a function, is not matched and therefore not checked
+# — the point of this tool is that it never guesses.
+SELECTION_RE = re.compile(
+    r"^    ([a-z_]+)\s*=\s*fields\.Selection\(\s*\[(.*?)\]", re.M | re.S
+)
+OPTION_RE = re.compile(r"\(\s*['\"]([\w.-]+)['\"]\s*,")
+
+
+def index_selections(sources: dict[str, str]) -> dict[tuple[str, str], set[str]]:
+    """(model, field) -> allowed values, for statically-declared Selections.
+
+    Exists because `target="inline"` on an ir.actions.act_window sailed past
+    every offline check and killed a production upgrade. The field name was
+    real, so the name check passed; only the VALUE was wrong, and "inline" has
+    not been valid since Odoo 8. Odoo raises ValueError at load, which means
+    you find out during the upgrade, with the module half-applied.
+    """
+    index: dict[tuple[str, str], set[str]] = {}
+    for text in sources.values():
+        for block in re.split(r"\nclass\s+\w+\(", text)[1:]:
+            names = _model_names(block, "_name")
+            inherits = _model_names(block, "_inherit")
+            targets = names or inherits
+            for field, body in SELECTION_RE.findall(block):
+                options = set(OPTION_RE.findall(body))
+                if not options:
+                    continue
+                for target in targets:
+                    index.setdefault((target, field), set()).update(options)
     return index
 
 
@@ -102,6 +173,7 @@ def main() -> int:
         return 0
 
     index = index_fields(sources)
+    selections = index_selections(sources)
     known_models = sorted(m for m in index if index[m])
     print(f"Indexed {len(known_models)} core models\n")
 
@@ -128,6 +200,25 @@ def main() -> int:
                         f"{xml_file.relative_to(ADDONS)}: "
                         f"{model}.{fname} does not exist in Odoo {ODOO_VERSION}"
                     )
+                    continue
+
+                # Plain text only. eval=/ref= values are expressions, and
+                # judging them would mean evaluating them.
+                options = selections.get((model, fname))
+                value = (field.text or "").strip()
+                if (
+                    options
+                    and value
+                    and not field.get("eval")
+                    and not field.get("ref")
+                    and value not in options
+                ):
+                    problems.append(
+                        f"{xml_file.relative_to(ADDONS)}: "
+                        f"{model}.{fname} = {value!r} is not a valid value in "
+                        f"Odoo {ODOO_VERSION} — allowed: "
+                        f"{', '.join(sorted(options))}"
+                    )
 
     print("Checked against:", ", ".join(sorted(checked)) or "nothing")
     if problems:
@@ -136,7 +227,7 @@ def main() -> int:
             print(f"  ✗ {problem}")
         return 1
 
-    print("\nOK — every core-model field written by a data file exists.")
+    print("\nOK — core-model fields and selection values all exist.")
     return 0
 
 
