@@ -365,7 +365,9 @@ echo " Credentials:    $SECRETS_FILE  (root only)"
 echo " Service:        systemctl status faizy-odoo"
 echo " Logs:           journalctl -u faizy-odoo -f"
 echo
-echo " First login creates the admin user for database '$FAIZY_DB'."
+echo " ⚠️  FIRST THING: log in as  admin / admin  and change that password."
+echo "    Odoo creates that account when it initialises the database. On a public"
+echo "    IP over plain HTTP it is an open door until you change it."
 echo
 if [[ -z "$FAIZY_DOMAIN" ]]; then
   echo " ⚠️  Plain HTTP on an IP — the password crosses the network in the clear."
