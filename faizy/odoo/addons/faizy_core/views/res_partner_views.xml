@@ -57,27 +57,38 @@
         <field name="context">{'default_is_faizy_customer': True}</field>
     </record>
 
-    <!-- Revenue policy: rates in Settings, not in code. -->
+    <!-- Revenue policy: rates in Settings, not in code.
+         Anchored on //form rather than on a block inside General Settings.
+         Block ids there are version-specific — the pre-19 //block[@id='companies']
+         does not exist in 19, where it is name="companies_setting_container" —
+         and Faizy's settings belong in their own app section anyway, not grafted
+         into someone else's. A form view always has a //form. -->
     <record id="res_config_settings_view_form_faizy" model="ir.ui.view">
         <field name="name">res.config.settings.view.form.faizy</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//block[@id='companies']" position="after">
-                <block title="Faizy" name="faizy_settings" groups="faizy_core.group_faizy_manager">
-                    <setting string="Platform Fee Rate"
-                             help="Share of purchase value added to the customer invoice.">
-                        <field name="faizy_platform_fee_rate" widget="percentage"/>
-                    </setting>
-                    <setting string="Vendor Commission Rate"
-                             help="Retained from the vendor on vendor-fulfilled orders.">
-                        <field name="faizy_vendor_commission_rate" widget="percentage"/>
-                    </setting>
-                    <setting string="Free Activities on Signup"
-                             help="Care activities a new customer gets before the paywall.">
-                        <field name="faizy_free_activity_grant"/>
-                    </setting>
-                </block>
+            <xpath expr="//form" position="inside">
+                <app data-string="Faizy" string="Faizy" name="faizy_core"
+                     logo="/faizy_core/static/description/icon.png"
+                     groups="faizy_core.group_faizy_manager">
+                    <block title="Revenue Policy" name="faizy_revenue_settings">
+                        <setting string="Platform Fee Rate"
+                                 help="Share of purchase value added to the customer invoice. 0.05 = 5%.">
+                            <field name="faizy_platform_fee_rate"/>
+                        </setting>
+                        <setting string="Vendor Commission Rate"
+                                 help="Retained from the vendor on vendor-fulfilled orders. 0.10 = 10%.">
+                            <field name="faizy_vendor_commission_rate"/>
+                        </setting>
+                    </block>
+                    <block title="Onboarding" name="faizy_onboarding_settings">
+                        <setting string="Free Activities on Signup"
+                                 help="Care activities a new customer gets before the paywall.">
+                            <field name="faizy_free_activity_grant"/>
+                        </setting>
+                    </block>
+                </app>
             </xpath>
         </field>
     </record>

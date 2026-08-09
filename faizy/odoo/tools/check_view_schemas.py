@@ -36,6 +36,24 @@ RAW = f"https://raw.githubusercontent.com/odoo/odoo/{ODOO_VERSION}/{RNG_DIR}"
 VIEW_TYPES = ["search", "list", "calendar", "pivot", "graph"]
 SUPPORT = ["common.rng"]
 
+# Parent views we inherit, and where their definition lives in the Odoo tree.
+# Used to confirm every xpath anchor actually resolves — "cannot be located in
+# parent view" is only discoverable at install otherwise, and anchors move
+# between versions (//block[@id='companies'] became
+# //block[@name='companies_setting_container'] in 19).
+#
+# A parent that is not listed here is skipped rather than guessed at. Add an
+# entry when you inherit something new.
+# Sentinel: the parent is itself an inheriting view, so its on-disk arch is a
+# fragment and xpaths cannot be resolved without Odoo building the chain.
+INHERITING_PARENT = object()
+
+PARENT_VIEWS = {
+    "base.view_partner_form": "odoo/addons/base/views/res_partner_views.xml",
+    "base_setup.res_config_settings_view_form":
+        "addons/base_setup/views/res_config_settings_views.xml",
+}
+
 
 def fetch_schemas(dest: Path, odoo_root: Path | None) -> list[str]:
     dest.mkdir(parents=True, exist_ok=True)
@@ -60,6 +78,93 @@ def fetch_schemas(dest: Path, odoo_root: Path | None) -> list[str]:
         except Exception as err:  # noqa: BLE001 - network is best-effort
             print(f"  ! could not fetch {filename}: {err}", file=sys.stderr)
     return got
+
+
+def load_parent_arch(xmlid: str, odoo_root: Path | None, etree):
+    """Return the <arch> root of a core view, or None if we cannot read it."""
+    rel = PARENT_VIEWS.get(xmlid)
+    if not rel:
+        return None
+
+    if odoo_root:
+        path = odoo_root / rel
+        if not path.exists():
+            return None
+        tree = etree.parse(str(path))
+    else:
+        url = f"https://raw.githubusercontent.com/odoo/odoo/{ODOO_VERSION}/{rel}"
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                tree = etree.fromstring(resp.read()).getroottree()
+        except Exception:  # noqa: BLE001 - network is best-effort
+            return None
+
+    record_id = xmlid.split(".", 1)[1]
+    for record in tree.iter("record"):
+        if record.get("id") != record_id or record.get("model") != "ir.ui.view":
+            continue
+
+        # If the "parent" is itself an inheriting view, the arch on disk is only
+        # a fragment — base_setup.res_config_settings_view_form, for instance, is
+        # just <xpath expr="//form" position="inside">. The effective view is the
+        # whole inheritance chain combined, which only Odoo can build. Report
+        # that we cannot judge rather than failing a correct anchor.
+        arch = record.find("./field[@name='arch']")
+        if arch is None or not len(arch):
+            return None
+        if record.find("./field[@name='inherit_id']") is not None or arch[0].tag == "xpath":
+            return INHERITING_PARENT
+        return arch[0]
+    return None
+
+
+def check_xpath_anchors(odoo_root: Path | None, etree) -> int:
+    """Confirm every xpath in an inheriting view resolves in its parent."""
+    problems = 0
+    cache: dict[str, object] = {}
+
+    for xml_file in sorted(ADDONS.glob("*/views/*.xml")):
+        tree = etree.parse(str(xml_file))
+        for record in tree.iter("record"):
+            if record.get("model") != "ir.ui.view":
+                continue
+            inherit = record.find("./field[@name='inherit_id']")
+            if inherit is None:
+                continue
+            parent_id = inherit.get("ref", "")
+            if parent_id not in PARENT_VIEWS:
+                continue
+
+            if parent_id not in cache:
+                cache[parent_id] = load_parent_arch(parent_id, odoo_root, etree)
+            parent = cache[parent_id]
+            if parent is None:
+                print(f"  ? {parent_id}: could not read parent view, skipping")
+                continue
+            if parent is INHERITING_PARENT:
+                print(f"  ~ {parent_id} is itself an inheriting view — "
+                      f"anchors need the full chain, skipping")
+                continue
+
+            arch = record.find("./field[@name='arch']")
+            if arch is None:
+                continue
+            for node in arch.iter("xpath"):
+                expr = node.get("expr")
+                if not expr:
+                    continue
+                try:
+                    hits = parent.xpath(expr)
+                except Exception as err:  # noqa: BLE001 - bad expression
+                    print(f"  ✗ {xml_file.name} :: {record.get('id')}")
+                    print(f"      invalid xpath {expr!r}: {err}")
+                    problems += 1
+                    continue
+                if not hits:
+                    print(f"  ✗ {xml_file.name} :: {record.get('id')}")
+                    print(f"      xpath {expr!r} matches nothing in {parent_id}")
+                    problems += 1
+    return problems
 
 
 def main() -> int:
@@ -121,11 +226,15 @@ def main() -> int:
                 print()
 
     print(f"Checked {checked} view(s) with a schema.")
+
+    print("\nVerifying xpath anchors against parent views")
+    problems += check_xpath_anchors(args.odoo, etree)
+
     if problems:
-        print(f"{problems} invalid view(s) — Odoo will refuse these at install.")
+        print(f"\n{problems} problem(s) — Odoo will refuse these at install.")
         return 1
 
-    print("OK — every schema-backed view validates.")
+    print("\nOK — schema-backed views validate and every xpath anchor resolves.")
     return 0
 
 
