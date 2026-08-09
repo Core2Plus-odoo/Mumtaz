@@ -81,6 +81,143 @@ class FaizyWebsite(http.Controller):
     def faizy_pricing(self, currency=None, **kw):
         return request.render("faizy_website.pricing", self._pricing_values(currency))
 
+    # ── Customer sign-up ─────────────────────────────────────────────────
+    #
+    # One page, eight fields, no card. The three free activities are the
+    # product's own answer to "why would I trust you" — asking for payment
+    # details before we have done anything throws that away, and the payment
+    # gateway is not chosen yet anyway. So signup creates the account and the
+    # subscription stays in draft until somebody has actually been helped.
+
+    def _signup_values(self, values=None, errors=None, plan_code=None):
+        env = request.env
+        plans = env["faizy.plan"].sudo().search(
+            [("active", "=", True)], order="sequence"
+        )
+        return {
+            "plans": plans,
+            "countries": env["res.country"].sudo().search([], order="name"),
+            "relationships": env["faizy.family.member"]
+            ._fields["relationship"]
+            .selection,
+            "values": values or {},
+            "errors": errors or {},
+            "plan_code": plan_code or "standard",
+        }
+
+    @http.route("/start", type="http", auth="public", website=True, sitemap=True)
+    def faizy_start(self, plan=None, **kw):
+        return request.render(
+            "faizy_website.signup", self._signup_values(values=kw, plan_code=plan)
+        )
+
+    @http.route(
+        "/start/submit",
+        type="http",
+        auth="public",
+        website=True,
+        methods=["POST"],
+        csrf=True,
+    )
+    def faizy_start_submit(self, **post):
+        """Create the customer, their first family member and a subscription.
+
+        ⚠️ Anonymous POST. The honeypot stops naive bots and nothing more — the
+        same CAPTCHA/rate-limit caveat as /join applies here, and more sharply,
+        because this endpoint writes three records.
+        """
+        if post.get("website"):  # honeypot
+            return request.redirect("/start/welcome")
+
+        env = request.env
+        errors = {}
+        name = (post.get("name") or "").strip()
+        phone = (post.get("phone") or "").strip()
+        country_id = post.get("country_id")
+        member_name = (post.get("member_name") or "").strip()
+        member_city = (post.get("member_city") or "").strip()
+        plan_code = post.get("plan") or "standard"
+
+        if not name:
+            errors["name"] = "Please tell us your name."
+        if not phone:
+            errors["phone"] = "We need your WhatsApp number — that is how we reach you."
+        if not country_id:
+            errors["country_id"] = "Where are you based?"
+        if not member_name:
+            errors["member_name"] = "Who are we caring for?"
+        if not member_city:
+            errors["member_city"] = "Which city are they in?"
+
+        plan = env["faizy.plan"].sudo().search([("code", "=", plan_code)], limit=1)
+        if not plan:
+            errors["plan"] = "Please choose a plan."
+
+        if errors:
+            return request.render(
+                "faizy_website.signup",
+                self._signup_values(values=post, errors=errors, plan_code=plan_code),
+            )
+
+        Partner = env["res.partner"].sudo()
+        # Someone who signs up twice is a returning customer, not a duplicate.
+        # Matching on phone keeps their FMB IDs and history attached.
+        partner = Partner.search(
+            ["|", ("phone", "=", phone), ("mobile", "=", phone)], limit=1
+        )
+        if partner:
+            partner.write({"is_faizy_customer": True, "name": partner.name or name})
+        else:
+            partner = Partner.create(
+                {
+                    "name": name,
+                    "phone": phone,
+                    "mobile": phone,
+                    "email": (post.get("email") or "").strip() or False,
+                    "country_id": int(country_id),
+                    "is_faizy_customer": True,
+                }
+            )
+
+        member = env["faizy.family.member"].sudo().create(
+            {
+                "partner_id": partner.id,
+                "name": member_name,
+                "relationship": post.get("relationship") or "other",
+                "city": member_city,
+            }
+        )
+
+        # Draft, not active: nobody has been billed and nothing has been
+        # delivered. Ops confirms once the first activity is arranged.
+        subscription = env["faizy.subscription"].sudo().create(
+            {"partner_id": partner.id, "plan_id": plan.id}
+        )
+
+        env["faizy.whatsapp.message"].sudo().queue_message(
+            partner=partner,
+            message_type="generic",
+            body=env._(
+                "Welcome to Faizy, %(name)s. %(member)s is registered as "
+                "%(fmb)s. You have %(free)s free care activities — just reply "
+                "here and tell us what they need.",
+                name=partner.name,
+                member=member.name,
+                fmb=member.fmb_id,
+                free=partner.faizy_free_activities,
+            ),
+        )
+        subscription.message_post(
+            body=env._("Signed up from the website on the %s plan.", plan.name)
+        )
+        return request.redirect(f"/start/welcome?fmb={member.fmb_id}")
+
+    @http.route(
+        "/start/welcome", type="http", auth="public", website=True, sitemap=False
+    )
+    def faizy_start_welcome(self, fmb=None, **kw):
+        return request.render("faizy_website.signup_welcome", {"fmb": fmb})
+
     # ── Worker sign-up ───────────────────────────────────────────────────
 
     @http.route("/join", type="http", auth="public", website=True, sitemap=True)

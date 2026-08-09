@@ -567,3 +567,76 @@ $fz-accent-amber:  #f7b209;
   }
   .fz-card--hover:hover, .btn-faizy:hover { transform: none; }
 }
+
+// ── Plan picker (sign-up) ───────────────────────────────────────────────
+// Radio buttons styled as cards. The native input stays in the DOM rather
+// than being replaced by JavaScript, so the form still works with JS off and
+// keyboard/screen-reader behaviour is the browser's, not ours.
+.fz-planpick {
+  display: grid;
+  gap: 0.75rem;
+
+  .fz-planpick-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid rgba(10, 10, 10, 0.12);
+    border-radius: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover { border-color: $fz-orange; }
+
+    input[type="radio"] {
+      accent-color: $fz-orange;
+      width: 1.15rem;
+      height: 1.15rem;
+      flex: none;
+    }
+
+    // :has() lets the card react to its own radio without a line of JS.
+    &:has(input:checked) {
+      border-color: $fz-orange;
+      background: rgba(246, 158, 34, 0.08);
+    }
+
+    &:has(input:focus-visible) {
+      outline: 2px solid $fz-orange;
+      outline-offset: 2px;
+    }
+  }
+
+  .fz-planpick-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.15rem 0.75rem;
+    width: 100%;
+  }
+
+  .fz-planpick-name { font-weight: 600; }
+  .fz-planpick-price { font-weight: 700; text-align: right; }
+  .fz-planpick-meta {
+    grid-column: 1 / -1;
+    font-size: 0.8125rem;
+    color: rgba(10, 10, 10, 0.55);
+  }
+}
+
+// ── Footer legal strip ──────────────────────────────────────────────────
+// Sits above Odoo's copyright bar. Quiet by design: it is there to be found
+// when someone goes looking for who charged them, not to be read.
+.fz-footer-legal {
+  padding: 1rem 0;
+  font-size: 0.8125rem;
+  color: rgba(10, 10, 10, 0.6);
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    &:hover { color: $fz-orange-700; }
+  }
+}

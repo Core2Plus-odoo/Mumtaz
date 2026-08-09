@@ -17,4 +17,13 @@
         <field name="sequence">30</field>
     </record>
 
+    <!-- Last, so it reads as the end of the journey rather than another
+         browsing option. -->
+    <record id="menu_faizy_start" model="website.menu">
+        <field name="name">Start free</field>
+        <field name="url">/start</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">40</field>
+    </record>
+
 </odoo>

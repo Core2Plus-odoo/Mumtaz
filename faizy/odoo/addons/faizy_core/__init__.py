@@ -1,11 +1,12 @@
 import logging
 
 from . import models
+from .company_setup import apply_company_profile
 
 _logger = logging.getLogger(__name__)
 
 
-def post_init_hook(env):
+def _set_company_currency(env):
     """Point the company at the currency the price list is written in.
 
     A fresh Odoo database defaults its company to USD. Faizy's base plan prices
@@ -30,10 +31,7 @@ def post_init_hook(env):
 
     company = companies
     aed = env.ref("base.AED", raise_if_not_found=False)
-    if not aed:
-        return
-
-    if company.currency_id == aed:
+    if not aed or company.currency_id == aed:
         return
 
     usd = env.ref("base.USD", raise_if_not_found=False)
@@ -55,6 +53,16 @@ def post_init_hook(env):
 
     aed.active = True
     company.currency_id = aed
-    if not company.country_id:
-        company.country_id = env.ref("base.ae", raise_if_not_found=False)
     _logger.info("faizy_core: company currency set to AED")
+
+
+def post_init_hook(env):
+    """Set up the operating company on a fresh database.
+
+    The two steps are independent on purpose. Currency has a long list of
+    reasons to bail out — existing journal entries, a deliberately different
+    currency — and none of them are a reason to leave the company called
+    "My Company" with no logo.
+    """
+    _set_company_currency(env)
+    apply_company_profile(env)
