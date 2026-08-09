@@ -171,7 +171,37 @@ sudo -u faizy /opt/faizy/venv/bin/python3 /opt/faizy/odoo/odoo-bin \
 sudo systemctl start faizy-odoo
 ```
 
-Upgrading after a code change is the same command with `-u` instead of `-i`.
+Upgrading after a code change is the same command with `-u` instead of `-i`:
+
+```bash
+sudo systemctl stop faizy-odoo
+sudo -u faizy git -C /opt/faizy/src pull
+sudo -u faizy /opt/faizy/venv/bin/python3 /opt/faizy/odoo/odoo-bin \
+  -c /opt/faizy/odoo.conf -d faizy_prod -u faizy_core,faizy_website --stop-after-init
+sudo systemctl start faizy-odoo
+```
+
+**Back up first** (§8) — an upgrade runs migration scripts, and those write.
+
+### The 19.0.1.1.0 upgrade
+
+Multi-market pricing landed in `faizy_core` 19.0.1.1.0, and an instance
+installed before it needs a data correction that the data files cannot make:
+plan currencies are `noupdate` (so ops repricing survives upgrades) and
+`post_init_hook` only fires on install, never on upgrade.
+
+`migrations/19.0.1.1.0/post-currency.py` handles it. It **relabels, it does not
+reprice** — every amount stays the number it was:
+
+- The company currency moves to AED, but only if the database still looks
+  untouched: one company, still on Odoo's USD default, no journal entries. It
+  logs a warning and leaves things alone otherwise.
+- Plans move to AED. `26.50` was always the AED price; only the label was wrong.
+- Subscriptions carrying the plan's old label move with them.
+
+Afterwards, check the log for the warning above, then confirm in
+**Faizy → Plans → Prices by Market** that the five currencies read as expected.
+
 
 ## 6. The dedicated domain
 
@@ -247,9 +277,12 @@ login from another host does not silently overwrite it.
 3. **Plan products** — each plan needs a subscription product and an overage
    product before the recurring cron can invoice. It refuses rather than
    guessing, and says so on the subscription's chatter.
-4. **⚠️ Confirm the placeholder numbers** — `activities_included` per tier and
-   the overage price are guesses (the brief never states them). Settings → Faizy
-   → Configuration → Plans.
+4. **⚠️ Confirm the derived prices.** The PKR figures and the AED plan prices
+   come from the prototype and are right. The **SAR, USD and GBP plan prices and
+   every non-PKR overage rate were derived** — carried across at the rate each
+   market's own plan price implies, then rounded. They are a working default,
+   not a commercial decision. Faizy → Plans → *Prices by Market*; the rows are
+   `noupdate`, so edits stick across upgrades.
 5. **Users and groups** — Agent / Operations / Manager. Only Operations and above
    can see medical notes.
 6. **Scheduled actions** — confirm both are active: recurring invoicing (daily)
