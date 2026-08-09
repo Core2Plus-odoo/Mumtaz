@@ -1057,3 +1057,124 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 .fz-faq .accordion-body { padding-top: 0.25rem; }
 .fz-person .fz-person-photo { width: 4.75rem; height: 4.75rem; margin-bottom: 0.55rem; }
 .fz-people { gap: clamp(0.85rem, 2.5vw, 1.5rem); }
+
+// ════════════════════════════════════════════════════════════════════════
+//  v7 — POLISH
+// ════════════════════════════════════════════════════════════════════════
+//
+// Alignment first, because that is what reads as "unfinished" even when
+// nobody can name it: cards of different heights, numbers that shift as they
+// change, headings that wrap into a long line and an orphan.
+
+// One radius scale instead of values invented per component. Small differences
+// between 1.25 and 1.5rem are not design decisions, they are drift.
+:root {
+  --fz-r-sm: 0.75rem;
+  --fz-r-md: 1rem;
+  --fz-r-lg: 1.35rem;
+}
+
+.fz-card, .fz-tile, .fz-plan { border-radius: var(--fz-r-lg); }
+.fz-tile .fz-tile-icon      { border-radius: var(--fz-r-md); }
+.fz-contact .fz-contact-item { border-radius: var(--fz-r-md); }
+
+// ── Headings that wrap like someone set them ────────────────────────────
+// Without this a two-line headline routinely leaves one word stranded on
+// line two. Browsers that do not support it simply wrap as before.
+.faizy-page h1,
+.faizy-page h2,
+.faizy-page h3 { text-wrap: balance; }
+
+.fz-lead, .fz-hero-sub { text-wrap: pretty; }   // kills orphans in body copy
+
+// ── Numbers that do not dance ───────────────────────────────────────────
+// Proportional digits make 22+ and 100% different widths, so a row of stats
+// shifts as the values change. Tabular figures line them up in a column.
+.fz-trustbar-value,
+.fz-plan-price,
+.fz-person-city,
+.faizy-fmb { font-variant-numeric: tabular-nums; }
+
+// ── Equal heights, aligned edges ────────────────────────────────────────
+// Grid rather than the float grid, so every tile in a row is the height of
+// the tallest and their tops and bottoms line up regardless of copy length.
+.fz-tiles-grid,
+.faizy-page .row > [class*="col-"] > .fz-tile,
+.faizy-page .row > [class*="col-"] > .fz-plan { height: 100%; }
+
+.fz-tile {
+  display: flex;
+  flex-direction: column;
+
+  // Pins the description to the bottom of its own box, so the icons and
+  // headings across a row sit on one line even when one tagline runs longer.
+  p:last-child { margin-top: auto; padding-top: 0.35rem; }
+}
+
+// ── The section intro ───────────────────────────────────────────────────
+// Every section opened with its own ad-hoc width, so the centred blocks were
+// centred to different measures and read as slightly misaligned down the page.
+.faizy-page section > .container > .text-center {
+  max-width: 34rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  .fz-eyebrow { margin-bottom: 0.4rem; }
+  h2 { margin-bottom: 0; }
+  .fz-lead { margin-top: 0.75rem; }
+}
+
+// ── Focus ───────────────────────────────────────────────────────────────
+// Every interactive element gets the same visible ring. Keyboard users are
+// the ones who notice, and a design with no focus state is not finished.
+.faizy-page a:focus-visible,
+.faizy-page button:focus-visible,
+.faizy-page input:focus-visible,
+.faizy-page select:focus-visible,
+.faizy-page textarea:focus-visible,
+.fz-topbar a:focus-visible,
+#wrapwrap > header a:focus-visible {
+  outline: 2px solid $fz-clay;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.faizy-page .form-control:focus,
+.faizy-page .form-select:focus {
+  border-color: $fz-orange;
+  box-shadow: 0 0 0 3px rgba(246, 158, 34, 0.22);
+}
+
+// ── Motion ──────────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .faizy-page *,
+  .faizy-page *::before,
+  .faizy-page *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .fz-rise { opacity: 1; transform: none; }
+}
+
+// ── Small refinements ───────────────────────────────────────────────────
+.fz-plan-price { letter-spacing: -0.035em; }      // large figures need it back
+
+.fz-eyebrow {
+  // Uppercase tracking is set on the letters, which leaves a gap after the
+  // last one and pushes the block visually left of everything under it.
+  margin-right: -0.1em;
+}
+
+.fz-plan.is-featured .fz-plan-cur { opacity: 0.6; }
+
+.fz-faq .accordion-button:not(.collapsed) {
+  background: transparent;
+  color: $fz-ink;
+  box-shadow: none;
+  font-weight: 600;
+}
+.fz-faq .accordion-button:focus { box-shadow: none; }
+
+.fz-person-name { line-height: 1.3; }
+.fz-person-city { line-height: 1.3; }
