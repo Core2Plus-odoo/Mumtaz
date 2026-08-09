@@ -62,6 +62,13 @@ jobs:
       - name: Check the plan price matrix
         run: python3 faizy/odoo/tools/check_plan_prices.py
 
+      # Contrast is not something you can eyeball — 3.3:1 and 4.6:1 look
+      # about equally readable on a good monitor and only one of them works
+      # on a phone in sunlight. Three separate failures were found on live
+      # pages before this existed.
+      - name: Check colour contrast
+        run: python3 faizy/odoo/tools/check_contrast.py
+
       - name: Lint
         run: |
           pip install --quiet flake8

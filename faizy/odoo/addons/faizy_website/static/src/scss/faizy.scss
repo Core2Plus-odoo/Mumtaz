@@ -1210,3 +1210,26 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 // until somebody edits it. Ours already names the operating entity, so the
 // stock line is noise.
 #wrapwrap .o_footer_copyright { display: none; }
+
+// ── The dark CTA panel ──────────────────────────────────────────────────
+// .fz-cta sets color: cream on itself, but .fz-lead sets its own colour and
+// the warm layer redefined that to dark ink for the light page. A class on the
+// element beats an inherited value, so the sub-copy rendered dark-on-dark at
+// 3.32:1 — technically visible, practically not, and it was the sentence that
+// says "no card needed".
+//
+// The same trap as .fz-card inheriting cream text onto white, in the opposite
+// direction. Any component with its own colour has to be re-stated when it
+// lands on a panel of the other polarity.
+.fz-cta {
+  padding: clamp(2rem, 4.5vw, 3rem);
+
+  h1, h2, h3 { color: $fz-cream; }
+
+  .fz-lead,
+  p:not(.faizy-urdu) {
+    color: rgba(253, 251, 247, 0.78);   // 11.17:1 on #0a0a0a
+  }
+
+  .faizy-urdu { color: $fz-orange; }
+}
