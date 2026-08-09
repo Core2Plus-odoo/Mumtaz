@@ -277,16 +277,34 @@ class FaizyWebsite(http.Controller):
         member_city = (post.get("member_city") or "").strip()
         plan_code = post.get("plan") or "standard"
 
+        # "This one is for me." Half the catalogue — passport, NADRA, FBR
+        # filing, property visits — is the subscriber's own business waiting in
+        # Pakistan, and the form used to insist on a family member, so there
+        # was no way to buy the thing they came for.
+        #
+        # Resolved server-side rather than by hiding a field with script: a
+        # checkbox that only changes the UI leaves the requirement in place,
+        # and the person who has JS off gets an error they cannot clear.
+        for_self = bool(post.get("for_self"))
+        relationship = post.get("relationship") or "other"
+        if for_self:
+            relationship = "self"
+            member_name = member_name or name
+
         if not name:
             errors["name"] = "Please tell us your name."
         if not phone:
             errors["phone"] = "We need your WhatsApp number — that is how we reach you."
         if not country_id:
             errors["country_id"] = "Where are you based?"
+        # Only reachable when the box is unticked AND no name was typed —
+        # ticking it borrows the subscriber's own name above.
         if not member_name:
-            errors["member_name"] = "Who are we caring for?"
+            errors["member_name"] = (
+                "Who are we caring for? Tick the box above if it is for you."
+            )
         if not member_city:
-            errors["member_city"] = "Which city are they in?"
+            errors["member_city"] = "Which city in Pakistan is the help needed in?"
 
         plan = env["faizy.plan"].sudo().search([("code", "=", plan_code)], limit=1)
         if not plan:
@@ -325,7 +343,7 @@ class FaizyWebsite(http.Controller):
             {
                 "partner_id": partner.id,
                 "name": member_name,
-                "relationship": post.get("relationship") or "other",
+                "relationship": relationship,
                 "city": member_city,
             }
         )

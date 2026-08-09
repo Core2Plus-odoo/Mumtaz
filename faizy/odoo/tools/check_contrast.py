@@ -54,6 +54,12 @@ CREAM_82_ON_WHATSAPP_DEEP = "#d1dfda"
 # there measures 2.14:1. Clay is what the heading colour has to be.
 PAPER = "#ffffff"
 
+# The "this one is for me" band on the signup form: brand orange at 7% (13%
+# once ticked) composited over the card. A tint, not a fill — orange as a
+# background is the only place it is allowed.
+TINT_7_ON_CARD = "#fef6eb"
+TINT_13_ON_CARD = "#fef1de"
+
 # (label, foreground, background, is_large_text)
 # "Large" is WCAG's definition — 24px regular or 18.66px bold — not "looks big".
 PAIRS = [
@@ -75,6 +81,9 @@ PAIRS = [
     ("invoice field labels",         INK,               PAPER,     False),
     ("invoice total on paper",       CLAY,              PAPER,     False),
     ("total row, boxed layout",      WHITE,             CLAY,      False),
+    ("self-check heading on tint",   CLAY,              TINT_7_ON_CARD,  False),
+    ("self-check body on tint",      INK,               TINT_7_ON_CARD,  False),
+    ("self-check heading, ticked",   CLAY,              TINT_13_ON_CARD, False),
 ]
 
 

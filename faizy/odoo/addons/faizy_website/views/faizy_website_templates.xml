@@ -1162,11 +1162,35 @@
                             </div>
 
                             <h2 class="h5 mb-3 mt-4">Who are we caring for?</h2>
+
+                            <!-- Not everyone signs up for a parent. Passport
+                                 renewals, attestations, FBR filing, a property
+                                 that needs checking — half the catalogue is the
+                                 subscriber's own business, waiting in Pakistan
+                                 while they are abroad. The form used to insist
+                                 on a family member, so there was no way to buy
+                                 the thing they came for.
+
+                                 A checkbox rather than a JS-driven toggle: the
+                                 name field simply becomes optional and the
+                                 server fills it from their own name. No script,
+                                 nothing to break with the editor. -->
+                            <label class="fz-selfcheck mb-3">
+                                <input type="checkbox" name="for_self" value="1"
+                                       t-att-checked="'checked' if values.get('for_self') else None"/>
+                                <span>
+                                    <strong>This one is for me.</strong>
+                                    Paperwork, a property visit, or anything else of
+                                    mine that needs doing in Pakistan.
+                                </span>
+                            </label>
+
                             <div class="row g-3">
                                 <div class="col-12 col-sm-6">
-                                    <label class="form-label" for="member_name">Their name *</label>
+                                    <label class="form-label" for="member_name">Their name</label>
                                     <input type="text" id="member_name" name="member_name" class="form-control"
-                                           t-att-value="values.get('member_name', '')" required="required"/>
+                                           t-att-value="values.get('member_name', '')"/>
+                                    <div class="form-text">Leave blank if it is for you.</div>
                                     <div class="text-danger small" t-if="errors.get('member_name')" t-out="errors['member_name']"/>
                                 </div>
                                 <div class="col-12 col-sm-6">
@@ -1180,11 +1204,15 @@
                                     </select>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label" for="member_city">Their city in Pakistan *</label>
+                                    <!-- "Where the work happens", not "where they
+                                         live". For a subscriber renewing their own
+                                         passport from Dubai, the city is the one
+                                         holding the NADRA office, not their home. -->
+                                    <label class="form-label" for="member_city">City in Pakistan *</label>
                                     <input type="text" id="member_city" name="member_city" class="form-control"
                                            placeholder="Lahore, Karachi, Islamabad…"
                                            t-att-value="values.get('member_city', '')" required="required"/>
-                                    <div class="form-text">You can add the rest of the family later.</div>
+                                    <div class="form-text">Where the help is needed. You can add the rest of the family later.</div>
                                     <div class="text-danger small" t-if="errors.get('member_city')" t-out="errors['member_city']"/>
                                 </div>
                             </div>

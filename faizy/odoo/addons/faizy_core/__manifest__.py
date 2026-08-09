@@ -25,7 +25,7 @@ Runs the whole operation inside Odoo Community:
 Revenue model: subscriptions, a 5% platform fee on purchase value charged to the
 customer, and 10% vendor commission retained from vendor-fulfilled orders.
 """,
-    "version": "19.0.1.12.0",
+    "version": "19.0.1.13.0",
     "category": "Services",
     "author": "C2P Consultants FZC LLC",
     "website": "https://faizy.pk",

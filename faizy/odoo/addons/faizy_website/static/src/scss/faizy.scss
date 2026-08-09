@@ -1374,6 +1374,34 @@ $fz-whatsapp-deep: #075e54;
 }
 
 
+// "This one is for me" on the signup form. A whole clickable band rather than
+// a bare checkbox, because it changes what the next two fields mean and a
+// 13px tickbox does not carry that weight.
+.fz-selfcheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(143, 79, 8, 0.28);
+  background: rgba(246, 158, 34, 0.07);
+  border-radius: var(--fz-r-md, 1rem);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  input { margin-top: 0.25rem; flex: 0 0 auto; }
+  strong { color: $fz-clay; }          // 6.29:1 on the tint
+
+  &:hover { border-color: rgba(143, 79, 8, 0.45); }
+  &:focus-within { outline: 2px solid $fz-clay; outline-offset: 2px; }
+  &:has(input:checked) {
+    border-color: $fz-clay;
+    background: rgba(246, 158, 34, 0.13);
+  }
+}
+
+
 // The one action on the page after signing up. Solid green, not the outline
 // used in the header: here there is nothing to compete with and this is the
 // step that actually starts the service.
