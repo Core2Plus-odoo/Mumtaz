@@ -2,6 +2,11 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 
+# "Under AED 30 balance" in the prototype. A round number in the company
+# currency rather than a computed threshold — it is a prompt to call someone,
+# not an accounting figure.
+LOW_WALLET = 30.0
+
 
 class FaizyDashboard(models.TransientModel):
     """The at-a-glance view the admin prototype opened on.
@@ -52,6 +57,11 @@ class FaizyDashboard(models.TransientModel):
 
     # ── Network ──────────────────────────────────────────────────────────
     workers_active = fields.Integer(compute="_compute_kpis")
+    # Both from the admin prototype's "needs attention" row, and both are
+    # leading indicators — a customer who has gone quiet or run their wallet
+    # down is one you can still keep, unlike one who has already cancelled.
+    customers_at_risk = fields.Integer(compute="_compute_kpis")
+    wallets_low = fields.Integer(compute="_compute_kpis")
     applications_pending = fields.Integer(compute="_compute_kpis")
     documents_expiring = fields.Integer(compute="_compute_kpis")
     whatsapp_queued = fields.Integer(compute="_compute_kpis")
@@ -115,6 +125,22 @@ class FaizyDashboard(models.TransientModel):
 
             record.workers_active = env["faizy.worker"].search_count(
                 [("state", "=", "active")]
+            )
+
+            # "Inactive 30+ days" in the prototype. Measured on orders rather
+            # than on the subscription, because a paying customer who has
+            # stopped asking for anything is exactly the one about to leave.
+            cutoff = fields.Datetime.to_datetime(today - relativedelta(days=30))
+            recent = set(
+                Order.search([("create_date", ">=", cutoff)]).mapped("partner_id").ids
+            )
+            customers = env["res.partner"].search([("is_faizy_customer", "=", True)])
+            record.customers_at_risk = len(
+                [p for p in customers if p.id not in recent]
+            )
+
+            record.wallets_low = len(
+                customers.filtered(lambda p: 0 < p.wallet_balance < LOW_WALLET)
             )
             record.applications_pending = env["faizy.application"].search_count(
                 [("state", "in", ("submitted", "under_review", "interview"))]
@@ -188,6 +214,14 @@ class FaizyDashboard(models.TransientModel):
     def action_open_customers(self):
         return self._open(
             self.env._("Customers"),
+            "res.partner",
+            [("is_faizy_customer", "=", True)],
+            view_mode="kanban,list,form",
+        )
+
+    def action_open_at_risk(self):
+        return self._open(
+            self.env._("Customers Gone Quiet"),
             "res.partner",
             [("is_faizy_customer", "=", True)],
             view_mode="kanban,list,form",

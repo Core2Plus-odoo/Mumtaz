@@ -1,0 +1,100 @@
+// Faizy — backend styling.
+//
+// Scoped to .o_faizy_dashboard and nothing else. The Odoo backend is shared
+// with Contacts, Invoicing and every other app on this database, and a module
+// that restyles the shared chrome makes every other app look broken.
+
+.o_faizy_dashboard {
+  --fzb-orange: #f69e22;
+  --fzb-clay:   #8f4f08;
+  --fzb-ink:    #2b2622;
+  --fzb-sand:   #faf6ef;
+
+  background: var(--fzb-sand);
+
+  .o_form_sheet { max-width: 1180px; background: transparent; box-shadow: none; border: 0; }
+
+  .fzb-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--fzb-ink);
+    margin: 0;
+  }
+  .fzb-sub { color: rgba(43, 38, 34, 0.6); margin: 0 0 1.5rem; }
+
+  .fzb-band-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fzb-clay);
+    margin: 1.75rem 0 0.75rem;
+  }
+
+  // ── The cards ─────────────────────────────────────────────────────────
+  .fzb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 0.85rem;
+  }
+
+  .fzb-kpi {
+    background: #fff;
+    border: 1px solid rgba(43, 38, 34, 0.09);
+    border-radius: 1rem;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: left;
+    width: 100%;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      border-color: rgba(246, 158, 34, 0.55);
+      transform: translateY(-1px);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--fzb-clay);
+      outline-offset: 2px;
+    }
+
+    .o_field_widget, .o_field_widget span, .o_stat_value {
+      font-size: 1.85rem;
+      font-weight: 600;
+      line-height: 1.1;
+      color: var(--fzb-ink);
+      // Counts change as the day goes on; proportional digits make the row
+      // twitch every time one does.
+      font-variant-numeric: tabular-nums;
+    }
+
+    .fzb-kpi-label {
+      font-size: 0.8125rem;
+      color: rgba(43, 38, 34, 0.6);
+    }
+
+    // Anything that needs a human today. Orange is a background here, never
+    // the text — same rule the website follows.
+    &.fzb-attention {
+      background: linear-gradient(180deg, #fff8ec 0%, #fff 60%);
+      border-color: rgba(246, 158, 34, 0.35);
+    }
+  }
+
+  // Odoo renders a form label next to every field; the card carries its own.
+  .fzb-kpi .o_form_label { display: none; }
+}
+
+// The sub-label carries the definition, so the big number never has to be
+// guessed at — "Revenue" means nothing until it says which revenue.
+.o_faizy_dashboard .fzb-kpi {
+  .fzb-kpi-sub {
+    order: 3;                       // number, label, then definition
+    font-size: 0.75rem;
+    color: rgba(43, 38, 34, 0.45);
+    line-height: 1.35;
+  }
+  .fzb-kpi-label { order: 2; font-weight: 500; color: rgba(43, 38, 34, 0.75); }
+  .o_field_widget { order: 1; }
+}

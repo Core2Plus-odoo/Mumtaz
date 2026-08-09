@@ -1,102 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The landing screen for the Faizy app.
 
-     Laid out as four bands that match how the day actually runs: what needs
-     doing now, what the customer base looks like, what it earned, and whether
-     the network is healthy. "Needs attention" comes first on purpose — a
-     dashboard whose top row is a vanity metric gets read once and then
-     ignored.
+     Four bands in the order the day runs: what needs a human now, who the
+     customers are, what this month earned, and whether the network is healthy.
+     "Needs attention" is first on purpose — a dashboard whose top row is a
+     vanity metric gets read once and then ignored.
 
-     Every tile is a button. A number you cannot click into is a number you
-     cannot check, and an unverifiable dashboard stops being trusted the first
-     time it looks wrong. -->
+     Every card is a button into the real records. A number you cannot click
+     into is a number you cannot check, and an unverifiable dashboard stops
+     being trusted the first time it looks wrong. That is also why these are
+     <button> elements rather than styled divs: the keyboard reaches them and
+     a screen reader announces them, for free. -->
 <odoo>
 
     <record id="view_faizy_dashboard_form" model="ir.ui.view">
         <field name="name">faizy.dashboard.form</field>
         <field name="model">faizy.dashboard</field>
         <field name="arch" type="xml">
-            <form string="Faizy" create="false" edit="false">
+            <form string="Faizy" create="false" edit="false" class="o_faizy_dashboard">
                 <field name="currency_id" invisible="1"/>
                 <sheet>
-                    <div class="oe_title mb-4">
-                        <h1 class="mb-0">Faizy</h1>
-                        <p class="text-muted mb-0">How the business looks right now.</p>
-                    </div>
+                    <h1 class="fzb-title">Faizy</h1>
+                    <p class="fzb-sub">How the business looks right now.</p>
 
-                    <group string="Needs attention">
-                        <group>
-                            <field name="orders_unassigned"
-                                   string="Waiting for a Faizy"/>
-                            <field name="applications_pending"
-                                   string="Applications to review"/>
-                        </group>
-                        <group>
-                            <field name="documents_expiring"
-                                   string="Documents expiring or expired"/>
-                            <field name="whatsapp_queued"
-                                   string="WhatsApp messages queued"/>
-                        </group>
-                    </group>
-                    <div class="mb-4">
+                    <p class="fzb-band-title">Needs attention</p>
+                    <div class="fzb-grid">
                         <button name="action_open_unassigned" type="object"
-                                class="btn btn-primary me-2" string="Unassigned orders"/>
+                                class="fzb-kpi fzb-attention">
+                            <field name="orders_unassigned" nolabel="1"/>
+                            <span class="fzb-kpi-sub">No Faizy assigned yet</span>
+                            <span class="fzb-kpi-label">Waiting for a Faizy</span>
+                        </button>
                         <button name="action_open_applications" type="object"
-                                class="btn btn-secondary me-2" string="Applications"/>
+                                class="fzb-kpi fzb-attention">
+                            <field name="applications_pending" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Awaiting review</span>
+                            <span class="fzb-kpi-label">Applications to review</span>
+                        </button>
                         <button name="action_open_documents" type="object"
-                                class="btn btn-secondary me-2" string="Documents"/>
+                                class="fzb-kpi fzb-attention">
+                            <field name="documents_expiring" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Expiring or already expired</span>
+                            <span class="fzb-kpi-label">Documents expiring</span>
+                        </button>
                         <button name="action_open_whatsapp" type="object"
-                                class="btn btn-secondary" string="WhatsApp queue"/>
-                    </div>
-
-                    <group string="Customers">
-                        <group>
-                            <field name="active_subscriptions"/>
-                            <field name="customers"/>
-                        </group>
-                        <group>
-                            <field name="mrr"/>
-                            <field name="families"/>
-                        </group>
-                    </group>
-                    <div class="mb-4">
-                        <button name="action_open_subscriptions" type="object"
-                                class="btn btn-secondary me-2" string="Subscriptions"/>
+                                class="fzb-kpi fzb-attention">
+                            <field name="whatsapp_queued" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Pending WhatsApp send</span>
+                            <span class="fzb-kpi-label">WhatsApp queued</span>
+                        </button>
+                        <button name="action_open_at_risk" type="object"
+                                class="fzb-kpi fzb-attention">
+                            <field name="customers_at_risk" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Nothing booked in 30 days</span>
+                            <span class="fzb-kpi-label">Customers gone quiet</span>
+                        </button>
                         <button name="action_open_customers" type="object"
-                                class="btn btn-secondary" string="Customers"/>
+                                class="fzb-kpi fzb-attention">
+                            <field name="wallets_low" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Balance running out</span>
+                            <span class="fzb-kpi-label">Low wallets</span>
+                        </button>
                     </div>
 
-                    <group string="This month">
-                        <group>
-                            <field name="orders_month"/>
-                            <field name="orders_completed_month" string="Completed"/>
-                        </group>
-                        <group>
-                            <!-- What Faizy keeps. Purchases passed through to
-                                 the customer are not revenue, and counting them
-                                 would inflate this by an order of magnitude. -->
-                            <field name="revenue_month" string="Revenue (fees kept)"/>
-                            <field name="commission_month" string="Vendor commission"/>
-                        </group>
-                    </group>
-                    <div class="mb-4">
-                        <button name="action_open_orders" type="object"
-                                class="btn btn-secondary me-2" string="Open orders"/>
-                        <!-- Service split, city split and orders by month are
-                             one group-by away in the graph and pivot views, and
-                             they stay correct as the schema moves. -->
-                        <button name="action_orders_analysis" type="object"
-                                class="btn btn-secondary" string="Order analysis"/>
+                    <p class="fzb-band-title">Customers</p>
+                    <div class="fzb-grid">
+                        <button name="action_open_subscriptions" type="object" class="fzb-kpi">
+                            <field name="active_subscriptions" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Trial, active or past due</span>
+                            <span class="fzb-kpi-label">Active subscriptions</span>
+                        </button>
+                        <button name="action_open_subscriptions" type="object" class="fzb-kpi">
+                            <field name="mrr" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Converted to company currency</span>
+                            <span class="fzb-kpi-label">MRR, company currency</span>
+                        </button>
+                        <button name="action_open_customers" type="object" class="fzb-kpi">
+                            <field name="customers" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Flagged as Faizy customers</span>
+                            <span class="fzb-kpi-label">Customers</span>
+                        </button>
+                        <button name="action_open_customers" type="object" class="fzb-kpi">
+                            <field name="families" nolabel="1"/>
+                            <span class="fzb-kpi-sub">People being looked after</span>
+                            <span class="fzb-kpi-label">Family members</span>
+                        </button>
                     </div>
 
-                    <group string="The ground network">
-                        <group>
-                            <field name="workers_active" string="Active Faizies"/>
-                        </group>
-                    </group>
-                    <div>
-                        <button name="action_open_workers" type="object"
-                                class="btn btn-secondary" string="Faizies"/>
+                    <p class="fzb-band-title">This month</p>
+                    <div class="fzb-grid">
+                        <button name="action_orders_analysis" type="object" class="fzb-kpi">
+                            <field name="orders_month" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Booked since the 1st</span>
+                            <span class="fzb-kpi-label">Orders booked</span>
+                        </button>
+                        <button name="action_orders_analysis" type="object" class="fzb-kpi">
+                            <field name="orders_completed_month" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Finished and photographed</span>
+                            <span class="fzb-kpi-label">Completed</span>
+                        </button>
+                        <button name="action_orders_analysis" type="object" class="fzb-kpi">
+                            <!-- Fees kept. purchase_value is the customer's money
+                                 on its way to a shop in Lahore; counting it as
+                                 revenue would inflate this roughly tenfold. -->
+                            <field name="revenue_month" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Service and platform fees only</span>
+                            <span class="fzb-kpi-label">Revenue — fees kept</span>
+                        </button>
+                        <button name="action_orders_analysis" type="object" class="fzb-kpi">
+                            <field name="commission_month" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Retained from vendor orders</span>
+                            <span class="fzb-kpi-label">Vendor commission</span>
+                        </button>
+                    </div>
+
+                    <p class="fzb-band-title">The ground network</p>
+                    <div class="fzb-grid">
+                        <button name="action_open_workers" type="object" class="fzb-kpi">
+                            <field name="workers_active" nolabel="1"/>
+                            <span class="fzb-kpi-sub">On the roster right now</span>
+                            <span class="fzb-kpi-label">Active Faizies</span>
+                        </button>
+                        <button name="action_open_orders" type="object" class="fzb-kpi">
+                            <field name="orders_open" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Assigned, scheduled or running</span>
+                            <span class="fzb-kpi-label">Orders in flight</span>
+                        </button>
                     </div>
                 </sheet>
             </form>
