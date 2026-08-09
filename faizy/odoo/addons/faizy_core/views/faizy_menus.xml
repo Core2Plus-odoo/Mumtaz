@@ -7,6 +7,12 @@
               web_icon="faizy_core,static/description/icon.png"
               groups="faizy_core.group_faizy_user"/>
 
+    <!-- Sequence 1, above Operations: opening the app should answer "how are
+         we doing" before it offers a list to work through. -->
+    <menuitem id="menu_faizy_dashboard" name="Dashboard"
+              parent="menu_faizy_root" action="action_faizy_dashboard"
+              sequence="1"/>
+
     <menuitem id="menu_faizy_operations" name="Operations"
               parent="menu_faizy_root" sequence="10"/>
     <menuitem id="menu_faizy_needs_assignment" name="Needs Assignment"

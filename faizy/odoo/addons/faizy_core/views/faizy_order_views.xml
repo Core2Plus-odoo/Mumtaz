@@ -232,4 +232,32 @@
         </field>
     </record>
 
+    <!-- The prototype's charts, done natively. Service split, city split and
+         orders by month are all one group-by away here, and unlike a
+         hand-drawn chart these stay correct as the schema moves. -->
+    <record id="view_faizy_order_graph" model="ir.ui.view">
+        <field name="name">faizy.order.graph</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <graph string="Orders" type="bar" sample="1">
+                <field name="service_id"/>
+                <field name="state"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_faizy_order_pivot" model="ir.ui.view">
+        <field name="name">faizy.order.pivot</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <pivot string="Orders" sample="1">
+                <field name="city" type="row"/>
+                <field name="service_id" type="col"/>
+                <!-- Fees kept, not purchase value: what the shop charged is
+                     the customer's money passing through, not Faizy's. -->
+                <field name="platform_fee" type="measure"/>
+                <field name="service_fee" type="measure"/>
+            </pivot>
+        </field>
+    </record>
 </odoo>

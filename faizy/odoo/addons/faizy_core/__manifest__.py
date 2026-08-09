@@ -22,7 +22,7 @@ Runs the whole operation inside Odoo Community:
 Revenue model: subscriptions, a 5% platform fee on purchase value charged to the
 customer, and 10% vendor commission retained from vendor-fulfilled orders.
 """,
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Services",
     "author": "C2P Consultants FZC LLC",
     "website": "https://faizy.pk",
@@ -53,6 +53,7 @@ customer, and 10% vendor commission retained from vendor-fulfilled orders.
         "views/faizy_whatsapp_views.xml",
         "views/res_partner_views.xml",
         "views/faizy_sample_data_views.xml",
+        "views/faizy_dashboard_views.xml",
         "views/faizy_menus.xml",
     ],
     # A fresh Odoo database defaults its company to USD, which would make the
