@@ -1016,3 +1016,44 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 }
 
 .fz-footer-legal { border-top-color: rgba(43, 38, 34, 0.08); }
+
+// ── Compact pass ────────────────────────────────────────────────────────
+// Same design, less of it. The warm layer above traded density for calm and
+// overshot: a visitor had to scroll past a screen and a half of air to reach
+// the plans. Vertical rhythm roughly a third tighter, with nothing removed.
+.fz-section        { padding: clamp(2.25rem, 5vw, 3.75rem) 0; }
+.fz-section--tight { padding: clamp(1.5rem, 3vw, 2.25rem) 0; }
+
+.faizy-page p { line-height: 1.65; }
+
+.fz-hero {
+  padding: clamp(2rem, 4.5vw, 3.5rem) 0 clamp(1.75rem, 3.5vw, 2.75rem);
+
+  // The proof card was competing with the headline for height.
+  .fz-card { padding: 1.35rem; }
+}
+
+.fz-card { padding: 1.35rem; }
+.fz-tile { padding: 1.35rem; }
+
+.fz-tile .fz-tile-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.25rem;
+  margin-bottom: 0.7rem;
+}
+
+.fz-trustbar { gap: clamp(1rem, 3vw, 2.25rem); }
+
+.fz-quiet {
+  line-height: 1.85;
+  font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+
+  .fz-quiet-turn { margin-top: 0.9rem; }
+}
+
+.fz-plan { padding: 1.5rem; }
+.fz-plan-feature { margin-bottom: 0.4rem; }
+.fz-faq .accordion-body { padding-top: 0.25rem; }
+.fz-person .fz-person-photo { width: 4.75rem; height: 4.75rem; margin-bottom: 0.55rem; }
+.fz-people { gap: clamp(0.85rem, 2.5vw, 1.5rem); }

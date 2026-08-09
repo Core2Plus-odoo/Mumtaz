@@ -41,7 +41,7 @@
                                     Faizy is that someone — family care in Pakistan for Pakistanis
                                     living abroad, asked for on WhatsApp and finished with a photo.
                                 </p>
-                                <div class="d-flex gap-2 flex-wrap mb-5">
+                                <div class="d-flex gap-2 flex-wrap mb-4">
                                     <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
                                     <a href="#how" class="btn btn-faizy-ghost btn-lg">How it works</a>
                                 </div>
@@ -138,7 +138,7 @@
                 <!-- ── Services ──────────────────────────────────────── -->
                 <section class="fz-section fz-section--cream">
                     <div class="container">
-                        <div class="text-center mb-5">
+                        <div class="text-center mb-4">
                             <p class="fz-eyebrow mb-2">What we look after</p>
                             <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">The things you would do yourself</h2>
                         </div>
@@ -222,7 +222,7 @@
                      never renders as broken images. -->
                 <section class="fz-section fz-section--cream" t-if="workers">
                     <div class="container">
-                        <div class="text-center mb-5">
+                        <div class="text-center mb-4">
                             <p class="fz-eyebrow mb-2">Who actually goes</p>
                             <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">
                                 People you would trust with your mother
@@ -254,7 +254,7 @@
                 <!-- ── Pricing ───────────────────────────────────────── -->
                 <section class="fz-section" id="plans">
                     <div class="container">
-                        <div class="text-center mb-5">
+                        <div class="text-center mb-4">
                             <p class="fz-eyebrow mb-2">Plans</p>
                             <h2 class="mb-2" style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
                                 Straightforward monthly care
