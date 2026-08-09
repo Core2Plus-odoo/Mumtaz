@@ -110,11 +110,24 @@ def apply_company_profile(env, overwrite_name=True):
         mark = base64.b64encode(LOGO.read_bytes())
         digest = hashlib.sha256(mark).hexdigest()
         previous = stamp.get_param(LOGO_STAMP)
-        if not company.logo or previous:
+
+        # First run owns the branding. There is no way to tell Odoo's "Your
+        # Logo" placeholder from a real upload by inspection — res.company.logo
+        # is an Image field, so Odoo re-encodes whatever it stores and a
+        # byte-comparison against the shipped default does not hold. The
+        # previous two attempts both got this wrong in the same direction and
+        # shipped the placeholder to the live header twice.
+        #
+        # After that, the stamp does the work: re-install only when the
+        # packaged mark itself changes, so a logo uploaded later survives every
+        # ordinary upgrade and the real artwork still lands when it replaces
+        # this interim one.
+        if previous is None or previous != digest:
             values["logo"] = mark
             stamp.set_param(LOGO_STAMP, digest)
+            _logger.info("faizy_core: installing the packaged logo")
         else:
-            _logger.info("faizy_core: company already has a logo, keeping it")
+            _logger.info("faizy_core: logo already current, leaving it")
     elif not LOGO.exists():
         _logger.warning(
             "faizy_core: %s missing — run tools/make_icon.py to regenerate it",
