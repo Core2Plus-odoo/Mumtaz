@@ -1235,10 +1235,37 @@
                         <h1 class="mb-3" style="font-size: clamp(1.75rem, 4vw, 2.5rem);">
                             You're in.
                         </h1>
+                        <!-- This used to say "We've sent a WhatsApp message to
+                             say hello." We had not. Messages become rows in
+                             faizy.whatsapp.message and stay there until a
+                             provider is configured, so a customer who had just
+                             signed up was told to wait for something that was
+                             never going to arrive.
+
+                             Customer-initiated is also the right shape, not a
+                             workaround: WhatsApp only allows free-form replies
+                             inside a 24-hour window the customer opens. Them
+                             messaging first opens it, proves the number is
+                             real, and means the opening exchange needs no
+                             approved template. -->
                         <p class="fz-lead">
-                            We've sent a WhatsApp message to say hello. Reply to it with
-                            whatever your family needs first.
+                            One more step: send us a message on WhatsApp and tell us
+                            what your family needs first.
                         </p>
+
+                        <div class="mt-4" t-if="whatsapp_url">
+                            <a t-att-href="whatsapp_url" rel="noopener"
+                               class="fz-welcome-wa">
+                                <i class="fa fa-whatsapp" title="WhatsApp"
+                                   aria-label="WhatsApp" role="img"/>
+                                <span>Message us on WhatsApp</span>
+                            </a>
+                            <p class="text-muted small mt-2 mb-0">
+                                Opens WhatsApp with your details already written.
+                                We usually reply within the hour.
+                            </p>
+                        </div>
+
                         <div class="fz-card mt-4" t-if="fmb">
                             <p class="text-muted small mb-1">Their Faizy Member ID</p>
                             <p class="h3 mb-2"><span class="faizy-fmb" t-out="fmb"/></p>

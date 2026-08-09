@@ -1374,6 +1374,29 @@ $fz-whatsapp-deep: #075e54;
 }
 
 
+// The one action on the page after signing up. Solid green, not the outline
+// used in the header: here there is nothing to compete with and this is the
+// step that actually starts the service.
+.fz-welcome-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.6rem;
+  border-radius: 999px;
+  background: $fz-whatsapp-deep;
+  color: #fff;                       // 7.67:1
+  font-weight: 600;
+  font-size: 1.0625rem;
+  text-decoration: none;
+  box-shadow: 0 12px 28px -18px rgba(7, 94, 84, 0.95);
+  transition: transform 0.18s ease, filter 0.18s ease;
+
+  .fa { font-size: 1.3em; }
+  &:hover { transform: translateY(-1px); filter: brightness(1.07); color: #fff; }
+  &:focus-visible { outline: 2px solid $fz-whatsapp-deep; outline-offset: 3px; }
+}
+
+
 // ════════════════════════════════════════════════════════════════════════
 //  Legal pages
 // ════════════════════════════════════════════════════════════════════════

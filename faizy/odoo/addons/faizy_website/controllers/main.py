@@ -18,6 +18,25 @@ class FaizyWebsite(http.Controller):
     # WhatsApp to a blank compose box has to decide how to introduce
     # themselves, and a good share of them simply close it.
     WHATSAPP_OPENER = "Assalam o Alaikum! I'd like to know more about Faizy."
+    WHATSAPP_SIGNUP_OPENER = "Assalam o Alaikum! I've just signed up for Faizy."
+
+    def _whatsapp_url(self, message):
+        """A wa.me link for the company number, or None if there isn't one.
+
+        `sudo()` because visitors are the public user, and reading res.company
+        from that env comes back empty — which is what made the header's
+        WhatsApp button dead-end to /contactus for everyone who pressed it.
+        """
+        company = request.website.sudo().company_id or request.env.company.sudo()
+        number = re.sub(r"^0+", "", re.sub(r"\D", "", company.phone or ""))
+        if not 8 <= len(number) <= 15:
+            _logger.warning(
+                "Faizy: no usable company phone (%r), so the WhatsApp link was "
+                "left off the page. Set it in Settings > Companies.",
+                company.phone,
+            )
+            return None
+        return f"https://wa.me/{number}?text={quote(message)}"
 
     # ── Currency ─────────────────────────────────────────────────────────
 
@@ -156,29 +175,13 @@ class FaizyWebsite(http.Controller):
         company phone is worse than one that lands somewhere a human can still
         be reached, and a silent fallback is how this went unnoticed.
         """
-        company = request.website.sudo().company_id or request.env.company.sudo()
-        number = re.sub(r"\D", "", company.phone or "")
-        # wa.me wants the full international number, digits only, no leading
-        # zeros: "0092 334..." and "+92 334..." are the same number written two
-        # ways and only one of them works.
-        number = re.sub(r"^0+", "", number)
-
-        # A country code plus a subscriber number is 8 digits at the very
-        # least and 15 at most (E.164). Anything outside that is a typo, and
-        # sending someone to a wa.me page for a number that does not exist is
-        # worse than sending them to the contact form.
-        if not 8 <= len(number) <= 15:
-            _logger.warning(
-                "Faizy: /whatsapp has no usable company phone (%r), sending the "
-                "visitor to /contactus instead. Set it in Settings > Companies.",
-                company.phone,
-            )
+        url = self._whatsapp_url(text or self.WHATSAPP_OPENER)
+        if not url:
+            # A header button that dead-ends because nobody filled in the
+            # company phone is worse than one that lands somewhere a human can
+            # still be reached. _whatsapp_url has already logged why.
             return request.redirect("/contactus")
-
-        message = text or self.WHATSAPP_OPENER
-        return request.redirect(
-            f"https://wa.me/{number}?text={quote(message)}", local=False
-        )
+        return request.redirect(url, local=False)
 
     @http.route(
         "/faizy/worker/<int:worker_id>/photo",
@@ -355,7 +358,21 @@ class FaizyWebsite(http.Controller):
         "/start/welcome", type="http", auth="public", website=True, sitemap=False
     )
     def faizy_start_welcome(self, fmb=None, **kw):
-        return request.render("faizy_website.signup_welcome", {"fmb": fmb})
+        """The page after signing up.
+
+        Carries a WhatsApp link with the member ID already written into it, so
+        the first message ops receives identifies the customer instead of
+        starting with "hi". Built here rather than in the template because the
+        number needs the same sudo and the same digits-only normalisation as
+        /whatsapp, and two places building the same URL is one place too many.
+        """
+        opener = self.WHATSAPP_SIGNUP_OPENER
+        if fmb:
+            opener = f"{opener} My family member ID is {fmb}."
+        return request.render(
+            "faizy_website.signup_welcome",
+            {"fmb": fmb, "whatsapp_url": self._whatsapp_url(opener)},
+        )
 
     # ── Worker sign-up ───────────────────────────────────────────────────
 
