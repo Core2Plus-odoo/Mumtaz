@@ -569,11 +569,14 @@
         <xpath expr="//div[hasclass('o_footer_copyright')]" position="before">
             <div class="fz-footer-legal">
                 <div class="container">
-                    <p class="mb-1">
-                        Faizy is operated by
-                        <strong t-out="website.company_id.name"/><t t-if="website.company_id.country_id">,
-                        <span t-out="website.company_id.country_id.name"/></t>.
-                    </p>
+                    <!-- report_footer, not company_id.name. The company is now
+                         named Faizy — the trading name — so naming it here
+                         would read "Faizy is operated by Faizy". The footer
+                         field already holds the operator sentence and is the
+                         same text that prints on every invoice, so the site
+                         and the paperwork cannot drift apart. -->
+                    <p class="mb-1" t-if="website.company_id.report_footer"
+                       t-out="website.company_id.report_footer"/>
                     <p class="mb-0">
                         <a t-if="website.company_id.email"
                            t-attf-href="mailto:#{website.company_id.email}"

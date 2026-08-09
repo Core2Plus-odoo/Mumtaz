@@ -31,10 +31,27 @@ LOGO = Path(__file__).parent / "static" / "description" / "icon.png"
 # Still needed from him: the support WhatsApp number, a real support email, the
 # registered address, and the TRN if C2P is VAT-registered. Each is a one-field
 # edit in Settings > Companies and needs no deployment.
+
+# The trading name. Muhammad's call: the company in Odoo is Faizy, because that
+# is what a customer recognises at the top of an invoice.
+COMPANY_NAME = "Faizy"
+
+# The entity that actually bills. Still needed, because "Faizy" is a brand and
+# the money is taken by a registered company — a customer disputing a charge,
+# or a bank tracing one, needs a legal name to find. Keeping it in
+# `report_footer` puts it on the bottom of every invoice and report without
+# turning the header into a legal document.
+LEGAL_ENTITY = "C2P Consultants FZC LLC"
+
 PROFILE = {
-    "name": "C2P Consultants FZC LLC",
+    "name": COMPANY_NAME,
     "social_facebook": "https://www.facebook.com/faizy.pk/",
+    "report_footer": f"Faizy is a service of {LEGAL_ENTITY}.",
 }
+
+# The name this module set before the rename. Used by the 19.0.1.4.0 migration
+# to correct only what we wrote, and leave alone anything set by hand.
+PREVIOUS_COMPANY_NAME = LEGAL_ENTITY
 
 
 def apply_company_profile(env, overwrite_name=True):
@@ -57,12 +74,23 @@ def apply_company_profile(env, overwrite_name=True):
         values.pop("name", None)
 
     # Odoo names a fresh company "My Company (San Francisco)" or similar. If it
-    # has already been renamed to something real, that was a decision.
-    if overwrite_name and company.name and "My Company" not in company.name:
+    # has already been renamed to something real, that was a decision — except
+    # when the name is the one THIS module set on an earlier version, which is
+    # not a decision, it is our own leftover.
+    renameable = (
+        not company.name
+        or "My Company" in company.name
+        or company.name == PREVIOUS_COMPANY_NAME
+    )
+    if overwrite_name and not renameable:
         values.pop("name", None)
         _logger.info(
             "faizy_core: company already named %r, keeping it", company.name
         )
+
+    # Same reasoning for the report footer: replace ours, never someone else's.
+    if company.report_footer and LEGAL_ENTITY not in (company.report_footer or ""):
+        values.pop("report_footer", None)
 
     if not company.country_id:
         values["country_id"] = env.ref("base.ae", raise_if_not_found=False).id or False
