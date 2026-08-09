@@ -119,6 +119,21 @@ class FaizyWhatsappMessage(models.Model):
         return self.env._("Faizy update.")
 
     @api.model
+    @api.model
+    def contact_number(self):
+        """The number customers and family members are told to write to.
+
+        Read from res.company.phone, never hardcoded. FAIZY_SPEC.md §12 carries
+        +971 58 128 2057 in the FMB welcome template, but Muhammad's call is the
+        Pakistani number — and the family members receiving that message are in
+        Pakistan, so a local number is the right one for them anyway.
+
+        One source, because this string ends up in the FMB welcome, the ops
+        alerts and the site, and three copies of a phone number become two
+        numbers the moment one changes.
+        """
+        return (self.env.company.phone or "").strip()
+
     def queue_message(
         self,
         partner=None,
