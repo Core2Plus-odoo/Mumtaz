@@ -284,7 +284,11 @@ login from another host does not silently overwrite it.
    not a commercial decision. Faizy → Plans → *Prices by Market*; the rows are
    `noupdate`, so edits stick across upgrades.
 5. **Users and groups** — Agent / Operations / Manager. Only Operations and above
-   can see medical notes.
+   can see medical notes. `admin` is put in **Faizy / Manager** at install, and
+   an upgrade repairs it — Odoo puts nobody in a custom group automatically, not
+   even the superuser, so without that the installer sees no Faizy menus at all.
+   Every other internal user needs a group assigned by hand; a user with none
+   simply does not see Faizy, which is the intended default.
 6. **Scheduled actions** — confirm both are active: recurring invoicing (daily)
    and the WhatsApp queue (every 15 min).
 7. **WhatsApp** — messages queue but do not send until a provider is configured;

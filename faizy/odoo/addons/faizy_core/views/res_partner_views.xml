@@ -8,20 +8,34 @@
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
         <field name="arch" type="xml">
+            <!-- `groups` is load-bearing, not cosmetic. Everything below reads a
+                 Faizy model, and Contacts is used by people with no Faizy role
+                 at all — accountants, whoever runs the marketing list. Without
+                 it, opening ANY contact raises "You are not allowed to access
+                 'Faizy Family Member'" and the form will not render.
+
+                 `invisible="not is_faizy_customer"` does NOT help: it is a
+                 display condition evaluated client-side, so the field is still
+                 in the arch and still fetched, and the ACL still fires. Only
+                 `groups` strips the node from the arch before it is sent. -->
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_family_members" type="object"
                         class="oe_stat_button" icon="fa-users"
+                        groups="faizy_core.group_faizy_user"
                         invisible="not is_faizy_customer">
                     <field name="family_member_count" widget="statinfo" string="Family"/>
                 </button>
                 <button name="action_view_faizy_orders" type="object"
                         class="oe_stat_button" icon="fa-list"
+                        groups="faizy_core.group_faizy_user"
                         invisible="not is_faizy_customer">
                     <field name="faizy_order_count" widget="statinfo" string="Orders"/>
                 </button>
             </xpath>
             <xpath expr="//notebook" position="inside">
-                <page string="Faizy" name="faizy" invisible="not is_faizy_customer">
+                <page string="Faizy" name="faizy"
+                      groups="faizy_core.group_faizy_user"
+                      invisible="not is_faizy_customer">
                     <group>
                         <group string="Subscription">
                             <field name="faizy_subscription_id" readonly="1"/>
@@ -44,7 +58,7 @@
                 </page>
             </xpath>
             <xpath expr="//field[@name='category_id']" position="after">
-                <field name="is_faizy_customer"/>
+                <field name="is_faizy_customer" groups="faizy_core.group_faizy_user"/>
             </xpath>
         </field>
     </record>

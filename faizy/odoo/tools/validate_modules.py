@@ -261,6 +261,60 @@ def main() -> int:
 
                 walk(arch, False)
 
+    # 6. Anything we graft onto ANOTHER module's view must carry `groups`.
+    #
+    # Opening any contact raised "You are not allowed to access 'Faizy Family
+    # Member'" for a user with no Faizy role, because faizy_core adds a page to
+    # base.view_partner_form that reads faizy.family.member. Contacts is used by
+    # people who will never have a Faizy role, and an ungated field there does
+    # not degrade — it takes the whole form down.
+    #
+    # `invisible="not is_faizy_customer"` is not a defence: it is evaluated
+    # client-side, so the field stays in the arch and is still fetched. Only
+    # `groups` strips the node before the arch is sent.
+    #
+    # The rule is deliberately blunt — every inserted node, not just relational
+    # ones. A plain Integer is just as dangerous when it is computed from a
+    # relation (family_member_count reads family_member_ids), and no static
+    # check can see through a compute method. Gating everything costs nothing:
+    # a user with no Faizy role has no use for any of it.
+    module_names = {m.name for m in modules}
+    for module in modules:
+        views_dir = module / "views"
+        for xml_file in views_dir.rglob("*.xml") if views_dir.exists() else []:
+            try:
+                tree = ET.parse(xml_file)
+            except ET.ParseError:
+                continue  # already reported above
+            for record in tree.iter("record"):
+                if record.get("model") != "ir.ui.view":
+                    continue
+                inherit = record.find("./field[@name='inherit_id']")
+                arch = record.find("./field[@name='arch']")
+                if inherit is None or arch is None:
+                    continue
+                ref = inherit.get("ref") or ""
+                # Inheriting our own view is fine — it is already gated wherever
+                # it needed to be, and its action controls who reaches it.
+                if ref.split(".")[0] in module_names:
+                    continue
+
+                for xpath in arch.iter("xpath"):
+                    # position="attributes" carries <attribute> children, which
+                    # modify an existing node rather than adding one.
+                    if xpath.get("position") == "attributes":
+                        continue
+                    for inserted in xpath:
+                        if inserted.get("groups"):
+                            continue
+                        label = inserted.get("name") or inserted.tag
+                        failures.append(
+                            f"{module.name}: {xml_file.name} inserts <{inserted.tag} "
+                            f"{label}> into {ref} without groups= — a user "
+                            f"without that group gets an AccessError that breaks "
+                            f"the whole form"
+                        )
+
     print(f"Checked {len(modules)} module(s): {', '.join(m.name for m in modules)}")
     print(f"Models found: {len([m for m in all_models if m.startswith('faizy.')])}")
 

@@ -28,6 +28,21 @@
         <field name="implied_ids" eval="[(4, ref('group_faizy_ops'))]"/>
     </record>
 
+    <!-- ── Who starts with access ───────────────────────────────────────
+         Odoo does not put anyone in a custom group automatically, not even
+         the superuser: base.group_system grants administration rights, not
+         membership of every module's groups. So without this, the person who
+         installs Faizy cannot see a single Faizy record and the app looks
+         broken on a fresh database.
+
+         Deliberately NOT noupdate: an upgrade should repair this, because an
+         instance installed before this record existed has an admin locked out
+         of their own data. In Odoo 19 the field is `group_ids` — `groups_id`
+         was renamed. -->
+    <record id="base.user_admin" model="res.users">
+        <field name="group_ids" eval="[(4, ref('faizy_core.group_faizy_manager'))]"/>
+    </record>
+
     <!-- ── Record rules ─────────────────────────────────────────────────
          A portal customer must only ever see their own records. Without
          these, the customer portal would expose every family in the system. -->
