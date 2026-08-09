@@ -187,6 +187,46 @@
                     </div>
                 </section>
 
+                <!-- ── The people ────────────────────────────────────── -->
+                <!-- Real Faizies out of the database, not stock photography.
+                     For a service whose whole promise is "a person you can
+                     trust went there", a bought photo of a model is actively
+                     corrosive — and these faces are the ones customers meet.
+                     Photos are uploaded on the worker record in Odoo; until
+                     one is, the initial avatar below stands in, so the section
+                     never renders as broken images. -->
+                <section class="fz-section fz-section--cream" t-if="workers">
+                    <div class="container">
+                        <div class="text-center mb-5">
+                            <p class="fz-eyebrow mb-2">The people on the ground</p>
+                            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
+                                Someone you'd trust with your mother
+                            </h2>
+                            <p class="fz-lead mx-auto mt-3" style="max-width:36rem;">
+                                CNIC verified, references called, code of conduct signed.
+                                Rated after every task — and the rating follows them.
+                            </p>
+                        </div>
+
+                        <div class="fz-people">
+                            <t t-foreach="workers" t-as="worker">
+                                <div class="fz-person">
+                                    <img t-if="worker.image_128"
+                                         class="fz-person-photo"
+                                         t-attf-src="/faizy/worker/#{worker.id}/photo"
+                                         t-attf-alt="#{worker.name}, Faizy in #{worker.city}"
+                                         loading="lazy"/>
+                                    <span t-else="" class="fz-person-photo fz-person-initial"
+                                          aria-hidden="true"
+                                          t-out="worker.name[:1].upper()"/>
+                                    <p class="fz-person-name mb-0" t-out="worker.name"/>
+                                    <p class="fz-person-city mb-0" t-out="worker.city"/>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- ── Pricing ───────────────────────────────────────── -->
                 <section class="fz-section" id="plans">
                     <div class="container">
@@ -309,6 +349,50 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── Talk to us ────────────────────────────────────── -->
+                <!-- Every channel here is driven off res.company, so ops adds
+                     the WhatsApp number in Settings rather than waiting for a
+                     release — and a channel that is not configured is simply
+                     not shown, instead of advertising a dead address. -->
+                <section class="fz-section--tight" id="contact">
+                    <div class="container">
+                        <div class="text-center mb-4">
+                            <p class="fz-eyebrow mb-2">Talk to us</p>
+                            <h2 style="font-size: clamp(1.5rem, 3.5vw, 2.25rem);">
+                                We answer on WhatsApp
+                            </h2>
+                        </div>
+                        <div class="fz-contact">
+                            <a t-if="company.mobile"
+                               t-attf-href="https://wa.me/#{company.mobile.replace('+','').replace(' ','')}"
+                               class="fz-contact-item" rel="noopener" target="_blank">
+                                <span class="fz-contact-icon" aria-hidden="true">💬</span>
+                                <span>
+                                    <span class="fz-contact-label">WhatsApp</span>
+                                    <span class="fz-contact-value" t-out="company.mobile"/>
+                                </span>
+                            </a>
+                            <a t-if="company.email"
+                               t-attf-href="mailto:#{company.email}" class="fz-contact-item">
+                                <span class="fz-contact-icon" aria-hidden="true">✉️</span>
+                                <span>
+                                    <span class="fz-contact-label">Email</span>
+                                    <span class="fz-contact-value" t-out="company.email"/>
+                                </span>
+                            </a>
+                            <a t-if="company.social_facebook"
+                               t-att-href="company.social_facebook"
+                               class="fz-contact-item" rel="noopener" target="_blank">
+                                <span class="fz-contact-icon" aria-hidden="true">👍</span>
+                                <span>
+                                    <span class="fz-contact-label">Facebook</span>
+                                    <span class="fz-contact-value">24k following our story</span>
+                                </span>
+                            </a>
                         </div>
                     </div>
                 </section>

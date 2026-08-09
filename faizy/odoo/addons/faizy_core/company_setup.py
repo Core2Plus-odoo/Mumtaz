@@ -20,13 +20,20 @@ _logger = logging.getLogger(__name__)
 
 LOGO = Path(__file__).parent / "static" / "description" / "icon.png"
 
-# Everything here is confirmed. Address, TRN and the support phone number are
-# NOT known, so they are absent rather than invented — a placeholder address on
-# a tax invoice is worse than a blank one.
+# ONLY confirmed facts go in here.
+#
+# An earlier version of this file carried email="hello@faizy.pk", which nobody
+# ever told me existed — I inferred it from the domain. A customer writing to a
+# support address that bounces is worse off than one who cannot find an address
+# at all, and the same goes for a placeholder street on a tax invoice. So the
+# rule is: if Muhammad has not said it, it is not here.
+#
+# Still needed from him: the support WhatsApp number, a real support email, the
+# registered address, and the TRN if C2P is VAT-registered. Each is a one-field
+# edit in Settings > Companies and needs no deployment.
 PROFILE = {
     "name": "C2P Consultants FZC LLC",
-    "website": "https://faizy.pk",
-    "email": "hello@faizy.pk",
+    "social_facebook": "https://www.facebook.com/faizy.pk/",
 }
 
 
