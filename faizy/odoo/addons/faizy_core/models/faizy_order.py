@@ -59,7 +59,11 @@ class FaizyOrder(models.Model):
     state = fields.Selection(
         [
             ("pending", "Pending"),
+            # The admin board has both: assigned to a Faizy, and booked for a
+            # date. They are different states — a job can be scheduled before
+            # anyone is free to take it.
             ("assigned", "Assigned"),
+            ("scheduled", "Scheduled"),
             ("in_progress", "In Progress"),
             ("completed", "Completed"),
             ("cancelled", "Cancelled"),

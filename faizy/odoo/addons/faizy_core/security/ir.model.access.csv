@@ -42,3 +42,6 @@ access_faizy_document_user,faizy.document.user,model_faizy_document,faizy_core.g
 access_faizy_document_ops,faizy.document.ops,model_faizy_document,faizy_core.group_faizy_ops,1,1,1,1
 access_faizy_document_portal,faizy.document.portal,model_faizy_document,base.group_portal,1,0,0,0
 access_faizy_sample_data_manager,faizy.sample.data.manager,model_faizy_sample_data,faizy_core.group_faizy_manager,1,1,1,1
+access_faizy_service_category_user,faizy.service.category.user,model_faizy_service_category,faizy_core.group_faizy_user,1,0,0,0
+access_faizy_service_category_manager,faizy.service.category.manager,model_faizy_service_category,faizy_core.group_faizy_manager,1,1,1,1
+access_faizy_service_category_public,faizy.service.category.public,model_faizy_service_category,base.group_public,1,0,0,0

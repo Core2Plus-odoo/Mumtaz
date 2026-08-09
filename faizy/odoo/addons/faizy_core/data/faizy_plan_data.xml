@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Subscription tiers.
+  Subscription tiers — the REAL numbers, taken from the customer app prototype.
+  These replace the placeholders that were in here before:
 
-  ⚠️ TWO NUMBERS BELOW ARE PLACEHOLDERS AND MUST BE CONFIRMED BEFORE BILLING
-  GOES LIVE:
+    Lite        10 activities/mo, PKR 300 per extra, up to 2 family members
+    Standard    30 activities/mo, PKR 250 per extra, up to 5 family members
+    Family Pro  60 activities/mo, PKR 200 per extra, up to 10 family members
 
-    * activities_included — the brief specifies "N activities per month" for
-      each tier but never states N. The values here are scaled to price.
-    * overage_price — never specified at all. AED 10.00 is a guess.
-
-  The prices themselves come from the brief, where they are described as
-  approximate. All of it is editable in the UI; nothing here is structural.
+  Prices are the same in every currency the app quotes: PKR 1999 / 4999 / 8999,
+  AED 26.50 / 66.20 / 119.20. Overage is priced in PKR because that is where the
+  work is done.
 
   noupdate so ops edits survive module upgrades.
 -->
@@ -21,21 +20,21 @@
         <field name="code">lite</field>
         <field name="sequence">10</field>
         <field name="price">26.50</field>
-        <field name="activities_included">5</field>
-        <field name="overage_price">10.00</field>
-        <field name="max_family_members">1</field>
-        <field name="description">For keeping an eye on one person back home.</field>
+        <field name="activities_included">10</field>
+        <field name="overage_price_pkr">300</field>
+        <field name="max_family_members">2</field>
+        <field name="description">Essential support for one or two people back home.</field>
     </record>
 
     <record id="plan_lite_f1" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_lite"/>
         <field name="sequence">10</field>
-        <field name="name">5 care activities a month</field>
+        <field name="name">10 activities a month</field>
     </record>
     <record id="plan_lite_f2" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_lite"/>
         <field name="sequence">20</field>
-        <field name="name">1 family member</field>
+        <field name="name">Up to 2 family members</field>
     </record>
     <record id="plan_lite_f3" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_lite"/>
@@ -53,21 +52,21 @@
         <field name="code">standard</field>
         <field name="sequence">20</field>
         <field name="price">66.20</field>
-        <field name="activities_included">15</field>
-        <field name="overage_price">10.00</field>
-        <field name="max_family_members">4</field>
-        <field name="description">For looking after a household.</field>
+        <field name="activities_included">30</field>
+        <field name="overage_price_pkr">250</field>
+        <field name="max_family_members">5</field>
+        <field name="description">Everything your family needs — every month.</field>
     </record>
 
     <record id="plan_standard_f1" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_standard"/>
         <field name="sequence">10</field>
-        <field name="name">15 care activities a month</field>
+        <field name="name">30 activities a month</field>
     </record>
     <record id="plan_standard_f2" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_standard"/>
         <field name="sequence">20</field>
-        <field name="name">Up to 4 family members</field>
+        <field name="name">Up to 5 family members</field>
     </record>
     <record id="plan_standard_f3" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_standard"/>
@@ -85,21 +84,21 @@
         <field name="code">family_pro</field>
         <field name="sequence">30</field>
         <field name="price">119.20</field>
-        <field name="activities_included">40</field>
-        <field name="overage_price">10.00</field>
-        <field name="max_family_members">0</field>
-        <field name="description">Everything, for the whole family.</field>
+        <field name="activities_included">60</field>
+        <field name="overage_price_pkr">200</field>
+        <field name="max_family_members">10</field>
+        <field name="description">Peace of mind for large families.</field>
     </record>
 
     <record id="plan_family_pro_f1" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_family_pro"/>
         <field name="sequence">10</field>
-        <field name="name">40 care activities a month</field>
+        <field name="name">60 activities a month</field>
     </record>
     <record id="plan_family_pro_f2" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_family_pro"/>
         <field name="sequence">20</field>
-        <field name="name">Unlimited family members</field>
+        <field name="name">Up to 10 family members</field>
     </record>
     <record id="plan_family_pro_f3" model="faizy.plan.feature">
         <field name="plan_id" ref="plan_family_pro"/>

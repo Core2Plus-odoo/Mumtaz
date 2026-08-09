@@ -137,6 +137,7 @@ class ResPartner(models.Model):
         "faizy_subscription_id.plan_id",
         "order_ids.state",
         "order_ids.date_completed",
+        "order_ids.amount_total",
     )
     def _compute_faizy_segment(self):
         today = fields.Date.context_today(self)
@@ -156,12 +157,25 @@ class ResPartner(models.Model):
             )
             days_quiet = (today - last.date()).days if last else 999
 
-            if days_quiet > 60:
-                partner.faizy_segment = "at_risk"
-            elif subscription.plan_id.code == "family_pro":
+            # The prototype's thresholds, kept exactly so ops sees the same
+            # segments here as in the app they already know:
+            #   >=15 orders or Family Pro -> VIP
+            #   >=500 AED lifetime spend  -> High Value
+            #   quiet 30+ days with history -> At Risk
+            #   joined <30 days, <4 orders  -> New
+            total_spend = sum(completed.mapped("amount_total"))
+            days_since_joined = (
+                (today - partner.create_date.date()).days if partner.create_date else 999
+            )
+
+            if len(partner.order_ids) >= 15 or subscription.plan_id.code == "family_pro":
                 partner.faizy_segment = "vip"
-            elif len(completed) >= 10:
+            elif total_spend >= 500:
                 partner.faizy_segment = "high_value"
+            elif days_quiet > 30 and partner.order_ids:
+                partner.faizy_segment = "at_risk"
+            elif days_since_joined < 30 and len(partner.order_ids) < 4:
+                partner.faizy_segment = "new"
             else:
                 partner.faizy_segment = "regular"
 

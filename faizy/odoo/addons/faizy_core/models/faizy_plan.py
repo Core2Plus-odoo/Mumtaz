@@ -39,17 +39,22 @@ class FaizyPlan(models.Model):
     )
 
     # ── Activity allowance ────────────────────────────────────────────────
-    # NOTE: the brief specifies "N activities per month" per tier but never
-    # states N, and never states the overage rate. The values shipped in
-    # data/faizy_plan_data.xml are placeholders — confirm before going live.
+    # Real figures, from the customer app prototype: 10 / 30 / 60 activities and
+    # PKR 300 / 250 / 200 per extra. These are no longer placeholders.
     activities_included = fields.Integer(
         required=True,
-        default=5,
+        default=10,
         help="Care activities included each billing period.",
     )
     overage_price = fields.Monetary(
         currency_field="currency_id",
-        help="Charged per activity once the monthly allowance is spent.",
+        help="Charged per activity once the monthly allowance is spent, in the "
+        "company currency.",
+    )
+    overage_price_pkr = fields.Float(
+        string="Extra Activity (PKR)",
+        help="The rate the customer app quotes. PKR is the source of truth "
+        "because that is where the work is done and priced.",
     )
 
     max_family_members = fields.Integer(

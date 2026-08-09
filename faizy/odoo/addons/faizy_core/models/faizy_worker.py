@@ -141,9 +141,30 @@ class FaizyArea(models.Model):
             area.display_name = f"{area.name}, {area.city}"
 
 
+class FaizyServiceCategory(models.Model):
+    """One of the five things Faizy does. The customer app groups the whole
+    catalogue under these, so they are structure, not decoration."""
+
+    _name = "faizy.service.category"
+    _description = "Faizy Service Category"
+    _order = "sequence, name"
+
+    name = fields.Char(required=True, translate=True)
+    code = fields.Char(required=True, index=True)
+    sequence = fields.Integer(default=10)
+    icon = fields.Char()
+    color = fields.Char(help="Tile background in the customer app.")
+    tagline = fields.Char(translate=True)
+    service_ids = fields.One2many("faizy.service", "category_id")
+
+    _sql_cat_code_unique = models.Constraint(
+        "unique(code)", "Category codes must be unique."
+    )
+
+
 class FaizyService(models.Model):
-    """A category of care work. Drives what a Faizy can be assigned and what the
-    customer can book."""
+    """A bookable service. Priced in PKR because that is where the work happens;
+    the customer is billed in their own currency at the going rate."""
 
     _name = "faizy.service"
     _description = "Faizy Service"
@@ -151,9 +172,18 @@ class FaizyService(models.Model):
 
     name = fields.Char(required=True, translate=True)
     code = fields.Char(required=True, index=True)
+    category_id = fields.Many2one("faizy.service.category", index=True)
     sequence = fields.Integer(default=10)
     description = fields.Text(translate=True)
     icon = fields.Char(help="Emoji or font-awesome class shown in the portal.")
+    price_pkr = fields.Float(
+        string="Service Charge (PKR)",
+        help="Faizy's charge for running this errand. Purchases are on top.",
+    )
+    price_unit = fields.Char(
+        string="Unit",
+        help="What the charge covers: per visit, + medicines, per share.",
+    )
     # Counts against the monthly allowance. Some services (e.g. an emergency
     # welfare check) may be excluded from metering as a goodwill policy.
     consumes_activity = fields.Boolean(default=True)

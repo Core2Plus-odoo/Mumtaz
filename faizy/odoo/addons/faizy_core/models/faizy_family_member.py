@@ -71,6 +71,17 @@ class FaizyFamilyMember(models.Model):
     active = fields.Boolean(default=True)
 
     order_ids = fields.One2many("faizy.order", "family_member_id")
+
+    # ── Care score ───────────────────────────────────────────────────────
+    # The customer app's ring, and its algorithm exactly: how recently this
+    # person was actually looked after. Nothing else — not spend, not order
+    # count. A parent visited last week scores 100 whatever the plan says.
+    care_score = fields.Integer(compute="_compute_care_score", store=True)
+    care_score_state = fields.Selection(
+        [("good", "Good"), ("fair", "Fair"), ("poor", "Needs Attention")],
+        compute="_compute_care_score",
+        store=True,
+    )
     order_count = fields.Integer(compute="_compute_order_count")
 
     _sql_fmb_unique = models.Constraint(
@@ -87,6 +98,38 @@ class FaizyFamilyMember(models.Model):
                 continue
             member.age = (
                 today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            )
+
+    @api.depends("order_ids.create_date")
+    def _compute_care_score(self):
+        """Days since this member's most recent order, banded.
+
+        Taken verbatim from the prototype: 7 days -> 100, 14 -> 85, 21 -> 65,
+        30 -> 45, beyond that 20, and 0 if nothing has ever been done for them.
+        The bands are deliberately generous at the top — weekly contact is the
+        product's promise, not daily.
+        """
+        now = fields.Datetime.now()
+        for member in self:
+            latest = max(
+                (o.create_date for o in member.order_ids if o.create_date), default=None
+            )
+            if not latest:
+                member.care_score = 0
+                member.care_score_state = "poor"
+                continue
+            days = (now - latest).days
+            member.care_score = (
+                100 if days <= 7 else
+                85 if days <= 14 else
+                65 if days <= 21 else
+                45 if days <= 30 else
+                20
+            )
+            member.care_score_state = (
+                "good" if member.care_score >= 80
+                else "fair" if member.care_score >= 50
+                else "poor"
             )
 
     @api.depends("order_ids")
