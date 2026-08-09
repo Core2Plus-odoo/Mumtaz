@@ -44,6 +44,8 @@ faizy/
 | Conversations and sourcing | `faizy.bridge.request`, `faizy.product.request` |
 | Money movement | `faizy.wallet.transaction` (append-only) |
 | Outbound messaging | `faizy.whatsapp.message` (queue) |
+| Document vault | `faizy.document` — CNICs, passports, expiry reminders |
+| Sample data | `faizy.sample.data` — fills an empty instance, removable |
 
 ## Ground rules
 
@@ -66,6 +68,8 @@ through `account.move` with an overage line, and rolls the allowance.
 group. Portal record rules limit a customer to their own family and orders, and a
 Faizy to their own assignments. Orders can be marked private, which hides the
 member's identity from the assigned worker.
+
+**The care score is a heuristic, and says so.** It answers whether a family is actually being looked after or the subscription is just sitting there — recency, coverage, consistency, readiness. It is a prompt for ops to reach out, not a rating of the customer.
 
 **The brand is one thing in one place.** `brand/` holds the mark and the rules —
 including the contrast rule that orange is a background colour, never a text

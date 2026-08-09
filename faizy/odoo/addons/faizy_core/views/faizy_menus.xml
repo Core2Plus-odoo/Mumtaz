@@ -28,6 +28,9 @@
     <menuitem id="menu_faizy_subscriptions" name="Subscriptions"
               parent="menu_faizy_customers_root" action="action_faizy_subscription" sequence="30"/>
 
+    <menuitem id="menu_faizy_documents" name="Document Vault"
+              parent="menu_faizy_customers_root" action="action_faizy_document" sequence="40"/>
+
     <menuitem id="menu_faizy_network" name="Network"
               parent="menu_faizy_root" sequence="30"/>
     <menuitem id="menu_faizy_workers" name="Faizies"
@@ -57,4 +60,6 @@
               parent="menu_faizy_config" action="action_faizy_service" sequence="20"/>
     <menuitem id="menu_faizy_areas" name="Coverage Areas"
               parent="menu_faizy_config" action="action_faizy_area" sequence="30"/>
+    <menuitem id="menu_faizy_sample_data" name="Sample Data"
+              parent="menu_faizy_config" action="action_faizy_sample_data" sequence="90"/>
 </odoo>

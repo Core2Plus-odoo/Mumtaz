@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Fills an empty instance so the boards can be judged before real data
+         arrives. Everything it creates is flagged and removable in one action. -->
+    <record id="view_faizy_sample_data_form" model="ir.ui.view">
+        <field name="name">faizy.sample.data.form</field>
+        <field name="model">faizy.sample.data</field>
+        <field name="arch" type="xml">
+            <form string="Sample Data">
+                <div class="alert alert-info" role="alert">
+                    <p class="mb-1"><strong>Loads a realistic slice of the business.</strong></p>
+                    <p class="mb-0">
+                        3 customers in the Gulf, 5 family members with FMB IDs, 3 Faizies,
+                        10 orders across every stage of the board, subscriptions, documents,
+                        a worker application and a recurring booking.
+                    </p>
+                </div>
+                <p>
+                    Every record is tagged as sample data and can be removed in one go.
+                    Loading refuses to run if real orders already exist.
+                </p>
+                <footer>
+                    <button name="action_load" type="object" string="Load Sample Data"
+                            class="btn-primary"/>
+                    <button name="action_remove" type="object" string="Remove Sample Data"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_sample_data" model="ir.actions.act_window">
+        <field name="name">Sample Data</field>
+        <field name="res_model">faizy.sample.data</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -38,3 +38,7 @@ access_faizy_plan_feature_public,faizy.plan.feature.public,model_faizy_plan_feat
 access_faizy_service_public,faizy.service.public,model_faizy_service,base.group_public,1,0,0,0
 access_faizy_area_public,faizy.area.public,model_faizy_area,base.group_public,1,0,0,0
 access_faizy_application_public,faizy.application.public,model_faizy_application,base.group_public,0,0,1,0
+access_faizy_document_user,faizy.document.user,model_faizy_document,faizy_core.group_faizy_user,1,0,0,0
+access_faizy_document_ops,faizy.document.ops,model_faizy_document,faizy_core.group_faizy_ops,1,1,1,1
+access_faizy_document_portal,faizy.document.portal,model_faizy_document,base.group_portal,1,0,0,0
+access_faizy_sample_data_manager,faizy.sample.data.manager,model_faizy_sample_data,faizy_core.group_faizy_manager,1,1,1,1

@@ -1,3 +1,5 @@
+from dateutil.relativedelta import relativedelta
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -15,6 +17,10 @@ class FaizyOrder(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
     _rec_names_search = ["name", "title"]
+
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
 
     name = fields.Char(
         string="Order Reference",
@@ -69,6 +75,36 @@ class FaizyOrder(models.Model):
     )
 
     scheduled_date = fields.Datetime(tracking=True)
+
+    # ── Recurring bookings ───────────────────────────────────────────────
+    # Groceries every Friday, medicines on the 1st. Each occurrence is a real
+    # order so it can be assigned, priced and rated independently; the template
+    # only decides when the next one appears.
+    is_recurring = fields.Boolean(
+        string="Repeats",
+        help="Generate a fresh order automatically on a schedule.",
+    )
+    recurrence_type = fields.Selection(
+        [("weekly", "Weekly"), ("monthly", "Monthly")],
+        default="weekly",
+    )
+    recurrence_interval = fields.Integer(
+        string="Every",
+        default=1,
+        help="1 = every week/month, 2 = every other, and so on.",
+    )
+    recurrence_next_date = fields.Date(
+        string="Next Occurrence",
+        index=True,
+        help="When the next order will be created. Cleared to stop repeating.",
+    )
+    recurrence_end_date = fields.Date(string="Repeat Until")
+    parent_order_id = fields.Many2one(
+        "faizy.order", string="Repeats From", index=True, ondelete="set null"
+    )
+    child_order_ids = fields.One2many("faizy.order", "parent_order_id")
+    occurrence_count = fields.Integer(compute="_compute_occurrence_count")
+
     date_assigned = fields.Datetime(readonly=True, copy=False)
     date_started = fields.Datetime(readonly=True, copy=False)
     date_completed = fields.Datetime(readonly=True, copy=False)
@@ -271,6 +307,71 @@ class FaizyOrder(models.Model):
                     message_type="worker_assignment",
                     order=order,
                 )
+
+    @api.depends("child_order_ids")
+    def _compute_occurrence_count(self):
+        for order in self:
+            order.occurrence_count = len(order.child_order_ids)
+
+    def action_view_occurrences(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Occurrences"),
+            "res_model": "faizy.order",
+            "view_mode": "list,form",
+            "domain": [("parent_order_id", "=", self.id)],
+        }
+
+    @api.model
+    def _cron_generate_recurring(self):
+        """Create the next occurrence of each due recurring order.
+
+        Copies the request, not the outcome: the new order starts pending and
+        unassigned, with no proof, rating or money carried over. Only the
+        template advances its own next date, so a chain cannot fork.
+        """
+        today = fields.Date.context_today(self)
+        due = self.search(
+            [
+                ("is_recurring", "=", True),
+                ("recurrence_next_date", "!=", False),
+                ("recurrence_next_date", "<=", today),
+                ("parent_order_id", "=", False),
+            ]
+        )
+
+        for template in due:
+            if template.recurrence_end_date and template.recurrence_next_date > template.recurrence_end_date:
+                template.recurrence_next_date = False
+                continue
+
+            self.create(
+                {
+                    "title": template.title,
+                    "description": template.description,
+                    "partner_id": template.partner_id.id,
+                    "family_member_id": template.family_member_id.id,
+                    "service_id": template.service_id.id,
+                    "city": template.city,
+                    "street": template.street,
+                    "privacy_mode": template.privacy_mode,
+                    "service_fee": template.service_fee,
+                    "currency_id": template.currency_id.id,
+                    "scheduled_date": template.recurrence_next_date,
+                    "parent_order_id": template.id,
+                }
+            )
+
+            step = template.recurrence_interval or 1
+            delta = (
+                relativedelta(weeks=step)
+                if template.recurrence_type == "weekly"
+                else relativedelta(months=step)
+            )
+            template.recurrence_next_date = template.recurrence_next_date + delta
+
+        return True
 
     @api.onchange("family_member_id")
     def _onchange_family_member_id(self):

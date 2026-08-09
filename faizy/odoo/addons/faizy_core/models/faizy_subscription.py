@@ -22,6 +22,10 @@ class FaizySubscription(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc"
 
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
+
     name = fields.Char(
         required=True,
         readonly=True,

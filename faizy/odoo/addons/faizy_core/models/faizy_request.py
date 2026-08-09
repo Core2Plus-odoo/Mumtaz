@@ -11,6 +11,10 @@ class FaizyBridgeRequest(models.Model):
     _inherit = ["mail.thread"]
     _order = "create_date desc"
 
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
+
     name = fields.Char(
         required=True,
         readonly=True,
@@ -56,6 +60,10 @@ class FaizyProductRequest(models.Model):
     _description = "Faizy Product Request"
     _inherit = ["mail.thread"]
     _order = "create_date desc"
+
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
 
     name = fields.Char(
         required=True,

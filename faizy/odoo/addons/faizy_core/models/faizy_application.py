@@ -16,6 +16,10 @@ class FaizyApplication(models.Model):
     _order = "create_date desc"
     _rec_names_search = ["reference", "name", "phone"]
 
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
+
     reference = fields.Char(
         required=True,
         readonly=True,

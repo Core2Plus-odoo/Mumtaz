@@ -14,6 +14,10 @@ class FaizyWorker(models.Model):
     _order = "name"
     _rec_names_search = ["name", "phone", "cnic"]
 
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
+
     name = fields.Char(required=True, tracking=True)
     reference = fields.Char(
         readonly=True,

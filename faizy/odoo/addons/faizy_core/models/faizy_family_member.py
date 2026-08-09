@@ -16,6 +16,10 @@ class FaizyFamilyMember(models.Model):
     _order = "fmb_id"
     _rec_names_search = ["name", "fmb_id"]
 
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
+
     name = fields.Char(required=True, tracking=True)
     fmb_id = fields.Char(
         string="FMB ID",

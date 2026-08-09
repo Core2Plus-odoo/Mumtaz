@@ -54,6 +54,10 @@ class ResPartner(models.Model):
 
     _inherit = "res.partner"
 
+    # Marks records created by the sample-data loader so they can all be
+    # removed together without touching anything real.
+    is_sample = fields.Boolean(default=False, copy=False, index=True)
+
     is_faizy_customer = fields.Boolean(string="Faizy Customer", index=True)
 
     family_member_ids = fields.One2many("faizy.family.member", "partner_id")
@@ -160,6 +164,84 @@ class ResPartner(models.Model):
                 partner.faizy_segment = "high_value"
             else:
                 partner.faizy_segment = "regular"
+
+    # ── Care score ───────────────────────────────────────────────────────
+    care_score = fields.Integer(
+        compute="_compute_care_score",
+        store=True,
+        help="How well this family is actually being looked after, 0-100.",
+    )
+    care_score_label = fields.Char(compute="_compute_care_score", store=True)
+
+    document_ids = fields.One2many("faizy.document", "partner_id")
+
+    @api.depends(
+        "family_member_ids",
+        "order_ids.state",
+        "order_ids.date_completed",
+        "document_ids",
+        "faizy_subscription_id.state",
+    )
+    def _compute_care_score(self):
+        """A heuristic, and worth being honest that it is one.
+
+        It answers "is this family actually being looked after, or is the
+        subscription just sitting there?" — which is the question that predicts
+        churn. Four things, weighted by how much each one tells us:
+
+          40  recency: someone was cared for lately
+          25  coverage: the family is actually on the system
+          20  consistency: care happens regularly, not once
+          15  readiness: documents on file, so an errand can start immediately
+
+        Deliberately not a rating of the customer. A low score is a prompt for
+        ops to reach out, not a judgement.
+        """
+        today = fields.Date.context_today(self)
+        for partner in self:
+            if not partner.is_faizy_customer:
+                partner.care_score = 0
+                partner.care_score_label = ""
+                continue
+
+            completed = partner.order_ids.filtered(lambda o: o.state == "completed")
+
+            # Recency — full marks within a fortnight, nothing past ten weeks.
+            last = max((o.date_completed for o in completed if o.date_completed), default=None)
+            if last:
+                days = (today - last.date()).days
+                recency = 40 if days <= 14 else max(0, 40 - (days - 14))
+            else:
+                recency = 0
+
+            # Coverage — a subscription with nobody attached to it helps no one.
+            coverage = min(25, len(partner.family_member_ids) * 12)
+
+            # Consistency — five completed tasks is a settled habit.
+            consistency = min(20, len(completed) * 4)
+
+            # Readiness — paperwork on file means an errand can start same-day.
+            readiness = min(15, len(partner.document_ids) * 5)
+
+            score = int(recency + coverage + consistency + readiness)
+            partner.care_score = score
+            partner.care_score_label = (
+                self.env._("Well cared for") if score >= 75
+                else self.env._("Steady") if score >= 50
+                else self.env._("Slipping") if score >= 25
+                else self.env._("Needs attention")
+            )
+
+    def action_view_documents(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Documents"),
+            "res_model": "faizy.document",
+            "view_mode": "list,form",
+            "domain": [("partner_id", "=", self.id)],
+            "context": {"default_partner_id": self.id},
+        }
 
     def action_view_family_members(self):
         self.ensure_one()
