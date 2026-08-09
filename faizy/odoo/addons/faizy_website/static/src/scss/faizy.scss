@@ -721,3 +721,113 @@ $fz-accent-amber:  #f7b209;
   }
   .fz-contact-value { display: block; font-weight: 600; }
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  Header — top bar and navigation
+// ════════════════════════════════════════════════════════════════════════
+//
+// Not scoped under .faizy-page: the header and top bar live outside the page
+// wrapper, so scoping them would silently do nothing.
+
+.fz-topbar {
+  background: $fz-black;
+  color: rgba(253, 251, 247, 0.85);
+  font-size: 0.8125rem;
+  padding: 0.4rem 0;
+
+  .fz-topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  // Nastaliq needs the height; the bar does not. Setting line-height back to 1
+  // stops one Urdu word making the strip three times taller than it should be.
+  .fz-topbar-tagline {
+    color: $fz-orange;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .fz-topbar-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-left: auto;
+  }
+
+  a {
+    color: rgba(253, 251, 247, 0.85);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+
+    &:hover { color: $fz-orange; }
+  }
+}
+
+// ── Navigation ──────────────────────────────────────────────────────────
+// Odoo's header markup varies by which of its variants is active, so this
+// styles by role and class rather than by structure — it holds up if somebody
+// switches header templates in the editor.
+#wrapwrap > header {
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.07);
+  box-shadow: 0 1px 12px -6px rgba(10, 10, 10, 0.18);
+
+  .navbar-brand img,
+  .o_website_logo,
+  img.o_website_logo_img {
+    max-height: 2.5rem;
+    width: auto;
+  }
+
+  .nav-link,
+  .navbar-nav > li > a {
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    transition: color 0.15s ease;
+
+    &:hover { color: $fz-orange-700; }
+  }
+
+  // The current page, marked without shouting.
+  .nav-item.active > .nav-link,
+  .nav-link.active {
+    color: $fz-black;
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 0 $fz-orange;
+  }
+
+  // "Start free" is the one thing we want clicked, so it stops looking like
+  // navigation and starts looking like the end of it. Selected by href rather
+  // than position: menu order is marketing's to change.
+  a[href="/start"] {
+    background: linear-gradient(135deg, $fz-orange 0%, #ffb648 100%);
+    color: $fz-black !important;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.45rem 1.15rem !important;
+    box-shadow: 0 6px 18px -8px rgba(246, 158, 34, 0.75);
+    transition: transform 0.15s ease, filter 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      color: $fz-black !important;
+    }
+    // The underline marker would sit outside the pill.
+    &.active { box-shadow: 0 6px 18px -8px rgba(246, 158, 34, 0.75); }
+  }
+}
+
+@media (max-width: 575.98px) {
+  .fz-topbar {
+    .fz-topbar-tagline { display: none; }   // the links are what matter here
+    .fz-topbar-links { gap: 0.9rem; margin-left: 0; }
+    .fz-topbar-inner { justify-content: center; }
+  }
+}
