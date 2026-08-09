@@ -2,6 +2,7 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from odoo.tools import format_date
 
 
 class FaizySubscription(models.Model):
@@ -249,11 +250,19 @@ class FaizySubscription(models.Model):
                 0,
                 {
                     "product_id": plan.product_id.id,
+                    # "Faizy Standard", not "Standard" — the line has to make
+                    # sense on a bank statement enquiry months later, where
+                    # nobody remembers what "Standard" was.
+                    #
+                    # Dates formatted, not raw. The printed invoice showed
+                    # "Standard — 2026-08-09 to 2026-09-09" against an invoice
+                    # date of 08/09/2026: two date formats on one page, one of
+                    # which no customer reads as a date.
                     "name": self.env._(
-                        "%(plan)s — %(start)s to %(end)s",
+                        "Faizy %(plan)s — %(start)s to %(end)s",
                         plan=plan.name,
-                        start=self.period_start,
-                        end=self.period_end,
+                        start=format_date(self.env, self.period_start),
+                        end=format_date(self.env, self.period_end),
                     ),
                     "quantity": 1,
                     # self.price, not plan.price — the subscription is billed at
@@ -290,9 +299,51 @@ class FaizySubscription(models.Model):
             )
         return lines
 
+    def _check_exchange_rate(self):
+        """Refuse to invoice in a currency the books cannot value.
+
+        Odoo's `_get_rates` ends in `COALESCE(rate, fallback, 1.0)` — a currency
+        with no rate row is silently worth 1.0 of the company currency. With
+        PKR books and no AED rate, a 66.20 AED invoice posts to the ledger as
+        66.20 PKR instead of roughly 5,000, and nothing anywhere says so. The
+        customer is billed correctly; only the accounts are wrong, which is the
+        kind of error that surfaces months later during a reconciliation.
+
+        This is why the check exists rather than a default rate: guessing an
+        exchange rate is how the SAR prices ended up 4.1% low for weeks. A rate
+        is a number somebody has to supply.
+        """
+        self.ensure_one()
+        company = self.company_id or self.env.company
+        if self.currency_id == company.currency_id:
+            return
+
+        has_rate = self.env["res.currency.rate"].sudo().search_count(
+            [
+                ("currency_id", "=", self.currency_id.id),
+                ("company_id", "in", (False, company.id)),
+            ],
+            limit=1,
+        )
+        if not has_rate:
+            raise UserError(
+                self.env._(
+                    "%(sub)s bills in %(cur)s but the books are in %(company)s, "
+                    "and no %(cur)s exchange rate exists. Odoo would treat the "
+                    "rate as 1.0 and record this invoice at %(cur)s 1 = "
+                    "%(company)s 1, understating the revenue without warning.\n\n"
+                    "Set a rate in Accounting → Configuration → Currencies → "
+                    "%(cur)s, then invoice again.",
+                    sub=self.name,
+                    cur=self.currency_id.name,
+                    company=company.currency_id.name,
+                )
+            )
+
     def _generate_invoice(self):
         """Raise the invoice for the closing period and roll to the next one."""
         self.ensure_one()
+        self._check_exchange_rate()
         overage = max(0, self.activities_used - self.activities_included)
 
         invoice = self.env["account.move"].create(
