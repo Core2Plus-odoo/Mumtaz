@@ -143,6 +143,124 @@ def collect_models(module: Path) -> dict[str, dict]:
     return models
 
 
+def field_definitions(module: Path) -> list[dict]:
+    """Every `x = fields.Y(...)` in the module, with the keywords that matter.
+
+    Uses `ast` rather than a regex because these checks turn on keyword VALUES
+    (store=True, tracking=True), and a field definition wraps across lines with
+    nested calls and lambdas. A regex that reads those correctly is a parser
+    written badly.
+    """
+    out: list[dict] = []
+    models_dir = module / "models"
+    for py in sorted(models_dir.glob("*.py")) if models_dir.exists() else []:
+        try:
+            tree = ast.parse(py.read_text())
+        except SyntaxError:
+            continue  # py_compile reports this properly elsewhere
+        for cls in (n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)):
+            model_name, inherits = None, set()
+            fields_here = []
+            for stmt in cls.body:
+                if not isinstance(stmt, ast.Assign) or len(stmt.targets) != 1:
+                    continue
+                target = stmt.targets[0]
+                if not isinstance(target, ast.Name):
+                    continue
+
+                if target.id in ("_name", "_inherit"):
+                    if isinstance(stmt.value, ast.Constant):
+                        value = {stmt.value.value}
+                    elif isinstance(stmt.value, (ast.List, ast.Tuple)):
+                        value = {
+                            e.value for e in stmt.value.elts
+                            if isinstance(e, ast.Constant)
+                        }
+                    else:
+                        continue
+                    if target.id == "_name":
+                        model_name = next(iter(value), None)
+                    else:
+                        inherits |= value
+                    continue
+
+                call = stmt.value
+                if not (
+                    isinstance(call, ast.Call)
+                    and isinstance(call.func, ast.Attribute)
+                    and isinstance(call.func.value, ast.Name)
+                    and call.func.value.id == "fields"
+                ):
+                    continue
+                kwargs = {
+                    kw.arg: kw.value.value
+                    for kw in call.keywords
+                    if kw.arg and isinstance(kw.value, ast.Constant)
+                }
+                fields_here.append(
+                    {
+                        "field": target.id,
+                        "type": call.func.attr,
+                        "line": stmt.lineno,
+                        "file": py.name,
+                        "kwargs": kwargs,
+                    }
+                )
+
+            # A class with only _inherit extends that model.
+            model_name = model_name or (next(iter(inherits), None) if inherits else None)
+            for entry in fields_here:
+                entry["model"] = model_name or "?"
+                entry["inherits"] = inherits
+                out.append(entry)
+    return out
+
+
+def check_field_definitions(module: Path, failures: list[str]) -> None:
+    """Two Odoo warnings that are quiet at load and wrong at runtime.
+
+    Both showed up in the production upgrade log, buried in tracebacks that
+    look fatal but are only `warnings.warn` printing a stack. Easy to scroll
+    past, which is exactly why they belong in CI.
+    """
+    definitions = field_definitions(module)
+
+    # 1. tracking=True needs mail.thread, or Odoo ignores it silently:
+    #    "Field x.y: unknown parameter 'tracking'". You believe you have an
+    #    audit trail and you have nothing.
+    for entry in definitions:
+        if entry["kwargs"].get("tracking") and "mail.thread" not in entry["inherits"]:
+            failures.append(
+                f"{module.name}: {entry['file']}:{entry['line']} "
+                f"{entry['model']}.{entry['field']} sets tracking=True but the "
+                f"model does not inherit mail.thread — Odoo ignores the "
+                f"parameter, so nothing is actually tracked"
+            )
+
+    # 2. Fields sharing a compute must agree on `store`. With one non-stored
+    #    field in the group, READING it runs the compute and WRITES the stored
+    #    ones as a side effect. `compute_sudo` also defaults differently for
+    #    stored vs non-stored, so mismatched `store` produces both warnings.
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for entry in definitions:
+        compute = entry["kwargs"].get("compute")
+        if compute:
+            groups.setdefault((entry["model"], compute), []).append(entry)
+
+    for (model_name, compute), entries in sorted(groups.items()):
+        stored = {bool(e["kwargs"].get("store")) for e in entries}
+        if len(stored) > 1:
+            names = ", ".join(
+                f"{e['field']}({'stored' if e['kwargs'].get('store') else 'not stored'})"
+                for e in sorted(entries, key=lambda e: e["field"])
+            )
+            failures.append(
+                f"{module.name}: {entries[0]['file']} {model_name}.{compute} "
+                f"computes fields with inconsistent store: {names} — reading a "
+                f"non-stored one writes the stored ones as a side effect"
+            )
+
+
 def main() -> int:
     failures: list[str] = []
     all_models: dict[str, set[str]] = {}
@@ -178,6 +296,9 @@ def main() -> int:
 
         # 3a. Data files must not write fields removed from core models.
         check_removed_core_fields(module, failures)
+
+        # 3b. Field keywords that Odoo only warns about at load.
+        check_field_definitions(module, failures)
 
         models = collect_models(module)
         all_models.update(models)
@@ -314,6 +435,46 @@ def main() -> int:
                             f"without that group gets an AccessError that breaks "
                             f"the whole form"
                         )
+
+    # 7. Font Awesome icons in backend views need an accessible name.
+    #
+    # Odoo runs this check itself and logs "A <i> with fa class (...) must have
+    # title in its tag, parents, descendants or have text" — but only as a
+    # WARNING, so the view installs and a screen reader reads nothing where a
+    # sighted user sees a location pin. Same rule, enforced here.
+    for module in modules:
+        views_dir = module / "views"
+        for xml_file in views_dir.rglob("*.xml") if views_dir.exists() else []:
+            try:
+                tree = ET.parse(xml_file)
+            except ET.ParseError:
+                continue
+            for record in tree.iter("record"):
+                if record.get("model") != "ir.ui.view":
+                    continue
+                arch = record.find("./field[@name='arch']")
+                if arch is None:
+                    continue
+                view_node = record.find("./field[@name='name']")
+                view_name = (view_node.text or "?") if view_node is not None else "?"
+
+                def walk_icons(node, titled_ancestor: bool) -> None:
+                    for child in node:
+                        has_title = bool(child.get("title") or child.get("aria-label"))
+                        classes = child.get("class") or ""
+                        is_icon = child.tag == "i" and re.search(r"\bfa[\b-]", classes)
+                        # Odoo also accepts text, or a titled descendant.
+                        has_text = bool("".join(child.itertext()).strip())
+                        if is_icon and not (has_title or titled_ancestor or has_text):
+                            failures.append(
+                                f"{module.name}: {xml_file.name} ({view_name}) has "
+                                f'<i class="{classes}"> with no title — a screen '
+                                f"reader announces nothing where a sighted user "
+                                f"sees an icon"
+                            )
+                        walk_icons(child, titled_ancestor or has_title)
+
+                walk_icons(arch, False)
 
     print(f"Checked {len(modules)} module(s): {', '.join(m.name for m in modules)}")
     print(f"Models found: {len([m for m in all_models if m.startswith('faizy.')])}")

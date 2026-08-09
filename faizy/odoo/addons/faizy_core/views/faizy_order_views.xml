@@ -33,13 +33,13 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-muted small">
-                                    <i class="fa fa-map-marker me-1"/><field name="city"/>
+                                    <i class="fa fa-map-marker me-1" title="City" aria-label="City" role="img"/><field name="city"/>
                                 </span>
                                 <field name="amount_total" widget="monetary"/>
                             </div>
                             <div class="mt-2 d-flex justify-content-between align-items-center">
                                 <span t-if="record.worker_id.raw_value" class="text-muted small">
-                                    <i class="fa fa-user me-1"/><field name="worker_id"/>
+                                    <i class="fa fa-user me-1" title="Assigned Faizy" aria-label="Assigned Faizy" role="img"/><field name="worker_id"/>
                                 </span>
                                 <span t-else="" class="badge text-bg-danger">Unassigned</span>
                                 <field name="activity_ids" widget="kanban_activity"/>

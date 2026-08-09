@@ -57,7 +57,12 @@ class FaizyWhatsappMessage(models.Model):
         default="queued",
         required=True,
         index=True,
-        tracking=True,
+        # No `tracking` here: this model has no mail.thread, so Odoo logged
+        # "unknown parameter 'tracking'" at load and silently ignored it. The
+        # fix is to drop it rather than add the mixin — a send queue turns over
+        # constantly, and giving every row a chatter would cost a message table
+        # write per state change for an audit trail nobody reads. `sent_date`,
+        # `error_message` and `retry_count` already record what matters.
     )
     provider = fields.Char(readonly=True)
     provider_message_id = fields.Char(readonly=True)

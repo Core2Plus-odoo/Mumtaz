@@ -100,7 +100,7 @@
                                         </div>
                                     </div>
                                     <p class="text-muted small mb-0">
-                                        <i class="fa fa-camera me-1" style="color:#F69E22;"/>
+                                        <i class="fa fa-camera me-1" style="color:#F69E22;" aria-hidden="true"/>
                                         Photo proof attached · delivered 6:42 PM
                                     </p>
                                 </div>
@@ -507,7 +507,7 @@
                         <div class="mb-4">
                             <t t-foreach="plan.feature_ids" t-as="feature">
                                 <div class="fz-plan-feature">
-                                    <i class="fa fa-check mt-1" style="color:#F69E22;"/>
+                                    <i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/>
                                     <span t-out="feature.name"/>
                                 </div>
                             </t>
@@ -626,10 +626,10 @@
                                     <h2 class="h6 text-uppercase text-muted mb-3" style="letter-spacing:.1em;">
                                         What we ask
                                     </h2>
-                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;"/><span>A valid CNIC and two references</span></div>
-                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;"/><span>A smartphone with WhatsApp</span></div>
-                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;"/><span>Reliability — families are counting on it</span></div>
-                                    <div class="fz-plan-feature mb-0"><i class="fa fa-check mt-1" style="color:#F69E22;"/><span>Respect for the people you'll be visiting</span></div>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>A valid CNIC and two references</span></div>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>A smartphone with WhatsApp</span></div>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>Reliability — families are counting on it</span></div>
+                                    <div class="fz-plan-feature mb-0"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>Respect for the people you'll be visiting</span></div>
                                 </div>
                             </div>
                         </div>

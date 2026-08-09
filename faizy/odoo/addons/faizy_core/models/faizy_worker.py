@@ -74,7 +74,12 @@ class FaizyWorker(models.Model):
     )
 
     order_ids = fields.One2many("faizy.order", "worker_id")
-    order_count = fields.Integer(compute="_compute_stats")
+    # All five share _compute_stats, so all five must agree on `store`. With
+    # order_count non-stored, merely READING it ran the compute and wrote the
+    # other four as a side effect — Odoo warns about exactly this at load:
+    # "accessing order_count may recompute and update completed_count...".
+    # A read that writes is a bug waiting for a concurrent transaction.
+    order_count = fields.Integer(compute="_compute_stats", store=True)
     completed_count = fields.Integer(compute="_compute_stats", store=True)
     cancelled_count = fields.Integer(compute="_compute_stats", store=True)
     # `aggregator` (not the pre-18 `group_operator`) — averaging is the only

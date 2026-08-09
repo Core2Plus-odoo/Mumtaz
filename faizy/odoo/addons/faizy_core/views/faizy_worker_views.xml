@@ -26,7 +26,7 @@
                                 </span>
                             </div>
                             <div class="mt-1 text-muted small" t-if="record.rating_count.raw_value">
-                                <i class="fa fa-star text-warning me-1"/><field name="rating_avg"/>
+                                <i class="fa fa-star text-warning me-1" title="Average rating" aria-label="Average rating" role="img"/><field name="rating_avg"/>
                                 (<field name="rating_count"/>)
                             </div>
                         </div>
