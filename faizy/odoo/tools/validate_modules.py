@@ -101,6 +101,47 @@ def check_removed_core_fields(module: Path, failures: list[str]) -> None:
                     )
 
 
+# QWeb helpers that no longer exist in an Odoo 19 kanban card. Verified against
+# addons/web/static/src/views/kanban/kanban_record.js — `renderingContext` is
+# exactly {context, JSON, luxon, record, selection_mode, widget, __comp__} and
+# nothing else is in scope.
+#
+# This class of error is nastier than a missing field. It survives install, it
+# survives the RNG schema, and it only fires in the browser the first time the
+# view has a record to draw — at which point it is not a broken avatar, it is
+# "UncaughtPromiseError > OwlError" and the entire screen is blank. The Faizies
+# kanban shipped with this and looked fine for weeks purely because the list was
+# empty on production.
+REMOVED_KANBAN_HELPERS = {
+    "kanban_image": (
+        "removed in Odoo 19 — use <field name=\"...\" widget=\"image\" "
+        "options=\"{'img_class': '...'}\"/> the way Odoo's own partner kanban does"
+    ),
+    "kanban_color": "removed in Odoo 19 — use the `color` field with widget/decoration",
+    "kanban_getcolor": "removed in Odoo 19 — use the `color` field with widget/decoration",
+}
+
+
+def check_kanban_helpers(module: Path, failures: list[str]) -> None:
+    """Flag kanban templates calling helpers Odoo 19 no longer provides."""
+    for xml_file in module.rglob("*.xml"):
+        try:
+            tree = ET.parse(xml_file)
+        except ET.ParseError:
+            continue  # reported elsewhere
+        for kanban in tree.iter("kanban"):
+            # Any attribute value can hold an expression — t-att-src, t-if,
+            # t-attf-class and so on — so scan the serialised subtree rather
+            # than guessing which attribute someone used.
+            arch = ET.tostring(kanban, encoding="unicode")
+            for helper, reason in REMOVED_KANBAN_HELPERS.items():
+                if f"{helper}(" in arch:
+                    failures.append(
+                        f"{module.name}: {xml_file.name} kanban calls "
+                        f"{helper}() — {reason}"
+                    )
+
+
 def module_dirs() -> list[Path]:
     return sorted(p for p in ADDONS.iterdir() if (p / "__manifest__.py").exists())
 
@@ -325,6 +366,10 @@ def main() -> int:
 
         # 3b. Field keywords that Odoo only warns about at load.
         check_field_definitions(module, failures)
+
+        # 3c. Kanban helpers Odoo 19 removed. Invisible until the view has a
+        #     record to draw, then the whole screen goes blank.
+        check_kanban_helpers(module, failures)
 
         models = collect_models(module)
         all_models.update(models)

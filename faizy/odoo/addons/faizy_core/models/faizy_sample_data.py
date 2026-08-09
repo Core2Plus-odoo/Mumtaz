@@ -71,14 +71,12 @@ class FaizySampleData(models.TransientModel):
              "phone": "+924235559001", "city": "Lahore",
              "country_id": env.ref("base.pk").id,
              "is_faizy_vendor": True, "faizy_vendor_type": "pharmacy",
-             "faizy_vendor_state": "active", "faizy_vendor_onboarded": today,
              "faizy_vendor_note": "Delivers Model Town before noon. Ask for Adnan.",
              "is_sample": True},
             {"name": "Green Valley Kiryana", "is_company": True,
              "phone": "+922134559002", "city": "Karachi",
              "country_id": env.ref("base.pk").id,
              "is_faizy_vendor": True, "faizy_vendor_type": "grocery",
-             "faizy_vendor_state": "active", "faizy_vendor_onboarded": today,
              "is_sample": True},
             # A negotiated rate, so the override path is visible on a real
             # record rather than only in the field's help text.
@@ -86,7 +84,6 @@ class FaizySampleData(models.TransientModel):
              "phone": "+925135559003", "city": "Islamabad",
              "country_id": env.ref("base.pk").id,
              "is_faizy_vendor": True, "faizy_vendor_type": "lab",
-             "faizy_vendor_state": "active", "faizy_vendor_onboarded": today,
              "faizy_vendor_custom_commission": True,
              "faizy_vendor_commission_rate": 0.15,
              "is_sample": True},
@@ -97,6 +94,11 @@ class FaizySampleData(models.TransientModel):
              "faizy_vendor_state": "prospect", "is_sample": True},
         ])
         shifa, kiryana, diagnostics, _prospect = vendors
+        # Through the real gate, not written straight to "active": an order
+        # refuses an unapproved vendor, so sample data that skipped approval
+        # would fail its own constraint. Rahat Medical Store stays a prospect
+        # so the awaiting-approval queue is not empty on a fresh instance.
+        (shifa + kiryana + diagnostics).action_faizy_vendor_approve()
 
         # ── Customers, wherever they are ─────────────────────────────────
         # Two in the Gulf and one in the UK, because that is the shape of the

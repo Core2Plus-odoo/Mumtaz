@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class FaizyOrder(models.Model):
@@ -140,9 +140,38 @@ class FaizyOrder(models.Model):
     vendor_id = fields.Many2one(
         "res.partner",
         string="Vendor",
-        domain=[("is_faizy_vendor", "=", True)],
-        help="Set when a third party fulfils the order. Triggers commission.",
+        # Approved vendors only. The domain filters the dropdown; the
+        # constraint below is what actually enforces it, because a domain is
+        # advisory — it does nothing against an import, an automation or a
+        # write from code.
+        domain=[("is_faizy_vendor", "=", True), ("faizy_vendor_state", "=", "active")],
+        help="Set when a third party fulfils the order. Triggers commission. "
+        "Only approved vendors can be assigned.",
     )
+
+    @api.constrains("vendor_id")
+    def _check_vendor_approved(self):
+        """A customer's purchase value may only flow through an approved vendor.
+
+        Vendors arrive as prospects — a bulk import can create twenty of them
+        from a research list in one click. Without this, any of those could be
+        attached to a live order and start earning commission on a relationship
+        nobody had agreed to.
+        """
+        for order in self:
+            vendor = order.vendor_id
+            if vendor and vendor.faizy_vendor_state != "active":
+                raise ValidationError(
+                    self.env._(
+                        "%(vendor)s has not been approved as a Faizy vendor yet "
+                        "(currently %(state)s). Approve them under Network → "
+                        "Vendors before routing an order through them.",
+                        vendor=vendor.display_name,
+                        state=dict(
+                            vendor._fields["faizy_vendor_state"].selection
+                        ).get(vendor.faizy_vendor_state, vendor.faizy_vendor_state),
+                    )
+                )
     vendor_commission = fields.Monetary(
         compute="_compute_amounts",
         store=True,

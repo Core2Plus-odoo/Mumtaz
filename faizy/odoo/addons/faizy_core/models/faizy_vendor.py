@@ -63,6 +63,24 @@ class FaizyVendorPartner(models.Model):
     )
     faizy_vendor_onboarded = fields.Date(string="Onboarded On", copy=False)
 
+    # ── Approval ─────────────────────────────────────────────────────────
+    # A vendor record can be created by anyone who can edit contacts, and a
+    # bulk import can create twenty in one click. Approval is what separates
+    # "someone found this company on the internet" from "we have agreed terms
+    # and a customer's money can go through them". Stamped, not just flagged:
+    # a state with no approver is an assertion nobody signed.
+    faizy_vendor_approved_by = fields.Many2one(
+        "res.users",
+        string="Approved By",
+        readonly=True,
+        copy=False,
+    )
+    faizy_vendor_approved_on = fields.Datetime(
+        string="Approved On",
+        readonly=True,
+        copy=False,
+    )
+
     faizy_vendor_area_ids = fields.Many2many(
         "faizy.area",
         "faizy_vendor_area_rel",
@@ -229,16 +247,59 @@ class FaizyVendorPartner(models.Model):
 
     # ── Actions ──────────────────────────────────────────────────────────
 
-    def action_faizy_vendor_activate(self):
-        self.write(
-            {
-                "faizy_vendor_state": "active",
-                "faizy_vendor_onboarded": fields.Date.context_today(self),
-            }
-        )
+    def action_faizy_vendor_approve(self):
+        """Approve a vendor for live work.
+
+        The gate, not a label. Until this runs, `faizy.order` refuses to accept
+        the vendor at all — see `_check_vendor_approved` — so an imported lead
+        cannot quietly end up carrying a customer's purchase value.
+
+        Restricted to Operations in the view. The record of *who* approved is
+        the point: if a vendor turns out to be a bad choice, "when did we agree
+        to this and who signed it off" needs an answer.
+        """
+        for partner in self:
+            if not partner.is_faizy_vendor:
+                raise ValidationError(
+                    self.env._(
+                        "%(name)s is not marked as a Faizy vendor.",
+                        name=partner.display_name,
+                    )
+                )
+            partner.write(
+                {
+                    "faizy_vendor_state": "active",
+                    "faizy_vendor_approved_by": self.env.user.id,
+                    "faizy_vendor_approved_on": fields.Datetime.now(),
+                    # Only on first approval — a vendor reinstated after a
+                    # suspension keeps the date the relationship actually began.
+                    "faizy_vendor_onboarded": partner.faizy_vendor_onboarded
+                    or fields.Date.context_today(self),
+                }
+            )
+            partner.message_post(
+                body=self.env._(
+                    "Approved as a Faizy vendor by %(user)s. Orders may now be "
+                    "routed through them.",
+                    user=self.env.user.display_name,
+                )
+            )
 
     def action_faizy_vendor_suspend(self):
-        self.write({"faizy_vendor_state": "suspended"})
+        """Stop new work without deleting the history.
+
+        Existing orders keep their vendor and their commission — those happened.
+        What changes is that nothing new can be assigned until somebody
+        approves again, which re-stamps the approver.
+        """
+        for partner in self:
+            partner.write({"faizy_vendor_state": "suspended"})
+            partner.message_post(
+                body=self.env._(
+                    "Suspended by %(user)s. No new orders can be routed here.",
+                    user=self.env.user.display_name,
+                )
+            )
 
     def action_view_faizy_vendor_orders(self):
         self.ensure_one()
