@@ -176,12 +176,20 @@ Upgrading after a code change is the same command with `-u` instead of `-i`:
 ```bash
 sudo systemctl stop faizy-odoo
 sudo -u faizy git -C /opt/faizy/src pull
-sudo -u faizy /opt/faizy/venv/bin/python3 /opt/faizy/odoo/odoo-bin \
+cd /opt/faizy && sudo -u faizy /opt/faizy/venv/bin/python3 /opt/faizy/odoo/odoo-bin \
   -c /opt/faizy/odoo.conf --logfile= \
   -d faizy_prod -u faizy_core,faizy_website --stop-after-init
 echo "upgrade exit: $?"
 sudo systemctl start faizy-odoo
 ```
+
+The `cd /opt/faizy` is not decoration. Run this from `/root` and every
+upgrade logs `Failed to render module description ... Permission denied:
+'html4css1.css'` — docutils falls back to resolving its stylesheet against
+the working directory, and the `faizy` user cannot read `/root`. Harmless
+(the description renders as raw text in the Apps list) but it is noise on
+every single upgrade, and running a service account from a directory it
+cannot read is worth not doing anyway.
 
 **`--logfile=` (empty) matters.** odoo.conf sets `logfile`, so without the
 override every line — including the traceback you need — goes to
