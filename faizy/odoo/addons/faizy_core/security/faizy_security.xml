@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <record id="module_category_faizy" model="ir.module.category">
-        <field name="name">Faizy</field>
-        <field name="description">Family care operations</field>
-        <field name="sequence">20</field>
-    </record>
+    <!-- Odoo 19 removed res.groups.category_id (and res.groups.users). The
+         grouping now comes from the "App / Role" name prefix, which is what the
+         other modules in this repo already do. -->
 
     <!-- ── Agent ────────────────────────────────────────────────────────
          Day-to-day ops: take bookings, assign Faizies, move orders along.
          Cannot see medical notes or touch money settings.               -->
     <record id="group_faizy_user" model="res.groups">
-        <field name="name">Agent</field>
-        <field name="category_id" ref="module_category_faizy"/>
+        <field name="name">Faizy / Agent</field>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
 
@@ -20,16 +17,14 @@
          Adds the sensitive layer: medical notes, the applications pipeline,
          wallet adjustments.                                              -->
     <record id="group_faizy_ops" model="res.groups">
-        <field name="name">Operations</field>
-        <field name="category_id" ref="module_category_faizy"/>
+        <field name="name">Faizy / Operations</field>
         <field name="implied_ids" eval="[(4, ref('group_faizy_user'))]"/>
     </record>
 
     <!-- ── Manager ──────────────────────────────────────────────────────
          Plans, pricing, subscriptions, the WhatsApp queue.               -->
     <record id="group_faizy_manager" model="res.groups">
-        <field name="name">Manager</field>
-        <field name="category_id" ref="module_category_faizy"/>
+        <field name="name">Faizy / Manager</field>
         <field name="implied_ids" eval="[(4, ref('group_faizy_ops'))]"/>
     </record>
 

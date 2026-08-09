@@ -47,6 +47,38 @@ INHERITED_FIELDS = {
 }
 
 
+# Fields removed from Odoo core models in 19.0. Writing one in a data file is
+# accepted by every static check and then fails at install with
+# "Invalid field 'x' in 'model'" — from inside XML parsing, so the traceback
+# points at the file rather than explaining the version change.
+REMOVED_CORE_FIELDS = {
+    "res.groups": {
+        "category_id": "removed in Odoo 19 — use an 'App / Role' name prefix",
+        "users": "removed in Odoo 19 — assign groups from the user side",
+    },
+}
+
+
+def check_removed_core_fields(module: Path, failures: list[str]) -> None:
+    """Flag data records writing fields that no longer exist on core models."""
+    for xml_file in module.rglob("*.xml"):
+        try:
+            tree = ET.parse(xml_file)
+        except ET.ParseError:
+            continue  # reported elsewhere
+        for record in tree.iter("record"):
+            removed = REMOVED_CORE_FIELDS.get(record.get("model", ""))
+            if not removed:
+                continue
+            for field in record.findall("./field"):
+                reason = removed.get(field.get("name", ""))
+                if reason:
+                    failures.append(
+                        f"{module.name}: {xml_file.name} sets "
+                        f"{record.get('model')}.{field.get('name')} — {reason}"
+                    )
+
+
 def module_dirs() -> list[Path]:
     return sorted(p for p in ADDONS.iterdir() if (p / "__manifest__.py").exists())
 
@@ -143,6 +175,9 @@ def main() -> int:
                 ET.parse(xml_file)
             except ET.ParseError as err:
                 failures.append(f"{name}: {xml_file.relative_to(module)} — {err}")
+
+        # 3a. Data files must not write fields removed from core models.
+        check_removed_core_fields(module, failures)
 
         models = collect_models(module)
         all_models.update(models)
