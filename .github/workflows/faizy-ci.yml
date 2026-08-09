@@ -41,6 +41,12 @@ jobs:
       - name: Validate manifests, XML, ACLs and view fields
         run: python3 faizy/odoo/tools/validate_modules.py
 
+      # Reads field names out of the real Odoo 19 source. Catches data files
+      # writing core fields that no longer exist — the class of error that
+      # broke three separate installs and that nothing offline can detect.
+      - name: Check core-model fields against Odoo 19
+        run: python3 faizy/odoo/tools/check_core_fields.py
+
       - name: Lint
         run: |
           pip install --quiet flake8

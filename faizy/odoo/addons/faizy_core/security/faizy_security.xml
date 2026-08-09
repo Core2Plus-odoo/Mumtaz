@@ -82,7 +82,8 @@
         <field name="name">Faizy Order: company scope</field>
         <field name="model_id" ref="model_faizy_order"/>
         <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
-        <field name="global" eval="True"/>
+        <!-- No `groups` set, which is what makes a rule global. The `global`
+             field itself is computed from exactly that and cannot be written. -->
     </record>
 
 </odoo>
