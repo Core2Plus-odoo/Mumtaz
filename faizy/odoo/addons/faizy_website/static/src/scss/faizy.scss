@@ -729,45 +729,6 @@ $fz-accent-amber:  #f7b209;
 // Not scoped under .faizy-page: the header and top bar live outside the page
 // wrapper, so scoping them would silently do nothing.
 
-.fz-topbar {
-  background: $fz-black;
-  color: rgba(253, 251, 247, 0.85);
-  font-size: 0.8125rem;
-  padding: 0.4rem 0;
-
-  .fz-topbar-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  // Nastaliq needs the height; the bar does not. Setting line-height back to 1
-  // stops one Urdu word making the strip three times taller than it should be.
-  .fz-topbar-tagline {
-    color: $fz-orange;
-    font-size: 1rem;
-    line-height: 1;
-  }
-
-  .fz-topbar-links {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    margin-left: auto;
-  }
-
-  a {
-    color: rgba(253, 251, 247, 0.85);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    white-space: nowrap;
-
-    &:hover { color: $fz-orange; }
-  }
-}
 
 // ── Navigation ──────────────────────────────────────────────────────────
 // Odoo's header markup varies by which of its variants is active, so this
@@ -824,13 +785,6 @@ $fz-accent-amber:  #f7b209;
   }
 }
 
-@media (max-width: 575.98px) {
-  .fz-topbar {
-    .fz-topbar-tagline { display: none; }   // the links are what matter here
-    .fz-topbar-links { gap: 0.9rem; margin-left: 0; }
-    .fz-topbar-inner { justify-content: center; }
-  }
-}
 
 // ════════════════════════════════════════════════════════════════════════
 //  v6 — WARM
@@ -990,17 +944,6 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 }
 
 // ── Header ──────────────────────────────────────────────────────────────
-.fz-topbar {
-  background: $fz-sand-deep;
-  color: rgba(43, 38, 34, 0.7);
-  border-bottom: 1px solid rgba(43, 38, 34, 0.06);
-
-  .fz-topbar-tagline { color: $fz-clay; }
-  a {
-    color: rgba(43, 38, 34, 0.7);
-    &:hover { color: $fz-clay; }
-  }
-}
 
 #wrapwrap > header {
   background: #fdf8f0;
@@ -1132,7 +1075,6 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 .faizy-page input:focus-visible,
 .faizy-page select:focus-visible,
 .faizy-page textarea:focus-visible,
-.fz-topbar a:focus-visible,
 #wrapwrap > header a:focus-visible {
   outline: 2px solid $fz-clay;
   outline-offset: 3px;
@@ -1206,6 +1148,3 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   .navbar-brand img, img.o_website_logo_img { min-height: 2rem; }
 }
 
-// The top bar now carries only contact links, so it centres on every width
-// rather than pushing them right against nothing.
-.fz-topbar .fz-topbar-inner { justify-content: flex-end; }

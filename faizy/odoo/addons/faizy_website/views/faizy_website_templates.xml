@@ -548,46 +548,6 @@
     </template>
 
     <!-- ════════════════════════════════════════════════════════════════
-         TOP BAR — the tagline, and how to reach a human
-         Anchored on #wrapwrap because that is the one structural id
-         Odoo's own templates inherit against; the header itself comes
-         from whichever of a dozen header variants is active, and
-         xpathing into that would break the moment marketing switches one
-         in the editor.
-         ════════════════════════════════════════════════════════════════ -->
-    <template id="faizy_topbar" inherit_id="website.layout" name="Faizy — Top Bar">
-        <xpath expr="//div[@id='wrapwrap']" position="before">
-            <div class="fz-topbar">
-                <div class="container fz-topbar-inner">
-                    <span class="fz-topbar-links">
-                        <!-- Each link appears only when the field behind it is
-                             filled in, so the bar never offers a channel that
-                             does not answer. -->
-                        <a t-if="website.company_id.phone"
-                           t-attf-href="https://wa.me/#{website.company_id.phone.replace('+','').replace(' ','').replace('-','')}"
-                           rel="noopener" target="_blank">
-                            <span aria-hidden="true">💬</span>
-                            <span t-out="website.company_id.phone"/>
-                        </a>
-                        <a t-if="website.company_id.email"
-                           t-attf-href="mailto:#{website.company_id.email}">
-                            <span aria-hidden="true">✉️</span>
-                            <span t-out="website.company_id.email"/>
-                        </a>
-                        <a t-if="website.company_id.social_facebook"
-                           t-att-href="website.company_id.social_facebook"
-                           rel="noopener" target="_blank"
-                           aria-label="Faizy on Facebook">
-                            <span aria-hidden="true">👍</span>
-                            <span class="d-none d-sm-inline">Facebook</span>
-                        </a>
-                    </span>
-                </div>
-            </div>
-        </xpath>
-    </template>
-
-    <!-- ════════════════════════════════════════════════════════════════
          FOOTER — who you are actually dealing with
          Faizy is the service; C2P Consultants FZC LLC is the entity that
          bills you. A customer querying a charge needs to find the legal
