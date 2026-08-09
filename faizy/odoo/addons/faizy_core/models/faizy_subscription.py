@@ -326,6 +326,49 @@ class FaizySubscription(models.Model):
         )
         return invoice
 
+    # States a subscription can be billed in. Draft has never started, paused
+    # is deliberately not being charged, and cancelled is over.
+    BILLABLE_STATES = ("trial", "active", "past_due")
+
+    def action_bill_now(self):
+        """Raise this period's invoice immediately, instead of waiting for the cron.
+
+        Two reasons this exists. Ops needs it — a customer who asks for their
+        invoice early should not be told to wait until tomorrow. And it is the
+        only way to find out whether billing works at all without waiting a
+        day, which matters more than usual here: the cron has been failing
+        silently into the chatter since it was switched on, because no plan had
+        a product, and nobody would have known for another month.
+
+        Deliberately the same `_generate_invoice` the cron calls, not a
+        parallel path. A "test" button that bills differently from the real run
+        proves nothing about the real run.
+
+        It therefore does what the cron does, including rolling the period
+        forward — so pressing it mid-period bills the whole period and moves
+        the schedule on. That is why the button asks first.
+        """
+        self.ensure_one()
+        if self.state not in self.BILLABLE_STATES:
+            raise UserError(
+                self.env._(
+                    "%(name)s is %(state)s, so there is nothing to bill.",
+                    name=self.name,
+                    state=dict(self._fields["state"].selection).get(
+                        self.state, self.state
+                    ),
+                )
+            )
+        invoice = self._generate_invoice()
+        return {
+            "type": "ir.actions.act_window",
+            "name": self.env._("Invoice"),
+            "res_model": "account.move",
+            "res_id": invoice.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
     @api.model
     def _cron_recurring_invoice(self):
         """Daily: invoice every subscription whose period has closed."""
