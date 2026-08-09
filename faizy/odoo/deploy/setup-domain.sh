@@ -173,7 +173,7 @@ cat > /etc/nginx/sites-available/faizy <<EOF
 # chatter stops updating live and nothing says why.
 #
 # Deliberately a Faizy-specific variable name: this box serves C2P, IG2 and
-# the mumtaz.digital sites from the same nginx, and a second `map` defining
+# the mumtaz.digital sites from the same nginx, and a second map defining
 # \$connection_upgrade would be a duplicate-directive error that takes every
 # vhost down at reload.
 map \$http_upgrade \$faizy_connection_upgrade {
