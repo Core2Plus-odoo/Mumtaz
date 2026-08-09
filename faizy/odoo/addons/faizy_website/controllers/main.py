@@ -32,7 +32,12 @@ class FaizyWebsite(http.Controller):
         Customers are anywhere — the CRM has people in Dubai, Riyadh, London,
         Manchester and New York — so the price shown should be the one we
         published for that market. Preference order: what the visitor picked,
-        then the currency of the country GeoIP puts them in, then the company's.
+        then the currency of the country GeoIP puts them in, then PKR.
+
+        PKR last rather than the company currency: the work is done in Pakistan
+        and costed in rupees, and every other market price is a decision made
+        on top of that one. A visitor we cannot place should see the rupee
+        price, not whichever currency the company happens to report in.
 
         Only currencies with a published price are eligible. We never convert:
         a subscription price that moves with the exchange rate is not a price.
@@ -57,7 +62,7 @@ class FaizyWebsite(http.Controller):
             if local:
                 return local
 
-        return request.env.company.currency_id
+        return plans[:1].default_currency() if plans else request.env.company.currency_id
 
     def _pricing_values(self, currency=None):
         plans = (

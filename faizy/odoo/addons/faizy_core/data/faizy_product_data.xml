@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Invoice-line products for the recurring billing.
+
+  These are not decoration. `faizy.subscription._prepare_invoice_lines` raises
+  UserError when a plan has no `product_id`, the daily cron catches it and
+  writes the failure into the subscription's chatter, and the result is a
+  billing run that has never produced a single invoice while looking, from the
+  outside, exactly like one that has nothing to do.
+
+  A real product rather than a bare invoice line, because that is what carries
+  the income account and the tax mapping. Odoo works out VAT, the chart of
+  accounts and the reports from the product; an invoice line with a name and a
+  price and nothing behind it lands in whatever the default happens to be.
+
+  `type` is "service" — Odoo 19 allows consu / service / combo, checked in
+  addons/product/models/product_template.py. There is no "product" any more.
+
+  list_price is left at 0.00 on purpose. The price on the invoice comes from
+  the subscription, which carries the figure published for that customer's
+  market — see faizy.plan.price. A list price here would be a second, silent
+  price that disagrees with the first the day anyone edits it.
+
+  noupdate: ops will rename these, set taxes on them and map them to accounts.
+  None of that should be reverted by the next module upgrade.
+-->
+<odoo>
+    <data noupdate="1">
+
+        <record id="product_plan_lite" model="product.product">
+            <field name="name">Faizy Lite — monthly</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Faizy Lite subscription, billed monthly.</field>
+        </record>
+
+        <record id="product_plan_standard" model="product.product">
+            <field name="name">Faizy Standard — monthly</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Faizy Standard subscription, billed monthly.</field>
+        </record>
+
+        <record id="product_plan_family_pro" model="product.product">
+            <field name="name">Faizy Family Pro — monthly</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Faizy Family Pro subscription, billed monthly.</field>
+        </record>
+
+        <!-- One overage product for all three plans. The per-activity rate
+             differs by plan and by market, but it comes from the plan's
+             published price, not from the product — so three near-identical
+             products would only be three places to keep in step. -->
+        <record id="product_overage_activity" model="product.product">
+            <field name="name">Additional care activity</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Care activity beyond the monthly allowance.</field>
+        </record>
+
+        <!-- Used when an errand is invoiced rather than metered: the platform
+             fee and the service fee on a faizy.order. Nothing raises these
+             invoices yet — orders do not reach accounting at all today — but
+             the product is what that work will need, and defining it here
+             means the account and tax mapping is set once. -->
+        <record id="product_platform_fee" model="product.product">
+            <field name="name">Faizy platform fee</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Share of purchase value for running the errand.</field>
+        </record>
+
+        <record id="product_service_fee" model="product.product">
+            <field name="name">Faizy service fee</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Charge for carrying out a care activity.</field>
+        </record>
+
+    </data>
+</odoo>

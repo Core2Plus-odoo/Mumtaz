@@ -24,6 +24,21 @@
         <field name="active" eval="False"/>
     </record>
 
+    <!-- No "Contact Us" button in the header either.
+
+         With it, the bar carried three button-shaped things — "Start free"
+         solid orange, "WhatsApp" outlined green, "Contact Us" outlined grey —
+         plus a loose phone number and four nav links. Three calls to action is
+         none: nothing reads as the thing to press.
+
+         Contact is not lost. WhatsApp is in the bar and is the channel this
+         business actually runs on, /contactus is in the footer, and the footer
+         also carries the number and the Facebook page. What goes is the third
+         competing button, not the route. -->
+    <record id="website.header_call_to_action" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
+
     <!-- ════════════════════════════════════════════════════════════════
          HOME
          ════════════════════════════════════════════════════════════════ -->
