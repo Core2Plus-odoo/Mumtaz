@@ -70,10 +70,13 @@ class FaizyWebsite(http.Controller):
     @http.route("/", type="http", auth="public", website=True, sitemap=True)
     def faizy_home(self, currency=None, **kw):
         values = self._pricing_values(currency)
-        values["services"] = (
-            request.env["faizy.service"]
+        # Categories, not the 22 individual services. The home page answers
+        # "can you help with my kind of problem"; the catalogue belongs where
+        # somebody has already decided to buy.
+        values["categories"] = (
+            request.env["faizy.service.category"]
             .sudo()
-            .search([("active", "=", True)], order="sequence")
+            .search([], order="sequence")
         )
         # Real Faizies, photographed ones first — the section is a trust
         # signal, and a wall of initials is a weaker one than actual faces.

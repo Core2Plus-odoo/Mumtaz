@@ -17,6 +17,12 @@
          ════════════════════════════════════════════════════════════════ -->
     <template id="home" name="Faizy — Home">
         <t t-call="website.layout">
+            <!-- website.layout reads these for <title> and <meta name=description>.
+                 Canonical, hreflang and the sitemap it handles by itself once
+                 website.domain is set, which setup-domain.sh does. -->
+            <t t-set="additional_title">Family care in Pakistan for overseas Pakistanis</t>
+            <t t-set="website_meta_description">Faizy looks after your family in Pakistan while you work abroad. Groceries, medicines, doctor visits, eldercare and NADRA paperwork, booked on WhatsApp and finished with a photo. From PKR 1,999 a month.</t>
+
             <div id="wrap" class="faizy-page">
 
                 <!-- ── Hero ──────────────────────────────────────────── -->
@@ -30,9 +36,9 @@
                                     <span style="color:#F69E22;">We'll look after them there.</span>
                                 </h1>
                                 <p class="fz-hero-sub fz-lead mb-4">
-                                    Groceries, medicine, doctor visits, NADRA paperwork — handled by
-                                    vetted Faizies on the ground in Pakistan. Asked for on WhatsApp,
-                                    confirmed in writing, finished with a photo.
+                                    Family care in Pakistan for overseas Pakistanis. Groceries,
+                                    medicines, doctor visits, eldercare, NADRA paperwork — done by
+                                    vetted Faizies, booked on WhatsApp, finished with a photo.
                                 </p>
                                 <div class="d-flex gap-2 flex-wrap mb-5">
                                     <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
@@ -116,22 +122,24 @@
                 <section class="fz-section fz-section--cream">
                     <div class="container">
                         <div class="text-center mb-5">
-                            <p class="fz-eyebrow mb-2">What we do</p>
-                            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">Care, in practical terms</h2>
+                            <p class="fz-eyebrow mb-2">Care for your family back home</p>
+                            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">Everything they need, handled</h2>
                         </div>
 
-                        <!-- Each tile carries its own accent so the grid reads as a
-                             vibrant set. Cycled by index — no per-service config. -->
+                        <!-- Categories, not the full service list. Twenty-two
+                             tiles is a catalogue; six is an answer to "can you
+                             help with my kind of problem". The catalogue lives
+                             one click away, where someone actually wants it. -->
                         <t t-set="accents"
-                           t-value="['#F69E22', '#7C5CFF', '#12B3A6', '#2E90FA', '#F0567A', '#12B76A', '#F7B209', '#E08410', '#818181']"/>
+                           t-value="['#F69E22', '#7C5CFF', '#12B3A6', '#2E90FA', '#F0567A', '#12B76A']"/>
                         <div class="row g-3 g-lg-4">
-                            <t t-foreach="services" t-as="service">
+                            <t t-foreach="categories" t-as="category">
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <div class="fz-tile"
-                                         t-attf-style="--fz-tile: #{accents[service_index % len(accents)]};">
-                                        <div class="fz-tile-icon" t-out="service.icon"/>
-                                        <h3 class="h5 mb-2" t-out="service.name"/>
-                                        <p class="text-muted mb-0 small" t-out="service.description"/>
+                                         t-attf-style="--fz-tile: #{accents[category_index % len(accents)]};">
+                                        <div class="fz-tile-icon" t-out="category.icon"/>
+                                        <h3 class="h5 mb-2" t-out="category.name"/>
+                                        <p class="text-muted mb-0 small" t-out="category.tagline"/>
                                     </div>
                                 </div>
                             </t>
@@ -202,9 +210,8 @@
                             <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
                                 Someone you'd trust with your mother
                             </h2>
-                            <p class="fz-lead mx-auto mt-3" style="max-width:36rem;">
-                                CNIC verified, references called, code of conduct signed.
-                                Rated after every task — and the rating follows them.
+                            <p class="fz-lead mx-auto mt-3" style="max-width:32rem;">
+                                CNIC verified. References called. Rated after every task.
                             </p>
                         </div>
 
@@ -242,110 +249,73 @@
                 </section>
 
                 <!-- ── FAQ ───────────────────────────────────────────── -->
-                <section class="fz-section">
-                    <div class="container" style="max-width: 48rem;">
-                        <div class="text-center mb-5">
+                <!-- Three questions, not six. Every one answers an objection
+                     that stops somebody signing up; the rest were us enjoying
+                     the sound of our own voice. Marked up as FAQPage so the
+                     answers can surface directly in search results. -->
+                <section class="fz-section" itemscope="itemscope"
+                         itemtype="https://schema.org/FAQPage">
+                    <div class="container" style="max-width: 46rem;">
+                        <div class="text-center mb-4">
                             <p class="fz-eyebrow mb-2">Questions</p>
                             <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">Before you start</h2>
                         </div>
 
                         <div class="accordion fz-faq" id="faizyFaq">
-                            <div class="accordion-item">
+                            <div class="accordion-item" itemscope="itemscope" itemprop="mainEntity"
+                                 itemtype="https://schema.org/Question">
                                 <h3 class="accordion-header">
                                     <button class="accordion-button collapsed" type="button"
                                             data-bs-toggle="collapse" data-bs-target="#faq1">
-                                        What counts as a "care activity"?
+                                        <span itemprop="name">What counts as a care activity?</span>
                                     </button>
                                 </h3>
-                                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
-                                    <div class="accordion-body text-muted">
+                                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faizyFaq"
+                                     itemscope="itemscope" itemprop="acceptedAnswer"
+                                     itemtype="https://schema.org/Answer">
+                                    <div class="accordion-body text-muted" itemprop="text">
                                         One task: a grocery run, a medicine collection, a doctor visit,
-                                        a document errand, a companionship visit. Emergencies are never
-                                        counted — we're not going to make you hesitate during a crisis.
+                                        a document errand, a visit to sit with your parents.
+                                        Emergencies are never counted.
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="accordion-item">
-                                <h3 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#faq6">
-                                        Do I have to be in the Gulf?
-                                    </button>
-                                </h3>
-                                <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
-                                    <div class="accordion-body text-muted">
-                                        No. What matters is where your family is, not where you are.
-                                        We have subscribers in Dubai and Riyadh, and just as many in
-                                        London, Manchester and New York. Pick your currency on the
-                                        pricing page — those are the prices we publish there, not
-                                        today's exchange rate applied to an AED figure.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="accordion-item">
+                            <div class="accordion-item" itemscope="itemscope" itemprop="mainEntity"
+                                 itemtype="https://schema.org/Question">
                                 <h3 class="accordion-header">
                                     <button class="accordion-button collapsed" type="button"
                                             data-bs-toggle="collapse" data-bs-target="#faq2">
-                                        How are the Faizies vetted?
+                                        <span itemprop="name">How are the Faizies vetted?</span>
                                     </button>
                                 </h3>
-                                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
-                                    <div class="accordion-body text-muted">
-                                        CNIC verification, references we actually call, an interview, and
-                                        a signed code of conduct. Every task is rated afterwards, and
-                                        ratings follow the Faizy.
+                                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faizyFaq"
+                                     itemscope="itemscope" itemprop="acceptedAnswer"
+                                     itemtype="https://schema.org/Answer">
+                                    <div class="accordion-body text-muted" itemprop="text">
+                                        CNIC verification, references we actually call, an interview
+                                        and a signed code of conduct. Every task is rated afterwards,
+                                        and the rating follows the Faizy.
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="accordion-item">
+                            <div class="accordion-item" itemscope="itemscope" itemprop="mainEntity"
+                                 itemtype="https://schema.org/Question">
                                 <h3 class="accordion-header">
                                     <button class="accordion-button collapsed" type="button"
                                             data-bs-toggle="collapse" data-bs-target="#faq3">
-                                        Who sees my family's details?
+                                        <span itemprop="name">Do I have to be in the Gulf?</span>
                                     </button>
                                 </h3>
-                                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
-                                    <div class="accordion-body text-muted">
-                                        Only our operations team and the Faizy assigned to that specific
-                                        task. Health notes are restricted further. You can also mark any
-                                        booking private, and the assigned Faizy sees the task and address
-                                        but not who it's for.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="accordion-item">
-                                <h3 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#faq4">
-                                        What do the fees actually mean?
-                                    </button>
-                                </h3>
-                                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
-                                    <div class="accordion-body text-muted">
-                                        You pay for what was bought, a service charge for running the
-                                        errand, and a 5% platform fee on the purchase value. Every one
-                                        of those appears as a separate line on your receipt. Nothing is
-                                        rolled up or hidden.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="accordion-item">
-                                <h3 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#faq5">
-                                        What if I need more than my plan allows?
-                                    </button>
-                                </h3>
-                                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
-                                    <div class="accordion-body text-muted">
-                                        Extra activities are billed individually at your plan's rate,
-                                        shown on the same monthly invoice. We'd rather do the task and
-                                        tell you than refuse your mother a doctor's visit.
+                                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faizyFaq"
+                                     itemscope="itemscope" itemprop="acceptedAnswer"
+                                     itemtype="https://schema.org/Answer">
+                                    <div class="accordion-body text-muted" itemprop="text">
+                                        No. What matters is where your family is, not where you are.
+                                        We have subscribers in Dubai and Riyadh, and just as many in
+                                        London, Manchester and New York — each billed in their own
+                                        currency.
                                     </div>
                                 </div>
                             </div>
@@ -492,6 +462,9 @@
          ════════════════════════════════════════════════════════════════ -->
     <template id="pricing" name="Faizy — Pricing">
         <t t-call="website.layout">
+            <t t-set="additional_title">Pricing</t>
+            <t t-set="website_meta_description">Faizy plans from PKR 1,999 a month, with published prices in AED, SAR, USD and GBP. Three free care activities, no card needed, cancel any time.</t>
+
             <div id="wrap" class="faizy-page">
                 <section class="fz-hero" style="padding-bottom: clamp(2rem, 5vw, 3rem);">
                     <div class="container text-center position-relative">
@@ -570,7 +543,20 @@
     <template id="faizy_footer_company" inherit_id="website.layout"
               name="Faizy — Operator Details">
         <xpath expr="//div[hasclass('o_footer_copyright')]" position="before">
-            <div class="fz-footer-legal">
+            <!-- Organization data for search engines. Emitted from real
+                 company fields, so it cannot claim a phone number or a social
+                 profile that is not configured — wrong structured data is
+                 worse than none, because it is what gets shown. -->
+            <div class="fz-footer-legal" itemscope="itemscope"
+                 itemtype="https://schema.org/Organization">
+                <meta itemprop="name" t-att-content="website.company_id.name"/>
+                <meta itemprop="url" t-att-content="website.get_base_url()"/>
+                <meta t-if="website.company_id.email" itemprop="email"
+                      t-att-content="website.company_id.email"/>
+                <meta t-if="website.company_id.phone" itemprop="telephone"
+                      t-att-content="website.company_id.phone"/>
+                <link t-if="website.company_id.social_facebook" itemprop="sameAs"
+                      t-att-href="website.company_id.social_facebook"/>
                 <div class="container">
                     <!-- report_footer, not company_id.name. The company is now
                          named Faizy — the trading name — so naming it here
@@ -602,6 +588,9 @@
          ════════════════════════════════════════════════════════════════ -->
     <template id="signup" name="Faizy — Start">
         <t t-call="website.layout">
+            <t t-set="additional_title">Start free</t>
+            <t t-set="website_meta_description">Sign up in one minute and get three free care activities for your family in Pakistan. No card needed. Tell us who to look after and we reply on WhatsApp.</t>
+
             <div id="wrap" class="faizy-page">
                 <section class="fz-hero" style="padding-bottom: clamp(1.5rem, 4vw, 2.5rem);">
                     <div class="container text-center position-relative">
@@ -760,6 +749,9 @@
          ════════════════════════════════════════════════════════════════ -->
     <template id="join" name="Faizy — Become a Faizy">
         <t t-call="website.layout">
+            <t t-set="additional_title">Become a Faizy</t>
+            <t t-set="website_meta_description">Paid work close to home, on your own hours, caring for families whose sons and daughters are abroad. Apply with your CNIC and two references.</t>
+
             <div id="wrap" class="faizy-page">
 
                 <section class="fz-hero" style="padding-bottom: clamp(2rem, 5vw, 3rem);">
