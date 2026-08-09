@@ -57,9 +57,13 @@
                         </div>
                         <p class="text-muted small mt-2 mb-0"
                            t-if="subscription.activities_used &gt; subscription.activities_included">
+                            <!-- The subscription's currency, not the plan's: subscribers
+                                 are billed in the currency published for their own
+                                 market, so quoting the plan's would show a London
+                                 customer a figure they will never be charged. -->
                             You are past this month's allowance. Extra activities are billed at
-                            <span t-out="subscription.plan_id.currency_id.symbol"/><!--
-                            --><span t-out="'%.2f' % subscription.plan_id.overage_price"/> each.
+                            <span t-out="subscription.currency_id.name"/>
+                            <span t-out="subscription.plan_id.overage_display(subscription.currency_id)"/> each.
                         </p>
                     </div>
                 </div>

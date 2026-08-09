@@ -1,8 +1,13 @@
 # Faizy
 
-WhatsApp-first family care for Pakistani expats in the GCC. Customers subscribe;
+WhatsApp-first family care for Pakistanis living abroad. Customers subscribe;
 a network of vetted on-ground workers in Pakistan ("Faizies") run errands and
 provide care for their family back home.
+
+What matters is where the family is, not where the subscriber is. The Gulf is
+the largest market, but the customer base already spans the UK and the US, so
+plans carry a published price per currency (PKR, AED, SAR, USD, GBP) rather
+than one base price converted at today's rate.
 
 Operated by **C2P Consultants FZC LLC**.
 

@@ -46,6 +46,60 @@ Deployment: `docs/02-odoo-deployment.md`.
 
 ---
 
+## ⚠️ DECIDED: customers can be based anywhere
+
+**Muhammad's call.** The business is not GCC-only and the product should stop
+assuming it is. The CRM already has subscribers in London, Manchester and New
+York alongside Dubai and Riyadh. What defines a Faizy customer is where their
+*family* is, not where they are.
+
+### What this changed
+
+**Prices are published per market, never converted.** Each plan carries a
+`faizy.plan.price` row per currency — PKR, AED, SAR, USD, GBP — and the pricing
+page has a currency switcher. `plan.price_for(currency)` deliberately does *not*
+call `_convert`. A subscription price is a commercial decision expressed in
+round local numbers: AED 26.50 and GBP 5.68 are each round in their own market,
+and neither is the other run through an FX rate. Quoting a number that moves
+with the daily rate is not a price list, it is a currency trade the customer
+did not ask for.
+
+**Subscriptions bill in their own currency.** `faizy.subscription.currency_id`
+used to be `related="plan_id.currency_id"`, which meant every subscriber in the
+world was invoiced in AED. It is now set once from the customer's country when
+the subscription is created and then left alone — re-deriving it later would
+silently re-price a live subscription the next time someone edited an address.
+The price is stored and editable, so a negotiated rate survives a plan change.
+
+**FX is used in exactly one place** and it is labelled as such: plan MRR, which
+sums subscriptions across currencies into the company currency. That is an
+internal comparison figure, never a number shown to a customer. It is only as
+good as the rates in *Settings → Currencies*.
+
+### Two bugs this surfaced
+
+1. `plan.overage_price` was never populated by the data file, so
+   `_prepare_invoice_lines` guarded on `if overage_count > 0 and
+   plan.overage_price` and **overage never billed at all**. Extra activities
+   were free. Now published per market, with the base field set as the fallback.
+2. The pricing page rendered that same empty field as "Extra activities
+   AED0.00 each".
+
+### What ops must confirm before launch
+
+The PKR figures and the AED plan prices come from the prototype. **The SAR, USD
+and GBP plan prices and every non-PKR overage rate were derived** — carried
+across at the rate each market's own plan price implies, then rounded to
+something sane. They are a working default, not a commercial decision. The rows
+are `noupdate`, so editing them in *Faizy → Plans → Prices by Market* sticks
+across upgrades.
+
+`tools/check_plan_prices.py` (wired into CI) holds the matrix together: no
+market gaps, no missing overage rate, and the plan's own fields kept in step
+with the row they are the fallback for.
+
+---
+
 ## TL;DR
 
 *(Sections below predate the decision above. Kept as the record of the analysis;
@@ -348,7 +402,7 @@ open.
 | 5 | Odoo `faizy_core` exploration vs all-in Supabase | §1 — recommend dropping Odoo |
 | 6 | Guide assumes Twilio; I recommend Meta direct | §2 — both built, config flag |
 | 7 | `schema.sql` `users` table vs Supabase `auth.users` | §7 — **needs your answer** |
-| 8 | Prices are "approx" AED, and SAR handling is undefined | §3 — **need exact figures + currency policy** |
+| 8 | Prices are "approx" AED, and SAR handling is undefined | **Resolved** — published price per market (PKR/AED/SAR/USD/GBP), never FX-converted. See "customers can be based anywhere" above. PKR + AED figures are yours; SAR/USD/GBP are derived defaults awaiting your confirmation. |
 | 9 | "3 free activities" — expiry undefined | Defaulted to **no expiry, consumed on use**. Say if wrong. |
 | 10 | Prototypes hold logic in localStorage/client | Under RLS, pricing/commission/activity-counting **must** be server-side — a customer can otherwise forge their own activity count. Moving to DB functions + server routes. |
 

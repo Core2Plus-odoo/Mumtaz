@@ -80,27 +80,116 @@ class FaizyPlan(models.Model):
         help="Invoice line product used for per-activity overage.",
     )
 
+    price_ids = fields.One2many("faizy.plan.price", "plan_id", string="Prices")
+
     subscription_ids = fields.One2many("faizy.subscription", "plan_id")
     subscription_count = fields.Integer(compute="_compute_subscription_count")
+    company_currency_id = fields.Many2one(
+        "res.currency",
+        compute="_compute_company_currency_id",
+        string="Company Currency",
+    )
     mrr = fields.Monetary(
         string="MRR",
         compute="_compute_subscription_count",
-        currency_field="currency_id",
-        help="Monthly recurring revenue from active subscriptions on this plan.",
+        currency_field="company_currency_id",
+        help="Monthly recurring revenue from active subscriptions on this plan, "
+        "converted to the company currency. Depends on the exchange rates in "
+        "Settings > Currencies being current.",
     )
 
     _sql_code_unique = models.Constraint(
         "unique(code)", "Each plan code may only be used once."
     )
 
-    @api.depends("subscription_ids.state")
+    def _compute_company_currency_id(self):
+        for plan in self:
+            plan.company_currency_id = self.env.company.currency_id
+
+    @api.depends(
+        "subscription_ids.state",
+        "subscription_ids.price",
+        "subscription_ids.currency_id",
+    )
     def _compute_subscription_count(self):
+        company = self.env.company
+        today = fields.Date.context_today(self)
         for plan in self:
             live = plan.subscription_ids.filtered(
                 lambda s: s.state in ("trial", "active", "past_due")
             )
             plan.subscription_count = len(live)
-            plan.mrr = len(live) * plan.price
+            # Subscribers bill in their own market's currency, so MRR has to be
+            # summed somewhere common. This is the ONE place FX is used: an
+            # internal comparison figure, never a price quoted to a customer.
+            plan.mrr = sum(
+                sub.currency_id._convert(
+                    sub.price, company.currency_id, company, today
+                )
+                for sub in live
+            )
+
+    def _published(self, currency):
+        if not self or not currency:
+            return self.env["faizy.plan.price"]
+        return self.price_ids.filtered(lambda p: p.currency_id == currency)[:1]
+
+    def price_for(self, currency):
+        """The published price in `currency`, or the plan's default.
+
+        Deliberately does NOT convert. A market without a published price falls
+        back to the base price rather than inventing a number from today's FX —
+        a quote that changes with the exchange rate is not a price list.
+        """
+        self.ensure_one()
+        line = self._published(currency)
+        return line.amount if line else self.price
+
+    def overage_for(self, currency):
+        """What one extra activity costs in `currency`.
+
+        Same rule as the subscription price: published per market, never
+        converted. Falls back to the plan's own overage figure.
+        """
+        self.ensure_one()
+        line = self._published(currency)
+        return line.overage_amount if line and line.overage_amount else self.overage_price
+
+    @staticmethod
+    def _money(amount):
+        """Thousands separated, decimals only when there are any.
+
+        PKR 1,999 rather than PKR 1,999.00, but AED 26.50 keeps its pennies.
+        Lives here rather than in the template because QWeb's expression
+        namespace is restricted and a formatting bug there surfaces as a blank
+        price on a live page.
+        """
+        amount = float(amount or 0.0)
+        return f"{amount:,.0f}" if amount.is_integer() else f"{amount:,.2f}"
+
+    def price_display(self, currency):
+        """The monthly price, formatted for the website."""
+        self.ensure_one()
+        return self._money(self.price_for(currency))
+
+    def overage_display(self, currency):
+        """The cost of one extra activity, formatted for the website."""
+        self.ensure_one()
+        return self._money(self.overage_for(currency))
+
+    def market_currency(self, partner):
+        """The currency to bill `partner` in.
+
+        Their country's currency when we publish a price in it, the company's
+        otherwise. A customer in a market we have not priced is billed in the
+        company currency rather than being quoted a converted number — and that
+        is the signal to go and publish a price for that market.
+        """
+        self.ensure_one()
+        country_currency = partner.country_id.currency_id if partner else False
+        if country_currency and self._published(country_currency):
+            return country_currency
+        return self.env.company.currency_id
 
     def action_view_subscriptions(self):
         self.ensure_one()
@@ -112,6 +201,37 @@ class FaizyPlan(models.Model):
             "domain": [("plan_id", "=", self.id)],
             "context": {"default_plan_id": self.id},
         }
+
+
+class FaizyPlanPrice(models.Model):
+    """What a plan costs in a given currency.
+
+    Customers are anywhere — the prototype already quotes PKR, AED, SAR, USD and
+    GBP, and the CRM has people in London, Manchester and New York. These are
+    published prices per market, NOT an FX conversion of a base price: AED 26.50
+    and GBP 5.68 are both round numbers locally and neither is the other
+    converted. Storing them explicitly is the only way to keep it that way.
+    """
+
+    _name = "faizy.plan.price"
+    _description = "Faizy Plan Price"
+    _order = "plan_id, currency_id"
+
+    plan_id = fields.Many2one("faizy.plan", required=True, ondelete="cascade", index=True)
+    currency_id = fields.Many2one("res.currency", required=True, index=True)
+    amount = fields.Monetary(required=True, currency_field="currency_id")
+    overage_amount = fields.Monetary(
+        string="Extra Activity",
+        currency_field="currency_id",
+        help="What one activity beyond the allowance costs in this market. "
+        "Published, not converted — for the same reason the subscription "
+        "price is.",
+    )
+
+    _sql_plan_currency_unique = models.Constraint(
+        "unique(plan_id, currency_id)",
+        "A plan may only have one price per currency.",
+    )
 
 
 class FaizyPlanFeature(models.Model):

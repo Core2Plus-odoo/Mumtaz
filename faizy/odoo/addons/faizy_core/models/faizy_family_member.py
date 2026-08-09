@@ -37,7 +37,7 @@ class FaizyFamilyMember(models.Model):
         ondelete="cascade",
         index=True,
         tracking=True,
-        help="The subscriber in the Gulf who this member belongs to.",
+        help="The subscriber abroad who this member belongs to.",
     )
     relationship = fields.Selection(
         [

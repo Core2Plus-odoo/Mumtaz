@@ -52,8 +52,26 @@ class FaizySubscription(models.Model):
         index=True,
     )
 
-    currency_id = fields.Many2one(related="plan_id.currency_id", store=True)
-    price = fields.Monetary(related="plan_id.price", currency_field="currency_id")
+    # The subscriber's billing currency, not the plan's. Customers are anywhere,
+    # so this is set once from their market when the subscription is created and
+    # then left alone: re-deriving it later would silently re-price a live
+    # subscription the next time somebody edits the customer's address.
+    currency_id = fields.Many2one(
+        "res.currency",
+        required=True,
+        tracking=True,
+        default=lambda self: self.env.company.currency_id,
+        help="Billing currency, taken from the customer's market when the "
+        "subscription starts.",
+    )
+    price = fields.Monetary(
+        compute="_compute_price",
+        store=True,
+        readonly=False,
+        currency_field="currency_id",
+        help="The published price for this market. Editable — a negotiated "
+        "price should not be overwritten by a plan change.",
+    )
 
     date_start = fields.Date(default=fields.Date.context_today, required=True)
     period_start = fields.Date(required=True, default=fields.Date.context_today)
@@ -96,10 +114,21 @@ class FaizySubscription(models.Model):
         for sub in self:
             sub.invoice_count = len(sub.invoice_ids)
 
+    @api.depends("plan_id", "currency_id")
+    def _compute_price(self):
+        for sub in self:
+            sub.price = sub.plan_id.price_for(sub.currency_id)
+
     @api.onchange("plan_id")
     def _onchange_plan_id(self):
         if self.plan_id:
             self.activities_included = self.plan_id.activities_included
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        """Pick up the customer's market currency, but only while drafting."""
+        if self.state == "draft" and self.partner_id and self.plan_id:
+            self.currency_id = self.plan_id.market_currency(self.partner_id)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -107,6 +136,9 @@ class FaizySubscription(models.Model):
             plan = self.env["faizy.plan"].browse(vals.get("plan_id"))
             if plan and not vals.get("activities_included"):
                 vals["activities_included"] = plan.activities_included
+            if plan and not vals.get("currency_id"):
+                partner = self.env["res.partner"].browse(vals.get("partner_id"))
+                vals["currency_id"] = plan.market_currency(partner).id
             start = fields.Date.to_date(vals.get("period_start")) or fields.Date.context_today(self)
             if not vals.get("period_end"):
                 vals["period_end"] = start + relativedelta(months=1)
@@ -182,7 +214,7 @@ class FaizySubscription(models.Model):
             source, amount = "included", 0.0
         else:
             self.sudo().activities_used += 1
-            source, amount = "overage", self.plan_id.overage_price
+            source, amount = "overage", self.plan_id.overage_for(self.currency_id)
 
         self.env["faizy.activity.log"].sudo().create(
             {
@@ -224,12 +256,15 @@ class FaizySubscription(models.Model):
                         end=self.period_end,
                     ),
                     "quantity": 1,
-                    "price_unit": plan.price,
+                    # self.price, not plan.price — the subscription is billed at
+                    # the price published for its own market.
+                    "price_unit": self.price,
                 },
             )
         ]
 
-        if overage_count > 0 and plan.overage_price:
+        overage_price = plan.overage_for(self.currency_id)
+        if overage_count > 0 and overage_price:
             if not plan.overage_product_id:
                 raise UserError(
                     self.env._(
@@ -249,7 +284,7 @@ class FaizySubscription(models.Model):
                             "Additional care activities (%(n)s)", n=overage_count
                         ),
                         "quantity": overage_count,
-                        "price_unit": plan.overage_price,
+                        "price_unit": overage_price,
                     },
                 )
             )

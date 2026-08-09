@@ -75,23 +75,28 @@
                                         <span class="faizy-fmb">FMB-000014</span>
                                         <span class="text-muted small">Ammi · Lahore</span>
                                     </div>
+                                    <!-- Receipts are in PKR because that is where the
+                                         money is spent, whatever currency you subscribe
+                                         in. The figures are the real ones: PKR 850 is
+                                         the pharmacy service charge from our catalogue,
+                                         and the platform fee is 5% of purchases. -->
                                     <div class="rounded-3 p-3 mb-3" style="background:#FAF6EF;">
                                         <div class="d-flex justify-content-between small mb-1">
                                             <span class="text-muted">Pharmacy</span>
-                                            <span>AED 84.00</span>
+                                            <span>PKR 2,400</span>
                                         </div>
                                         <div class="d-flex justify-content-between small mb-1">
                                             <span class="text-muted">Service</span>
-                                            <span>AED 15.00</span>
+                                            <span>PKR 850</span>
                                         </div>
                                         <div class="d-flex justify-content-between small">
                                             <span class="text-muted">Platform fee (5%)</span>
-                                            <span>AED 4.20</span>
+                                            <span>PKR 120</span>
                                         </div>
                                         <hr class="my-2"/>
                                         <div class="d-flex justify-content-between fw-bold">
                                             <span>Total</span>
-                                            <span>AED 103.20</span>
+                                            <span>PKR 3,370</span>
                                         </div>
                                     </div>
                                     <p class="text-muted small mb-0">
@@ -264,7 +269,7 @@
                 </section>
 
                 <!-- ── Pricing ───────────────────────────────────────── -->
-                <section class="fz-section">
+                <section class="fz-section" id="plans">
                     <div class="container">
                         <div class="text-center mb-5">
                             <p class="fz-eyebrow mb-2">Plans</p>
@@ -316,7 +321,7 @@
                                         sat with my father for an hour and told me how he really was.
                                     </p>
                                     <p class="fz-quote-author mb-0">Hamza S.</p>
-                                    <p class="fz-quote-meta mb-0">Abu Dhabi · caring for Islamabad</p>
+                                    <p class="fz-quote-meta mb-0">London · caring for Islamabad</p>
                                 </div>
                             </div>
                         </div>
@@ -347,6 +352,24 @@
                                         One task: a grocery run, a medicine collection, a doctor visit,
                                         a document errand, a companionship visit. Emergencies are never
                                         counted — we're not going to make you hesitate during a crisis.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#faq6">
+                                        Do I have to be in the Gulf?
+                                    </button>
+                                </h3>
+                                <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faizyFaq">
+                                    <div class="accordion-body text-muted">
+                                        No. What matters is where your family is, not where you are.
+                                        We have subscribers in Dubai and Riyadh, and just as many in
+                                        London, Manchester and New York. Pick your currency on the
+                                        pricing page — those are the prices we publish there, not
+                                        today's exchange rate applied to an AED figure.
                                     </div>
                                 </div>
                             </div>
@@ -451,6 +474,21 @@
          PLAN CARDS — shared so home and /pricing cannot drift apart
          ════════════════════════════════════════════════════════════════ -->
     <template id="plan_cards" name="Faizy Plan Cards">
+
+        <!-- Customers are anywhere, so let them see the price we actually
+             publish in their market. The switcher only offers currencies with
+             a published price — nothing here is converted at today's rate.
+             ISO codes rather than symbols: "AED 26.50" is unambiguous to an
+             international audience in a way that mixed glyphs are not. -->
+        <div class="fz-currency-switch mb-4" t-if="len(currencies) &gt; 1">
+            <span class="fz-currency-label">Show prices in</span>
+            <t t-foreach="currencies" t-as="currency">
+                <a t-attf-href="?currency=#{currency.name}#plans"
+                   t-attf-class="fz-currency-opt #{currency == display_currency and 'is-active' or ''}"
+                   t-out="currency.name"/>
+            </t>
+        </div>
+
         <div class="row g-4 justify-content-center align-items-stretch">
             <t t-foreach="plans" t-as="plan">
                 <div class="col-12 col-md-6 col-lg-4">
@@ -461,9 +499,8 @@
                         <p class="text-muted small mb-3" t-out="plan.description"/>
 
                         <div class="fz-plan-price mb-1">
-                            <span style="font-size:1.25rem; vertical-align:top;"
-                                  t-out="plan.currency_id.symbol or plan.currency_id.name"/><!--
-                            --><span t-out="'%.2f' % plan.price"/>
+                            <span class="fz-plan-cur" t-out="display_currency.name"/><!--
+                            --><span t-out="plan.price_display(display_currency)"/>
                         </div>
                         <p class="text-muted small mb-4">per month</p>
 
@@ -483,8 +520,8 @@
                             </a>
                             <p class="text-muted small text-center mt-3 mb-0">
                                 Extra activities
-                                <span t-out="plan.currency_id.symbol or plan.currency_id.name"/><!--
-                                --><span t-out="'%.2f' % plan.overage_price"/> each
+                                <span t-out="display_currency.name"/>
+                                <span t-out="plan.overage_display(display_currency)"/> each
                             </p>
                         </div>
                     </div>
@@ -512,7 +549,7 @@
                     </div>
                 </section>
 
-                <section class="fz-section">
+                <section class="fz-section" id="plans">
                     <div class="container">
                         <t t-call="faizy_website.plan_cards"/>
 

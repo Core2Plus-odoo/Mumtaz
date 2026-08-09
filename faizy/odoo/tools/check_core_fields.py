@@ -42,6 +42,7 @@ CORE_SOURCES = [
     "odoo/addons/base/models/ir_rule.py",
     "odoo/addons/base/models/res_users.py",       # res.groups lives here
     "odoo/addons/base/models/ir_module.py",
+    "odoo/addons/base/models/res_currency.py",
     "addons/website/models/website_menu.py",
 ]
 

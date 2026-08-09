@@ -15,6 +15,9 @@
                 <field name="subscription_count" string="Subscribers"/>
                 <field name="mrr" sum="MRR"/>
                 <field name="currency_id" column_invisible="True"/>
+                <!-- MRR is Monetary on company_currency_id, so the widget needs
+                     that field present in the view to render at all. -->
+                <field name="company_currency_id" column_invisible="True"/>
             </list>
         </field>
     </record>
@@ -45,6 +48,7 @@
                         <group string="Allowance">
                             <field name="activities_included"/>
                             <field name="overage_price"/>
+                            <field name="overage_price_pkr"/>
                             <field name="max_family_members"/>
                         </group>
                     </group>
@@ -55,6 +59,22 @@
                         <field name="overage_product_id"/>
                     </group>
                     <notebook>
+                        <page string="Prices by Market" name="prices">
+                            <div class="alert alert-info" role="alert">
+                                Subscribers are billed in the currency published
+                                for their country. These are real local prices,
+                                not conversions — editing one does not move the
+                                others. A market with no row here falls back to
+                                the price above.
+                            </div>
+                            <field name="price_ids">
+                                <list editable="bottom">
+                                    <field name="currency_id"/>
+                                    <field name="amount"/>
+                                    <field name="overage_amount"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Features" name="features">
                             <field name="feature_ids">
                                 <list editable="bottom">

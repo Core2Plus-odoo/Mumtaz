@@ -62,7 +62,10 @@ class FaizySampleData(models.TransientModel):
              "base_rate": 1800, "is_sample": True},
         ])
 
-        # ── Customers in the Gulf ────────────────────────────────────────
+        # ── Customers, wherever they are ─────────────────────────────────
+        # Two in the Gulf and one in the UK, because that is the shape of the
+        # real book — anyone demoing on sample data should see a non-AED
+        # subscriber straight away rather than assume the Gulf is all of it.
         customers = env["res.partner"].create([
             {"name": "Bilal Rehman", "phone": "+971501234567", "email": "bilal@example.ae",
              "city": "Dubai", "country_id": env.ref("base.ae").id,
@@ -70,8 +73,8 @@ class FaizySampleData(models.TransientModel):
             {"name": "Ayesha Khan", "phone": "+966551234567", "email": "ayesha@example.sa",
              "city": "Riyadh", "country_id": env.ref("base.sa").id,
              "is_faizy_customer": True, "is_sample": True},
-            {"name": "Hamza Siddiqui", "phone": "+971561234567", "email": "hamza@example.ae",
-             "city": "Abu Dhabi", "country_id": env.ref("base.ae").id,
+            {"name": "Hamza Siddiqui", "phone": "+447700900123", "email": "hamza@example.co.uk",
+             "city": "London", "country_id": env.ref("base.uk").id,
              "is_faizy_customer": True, "is_sample": True},
         ])
         bilal, ayesha, hamza = customers

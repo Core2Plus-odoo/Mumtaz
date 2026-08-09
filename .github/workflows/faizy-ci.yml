@@ -55,6 +55,13 @@ jobs:
           pip install --quiet lxml
           python3 faizy/odoo/tools/check_view_schemas.py
 
+      # Subscribers live anywhere, so each plan publishes a price per market.
+      # That is three numbers turned into fifteen, and a fifteen-cell table
+      # maintained by hand drifts silently — a missing row reads as a price
+      # rather than as an error.
+      - name: Check the plan price matrix
+        run: python3 faizy/odoo/tools/check_plan_prices.py
+
       - name: Lint
         run: |
           pip install --quiet flake8

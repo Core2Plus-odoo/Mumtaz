@@ -15,8 +15,10 @@
                 <field name="activities_included"/>
                 <field name="activities_remaining"/>
                 <field name="next_invoice_date"/>
-                <field name="price" sum="MRR"/>
-                <field name="currency_id" column_invisible="True"/>
+                <field name="price"/>
+                <!-- Not summed: subscriptions bill in different currencies now,
+                     so a column total would add AED to GBP. Plan MRR converts. -->
+                <field name="currency_id" optional="show"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'active'"
                        decoration-danger="state == 'past_due'"/>
@@ -55,8 +57,13 @@
                         <group string="Customer">
                             <field name="partner_id"/>
                             <field name="plan_id"/>
-                            <field name="price" readonly="1"/>
-                            <field name="currency_id" invisible="1"/>
+                            <!-- Both editable: the currency is picked from the
+                                 customer's country on creation but a subscriber
+                                 who moves keeps their billing currency unless
+                                 someone decides otherwise, and the price can be
+                                 negotiated away from the published one. -->
+                            <field name="currency_id"/>
+                            <field name="price"/>
                         </group>
                         <group string="Billing Period">
                             <field name="date_start"/>

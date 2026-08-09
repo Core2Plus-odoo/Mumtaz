@@ -4,8 +4,8 @@ from odoo import api, fields, models
 class FaizyDocument(models.Model):
     """The family document vault.
 
-    Passports, CNICs, medical cards, utility bills — the paperwork an expat
-    needs someone on the ground to act on. Held against the family member so a
+    Passports, CNICs, medical cards, utility bills — the paperwork someone
+    living abroad needs a person on the ground to act on. Held against the family member so a
     Faizy sent to renew a CNIC has the number to hand without the customer
     digging through WhatsApp history at 2am.
 
@@ -95,8 +95,8 @@ class FaizyDocument(models.Model):
 
     @api.model
     def _cron_expiry_reminders(self):
-        """Warn the customer 60 days out. Renewing a Pakistani passport from the
-        Gulf takes time, so a reminder on the day it expires is useless."""
+        """Warn the customer 60 days out. Renewing a Pakistani passport from
+        abroad takes time, so a reminder on the day it expires is useless."""
         soon = self.search([("expiry_state", "=", "expiring")])
         Queue = self.env["faizy.whatsapp.message"].sudo()
         for doc in soon:

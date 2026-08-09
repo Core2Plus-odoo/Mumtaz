@@ -312,6 +312,16 @@ $fz-accent-amber:  #f7b209;
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.03em;
+
+    // The ISO code rides small and high so the number stays the thing you read.
+    .fz-plan-cur {
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: 0;
+      vertical-align: top;
+      margin-right: 0.2em;
+      opacity: 0.75;
+    }
   }
 
   &.is-featured {
@@ -346,6 +356,49 @@ $fz-accent-amber:  #f7b209;
   align-items: flex-start;
   margin-bottom: 0.55rem;
   font-size: 0.9375rem;
+}
+
+// ── Currency switcher ───────────────────────────────────────────────────
+// Plain links, not a <select>: they work with JavaScript off, they are
+// crawlable, and each market's price gets its own shareable URL.
+.fz-currency-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+
+  .fz-currency-label {
+    font-size: 0.8125rem;
+    color: rgba(10, 10, 10, 0.55);
+    margin-right: 0.35rem;
+  }
+
+  .fz-currency-opt {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(10, 10, 10, 0.12);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: $fz-black;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      border-color: $fz-orange;
+      color: $fz-black;
+    }
+
+    // Orange is a background colour only — black on orange is ~9:1, orange
+    // text on white is ~2.2:1 and fails.
+    &.is-active {
+      background: $fz-orange;
+      border-color: $fz-orange;
+      color: $fz-black;
+    }
+  }
 }
 
 // ── Comparison ──────────────────────────────────────────────────────────

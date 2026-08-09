@@ -10,30 +10,76 @@ CNIC_RE = re.compile(r"^\d{5}-\d{7}-\d$")
 class FaizyWebsite(http.Controller):
     """Public pages: the pitch, the pricing, and the worker sign-up."""
 
-    @http.route("/", type="http", auth="public", website=True, sitemap=True)
-    def faizy_home(self, **kw):
+    # ── Currency ─────────────────────────────────────────────────────────
+
+    def _plan_currencies(self, plans):
+        """Every currency we have actually published a price in, plus the
+        company's own. Ordered by name so the switcher doesn't reshuffle
+        between requests."""
+        currencies = plans.mapped("price_ids.currency_id")
+        currencies |= request.env.company.currency_id
+        return currencies.sorted("name")
+
+    def _display_currency(self, plans, requested=None):
+        """Which currency to quote in.
+
+        Customers are anywhere — the CRM has people in Dubai, Riyadh, London,
+        Manchester and New York — so the price shown should be the one we
+        published for that market. Preference order: what the visitor picked,
+        then the currency of the country GeoIP puts them in, then the company's.
+
+        Only currencies with a published price are eligible. We never convert:
+        a subscription price that moves with the exchange rate is not a price.
+        """
+        available = self._plan_currencies(plans)
+
+        if requested:
+            picked = available.filtered(
+                lambda c: c.name == requested.strip().upper()
+            )[:1]
+            if picked:
+                return picked
+
+        # request.geoip is absent when no GeoIP database is installed, and its
+        # country_code is None for unresolved addresses — both are normal.
+        code = getattr(request, "geoip", None) and request.geoip.country_code
+        if code:
+            country = request.env["res.country"].sudo().search(
+                [("code", "=", code)], limit=1
+            )
+            local = available.filtered(lambda c: c == country.currency_id)[:1]
+            if local:
+                return local
+
+        return request.env.company.currency_id
+
+    def _pricing_values(self, currency=None):
         plans = (
             request.env["faizy.plan"]
             .sudo()
             .search([("active", "=", True)], order="sequence")
         )
-        services = (
+        return {
+            "plans": plans,
+            "currencies": self._plan_currencies(plans),
+            "display_currency": self._display_currency(plans, currency),
+        }
+
+    # ── Pages ────────────────────────────────────────────────────────────
+
+    @http.route("/", type="http", auth="public", website=True, sitemap=True)
+    def faizy_home(self, currency=None, **kw):
+        values = self._pricing_values(currency)
+        values["services"] = (
             request.env["faizy.service"]
             .sudo()
             .search([("active", "=", True)], order="sequence")
         )
-        return request.render(
-            "faizy_website.home", {"plans": plans, "services": services}
-        )
+        return request.render("faizy_website.home", values)
 
     @http.route("/pricing", type="http", auth="public", website=True, sitemap=True)
-    def faizy_pricing(self, **kw):
-        plans = (
-            request.env["faizy.plan"]
-            .sudo()
-            .search([("active", "=", True)], order="sequence")
-        )
-        return request.render("faizy_website.pricing", {"plans": plans})
+    def faizy_pricing(self, currency=None, **kw):
+        return request.render("faizy_website.pricing", self._pricing_values(currency))
 
     # ── Worker sign-up ───────────────────────────────────────────────────
 

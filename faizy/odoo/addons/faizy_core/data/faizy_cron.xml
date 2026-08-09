@@ -28,7 +28,7 @@
     </record>
 
     <!-- Warns 60 days before a passport or CNIC expires. Renewing Pakistani
-         documents from the Gulf takes time; a reminder on the expiry date is
+         documents from abroad takes time; a reminder on the expiry date is
          no use to anyone. -->
     <record id="cron_faizy_document_expiry" model="ir.cron">
         <field name="name">Faizy: document expiry reminders</field>

@@ -7,20 +7,47 @@
     Standard    30 activities/mo, PKR 250 per extra, up to 5 family members
     Family Pro  60 activities/mo, PKR 200 per extra, up to 10 family members
 
-  Prices are the same in every currency the app quotes: PKR 1999 / 4999 / 8999,
-  AED 26.50 / 66.20 / 119.20. Overage is priced in PKR because that is where the
-  work is done.
+  Subscribers live anywhere — Dubai and Riyadh, but also London, Manchester and
+  New York — so each plan carries a published price per market rather than one
+  base price converted at today's rate.
 
-  noupdate so ops edits survive module upgrades.
+  Plans and prices are noupdate so ops edits survive module upgrades. Currency
+  activation is not: Odoo ships every currency except the company's as
+  active=False, and if someone deactivates GBP the published GBP price becomes
+  unquotable, so an upgrade should put it back.
 -->
-<odoo noupdate="1">
+<odoo>
+
+  <!-- Every currency we publish a price in has to be active, or the price is
+       a number we cannot actually invoice. -->
+  <data>
+    <record id="base.PKR" model="res.currency">
+        <field name="active" eval="True"/>
+    </record>
+    <record id="base.AED" model="res.currency">
+        <field name="active" eval="True"/>
+    </record>
+    <record id="base.SAR" model="res.currency">
+        <field name="active" eval="True"/>
+    </record>
+    <record id="base.USD" model="res.currency">
+        <field name="active" eval="True"/>
+    </record>
+    <record id="base.GBP" model="res.currency">
+        <field name="active" eval="True"/>
+    </record>
+  </data>
+
+  <data noupdate="1">
 
     <record id="plan_lite" model="faizy.plan">
         <field name="name">Lite</field>
         <field name="code">lite</field>
+        <field name="currency_id" ref="base.AED"/>
         <field name="sequence">10</field>
         <field name="price">26.50</field>
         <field name="activities_included">10</field>
+        <field name="overage_price">4.00</field>
         <field name="overage_price_pkr">300</field>
         <field name="max_family_members">2</field>
         <field name="description">Essential support for one or two people back home.</field>
@@ -50,9 +77,11 @@
     <record id="plan_standard" model="faizy.plan">
         <field name="name">Standard</field>
         <field name="code">standard</field>
+        <field name="currency_id" ref="base.AED"/>
         <field name="sequence">20</field>
         <field name="price">66.20</field>
         <field name="activities_included">30</field>
+        <field name="overage_price">3.50</field>
         <field name="overage_price_pkr">250</field>
         <field name="max_family_members">5</field>
         <field name="description">Everything your family needs — every month.</field>
@@ -82,9 +111,11 @@
     <record id="plan_family_pro" model="faizy.plan">
         <field name="name">Family Pro</field>
         <field name="code">family_pro</field>
+        <field name="currency_id" ref="base.AED"/>
         <field name="sequence">30</field>
         <field name="price">119.20</field>
         <field name="activities_included">60</field>
+        <field name="overage_price">2.75</field>
         <field name="overage_price_pkr">200</field>
         <field name="max_family_members">10</field>
         <field name="description">Peace of mind for large families.</field>
@@ -116,4 +147,119 @@
         <field name="name">Full spending analytics</field>
     </record>
 
+    <!-- Published prices per market. Customers are anywhere, so these are real
+         local prices rather than FX conversions of a base figure — AED 26.50 and
+         GBP 5.68 are each round locally, and neither is the other converted.
+
+         ⚠️ The PKR plan prices and PKR overage rates are the prototype's, and so
+         are the AED plan prices. The SAR/USD/GBP plan prices and every non-PKR
+         overage rate were carried across at the rate each market's own plan
+         price implies, then rounded — they are a working default, not a
+         commercial decision. Ops should confirm them before launch; they are
+         noupdate, so an edit in the UI sticks. -->
+    <record id="price_lite_pkr" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_lite"/>
+        <field name="currency_id" ref="base.PKR"/>
+        <field name="amount">1999</field>
+        <field name="overage_amount">300</field>
+    </record>
+
+    <record id="price_lite_aed" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_lite"/>
+        <field name="currency_id" ref="base.AED"/>
+        <field name="amount">26.5</field>
+        <field name="overage_amount">4.00</field>
+    </record>
+
+    <record id="price_lite_sar" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_lite"/>
+        <field name="currency_id" ref="base.SAR"/>
+        <field name="amount">25.9</field>
+        <field name="overage_amount">4.00</field>
+    </record>
+
+    <record id="price_lite_usd" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_lite"/>
+        <field name="currency_id" ref="base.USD"/>
+        <field name="amount">7.19</field>
+        <field name="overage_amount">1.10</field>
+    </record>
+
+    <record id="price_lite_gbp" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_lite"/>
+        <field name="currency_id" ref="base.GBP"/>
+        <field name="amount">5.68</field>
+        <field name="overage_amount">0.85</field>
+    </record>
+
+    <record id="price_standard_pkr" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_standard"/>
+        <field name="currency_id" ref="base.PKR"/>
+        <field name="amount">4999</field>
+        <field name="overage_amount">250</field>
+    </record>
+
+    <record id="price_standard_aed" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_standard"/>
+        <field name="currency_id" ref="base.AED"/>
+        <field name="amount">66.2</field>
+        <field name="overage_amount">3.50</field>
+    </record>
+
+    <record id="price_standard_sar" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_standard"/>
+        <field name="currency_id" ref="base.SAR"/>
+        <field name="amount">64.8</field>
+        <field name="overage_amount">3.25</field>
+    </record>
+
+    <record id="price_standard_usd" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_standard"/>
+        <field name="currency_id" ref="base.USD"/>
+        <field name="amount">17.98</field>
+        <field name="overage_amount">0.90</field>
+    </record>
+
+    <record id="price_standard_gbp" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_standard"/>
+        <field name="currency_id" ref="base.GBP"/>
+        <field name="amount">14.2</field>
+        <field name="overage_amount">0.75</field>
+    </record>
+
+    <record id="price_family_pro_pkr" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_family_pro"/>
+        <field name="currency_id" ref="base.PKR"/>
+        <field name="amount">8999</field>
+        <field name="overage_amount">200</field>
+    </record>
+
+    <record id="price_family_pro_aed" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_family_pro"/>
+        <field name="currency_id" ref="base.AED"/>
+        <field name="amount">119.2</field>
+        <field name="overage_amount">2.75</field>
+    </record>
+
+    <record id="price_family_pro_sar" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_family_pro"/>
+        <field name="currency_id" ref="base.SAR"/>
+        <field name="amount">116.7</field>
+        <field name="overage_amount">2.60</field>
+    </record>
+
+    <record id="price_family_pro_usd" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_family_pro"/>
+        <field name="currency_id" ref="base.USD"/>
+        <field name="amount">32.37</field>
+        <field name="overage_amount">0.75</field>
+    </record>
+
+    <record id="price_family_pro_gbp" model="faizy.plan.price">
+        <field name="plan_id" ref="plan_family_pro"/>
+        <field name="currency_id" ref="base.GBP"/>
+        <field name="amount">25.56</field>
+        <field name="overage_amount">0.60</field>
+    </record>
+  </data>
 </odoo>
