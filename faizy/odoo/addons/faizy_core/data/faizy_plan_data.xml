@@ -151,12 +151,14 @@
          local prices rather than FX conversions of a base figure — AED 26.50 and
          GBP 5.68 are each round locally, and neither is the other converted.
 
-         ⚠️ The PKR plan prices and PKR overage rates are the prototype's, and so
-         are the AED plan prices. The SAR/USD/GBP plan prices and every non-PKR
-         overage rate were carried across at the rate each market's own plan
-         price implies, then rounded — they are a working default, not a
-         commercial decision. Ops should confirm them before launch; they are
-         noupdate, so an edit in the UI sticks. -->
+         Rates are FAIZY_SPEC.md §6: AED 75.5, SAR 74.0, GBP 352, USD 278 to
+         the rupee. Every published price is the PKR figure at that rate,
+         rounded.
+
+         The SAR prices were wrong until the spec arrived — derived at roughly
+         77 PKR rather than 74, which undercharged every Saudi subscriber by
+         4.1%. That is what comes of deriving a rate instead of being told one.
+         tools/check_plan_prices.py now checks the arithmetic. -->
     <record id="price_lite_pkr" model="faizy.plan.price">
         <field name="plan_id" ref="plan_lite"/>
         <field name="currency_id" ref="base.PKR"/>
@@ -174,8 +176,8 @@
     <record id="price_lite_sar" model="faizy.plan.price">
         <field name="plan_id" ref="plan_lite"/>
         <field name="currency_id" ref="base.SAR"/>
-        <field name="amount">25.9</field>
-        <field name="overage_amount">4.00</field>
+        <field name="amount">27.01</field>
+        <field name="overage_amount">4.05</field>
     </record>
 
     <record id="price_lite_usd" model="faizy.plan.price">
@@ -209,8 +211,8 @@
     <record id="price_standard_sar" model="faizy.plan.price">
         <field name="plan_id" ref="plan_standard"/>
         <field name="currency_id" ref="base.SAR"/>
-        <field name="amount">64.8</field>
-        <field name="overage_amount">3.25</field>
+        <field name="amount">67.55</field>
+        <field name="overage_amount">3.40</field>
     </record>
 
     <record id="price_standard_usd" model="faizy.plan.price">
@@ -244,8 +246,8 @@
     <record id="price_family_pro_sar" model="faizy.plan.price">
         <field name="plan_id" ref="plan_family_pro"/>
         <field name="currency_id" ref="base.SAR"/>
-        <field name="amount">116.7</field>
-        <field name="overage_amount">2.60</field>
+        <field name="amount">121.61</field>
+        <field name="overage_amount">2.70</field>
     </record>
 
     <record id="price_family_pro_usd" model="faizy.plan.price">

@@ -48,6 +48,14 @@ DATA = (
 # fresh Odoo database defaults that to USD.
 BASE_CURRENCY = "AED"
 
+# FAIZY_SPEC.md §6. Every published price should be the PKR figure at these
+# rates. Checked because the SAR prices sat 4.1% low for weeks: they were
+# derived from the AED price rather than taken from a stated rate, and nothing
+# compared them to anything. Undercharging is the quiet kind of pricing bug —
+# nobody complains.
+SPEC_RATES = {"AED": 75.5, "SAR": 74.0, "GBP": 352.0, "USD": 278.0}
+RATE_TOLERANCE = 0.02   # rounding to a sensible local figure, not a free hand
+
 
 def field(record: ET.Element, name: str) -> str | None:
     node = record.find(f"./field[@name='{name}']")
@@ -163,6 +171,24 @@ def main() -> int:
                         f"with the PKR row {row['overage']} — the app quotes the "
                         f"former, invoicing uses the latter"
                     )
+
+    # Published prices must match the PKR figure at the spec's rate.
+    for ref, rows in sorted(prices.items()):
+        pkr = next((r["amount"] for r in rows if r["currency"] == "PKR"), None)
+        if pkr is None:
+            continue
+        for row in rows:
+            rate = SPEC_RATES.get(row["currency"])
+            if not rate or row["amount"] is None:
+                continue
+            implied = pkr / rate
+            drift = abs(row["amount"] - implied) / implied
+            if drift > RATE_TOLERANCE:
+                errors.append(
+                    f"{row['id']}: {row['amount']} is {drift * 100:.1f}% off "
+                    f"PKR {pkr:.0f} at the spec rate of {rate} "
+                    f"(expected about {implied:.2f})"
+                )
 
     if errors:
         print(f"Plan price matrix: {len(errors)} problem(s)\n")

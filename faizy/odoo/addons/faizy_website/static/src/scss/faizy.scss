@@ -1148,3 +1148,15 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   .navbar-brand img, img.o_website_logo_img { min-height: 2rem; }
 }
 
+
+// ── Tagline ─────────────────────────────────────────────────────────────
+// "Faizy Hai Na!" is the spoken line — Roman Urdu, and the one people say out
+// loud. حاضر ہیں۔ stays as the Urdu mark in the closing CTA rather than
+// appearing twice on the same screen.
+.fz-hero .fz-hero-tagline {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
