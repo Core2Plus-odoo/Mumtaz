@@ -1178,3 +1178,34 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 
 .fz-person-name { line-height: 1.3; }
 .fz-person-city { line-height: 1.3; }
+
+// ── Odoo's own header furniture ─────────────────────────────────────────
+// The header ships a "Contact Us" button in Odoo's default purple, which
+// fights the brand and competes with "Start free" for the same click. Kept,
+// because it is a real route to a human — demoted to an outline so there is
+// one obvious primary action.
+#wrapwrap > header {
+  .btn-primary:not([href="/start"]),
+  a.btn-primary:not([href="/start"]) {
+    background: transparent !important;
+    border: 1.5px solid rgba(43, 38, 34, 0.18) !important;
+    color: $fz-ink !important;
+    border-radius: 999px;
+    font-weight: 500;
+    box-shadow: none !important;
+
+    &:hover {
+      background: rgba(43, 38, 34, 0.05) !important;
+      border-color: rgba(43, 38, 34, 0.28) !important;
+      color: $fz-ink !important;
+    }
+  }
+
+  // The default logo placeholder is wider than it is tall; the Faizy mark is
+  // square. Without a floor it renders as a thumbnail next to the wordmark.
+  .navbar-brand img, img.o_website_logo_img { min-height: 2rem; }
+}
+
+// The top bar now carries only contact links, so it centres on every width
+// rather than pushing them right against nothing.
+.fz-topbar .fz-topbar-inner { justify-content: flex-end; }

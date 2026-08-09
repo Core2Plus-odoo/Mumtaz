@@ -559,7 +559,6 @@
         <xpath expr="//div[@id='wrapwrap']" position="before">
             <div class="fz-topbar">
                 <div class="container fz-topbar-inner">
-                    <span class="fz-topbar-tagline faizy-urdu" lang="ur" dir="rtl">حاضر ہیں۔</span>
                     <span class="fz-topbar-links">
                         <!-- Each link appears only when the field behind it is
                              filled in, so the bar never offers a channel that

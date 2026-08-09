@@ -13,12 +13,18 @@ noupdate one would never reach the instance already running.
 """
 
 import base64
+import hashlib
 import logging
 from pathlib import Path
 
 _logger = logging.getLogger(__name__)
 
 LOGO = Path(__file__).parent / "static" / "description" / "icon.png"
+
+# Records the mark we installed, so a later logo replaces it while one
+# uploaded by hand survives. Odoo ships a placeholder, so "is it empty"
+# cannot tell the two apart.
+LOGO_STAMP = "faizy_core.logo_source_sha"
 
 # ONLY confirmed facts go in here.
 #
@@ -95,8 +101,20 @@ def apply_company_profile(env, overwrite_name=True):
     if not company.country_id:
         values["country_id"] = env.ref("base.ae", raise_if_not_found=False).id or False
 
-    if LOGO.exists() and not company.logo:
-        values["logo"] = base64.b64encode(LOGO.read_bytes())
+    # `not company.logo` was wrong and shipped as "Your Logo" on the live
+    # header. Odoo gives every new company a placeholder logo, so the field is
+    # never empty and this branch never fired. Same fix as the favicon: stamp
+    # what we installed, replace ours, never touch one somebody uploaded.
+    stamp = env["ir.config_parameter"].sudo()
+    if LOGO.exists():
+        mark = base64.b64encode(LOGO.read_bytes())
+        digest = hashlib.sha256(mark).hexdigest()
+        previous = stamp.get_param(LOGO_STAMP)
+        if not company.logo or previous:
+            values["logo"] = mark
+            stamp.set_param(LOGO_STAMP, digest)
+        else:
+            _logger.info("faizy_core: company already has a logo, keeping it")
     elif not LOGO.exists():
         _logger.warning(
             "faizy_core: %s missing — run tools/make_icon.py to regenerate it",
