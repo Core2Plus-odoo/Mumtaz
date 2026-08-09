@@ -25,7 +25,7 @@ Runs the whole operation inside Odoo Community:
 Revenue model: subscriptions, a 5% platform fee on purchase value charged to the
 customer, and 10% vendor commission retained from vendor-fulfilled orders.
 """,
-    "version": "19.0.1.9.0",
+    "version": "19.0.1.10.0",
     "category": "Services",
     "author": "C2P Consultants FZC LLC",
     "website": "https://faizy.pk",
@@ -36,6 +36,11 @@ customer, and 10% vendor commission retained from vendor-fulfilled orders.
         "contacts",
         "product",
         "account",
+        # Pakistan - Accounting: chart of accounts, taxes, VAT and withholding
+        # tax reports. A hard dependency rather than something ops installs by
+        # hand, because without a chart of accounts Invoicing is present but
+        # cannot post anything, which is the state this database was in.
+        "l10n_pk",
     ],
     "data": [
         "security/faizy_security.xml",
@@ -69,8 +74,9 @@ customer, and 10% vendor commission retained from vendor-fulfilled orders.
             "faizy_core/static/src/scss/faizy_backend.scss",
         ],
     },
-    # A fresh Odoo database defaults its company to USD, which would make the
-    # AED figures in faizy_plan_data.xml silently mean something else.
+    # A fresh Odoo database defaults its company to USD and has no chart of
+    # accounts, which would make the PKR figures in faizy_plan_data.xml
+    # silently mean something else and leave Invoicing unable to post.
     "post_init_hook": "post_init_hook",
     "installable": True,
     "auto_install": False,

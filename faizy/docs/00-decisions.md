@@ -165,6 +165,54 @@ customer base is large enough for anyone to ask.
 
 ---
 
+## ⚠️ DECIDED: the accounting entity is Pakistani — PKR books, l10n_pk
+
+**Muhammad's call**, asked because it is expensive to reverse: Odoo will not
+stop you changing a company's currency under existing journal entries, it
+simply restates every one of them.
+
+- **Company currency: PKR.** Was AED.
+- **Country: Pakistan**, which is what makes Odoo offer the right taxes.
+- **Chart of accounts: `l10n_pk`** — Pakistan - Accounting, which ships in
+  Community and carries the CoA, taxes, the VAT report and the withholding tax
+  report. It is now a hard dependency of `faizy_core` rather than something ops
+  installs by hand: without a chart, Invoicing is present but cannot post, and
+  that is the state this database was in.
+- **Default price: PKR.** The work is done in Pakistan and costed in rupees.
+  Every other market price — AED, SAR, USD, GBP — is a commercial decision made
+  on top of that one, not a conversion of it, and the per-market rows are
+  unchanged: a subscriber in Dubai still pays the AED figure published for
+  Dubai.
+
+**The window this fitted through.** The currency could only be changed because
+the books were empty — and they were empty for a bad reason. No plan had a
+`product_id`, so `_prepare_invoice_lines` raised `UserError` on every run of the
+daily billing cron, which caught it and wrote the failure into the
+subscription's chatter. **The recurring billing has never raised a single
+invoice.** Six service products now exist and the plans point at them.
+
+Migration order matters and is enforced by the version numbers: `19.0.1.9.0`
+gives the plans their products and moves them to PKR, `19.0.1.10.0` moves the
+company. Both refuse, loudly and in the log, if the window has closed.
+
+### What this leaves inconsistent, and needs your answer
+
+`res.company.report_footer` still reads **"Faizy is a service of C2P
+Consultants FZC LLC"** — a UAE free-zone entity — and it prints on every
+invoice. The books are now Pakistani. One of those two is wrong and I have not
+guessed which: you told me the accounting entity is Pakistani, you have never
+told me the legal entity changed. Either the footer needs the Pakistani
+company's name, or the books belong somewhere else after all.
+
+Also still true: orders never reach accounting at all. `purchase_value`,
+`platform_fee` and `service_fee` are computed and stored on `faizy.order` and
+no `account.move` is ever created, so the 5% platform fee is not in the books.
+Vendor commission is computed and never billed. The wallet ledger is
+append-only and has no journal entries behind it. Subscriptions are the only
+thing that invoices.
+
+---
+
 ## TL;DR
 
 *(Sections below predate the decision above. Kept as the record of the analysis;
