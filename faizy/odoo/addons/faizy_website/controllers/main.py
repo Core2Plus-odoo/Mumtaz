@@ -266,9 +266,13 @@ class FaizyWebsite(http.Controller):
         Partner = env["res.partner"].sudo()
         # Someone who signs up twice is a returning customer, not a duplicate.
         # Matching on phone keeps their FMB IDs and history attached.
-        partner = Partner.search(
-            ["|", ("phone", "=", phone), ("mobile", "=", phone)], limit=1
-        )
+        #
+        # `phone` only: Odoo 19 removed res.partner.mobile — checked in
+        # odoo/addons/base/models/res_partner.py, where 18.0 declares both and
+        # 19.0 declares `phone = fields.Char()` alone. Searching or writing
+        # `mobile` raises ValueError, which is what this route did on every
+        # single signup until it was found.
+        partner = Partner.search([("phone", "=", phone)], limit=1)
         if partner:
             partner.write({"is_faizy_customer": True, "name": partner.name or name})
         else:
@@ -276,7 +280,6 @@ class FaizyWebsite(http.Controller):
                 {
                     "name": name,
                     "phone": phone,
-                    "mobile": phone,
                     "email": (post.get("email") or "").strip() or False,
                     "country_id": int(country_id),
                     "is_faizy_customer": True,

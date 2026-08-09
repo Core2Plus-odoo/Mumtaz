@@ -338,7 +338,8 @@ class FaizyOrder(models.Model):
         """
         Queue = self.env["faizy.whatsapp.message"].sudo()
         for order in self:
-            if order.partner_id.mobile or order.partner_id.phone:
+            # res.partner.mobile does not exist in Odoo 19.
+            if order.partner_id.phone:
                 Queue.queue_message(
                     partner=order.partner_id,
                     message_type=message_type,

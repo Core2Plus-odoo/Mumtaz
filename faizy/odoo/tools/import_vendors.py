@@ -57,9 +57,23 @@ def main():
     states = _selection_map(Partner, "faizy_vendor_state")
 
     with open(CSV_PATH, newline="", encoding="utf-8") as handle:
-        rows = list(csv.DictReader(handle))
+        reader = csv.DictReader(handle)
+        headers = list(reader.fieldnames or [])
+        rows = list(reader)
 
     created, skipped, warnings = [], [], []
+
+    # Fail before writing anything, not halfway through. The first run of this
+    # script died on row one with "Invalid field 'mobile' in 'res.partner'" —
+    # Odoo 19 removed res.partner.mobile and the CSV still had the column. A
+    # partial import is worse than none: the survivors have to be found and
+    # deleted by hand before it can be re-run.
+    unknown = [h for h in headers if h not in Partner._fields]
+    if unknown:
+        raise SystemExit(
+            f"{CSV_PATH} has column(s) that are not fields on res.partner in "
+            f"this Odoo version: {', '.join(unknown)}. Nothing was imported."
+        )
 
     for row in rows:
         name = (row.get("name") or "").strip()
@@ -81,7 +95,6 @@ def main():
             "website": website or False,
             "email": (row.get("email") or "").strip() or False,
             "phone": (row.get("phone") or "").strip() or False,
-            "mobile": (row.get("mobile") or "").strip() or False,
             "street": (row.get("street") or "").strip() or False,
             "city": (row.get("city") or "").strip() or False,
             "is_faizy_vendor": True,
