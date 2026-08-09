@@ -48,6 +48,12 @@ INK_72_ON_SAND = "#6b625b"
 CREAM_78_ON_BLACK = "#c6c2bd"
 CREAM_82_ON_WHATSAPP_DEEP = "#d1dfda"
 
+# The printed invoice. A different rendering path from the site — a PDF, no
+# webfonts — but the same rule decides the palette: Odoo paints primary_color
+# onto the invoice heading, the total and the tagline as TEXT, and brand orange
+# there measures 2.14:1. Clay is what the heading colour has to be.
+PAPER = "#ffffff"
+
 # (label, foreground, background, is_large_text)
 # "Large" is WCAG's definition — 24px regular or 18.66px bold — not "looks big".
 PAIRS = [
@@ -65,6 +71,10 @@ PAIRS = [
     ("WhatsApp pill, hovered",       WHITE,             WHATSAPP_DEEP, False),
     ("contact banner label",         CREAM_82_ON_WHATSAPP_DEEP, WHATSAPP_DEEP, False),
     ("contact banner number",        WHITE,             WHATSAPP_DEEP, False),
+    ("invoice heading on paper",     CLAY,              PAPER,     True),
+    ("invoice field labels",         INK,               PAPER,     False),
+    ("invoice total on paper",       CLAY,              PAPER,     False),
+    ("total row, boxed layout",      WHITE,             CLAY,      False),
 ]
 
 
