@@ -831,3 +831,188 @@ $fz-accent-amber:  #f7b209;
     .fz-topbar-inner { justify-content: center; }
   }
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  v6 — WARM
+// ════════════════════════════════════════════════════════════════════════
+//
+// Muhammad's call after seeing v5: warm and human, not vibrant and technical.
+// The old hero was a black slab with gradient blooms — confident, and entirely
+// wrong for a service you buy because you feel guilty about your parents. A
+// page about family should feel like a room, not a product launch.
+//
+// Later layer, so it overrides by cascade order rather than by editing what is
+// above — same convention the rest of this sheet follows.
+
+$fz-sand:      #f7f1e7;   // page ground, warmer than the old cream
+$fz-sand-deep: #efe5d6;   // banded sections
+$fz-clay:      #8f4f08;   // 5.68:1 on sand, 5.12:1 on sand-deep.
+                          // Measured, not eyeballed: the first value I
+                          // picked here (#b9670d) looked right and came
+                          // out at 3.73:1 — fine for a heading, a fail
+                          // for the 13px eyebrow labels that use it.
+$fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
+
+.faizy-page {
+  background: $fz-sand;
+  color: $fz-ink;
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;    // was -0.025em; tight tracking reads corporate
+    line-height: 1.15;
+  }
+  p { line-height: 1.75; }      // more air between lines, less between blocks
+}
+
+.fz-display {
+  font-size: clamp(2.1rem, 5.2vw, 3.4rem);   // was up to 4.5rem — shouting
+  font-weight: 600;                          // was 700
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.fz-accent { color: $fz-clay; }
+
+.fz-lead { color: rgba(43, 38, 34, 0.72); }
+
+.fz-eyebrow {
+  color: $fz-clay;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+.fz-section--cream { background: $fz-sand-deep; }
+.fz-section--dark  { background: $fz-ink; }
+
+// ── Hero ────────────────────────────────────────────────────────────────
+// Same room as the rest of the page now. The warmth comes from one soft
+// sunrise wash behind the copy instead of two saturated blooms on black.
+.fz-hero {
+  background: linear-gradient(180deg, #fdf8f0 0%, $fz-sand 100%);
+  color: $fz-ink;
+  padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(2.5rem, 6vw, 4.5rem);
+
+  &::before {
+    width: 40rem; height: 40rem;
+    top: -20rem; right: -14rem;
+    background: radial-gradient(circle, rgba(246,158,34,.20) 0%, rgba(246,158,34,0) 70%);
+    filter: blur(70px);
+  }
+  &::after { display: none; }   // the violet bloom belonged to the dark hero
+
+  .fz-hero-tagline { color: $fz-clay; }
+  .fz-hero-sub { color: rgba(43, 38, 34, 0.72); }
+}
+
+.fz-trustbar {
+  .fz-trustbar-value { color: $fz-clay; font-weight: 600; }
+  .fz-trustbar-label { color: rgba(43, 38, 34, 0.55); }
+}
+
+// Ghost buttons sat on a dark hero before, so they were drawn in cream.
+.fz-hero .btn-faizy-ghost {
+  border-color: rgba(43, 38, 34, 0.2);
+  color: $fz-ink;
+  &:hover { background: rgba(43, 38, 34, 0.05); color: $fz-ink; }
+}
+
+// ── The quiet section ───────────────────────────────────────────────────
+// Three lines, generous leading, no card around them. The restraint is the
+// point: it is the only place on the page not trying to sell anything.
+.fz-quiet {
+  text-align: center;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  line-height: 2;
+  // 0.6 alpha measured 3.65:1 — below AA, and this text is 18px, which
+  // is not "large" by WCAG's definition (24px regular / 18.66px bold).
+  color: rgba(43, 38, 34, 0.72);
+
+  p { margin-bottom: 0; }
+
+  .fz-quiet-turn {
+    color: $fz-ink;
+    font-weight: 500;
+    margin-top: 1.25rem;
+  }
+}
+
+// ── Cards and tiles ─────────────────────────────────────────────────────
+.fz-card {
+  background: #fffdfa;
+  border: 1px solid rgba(43, 38, 34, 0.08);
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 3px rgba(43, 38, 34, 0.03);
+  color: $fz-ink;
+}
+
+// The accent used to be a saturated bar across the top of every tile. Warm
+// means the colour sits underneath the icon, not in front of the words.
+.fz-tile {
+  background: #fffdfa;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(43, 38, 34, 0.08);
+
+  .fz-tile-icon {
+    background: color-mix(in srgb, var(--fz-tile) 14%, transparent);
+    border-radius: 1rem;
+    width: 3.25rem;
+    height: 3.25rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &::before { display: none; }
+}
+
+.fz-plan {
+  border-radius: 1.5rem;
+
+  &.is-featured {
+    background: $fz-ink;
+    box-shadow: 0 20px 50px -28px rgba(43, 38, 34, 0.6);
+  }
+}
+
+// ── Buttons ─────────────────────────────────────────────────────────────
+// Flat warm orange rather than a gradient with a coloured glow. Black on
+// orange stays ~9:1, which is the rule the whole identity hangs on.
+.btn-faizy {
+  background: $fz-orange;
+  box-shadow: 0 6px 16px -10px rgba(185, 103, 13, 0.8);
+  font-weight: 600;
+
+  &:hover {
+    background: $fz-orange-600;
+    box-shadow: 0 10px 22px -12px rgba(185, 103, 13, 0.9);
+  }
+}
+
+// ── Header ──────────────────────────────────────────────────────────────
+.fz-topbar {
+  background: $fz-sand-deep;
+  color: rgba(43, 38, 34, 0.7);
+  border-bottom: 1px solid rgba(43, 38, 34, 0.06);
+
+  .fz-topbar-tagline { color: $fz-clay; }
+  a {
+    color: rgba(43, 38, 34, 0.7);
+    &:hover { color: $fz-clay; }
+  }
+}
+
+#wrapwrap > header {
+  background: #fdf8f0;
+  border-bottom-color: rgba(43, 38, 34, 0.07);
+  box-shadow: none;
+
+  .nav-link:hover, .navbar-nav > li > a:hover { color: $fz-clay; }
+  a[href="/start"] {
+    background: $fz-orange;
+    box-shadow: 0 5px 14px -9px rgba(185, 103, 13, 0.85);
+    &:hover { background: $fz-orange-600; }
+  }
+}
+
+.fz-footer-legal { border-top-color: rgba(43, 38, 34, 0.08); }

@@ -32,17 +32,18 @@
                             <div class="col-12 col-lg-7 fz-rise">
                                 <p class="faizy-urdu fz-hero-tagline mb-2" lang="ur" dir="rtl">حاضر ہیں۔</p>
                                 <h1 class="fz-display mb-3">
-                                    You're building a life here.<br/>
-                                    <span style="color:#F69E22;">We'll look after them there.</span>
+                                    Ammi's medicines,<br/>
+                                    <span class="fz-accent">collected on Tuesday.</span>
                                 </h1>
                                 <p class="fz-hero-sub fz-lead mb-4">
-                                    Family care in Pakistan for overseas Pakistanis. Groceries,
-                                    medicines, doctor visits, eldercare, NADRA paperwork — done by
-                                    vetted Faizies, booked on WhatsApp, finished with a photo.
+                                    You are far away. Someone still has to queue at the pharmacy,
+                                    sit with your father at the doctor's, chase the NADRA office.
+                                    Faizy is that someone — family care in Pakistan for Pakistanis
+                                    living abroad, asked for on WhatsApp and finished with a photo.
                                 </p>
                                 <div class="d-flex gap-2 flex-wrap mb-5">
                                     <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
-                                    <a href="#how" class="btn btn-faizy-ghost btn-lg">See how it works</a>
+                                    <a href="#how" class="btn btn-faizy-ghost btn-lg">How it works</a>
                                 </div>
 
                                 <div class="fz-trustbar">
@@ -118,12 +119,28 @@
                 <!-- Marketing can drop snippets here without touching code. -->
                 <div class="oe_structure" id="oe_structure_faizy_after_hero"/>
 
+                <!-- ── The situation ─────────────────────────────────── -->
+                <!-- Nothing is sold here. It exists because the visitor arrives
+                     carrying a specific guilt, and a page that goes straight to
+                     features tells them they are in the wrong place. -->
+                <section class="fz-section--tight">
+                    <div class="container" style="max-width: 44rem;">
+                        <div class="fz-quiet">
+                            <p>Your mother says everything is fine.</p>
+                            <p>The prescription ran out eleven days ago.</p>
+                            <p class="fz-quiet-turn">
+                                Distance is not the problem. Not knowing is.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- ── Services ──────────────────────────────────────── -->
                 <section class="fz-section fz-section--cream">
                     <div class="container">
                         <div class="text-center mb-5">
-                            <p class="fz-eyebrow mb-2">Care for your family back home</p>
-                            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">Everything they need, handled</h2>
+                            <p class="fz-eyebrow mb-2">What we look after</p>
+                            <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">The things you would do yourself</h2>
                         </div>
 
                         <!-- Categories, not the full service list. Twenty-two
@@ -206,9 +223,9 @@
                 <section class="fz-section fz-section--cream" t-if="workers">
                     <div class="container">
                         <div class="text-center mb-5">
-                            <p class="fz-eyebrow mb-2">The people on the ground</p>
-                            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
-                                Someone you'd trust with your mother
+                            <p class="fz-eyebrow mb-2">Who actually goes</p>
+                            <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">
+                                People you would trust with your mother
                             </h2>
                             <p class="fz-lead mx-auto mt-3" style="max-width:32rem;">
                                 CNIC verified. References called. Rated after every task.
@@ -258,7 +275,7 @@
                     <div class="container" style="max-width: 46rem;">
                         <div class="text-center mb-4">
                             <p class="fz-eyebrow mb-2">Questions</p>
-                            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem);">Before you start</h2>
+                            <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">Before you start</h2>
                         </div>
 
                         <div class="accordion fz-faq" id="faizyFaq">
