@@ -943,6 +943,98 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 }
 
 
+// ── Header, v8: composition ─────────────────────────────────────────────
+//
+// "Make it look professional" — which, on a bar this small, is almost entirely
+// rhythm rather than decoration. Four changes, each fixing something specific:
+//
+//   1. Navigation and actions were one undifferentiated run of items at equal
+//      spacing, so "Start free" read as the fifth link rather than the thing
+//      to press. They are now two groups with real air between them.
+//   2. The links sat at inherited sizes and default padding, which left them
+//      slightly too large and unevenly spaced against the pills.
+//   3. The active marker was a 2px orange bar under the whole item, heavy
+//      enough to compete with the button it sits beside.
+//   4. Nothing was vertically centred against the pills, so the text rode
+//      high.
+#wrapwrap > header {
+  .navbar-nav {
+    align-items: center;
+    // The gap before the action pills. `.nav-link` items keep their own tight
+    // rhythm; anything button-shaped gets pushed away from them.
+    gap: 0.15rem;
+  }
+
+  .nav-link,
+  .navbar-nav > li > a {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    line-height: 1.2;
+    border-radius: 8px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+
+    &:hover { background: rgba(143, 79, 8, 0.06); }
+  }
+
+  // Separate the two action pills from the links. A margin on the first of
+  // them rather than a wrapper, because the markup belongs to whichever header
+  // variant is active and is not ours to restructure.
+  a[href="/whatsapp"] { margin-left: 0.6rem; }
+  a[href="/whatsapp"] + li > a,
+  li:has(a[href="/whatsapp"]) + li { margin-left: 0.15rem; }
+
+  // A quieter current-page marker: a short centred rule instead of a full
+  // underline, and no background on hover fighting it.
+  .nav-item.active > .nav-link,
+  .nav-link.active {
+    color: $fz-ink;
+    font-weight: 600;
+    box-shadow: none;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0.85rem;
+      right: 0.85rem;
+      bottom: 0.15rem;
+      height: 2px;
+      border-radius: 2px;
+      background: $fz-orange;
+    }
+  }
+
+  // The dropdown caret Odoo renders for a menu with children. Default size
+  // makes it look bolted on next to 15px type.
+  .nav-link .fa-angle-down,
+  .dropdown-toggle::after { opacity: 0.55; }
+
+  .dropdown-menu {
+    border: 1px solid rgba(43, 38, 34, 0.1);
+    border-radius: var(--fz-r-md, 1rem);
+    box-shadow: 0 18px 40px -24px rgba(43, 38, 34, 0.45);
+    padding: 0.4rem;
+
+    .dropdown-item {
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      padding: 0.5rem 0.75rem;
+      &:hover, &:focus { background: rgba(143, 79, 8, 0.07); color: $fz-clay; }
+    }
+  }
+
+  // Slightly smaller pills. At the old size they were the loudest thing in a
+  // bar that is mostly quiet type.
+  a[href="/start"], a[href="/whatsapp"] {
+    font-size: 0.9375rem;
+    padding: 0.42rem 1.05rem !important;
+  }
+
+  .navbar-brand { padding-top: 0; padding-bottom: 0; }
+}
+
+
 // ── Compact pass ────────────────────────────────────────────────────────
 // Same design, less of it. The warm layer above traded density for calm and
 // overshot: a visitor had to scroll past a screen and a half of air to reach

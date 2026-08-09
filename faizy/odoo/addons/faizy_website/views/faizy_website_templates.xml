@@ -39,6 +39,24 @@
         <field name="active" eval="False"/>
     </record>
 
+    <!-- And no loose text element in the header.
+
+         Odoo ships this slot filled with "Free Returns and Standard Shipping".
+         Somebody edited it to a phone number, which then sat next to the
+         WhatsApp button saying the same thing twice — and said it wrong: the
+         edited text reads +92343043970, one digit short of the company
+         record's +92 3343043970. That is the whole argument for not typing a
+         number into a page: the WhatsApp button reads res.company and cannot
+         drift, a snippet can and did.
+
+         Switching the extension template off removes the slot and whatever was
+         edited into it. If the number turns out to have been added as a
+         free-standing snippet instead, this will not reach it and it has to go
+         from the website editor. -->
+    <record id="website.header_text_element" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
+
     <!-- ════════════════════════════════════════════════════════════════
          HOME
          ════════════════════════════════════════════════════════════════ -->
