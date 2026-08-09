@@ -624,22 +624,6 @@ $fz-accent-amber:  #f7b209;
   }
 }
 
-// ── Footer legal strip ──────────────────────────────────────────────────
-// Sits above Odoo's copyright bar. Quiet by design: it is there to be found
-// when someone goes looking for who charged them, not to be read.
-.fz-footer-legal {
-  padding: 1rem 0;
-  font-size: 0.8125rem;
-  color: rgba(10, 10, 10, 0.6);
-  border-top: 1px solid rgba(10, 10, 10, 0.08);
-
-  a {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    &:hover { color: $fz-orange-700; }
-  }
-}
 
 // ── The people on the ground ────────────────────────────────────────────
 // Real Faizies from the database. Circular crops at a small size because a
@@ -958,7 +942,6 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   }
 }
 
-.fz-footer-legal { border-top-color: rgba(43, 38, 34, 0.08); }
 
 // ── Compact pass ────────────────────────────────────────────────────────
 // Same design, less of it. The warm layer above traded density for calm and
@@ -1160,3 +1143,70 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  Footer
+// ════════════════════════════════════════════════════════════════════════
+// Outside .faizy-page, so no scoping — the footer renders on every page
+// including the portal, and scoping it would compile fine and style nothing.
+
+.fz-footer {
+  background: #efe5d6;
+  color: #2b2622;
+  padding: clamp(2.25rem, 5vw, 3.25rem) 0 1.25rem;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  .fz-footer-mark {
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #8f4f08;
+  }
+
+  .fz-footer-blurb {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: rgba(43, 38, 34, 0.7);
+    max-width: 26rem;
+  }
+
+  .fz-footer-head {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(43, 38, 34, 0.5);
+    margin-bottom: 0.6rem;
+    // Uppercase tracking leaves a gap after the last letter, which pushes the
+    // heading visually left of the list beneath it.
+    margin-right: -0.1em;
+  }
+
+  .fz-footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9375rem;
+
+    li { margin-bottom: 0.4rem; }
+
+    a {
+      color: rgba(43, 38, 34, 0.78);
+      text-decoration: none;
+      &:hover { color: #8f4f08; text-decoration: underline; text-underline-offset: 2px; }
+      &:focus-visible { outline: 2px solid #8f4f08; outline-offset: 3px; border-radius: 3px; }
+    }
+  }
+
+  .fz-footer-legal {
+    margin-top: clamp(1.5rem, 4vw, 2.25rem);
+    padding-top: 1rem;
+    border-top: 1px solid rgba(43, 38, 34, 0.1);
+    font-size: 0.8125rem;
+    color: rgba(43, 38, 34, 0.55);
+  }
+}
+
+// Odoo's copyright bar sits below ours and says "Copyright © Company name"
+// until somebody edits it. Ours already names the operating entity, so the
+// stock line is noise.
+#wrapwrap .o_footer_copyright { display: none; }

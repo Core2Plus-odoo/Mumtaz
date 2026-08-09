@@ -548,49 +548,74 @@
     </template>
 
     <!-- ════════════════════════════════════════════════════════════════
-         FOOTER — who you are actually dealing with
-         Faizy is the service; C2P Consultants FZC LLC is the entity that
-         bills you. A customer querying a charge needs to find the legal
-         name somewhere obvious, not just a brand.
+         FOOTER
+         Odoo's default footer is a snippet full of placeholder copy —
+         "disruptive products", info@yourcompany.example.com, an X and a
+         LinkedIn account that do not exist. It is editable, which is why it
+         shipped that way, but nobody edits a footer and a placeholder in the
+         footer reads as an abandoned site.
+
+         Replacing it follows the same pattern as Odoo's own footer variants:
+         inherit website.layout, replace //div[@id='footer'], and switch the
+         default off. Deliberately NOT t-ignore="true" like the original, so
+         the contact details come from res.company instead of being typed in.
          ════════════════════════════════════════════════════════════════ -->
-    <!-- Anchored on website.layout's copyright bar, NOT on website.footer_custom.
-         That template is the editable footer and carries t-ignore="true", so
-         QWeb directives inside it are never evaluated — t-out would silently
-         render nothing. The copyright bar is outside that boundary. -->
-    <template id="faizy_footer_company" inherit_id="website.layout"
-              name="Faizy — Operator Details">
-        <xpath expr="//div[hasclass('o_footer_copyright')]" position="before">
-            <!-- Organization data for search engines. Emitted from real
-                 company fields, so it cannot claim a phone number or a social
-                 profile that is not configured — wrong structured data is
-                 worse than none, because it is what gets shown. -->
-            <div class="fz-footer-legal" itemscope="itemscope"
-                 itemtype="https://schema.org/Organization">
-                <meta itemprop="name" t-att-content="website.company_id.name"/>
-                <meta itemprop="url" t-att-content="website.get_base_url()"/>
-                <meta t-if="website.company_id.email" itemprop="email"
-                      t-att-content="website.company_id.email"/>
-                <meta t-if="website.company_id.phone" itemprop="telephone"
-                      t-att-content="website.company_id.phone"/>
-                <link t-if="website.company_id.social_facebook" itemprop="sameAs"
-                      t-att-href="website.company_id.social_facebook"/>
+    <record id="website.footer_custom" model="ir.ui.view">
+        <field name="active" eval="False"/>
+    </record>
+
+    <template id="faizy_footer" inherit_id="website.layout" name="Faizy Footer">
+        <xpath expr="//div[@id='footer']" position="replace">
+            <div id="footer" class="fz-footer" t-if="not no_footer">
                 <div class="container">
-                    <!-- report_footer, not company_id.name. The company is now
-                         named Faizy — the trading name — so naming it here
-                         would read "Faizy is operated by Faizy". The footer
-                         field already holds the operator sentence and is the
-                         same text that prints on every invoice, so the site
-                         and the paperwork cannot drift apart. -->
-                    <p class="mb-1" t-if="website.company_id.report_footer"
-                       t-out="website.company_id.report_footer"/>
-                    <p class="mb-0">
-                        <a t-if="website.company_id.email"
-                           t-attf-href="mailto:#{website.company_id.email}"
-                           t-out="website.company_id.email"/>
-                        <span t-if="website.company_id.email"> · </span>
-                        <a href="https://facebook.com/faizy.pk" rel="noopener"
-                           target="_blank">facebook.com/faizy.pk</a>
-                    </p>
+                    <div class="row g-4">
+                        <div class="col-12 col-lg-5">
+                            <p class="fz-footer-mark mb-2">Faizy Hai Na!</p>
+                            <p class="fz-footer-blurb mb-0">
+                                Family care in Pakistan for Pakistanis living abroad.
+                                Groceries, medicines, doctor visits and paperwork —
+                                asked for on WhatsApp, finished with a photo.
+                            </p>
+                        </div>
+
+                        <div class="col-6 col-lg-3">
+                            <p class="fz-footer-head">Faizy</p>
+                            <ul class="fz-footer-links">
+                                <li><a href="/">Home</a></li>
+                                <li><a href="/pricing">Plans</a></li>
+                                <li><a href="/start">Start free</a></li>
+                                <li><a href="/join">Become a Faizy</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="col-6 col-lg-4">
+                            <p class="fz-footer-head">Talk to us</p>
+                            <ul class="fz-footer-links">
+                                <!-- Every line is conditional. A footer that
+                                     lists a channel nobody answers is worse
+                                     than a footer with one line in it. -->
+                                <li t-if="website.company_id.phone">
+                                    <a t-attf-href="https://wa.me/#{website.company_id.phone.replace('+','').replace(' ','').replace('-','')}"
+                                       rel="noopener" target="_blank">
+                                        WhatsApp <span t-out="website.company_id.phone"/>
+                                    </a>
+                                </li>
+                                <li t-if="website.company_id.email">
+                                    <a t-attf-href="mailto:#{website.company_id.email}"
+                                       t-out="website.company_id.email"/>
+                                </li>
+                                <li t-if="website.company_id.social_facebook">
+                                    <a t-att-href="website.company_id.social_facebook"
+                                       rel="noopener" target="_blank">Facebook</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="fz-footer-legal">
+                        <p class="mb-0" t-if="website.company_id.report_footer"
+                           t-out="website.company_id.report_footer"/>
+                    </div>
                 </div>
             </div>
         </xpath>
