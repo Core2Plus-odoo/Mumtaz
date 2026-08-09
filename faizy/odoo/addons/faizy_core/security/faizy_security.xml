@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Odoo 19 removed res.groups.category_id (and res.groups.users). The
+         grouping now comes from the "App / Role" name prefix, which is what the
+         other modules in this repo already do. -->
+
+    <!-- ── Agent ────────────────────────────────────────────────────────
+         Day-to-day ops: take bookings, assign Faizies, move orders along.
+         Cannot see medical notes or touch money settings.               -->
+    <record id="group_faizy_user" model="res.groups">
+        <field name="name">Faizy / Agent</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- ── Operations ───────────────────────────────────────────────────
+         Adds the sensitive layer: medical notes, the applications pipeline,
+         wallet adjustments.                                              -->
+    <record id="group_faizy_ops" model="res.groups">
+        <field name="name">Faizy / Operations</field>
+        <field name="implied_ids" eval="[(4, ref('group_faizy_user'))]"/>
+    </record>
+
+    <!-- ── Manager ──────────────────────────────────────────────────────
+         Plans, pricing, subscriptions, the WhatsApp queue.               -->
+    <record id="group_faizy_manager" model="res.groups">
+        <field name="name">Faizy / Manager</field>
+        <field name="implied_ids" eval="[(4, ref('group_faizy_ops'))]"/>
+    </record>
+
+    <!-- ── Who starts with access ───────────────────────────────────────
+         Odoo does not put anyone in a custom group automatically, not even
+         the superuser: base.group_system grants administration rights, not
+         membership of every module's groups. So without this, the person who
+         installs Faizy cannot see a single Faizy record and the app looks
+         broken on a fresh database.
+
+         Deliberately NOT noupdate: an upgrade should repair this, because an
+         instance installed before this record existed has an admin locked out
+         of their own data. In Odoo 19 the field is `group_ids` — `groups_id`
+         was renamed. -->
+    <record id="base.user_admin" model="res.users">
+        <field name="group_ids" eval="[(4, ref('faizy_core.group_faizy_manager'))]"/>
+    </record>
+
+    <!-- ── Record rules ─────────────────────────────────────────────────
+         A portal customer must only ever see their own records. Without
+         these, the customer portal would expose every family in the system. -->
+
+    <record id="rule_order_portal" model="ir.rule">
+        <field name="name">Faizy Order: customers see only their own</field>
+        <field name="model_id" ref="model_faizy_order"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_family_member_portal" model="ir.rule">
+        <field name="name">Faizy Family Member: customers see only their own</field>
+        <field name="model_id" ref="model_faizy_family_member"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_subscription_portal" model="ir.rule">
+        <field name="name">Faizy Subscription: customers see only their own</field>
+        <field name="model_id" ref="model_faizy_subscription"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- A Faizy in the portal sees the jobs assigned to them, nothing else. -->
+    <record id="rule_order_worker_portal" model="ir.rule">
+        <field name="name">Faizy Order: workers see their own assignments</field>
+        <field name="model_id" ref="model_faizy_order"/>
+        <field name="domain_force">[('worker_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Internal staff see everything for their own company. -->
+    <record id="rule_order_company" model="ir.rule">
+        <field name="name">Faizy Order: company scope</field>
+        <field name="model_id" ref="model_faizy_order"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+        <!-- No `groups` set, which is what makes a rule global. The `global`
+             field itself is computed from exactly that and cannot be written. -->
+    </record>
+
+</odoo>

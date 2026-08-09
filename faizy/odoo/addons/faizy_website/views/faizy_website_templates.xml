@@ -1,0 +1,1030 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Brand fonts. Poppins for everything Latin; Noto Nastaliq Urdu because
+         the tagline will not render correctly from a generic serif fallback. -->
+    <template id="faizy_fonts" inherit_id="website.layout" name="Faizy Fonts">
+        <xpath expr="//head" position="inside">
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+            <link rel="stylesheet"
+                  href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;family=Noto+Nastaliq+Urdu:wght@400;600&amp;display=swap"/>
+        </xpath>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         HOME
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="home" name="Faizy — Home">
+        <t t-call="website.layout">
+            <!-- website.layout reads these for <title> and <meta name=description>.
+                 Canonical, hreflang and the sitemap it handles by itself once
+                 website.domain is set, which setup-domain.sh does. -->
+            <t t-set="additional_title">Family care in Pakistan for overseas Pakistanis</t>
+            <t t-set="website_meta_description">Faizy looks after your family in Pakistan while you work abroad. Groceries, medicines, doctor visits, eldercare and NADRA paperwork, booked on WhatsApp and finished with a photo. From PKR 1,999 a month.</t>
+
+            <div id="wrap" class="faizy-page">
+
+                <!-- ── Hero ──────────────────────────────────────────── -->
+                <section class="fz-hero">
+                    <div class="container position-relative">
+                        <div class="row align-items-center g-5">
+                            <div class="col-12 col-lg-7 fz-rise">
+                                <p class="fz-hero-tagline mb-2">Faizy Hai Na!</p>
+                                <h1 class="fz-display mb-3">
+                                    Ammi's medicines,<br/>
+                                    <span class="fz-accent">collected on Tuesday.</span>
+                                </h1>
+                                <p class="fz-hero-sub fz-lead mb-4">
+                                    You are far away. Someone still has to queue at the pharmacy,
+                                    sit with your father at the doctor's, chase the NADRA office.
+                                    Faizy is that someone — family care in Pakistan for Pakistanis
+                                    living abroad, asked for on WhatsApp and finished with a photo.
+                                </p>
+                                <div class="d-flex gap-2 flex-wrap mb-4">
+                                    <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
+                                    <a href="#how" class="btn btn-faizy-ghost btn-lg">How it works</a>
+                                </div>
+
+                                <div class="fz-trustbar">
+                                    <div class="fz-trustbar-item">
+                                        <span class="fz-trustbar-value">22+</span>
+                                        <span class="fz-trustbar-label">families cared for</span>
+                                    </div>
+                                    <div class="fz-trustbar-item">
+                                        <span class="fz-trustbar-value">3</span>
+                                        <span class="fz-trustbar-label">cities on the ground</span>
+                                    </div>
+                                    <div class="fz-trustbar-item">
+                                        <span class="fz-trustbar-value">24k</span>
+                                        <span class="fz-trustbar-label">following our story</span>
+                                    </div>
+                                    <div class="fz-trustbar-item">
+                                        <span class="fz-trustbar-value">100%</span>
+                                        <span class="fz-trustbar-label">tasks photographed</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-5 fz-rise fz-rise-2">
+                                <!-- A live-looking proof card. The product's whole
+                                     promise is "you can see it happened", so the
+                                     hero shows exactly that rather than a stock photo. -->
+                                <div class="fz-card" style="background:#fff;">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <p class="text-muted small mb-1">Order FZO-100248</p>
+                                            <h3 class="h5 mb-0">Monthly medicines</h3>
+                                        </div>
+                                        <span class="faizy-status is-completed">Completed</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <span class="faizy-fmb">FMB-000014</span>
+                                        <span class="text-muted small">Ammi · Lahore</span>
+                                    </div>
+                                    <!-- Receipts are in PKR because that is where the
+                                         money is spent, whatever currency you subscribe
+                                         in. The figures are the real ones: PKR 850 is
+                                         the pharmacy service charge from our catalogue,
+                                         and the platform fee is 5% of purchases. -->
+                                    <div class="rounded-3 p-3 mb-3" style="background:#FAF6EF;">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="text-muted">Pharmacy</span>
+                                            <span>PKR 2,400</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span class="text-muted">Service</span>
+                                            <span>PKR 850</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between small">
+                                            <span class="text-muted">Platform fee (5%)</span>
+                                            <span>PKR 120</span>
+                                        </div>
+                                        <hr class="my-2"/>
+                                        <div class="d-flex justify-content-between fw-bold">
+                                            <span>Total</span>
+                                            <span>PKR 3,370</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fa fa-camera me-1" style="color:#F69E22;" aria-hidden="true"/>
+                                        Photo proof attached · delivered 6:42 PM
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Marketing can drop snippets here without touching code. -->
+                <div class="oe_structure" id="oe_structure_faizy_after_hero"/>
+
+                <!-- ── The situation ─────────────────────────────────── -->
+                <!-- Nothing is sold here. It exists because the visitor arrives
+                     carrying a specific guilt, and a page that goes straight to
+                     features tells them they are in the wrong place. -->
+                <section class="fz-section--tight">
+                    <div class="container" style="max-width: 44rem;">
+                        <div class="fz-quiet">
+                            <p>Your mother says everything is fine.</p>
+                            <p>The prescription ran out eleven days ago.</p>
+                            <p class="fz-quiet-turn">
+                                Distance is not the problem. Not knowing is.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── Services ──────────────────────────────────────── -->
+                <section class="fz-section fz-section--cream">
+                    <div class="container">
+                        <div class="text-center mb-4">
+                            <p class="fz-eyebrow mb-2">What we look after</p>
+                            <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">The things you would do yourself</h2>
+                        </div>
+
+                        <!-- Categories, not the full service list. Twenty-two
+                             tiles is a catalogue; six is an answer to "can you
+                             help with my kind of problem". The catalogue lives
+                             one click away, where someone actually wants it. -->
+                        <t t-set="accents"
+                           t-value="['#F69E22', '#7C5CFF', '#12B3A6', '#2E90FA', '#F0567A', '#12B76A']"/>
+                        <div class="row g-3 g-lg-4">
+                            <t t-foreach="categories" t-as="category">
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <div class="fz-tile"
+                                         t-attf-style="--fz-tile: #{accents[category_index % len(accents)]};">
+                                        <div class="fz-tile-icon" t-out="category.icon"/>
+                                        <h3 class="h5 mb-2" t-out="category.name"/>
+                                        <p class="text-muted mb-0 small" t-out="category.tagline"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── How it works ──────────────────────────────────── -->
+                <section class="fz-section" id="how">
+                    <div class="container">
+                        <div class="row g-5 align-items-center">
+                            <div class="col-12 col-lg-5">
+                                <p class="fz-eyebrow mb-2">How it works</p>
+                                <h2 class="mb-3" style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
+                                    Three steps. No app to learn.
+                                </h2>
+                                <p class="fz-lead">
+                                    You already use WhatsApp all day. So do we. The portal is there
+                                    when you want the detail — receipts, photos, history — not because
+                                    you're forced through it.
+                                </p>
+                                <a href="/pricing" class="btn btn-faizy mt-2">See plans</a>
+                            </div>
+
+                            <div class="col-12 col-lg-7">
+                                <div class="fz-step mb-4">
+                                    <span class="fz-step-num">1</span>
+                                    <h3 class="h5 mb-1">Tell us who to care for</h3>
+                                    <p class="text-muted mb-0">
+                                        Each family member gets their own <strong>FMB ID</strong>, so
+                                        "the medicines for Ammi" is never ambiguous — not to us, not
+                                        to the Faizy on the ground.
+                                    </p>
+                                </div>
+                                <div class="fz-step mb-4">
+                                    <span class="fz-step-num">2</span>
+                                    <h3 class="h5 mb-1">Ask on WhatsApp</h3>
+                                    <p class="text-muted mb-0">
+                                        Send what's needed. You get a written confirmation with a
+                                        reference number, then the name of the Faizy assigned to it.
+                                    </p>
+                                </div>
+                                <div class="fz-step">
+                                    <span class="fz-step-num">3</span>
+                                    <h3 class="h5 mb-1">See it done</h3>
+                                    <p class="text-muted mb-0">
+                                        A photo and an itemised receipt when it's finished. Not a
+                                        promise that it happened — evidence.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── The people ────────────────────────────────────── -->
+                <!-- Real Faizies out of the database, not stock photography.
+                     For a service whose whole promise is "a person you can
+                     trust went there", a bought photo of a model is actively
+                     corrosive — and these faces are the ones customers meet.
+                     Photos are uploaded on the worker record in Odoo; until
+                     one is, the initial avatar below stands in, so the section
+                     never renders as broken images. -->
+                <section class="fz-section fz-section--cream" t-if="workers">
+                    <div class="container">
+                        <div class="text-center mb-4">
+                            <p class="fz-eyebrow mb-2">Who actually goes</p>
+                            <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">
+                                People you would trust with your mother
+                            </h2>
+                            <p class="fz-lead mx-auto mt-3" style="max-width:32rem;">
+                                CNIC verified. References called. Rated after every task.
+                            </p>
+                        </div>
+
+                        <div class="fz-people">
+                            <t t-foreach="workers" t-as="worker">
+                                <div class="fz-person">
+                                    <img t-if="worker.image_128"
+                                         class="fz-person-photo"
+                                         t-attf-src="/faizy/worker/#{worker.id}/photo"
+                                         t-attf-alt="#{worker.name}, Faizy in #{worker.city}"
+                                         loading="lazy"/>
+                                    <span t-else="" class="fz-person-photo fz-person-initial"
+                                          aria-hidden="true"
+                                          t-out="worker.name[:1].upper()"/>
+                                    <p class="fz-person-name mb-0" t-out="worker.name"/>
+                                    <p class="fz-person-city mb-0" t-out="worker.city"/>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── Pricing ───────────────────────────────────────── -->
+                <section class="fz-section" id="plans">
+                    <div class="container">
+                        <div class="text-center mb-4">
+                            <p class="fz-eyebrow mb-2">Plans</p>
+                            <h2 class="mb-2" style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
+                                Straightforward monthly care
+                            </h2>
+                            <p class="fz-lead mb-0">Your first three care activities are on us.</p>
+                        </div>
+                        <t t-call="faizy_website.plan_cards"/>
+                    </div>
+                </section>
+
+                <!-- ── FAQ ───────────────────────────────────────────── -->
+                <!-- Three questions, not six. Every one answers an objection
+                     that stops somebody signing up; the rest were us enjoying
+                     the sound of our own voice. Marked up as FAQPage so the
+                     answers can surface directly in search results. -->
+                <section class="fz-section" itemscope="itemscope"
+                         itemtype="https://schema.org/FAQPage">
+                    <div class="container" style="max-width: 46rem;">
+                        <div class="text-center mb-4">
+                            <p class="fz-eyebrow mb-2">Questions</p>
+                            <h2 style="font-size: clamp(1.6rem, 3.6vw, 2.4rem);">Before you start</h2>
+                        </div>
+
+                        <div class="accordion fz-faq" id="faizyFaq">
+                            <div class="accordion-item" itemscope="itemscope" itemprop="mainEntity"
+                                 itemtype="https://schema.org/Question">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#faq1">
+                                        <span itemprop="name">What counts as a care activity?</span>
+                                    </button>
+                                </h3>
+                                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faizyFaq"
+                                     itemscope="itemscope" itemprop="acceptedAnswer"
+                                     itemtype="https://schema.org/Answer">
+                                    <div class="accordion-body text-muted" itemprop="text">
+                                        One task: a grocery run, a medicine collection, a doctor visit,
+                                        a document errand, a visit to sit with your parents.
+                                        Emergencies are never counted.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item" itemscope="itemscope" itemprop="mainEntity"
+                                 itemtype="https://schema.org/Question">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#faq2">
+                                        <span itemprop="name">How are the Faizies vetted?</span>
+                                    </button>
+                                </h3>
+                                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faizyFaq"
+                                     itemscope="itemscope" itemprop="acceptedAnswer"
+                                     itemtype="https://schema.org/Answer">
+                                    <div class="accordion-body text-muted" itemprop="text">
+                                        CNIC verification, references we actually call, an interview
+                                        and a signed code of conduct. Every task is rated afterwards,
+                                        and the rating follows the Faizy.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item" itemscope="itemscope" itemprop="mainEntity"
+                                 itemtype="https://schema.org/Question">
+                                <h3 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#faq3">
+                                        <span itemprop="name">Do I have to be in the Gulf?</span>
+                                    </button>
+                                </h3>
+                                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faizyFaq"
+                                     itemscope="itemscope" itemprop="acceptedAnswer"
+                                     itemtype="https://schema.org/Answer">
+                                    <div class="accordion-body text-muted" itemprop="text">
+                                        No. What matters is where your family is, not where you are.
+                                        We have subscribers in Dubai and Riyadh, and just as many in
+                                        London, Manchester and New York — each billed in their own
+                                        currency.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── Talk to us ────────────────────────────────────── -->
+                <!-- Every channel here is driven off res.company, so ops adds
+                     the WhatsApp number in Settings rather than waiting for a
+                     release — and a channel that is not configured is simply
+                     not shown, instead of advertising a dead address. -->
+                <section class="fz-section--tight" id="contact">
+                    <div class="container">
+                        <div class="text-center mb-4">
+                            <p class="fz-eyebrow mb-2">Talk to us</p>
+                            <h2 style="font-size: clamp(1.5rem, 3.5vw, 2.25rem);">
+                                We answer on WhatsApp
+                            </h2>
+                        </div>
+                        <div class="fz-contact">
+                            <!-- company.phone, not company.mobile: res.company
+                                 has no mobile field in Odoo 19, and reading it
+                                 raised on every render of this page. -->
+                            <a t-if="company.phone"
+                               t-attf-href="https://wa.me/#{company.phone.replace('+','').replace(' ','').replace('-','')}"
+                               class="fz-contact-item" rel="noopener" target="_blank">
+                                <span class="fz-contact-icon" aria-hidden="true">💬</span>
+                                <span>
+                                    <span class="fz-contact-label">WhatsApp</span>
+                                    <span class="fz-contact-value" t-out="company.phone"/>
+                                </span>
+                            </a>
+                            <a t-if="company.email"
+                               t-attf-href="mailto:#{company.email}" class="fz-contact-item">
+                                <span class="fz-contact-icon" aria-hidden="true">✉️</span>
+                                <span>
+                                    <span class="fz-contact-label">Email</span>
+                                    <span class="fz-contact-value" t-out="company.email"/>
+                                </span>
+                            </a>
+                            <a t-if="company.social_facebook"
+                               t-att-href="company.social_facebook"
+                               class="fz-contact-item" rel="noopener" target="_blank">
+                                <span class="fz-contact-icon" aria-hidden="true">👍</span>
+                                <span>
+                                    <span class="fz-contact-label">Facebook</span>
+                                    <span class="fz-contact-value">24k following our story</span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── Final CTA ─────────────────────────────────────── -->
+                <section class="fz-section--tight pb-5">
+                    <div class="container">
+                        <div class="fz-cta text-center">
+                            <p class="faizy-urdu mb-2" lang="ur" dir="rtl"
+                               style="color:#F69E22; font-size:1.75rem;">حاضر ہیں۔</p>
+                            <h2 class="mb-3" style="font-size: clamp(1.75rem, 4.5vw, 3rem);">
+                                Start with three free activities
+                            </h2>
+                            <p class="fz-lead mb-4 mx-auto" style="max-width:34rem;">
+                                No card needed to begin. Tell us who to look after, and we'll
+                                take it from there.
+                            </p>
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
+                                <a href="/join" class="btn btn-faizy-ghost btn-lg">Work with us</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="oe_structure" id="oe_structure_faizy_home_end"/>
+
+            </div>
+        </t>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         PLAN CARDS — shared so home and /pricing cannot drift apart
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="plan_cards" name="Faizy Plan Cards">
+
+        <!-- Customers are anywhere, so let them see the price we actually
+             publish in their market. The switcher only offers currencies with
+             a published price — nothing here is converted at today's rate.
+             ISO codes rather than symbols: "AED 26.50" is unambiguous to an
+             international audience in a way that mixed glyphs are not. -->
+        <div class="fz-currency-switch mb-4" t-if="len(currencies) &gt; 1">
+            <span class="fz-currency-label">Show prices in</span>
+            <t t-foreach="currencies" t-as="currency">
+                <a t-attf-href="?currency=#{currency.name}#plans"
+                   t-attf-class="fz-currency-opt #{currency == display_currency and 'is-active' or ''}"
+                   t-out="currency.name"/>
+            </t>
+        </div>
+
+        <div class="row g-4 justify-content-center align-items-stretch">
+            <t t-foreach="plans" t-as="plan">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div t-attf-class="fz-plan #{plan.code == 'standard' and 'is-featured' or ''}">
+                        <span t-if="plan.code == 'standard'" class="fz-plan-badge">Most chosen</span>
+
+                        <h3 class="h4 mb-1" t-out="plan.name"/>
+                        <p class="text-muted small mb-3" t-out="plan.description"/>
+
+                        <div class="fz-plan-price mb-1">
+                            <span class="fz-plan-cur" t-out="display_currency.name"/><!--
+                            --><span t-out="plan.price_display(display_currency)"/>
+                        </div>
+                        <p class="text-muted small mb-4">per month</p>
+
+                        <div class="mb-4">
+                            <t t-foreach="plan.feature_ids" t-as="feature">
+                                <div class="fz-plan-feature">
+                                    <i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/>
+                                    <span t-out="feature.name"/>
+                                </div>
+                            </t>
+                        </div>
+
+                        <div class="mt-auto">
+                            <a t-attf-href="/start?plan=#{plan.code}"
+                               t-attf-class="btn w-100 #{plan.code == 'standard' and 'btn-faizy' or 'btn-faizy-ghost'}">
+                                Get started
+                            </a>
+                            <p class="text-muted small text-center mt-3 mb-0">
+                                Extra activities
+                                <span t-out="display_currency.name"/>
+                                <span t-out="plan.overage_display(display_currency)"/> each
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         PRICING
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="pricing" name="Faizy — Pricing">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Pricing</t>
+            <t t-set="website_meta_description">Faizy plans from PKR 1,999 a month, with published prices in AED, SAR, USD and GBP. Three free care activities, no card needed, cancel any time.</t>
+
+            <div id="wrap" class="faizy-page">
+                <section class="fz-hero" style="padding-bottom: clamp(2rem, 5vw, 3rem);">
+                    <div class="container text-center position-relative">
+                        <p class="fz-eyebrow mb-2">Plans</p>
+                        <h1 class="fz-display mb-3" style="font-size: clamp(2rem, 5.5vw, 3.5rem);">
+                            Care that fits your family
+                        </h1>
+                        <p class="fz-hero-sub fz-lead mx-auto mb-0">
+                            Pay monthly, cancel whenever. Your first three care activities are free —
+                            no card needed to start.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="fz-section" id="plans">
+                    <div class="container">
+                        <t t-call="faizy_website.plan_cards"/>
+
+                        <div class="row justify-content-center mt-5">
+                            <div class="col-12 col-lg-9">
+                                <div class="fz-card">
+                                    <h3 class="h5 mb-3">What you pay, line by line</h3>
+                                    <p class="text-muted mb-3">
+                                        The subscription covers the caring. Anything bought on your
+                                        behalf is passed through, itemised, on the same invoice.
+                                    </p>
+                                    <div class="row g-3 small">
+                                        <div class="col-12 col-md-4">
+                                            <strong class="d-block">Purchases</strong>
+                                            <span class="text-muted">Exactly what the shop charged. Receipt attached.</span>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <strong class="d-block">Service charge</strong>
+                                            <span class="text-muted">For the Faizy's time running the errand.</span>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <strong class="d-block">Platform fee — 5%</strong>
+                                            <span class="text-muted">On purchase value. Keeps the network running.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="fz-section--tight pb-5">
+                    <div class="container">
+                        <div class="fz-cta text-center">
+                            <h2 class="mb-3" style="font-size: clamp(1.5rem, 4vw, 2.5rem);">
+                                Not sure which plan?
+                            </h2>
+                            <p class="fz-lead mb-4">
+                                Tell us who you're caring for and we'll tell you honestly.
+                            </p>
+                            <a href="/start" class="btn btn-faizy btn-lg">Start free</a>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="oe_structure" id="oe_structure_faizy_pricing_end"/>
+            </div>
+        </t>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         FOOTER — who you are actually dealing with
+         Faizy is the service; C2P Consultants FZC LLC is the entity that
+         bills you. A customer querying a charge needs to find the legal
+         name somewhere obvious, not just a brand.
+         ════════════════════════════════════════════════════════════════ -->
+    <!-- Anchored on website.layout's copyright bar, NOT on website.footer_custom.
+         That template is the editable footer and carries t-ignore="true", so
+         QWeb directives inside it are never evaluated — t-out would silently
+         render nothing. The copyright bar is outside that boundary. -->
+    <template id="faizy_footer_company" inherit_id="website.layout"
+              name="Faizy — Operator Details">
+        <xpath expr="//div[hasclass('o_footer_copyright')]" position="before">
+            <!-- Organization data for search engines. Emitted from real
+                 company fields, so it cannot claim a phone number or a social
+                 profile that is not configured — wrong structured data is
+                 worse than none, because it is what gets shown. -->
+            <div class="fz-footer-legal" itemscope="itemscope"
+                 itemtype="https://schema.org/Organization">
+                <meta itemprop="name" t-att-content="website.company_id.name"/>
+                <meta itemprop="url" t-att-content="website.get_base_url()"/>
+                <meta t-if="website.company_id.email" itemprop="email"
+                      t-att-content="website.company_id.email"/>
+                <meta t-if="website.company_id.phone" itemprop="telephone"
+                      t-att-content="website.company_id.phone"/>
+                <link t-if="website.company_id.social_facebook" itemprop="sameAs"
+                      t-att-href="website.company_id.social_facebook"/>
+                <div class="container">
+                    <!-- report_footer, not company_id.name. The company is now
+                         named Faizy — the trading name — so naming it here
+                         would read "Faizy is operated by Faizy". The footer
+                         field already holds the operator sentence and is the
+                         same text that prints on every invoice, so the site
+                         and the paperwork cannot drift apart. -->
+                    <p class="mb-1" t-if="website.company_id.report_footer"
+                       t-out="website.company_id.report_footer"/>
+                    <p class="mb-0">
+                        <a t-if="website.company_id.email"
+                           t-attf-href="mailto:#{website.company_id.email}"
+                           t-out="website.company_id.email"/>
+                        <span t-if="website.company_id.email"> · </span>
+                        <a href="https://facebook.com/faizy.pk" rel="noopener"
+                           target="_blank">facebook.com/faizy.pk</a>
+                    </p>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         START — customer sign-up
+         One page. Everything asked for here is something we cannot do the
+         job without: who you are, how to reach you, who to look after and
+         where they live. Anything else can wait until there is a
+         conversation.
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="signup" name="Faizy — Start">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Start free</t>
+            <t t-set="website_meta_description">Sign up in one minute and get three free care activities for your family in Pakistan. No card needed. Tell us who to look after and we reply on WhatsApp.</t>
+
+            <div id="wrap" class="faizy-page">
+                <section class="fz-hero" style="padding-bottom: clamp(1.5rem, 4vw, 2.5rem);">
+                    <div class="container text-center position-relative">
+                        <p class="faizy-urdu mb-2" lang="ur" dir="rtl"
+                           style="color:#F69E22; font-size:1.5rem;">حاضر ہیں۔</p>
+                        <h1 class="fz-display mb-3" style="font-size: clamp(1.9rem, 5vw, 3rem);">
+                            Three free activities.<br/>No card needed.
+                        </h1>
+                        <p class="fz-hero-sub fz-lead mx-auto mb-0" style="max-width:34rem;">
+                            Tell us who to look after. We'll message you on WhatsApp
+                            and take it from there.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="fz-section" style="padding-top: clamp(1.5rem, 4vw, 2.5rem);">
+                    <div class="container" style="max-width: 40rem;">
+                        <form action="/start/submit" method="POST" class="fz-card">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <div style="position:absolute; left:-9999px;" aria-hidden="true">
+                                <label for="start_hp">Leave this empty</label>
+                                <input type="text" id="start_hp" name="website" tabindex="-1" autocomplete="off"/>
+                            </div>
+
+                            <h2 class="h5 mb-3">About you</h2>
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="name">Your name *</label>
+                                    <input type="text" id="name" name="name" class="form-control"
+                                           t-att-value="values.get('name', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('name')" t-out="errors['name']"/>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="phone">WhatsApp number *</label>
+                                    <input type="tel" id="phone" name="phone" class="form-control"
+                                           placeholder="+971 50 123 4567"
+                                           t-att-value="values.get('phone', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('phone')" t-out="errors['phone']"/>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="country_id">Where you live *</label>
+                                    <select id="country_id" name="country_id" class="form-select" required="required">
+                                        <option value="">Choose your country…</option>
+                                        <t t-foreach="countries" t-as="country">
+                                            <option t-att-value="country.id"
+                                                    t-att-selected="'selected' if str(country.id) == str(values.get('country_id')) else None"
+                                                    t-out="country.name"/>
+                                        </t>
+                                    </select>
+                                    <div class="form-text">Sets the currency we bill you in.</div>
+                                    <div class="text-danger small" t-if="errors.get('country_id')" t-out="errors['country_id']"/>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="email">Email <span class="text-muted">(optional)</span></label>
+                                    <input type="email" id="email" name="email" class="form-control"
+                                           t-att-value="values.get('email', '')"/>
+                                </div>
+                            </div>
+
+                            <h2 class="h5 mb-3 mt-4">Who are we caring for?</h2>
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="member_name">Their name *</label>
+                                    <input type="text" id="member_name" name="member_name" class="form-control"
+                                           t-att-value="values.get('member_name', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('member_name')" t-out="errors['member_name']"/>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="relationship">Relationship</label>
+                                    <select id="relationship" name="relationship" class="form-select">
+                                        <t t-foreach="relationships" t-as="rel">
+                                            <option t-att-value="rel[0]"
+                                                    t-att-selected="'selected' if rel[0] == values.get('relationship') else None"
+                                                    t-out="rel[1]"/>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="member_city">Their city in Pakistan *</label>
+                                    <input type="text" id="member_city" name="member_city" class="form-control"
+                                           placeholder="Lahore, Karachi, Islamabad…"
+                                           t-att-value="values.get('member_city', '')" required="required"/>
+                                    <div class="form-text">You can add the rest of the family later.</div>
+                                    <div class="text-danger small" t-if="errors.get('member_city')" t-out="errors['member_city']"/>
+                                </div>
+                            </div>
+
+                            <h2 class="h5 mb-3 mt-4">Your plan</h2>
+                            <div class="fz-planpick">
+                                <t t-foreach="plans" t-as="plan">
+                                    <label class="fz-planpick-opt">
+                                        <input type="radio" name="plan" t-att-value="plan.code"
+                                               t-att-checked="'checked' if plan.code == plan_code else None"/>
+                                        <span class="fz-planpick-body">
+                                            <span class="fz-planpick-name" t-out="plan.name"/>
+                                            <span class="fz-planpick-price">
+                                                <t t-out="plan.currency_id.name"/>
+                                                <t t-out="plan.price_display(plan.currency_id)"/>
+                                                <span class="text-muted">/mo</span>
+                                            </span>
+                                            <span class="fz-planpick-meta">
+                                                <t t-out="plan.activities_included"/> activities a month
+                                            </span>
+                                        </span>
+                                    </label>
+                                </t>
+                            </div>
+                            <p class="text-muted small mt-3 mb-4">
+                                Nothing is charged today. Your first three activities are free,
+                                and we'll confirm the plan with you on WhatsApp before any
+                                billing starts.
+                            </p>
+
+                            <button type="submit" class="btn btn-faizy btn-lg w-100">
+                                Create my account
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <template id="signup_welcome" name="Faizy — Welcome">
+        <t t-call="website.layout">
+            <div id="wrap" class="faizy-page">
+                <section class="fz-section">
+                    <div class="container text-center" style="max-width: 34rem;">
+                        <p class="faizy-urdu mb-2" lang="ur" dir="rtl"
+                           style="color:#F69E22; font-size:2rem;">حاضر ہیں۔</p>
+                        <h1 class="mb-3" style="font-size: clamp(1.75rem, 4vw, 2.5rem);">
+                            You're in.
+                        </h1>
+                        <p class="fz-lead">
+                            We've sent a WhatsApp message to say hello. Reply to it with
+                            whatever your family needs first.
+                        </p>
+                        <div class="fz-card mt-4" t-if="fmb">
+                            <p class="text-muted small mb-1">Their Faizy Member ID</p>
+                            <p class="h3 mb-2"><span class="faizy-fmb" t-out="fmb"/></p>
+                            <p class="text-muted small mb-0">
+                                Every task, receipt and photo for them is filed under this.
+                            </p>
+                        </div>
+                        <p class="text-muted small mt-4 mb-0">
+                            Nothing has been charged. Your first three activities are free.
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         BECOME A FAIZY
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="join" name="Faizy — Become a Faizy">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Become a Faizy</t>
+            <t t-set="website_meta_description">Paid work close to home, on your own hours, caring for families whose sons and daughters are abroad. Apply with your CNIC and two references.</t>
+
+            <div id="wrap" class="faizy-page">
+
+                <section class="fz-hero" style="padding-bottom: clamp(2rem, 5vw, 3rem);">
+                    <div class="container position-relative">
+                        <div class="row align-items-center g-4">
+                            <div class="col-12 col-lg-7">
+                                <p class="fz-eyebrow mb-2">Join the network</p>
+                                <h1 class="fz-display mb-3" style="font-size: clamp(2rem, 5.5vw, 3.5rem);">
+                                    Honest work,<br/>close to home.
+                                </h1>
+                                <p class="fz-hero-sub fz-lead mb-0">
+                                    Paid per task, work the hours you choose, in the areas you already
+                                    know. You'll be caring for families whose sons and daughters are
+                                    far away.
+                                </p>
+                            </div>
+                            <div class="col-12 col-lg-5">
+                                <div class="fz-card">
+                                    <h2 class="h6 text-uppercase text-muted mb-3" style="letter-spacing:.1em;">
+                                        What we ask
+                                    </h2>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>A valid CNIC and two references</span></div>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>A smartphone with WhatsApp</span></div>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>Reliability — families are counting on it</span></div>
+                                    <div class="fz-plan-feature mb-0"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span>Respect for the people you'll be visiting</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="fz-section">
+                    <div class="container" style="max-width: 48rem;">
+                        <form action="/join/submit" method="POST" class="fz-card">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <!-- Honeypot: hidden from people, irresistible to naive bots. -->
+                            <div style="position:absolute; left:-9999px;" aria-hidden="true">
+                                <label for="website_hp">Leave this empty</label>
+                                <input type="text" id="website_hp" name="website" tabindex="-1" autocomplete="off"/>
+                            </div>
+
+                            <p class="fz-eyebrow mb-1">Step 1</p>
+                            <h2 class="h5 mb-3">About you</h2>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="name">Full name *</label>
+                                    <input type="text" id="name" name="name" class="form-control"
+                                           t-att-value="values.get('name', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('name')" t-out="errors['name']"/>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="phone">Phone (WhatsApp) *</label>
+                                    <input type="tel" id="phone" name="phone" class="form-control"
+                                           placeholder="+92 300 1234567"
+                                           t-att-value="values.get('phone', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('phone')" t-out="errors['phone']"/>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="cnic">CNIC *</label>
+                                    <input type="text" id="cnic" name="cnic" class="form-control"
+                                           placeholder="00000-0000000-0" pattern="\d{5}-\d{7}-\d"
+                                           t-att-value="values.get('cnic', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('cnic')" t-out="errors['cnic']"/>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="email">Email</label>
+                                    <input type="email" id="email" name="email" class="form-control"
+                                           t-att-value="values.get('email', '')"/>
+                                </div>
+                            </div>
+
+                            <p class="fz-eyebrow mb-1 mt-4">Step 2</p>
+                            <h2 class="h5 mb-3">Where you work</h2>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="city">City *</label>
+                                    <input type="text" id="city" name="city" class="form-control"
+                                           t-att-value="values.get('city', '')" required="required"/>
+                                    <div class="text-danger small" t-if="errors.get('city')" t-out="errors['city']"/>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="area_ids">Areas you cover</label>
+                                    <select id="area_ids" name="area_ids" class="form-select" multiple="multiple" size="4">
+                                        <t t-foreach="areas" t-as="area">
+                                            <option t-att-value="area.id" t-out="area.display_name"/>
+                                        </t>
+                                    </select>
+                                    <div class="form-text">Hold Ctrl (or Cmd) to choose several.</div>
+                                </div>
+                            </div>
+
+                            <p class="fz-eyebrow mb-1 mt-4">Step 3</p>
+                            <h2 class="h5 mb-3">What you can do</h2>
+                            <div class="row g-2">
+                                <t t-foreach="services" t-as="service">
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="service_ids" t-att-value="service.id"
+                                                   t-attf-id="service_#{service.id}"/>
+                                            <label class="form-check-label" t-attf-for="service_#{service.id}">
+                                                <span t-out="service.icon"/> <span t-out="service.name"/>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-12">
+                                    <label class="form-label" for="availability">When you're available</label>
+                                    <input type="text" id="availability" name="availability" class="form-control"
+                                           placeholder="e.g. Mon–Sat, 9am–6pm"
+                                           t-att-value="values.get('availability', '')"/>
+                                </div>
+                                <div class="col-12 col-md-6 d-flex align-items-end">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="has_vehicle" name="has_vehicle"/>
+                                        <label class="form-check-label" for="has_vehicle">I have a vehicle</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label" for="vehicle_type">Vehicle type</label>
+                                    <input type="text" id="vehicle_type" name="vehicle_type" class="form-control"
+                                           placeholder="Motorbike, car…"
+                                           t-att-value="values.get('vehicle_type', '')"/>
+                                </div>
+                            </div>
+
+                            <p class="fz-eyebrow mb-1 mt-4">Step 4</p>
+                            <h2 class="h5 mb-3">Experience</h2>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-4">
+                                    <label class="form-label" for="experience_years">Years of experience</label>
+                                    <input type="number" id="experience_years" name="experience_years"
+                                           class="form-control" min="0"
+                                           t-att-value="values.get('experience_years', '')"/>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="experience_notes">Briefly, what have you done?</label>
+                                    <textarea id="experience_notes" name="experience_notes"
+                                              class="form-control" rows="3"
+                                              t-out="values.get('experience_notes', '')"/>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="reference_contacts">
+                                        Two references — name, relationship, phone
+                                    </label>
+                                    <textarea id="reference_contacts" name="reference_contacts"
+                                              class="form-control" rows="2"
+                                              t-out="values.get('reference_contacts', '')"/>
+                                </div>
+                            </div>
+
+                            <p class="fz-eyebrow mb-1 mt-4">Step 5</p>
+                            <h2 class="h5 mb-3">Agreements</h2>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox"
+                                       id="code_of_conduct" name="code_of_conduct" required="required"/>
+                                <label class="form-check-label" for="code_of_conduct">
+                                    I accept the Faizy code of conduct *
+                                </label>
+                                <div class="text-danger small" t-if="errors.get('code_of_conduct')"
+                                     t-out="errors['code_of_conduct']"/>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox"
+                                       id="rate_card" name="rate_card" required="required"/>
+                                <label class="form-check-label" for="rate_card">
+                                    I accept the rate card *
+                                </label>
+                                <div class="text-danger small" t-if="errors.get('rate_card')"
+                                     t-out="errors['rate_card']"/>
+                            </div>
+
+                            <p class="text-muted small mt-3 mb-3">
+                                We'll ask for your CNIC photos and a selfie after this first step.
+                            </p>
+                            <button type="submit" class="btn btn-faizy btn-lg">Send application</button>
+                        </form>
+
+                        <p class="text-center text-muted small mt-4">
+                            Already applied? <a href="/join/status">Check your status</a>.
+                        </p>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <template id="join_thanks" name="Faizy — Application Received">
+        <t t-call="website.layout">
+            <div id="wrap" class="faizy-page">
+                <section class="fz-section">
+                    <div class="container text-center" style="max-width: 34rem;">
+                        <div style="font-size: 3.5rem;">🎉</div>
+                        <h1 class="mt-3 mb-2" style="font-size: clamp(1.75rem, 4vw, 2.5rem);">
+                            Application received
+                        </h1>
+                        <p class="fz-lead">
+                            Thank you. We read every application, and we'll reach out on WhatsApp.
+                        </p>
+                        <div class="fz-card mt-4" t-if="reference">
+                            <p class="text-muted small mb-1">Your reference number</p>
+                            <p class="h3 mb-2" style="letter-spacing:.05em;" t-out="reference"/>
+                            <p class="text-muted small mb-0">
+                                Keep this — you'll need it, with your phone number, to check
+                                your status.
+                            </p>
+                        </div>
+                        <a href="/join/status" class="btn btn-faizy-ghost mt-4">Check status</a>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <template id="join_status" name="Faizy — Application Status">
+        <t t-call="website.layout">
+            <div id="wrap" class="faizy-page">
+                <section class="fz-section">
+                    <div class="container" style="max-width: 34rem;">
+                        <h1 class="mb-3" style="font-size: clamp(1.75rem, 4vw, 2.5rem);">
+                            Check your application
+                        </h1>
+                        <form action="/join/status" method="GET" class="fz-card mb-4">
+                            <div class="mb-3">
+                                <label class="form-label" for="reference">Reference number</label>
+                                <input type="text" id="reference" name="reference" class="form-control"
+                                       placeholder="FZY-10001" t-att-value="reference or ''" required="required"/>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="phone">Phone number</label>
+                                <input type="tel" id="phone" name="phone" class="form-control"
+                                       t-att-value="phone or ''" required="required"/>
+                            </div>
+                            <button type="submit" class="btn btn-faizy">Check</button>
+                        </form>
+
+                        <div t-if="searched and application" class="fz-card">
+                            <p class="text-muted small mb-1">Status</p>
+                            <p class="h4 mb-1"
+                               t-out="dict(application._fields['state'].selection).get(application.state)"/>
+                            <p class="text-muted small mb-0">
+                                Submitted <span t-out="application.create_date" t-options="{'widget': 'date'}"/>
+                            </p>
+                        </div>
+                        <div t-if="searched and not application" class="alert alert-warning">
+                            We couldn't find an application with that reference and phone number.
+                            Please check both and try again.
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+</odoo>

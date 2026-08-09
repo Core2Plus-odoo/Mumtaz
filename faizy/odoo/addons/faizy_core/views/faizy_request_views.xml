@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_bridge_request_list" model="ir.ui.view">
+        <field name="name">faizy.bridge.request.list</field>
+        <field name="model">faizy.bridge.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="family_member_id"/>
+                <field name="subject"/>
+                <field name="preferred_time"/>
+                <field name="state" widget="badge" decoration-success="state == 'completed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_bridge_request_form" model="ir.ui.view">
+        <field name="name">faizy.bridge.request.form</field>
+        <field name="model">faizy.bridge.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="subject"/>
+                        <h1><field name="subject"/></h1>
+                        <h3 class="text-muted"><field name="name" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group string="Customer">
+                            <field name="partner_id"/>
+                            <field name="family_member_id"/>
+                            <field name="state"/>
+                        </group>
+                        <group string="Who to reach">
+                            <field name="counterparty_name"/>
+                            <field name="counterparty_phone"/>
+                            <field name="preferred_time"/>
+                            <field name="order_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="details"/>
+                        <field name="outcome_notes"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_bridge_request" model="ir.actions.act_window">
+        <field name="name">Bridge Requests</field>
+        <field name="res_model">faizy.bridge.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_faizy_product_request_list" model="ir.ui.view">
+        <field name="name">faizy.product.request.list</field>
+        <field name="model">faizy.product.request</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="state == 'quoted'" decoration-success="state == 'approved'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="product_name"/>
+                <field name="quantity"/>
+                <field name="max_budget"/>
+                <field name="quoted_price"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_product_request_form" model="ir.ui.view">
+        <field name="name">faizy.product.request.form</field>
+        <field name="model">faizy.product.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <!-- The approval gate: never source before the customer
+                         has accepted a price. -->
+                    <button name="action_send_quote" type="object" string="Send Quote"
+                            class="btn-primary" invisible="state != 'pending'"/>
+                    <button name="action_approve" type="object" string="Customer Approved"
+                            class="btn-primary" invisible="state != 'quoted'"/>
+                    <button name="action_reject" type="object" string="Declined"
+                            invisible="state not in ('pending', 'quoted')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,quoted,approved,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="product_name"/>
+                        <h1><field name="product_name"/></h1>
+                        <h3 class="text-muted"><field name="name" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group string="Request">
+                            <field name="partner_id"/>
+                            <field name="family_member_id"/>
+                            <field name="quantity"/>
+                            <field name="max_budget"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="reference_url" widget="url"/>
+                        </group>
+                        <group string="Quote">
+                            <field name="quoted_price"/>
+                            <field name="quoted_by" readonly="1"/>
+                            <field name="date_quoted" readonly="1"/>
+                            <field name="order_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description"/>
+                        <field name="quote_notes"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_product_request" model="ir.actions.act_window">
+        <field name="name">Product Requests</field>
+        <field name="res_model">faizy.product.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

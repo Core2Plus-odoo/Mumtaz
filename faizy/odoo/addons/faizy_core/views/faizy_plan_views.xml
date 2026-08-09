@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_plan_list" model="ir.ui.view">
+        <field name="name">faizy.plan.list</field>
+        <field name="model">faizy.plan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="price"/>
+                <field name="activities_included"/>
+                <field name="overage_price"/>
+                <field name="max_family_members" string="Members (0 = unlimited)"/>
+                <field name="subscription_count" string="Subscribers"/>
+                <field name="mrr" sum="MRR"/>
+                <field name="currency_id" column_invisible="True"/>
+                <!-- MRR is Monetary on company_currency_id, so the widget needs
+                     that field present in the view to render at all. -->
+                <field name="company_currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_plan_form" model="ir.ui.view">
+        <field name="name">faizy.plan.form</field>
+        <field name="model">faizy.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_subscriptions" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="subscription_count" widget="statinfo" string="Subscribers"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Plan name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Commercials">
+                            <field name="code"/>
+                            <field name="price"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Allowance">
+                            <field name="activities_included"/>
+                            <field name="overage_price"/>
+                            <field name="overage_price_pkr"/>
+                            <field name="max_family_members"/>
+                        </group>
+                    </group>
+                    <group string="Invoicing">
+                        <!-- Real products so tax and account mapping behave as
+                             they do everywhere else in Odoo. -->
+                        <field name="product_id"/>
+                        <field name="overage_product_id"/>
+                    </group>
+                    <notebook>
+                        <page string="Prices by Market" name="prices">
+                            <div class="alert alert-info" role="alert">
+                                Subscribers are billed in the currency published
+                                for their country. These are real local prices,
+                                not conversions — editing one does not move the
+                                others. A market with no row here falls back to
+                                the price above.
+                            </div>
+                            <field name="price_ids">
+                                <list editable="bottom">
+                                    <field name="currency_id"/>
+                                    <field name="amount"/>
+                                    <field name="overage_amount"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Features" name="features">
+                            <field name="feature_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Description" name="description">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_plan" model="ir.actions.act_window">
+        <field name="name">Plans</field>
+        <field name="res_model">faizy.plan</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

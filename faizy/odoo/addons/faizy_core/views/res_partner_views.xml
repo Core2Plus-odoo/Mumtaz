@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Faizy customer data on the standard contact form. Extending res.partner
+         rather than inventing a parallel customer model means invoicing,
+         messaging and the portal all work with no translation layer. -->
+    <record id="view_partner_form_faizy" model="ir.ui.view">
+        <field name="name">res.partner.form.faizy</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- `groups` is load-bearing, not cosmetic. Everything below reads a
+                 Faizy model, and Contacts is used by people with no Faizy role
+                 at all — accountants, whoever runs the marketing list. Without
+                 it, opening ANY contact raises "You are not allowed to access
+                 'Faizy Family Member'" and the form will not render.
+
+                 `invisible="not is_faizy_customer"` does NOT help: it is a
+                 display condition evaluated client-side, so the field is still
+                 in the arch and still fetched, and the ACL still fires. Only
+                 `groups` strips the node from the arch before it is sent. -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_family_members" type="object"
+                        class="oe_stat_button" icon="fa-users"
+                        groups="faizy_core.group_faizy_user"
+                        invisible="not is_faizy_customer">
+                    <field name="family_member_count" widget="statinfo" string="Family"/>
+                </button>
+                <button name="action_view_faizy_orders" type="object"
+                        class="oe_stat_button" icon="fa-list"
+                        groups="faizy_core.group_faizy_user"
+                        invisible="not is_faizy_customer">
+                    <field name="faizy_order_count" widget="statinfo" string="Orders"/>
+                </button>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Faizy" name="faizy"
+                      groups="faizy_core.group_faizy_user"
+                      invisible="not is_faizy_customer">
+                    <group>
+                        <group string="Subscription">
+                            <field name="faizy_subscription_id" readonly="1"/>
+                            <field name="faizy_plan_id" readonly="1"/>
+                            <field name="faizy_segment" readonly="1" widget="badge"/>
+                            <field name="faizy_free_activities" readonly="1"/>
+                        </group>
+                        <group string="Wallet">
+                            <field name="wallet_balance" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="family_member_ids" readonly="1">
+                        <list>
+                            <field name="fmb_id"/>
+                            <field name="name"/>
+                            <field name="relationship"/>
+                            <field name="city"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="is_faizy_customer" groups="faizy_core.group_faizy_user"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_faizy_customer" model="ir.actions.act_window">
+        <field name="name">Customers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_faizy_customer', '=', True)]</field>
+        <field name="context">{'default_is_faizy_customer': True}</field>
+    </record>
+
+    <!-- Revenue policy: rates in Settings, not in code.
+         Anchored on //form rather than on a block inside General Settings.
+         Block ids there are version-specific — the pre-19 //block[@id='companies']
+         does not exist in 19, where it is name="companies_setting_container" —
+         and Faizy's settings belong in their own app section anyway, not grafted
+         into someone else's. A form view always has a //form. -->
+    <record id="res_config_settings_view_form_faizy" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.faizy</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Faizy" string="Faizy" name="faizy_core"
+                     logo="/faizy_core/static/description/icon.png"
+                     groups="faizy_core.group_faizy_manager">
+                    <block title="Revenue Policy" name="faizy_revenue_settings">
+                        <setting string="Platform Fee Rate"
+                                 help="Share of purchase value added to the customer invoice. 0.05 = 5%.">
+                            <field name="faizy_platform_fee_rate"/>
+                        </setting>
+                        <setting string="Vendor Commission Rate"
+                                 help="Retained from the vendor on vendor-fulfilled orders. 0.10 = 10%.">
+                            <field name="faizy_vendor_commission_rate"/>
+                        </setting>
+                    </block>
+                    <block title="Onboarding" name="faizy_onboarding_settings">
+                        <setting string="Free Activities on Signup"
+                                 help="Care activities a new customer gets before the paywall.">
+                            <field name="faizy_free_activity_grant"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

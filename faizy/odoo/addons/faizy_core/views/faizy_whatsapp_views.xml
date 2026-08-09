@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_whatsapp_list" model="ir.ui.view">
+        <field name="name">faizy.whatsapp.message.list</field>
+        <field name="model">faizy.whatsapp.message</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="state == 'failed'" decoration-muted="state == 'sent'">
+                <field name="create_date" string="Queued" widget="datetime"/>
+                <field name="phone"/>
+                <field name="partner_id" optional="show"/>
+                <field name="worker_id" optional="show"/>
+                <field name="message_type"/>
+                <field name="order_id" optional="hide"/>
+                <field name="lang" optional="hide"/>
+                <field name="attempts"/>
+                <field name="state" widget="badge" decoration-danger="state == 'failed'"
+                       decoration-success="state in ('sent', 'delivered')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_whatsapp_form" model="ir.ui.view">
+        <field name="name">faizy.whatsapp.message.form</field>
+        <field name="model">faizy.whatsapp.message</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_send" type="object" string="Send Now"
+                            class="btn-primary" invisible="state in ('sent', 'delivered')"/>
+                    <button name="action_retry" type="object" string="Retry"
+                            invisible="state != 'failed'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Recipient">
+                            <field name="phone"/>
+                            <field name="partner_id"/>
+                            <field name="worker_id"/>
+                            <field name="lang"/>
+                        </group>
+                        <group string="Delivery">
+                            <field name="message_type"/>
+                            <field name="template_name"/>
+                            <field name="order_id"/>
+                            <field name="provider" readonly="1"/>
+                            <field name="provider_message_id" readonly="1"/>
+                            <field name="attempts" readonly="1"/>
+                            <field name="date_sent" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Message">
+                        <field name="body" nolabel="1"/>
+                    </group>
+                    <group string="Error" invisible="not error_message">
+                        <field name="error_message" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_whatsapp" model="ir.actions.act_window">
+        <field name="name">WhatsApp Queue</field>
+        <field name="res_model">faizy.whatsapp.message</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">Nothing queued.</p>
+            <p>Every outbound WhatsApp message is a record here before it is sent,
+               so a failure stays visible and retryable.</p>
+        </field>
+    </record>
+</odoo>

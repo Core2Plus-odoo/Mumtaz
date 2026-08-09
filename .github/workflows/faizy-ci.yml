@@ -1,0 +1,78 @@
+name: Faizy CI
+
+# Faizy is a separate product from Mumtaz — its own Odoo Community instance,
+# its own database, its own domain — so it gets its own checks rather than
+# relying on the Mumtaz jobs, which scan different paths.
+#
+# This workflow lives at the repo root because GitHub only reads workflows from
+# .github/workflows/. It moves with the code when Faizy is split into its own
+# repository (see faizy/docs/00-decisions.md §8.1).
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "faizy/**"
+      - ".github/workflows/faizy-ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "faizy/**"
+      - ".github/workflows/faizy-ci.yml"
+
+jobs:
+  modules:
+    name: Odoo Module Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile all Python
+        run: python -m compileall -q faizy/odoo
+
+      # Catches the things that actually break a module install: a manifest
+      # listing a file that was renamed, malformed XML, a model with no ACL, an
+      # ACL pointing at a model that does not exist, or a view referencing a
+      # field the model never declares.
+      - name: Validate manifests, XML, ACLs and view fields
+        run: python3 faizy/odoo/tools/validate_modules.py
+
+      # Reads field names out of the real Odoo 19 source. Catches data files
+      # writing core fields that no longer exist — the class of error that
+      # broke three separate installs and that nothing offline can detect.
+      - name: Check core-model fields against Odoo 19
+        run: python3 faizy/odoo/tools/check_core_fields.py
+
+      # Runs Odoo's own RelaxNG schemas over the view definitions — the same
+      # validation Odoo performs at install, where a failure is an RNG error
+      # pointing at a generated string rather than at your file.
+      - name: Validate views against Odoo's RNG schemas
+        run: |
+          pip install --quiet lxml
+          python3 faizy/odoo/tools/check_view_schemas.py
+
+      # Subscribers live anywhere, so each plan publishes a price per market.
+      # That is three numbers turned into fifteen, and a fifteen-cell table
+      # maintained by hand drifts silently — a missing row reads as a price
+      # rather than as an error.
+      - name: Check the plan price matrix
+        run: python3 faizy/odoo/tools/check_plan_prices.py
+
+      - name: Lint
+        run: |
+          pip install --quiet flake8
+          flake8 faizy/odoo --max-line-length=120 \
+            --extend-ignore=E203,W503 \
+            --exclude=__pycache__
+
+      # The brand mark is generated, not hand-edited. If the committed icon
+      # differs from what the generator produces, someone edited the wrong file.
+      - name: Brand icon is reproducible
+        run: |
+          python3 faizy/odoo/tools/make_icon.py
+          git diff --exit-code -- faizy/odoo/addons/faizy_core/static/description/icon.png \
+            || { echo "::error::icon.png is out of sync with tools/make_icon.py — regenerate and commit it"; exit 1; }

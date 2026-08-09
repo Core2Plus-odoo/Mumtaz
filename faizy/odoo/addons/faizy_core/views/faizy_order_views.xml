@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Kanban: the ops board ────────────────────────────────────────
+         Grouped by state by default. group_expand on the field keeps empty
+         columns visible so the board's shape stays constant. -->
+    <record id="view_faizy_order_kanban" model="ir.ui.view">
+        <field name="name">faizy.order.kanban</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false">
+                <field name="state"/>
+                <field name="priority"/>
+                <field name="worker_id"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <strong class="o_kanban_record_title">
+                                    <field name="title"/>
+                                </strong>
+                                <field name="priority" widget="priority"/>
+                            </div>
+                            <div class="text-muted small mb-2">
+                                <field name="name"/> · <field name="service_id"/>
+                            </div>
+                            <div class="mb-2">
+                                <field name="partner_id"/>
+                                <span t-if="record.fmb_id.raw_value" class="badge text-bg-warning ms-1">
+                                    <field name="fmb_id"/>
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small">
+                                    <i class="fa fa-map-marker me-1" title="City" aria-label="City" role="img"/><field name="city"/>
+                                </span>
+                                <field name="amount_total" widget="monetary"/>
+                            </div>
+                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                <span t-if="record.worker_id.raw_value" class="text-muted small">
+                                    <i class="fa fa-user me-1" title="Assigned Faizy" aria-label="Assigned Faizy" role="img"/><field name="worker_id"/>
+                                </span>
+                                <span t-else="" class="badge text-bg-danger">Unassigned</span>
+                                <field name="activity_ids" widget="kanban_activity"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_faizy_order_list" model="ir.ui.view">
+        <field name="name">faizy.order.list</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="state == 'cancelled'"
+                  decoration-success="state == 'completed'"
+                  decoration-muted="state == 'pending' and not worker_id">
+                <field name="name"/>
+                <field name="create_date" string="Booked" widget="date"/>
+                <field name="title"/>
+                <field name="partner_id"/>
+                <field name="fmb_id" optional="show"/>
+                <field name="service_id"/>
+                <field name="city"/>
+                <field name="worker_id"/>
+                <field name="scheduled_date" optional="hide"/>
+                <field name="purchase_value" optional="hide" sum="Purchase"/>
+                <field name="platform_fee" optional="hide" sum="Platform fee"/>
+                <field name="vendor_commission" optional="hide" sum="Commission"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'completed'"
+                       decoration-info="state == 'assigned'"
+                       decoration-warning="state == 'in_progress'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_order_form" model="ir.ui.view">
+        <field name="name">faizy.order.form</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm Booking"
+                            class="btn-primary" invisible="consumed_activity or state != 'pending'"
+                            help="Meters the care activity and confirms to the customer."/>
+                    <button name="action_assign" type="object" string="Assign"
+                            class="btn-primary" invisible="state != 'pending'"/>
+                    <button name="action_start" type="object" string="Start"
+                            invisible="state != 'assigned'"/>
+                    <button name="action_complete" type="object" string="Complete"
+                            class="btn-primary" invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('completed', 'cancelled')"/>
+                    <button name="action_reset_to_pending" type="object" string="Reset"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,assigned,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="title"/>
+                        <h1><field name="title" placeholder="e.g. Weekly groceries"/></h1>
+                        <h3 class="text-muted"><field name="name" readonly="1"/></h3>
+                    </div>
+                    <group>
+                        <group string="Customer">
+                            <field name="partner_id"/>
+                            <field name="family_member_id"/>
+                            <field name="fmb_id" readonly="1"
+                                   invisible="not family_member_id"/>
+                            <field name="privacy_mode"/>
+                        </group>
+                        <group string="Delivery">
+                            <field name="service_id"/>
+                            <field name="worker_id"/>
+                            <field name="city"/>
+                            <field name="street"/>
+                            <field name="scheduled_date"/>
+                            <field name="priority" widget="priority"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Charges">
+                            <field name="purchase_value"/>
+                            <field name="service_fee"/>
+                            <field name="platform_fee" readonly="1"/>
+                            <field name="amount_total" readonly="1" class="oe_subtotal_footer_separator"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                        <group string="Vendor">
+                            <field name="vendor_id"/>
+                            <field name="vendor_commission" readonly="1"
+                                   invisible="not vendor_id"/>
+                            <field name="consumed_activity" readonly="1"/>
+                            <field name="activity_source" readonly="1"
+                                   invisible="not consumed_activity"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Details" name="details">
+                            <field name="description" placeholder="What exactly is needed?"/>
+                        </page>
+                        <page string="Completion" name="completion"
+                              invisible="state not in ('in_progress', 'completed')">
+                            <group>
+                                <field name="proof_image" widget="image"
+                                       options="{'size': [200, 200]}"/>
+                                <field name="completion_note"/>
+                                <field name="date_completed" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Feedback" name="feedback" invisible="state != 'completed'">
+                            <group>
+                                <field name="rating" widget="radio" options="{'horizontal': true}"/>
+                                <field name="rating_comment"/>
+                            </group>
+                        </page>
+                        <page string="Cancellation" name="cancellation"
+                              invisible="state != 'cancelled'">
+                            <field name="cancellation_reason"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_faizy_order_search" model="ir.ui.view">
+        <field name="name">faizy.order.search</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="title"/>
+                <field name="partner_id"/>
+                <field name="worker_id"/>
+                <field name="fmb_id"/>
+                <field name="city"/>
+                <!-- The two filters ops actually lives in. -->
+                <filter name="unassigned" string="Needs Assignment"
+                        domain="[('state', '=', 'pending'), ('worker_id', '=', False)]"/>
+                <filter name="open" string="Open"
+                        domain="[('state', 'in', ('pending', 'assigned', 'in_progress'))]"/>
+                <separator/>
+                <filter name="urgent" string="Urgent" domain="[('priority', '=', '1')]"/>
+                <filter name="today" string="Scheduled Today"
+                        domain="[('scheduled_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0))),
+                                 ('scheduled_date', '&lt;=', datetime.datetime.combine(context_today(), datetime.time(23,59,59)))]"/>
+                <!-- Group-by filters sit directly in the search view. Odoo 19's
+                     schema allows only <field> inside <group>, so the old
+                     <group expand="0" string="Group By"> wrapper is invalid;
+                     the client collects context group_by filters into the
+                     Group By menu on its own. -->
+                <separator/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                <filter name="group_worker" string="Faizy" context="{'group_by': 'worker_id'}"/>
+                <filter name="group_service" string="Service" context="{'group_by': 'service_id'}"/>
+                <filter name="group_city" string="City" context="{'group_by': 'city'}"/>
+                <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_faizy_order" model="ir.actions.act_window">
+        <field name="name">Orders</field>
+        <field name="res_model">faizy.order</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_faizy_order_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">No orders yet.</p>
+            <p>Every errand, medicine run and visit lives here — from booking to photo proof.</p>
+        </field>
+    </record>
+
+    <!-- Straight to what needs a human right now. -->
+    <record id="action_faizy_order_needs_assignment" model="ir.actions.act_window">
+        <field name="name">Needs Assignment</field>
+        <field name="res_model">faizy.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('state', '=', 'pending'), ('worker_id', '=', False)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">Nothing waiting.</p>
+            <p>Every booking has a Faizy assigned.</p>
+        </field>
+    </record>
+
+    <!-- The prototype's charts, done natively. Service split, city split and
+         orders by month are all one group-by away here, and unlike a
+         hand-drawn chart these stay correct as the schema moves. -->
+    <record id="view_faizy_order_graph" model="ir.ui.view">
+        <field name="name">faizy.order.graph</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <graph string="Orders" type="bar" sample="1">
+                <field name="service_id"/>
+                <field name="state"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_faizy_order_pivot" model="ir.ui.view">
+        <field name="name">faizy.order.pivot</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <pivot string="Orders" sample="1">
+                <field name="city" type="row"/>
+                <field name="service_id" type="col"/>
+                <!-- Fees kept, not purchase value: what the shop charged is
+                     the customer's money passing through, not Faizy's. -->
+                <field name="platform_fee" type="measure"/>
+                <field name="service_fee" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+</odoo>

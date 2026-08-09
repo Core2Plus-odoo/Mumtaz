@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_document_list" model="ir.ui.view">
+        <field name="name">faizy.document.list</field>
+        <field name="model">faizy.document</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="expiry_state == 'expired'"
+                  decoration-warning="expiry_state == 'expiring'">
+                <field name="name"/>
+                <field name="doc_type"/>
+                <field name="partner_id"/>
+                <field name="family_member_id"/>
+                <field name="issue_date" optional="hide"/>
+                <field name="expiry_date"/>
+                <field name="days_to_expiry" string="Days Left"/>
+                <field name="expiry_state" widget="badge"
+                       decoration-danger="expiry_state == 'expired'"
+                       decoration-warning="expiry_state == 'expiring'"
+                       decoration-success="expiry_state == 'valid'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_document_form" model="ir.ui.view">
+        <field name="name">faizy.document.form</field>
+        <field name="model">faizy.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Ammi — CNIC"/></h1>
+                    </div>
+                    <group>
+                        <group string="Belongs To">
+                            <field name="partner_id"/>
+                            <field name="family_member_id"/>
+                            <field name="doc_type"/>
+                            <!-- Identity numbers: Operations only. -->
+                            <field name="reference" groups="faizy_core.group_faizy_ops"/>
+                        </group>
+                        <group string="Validity">
+                            <field name="issue_date"/>
+                            <field name="expiry_date"/>
+                            <field name="days_to_expiry" readonly="1"
+                                   invisible="not expiry_date"/>
+                            <field name="expiry_state" readonly="1" widget="badge"/>
+                            <field name="active"/>
+                            <field name="is_sample" readonly="1" invisible="not is_sample"/>
+                        </group>
+                    </group>
+                    <group string="File">
+                        <field name="attachment" filename="attachment_name"/>
+                        <field name="attachment_name" invisible="1"/>
+                    </group>
+                    <field name="notes" placeholder="Anything a Faizy would need to know."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_faizy_document_search" model="ir.ui.view">
+        <field name="name">faizy.document.search</field>
+        <field name="model">faizy.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="family_member_id"/>
+                <filter name="expiring" string="Expiring Soon"
+                        domain="[('expiry_state', '=', 'expiring')]"/>
+                <filter name="expired" string="Expired"
+                        domain="[('expiry_state', '=', 'expired')]"/>
+                <separator/>
+                <filter name="group_type" string="Type" context="{'group_by': 'doc_type'}"/>
+                <filter name="group_customer" string="Customer" context="{'group_by': 'partner_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_faizy_document" model="ir.actions.act_window">
+        <field name="name">Document Vault</field>
+        <field name="res_model">faizy.document</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_faizy_document_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">No documents yet.</p>
+            <p>CNICs, passports and medical records, so a Faizy sent to renew one
+               has the details to hand.</p>
+        </field>
+    </record>
+</odoo>

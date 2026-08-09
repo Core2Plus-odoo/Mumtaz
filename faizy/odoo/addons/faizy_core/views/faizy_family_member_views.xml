@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_family_member_list" model="ir.ui.view">
+        <field name="name">faizy.family.member.list</field>
+        <field name="model">faizy.family.member</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="fmb_id"/>
+                <field name="name"/>
+                <field name="relationship"/>
+                <field name="partner_id"/>
+                <field name="city"/>
+                <field name="area"/>
+                <field name="phone" optional="show"/>
+                <field name="order_count" string="Orders"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_family_member_form" model="ir.ui.view">
+        <field name="name">faizy.family.member.form</field>
+        <field name="model">faizy.family.member</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <field name="image_128" widget="image" class="oe_avatar"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_orders" type="object"
+                                class="oe_stat_button" icon="fa-list">
+                            <field name="order_count" widget="statinfo" string="Orders"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                        <h3><span class="badge text-bg-warning"><field name="fmb_id" readonly="1"/></span></h3>
+                    </div>
+                    <group>
+                        <group string="Who">
+                            <field name="partner_id"/>
+                            <field name="relationship"/>
+                            <field name="phone"/>
+                            <field name="date_of_birth"/>
+                            <field name="age" readonly="1" invisible="not date_of_birth"/>
+                        </group>
+                        <group string="Where">
+                            <field name="city"/>
+                            <field name="area"/>
+                            <field name="street"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <!-- Restricted: medical detail is the most sensitive
+                             thing in the system. -->
+                        <page string="Care Notes" name="care" groups="faizy_core.group_faizy_ops">
+                            <group>
+                                <field name="medical_notes"
+                                       placeholder="Allergies, conditions, regular medication"/>
+                                <field name="notes"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_family_member" model="ir.actions.act_window">
+        <field name="name">Family Members</field>
+        <field name="res_model">faizy.family.member</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

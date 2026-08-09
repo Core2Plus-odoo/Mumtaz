@@ -1,0 +1,23 @@
+# Python / Odoo
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Odoo runtime
+*.log
+filestore/
+sessions/
+odoo.conf
+!odoo.conf.example
+
+# Secrets — never commit a filled-in config
+.env
+.env.local
+
+# Editors / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/

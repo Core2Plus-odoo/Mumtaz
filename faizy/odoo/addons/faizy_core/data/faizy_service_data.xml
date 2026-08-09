@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The real catalogue, taken from the customer app prototype:
+     five categories, twenty services, PKR service charges and the unit
+     each charge covers. Purchases are always on top of these.
+
+     noupdate so ops can retire or reprice a service without a module
+     upgrade putting it back. -->
+<odoo noupdate="1">
+
+    <record id="cat_daily" model="faizy.service.category">
+        <field name="name">Daily Life</field>
+        <field name="code">daily</field>
+        <field name="icon">💊</field>
+        <field name="color">#FFF4DC</field>
+        <field name="tagline">recurring needs, sorted</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="service_med" model="faizy.service">
+        <field name="name">Medicines &amp; Pharmacy</field>
+        <field name="code">med</field>
+        <field name="category_id" ref="cat_daily"/>
+        <field name="icon">💊</field>
+        <field name="price_pkr">850</field>
+        <field name="price_unit">+ medicines</field>
+        <field name="description">Servaid, Chughtai, D Watson. Monthly auto-refill.</field>
+        <field name="sequence">11</field>
+    </record>
+
+    <record id="service_bills" model="faizy.service">
+        <field name="name">Bills &amp; Utilities</field>
+        <field name="code">bills</field>
+        <field name="category_id" ref="cat_daily"/>
+        <field name="icon">⚡</field>
+        <field name="price_pkr">500</field>
+        <field name="price_unit">per bill</field>
+        <field name="description">K-Electric, SSGC, internet, mobile.</field>
+        <field name="sequence">12</field>
+    </record>
+
+    <record id="service_groc" model="faizy.service">
+        <field name="name">Grocery &amp; Daily</field>
+        <field name="code">groc</field>
+        <field name="category_id" ref="cat_daily"/>
+        <field name="icon">🛒</field>
+        <field name="price_pkr">1200</field>
+        <field name="price_unit">+ groceries</field>
+        <field name="description">Imtiaz, Naheed, Carrefour. Weekly basket.</field>
+        <field name="sequence">13</field>
+    </record>
+
+    <record id="service_maid" model="faizy.service">
+        <field name="name">Maid &amp; Cleaning</field>
+        <field name="code">maid</field>
+        <field name="category_id" ref="cat_daily"/>
+        <field name="icon">🧹</field>
+        <field name="price_pkr">8500</field>
+        <field name="price_unit">/month</field>
+        <field name="description">Trusted household help.</field>
+        <field name="sequence">14</field>
+    </record>
+
+    <record id="cat_family" model="faizy.service.category">
+        <field name="name">Family Care</field>
+        <field name="code">family</field>
+        <field name="icon">👵</field>
+        <field name="color">#FDE8DF</field>
+        <field name="tagline">because someone has to be there</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <record id="service_elder" model="faizy.service">
+        <field name="name">Eldercare Visits</field>
+        <field name="code">elder</field>
+        <field name="category_id" ref="cat_family"/>
+        <field name="icon">👵</field>
+        <field name="price_pkr">1800</field>
+        <field name="price_unit">per visit</field>
+        <field name="description">Weekly check-ins for parents.</field>
+        <field name="sequence">21</field>
+    </record>
+
+    <record id="service_hosp" model="faizy.service">
+        <field name="name">Hospital Escort</field>
+        <field name="code">hosp</field>
+        <field name="category_id" ref="cat_family"/>
+        <field name="icon">🏥</field>
+        <field name="price_pkr">2800</field>
+        <field name="price_unit">per visit</field>
+        <field name="description">Doctor appointments and lab tests.</field>
+        <field name="sequence">22</field>
+    </record>
+
+    <record id="service_school" model="faizy.service">
+        <field name="name">School Matters</field>
+        <field name="code">school</field>
+        <field name="category_id" ref="cat_family"/>
+        <field name="icon">🎓</field>
+        <field name="price_pkr">1200</field>
+        <field name="price_unit">per task</field>
+        <field name="description">Fees, PTM, result collection.</field>
+        <field name="sequence">23</field>
+    </record>
+
+    <record id="service_comp" model="faizy.service">
+        <field name="name">Companionship</field>
+        <field name="code">comp</field>
+        <field name="category_id" ref="cat_family"/>
+        <field name="icon">💙</field>
+        <field name="price_pkr">2000</field>
+        <field name="price_unit">per visit</field>
+        <field name="description">Tea, walks, conversation for elders.</field>
+        <field name="sequence">24</field>
+    </record>
+
+    <record id="cat_docs" model="faizy.service.category">
+        <field name="name">Documents</field>
+        <field name="code">docs</field>
+        <field name="icon">📄</field>
+        <field name="color">#DAE6FB</field>
+        <field name="tagline">paperwork without the headache</field>
+        <field name="sequence">30</field>
+    </record>
+
+    <record id="service_nad" model="faizy.service">
+        <field name="name">NADRA Renewal</field>
+        <field name="code">nad</field>
+        <field name="category_id" ref="cat_docs"/>
+        <field name="icon">🪪</field>
+        <field name="price_pkr">1500</field>
+        <field name="price_unit">+ govt fee</field>
+        <field name="description">CNIC, B-form, corrections.</field>
+        <field name="sequence">31</field>
+    </record>
+
+    <record id="service_pass" model="faizy.service">
+        <field name="name">Passport Services</field>
+        <field name="code">pass</field>
+        <field name="category_id" ref="cat_docs"/>
+        <field name="icon">🛂</field>
+        <field name="price_pkr">2800</field>
+        <field name="price_unit">+ govt fee</field>
+        <field name="description">New, renewal, urgent.</field>
+        <field name="sequence">32</field>
+    </record>
+
+    <record id="service_attest" model="faizy.service">
+        <field name="name">Attestation</field>
+        <field name="code">attest</field>
+        <field name="category_id" ref="cat_docs"/>
+        <field name="icon">📜</field>
+        <field name="price_pkr">3800</field>
+        <field name="price_unit">+ fee</field>
+        <field name="description">HEC, MOFA, embassy attestation.</field>
+        <field name="sequence">33</field>
+    </record>
+
+    <record id="service_fbr" model="faizy.service">
+        <field name="name">FBR &amp; Tax Filing</field>
+        <field name="code">fbr</field>
+        <field name="category_id" ref="cat_docs"/>
+        <field name="icon">💼</field>
+        <field name="price_pkr">5500</field>
+        <field name="price_unit">per year</field>
+        <field name="description">Annual tax return filing.</field>
+        <field name="sequence">34</field>
+    </record>
+
+    <record id="cat_occasions" model="faizy.service.category">
+        <field name="name">Occasions</field>
+        <field name="code">occasions</field>
+        <field name="icon">🎁</field>
+        <field name="color">#FCD7F0</field>
+        <field name="tagline">be there — even when you can't</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="service_eid" model="faizy.service">
+        <field name="name">Eid Groceries &amp; Hampers</field>
+        <field name="code">eid</field>
+        <field name="category_id" ref="cat_occasions"/>
+        <field name="icon">🌙</field>
+        <field name="price_pkr">3500</field>
+        <field name="price_unit">+ items</field>
+        <field name="description">Sheer khurma, biryani, sweets.</field>
+        <field name="sequence">41</field>
+    </record>
+
+    <record id="service_qurb" model="faizy.service">
+        <field name="name">Qurbani Arrangements</field>
+        <field name="code">qurb</field>
+        <field name="category_id" ref="cat_occasions"/>
+        <field name="icon">🐑</field>
+        <field name="price_pkr">5500</field>
+        <field name="price_unit">per share</field>
+        <field name="description">Animal, slaughter, distribution.</field>
+        <field name="sequence">42</field>
+    </record>
+
+    <record id="service_wed" model="faizy.service">
+        <field name="name">Wedding Support</field>
+        <field name="code">wed</field>
+        <field name="category_id" ref="cat_occasions"/>
+        <field name="icon">💍</field>
+        <field name="price_pkr">5500</field>
+        <field name="price_unit">per event</field>
+        <field name="description">Shopping, gifts, coordination.</field>
+        <field name="sequence">43</field>
+    </record>
+
+    <record id="service_gift" model="faizy.service">
+        <field name="name">Gifts to Relatives</field>
+        <field name="code">gift</field>
+        <field name="category_id" ref="cat_occasions"/>
+        <field name="icon">🎁</field>
+        <field name="price_pkr">1800</field>
+        <field name="price_unit">+ gift</field>
+        <field name="description">Birthdays, anniversaries, new baby.</field>
+        <field name="sequence">44</field>
+    </record>
+
+    <record id="cat_property" model="faizy.service.category">
+        <field name="name">Property &amp; Errands</field>
+        <field name="code">property</field>
+        <field name="icon">🏠</field>
+        <field name="color">#D6F2E0</field>
+        <field name="tagline">things that need someone on ground</field>
+        <field name="sequence">50</field>
+    </record>
+
+    <record id="service_prop" model="faizy.service">
+        <field name="name">Property Visits</field>
+        <field name="code">prop</field>
+        <field name="category_id" ref="cat_property"/>
+        <field name="icon">🏠</field>
+        <field name="price_pkr">2800</field>
+        <field name="price_unit">per visit</field>
+        <field name="description">House inspection, tenant coordination.</field>
+        <field name="sequence">51</field>
+    </record>
+
+    <record id="service_court" model="faizy.service">
+        <field name="name">Court &amp; Legal Visits</field>
+        <field name="code">court</field>
+        <field name="category_id" ref="cat_property"/>
+        <field name="icon">⚖️</field>
+        <field name="price_pkr">3200</field>
+        <field name="price_unit">per visit</field>
+        <field name="description">Document submission, hearings.</field>
+        <field name="sequence">52</field>
+    </record>
+
+    <record id="service_repair" model="faizy.service">
+        <field name="name">Repairs &amp; Vendors</field>
+        <field name="code">repair</field>
+        <field name="category_id" ref="cat_property"/>
+        <field name="icon">🔧</field>
+        <field name="price_pkr">1800</field>
+        <field name="price_unit">+ vendor</field>
+        <field name="description">Electrician, plumber, AC — vetted.</field>
+        <field name="sequence">53</field>
+    </record>
+
+    <record id="service_pickup" model="faizy.service">
+        <field name="name">Pickup &amp; Drop</field>
+        <field name="code">pickup</field>
+        <field name="category_id" ref="cat_property"/>
+        <field name="icon">📦</field>
+        <field name="price_pkr">1400</field>
+        <field name="price_unit">per parcel</field>
+        <field name="description">Between cities, same-day.</field>
+        <field name="sequence">54</field>
+    </record>
+
+    <record id="cat_other" model="faizy.service.category">
+        <field name="name">Other</field>
+        <field name="code">other</field>
+        <field name="icon">📦</field>
+        <field name="sequence">60</field>
+    </record>
+
+    <record id="service_emergency" model="faizy.service">
+        <field name="name">Emergency Response</field>
+        <field name="code">emergency</field>
+        <field name="category_id" ref="cat_other"/>
+        <field name="icon">🚨</field>
+        <field name="consumes_activity" eval="False"/>
+        <field name="description">Urgent help when something goes wrong. Never counted against your monthly activities.</field>
+        <field name="sequence">61</field>
+    </record>
+
+    <record id="service_product_request" model="faizy.service">
+        <field name="name">Product Finder</field>
+        <field name="code">product_request</field>
+        <field name="category_id" ref="cat_other"/>
+        <field name="icon">🔎</field>
+        <field name="description">Describe any product. We source, quote and deliver, plus the 5% platform fee.</field>
+        <field name="sequence">62</field>
+    </record>
+
+</odoo>

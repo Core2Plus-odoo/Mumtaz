@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_faizy_subscription_list" model="ir.ui.view">
+        <field name="name">faizy.subscription.list</field>
+        <field name="model">faizy.subscription</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="state == 'past_due'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="plan_id"/>
+                <field name="period_start"/>
+                <field name="period_end"/>
+                <field name="activities_used"/>
+                <field name="activities_included"/>
+                <field name="activities_remaining"/>
+                <field name="next_invoice_date"/>
+                <field name="price"/>
+                <!-- Not summed: subscriptions bill in different currencies now,
+                     so a column total would add AED to GBP. Plan MRR converts. -->
+                <field name="currency_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-danger="state == 'past_due'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_subscription_form" model="ir.ui.view">
+        <field name="name">faizy.subscription.form</field>
+        <field name="model">faizy.subscription</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" type="object" string="Start"
+                            class="btn-primary" invisible="state not in ('draft', 'trial')"/>
+                    <button name="action_pause" type="object" string="Pause"
+                            invisible="state != 'active'"/>
+                    <button name="action_resume" type="object" string="Resume"
+                            invisible="state != 'paused'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('cancelled', 'draft')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,trial,active"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoices" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Customer">
+                            <field name="partner_id"/>
+                            <field name="plan_id"/>
+                            <!-- Both editable: the currency is picked from the
+                                 customer's country on creation but a subscriber
+                                 who moves keeps their billing currency unless
+                                 someone decides otherwise, and the price can be
+                                 negotiated away from the published one. -->
+                            <field name="currency_id"/>
+                            <field name="price"/>
+                        </group>
+                        <group string="Billing Period">
+                            <field name="date_start"/>
+                            <field name="period_start"/>
+                            <field name="period_end"/>
+                            <field name="next_invoice_date"/>
+                            <field name="cancel_at_period_end"/>
+                        </group>
+                    </group>
+                    <group string="Activity Meter">
+                        <group>
+                            <field name="activities_included"/>
+                            <field name="activities_used" readonly="1"/>
+                            <field name="activities_remaining" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Activity Log" name="activity_log">
+                            <field name="care_activity_ids" readonly="1">
+                                <list>
+                                    <field name="create_date" string="When"/>
+                                    <field name="order_id"/>
+                                    <field name="source" widget="badge"/>
+                                    <field name="amount"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_subscription" model="ir.actions.act_window">
+        <field name="name">Subscriptions</field>
+        <field name="res_model">faizy.subscription</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

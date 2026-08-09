@@ -1,0 +1,1162 @@
+// Faizy — website and portal styling.
+//
+// The identity is orange #F69E22 + black #0A0A0A + Poppins. Vibrant, but built
+// on one disciplined rule, because "vibrant" done carelessly turns into noise:
+//
+//   ORANGE IS A BACKGROUND COLOUR, NEVER A TEXT COLOUR.
+//
+// Brand orange on white is ~2.2:1 and fails WCAG for text; black on brand orange
+// is ~9:1 and passes. So the energy comes from large saturated FIELDS — gradient
+// hero, colour-washed tiles, banded sections — with type sitting in black or
+// cream on top of them. That is what keeps it premium rather than garish.
+//
+// The secondary hues below are used only as accents on tiles and icons, never
+// as the primary brand signal.
+
+$fz-orange:        #f69e22;
+$fz-orange-600:    #e08410;
+$fz-orange-700:    #b9670d;
+$fz-orange-100:    #fdeacc;
+$fz-orange-50:     #fef6ea;
+$fz-black:         #0a0a0a;
+$fz-ink-900:       #1a1a1a;
+$fz-ink-600:       #515151;
+$fz-ink-400:       #818181;
+$fz-cream:         #fdfbf7;
+$fz-cream-100:     #faf6ef;
+$fz-cream-200:     #f4ede0;
+
+// Accent hues for service tiles. Deliberately warm-leaning so they sit beside
+// the orange instead of fighting it.
+$fz-accent-rose:   #f0567a;
+$fz-accent-violet: #7c5cff;
+$fz-accent-teal:   #12b3a6;
+$fz-accent-blue:   #2e90fa;
+$fz-accent-green:  #12b76a;
+$fz-accent-amber:  #f7b209;
+
+:root {
+  --fz-orange: #{$fz-orange};
+  --fz-black: #{$fz-black};
+  --fz-cream: #{$fz-cream};
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Base
+// ════════════════════════════════════════════════════════════════════════
+
+.faizy-page {
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: $fz-black;
+  background: $fz-cream;
+  overflow-x: hidden;      // gradient blooms extend past the viewport edge
+
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  p { line-height: 1.65; }
+
+  ::selection {
+    background: $fz-orange;
+    color: $fz-black;
+  }
+}
+
+.fz-display {
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.fz-eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: $fz-orange-700;
+}
+
+.fz-lead {
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  color: $fz-ink-600;
+}
+
+.fz-section { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
+.fz-section--tight { padding: clamp(2.5rem, 5vw, 4rem) 0; }
+.fz-section--cream { background: $fz-cream-100; }
+.fz-section--dark { background: $fz-black; color: $fz-cream; }
+
+.fz-section--dark {
+  h1, h2, h3, h4 { color: $fz-cream; }
+  .fz-lead { color: rgba(253, 251, 247, 0.72); }
+  .fz-eyebrow { color: $fz-orange; }
+}
+
+// ── Urdu ────────────────────────────────────────────────────────────────
+// Nastaliq needs a face built for it — a generic serif fallback renders Naskh
+// shaping, which reads as wrong to a native speaker. It also needs far more
+// line-height than Latin: the steep descending baseline collides otherwise.
+.faizy-urdu {
+  font-family: "Noto Nastaliq Urdu", serif;
+  direction: rtl;
+  line-height: 2.1;
+  unicode-bidi: isolate;
+  font-weight: 400;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Buttons
+// ════════════════════════════════════════════════════════════════════════
+
+.btn-faizy {
+  --shadow: 0 8px 24px -8px rgba(246, 158, 34, 0.65);
+  background: linear-gradient(135deg, $fz-orange 0%, #ffb648 100%);
+  border: none;
+  color: $fz-black;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.8rem 1.8rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+
+  &:hover, &:focus {
+    color: $fz-black;
+    transform: translateY(-2px);
+    filter: brightness(1.03);
+    box-shadow: 0 14px 32px -10px rgba(246, 158, 34, 0.8);
+  }
+  &:active { transform: translateY(0); }
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(246, 158, 34, 0.4), var(--shadow);
+  }
+}
+
+.btn-faizy-ghost {
+  background: transparent;
+  border: 1.5px solid rgba(10, 10, 10, 0.18);
+  color: $fz-black;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 0.8rem 1.8rem;
+  transition: background 0.18s ease, border-color 0.18s ease;
+
+  &:hover { background: $fz-cream-200; color: $fz-black; border-color: rgba(10,10,10,.28); }
+
+  .fz-section--dark &, .fz-hero & {
+    border-color: rgba(253, 251, 247, 0.28);
+    color: $fz-cream;
+    &:hover { background: rgba(253, 251, 247, 0.08); color: $fz-cream; }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Hero — the one place the brand goes full volume
+// ════════════════════════════════════════════════════════════════════════
+
+.fz-hero {
+  position: relative;
+  background: $fz-black;
+  color: $fz-cream;
+  padding: clamp(4rem, 11vw, 8rem) 0 clamp(3.5rem, 8vw, 6rem);
+  isolation: isolate;
+  overflow: hidden;
+
+  // Two soft colour blooms rather than a flat panel — this is what stops a
+  // black hero reading as a void.
+  &::before, &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  &::before {
+    width: 46rem; height: 46rem;
+    top: -18rem; right: -12rem;
+    background: radial-gradient(circle, rgba(246,158,34,.55) 0%, rgba(246,158,34,0) 70%);
+  }
+  &::after {
+    width: 34rem; height: 34rem;
+    bottom: -16rem; left: -10rem;
+    background: radial-gradient(circle, rgba(124,92,255,.30) 0%, rgba(124,92,255,0) 70%);
+  }
+
+  .fz-hero-tagline {
+    color: $fz-orange;
+    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+    display: inline-block;
+  }
+
+  .fz-hero-sub {
+    color: rgba(253, 251, 247, 0.78);
+    max-width: 34rem;
+  }
+}
+
+// Thin credibility strip under the hero copy.
+.fz-trustbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.25rem, 4vw, 3rem);
+  align-items: center;
+
+  .fz-trustbar-item {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+  .fz-trustbar-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $fz-orange;
+  }
+  .fz-trustbar-label {
+    font-size: 0.8125rem;
+    color: rgba(253, 251, 247, 0.6);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Cards
+// ════════════════════════════════════════════════════════════════════════
+
+.fz-card {
+  background: #fff;
+  // Must set its own colour, not inherit. A card placed inside .fz-hero or
+  // .fz-section--dark would otherwise render cream text on a white background
+  // — invisible. Anything inverting this (.is-featured, --new) is more specific
+  // and still wins.
+  color: $fz-black;
+  border: 1px solid rgba(10, 10, 10, 0.07);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  height: 100%;
+  box-shadow: 0 1px 2px rgba(10, 10, 10, 0.04);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+
+  h1, h2, h3, h4, h5, h6 { color: inherit; }
+}
+
+.fz-card--hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(246, 158, 34, 0.35);
+  box-shadow: 0 18px 40px -18px rgba(10, 10, 10, 0.22);
+}
+
+// Service tiles. Each carries its own accent via --fz-tile, set inline from the
+// service's sequence, so the grid reads as a vibrant set rather than a list.
+.fz-tile {
+  @extend .fz-card;
+  @extend .fz-card--hover;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 4px;
+    background: var(--fz-tile, #{$fz-orange});
+  }
+
+  .fz-tile-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.875rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.875rem;
+    background: color-mix(in srgb, var(--fz-tile, #{$fz-orange}) 14%, white);
+  }
+}
+
+// ── Numbered steps ──────────────────────────────────────────────────────
+.fz-step {
+  position: relative;
+  padding-left: 4rem;
+
+  .fz-step-num {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    background: linear-gradient(135deg, $fz-orange, #ffb648);
+    color: $fz-black;
+    box-shadow: 0 6px 18px -6px rgba(246, 158, 34, 0.7);
+  }
+}
+
+// ── Pricing ─────────────────────────────────────────────────────────────
+.fz-plan {
+  @extend .fz-card;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  .fz-plan-price {
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+
+    // The ISO code rides small and high so the number stays the thing you read.
+    .fz-plan-cur {
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: 0;
+      vertical-align: top;
+      margin-right: 0.2em;
+      opacity: 0.75;
+    }
+  }
+
+  &.is-featured {
+    border: none;
+    background: $fz-black;
+    color: $fz-cream;
+    box-shadow: 0 24px 60px -24px rgba(10, 10, 10, 0.55);
+
+    h3, .fz-plan-price { color: $fz-cream; }
+    .text-muted { color: rgba(253,251,247,.6) !important; }
+    .fz-plan-feature i { color: $fz-orange; }
+  }
+}
+
+.fz-plan-badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, $fz-orange, #ffb648);
+  color: $fz-black;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.fz-plan-feature {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin-bottom: 0.55rem;
+  font-size: 0.9375rem;
+}
+
+// ── Currency switcher ───────────────────────────────────────────────────
+// Plain links, not a <select>: they work with JavaScript off, they are
+// crawlable, and each market's price gets its own shareable URL.
+.fz-currency-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+
+  .fz-currency-label {
+    font-size: 0.8125rem;
+    color: rgba(10, 10, 10, 0.55);
+    margin-right: 0.35rem;
+  }
+
+  .fz-currency-opt {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(10, 10, 10, 0.12);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: $fz-black;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      border-color: $fz-orange;
+      color: $fz-black;
+    }
+
+    // Orange is a background colour only — black on orange is ~9:1, orange
+    // text on white is ~2.2:1 and fails.
+    &.is-active {
+      background: $fz-orange;
+      border-color: $fz-orange;
+      color: $fz-black;
+    }
+  }
+}
+
+// ── Comparison ──────────────────────────────────────────────────────────
+.fz-compare {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) { grid-template-columns: 1fr 1fr; }
+
+  .fz-compare-col {
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+  }
+  .fz-compare-col--old {
+    background: $fz-cream-200;
+    color: $fz-ink-600;
+  }
+  .fz-compare-col--new {
+    background: $fz-black;
+    color: $fz-cream;
+    box-shadow: 0 24px 60px -28px rgba(10, 10, 10, 0.6);
+  }
+  li { margin-bottom: 0.6rem; }
+}
+
+// ── Stats band ──────────────────────────────────────────────────────────
+.fz-stats {
+  background: linear-gradient(120deg, $fz-orange 0%, #ffb648 55%, #ffcf7a 100%);
+  color: $fz-black;
+  border-radius: 1.5rem;
+  padding: clamp(2rem, 5vw, 3rem);
+
+  .fz-stat-value { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; line-height: 1; }
+  .fz-stat-label { font-size: 0.9375rem; opacity: 0.75; }
+}
+
+// ── Testimonials ────────────────────────────────────────────────────────
+.fz-quote {
+  @extend .fz-card;
+
+  .fz-quote-mark {
+    font-size: 2.5rem;
+    line-height: 1;
+    color: $fz-orange;
+    font-weight: 700;
+  }
+  .fz-quote-author {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+  .fz-quote-meta { font-size: 0.8125rem; color: $fz-ink-400; }
+}
+
+// ── FAQ ─────────────────────────────────────────────────────────────────
+.fz-faq {
+  .accordion-item {
+    border: 1px solid rgba(10, 10, 10, 0.08);
+    border-radius: 1rem !important;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  .accordion-button {
+    font-weight: 600;
+    background: #fff;
+    &:not(.collapsed) { background: $fz-orange-50; color: $fz-black; box-shadow: none; }
+    &:focus { box-shadow: 0 0 0 3px rgba(246,158,34,.3); }
+  }
+}
+
+// ── CTA band ────────────────────────────────────────────────────────────
+.fz-cta {
+  position: relative;
+  background: $fz-black;
+  color: $fz-cream;
+  border-radius: 1.75rem;
+  padding: clamp(2.5rem, 6vw, 4rem);
+  overflow: hidden;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    width: 32rem; height: 32rem;
+    top: -14rem; right: -10rem;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: -1;
+    background: radial-gradient(circle, rgba(246,158,34,.5) 0%, rgba(246,158,34,0) 70%);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Chips, badges, portal
+// ════════════════════════════════════════════════════════════════════════
+
+.faizy-fmb {
+  display: inline-flex;
+  align-items: center;
+  background: $fz-orange-100;
+  color: $fz-orange-700;
+  border: 1px solid rgba(246, 158, 34, 0.35);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.faizy-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.is-pending     { background: #e3e3e3; color: #434343; }
+  &.is-assigned    { background: #d1e9ff; color: #175cd3; }
+  &.is-in_progress { background: $fz-orange-100; color: $fz-orange-700; }
+  &.is-completed   { background: #d1fadf; color: #027a48; }
+  &.is-cancelled   { background: #fee4e2; color: #b42318; }
+}
+
+.faizy-meter {
+  height: 0.55rem;
+  background: rgba(10, 10, 10, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+
+  .faizy-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $fz-orange, #ffb648);
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+// Kept as aliases so the portal templates written against the first pass
+// keep working.
+.faizy-card { @extend .fz-card; }
+.faizy-page .btn-faizy-outline { @extend .btn-faizy-ghost; }
+
+// ════════════════════════════════════════════════════════════════════════
+//  Motion — subtle, and switched off when the OS asks
+// ════════════════════════════════════════════════════════════════════════
+
+@keyframes fz-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fz-rise { animation: fz-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.fz-rise-2 { animation-delay: 0.08s; }
+.fz-rise-3 { animation-delay: 0.16s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .faizy-page *,
+  .faizy-page *::before,
+  .faizy-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .fz-card--hover:hover, .btn-faizy:hover { transform: none; }
+}
+
+// ── Plan picker (sign-up) ───────────────────────────────────────────────
+// Radio buttons styled as cards. The native input stays in the DOM rather
+// than being replaced by JavaScript, so the form still works with JS off and
+// keyboard/screen-reader behaviour is the browser's, not ours.
+.fz-planpick {
+  display: grid;
+  gap: 0.75rem;
+
+  .fz-planpick-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid rgba(10, 10, 10, 0.12);
+    border-radius: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover { border-color: $fz-orange; }
+
+    input[type="radio"] {
+      accent-color: $fz-orange;
+      width: 1.15rem;
+      height: 1.15rem;
+      flex: none;
+    }
+
+    // :has() lets the card react to its own radio without a line of JS.
+    &:has(input:checked) {
+      border-color: $fz-orange;
+      background: rgba(246, 158, 34, 0.08);
+    }
+
+    &:has(input:focus-visible) {
+      outline: 2px solid $fz-orange;
+      outline-offset: 2px;
+    }
+  }
+
+  .fz-planpick-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.15rem 0.75rem;
+    width: 100%;
+  }
+
+  .fz-planpick-name { font-weight: 600; }
+  .fz-planpick-price { font-weight: 700; text-align: right; }
+  .fz-planpick-meta {
+    grid-column: 1 / -1;
+    font-size: 0.8125rem;
+    color: rgba(10, 10, 10, 0.55);
+  }
+}
+
+// ── Footer legal strip ──────────────────────────────────────────────────
+// Sits above Odoo's copyright bar. Quiet by design: it is there to be found
+// when someone goes looking for who charged them, not to be read.
+.fz-footer-legal {
+  padding: 1rem 0;
+  font-size: 0.8125rem;
+  color: rgba(10, 10, 10, 0.6);
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    &:hover { color: $fz-orange-700; }
+  }
+}
+
+// ── The people on the ground ────────────────────────────────────────────
+// Real Faizies from the database. Circular crops at a small size because a
+// phone snapshot taken in a Lahore street holds up at 96px in a way it does
+// not at 400px — the constraint is honest about the source material.
+.fz-people {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: clamp(1rem, 3vw, 2rem);
+  justify-items: center;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.fz-person {
+  text-align: center;
+  max-width: 9rem;
+
+  .fz-person-photo {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto 0.75rem;
+    border: 3px solid #fff;
+    box-shadow: 0 8px 20px -8px rgba(10, 10, 10, 0.3);
+  }
+
+  // Stand-in until a photo is uploaded. Black on orange, ~9:1 — the same rule
+  // the rest of the identity follows.
+  .fz-person-initial {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, $fz-orange, #ffb648);
+    color: $fz-black;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .fz-person-name { font-weight: 600; font-size: 0.9375rem; }
+  .fz-person-city { font-size: 0.8125rem; color: $fz-ink-400; }
+}
+
+// ── Contact ─────────────────────────────────────────────────────────────
+.fz-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+
+  .fz-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.4rem;
+    background: #fff;
+    border: 1px solid rgba(10, 10, 10, 0.08);
+    border-radius: 1rem;
+    text-decoration: none;
+    color: $fz-black;
+    min-width: 15rem;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: rgba(246, 158, 34, 0.45);
+      color: $fz-black;
+    }
+  }
+
+  .fz-contact-icon { font-size: 1.5rem; line-height: 1; }
+  .fz-contact-label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $fz-ink-400;
+  }
+  .fz-contact-value { display: block; font-weight: 600; }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Header — top bar and navigation
+// ════════════════════════════════════════════════════════════════════════
+//
+// Not scoped under .faizy-page: the header and top bar live outside the page
+// wrapper, so scoping them would silently do nothing.
+
+
+// ── Navigation ──────────────────────────────────────────────────────────
+// Odoo's header markup varies by which of its variants is active, so this
+// styles by role and class rather than by structure — it holds up if somebody
+// switches header templates in the editor.
+#wrapwrap > header {
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.07);
+  box-shadow: 0 1px 12px -6px rgba(10, 10, 10, 0.18);
+
+  .navbar-brand img,
+  .o_website_logo,
+  img.o_website_logo_img {
+    max-height: 2.5rem;
+    width: auto;
+  }
+
+  .nav-link,
+  .navbar-nav > li > a {
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    transition: color 0.15s ease;
+
+    &:hover { color: $fz-orange-700; }
+  }
+
+  // The current page, marked without shouting.
+  .nav-item.active > .nav-link,
+  .nav-link.active {
+    color: $fz-black;
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 0 $fz-orange;
+  }
+
+  // "Start free" is the one thing we want clicked, so it stops looking like
+  // navigation and starts looking like the end of it. Selected by href rather
+  // than position: menu order is marketing's to change.
+  a[href="/start"] {
+    background: linear-gradient(135deg, $fz-orange 0%, #ffb648 100%);
+    color: $fz-black !important;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.45rem 1.15rem !important;
+    box-shadow: 0 6px 18px -8px rgba(246, 158, 34, 0.75);
+    transition: transform 0.15s ease, filter 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      color: $fz-black !important;
+    }
+    // The underline marker would sit outside the pill.
+    &.active { box-shadow: 0 6px 18px -8px rgba(246, 158, 34, 0.75); }
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  v6 — WARM
+// ════════════════════════════════════════════════════════════════════════
+//
+// Muhammad's call after seeing v5: warm and human, not vibrant and technical.
+// The old hero was a black slab with gradient blooms — confident, and entirely
+// wrong for a service you buy because you feel guilty about your parents. A
+// page about family should feel like a room, not a product launch.
+//
+// Later layer, so it overrides by cascade order rather than by editing what is
+// above — same convention the rest of this sheet follows.
+
+$fz-sand:      #f7f1e7;   // page ground, warmer than the old cream
+$fz-sand-deep: #efe5d6;   // banded sections
+$fz-clay:      #8f4f08;   // 5.68:1 on sand, 5.12:1 on sand-deep.
+                          // Measured, not eyeballed: the first value I
+                          // picked here (#b9670d) looked right and came
+                          // out at 3.73:1 — fine for a heading, a fail
+                          // for the 13px eyebrow labels that use it.
+$fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
+
+.faizy-page {
+  background: $fz-sand;
+  color: $fz-ink;
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;    // was -0.025em; tight tracking reads corporate
+    line-height: 1.15;
+  }
+  p { line-height: 1.75; }      // more air between lines, less between blocks
+}
+
+.fz-display {
+  font-size: clamp(2.1rem, 5.2vw, 3.4rem);   // was up to 4.5rem — shouting
+  font-weight: 600;                          // was 700
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.fz-accent { color: $fz-clay; }
+
+.fz-lead { color: rgba(43, 38, 34, 0.72); }
+
+.fz-eyebrow {
+  color: $fz-clay;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+}
+
+.fz-section--cream { background: $fz-sand-deep; }
+.fz-section--dark  { background: $fz-ink; }
+
+// ── Hero ────────────────────────────────────────────────────────────────
+// Same room as the rest of the page now. The warmth comes from one soft
+// sunrise wash behind the copy instead of two saturated blooms on black.
+.fz-hero {
+  background: linear-gradient(180deg, #fdf8f0 0%, $fz-sand 100%);
+  color: $fz-ink;
+  padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(2.5rem, 6vw, 4.5rem);
+
+  &::before {
+    width: 40rem; height: 40rem;
+    top: -20rem; right: -14rem;
+    background: radial-gradient(circle, rgba(246,158,34,.20) 0%, rgba(246,158,34,0) 70%);
+    filter: blur(70px);
+  }
+  &::after { display: none; }   // the violet bloom belonged to the dark hero
+
+  .fz-hero-tagline { color: $fz-clay; }
+  .fz-hero-sub { color: rgba(43, 38, 34, 0.72); }
+}
+
+.fz-trustbar {
+  .fz-trustbar-value { color: $fz-clay; font-weight: 600; }
+  .fz-trustbar-label { color: rgba(43, 38, 34, 0.55); }
+}
+
+// Ghost buttons sat on a dark hero before, so they were drawn in cream.
+.fz-hero .btn-faizy-ghost {
+  border-color: rgba(43, 38, 34, 0.2);
+  color: $fz-ink;
+  &:hover { background: rgba(43, 38, 34, 0.05); color: $fz-ink; }
+}
+
+// ── The quiet section ───────────────────────────────────────────────────
+// Three lines, generous leading, no card around them. The restraint is the
+// point: it is the only place on the page not trying to sell anything.
+.fz-quiet {
+  text-align: center;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  line-height: 2;
+  // 0.6 alpha measured 3.65:1 — below AA, and this text is 18px, which
+  // is not "large" by WCAG's definition (24px regular / 18.66px bold).
+  color: rgba(43, 38, 34, 0.72);
+
+  p { margin-bottom: 0; }
+
+  .fz-quiet-turn {
+    color: $fz-ink;
+    font-weight: 500;
+    margin-top: 1.25rem;
+  }
+}
+
+// ── Cards and tiles ─────────────────────────────────────────────────────
+.fz-card {
+  background: #fffdfa;
+  border: 1px solid rgba(43, 38, 34, 0.08);
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 3px rgba(43, 38, 34, 0.03);
+  color: $fz-ink;
+}
+
+// The accent used to be a saturated bar across the top of every tile. Warm
+// means the colour sits underneath the icon, not in front of the words.
+.fz-tile {
+  background: #fffdfa;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(43, 38, 34, 0.08);
+
+  .fz-tile-icon {
+    background: color-mix(in srgb, var(--fz-tile) 14%, transparent);
+    border-radius: 1rem;
+    width: 3.25rem;
+    height: 3.25rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &::before { display: none; }
+}
+
+.fz-plan {
+  border-radius: 1.5rem;
+
+  &.is-featured {
+    background: $fz-ink;
+    box-shadow: 0 20px 50px -28px rgba(43, 38, 34, 0.6);
+  }
+}
+
+// ── Buttons ─────────────────────────────────────────────────────────────
+// Flat warm orange rather than a gradient with a coloured glow. Black on
+// orange stays ~9:1, which is the rule the whole identity hangs on.
+.btn-faizy {
+  background: $fz-orange;
+  box-shadow: 0 6px 16px -10px rgba(185, 103, 13, 0.8);
+  font-weight: 600;
+
+  &:hover {
+    background: $fz-orange-600;
+    box-shadow: 0 10px 22px -12px rgba(185, 103, 13, 0.9);
+  }
+}
+
+// ── Header ──────────────────────────────────────────────────────────────
+
+#wrapwrap > header {
+  background: #fdf8f0;
+  border-bottom-color: rgba(43, 38, 34, 0.07);
+  box-shadow: none;
+
+  .nav-link:hover, .navbar-nav > li > a:hover { color: $fz-clay; }
+  a[href="/start"] {
+    background: $fz-orange;
+    box-shadow: 0 5px 14px -9px rgba(185, 103, 13, 0.85);
+    &:hover { background: $fz-orange-600; }
+  }
+}
+
+.fz-footer-legal { border-top-color: rgba(43, 38, 34, 0.08); }
+
+// ── Compact pass ────────────────────────────────────────────────────────
+// Same design, less of it. The warm layer above traded density for calm and
+// overshot: a visitor had to scroll past a screen and a half of air to reach
+// the plans. Vertical rhythm roughly a third tighter, with nothing removed.
+.fz-section        { padding: clamp(2.25rem, 5vw, 3.75rem) 0; }
+.fz-section--tight { padding: clamp(1.5rem, 3vw, 2.25rem) 0; }
+
+.faizy-page p { line-height: 1.65; }
+
+.fz-hero {
+  padding: clamp(2rem, 4.5vw, 3.5rem) 0 clamp(1.75rem, 3.5vw, 2.75rem);
+
+  // The proof card was competing with the headline for height.
+  .fz-card { padding: 1.35rem; }
+}
+
+.fz-card { padding: 1.35rem; }
+.fz-tile { padding: 1.35rem; }
+
+.fz-tile .fz-tile-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.25rem;
+  margin-bottom: 0.7rem;
+}
+
+.fz-trustbar { gap: clamp(1rem, 3vw, 2.25rem); }
+
+.fz-quiet {
+  line-height: 1.85;
+  font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+
+  .fz-quiet-turn { margin-top: 0.9rem; }
+}
+
+.fz-plan { padding: 1.5rem; }
+.fz-plan-feature { margin-bottom: 0.4rem; }
+.fz-faq .accordion-body { padding-top: 0.25rem; }
+.fz-person .fz-person-photo { width: 4.75rem; height: 4.75rem; margin-bottom: 0.55rem; }
+.fz-people { gap: clamp(0.85rem, 2.5vw, 1.5rem); }
+
+// ════════════════════════════════════════════════════════════════════════
+//  v7 — POLISH
+// ════════════════════════════════════════════════════════════════════════
+//
+// Alignment first, because that is what reads as "unfinished" even when
+// nobody can name it: cards of different heights, numbers that shift as they
+// change, headings that wrap into a long line and an orphan.
+
+// One radius scale instead of values invented per component. Small differences
+// between 1.25 and 1.5rem are not design decisions, they are drift.
+:root {
+  --fz-r-sm: 0.75rem;
+  --fz-r-md: 1rem;
+  --fz-r-lg: 1.35rem;
+}
+
+.fz-card, .fz-tile, .fz-plan { border-radius: var(--fz-r-lg); }
+.fz-tile .fz-tile-icon      { border-radius: var(--fz-r-md); }
+.fz-contact .fz-contact-item { border-radius: var(--fz-r-md); }
+
+// ── Headings that wrap like someone set them ────────────────────────────
+// Without this a two-line headline routinely leaves one word stranded on
+// line two. Browsers that do not support it simply wrap as before.
+.faizy-page h1,
+.faizy-page h2,
+.faizy-page h3 { text-wrap: balance; }
+
+.fz-lead, .fz-hero-sub { text-wrap: pretty; }   // kills orphans in body copy
+
+// ── Numbers that do not dance ───────────────────────────────────────────
+// Proportional digits make 22+ and 100% different widths, so a row of stats
+// shifts as the values change. Tabular figures line them up in a column.
+.fz-trustbar-value,
+.fz-plan-price,
+.fz-person-city,
+.faizy-fmb { font-variant-numeric: tabular-nums; }
+
+// ── Equal heights, aligned edges ────────────────────────────────────────
+// Grid rather than the float grid, so every tile in a row is the height of
+// the tallest and their tops and bottoms line up regardless of copy length.
+.fz-tiles-grid,
+.faizy-page .row > [class*="col-"] > .fz-tile,
+.faizy-page .row > [class*="col-"] > .fz-plan { height: 100%; }
+
+.fz-tile {
+  display: flex;
+  flex-direction: column;
+
+  // Pins the description to the bottom of its own box, so the icons and
+  // headings across a row sit on one line even when one tagline runs longer.
+  p:last-child { margin-top: auto; padding-top: 0.35rem; }
+}
+
+// ── The section intro ───────────────────────────────────────────────────
+// Every section opened with its own ad-hoc width, so the centred blocks were
+// centred to different measures and read as slightly misaligned down the page.
+.faizy-page section > .container > .text-center {
+  max-width: 34rem;
+  margin-left: auto;
+  margin-right: auto;
+
+  .fz-eyebrow { margin-bottom: 0.4rem; }
+  h2 { margin-bottom: 0; }
+  .fz-lead { margin-top: 0.75rem; }
+}
+
+// ── Focus ───────────────────────────────────────────────────────────────
+// Every interactive element gets the same visible ring. Keyboard users are
+// the ones who notice, and a design with no focus state is not finished.
+.faizy-page a:focus-visible,
+.faizy-page button:focus-visible,
+.faizy-page input:focus-visible,
+.faizy-page select:focus-visible,
+.faizy-page textarea:focus-visible,
+#wrapwrap > header a:focus-visible {
+  outline: 2px solid $fz-clay;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.faizy-page .form-control:focus,
+.faizy-page .form-select:focus {
+  border-color: $fz-orange;
+  box-shadow: 0 0 0 3px rgba(246, 158, 34, 0.22);
+}
+
+// ── Motion ──────────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .faizy-page *,
+  .faizy-page *::before,
+  .faizy-page *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .fz-rise { opacity: 1; transform: none; }
+}
+
+// ── Small refinements ───────────────────────────────────────────────────
+.fz-plan-price { letter-spacing: -0.035em; }      // large figures need it back
+
+.fz-eyebrow {
+  // Uppercase tracking is set on the letters, which leaves a gap after the
+  // last one and pushes the block visually left of everything under it.
+  margin-right: -0.1em;
+}
+
+.fz-plan.is-featured .fz-plan-cur { opacity: 0.6; }
+
+.fz-faq .accordion-button:not(.collapsed) {
+  background: transparent;
+  color: $fz-ink;
+  box-shadow: none;
+  font-weight: 600;
+}
+.fz-faq .accordion-button:focus { box-shadow: none; }
+
+.fz-person-name { line-height: 1.3; }
+.fz-person-city { line-height: 1.3; }
+
+// ── Odoo's own header furniture ─────────────────────────────────────────
+// The header ships a "Contact Us" button in Odoo's default purple, which
+// fights the brand and competes with "Start free" for the same click. Kept,
+// because it is a real route to a human — demoted to an outline so there is
+// one obvious primary action.
+#wrapwrap > header {
+  .btn-primary:not([href="/start"]),
+  a.btn-primary:not([href="/start"]) {
+    background: transparent !important;
+    border: 1.5px solid rgba(43, 38, 34, 0.18) !important;
+    color: $fz-ink !important;
+    border-radius: 999px;
+    font-weight: 500;
+    box-shadow: none !important;
+
+    &:hover {
+      background: rgba(43, 38, 34, 0.05) !important;
+      border-color: rgba(43, 38, 34, 0.28) !important;
+      color: $fz-ink !important;
+    }
+  }
+
+  // The default logo placeholder is wider than it is tall; the Faizy mark is
+  // square. Without a floor it renders as a thumbnail next to the wordmark.
+  .navbar-brand img, img.o_website_logo_img { min-height: 2rem; }
+}
+
+
+// ── Tagline ─────────────────────────────────────────────────────────────
+// "Faizy Hai Na!" is the spoken line — Roman Urdu, and the one people say out
+// loud. حاضر ہیں۔ stays as the Urdu mark in the closing CTA rather than
+// appearing twice on the same screen.
+.fz-hero .fz-hero-tagline {
+  font-family: "Poppins", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
