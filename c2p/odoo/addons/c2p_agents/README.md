@@ -10,6 +10,8 @@ Four nightly agents for `Mumtaz_C2P`, as a versioned module instead of Python in
 | Proposal follow-up | `crm.lead` | `_cron_followup_proposals` | Call on leads 7+ days in a proposal stage |
 | Invoice chaser | `account.move` | `_cron_chase_overdue_invoices` | Call on the owner of an overdue posted customer invoice |
 | Email validation | `crm.lead` | `_cron_validate_emails` | Checks addresses before outreach; routes to WhatsApp when email is unusable |
+| Owner assignment | `crm.lead` | `_cron_assign_owners` | Every open lead gets a salesperson, balanced by current open-lead load |
+| Guaranteed next step | `crm.lead` | `_cron_ensure_next_step` | Every owned lead with nothing scheduled gets a To-Do |
 
 ## Why it exists
 
@@ -76,6 +78,27 @@ the check keys on open activities, so once a rep marks the activity done and the
 record is *still* stale, the next run raises a fresh one. For a chaser that is
 usually wanted. If it should instead go quiet for a period, that is a cooldown
 window and a small change to `_c2p_already_flagged`.
+
+## Coverage — "no lead falls through"
+
+Three of the seven agents exist to guarantee completeness rather than to react
+to a situation, and they share one design rule: **select exactly the records in
+the bad state**, never a rolling window. An agent whose domain is "unassigned"
+or "never scored" drains its backlog at `limit` a night and then handles only
+the day's intake. An agent ordered by `write_date desc` under a limit will
+circle the same recently-edited records forever and never reach the rest — which
+is what `_cron_score_leads` did until `c2p_scored_on` was added, and why that
+field exists.
+
+Each of the three reports its remaining backlog in the run note, so you can see
+the queue shrinking rather than guess.
+
+Two cautions on `_cron_ensure_next_step`: it observes a three-day grace period,
+because a lead that arrived this morning is not neglected, and it runs under a
+low limit on purpose. On a database with thousands of untouched leads it would
+otherwise create thousands of activities on its first night, which is a worse
+outcome than the silence it replaces. Watch the backlog figure and raise the
+limit deliberately.
 
 ## Email validation
 

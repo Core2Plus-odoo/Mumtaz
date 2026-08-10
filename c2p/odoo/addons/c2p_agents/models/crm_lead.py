@@ -84,6 +84,15 @@ PROPOSAL_STAGE_HINTS = ("propos", "quot", "offer")
 
 EMAIL_VALIDATION_LIMIT = 100
 
+# Coverage agents — the "no lead falls through" pair.
+OWNER_ASSIGNMENT_LIMIT = 50
+COVERAGE_LIMIT = 50
+
+# Days a lead is left alone before the coverage agent insists on a next step.
+# Without this it would raise a To-Do on leads that arrived this morning and are
+# already being handled by a human who has simply not scheduled anything yet.
+COVERAGE_GRACE_DAYS = 3
+
 # Priorities the stale-opportunity agent considers worth chasing.
 HIGH_PRIORITIES = ("2", "3")
 
@@ -92,6 +101,7 @@ HIGH_PRIORITIES = ("2", "3")
 # one makes every already-flagged record eligible again, so treat them as data.
 STALE_SUMMARY = "C2P Agent: stale opportunity"
 PROPOSAL_SUMMARY = "C2P Agent: proposal follow-up"
+COVERAGE_SUMMARY = "C2P Agent: no next step"
 
 
 class CrmLead(models.Model):
@@ -112,6 +122,14 @@ class CrmLead(models.Model):
     )
     c2p_email_validity_detail = fields.Char(readonly=True, copy=False)
     c2p_email_checked_on = fields.Datetime(readonly=True, copy=False)
+    c2p_scored_on = fields.Datetime(
+        readonly=True,
+        copy=False,
+        index=True,
+        help="When the scoring agent last set this lead's priority. Blank means "
+        "never scored — those are taken first, so the backlog drains instead of "
+        "the agent circling the most recently edited records forever.",
+    )
     c2p_outreach_channel = fields.Selection(
         [
             ("email", "Email"),
@@ -198,24 +216,58 @@ class CrmLead(models.Model):
         return PRIORITY_FLOOR
 
     @api.model
+    def _c2p_scoring_batch(self, limit):
+        """Never-scored leads first, then the longest-unrescored.
+
+        Two searches rather than one ordered query, because "nulls first" is not
+        expressible in an Odoo order string — Postgres sorts NULLs last on ASC,
+        which would put the never-scored leads permanently at the back of the
+        queue. Taking them explicitly is what makes coverage a guarantee: the
+        backlog drains at `limit` a night and then the agent settles into
+        refreshing the oldest scores.
+        """
+        never = self.search(
+            [("active", "=", True), ("c2p_scored_on", "=", False)], limit=limit
+        )
+        if len(never) >= limit:
+            return never
+        stale = self.search(
+            [("active", "=", True), ("c2p_scored_on", "!=", False)],
+            limit=limit - len(never),
+            order="c2p_scored_on asc",
+        )
+        return never | stale
+
+    @api.model
     def _cron_score_leads(self, limit=LEAD_SCORING_LIMIT, dry_run=None):
         """Set priority on ``crm.lead`` from the scoring rules.
 
-        Ordered by ``write_date desc`` so that under a limit the agent rescores
-        whatever moved most recently — a record nobody has touched does not need
-        rescoring.
+        Stamps `c2p_scored_on` on every lead it looks at, including the ones
+        whose priority did not change — otherwise an unchanged lead would be
+        re-selected every night and the backlog would never move.
         """
         dry_run = dry_run_enabled(self.env, dry_run)
-        leads = self.search([("active", "=", True)], limit=limit, order="write_date desc")
+        leads = self._c2p_scoring_batch(limit)
+        scored_on = fields.Datetime.now()
         acted = 0
         for lead in leads:
             priority = lead._c2p_lead_priority()
-            if priority == lead.priority:
+            changed = priority != lead.priority
+            if changed:
+                acted += 1
+            if dry_run:
                 continue
-            acted += 1
-            if not dry_run:
-                lead.priority = priority
-        return log_run(self.env, "lead_scoring", len(leads), acted, dry_run, limit)
+            values = {"c2p_scored_on": scored_on}
+            if changed:
+                values["priority"] = priority
+            lead.write(values)
+        remaining = self.search_count(
+            [("active", "=", True), ("c2p_scored_on", "=", False)]
+        )
+        note = "%s never-scored lead(s) still in the backlog" % remaining
+        return log_run(
+            self.env, "lead_scoring", len(leads), acted, dry_run, limit, note
+        )
 
     # ------------------------------------------------------------------
     # Agent 2 — stale opportunity detection
@@ -396,4 +448,160 @@ class CrmLead(models.Model):
         )
         return log_run(
             self.env, "email_validation", len(leads), len(leads), dry_run, limit, note
+        )
+
+    # ------------------------------------------------------------------
+    # Agent 6 — owner assignment
+    # ------------------------------------------------------------------
+    @api.model
+    def _c2p_assignable_users(self, team):
+        """Salespeople who may receive a lead.
+
+        Prefers the lead's own sales team; falls back to everyone in the
+        salesman group. Note the v19 spelling: `res.groups.users` was removed,
+        so membership is read from the user side via `group_ids`.
+        """
+        if team and team.member_ids:
+            return team.member_ids.filtered("active")
+        group = self.env.ref("sales_team.group_sale_salesman", raise_if_not_found=False)
+        if not group:
+            return self.env["res.users"]
+        return self.env["res.users"].search(
+            [("group_ids", "in", group.id), ("active", "=", True)]
+        )
+
+    @api.model
+    def _c2p_open_lead_load(self, users):
+        """How many open leads each candidate already carries.
+
+        One grouped query, not one count per user. Assigning to the lightest
+        load is self-balancing in a way round-robin is not: it corrects for
+        leads that arrived by any other route.
+        """
+        if not users:
+            return {}
+        rows = self._read_group(
+            [
+                ("user_id", "in", users.ids),
+                ("active", "=", True),
+                ("probability", "<", 100),
+            ],
+            groupby=["user_id"],
+            aggregates=["__count"],
+        )
+        return {user.id: count for user, count in rows}
+
+    @api.model
+    def _cron_assign_owners(self, limit=OWNER_ASSIGNMENT_LIMIT, dry_run=None):
+        """Give every unassigned open lead a salesperson.
+
+        A lead with no owner is nobody's problem, so it is the one state from
+        which a lead never recovers on its own. Selection is exactly the
+        unassigned, so this drains and then handles the day's intake.
+        """
+        dry_run = dry_run_enabled(self.env, dry_run)
+        leads = self.search(
+            [
+                ("active", "=", True),
+                ("user_id", "=", False),
+                ("probability", "<", 100),
+            ],
+            limit=limit,
+            order="create_date asc",
+        )
+        # Candidates per team, resolved once each rather than per lead.
+        candidate_cache = {}
+
+        def candidates_for(team):
+            key = team.id or 0
+            if key not in candidate_cache:
+                candidate_cache[key] = self._c2p_assignable_users(team)
+            return candidate_cache[key]
+
+        everyone = self.env["res.users"]
+        for lead in leads:
+            everyone |= candidates_for(lead.team_id)
+        # One grouped query for the whole batch. Load is then tracked in memory
+        # so fifty leads spread across the team rather than all landing on
+        # whoever happened to start the night quietest.
+        load_by_user = self._c2p_open_lead_load(everyone)
+
+        acted = 0
+        skipped = 0
+        for lead in leads:
+            candidates = candidates_for(lead.team_id)
+            if not candidates:
+                skipped += 1
+                continue
+            chosen = min(candidates, key=lambda u: (load_by_user.get(u.id, 0), u.id))
+            load_by_user[chosen.id] = load_by_user.get(chosen.id, 0) + 1
+            acted += 1
+            if not dry_run:
+                lead.user_id = chosen
+        note = "no salesperson available for %s lead(s)" % skipped if skipped else ""
+        return log_run(
+            self.env, "owner_assignment", len(leads), acted, dry_run, limit, note
+        )
+
+    # ------------------------------------------------------------------
+    # Agent 7 — guaranteed next step
+    # ------------------------------------------------------------------
+    @api.model
+    def _c2p_coverage_domain(self, cutoff):
+        return [
+            ("active", "=", True),
+            ("probability", "<", 100),
+            ("user_id", "!=", False),
+            ("activity_ids", "=", False),
+            ("create_date", "<=", cutoff),
+        ]
+
+    @api.model
+    def _cron_ensure_next_step(self, limit=COVERAGE_LIMIT, dry_run=None):
+        """Every open lead with an owner and no scheduled action gets one.
+
+        The stale and proposal agents chase specific situations; this is the
+        floor beneath them — a lead nobody has scheduled anything on is a lead
+        nobody is working, whatever its priority or stage.
+
+        Deliberately runs after a grace period and under a low limit. On a
+        database with thousands of untouched leads this would otherwise create
+        thousands of activities on its first night, which is a worse outcome
+        than the silence it replaces. Watch the run log's backlog figure and
+        raise the limit deliberately.
+        """
+        dry_run = dry_run_enabled(self.env, dry_run)
+        todo = activity_type(self.env, "mail.mail_activity_data_todo")
+        cutoff = fields.Datetime.now() - timedelta(days=COVERAGE_GRACE_DAYS)
+        leads = self.search(
+            self._c2p_coverage_domain(cutoff), limit=limit, order="create_date asc"
+        )
+        flagged = already_flagged(
+            self.env, "crm.lead", leads.ids, todo.id, COVERAGE_SUMMARY
+        )
+        deadline = fields.Date.context_today(self)
+        acted = 0
+        for lead in leads:
+            if lead.id in flagged:
+                continue
+            acted += 1
+            if dry_run:
+                continue
+            lead.activity_schedule(
+                activity_type_id=todo.id,
+                summary=COVERAGE_SUMMARY,
+                note="This lead has no scheduled next step and has been open "
+                "since %s. Decide the next action or mark it lost."
+                % (lead.create_date and lead.create_date.date() or "creation"),
+                user_id=lead.user_id.id,
+                date_deadline=deadline,
+            )
+        remaining = self.search_count(self._c2p_coverage_domain(cutoff))
+        if dry_run:
+            # Nothing was created, so the leads just counted are still in the
+            # domain. On a live run the new activities have already removed them.
+            remaining = max(0, remaining - acted)
+        note = "%s lead(s) still with no next step" % remaining
+        return log_run(
+            self.env, "coverage_followup", len(leads), acted, dry_run, limit, note
         )

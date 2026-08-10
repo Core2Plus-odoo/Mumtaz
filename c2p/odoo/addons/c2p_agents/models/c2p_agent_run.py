@@ -19,6 +19,8 @@ AGENTS = [
     ("proposal_followup", "Proposal Follow-up"),
     ("invoice_chaser", "Invoice Chaser"),
     ("email_validation", "Email Validation"),
+    ("owner_assignment", "Owner Assignment"),
+    ("coverage_followup", "Guaranteed Next Step"),
 ]
 
 
