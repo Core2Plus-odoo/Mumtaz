@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- These install ACTIVE. That is safe because c2p_agents.dry_run defaults to
+     True: from the first night they report real selection counts against real
+     data in c2p.agent.run while writing nothing. Shipping them inactive would
+     mean learning nothing until the day they are armed, which is the worst
+     moment to discover a domain selects ten thousand records.
+
+     noupdate="1" so that a schedule tuned on the VPS survives the next upgrade.
+     The `code` is a one-liner by design — all four bodies live in models/, under
+     version control, with tests. -->
+<odoo noupdate="1">
+
+    <record id="cron_lead_scoring" model="ir.cron">
+        <field name="name">C2P Agent: lead scoring</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_score_leads()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="cron_stale_opportunities" model="ir.cron">
+        <field name="name">C2P Agent: stale opportunity detection</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_flag_stale_opportunities()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="cron_proposal_followup" model="ir.cron">
+        <field name="name">C2P Agent: proposal follow-up</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_followup_proposals()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="cron_invoice_chaser" model="ir.cron">
+        <field name="name">C2P Agent: overdue invoice chaser</field>
+        <field name="model_id" ref="account.model_account_move"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_chase_overdue_invoices()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+</odoo>
