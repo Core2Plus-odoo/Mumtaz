@@ -18,6 +18,7 @@ AGENTS = [
     ("stale_opportunity", "Stale Opportunity Detection"),
     ("proposal_followup", "Proposal Follow-up"),
     ("invoice_chaser", "Invoice Chaser"),
+    ("email_validation", "Email Validation"),
 ]
 
 

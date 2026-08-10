@@ -9,6 +9,7 @@ Four nightly agents for `Mumtaz_C2P`, as a versioned module instead of Python in
 | Stale opportunities | `crm.lead` | `_cron_flag_stale_opportunities` | To-Do on high-priority opportunities quiet for 21+ days |
 | Proposal follow-up | `crm.lead` | `_cron_followup_proposals` | Call on leads 7+ days in a proposal stage |
 | Invoice chaser | `account.move` | `_cron_chase_overdue_invoices` | Call on the owner of an overdue posted customer invoice |
+| Email validation | `crm.lead` | `_cron_validate_emails` | Checks addresses before outreach; routes to WhatsApp when email is unusable |
 
 ## Why it exists
 
@@ -75,6 +76,41 @@ the check keys on open activities, so once a rep marks the activity done and the
 record is *still* stale, the next run raises a fresh one. For a chaser that is
 usually wanted. If it should instead go quiet for a period, that is a cooldown
 window and a small change to `_c2p_already_flagged`.
+
+## Email validation
+
+`models/email_validation.py`, three layers, cheapest first, short-circuiting:
+
+1. **Syntax** — Odoo's own `email_normalize`. Free, instant, catches typos.
+2. **Domain class** — free provider → `risky`; disposable mailbox → `invalid`.
+3. **Resolution** — MX lookup via dnspython where installed, otherwise "does the
+   domain resolve at all". The verdict detail always says which check ran, so a
+   result is never ambiguous about how much it proved.
+
+Verdicts are three-valued on purpose. **`risky` is not `invalid`** — a gmail
+address is perfectly deliverable, it just tells you the lead is a person rather
+than a company, and only `invalid` suppresses a send.
+
+Results land on the lead as `c2p_email_validity`, `c2p_email_validity_detail` and
+`c2p_email_checked_on`. The agent only picks up leads still marked `unknown`, so
+it clears the backlog once and then handles the day's intake. To re-check
+everything: `leads.write({"c2p_email_validity": "unknown"})`.
+
+**WhatsApp fallback.** `c2p_outreach_channel` is a stored computed field —
+`email` when the address is usable, `whatsapp` when it is not and a number is on
+file, `none` when neither. Stored so you can filter a send list on it.
+
+**Mailbox-level verification is not implemented.** Layers 1-3 prove an address
+is well-formed and its domain accepts mail; they cannot prove the mailbox
+exists. That needs a paid service, and `verify_mailbox()` is the documented
+place to wire one in — left as a raise rather than a guess, because the
+providers' APIs differ enough that picking wrong means dead code with a
+credential handler attached.
+
+Two operational notes: dry run still performs DNS lookups (that is what makes
+the reported verdicts real — dry run means nothing is written to *your*
+database, not that there is no outbound traffic), and one lookup is made per
+domain per batch rather than per lead.
 
 ## Migration
 

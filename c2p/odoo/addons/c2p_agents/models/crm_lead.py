@@ -16,6 +16,14 @@ from datetime import timedelta
 from odoo import api, fields, models
 
 from .agent_tools import activity_type, already_flagged, dry_run_enabled, log_run
+from .email_validation import (
+    FREE_EMAIL_DOMAINS,
+    INVALID,
+    RISKY,
+    VALID,
+    address_domain,
+    validate_address,
+)
 
 # --------------------------------------------------------------------------
 # Scoring weights — PLACEHOLDER, pending the original rules.
@@ -44,29 +52,6 @@ COUNTRY_SCORES = {
     "BH": 12,
     "PK": 8,
 }
-
-# An address at one of these is a person, not a business.
-FREE_EMAIL_DOMAINS = frozenset(
-    {
-        "gmail.com",
-        "googlemail.com",
-        "yahoo.com",
-        "yahoo.co.uk",
-        "hotmail.com",
-        "outlook.com",
-        "live.com",
-        "msn.com",
-        "icloud.com",
-        "me.com",
-        "aol.com",
-        "protonmail.com",
-        "proton.me",
-        "gmx.com",
-        "yandex.com",
-        "mail.ru",
-        "rediffmail.com",
-    }
-)
 
 SCORE_BUSINESS_EMAIL = 15
 SCORE_PHONE = 10
@@ -97,6 +82,8 @@ PROPOSAL_LIMIT = 50
 # names — see _c2p_proposal_stage_ids for the trade-off that represents.
 PROPOSAL_STAGE_HINTS = ("propos", "quot", "offer")
 
+EMAIL_VALIDATION_LIMIT = 100
+
 # Priorities the stale-opportunity agent considers worth chasing.
 HIGH_PRIORITIES = ("2", "3")
 
@@ -110,16 +97,61 @@ PROPOSAL_SUMMARY = "C2P Agent: proposal follow-up"
 class CrmLead(models.Model):
     _inherit = "crm.lead"
 
+    c2p_email_validity = fields.Selection(
+        [
+            ("unknown", "Not checked"),
+            (VALID, "Valid"),
+            (RISKY, "Risky"),
+            (INVALID, "Invalid"),
+        ],
+        default="unknown",
+        index=True,
+        copy=False,
+        help="Set by the email validation agent. Risky means deliverable but "
+        "a consumer mailbox; invalid means do not send.",
+    )
+    c2p_email_validity_detail = fields.Char(readonly=True, copy=False)
+    c2p_email_checked_on = fields.Datetime(readonly=True, copy=False)
+    c2p_outreach_channel = fields.Selection(
+        [
+            ("email", "Email"),
+            ("whatsapp", "WhatsApp"),
+            ("none", "No usable channel"),
+        ],
+        compute="_compute_c2p_outreach_channel",
+        store=True,
+        help="Where outreach should go. Falls back to WhatsApp when the email "
+        "address is unusable and a number is on file.",
+    )
+
+    @api.depends("c2p_email_validity", "email_from", "phone")
+    def _compute_c2p_outreach_channel(self):
+        """Route outreach: email unless it is unusable, then the number.
+
+        Stored so it can be filtered and grouped — picking a send list is the
+        whole point, and a non-stored field could not be searched.
+
+        `mobile` is deliberately absent from the depends: the field has come and
+        gone from crm.lead across versions, and naming a field that does not
+        exist fails the registry at install. Editing only the mobile number
+        therefore leaves this stale until something else on the lead changes.
+        """
+        for lead in self:
+            usable_email = lead.email_from and lead.c2p_email_validity != INVALID
+            if usable_email:
+                lead.c2p_outreach_channel = "email"
+            elif lead._c2p_has_phone():
+                lead.c2p_outreach_channel = "whatsapp"
+            else:
+                lead.c2p_outreach_channel = "none"
+
     # ------------------------------------------------------------------
     # Agent 1 — lead scoring
     # ------------------------------------------------------------------
     def _c2p_email_domain(self):
         """The domain part of ``email_from``, tolerating "Name <a@b.com>"."""
         self.ensure_one()
-        email = (self.email_from or "").strip().lower()
-        if "<" in email and ">" in email:
-            email = email[email.rfind("<") + 1 : email.rfind(">")]
-        return email.rpartition("@")[2].strip()
+        return address_domain(self.email_from)
 
     def _c2p_has_phone(self):
         self.ensure_one()
@@ -312,3 +344,56 @@ class CrmLead(models.Model):
                 date_deadline=deadline,
             )
         return log_run(self.env, "proposal_followup", len(leads), acted, dry_run, limit)
+
+    # ------------------------------------------------------------------
+    # Agent 5 — email validation
+    # ------------------------------------------------------------------
+    @api.model
+    def _cron_validate_emails(self, limit=EMAIL_VALIDATION_LIMIT, dry_run=None):
+        """Validate addresses that have never been checked.
+
+        Selects only `unknown` leads, so a run costs one pass over the backlog
+        and then settles to whatever came in that day. To re-check everything,
+        reset the field: `leads.write({"c2p_email_validity": "unknown"})`.
+
+        A note on dry run: this agent still performs DNS lookups when dry, since
+        that is what makes the reported verdicts real. Dry run means nothing is
+        written to your database — it does not mean no outbound traffic. If the
+        Odoo host cannot reach a resolver, the domain layer degrades to "not
+        checked" rather than condemning every address.
+        """
+        dry_run = dry_run_enabled(self.env, dry_run)
+        leads = self.search(
+            [
+                ("active", "=", True),
+                ("email_from", "!=", False),
+                ("c2p_email_validity", "=", "unknown"),
+            ],
+            limit=limit,
+            order="create_date desc",
+        )
+        # One lookup per domain for the whole batch, not one per lead.
+        domain_cache = {}
+        checked_on = fields.Datetime.now()
+        counts = {VALID: 0, RISKY: 0, INVALID: 0}
+        for lead in leads:
+            verdict, detail = validate_address(lead.email_from, domain_cache)
+            counts[verdict] += 1
+            if dry_run:
+                continue
+            lead.write(
+                {
+                    "c2p_email_validity": verdict,
+                    "c2p_email_validity_detail": detail[:255],
+                    "c2p_email_checked_on": checked_on,
+                }
+            )
+        note = "valid=%s risky=%s invalid=%s over %s domain(s)" % (
+            counts[VALID],
+            counts[RISKY],
+            counts[INVALID],
+            len(domain_cache),
+        )
+        return log_run(
+            self.env, "email_validation", len(leads), len(leads), dry_run, limit, note
+        )

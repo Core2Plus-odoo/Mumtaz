@@ -42,6 +42,11 @@ without losing their schedules.
         "mail",
         "account",
     ],
+    # dnspython, if installed, gives the email validation agent real MX lookups.
+    # Deliberately NOT declared in external_dependencies: doing so would make
+    # Odoo refuse to install the module without it. Absent, the domain layer
+    # degrades to "does this domain resolve at all" — weaker, but still catching
+    # most bounce sources — and every result records which check actually ran.
     "data": [
         "security/ir.model.access.csv",
         "data/c2p_agents_params.xml",
