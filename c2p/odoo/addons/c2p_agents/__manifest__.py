@@ -52,6 +52,7 @@ without losing their schedules.
         "data/c2p_agents_params.xml",
         "data/c2p_agents_cron.xml",
         "views/c2p_agent_run_views.xml",
+        "views/ir_cron_views.xml",
     ],
     "installable": True,
     "auto_install": False,

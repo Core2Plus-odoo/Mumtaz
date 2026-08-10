@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- A dedicated list rather than an inherit of Odoo's own Scheduled Actions
+         view: this one is a diagnostic, and it shows archived records by
+         default. A cron somebody quietly switched off is exactly the kind of
+         thing you come here to find, and Odoo's list hides it. -->
+    <record id="view_ir_cron_health_list" model="ir.ui.view">
+        <field name="name">ir.cron.health.list</field>
+        <field name="model">ir.cron</field>
+        <field name="arch" type="xml">
+            <list string="Agent Health"
+                  create="false"
+                  decoration-danger="c2p_health == 'empty'"
+                  decoration-warning="c2p_health in ['never_ran', 'overdue']"
+                  decoration-muted="c2p_health == 'inactive'">
+                <field name="name"/>
+                <field name="c2p_health"/>
+                <field name="c2p_code_length" string="Code"/>
+                <field name="model_id" optional="show"/>
+                <field name="interval_number" string="Every"/>
+                <field name="interval_type" string=""/>
+                <field name="lastcall" string="Last Run"/>
+                <field name="nextcall" string="Next Run"/>
+                <field name="user_id" optional="hide"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_ir_cron_health_search" model="ir.ui.view">
+        <field name="name">ir.cron.health.search</field>
+        <field name="model">ir.cron</field>
+        <field name="arch" type="xml">
+            <search string="Agent Health">
+                <field name="name"/>
+                <field name="model_id"/>
+                <!-- Plain domains on stored fields, so every filter works
+                     regardless of the computed Health column. -->
+                <filter name="filter_empty_code" string="Empty Code"
+                        domain="['&amp;', ('state', '=', 'code'),
+                                 '|', ('code', '=', False), ('code', '=', '')]"
+                        help="Scheduled, but the body is blank. Runs nightly, does nothing, reports success."/>
+                <filter name="filter_never_ran" string="Never Ran"
+                        domain="[('lastcall', '=', False)]"/>
+                <filter name="filter_overdue" string="Overdue"
+                        domain="[('nextcall', '&lt;', (context_today() - datetime.timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <separator/>
+                <filter name="filter_active" string="Active"
+                        domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived"
+                        domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter name="filter_c2p" string="C2P Agents"
+                        domain="[('name', 'ilike', 'C2P Agent')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_model" string="Model"
+                            context="{'group_by': 'model_id'}"/>
+                    <filter name="group_interval" string="Frequency"
+                            context="{'group_by': 'interval_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_ir_cron_health" model="ir.actions.act_window">
+        <field name="name">Agent Health</field>
+        <field name="res_model">ir.cron</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ir_cron_health_search"/>
+        <!-- active_test False so archived crons are listed, not hidden. -->
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No scheduled actions</p>
+            <p>
+                Every cron on this database, with the one column the standard
+                list does not show: whether the action actually has a body.
+                Red means empty code — scheduled, running, doing nothing.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_ir_cron_health_list_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_ir_cron_health_list"/>
+        <field name="act_window_id" ref="action_ir_cron_health"/>
+    </record>
+
+    <menuitem id="menu_ir_cron_health"
+              name="Agent Health"
+              parent="base.menu_custom"
+              action="action_ir_cron_health"
+              sequence="89"
+              groups="base.group_system"/>
+
+</odoo>

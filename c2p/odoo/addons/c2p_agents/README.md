@@ -80,6 +80,27 @@ record is *still* stale, the next run raises a fresh one. For a chaser that is
 usually wanted. If it should instead go quiet for a period, that is a cooldown
 window and a small change to `_c2p_already_flagged`.
 
+## Agent Health — seeing every cron on the database
+
+**Settings → Technical → Agent Health**, admin-only. Every `ir.cron` on the
+database, not just this module's, with the one column the standard Scheduled
+Actions list does not show: whether the action actually has a body.
+
+`c2p_health` is worst-first — `empty` (scheduled, running, doing nothing),
+`inactive`, `never_ran`, `overdue`, `ok` — rendered red for empty and amber for
+never-ran or overdue. The list shows **archived crons too**, because a cron
+somebody quietly switched off is exactly what you come here to find and Odoo's
+own list hides it.
+
+Nothing is stored. Two computed columns and a set of filters over records Odoo
+already keeps, so there is no second copy of the truth to drift, and the verdict
+is always computed from the record in front of you. The filters themselves are
+plain domains on stored fields, so **Empty Code** works whether or not the
+computed column does.
+
+This is the view that would have caught the original failure. It covers all
+crons on purpose — that failure was never specific to C2P's agents.
+
 ## Coverage — "no lead falls through"
 
 Three of the seven agents exist to guarantee completeness rather than to react
