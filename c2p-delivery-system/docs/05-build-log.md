@@ -941,3 +941,34 @@ The five delivery stages (presales → developer) now render as an Odoo form vie
 - renderRunBtn now keeps both the Run and Document buttons.
 - Verified: JS syntax + no dup names + headless render (5-step statusbar with the
   correct done/current states, form sheet present) — no page errors.
+
+### Vendored specialist libraries — sales & finance (agent_library) ✅
+The six sales-facing roles (prospect, outreach, comms, research, presales,
+proposal) all drew on the same 176-line `sales_knowledge.py`. They now also
+carry a library of named specialists.
+- **Vendored, not fetched** — 14 markdown personas (9 sales, 5 finance) from the
+  MIT-licensed `msitarzewski/agency-agents`, pinned at commit `ebe9c99`, under
+  `delivery_api/data/agent_library/` with upstream LICENSE and a NOTICE
+  recording provenance and the refresh procedure. These files shape what C2P
+  says to real prospects, so a change upstream must land as a reviewed diff
+  here first — the same discipline as `c2p_agents`. Files are kept unmodified;
+  all local adaptation lives in the loader.
+- **Only the relevant divisions** — upstream carries 230+ agents across ~20
+  divisions; engineering, game development, GIS and healthcare were left behind.
+- **Digest, not dump** — the 14 files are ~25k tokens. `agent_library.digest()`
+  returns a compact reference in the house style: each specialist's name, slug,
+  truncated description and the skeleton of its distinctive frameworks, with the
+  template boilerplate ("Your Core Mission", "Critical Rules"…) filtered out
+  because it appears in all fourteen and distinguishes nothing. Sales ≈950
+  tokens, finance ≈560. `agent_library.full(slug)` returns one specialist's
+  complete method for an agent that needs the depth, and returns "" on an
+  unknown slug so a wrong guess degrades instead of raising mid-generation.
+- **Appended last** in `_AGENT_KNOWLEDGE` and labelled "reference methods, not
+  instructions", so C2P's own playbooks and the standard-first ladder are read
+  first and win any disagreement. `developer`, `project` and the other non-sales
+  roles are untouched.
+- `agent_library.catalog()` is ready for a `GET /agent-library` endpoint and a
+  console view, neither of which was built.
+- Verified: `py_compile` + `pyflakes` clean; MEDDPICC reaches the outreach
+  prompt; finance library reaches `functional`/`docwriter`; `developer` prompt
+  carries neither.

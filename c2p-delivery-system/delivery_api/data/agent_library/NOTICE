@@ -1,0 +1,32 @@
+Vendored agent definitions
+==========================
+
+Source:    https://github.com/msitarzewski/agency-agents
+Commit:    ebe9c99acb5c96f9468de368d8bead775387d1a7
+Retrieved: 2026-08-10
+Licence:   MIT — see LICENSE in this directory
+Copyright: (c) 2025 AgentLand Contributors
+
+What was taken
+--------------
+The 'sales' and 'finance' divisions only (14 files). The upstream repository
+carries 230+ agents across ~20 divisions; the rest — engineering, game
+development, GIS, healthcare — have no bearing on a GCC Odoo consultancy and
+were deliberately left behind.
+
+Why vendored rather than fetched
+--------------------------------
+These files shape what C2P's agents say to real prospects. Pinning them to a
+commit means a change upstream cannot alter our outreach without a reviewed
+diff landing in this repository first. Same discipline as c2p_agents: content
+that decides behaviour belongs in version control, not fetched at run time.
+
+How to update
+-------------
+  git clone --depth 1 https://github.com/msitarzewski/agency-agents /tmp/aa
+  cp /tmp/aa/sales/*.md   delivery_api/data/agent_library/sales/
+  cp /tmp/aa/finance/*.md delivery_api/data/agent_library/finance/
+  # then update Commit/Retrieved above and review the diff before committing
+
+These files are upstream's work, unmodified. Local adaptation belongs in
+agent_library.py, which reads them, so that a refresh stays a clean copy.

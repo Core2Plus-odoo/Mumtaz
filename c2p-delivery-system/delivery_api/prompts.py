@@ -596,6 +596,7 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
         import sales_knowledge as _sk
         import tech_knowledge as _tk
         import consulting_knowledge as _con
+        import agent_library as _al
 
         _ODOO = _ok.capability_digest()
         _STD = _os_.digest()               # comprehensive standard-first reference
@@ -626,6 +627,20 @@ if _os.getenv("C2P_EMBED_KNOWLEDGE", "1") == "1":
             "comms": _SALES,
             "research": _SALES + "\n\n" + _CON,
         }
+
+        # Vendored specialist libraries, appended last so C2P's own playbooks
+        # are read first and win any disagreement. Compact digests, not the full
+        # 25k tokens of upstream markdown — see agent_library for why.
+        _SALESLIB = _al.digest("sales")      # 9 specialists, ~950 tokens
+        _FINLIB = _al.digest("finance")      # 5 specialists, ~560 tokens
+        for _role in ("prospect", "outreach", "comms", "research",
+                      "presales", "proposal"):
+            if _SALESLIB and _role in _AGENT_KNOWLEDGE:
+                _AGENT_KNOWLEDGE[_role] += "\n\n" + _SALESLIB
+        for _role in ("functional", "ba", "config", "docwriter"):
+            if _FINLIB and _role in _AGENT_KNOWLEDGE:
+                _AGENT_KNOWLEDGE[_role] += "\n\n" + _FINLIB
+
         for _k, _v in _AGENT_KNOWLEDGE.items():
             if _k in PROMPTS:
                 PROMPTS[_k] = (PROMPTS[_k]
