@@ -972,3 +972,35 @@ carry a library of named specialists.
 - Verified: `py_compile` + `pyflakes` clean; MEDDPICC reaches the outreach
   prompt; finance library reaches `functional`/`docwriter`; `developer` prompt
   carries neither.
+
+### Assistant — read-only Q&A over live Odoo (v1) ✅
+Seventeen agents ran as pipeline stages; none answered a question. This one does.
+- **`POST /assistant/ask`** (+ `GET /assistant/tools`) via `routers/assistant.py`,
+  wired through `init(store)` like the other routers — main.py gains two lines
+  and nothing else.
+- **Six read-only tools** over live Odoo: `pipeline_summary`,
+  `overdue_invoices`, `search_leads`, `stale_proposals`, `agent_health`,
+  `unassigned_leads`.
+- **Read-only by construction.** Every Odoo call goes through `_read()`, which
+  refuses any method outside `READ_METHODS` — a tool added carelessly later
+  cannot write to a client-facing database, because the guard is in the path
+  rather than in a docstring. `MAX_ROWS` caps what any question can pull.
+- **Two LLM calls, both with a local fallback** (plan → answer). With
+  `C2P_LLM_PROVIDER=none` a keyword router picks the tool and a deterministic
+  formatter writes the prose; `llm.log_local` records the offline run. The
+  figures are identical either way — they come from Odoo, not the model — and
+  the console labels which path produced an answer rather than letting them look
+  alike.
+- **Console** — an Assistant view beside Dashboard: thread, suggestion chips,
+  Enter-to-send, and an "offline (no model)" badge.
+- **23 tests**, Odoo stubbed, no key or network needed. One of them
+  (`test_odoo_is_called_the_way_execute_kw_expects`) pins a real bug found while
+  writing them: `OdooClient.execute` forwards `*args` as execute_kw's positional
+  list and `**kw` as its options, so passing the options positionally — as the
+  first draft did — would have failed against every real Odoo.
+- Verified: pytest 23 passed; JS syntax + no duplicate function names; headless
+  render (nav entry present, view renders, a mocked question round-trips, the
+  offline badge shows) — no page errors beyond the external CDN fetches that
+  cannot resolve offline.
+- Not built: writes of any kind. Anything actionable should go through
+  `policy.py` as a proposed action, which is the next step if this proves useful.
