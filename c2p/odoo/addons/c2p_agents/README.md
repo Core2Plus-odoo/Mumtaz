@@ -1,7 +1,8 @@
 # C2P Agents
 
-Four nightly agents for `Mumtaz_C2P`, as a versioned module instead of Python in
-`ir.actions.server.code`.
+Seven nightly agents for `Mumtaz_C2P`, as a versioned module instead of Python
+in `ir.actions.server.code`. The first four are the port; the rest were added
+after.
 
 | Agent | Model | Method | What it does |
 |---|---|---|---|
@@ -15,8 +16,8 @@ Four nightly agents for `Mumtaz_C2P`, as a versioned module instead of Python in
 
 ## Why it exists
 
-All four previously ran as Python stored in database fields, and all four were
-found silently empty — running every night, executing nothing, reporting
+The first four previously ran as Python stored in database fields, and all four
+were found silently empty — running every night, executing nothing, reporting
 success. Code in a database field cannot be reviewed, diffed, tested or rolled
 back, and a cron that does nothing looks exactly like a cron that works.
 
