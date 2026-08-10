@@ -16,10 +16,21 @@ after.
 
 ## Why it exists
 
-The first four previously ran as Python stored in database fields, and all four
-were found silently empty — running every night, executing nothing, reporting
-success. Code in a database field cannot be reviewed, diffed, tested or rolled
-back, and a cron that does nothing looks exactly like a cron that works.
+The first four ran as Python stored in `ir.actions.server.code` — crons 44, 45,
+46 and 47 on `Mumtaz_C2P`. They were reported as silently empty: running nightly,
+executing nothing, reporting success.
+
+**That could not be reproduced.** Read on 2026-08-10, all four had substantial
+bodies (955–1504 characters), all were active, and all had run that morning at
+09:00. Either they were repopulated after the incident, or the empty records
+were different ones since removed.
+
+The reason to move them stands regardless, and is the more durable one: code in
+a database field cannot be reviewed, diffed, tested or rolled back, and a cron
+that does nothing looks exactly like a cron that works. The rules in
+`models/crm_lead.py` and `models/account_move.py` are ports of what those four
+records actually contain — the weights, thresholds, summaries and deadlines were
+read out of the database, not invented.
 
 ## Safety model
 

@@ -1,14 +1,15 @@
-"""Agents 1-3: lead scoring, stale opportunities, proposal follow-up.
+"""The C2P lead agents, ported from the server actions running on Mumtaz_C2P.
 
-Thresholds live here as constants rather than in ``ir.config_parameter``. A
-value that governs behaviour belongs next to the code it governs, where it can
-be diffed and reviewed — putting it in a database field is the same habit that
-produced the empty server actions. ``dry_run`` is the one exception: flipping it
-is an operational act, not a code change.
+Agents 1-3 are faithful ports of crons 44, 45 and 46 — the scoring weights,
+thresholds, activity summaries and deadlines below are the ones actually in
+production, read out of `ir_act_server.code` on 2026-08-10, not invented here.
+Where this module deliberately departs from the original, the comment says so.
 
-The scoring weights are the one part of this module that is a placeholder. They
-are plain module-level tables so that reconciling them against the intended
-rules is a diff of a table, not a rewrite of a method.
+What the port adds is the scaffolding the database version could not have: a
+dry-run mode, a per-run audit row, tests, and a limit that is a reviewable
+constant rather than a literal buried in a database field.
+
+Agents 6 and 7 are new — they were not in the original set.
 """
 
 from datetime import timedelta
@@ -17,7 +18,6 @@ from odoo import api, fields, models
 
 from .agent_tools import activity_type, already_flagged, dry_run_enabled, log_run
 from .email_validation import (
-    FREE_EMAIL_DOMAINS,
     INVALID,
     RISKY,
     VALID,
@@ -26,82 +26,94 @@ from .email_validation import (
 )
 
 # --------------------------------------------------------------------------
-# Scoring weights — PLACEHOLDER, pending the original rules.
+# Agent 1 — scoring weights, as they run in production.
 # --------------------------------------------------------------------------
 
-# Matched case-insensitively against the UTM source name, so renaming a source
-# in the UI changes scoring visibly rather than by silent lookup failure.
-SOURCE_SCORES = {
-    "referral": 25,
-    "website": 15,
-    "search engine": 12,
-    "linkedin": 12,
-    "email campaign": 8,
-    "newsletter": 5,
-    "facebook": 5,
-    "cold list": 0,
-}
+# Substring matches against the lowercased UTM source name. Both rules can fire
+# on one lead — a source named "Meta referral" scores 45, not 25. That is the
+# original behaviour, and it is additive on purpose.
+SOURCE_SIGNALS = (
+    (("whatsapp", "ctwa", "meta"), 20),
+    (("referral", "apollo"), 25),
+)
 
-# ISO country codes, resolved through res.country.code — no database IDs.
-COUNTRY_SCORES = {
-    "AE": 25,
-    "SA": 20,
-    "QA": 15,
-    "KW": 15,
-    "OM": 12,
-    "BH": 12,
-    "PK": 8,
-}
+# Flat 20 for any of the six. Note there is no Pakistan here: the production
+# rule scores GCC only.
+GCC_COUNTRY_CODES = ("AE", "SA", "OM", "QA", "BH", "KW")
+SCORE_GCC = 20
 
-SCORE_BUSINESS_EMAIL = 15
+# Matched as substrings of the whole address, with the trailing dot, exactly as
+# production does — "gmail." catches gmail.com and gmail.co.uk alike. This is a
+# separate, shorter list from the one email_validation.py uses for deliverability
+# verdicts; they answer different questions and are kept apart on purpose.
+FREE_EMAIL_MARKERS = ("gmail.", "yahoo.", "hotmail.", "outlook.", "icloud.")
+SCORE_BUSINESS_EMAIL = 20
+
+# (expected revenue at or above, points). First match wins.
+REVENUE_BANDS = ((30000, 25), (7000, 10))
+
 SCORE_PHONE = 10
-SCORE_NAMED_CONTACT = 10
-
-# (expected revenue at or above, points). First match wins, so keep descending.
-REVENUE_BANDS = ((100000, 25), (50000, 20), (20000, 12), (5000, 6))
+SCORE_CONTACT_NAME = 5
+# An existing activity is read as evidence somebody is working the lead.
+SCORE_HAS_ACTIVITY = 5
 
 # (total score at or above, crm.lead priority). First match wins.
-PRIORITY_BANDS = ((60, "3"), (40, "2"), (20, "1"))
+PRIORITY_BANDS = ((65, "3"), (45, "2"), (25, "1"))
 PRIORITY_FLOOR = "0"
 
 # --------------------------------------------------------------------------
-# Agent settings
+# Agent settings — production values.
 # --------------------------------------------------------------------------
 
-LEAD_SCORING_LIMIT = 200
+LEAD_SCORING_LIMIT = 4000
 
-# Days of silence before a high-priority opportunity counts as stale.
 STALE_DAYS = 21
-STALE_LIMIT = 50
+STALE_LIMIT = 40
+STALE_DEADLINE_DAYS = 2
 
-# Days parked in a proposal stage before the opportunity gets chased.
 PROPOSAL_DAYS = 7
-PROPOSAL_LIMIT = 50
+PROPOSAL_LIMIT = 40
+PROPOSAL_DEADLINE_DAYS = 1
 
-# Substrings that identify a proposal stage. Matched at run time against stage
-# names — see _c2p_proposal_stage_ids for the trade-off that represents.
-PROPOSAL_STAGE_HINTS = ("propos", "quot", "offer")
+# Exact stage names, as production matches them. Not a fuzzy match: the two
+# stages mean different things and the agent says something different in each.
+PROPOSAL_STAGE_SENT = "Proposal Sent"
+PROPOSAL_STAGE_PENDING = "Proposal to be Send"
+PROPOSAL_STAGE_NAMES = (PROPOSAL_STAGE_SENT, PROPOSAL_STAGE_PENDING)
 
 EMAIL_VALIDATION_LIMIT = 100
 
-# Coverage agents — the "no lead falls through" pair.
+# Coverage agents — new, not part of the ported set.
 OWNER_ASSIGNMENT_LIMIT = 50
 COVERAGE_LIMIT = 50
-
-# Days a lead is left alone before the coverage agent insists on a next step.
-# Without this it would raise a To-Do on leads that arrived this morning and are
-# already being handled by a human who has simply not scheduled anything yet.
 COVERAGE_GRACE_DAYS = 3
 
-# Priorities the stale-opportunity agent considers worth chasing.
 HIGH_PRIORITIES = ("2", "3")
 
-# The activity summary doubles as the duplicate marker: an open activity
-# carrying this exact text means the record has already been flagged. Changing
-# one makes every already-flagged record eligible again, so treat them as data.
-STALE_SUMMARY = "C2P Agent: stale opportunity"
-PROPOSAL_SUMMARY = "C2P Agent: proposal follow-up"
+# The production summaries, character for character. Keeping them identical is
+# what stops this module re-nagging every lead the database agents already
+# flagged: an activity raised last week by cron 45 still matches, so the ported
+# agent skips it instead of raising a second one beside it.
+STALE_SUMMARY = "Stale - no contact in 21 days"
+PROPOSAL_SENT_SUMMARY = "Proposal follow-up call"
+PROPOSAL_PENDING_SUMMARY = "Proposal still not sent - issue it today"
 COVERAGE_SUMMARY = "C2P Agent: no next step"
+
+_STALE_NOTE = (
+    "<p>This opportunity has had no activity for 21 days and is rated high "
+    "priority. Decide one of three things: re-engage with a specific reason, "
+    "move it to Project Onhold with a note, or mark it Lost with a reason.</p>"
+)
+_PROPOSAL_SENT_NOTE = (
+    "<p>Seven days in this stage with no next action.</p>"
+    "<p>Call rather than email. Ask what is outstanding on their side and "
+    "whether the scope still matches. Do not lead with a discount to a problem "
+    "you have not diagnosed.</p>"
+)
+_PROPOSAL_PENDING_NOTE = (
+    "<p>This has sat in 'Proposal to be Send' for over a week. Either issue the "
+    "proposal today or move the record to a stage that reflects reality.</p>"
+)
 
 
 class CrmLead(models.Model):
@@ -126,9 +138,8 @@ class CrmLead(models.Model):
         readonly=True,
         copy=False,
         index=True,
-        help="When the scoring agent last set this lead's priority. Blank means "
-        "never scored — those are taken first, so the backlog drains instead of "
-        "the agent circling the most recently edited records forever.",
+        help="When the scoring agent last looked at this lead. Blank means "
+        "never scored — those are taken first, so the backlog drains.",
     )
     c2p_outreach_channel = fields.Selection(
         [
@@ -146,17 +157,12 @@ class CrmLead(models.Model):
     def _compute_c2p_outreach_channel(self):
         """Route outreach: email unless it is unusable, then the number.
 
-        Stored so it can be filtered and grouped — picking a send list is the
-        whole point, and a non-stored field could not be searched.
-
         `mobile` is deliberately absent from the depends: the field has come and
-        gone from crm.lead across versions, and naming a field that does not
-        exist fails the registry at install. Editing only the mobile number
-        therefore leaves this stale until something else on the lead changes.
+        gone from crm.lead across versions, and naming one that does not exist
+        fails the registry at install.
         """
         for lead in self:
-            usable_email = lead.email_from and lead.c2p_email_validity != INVALID
-            if usable_email:
+            if lead.email_from and lead.c2p_email_validity != INVALID:
                 lead.c2p_outreach_channel = "email"
             elif lead._c2p_has_phone():
                 lead.c2p_outreach_channel = "whatsapp"
@@ -172,37 +178,41 @@ class CrmLead(models.Model):
         return address_domain(self.email_from)
 
     def _c2p_has_phone(self):
+        """Used for outreach routing only — scoring reads `phone` alone, as
+        production does."""
         self.ensure_one()
-        # `mobile` has come and gone from crm.lead across recent versions, so it
-        # is read defensively rather than assumed present on v19.
         mobile = self.mobile if "mobile" in self._fields else False
         return bool(self.phone or mobile)
 
     def _c2p_lead_score(self):
-        """Total the scoring rules for one lead. No side effects."""
+        """Total the production scoring rules for one lead. No side effects."""
         self.ensure_one()
         score = 0
 
-        if self.source_id:
-            score += SOURCE_SCORES.get((self.source_id.name or "").strip().lower(), 0)
+        source = (self.source_id.name or "").lower() if self.source_id else ""
+        for keywords, points in SOURCE_SIGNALS:
+            if any(keyword in source for keyword in keywords):
+                score += points
 
-        if self.country_id:
-            score += COUNTRY_SCORES.get(self.country_id.code, 0)
+        if self.country_id and self.country_id.code in GCC_COUNTRY_CODES:
+            score += SCORE_GCC
 
-        domain = self._c2p_email_domain()
-        if domain and domain not in FREE_EMAIL_DOMAINS:
-            score += SCORE_BUSINESS_EMAIL
+        email = (self.email_from or "").lower()
+        if email and "@" in email:
+            if not any(marker in email for marker in FREE_EMAIL_MARKERS):
+                score += SCORE_BUSINESS_EMAIL
 
         for threshold, points in REVENUE_BANDS:
-            if (self.expected_revenue or 0) >= threshold:
+            if self.expected_revenue and self.expected_revenue >= threshold:
                 score += points
                 break
 
-        if self._c2p_has_phone():
+        if self.phone:
             score += SCORE_PHONE
-
-        if self.contact_name or self.partner_id:
-            score += SCORE_NAMED_CONTACT
+        if self.contact_name:
+            score += SCORE_CONTACT_NAME
+        if self.activity_ids:
+            score += SCORE_HAS_ACTIVITY
 
         return score
 
@@ -216,53 +226,71 @@ class CrmLead(models.Model):
         return PRIORITY_FLOOR
 
     @api.model
+    def _c2p_scoring_domain(self):
+        return [
+            ("active", "=", True),
+            ("stage_id.is_won", "=", False),
+            ("probability", "<", 100),
+        ]
+
+    @api.model
     def _c2p_scoring_batch(self, limit):
         """Never-scored leads first, then the longest-unrescored.
 
         Two searches rather than one ordered query, because "nulls first" is not
         expressible in an Odoo order string — Postgres sorts NULLs last on ASC,
-        which would put the never-scored leads permanently at the back of the
-        queue. Taking them explicitly is what makes coverage a guarantee: the
-        backlog drains at `limit` a night and then the agent settles into
-        refreshing the oldest scores.
+        which would put never-scored leads permanently at the back of the queue.
         """
-        never = self.search(
-            [("active", "=", True), ("c2p_scored_on", "=", False)], limit=limit
-        )
+        domain = self._c2p_scoring_domain()
+        never = self.search(domain + [("c2p_scored_on", "=", False)], limit=limit)
         if len(never) >= limit:
             return never
         stale = self.search(
-            [("active", "=", True), ("c2p_scored_on", "!=", False)],
+            domain + [("c2p_scored_on", "!=", False)],
             limit=limit - len(never),
             order="c2p_scored_on asc",
         )
         return never | stale
 
+    def _c2p_stamp_scored(self, when):
+        """Record the pass WITHOUT touching write_date.
+
+        Raw SQL, and load-bearing. A normal write() bumps write_date, and the
+        stale-lead agent selects on `write_date` older than 21 days — so
+        stamping through the ORM would refresh every lead the scorer touched and
+        the stale agent would never select anything again. The two agents run on
+        the same records nightly, so this is not a theoretical interaction.
+        """
+        if not self:
+            return
+        self.env.cr.execute(
+            "UPDATE crm_lead SET c2p_scored_on = %s WHERE id IN %s",
+            (when, tuple(self.ids)),
+        )
+        self.invalidate_recordset(["c2p_scored_on"])
+
     @api.model
     def _cron_score_leads(self, limit=LEAD_SCORING_LIMIT, dry_run=None):
-        """Set priority on ``crm.lead`` from the scoring rules.
+        """Set priority on ``crm.lead`` from the production scoring rules.
 
-        Stamps `c2p_scored_on` on every lead it looks at, including the ones
-        whose priority did not change — otherwise an unchanged lead would be
-        re-selected every night and the backlog would never move.
+        Only writes `priority` where it actually changed — as production does,
+        and for the same reason: a write on every lead every night would churn
+        write_date across the whole pipeline.
         """
         dry_run = dry_run_enabled(self.env, dry_run)
         leads = self._c2p_scoring_batch(limit)
-        scored_on = fields.Datetime.now()
         acted = 0
         for lead in leads:
             priority = lead._c2p_lead_priority()
-            changed = priority != lead.priority
-            if changed:
-                acted += 1
-            if dry_run:
+            if priority == lead.priority:
                 continue
-            values = {"c2p_scored_on": scored_on}
-            if changed:
-                values["priority"] = priority
-            lead.write(values)
+            acted += 1
+            if not dry_run:
+                lead.priority = priority
+        if not dry_run:
+            leads._c2p_stamp_scored(fields.Datetime.now())
         remaining = self.search_count(
-            [("active", "=", True), ("c2p_scored_on", "=", False)]
+            self._c2p_scoring_domain() + [("c2p_scored_on", "=", False)]
         )
         note = "%s never-scored lead(s) still in the backlog" % remaining
         return log_run(
@@ -270,19 +298,18 @@ class CrmLead(models.Model):
         )
 
     # ------------------------------------------------------------------
-    # Agent 2 — stale opportunity detection
+    # Agent 2 — stale lead detection
     # ------------------------------------------------------------------
     @api.model
     def _c2p_stale_domain(self, cutoff):
         return [
-            ("type", "=", "opportunity"),
             ("active", "=", True),
-            ("priority", "in", list(HIGH_PRIORITIES)),
-            # Won opportunities sit at 100; lost ones are archived, so `active`
-            # already excludes them.
+            ("type", "=", "opportunity"),
+            ("stage_id.is_won", "=", False),
             ("probability", "<", 100),
+            ("write_date", "<", cutoff),
             ("activity_ids", "=", False),
-            ("write_date", "<=", cutoff),
+            ("priority", "in", list(HIGH_PRIORITIES)),
         ]
 
     @api.model
@@ -297,9 +324,18 @@ class CrmLead(models.Model):
         flagged = already_flagged(
             self.env, "crm.lead", leads.ids, todo.id, STALE_SUMMARY
         )
-        deadline = fields.Date.context_today(self)
+        deadline = fields.Date.context_today(self) + timedelta(
+            days=STALE_DEADLINE_DAYS
+        )
         acted = 0
+        ownerless = 0
         for lead in leads:
+            # Production skips a lead with no owner rather than assigning the
+            # task to whoever ran the cron. Agent 6 is what fixes those.
+            owner = lead.user_id or lead.team_id.user_id
+            if not owner:
+                ownerless += 1
+                continue
             if lead.id in flagged:
                 continue
             acted += 1
@@ -308,94 +344,92 @@ class CrmLead(models.Model):
             lead.activity_schedule(
                 activity_type_id=todo.id,
                 summary=STALE_SUMMARY,
-                note="No activity on this opportunity for %s days or more. "
-                "Expected revenue: %s." % (STALE_DAYS, lead.expected_revenue or 0),
-                user_id=(lead.user_id or self.env.user).id,
+                note=_STALE_NOTE,
+                user_id=owner.id,
                 date_deadline=deadline,
             )
-        return log_run(self.env, "stale_opportunity", len(leads), acted, dry_run, limit)
+        note = "%s lead(s) skipped for having no owner" % ownerless if ownerless else ""
+        return log_run(
+            self.env, "stale_opportunity", len(leads), acted, dry_run, limit, note
+        )
 
     # ------------------------------------------------------------------
     # Agent 3 — proposal follow-up
     # ------------------------------------------------------------------
     @api.model
-    def _c2p_proposal_stage_ids(self):
-        """Stages that read as proposal stages, matched by name at run time.
-
-        Name matching is the trade-off taken for a smaller CRM footprint: no
-        extra field on crm.stage, no extra view. The cost is that renaming a
-        stage out of these hints stops it being selected — which is why a run
-        that matches nothing says so in its note instead of quietly reporting a
-        zero that looks like a quiet week.
-        """
-        stages = self.env["crm.stage"].search([])
-        return stages.filtered(
-            lambda stage: any(
-                hint in (stage.name or "").lower() for hint in PROPOSAL_STAGE_HINTS
-            )
-        ).ids
+    def _c2p_proposal_stages(self):
+        return self.env["crm.stage"].search(
+            [("name", "in", list(PROPOSAL_STAGE_NAMES))]
+        )
 
     @api.model
     def _c2p_proposal_domain(self, cutoff, stage_ids):
         return [
             ("active", "=", True),
             ("stage_id", "in", stage_ids),
-            ("probability", "<", 100),
+            ("date_last_stage_update", "<", cutoff),
             ("activity_ids", "=", False),
-            ("date_last_stage_update", "<=", cutoff),
         ]
 
     @api.model
     def _cron_followup_proposals(self, limit=PROPOSAL_LIMIT, dry_run=None):
-        """Raise a Call on leads parked in a proposal stage.
+        """Chase leads parked in a proposal stage.
 
-        Selects on ``date_last_stage_update`` — time in *this* stage — rather
-        than ``write_date``, so editing an unrelated field does not reset the
-        clock on a proposal nobody has chased.
+        Two stages, two different messages: "Proposal Sent" gets a follow-up
+        call, "Proposal to be Send" gets told to issue the thing. Production
+        matches those names exactly, so this does too — but a run that matches
+        no stage at all now says so in its note rather than reporting a zero
+        that reads like a quiet week.
         """
         dry_run = dry_run_enabled(self.env, dry_run)
         call = activity_type(self.env, "mail.mail_activity_data_call")
 
-        stage_ids = self._c2p_proposal_stage_ids()
-        if not stage_ids:
+        stages = self._c2p_proposal_stages()
+        if not stages:
             return log_run(
-                self.env,
-                "proposal_followup",
-                0,
-                0,
-                dry_run,
-                limit,
-                note="no CRM stage name contains any of %s, so nothing could be "
-                "selected — check CRM > Configuration > Stages"
-                % (", ".join(PROPOSAL_STAGE_HINTS),),
+                self.env, "proposal_followup", 0, 0, dry_run, limit,
+                note="no crm.stage is named %s — nothing could be selected"
+                % " or ".join(PROPOSAL_STAGE_NAMES),
             )
 
         cutoff = fields.Datetime.now() - timedelta(days=PROPOSAL_DAYS)
         leads = self.search(
-            self._c2p_proposal_domain(cutoff, stage_ids),
+            self._c2p_proposal_domain(cutoff, stages.ids),
             limit=limit,
             order="date_last_stage_update asc",
         )
         flagged = already_flagged(
-            self.env, "crm.lead", leads.ids, call.id, PROPOSAL_SUMMARY
+            self.env, "crm.lead", leads.ids, call.id, PROPOSAL_SENT_SUMMARY
+        ) | already_flagged(
+            self.env, "crm.lead", leads.ids, call.id, PROPOSAL_PENDING_SUMMARY
         )
-        deadline = fields.Date.context_today(self)
+        deadline = fields.Date.context_today(self) + timedelta(
+            days=PROPOSAL_DEADLINE_DAYS
+        )
         acted = 0
+        ownerless = 0
         for lead in leads:
+            owner = lead.user_id or lead.team_id.user_id
+            if not owner:
+                ownerless += 1
+                continue
             if lead.id in flagged:
                 continue
+            sent = lead.stage_id.name == PROPOSAL_STAGE_SENT
             acted += 1
             if dry_run:
                 continue
             lead.activity_schedule(
                 activity_type_id=call.id,
-                summary=PROPOSAL_SUMMARY,
-                note="In %s for %s days or more with no activity scheduled."
-                % (lead.stage_id.name or "a proposal stage", PROPOSAL_DAYS),
-                user_id=(lead.user_id or self.env.user).id,
+                summary=PROPOSAL_SENT_SUMMARY if sent else PROPOSAL_PENDING_SUMMARY,
+                note=_PROPOSAL_SENT_NOTE if sent else _PROPOSAL_PENDING_NOTE,
+                user_id=owner.id,
                 date_deadline=deadline,
             )
-        return log_run(self.env, "proposal_followup", len(leads), acted, dry_run, limit)
+        note = "%s lead(s) skipped for having no owner" % ownerless if ownerless else ""
+        return log_run(
+            self.env, "proposal_followup", len(leads), acted, dry_run, limit, note
+        )
 
     # ------------------------------------------------------------------
     # Agent 5 — email validation

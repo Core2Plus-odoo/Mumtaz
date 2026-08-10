@@ -56,12 +56,31 @@ JOIN ir_act_server a ON a.id = c.ir_actions_server_id
 ORDER BY c.id;
 ```
 
-Two things to read off it:
+**Already run, on 2026-08-10.** The four agents are crons **44, 45, 46 and 47**,
+and — contrary to the original report — none was empty:
 
-- **`code_length`** — this is where the four agents will show `0` or `NULL`.
-  That is the silent failure, on the record, with a timestamp next to it.
-- **`nextcall` / `interval_number` / `interval_type` / `user_id` / `priority`** —
-  copy these four rows somewhere. Step 3 writes them onto the new crons.
+| id | name | interval | code | last run |
+|---|---|---|---|---|
+| 44 | C2P Agent: Lead Scoring (Daily) | 1 day | 1033 chars | 2026-08-10 09:00 |
+| 45 | C2P Agent: Stale Lead Detection (Daily) | 1 day | 1150 chars | 2026-08-10 09:00 |
+| 46 | C2P Agent: Proposal Follow-up (Daily) | 1 day | 1504 chars | 2026-08-10 09:00 |
+| 47 | C2P Agent: Invoice Chaser (Weekly) | **7 days** | 955 chars | 2026-08-10 09:00 |
+
+All four fire at **09:00**. Note the invoice chaser is weekly, not daily — the
+module's cron matches.
+
+Re-run the query before migrating anyway: `code_length` of `0` or `NULL` beside a
+recent `lastcall` is still the signature of the failure originally reported, and
+these numbers are a snapshot.
+
+Three more agents live in database code fields and are **not** covered by this
+module — worth the same treatment later:
+
+| id | name | interval | code |
+|---|---|---|---|
+| 38 | Project — Weekly Status Update Task Creation | 1 week | 1011 chars |
+| 39 | Project — Overdue Task Reminder | 1 day | 964 chars |
+| 40 | Project — Duplicate Cleanup Safety Net | 10 min | 353 chars |
 
 If any of the four crons has `action_state` other than `code` — say it calls a
 *separate* server action via `env.ref('...').run()` — note that action's XML ID
@@ -113,11 +132,12 @@ sudo -u odoo /opt/odoo/odoo-bin shell -c /etc/odoo/odoo.conf -d Mumtaz_C2P
 
 ```python
 # Map each OLD cron to its replacement. Fill in the old IDs from step 1.
+# IDs confirmed on Mumtaz_C2P, 2026-08-10. Re-check them before running.
 PAIRS = [
-    (OLD_LEAD_SCORING_ID,   "c2p_agents.cron_lead_scoring"),
-    (OLD_STALE_ID,          "c2p_agents.cron_stale_opportunities"),
-    (OLD_PROPOSAL_ID,       "c2p_agents.cron_proposal_followup"),
-    (OLD_INVOICE_ID,        "c2p_agents.cron_invoice_chaser"),
+    (44, "c2p_agents.cron_lead_scoring"),
+    (45, "c2p_agents.cron_stale_opportunities"),
+    (46, "c2p_agents.cron_proposal_followup"),
+    (47, "c2p_agents.cron_invoice_chaser"),
 ]
 
 CARRIED = ["interval_number", "interval_type", "nextcall", "priority", "user_id"]
@@ -149,9 +169,7 @@ including its now-empty `code` — available for reference.
 ```python
 from odoo import fields  # the shell namespace does not provide it
 
-old = env["ir.cron"].browse([
-    OLD_LEAD_SCORING_ID, OLD_STALE_ID, OLD_PROPOSAL_ID, OLD_INVOICE_ID,
-])
+old = env["ir.cron"].browse([44, 45, 46, 47])
 old.write({"active": False})
 
 # Rename so nobody re-enables one by accident in six months.
@@ -216,16 +234,16 @@ This is the first move if a live run does something unexpected.
 **Back to the old crons** — un-archive them and archive the new four:
 
 ```python
-env["ir.cron"].browse([OLD_LEAD_SCORING_ID, ...]).write({"active": True})
+env["ir.cron"].browse([44, 45, 46, 47]).write({"active": True})
 for xmlid in ["c2p_agents.cron_lead_scoring", "c2p_agents.cron_stale_opportunities",
               "c2p_agents.cron_proposal_followup", "c2p_agents.cron_invoice_chaser"]:
     env.ref(xmlid).active = False
 env.cr.commit()
 ```
 
-Worth being clear-eyed about what that buys you: the old crons execute an empty
-`code` field. Rolling back restores the *previous behaviour*, which was nothing.
-It is a way to stop the new agents, not a way to get the old ones working.
+Rolling back genuinely restores the previous behaviour here: those four records
+carry working code and ran this morning. That was not true of the situation
+originally described, but it is true of the database as it stands.
 
 **Removing the module** — `Apps → C2P Agents → Uninstall` drops the four new
 crons and the run log. It does **not** remove

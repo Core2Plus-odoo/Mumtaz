@@ -1,21 +1,23 @@
-"""Agent 4: the invoice chaser."""
+"""Agent 4: the invoice chaser, ported from cron 47.
+
+Faithful to the production rules, including the three places my first pass had
+guessed wrong: customer invoices only (not receipts), any existing activity
+suppresses the chase, and it runs weekly rather than daily.
+"""
 
 from odoo import api, fields, models
 
-from .agent_tools import activity_type, already_flagged, dry_run_enabled, log_run
+from .agent_tools import activity_type, dry_run_enabled, log_run
 
-INVOICE_CHASER_LIMIT = 50
+INVOICE_CHASER_LIMIT = 40
 
-# See the note on the crm.lead summaries: this string is the duplicate marker.
-CHASER_SUMMARY = "C2P Agent: overdue invoice"
+# Production chases `out_invoice` only. Customer receipts are deliberately not
+# in scope, and vendor bills never were — chasing ourselves for our own payables
+# is a different job with a different owner.
+CHASEABLE_TYPES = ("out_invoice",)
 
-# Customer documents that can fall overdue. Vendor bills are deliberately out of
-# scope — chasing ourselves for our own payables is a different job with a
-# different owner.
-CHASEABLE_TYPES = ("out_invoice", "out_receipt")
-
-# Payment states worth a phone call. `in_payment` is excluded: the money is
-# already moving and the call would be wrong.
+# `in_payment` is excluded: the money is already moving and the call would be
+# wrong. `reversed` and `paid` need no chasing.
 UNPAID_STATES = ("not_paid", "partial")
 
 
@@ -29,16 +31,23 @@ class AccountMove(models.Model):
             ("state", "=", "posted"),
             ("payment_state", "in", list(UNPAID_STATES)),
             ("invoice_date_due", "<", today),
+            # Production skips any invoice that already carries an activity —
+            # deliberately, and it is also what makes this agent idempotent,
+            # since its summary embeds the overdue day count and therefore
+            # changes every single day. A summary marker could not dedupe it.
+            ("activity_ids", "=", False),
         ]
 
     @api.model
     def _cron_chase_overdue_invoices(self, limit=INVOICE_CHASER_LIMIT, dry_run=None):
         """Raise a Call on the owner of each overdue posted customer invoice.
 
-        Unlike the two CRM chasers, this does not require the invoice to be free
-        of activities. An overdue invoice often has other activities on it
-        already, and none of them mean somebody has chased the payment — so here
-        the duplicate marker alone decides.
+        One deliberate departure from production: the "has no activity" test is
+        in the domain rather than applied in Python after the limit. Production
+        takes 40 invoices and then discards those with activities, so a run can
+        act on far fewer than 40 — sometimes none, while genuinely unchased
+        invoices wait behind them. In the domain, the limit selects 40 invoices
+        that actually need chasing.
         """
         dry_run = dry_run_enabled(self.env, dry_run)
         call = activity_type(self.env, "mail.mail_activity_data_call")
@@ -46,27 +55,35 @@ class AccountMove(models.Model):
         moves = self.search(
             self._c2p_overdue_domain(today), limit=limit, order="invoice_date_due asc"
         )
-        flagged = already_flagged(
-            self.env, "account.move", moves.ids, call.id, CHASER_SUMMARY
-        )
         acted = 0
+        ownerless = 0
         for move in moves:
-            if move.id in flagged:
+            owner = move.invoice_user_id or move.create_uid
+            if not owner:
+                ownerless += 1
                 continue
+            overdue_days = (today - move.invoice_date_due).days
             acted += 1
             if dry_run:
                 continue
             move.activity_schedule(
                 activity_type_id=call.id,
-                summary=CHASER_SUMMARY,
-                note="%s is %s days overdue. Outstanding: %s %s."
+                summary="Overdue %s days - %s" % (overdue_days, move.name),
+                note="<p>%s is %s days overdue. Amount due: %s %s.</p>"
                 % (
-                    move.name or "This invoice",
-                    (today - move.invoice_date_due).days,
-                    move.currency_id.name or "",
+                    move.name,
+                    overdue_days,
                     move.amount_residual,
+                    move.currency_id.name or "",
                 ),
-                user_id=(move.invoice_user_id or move.create_uid or self.env.user).id,
+                user_id=owner.id,
                 date_deadline=today,
             )
-        return log_run(self.env, "invoice_chaser", len(moves), acted, dry_run, limit)
+        note = (
+            "%s invoice(s) skipped for having no owner" % ownerless
+            if ownerless
+            else ""
+        )
+        return log_run(
+            self.env, "invoice_chaser", len(moves), acted, dry_run, limit, note
+        )

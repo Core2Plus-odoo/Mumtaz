@@ -1,8 +1,18 @@
-"""Agent 3 — time parked in a stage whose name reads as a proposal stage."""
+"""Agent 3 — two proposal stages, two different messages.
+
+Production matches stage names exactly: "Proposal Sent" means chase the client,
+"Proposal to be Send" means chase ourselves. Getting those the same way round is
+the whole point of the agent.
+"""
 
 from odoo.tests import tagged
 
-from ..models.crm_lead import PROPOSAL_SUMMARY
+from ..models.crm_lead import (
+    PROPOSAL_PENDING_SUMMARY,
+    PROPOSAL_SENT_SUMMARY,
+    PROPOSAL_STAGE_PENDING,
+    PROPOSAL_STAGE_SENT,
+)
 from .common import C2pAgentsCommon
 
 
@@ -11,68 +21,89 @@ class TestProposalFollowup(C2pAgentsCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.proposal_stage = cls.env["crm.stage"].create({"name": "Proposal Sent"})
-        cls.other_stage = cls.env["crm.stage"].create({"name": "Negotiation"})
+        cls.stage_sent = cls.env["crm.stage"].create({"name": PROPOSAL_STAGE_SENT})
+        cls.stage_pending = cls.env["crm.stage"].create(
+            {"name": PROPOSAL_STAGE_PENDING}
+        )
+        cls.stage_other = cls.env["crm.stage"].create({"name": "Negotiation"})
 
     def _parked(self, stage, days, **values):
-        values.setdefault("probability", 40)
         lead = self.make_lead(stage_id=stage.id, **values)
         self.age(lead, "date_last_stage_update", days)
         return lead
 
-    def test_proposal_sitting_too_long_is_chased(self):
-        lead = self._parked(self.proposal_stage, 10, name="Proposal out with client")
+    def test_sent_proposal_gets_a_follow_up_call(self):
+        lead = self._parked(self.stage_sent, 10, name="Out with the client")
 
         self.env["crm.lead"]._cron_followup_proposals()
 
-        activity = self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY)
+        activity = self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
         self.assertEqual(len(activity), 1)
         self.assertEqual(activity.user_id, self.salesperson)
+        self.assertIn("Call rather than email", activity.note)
 
-    def test_fresh_proposal_is_left_alone(self):
-        lead = self._parked(self.proposal_stage, 3, name="Just sent")
+    def test_unsent_proposal_chases_us_not_the_client(self):
+        """The other stage means we have not issued it yet — different message."""
+        lead = self._parked(self.stage_pending, 10, name="Still not issued")
 
         self.env["crm.lead"]._cron_followup_proposals()
 
-        self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
+        self.assertFalse(
+            self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
+        )
+        activity = self.agent_activities(
+            lead, self.call_type, PROPOSAL_PENDING_SUMMARY
+        )
+        self.assertEqual(len(activity), 1)
+        self.assertIn("issue the proposal today", activity.note)
+
+    def test_fresh_proposal_is_left_alone(self):
+        lead = self._parked(self.stage_sent, 3, name="Just sent")
+
+        self.env["crm.lead"]._cron_followup_proposals()
+
+        self.assertFalse(
+            self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
+        )
 
     def test_boundary_is_inclusive_at_the_threshold(self):
-        at_threshold = self._parked(self.proposal_stage, 7, name="Exactly 7")
-        just_under = self._parked(self.proposal_stage, 6, name="Only 6")
+        at_threshold = self._parked(self.stage_sent, 8, name="Past 7 days")
+        just_under = self._parked(self.stage_sent, 6, name="Only 6")
 
         self.env["crm.lead"]._cron_followup_proposals()
 
         self.assertTrue(
-            self.agent_activities(at_threshold, self.call_type, PROPOSAL_SUMMARY)
+            self.agent_activities(at_threshold, self.call_type, PROPOSAL_SENT_SUMMARY)
         )
         self.assertFalse(
-            self.agent_activities(just_under, self.call_type, PROPOSAL_SUMMARY)
+            self.agent_activities(just_under, self.call_type, PROPOSAL_SENT_SUMMARY)
         )
 
-    def test_stage_whose_name_does_not_match_is_out_of_scope(self):
-        lead = self._parked(self.other_stage, 30, name="Sitting in negotiation")
+    def test_other_stages_are_out_of_scope(self):
+        lead = self._parked(self.stage_other, 30, name="Sitting in negotiation")
 
         self.env["crm.lead"]._cron_followup_proposals()
 
-        self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
+        self.assertFalse(
+            self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
+        )
 
-    def test_stage_hints_match_quotation_and_offer_too(self):
-        for stage_name in ("Quotation Review", "Offer Issued", "PROPOSAL follow"):
-            stage = self.env["crm.stage"].create({"name": stage_name})
-            self.assertIn(
-                stage.id,
-                self.env["crm.lead"]._c2p_proposal_stage_ids(),
-                "%s should read as a proposal stage" % stage_name,
-            )
+    def test_stage_names_are_matched_exactly(self):
+        """A near-miss name is not a proposal stage. This is the fragility the
+        run note exists to make visible."""
+        near_miss = self.env["crm.stage"].create({"name": "Proposal Sent to Client"})
+        lead = self._parked(near_miss, 30, name="Near-miss stage")
 
-    def test_renaming_a_stage_out_of_the_hints_is_reported_not_silent(self):
-        """The cost of matching names, made visible rather than quiet.
+        self.env["crm.lead"]._cron_followup_proposals()
 
-        With no stage matching, the run records why it selected nothing. A bare
-        zero would read as a quiet week — which is the failure this module
-        exists to stop.
-        """
-        self.env["crm.stage"].search([]).write({"name": "Unrecognisable"})
+        self.assertFalse(
+            self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
+        )
+
+    def test_no_matching_stage_is_reported_not_silent(self):
+        self.env["crm.stage"].search(
+            [("name", "in", [PROPOSAL_STAGE_SENT, PROPOSAL_STAGE_PENDING])]
+        ).write({"name": "Renamed away"})
 
         result = self.env["crm.lead"]._cron_followup_proposals()
 
@@ -80,11 +111,11 @@ class TestProposalFollowup(C2pAgentsCommon):
         run = self.env["c2p.agent.run"].search(
             [("agent", "=", "proposal_followup")], order="id desc", limit=1
         )
-        self.assertIn("no CRM stage name contains", run.note)
+        self.assertIn("no crm.stage is named", run.note)
 
     def test_lead_with_an_open_activity_is_left_alone(self):
         lead = self.make_lead(
-            name="Being chased already", stage_id=self.proposal_stage.id, probability=40
+            name="Being chased already", stage_id=self.stage_sent.id
         )
         lead.activity_schedule(
             activity_type_id=self.todo_type.id,
@@ -95,14 +126,34 @@ class TestProposalFollowup(C2pAgentsCommon):
 
         self.env["crm.lead"]._cron_followup_proposals()
 
-        self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
-
-    def test_won_lead_is_out_of_scope(self):
-        lead = self.make_lead(
-            name="Signed", stage_id=self.proposal_stage.id, probability=100
+        self.assertFalse(
+            self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
         )
-        self.age(lead, "date_last_stage_update", 30)
+
+    def test_ownerless_lead_is_skipped_and_counted(self):
+        """Production refuses to schedule a task for nobody."""
+        lead = self._parked(
+            self.stage_sent, 10, name="Nobody's proposal", user_id=False
+        )
+        lead.team_id = False
+
+        result = self.env["crm.lead"]._cron_followup_proposals()
+
+        self.assertFalse(
+            self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)
+        )
+        run = self.env["c2p.agent.run"].search(
+            [("agent", "=", "proposal_followup")], order="id desc", limit=1
+        )
+        self.assertIn("no owner", run.note)
+        self.assertGreaterEqual(result["scanned"], 1)
+
+    def test_rerun_does_not_duplicate(self):
+        lead = self._parked(self.stage_sent, 10, name="Chase once")
 
         self.env["crm.lead"]._cron_followup_proposals()
+        self.env["crm.lead"]._cron_followup_proposals()
 
-        self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
+        self.assertEqual(
+            len(self.agent_activities(lead, self.call_type, PROPOSAL_SENT_SUMMARY)), 1
+        )
