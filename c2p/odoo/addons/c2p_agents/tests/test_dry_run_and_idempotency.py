@@ -58,7 +58,7 @@ class TestDryRunAndIdempotency(C2pAgentsCommon):
             [("agent", "=", "stale_opportunity")], order="id desc", limit=1
         )
         self.assertTrue(run.dry_run)
-        self.assertEqual(run.state, "ok")
+        self.assertIn("dry run", run.note)
 
     def test_parameter_supplies_the_default(self):
         self.env["ir.config_parameter"].sudo().set_param("c2p_agents.dry_run", "True")
@@ -89,19 +89,6 @@ class TestDryRunAndIdempotency(C2pAgentsCommon):
         self.env["crm.lead"]._cron_flag_stale_opportunities()
 
         self.assertFalse(self.agent_activities(lead, self.todo_type, STALE_SUMMARY))
-
-    def test_a_broken_numeric_parameter_falls_back_to_its_default(self):
-        self.env["ir.config_parameter"].sudo().set_param(
-            "c2p_agents.stale_days", "three weeks"
-        )
-        lead = self._stale_lead()
-
-        self.env["crm.lead"]._cron_flag_stale_opportunities()
-
-        self.assertTrue(
-            self.agent_activities(lead, self.todo_type, STALE_SUMMARY),
-            "it should fall back to 21 days rather than crash",
-        )
 
     # ------------------------------------------------------------------
     # Idempotency

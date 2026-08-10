@@ -24,13 +24,17 @@ crons are active and run on schedule, they select records and report what they
 would have done, and they write nothing. Setting the parameter to `False` arms
 them.
 
-Every run — dry or live — writes a `c2p.agent.run` row recording the agent, the
-timestamp, how many records were scanned, how many were acted on, and any error.
-**CRM → Configuration → C2P Agent Runs**, with an *Acted on Nothing* filter. This
-is the check the previous setup did not have.
+Every run writes a `c2p.agent.run` row recording the agent, the timestamp, how
+many records were scanned and how many were acted on. **Settings → Technical →
+C2P Agent Runs**, admin-only, with an *Acted on Nothing* filter. This is the
+check the previous setup did not have.
 
-Each method takes `limit` (default from a system parameter, conservative) and
-`dry_run` (an explicit argument overrides the parameter).
+A run that *crashes* needs no help from the log: Odoo marks the cron as failed
+and records the traceback. What the log catches is the quiet failure — the run
+that completes cleanly and touches nothing, which is what went unnoticed before.
+
+Each method takes `limit` (a conservative module constant) and `dry_run` (an
+explicit argument overrides the system parameter).
 
 ```python
 # Read-only, safe on production, returns a summary dict:
@@ -39,16 +43,25 @@ env["crm.lead"]._cron_flag_stale_opportunities(limit=10, dry_run=True)
 
 ## Configuration
 
-Thresholds and limits are `ir.config_parameter` entries under `c2p_agents.*` —
-see the table in `docs/migration-from-server-actions.md`.
+**One knob: `c2p_agents.dry_run`.** Thresholds (`STALE_DAYS = 21`,
+`PROPOSAL_DAYS = 7`) and per-run limits are module constants in `models/`.
 
-Nothing resolves a database ID. Activity types come from `mail.mail_activity_data_todo`
-and `mail.mail_activity_data_call` by XML ID, countries from `res.country.code`,
-sources by name. Proposal stages are identified by a **Proposal Stage** checkbox
-added to `crm.stage` — seeded at install from the existing stage names, editable
-thereafter under CRM → Configuration → Stages. Selecting on a flag rather than
-matching stage names at runtime means renaming a stage cannot silently switch the
-follow-up agent off.
+That is deliberate. A value stored in `ir.config_parameter` is the same class of
+thing as Python stored in `ir.actions.server` — it governs behaviour and lives
+somewhere it cannot be diffed, reviewed or reverted. Changing `STALE_DAYS` should
+be a commit. `dry_run` is the exception because flipping it is an operational
+act, not a change of rules.
+
+Nothing resolves a database ID. Activity types come from
+`mail.mail_activity_data_todo` and `mail.mail_activity_data_call` by XML ID,
+countries from `res.country.code`, sources by name. Proposal stages are matched
+by name at run time against `PROPOSAL_STAGE_HINTS` (`propos`, `quot`, `offer`) —
+no extra field, no extra view, nothing added to the CRM UI.
+
+The cost of that: rename a stage out of those hints and it stops being selected.
+So a run matching **no** stage records why in its note rather than reporting a
+zero that reads like a quiet week. `test_renaming_a_stage_out_of_the_hints_is_reported_not_silent`
+pins that behaviour.
 
 ## Idempotency
 

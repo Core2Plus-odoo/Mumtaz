@@ -1,12 +1,17 @@
 """One row per agent run.
 
-The reason this model exists: four crons ran nightly for an unknown period,
-executed nothing, and reported success. Odoo's own cron log records that a job
-ran, not that it did anything. This records both, so "scanned 0, acted on 0,
-every night for six weeks" is a line in a list view somebody can notice.
+Why this exists: four crons ran nightly for an unknown period, executed nothing,
+and reported success. Odoo's own cron log records that a job ran, not that it
+did anything. This records both, so "scanned 0, acted on 0, every night for six
+weeks" is a line in a list somebody can notice.
+
+It deliberately does not record failures. A crash is already loud — Odoo marks
+the cron failed and logs the traceback — and a row written here would be rolled
+back with the transaction anyway. The quiet failure is the one that needed a
+home.
 """
 
-from odoo import api, fields, models
+from odoo import fields, models
 
 AGENTS = [
     ("lead_scoring", "Lead Scoring"),
@@ -31,8 +36,7 @@ class C2pAgentRun(models.Model):
     )
     scanned = fields.Integer(
         string="Records Scanned",
-        help="How many records the agent's domain selected, before the limit "
-        "on what it would act on.",
+        help="How many records the agent's domain selected.",
     )
     acted = fields.Integer(
         string="Records Acted On",
@@ -41,15 +45,3 @@ class C2pAgentRun(models.Model):
     )
     limit_applied = fields.Integer(string="Limit")
     note = fields.Text()
-    error = fields.Text()
-    state = fields.Selection(
-        [("ok", "Completed"), ("error", "Failed")],
-        compute="_compute_state",
-        store=True,
-        index=True,
-    )
-
-    @api.depends("error")
-    def _compute_state(self):
-        for run in self:
-            run.state = "error" if run.error else "ok"

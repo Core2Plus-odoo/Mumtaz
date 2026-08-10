@@ -5,18 +5,15 @@
         <field name="name">c2p.agent.run.list</field>
         <field name="model">c2p.agent.run</field>
         <field name="arch" type="xml">
-            <!-- decoration_danger on a failed run, decoration_muted on a run
-                 that touched nothing: the two rows worth noticing at a glance. -->
-            <list string="Agent Runs"
-                  decoration-danger="state == 'error'"
-                  decoration-muted="state == 'ok' and acted == 0">
+            <!-- A run that touched nothing is greyed out: the row worth
+                 noticing, and the one nobody noticed last time. -->
+            <list string="Agent Runs" decoration-muted="acted == 0">
                 <field name="executed_at"/>
                 <field name="agent"/>
                 <field name="scanned"/>
                 <field name="acted"/>
                 <field name="limit_applied" optional="hide"/>
                 <field name="dry_run" widget="boolean_toggle" readonly="1"/>
-                <field name="state"/>
                 <field name="note" optional="hide"/>
             </list>
         </field>
@@ -32,7 +29,6 @@
                         <group>
                             <field name="agent"/>
                             <field name="executed_at"/>
-                            <field name="state"/>
                             <field name="dry_run"/>
                         </group>
                         <group>
@@ -43,9 +39,6 @@
                     </group>
                     <group string="Summary">
                         <field name="note" nolabel="1"/>
-                    </group>
-                    <group string="Error" invisible="state != 'error'">
-                        <field name="error" nolabel="1"/>
                     </group>
                 </sheet>
             </form>
@@ -58,8 +51,6 @@
         <field name="arch" type="xml">
             <search string="Agent Runs">
                 <field name="agent"/>
-                <filter name="filter_failed" string="Failed"
-                        domain="[('state', '=', 'error')]"/>
                 <filter name="filter_did_nothing" string="Acted on Nothing"
                         domain="[('acted', '=', 0)]"/>
                 <filter name="filter_live" string="Live Runs"
@@ -70,8 +61,6 @@
                 <group expand="0" string="Group By">
                     <filter name="group_agent" string="Agent"
                             context="{'group_by': 'agent'}"/>
-                    <filter name="group_state" string="Status"
-                            context="{'group_by': 'state'}"/>
                     <filter name="group_day" string="Day"
                             context="{'group_by': 'executed_at:day'}"/>
                 </group>
@@ -94,9 +83,12 @@
         </field>
     </record>
 
+    <!-- Under Settings > Technical rather than CRM > Configuration: this is an
+         operational audit trail, not a CRM feature, and the CRM menu is for
+         people selling. -->
     <menuitem id="menu_c2p_agent_run"
               name="C2P Agent Runs"
-              parent="crm.crm_menu_config"
+              parent="base.menu_custom"
               action="action_c2p_agent_run"
               sequence="90"
               groups="base.group_system"/>

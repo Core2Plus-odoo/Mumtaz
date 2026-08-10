@@ -47,11 +47,7 @@ without losing their schedules.
         "data/c2p_agents_params.xml",
         "data/c2p_agents_cron.xml",
         "views/c2p_agent_run_views.xml",
-        "views/crm_stage_views.xml",
     ],
-    # Ticks "Proposal Stage" on stages that already look like proposal stages,
-    # so the follow-up agent has something to select on the day it installs.
-    "post_init_hook": "post_init_hook",
     "installable": True,
     "auto_install": False,
     "application": False,

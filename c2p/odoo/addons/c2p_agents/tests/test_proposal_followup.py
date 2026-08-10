@@ -1,4 +1,4 @@
-"""Agent 3 — time parked in a stage flagged as a proposal stage."""
+"""Agent 3 — time parked in a stage whose name reads as a proposal stage."""
 
 from odoo.tests import tagged
 
@@ -11,12 +11,8 @@ class TestProposalFollowup(C2pAgentsCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.proposal_stage = cls.env["crm.stage"].create(
-            {"name": "Proposal Sent", "is_proposal_stage": True}
-        )
-        cls.other_stage = cls.env["crm.stage"].create(
-            {"name": "Qualification", "is_proposal_stage": False}
-        )
+        cls.proposal_stage = cls.env["crm.stage"].create({"name": "Proposal Sent"})
+        cls.other_stage = cls.env["crm.stage"].create({"name": "Negotiation"})
 
     def _parked(self, stage, days, **values):
         values.setdefault("probability", 40)
@@ -53,22 +49,38 @@ class TestProposalFollowup(C2pAgentsCommon):
             self.agent_activities(just_under, self.call_type, PROPOSAL_SUMMARY)
         )
 
-    def test_unflagged_stage_is_out_of_scope(self):
-        """This is the whole reason the flag exists rather than a name match."""
-        lead = self._parked(self.other_stage, 30, name="Sitting in qualification")
+    def test_stage_whose_name_does_not_match_is_out_of_scope(self):
+        lead = self._parked(self.other_stage, 30, name="Sitting in negotiation")
 
         self.env["crm.lead"]._cron_followup_proposals()
 
         self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
 
-    def test_unflagging_a_stage_takes_it_out_of_scope(self):
-        """Selection follows the checkbox, so unticking it stops the chasing."""
-        lead = self._parked(self.proposal_stage, 30, name="No longer chased")
-        self.proposal_stage.is_proposal_stage = False
+    def test_stage_hints_match_quotation_and_offer_too(self):
+        for stage_name in ("Quotation Review", "Offer Issued", "PROPOSAL follow"):
+            stage = self.env["crm.stage"].create({"name": stage_name})
+            self.assertIn(
+                stage.id,
+                self.env["crm.lead"]._c2p_proposal_stage_ids(),
+                "%s should read as a proposal stage" % stage_name,
+            )
 
-        self.env["crm.lead"]._cron_followup_proposals()
+    def test_renaming_a_stage_out_of_the_hints_is_reported_not_silent(self):
+        """The cost of matching names, made visible rather than quiet.
 
-        self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
+        With no stage matching, the run records why it selected nothing. A bare
+        zero would read as a quiet week — which is the failure this module
+        exists to stop.
+        """
+        self.env["crm.stage"].search([]).write({"name": "Unrecognisable"})
+
+        result = self.env["crm.lead"]._cron_followup_proposals()
+
+        self.assertEqual(result["scanned"], 0)
+        run = self.env["c2p.agent.run"].search(
+            [("agent", "=", "proposal_followup")], order="id desc", limit=1
+        )
+        self.assertIn("no CRM stage name contains", run.note)
 
     def test_lead_with_an_open_activity_is_left_alone(self):
         lead = self.make_lead(
@@ -94,15 +106,3 @@ class TestProposalFollowup(C2pAgentsCommon):
         self.env["crm.lead"]._cron_followup_proposals()
 
         self.assertFalse(self.agent_activities(lead, self.call_type, PROPOSAL_SUMMARY))
-
-    def test_install_hook_seeds_the_flag_from_stage_names(self):
-        """The seeding rule that makes the flag useful on day one."""
-        from ..models.crm_stage import seed_proposal_stages
-
-        looks_like_one = self.env["crm.stage"].create({"name": "Quotation Review"})
-        does_not = self.env["crm.stage"].create({"name": "Negotiation"})
-
-        seed_proposal_stages(self.env)
-
-        self.assertTrue(looks_like_one.is_proposal_stage)
-        self.assertFalse(does_not.is_proposal_stage)

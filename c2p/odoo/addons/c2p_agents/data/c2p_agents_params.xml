@@ -4,47 +4,16 @@
      turned on — the same class of failure this module was written to end. -->
 <odoo noupdate="1">
 
-    <!-- The master safety catch. The module installs inert: the crons run on
-         schedule, record what they would have touched in c2p.agent.run, and
-         write nothing. Set this to False to arm them. -->
+    <!-- The only knob. Everything else — thresholds, per-run limits — is a
+         constant in models/, where it can be diffed and reviewed. This one is
+         seeded here rather than left to the code default so that it is visible
+         and editable under Settings > Technical > System Parameters.
+
+         The module installs inert: the crons run on schedule, record what they
+         would have touched, and write nothing until this is set to False. -->
     <record id="param_dry_run" model="ir.config_parameter">
         <field name="key">c2p_agents.dry_run</field>
         <field name="value">True</field>
-    </record>
-
-    <!-- Days of silence before a high-priority opportunity is considered stale. -->
-    <record id="param_stale_days" model="ir.config_parameter">
-        <field name="key">c2p_agents.stale_days</field>
-        <field name="value">21</field>
-    </record>
-
-    <!-- Days in a proposal stage before the opportunity gets chased. -->
-    <record id="param_proposal_days" model="ir.config_parameter">
-        <field name="key">c2p_agents.proposal_days</field>
-        <field name="value">7</field>
-    </record>
-
-    <!-- Per-run ceilings. Conservative on purpose: an agent that creates fifty
-         activities on a bad night is a conversation, one that creates five
-         thousand is an incident. Raise them once a live run looks right. -->
-    <record id="param_lead_scoring_limit" model="ir.config_parameter">
-        <field name="key">c2p_agents.lead_scoring_limit</field>
-        <field name="value">200</field>
-    </record>
-
-    <record id="param_stale_limit" model="ir.config_parameter">
-        <field name="key">c2p_agents.stale_limit</field>
-        <field name="value">50</field>
-    </record>
-
-    <record id="param_proposal_limit" model="ir.config_parameter">
-        <field name="key">c2p_agents.proposal_limit</field>
-        <field name="value">50</field>
-    </record>
-
-    <record id="param_invoice_chaser_limit" model="ir.config_parameter">
-        <field name="key">c2p_agents.invoice_chaser_limit</field>
-        <field name="value">50</field>
     </record>
 
 </odoo>

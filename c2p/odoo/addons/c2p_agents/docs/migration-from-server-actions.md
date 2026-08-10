@@ -82,7 +82,7 @@ sudo systemctl start odoo
 ```
 
 The module installs with `c2p_agents.dry_run = True`. Its four crons are active
-immediately, so from that night onward **CRM → Configuration → C2P Agent Runs**
+immediately, so from that night onward **Settings → Technical → C2P Agent Runs**
 fills with real selection counts against real data while nothing is written.
 
 Both sets of crons are running at this point. That is fine and deliberate: the
@@ -94,8 +94,8 @@ Let it run for **at least two nights** before step 3. What you are looking for:
 |---|---|
 | `scanned` in the tens, `acted` a sensible fraction | Ready to proceed |
 | `scanned` in the thousands | A domain is too broad — tune before arming |
-| `scanned = 0` every night for an agent | Its domain matches nothing. Check the proposal-stage flag and the priority values before assuming it is correct |
-| `state = Failed` | Read `error` on the row. Usually a missing activity type |
+| `scanned = 0` every night for an agent | Its domain matches nothing. Read the row's `note` — the proposal agent says outright when no stage name matched — then check the priority values before assuming it is correct |
+| No row at all for an agent | It crashed. Odoo will have flagged the cron as failed; the traceback is in `odoo.log` |
 
 The **Acted on Nothing** filter on that list is the check that the old setup
 lacked entirely.
@@ -186,19 +186,22 @@ The next night's rows in C2P Agent Runs will show `Dry Run` unticked and real
 activities appearing on leads and invoices. Check the first live run the
 following morning.
 
-### The other knobs
+### The other settings
 
-All under Settings → Technical → System Parameters:
+There are none in the database. `c2p_agents.dry_run` is the only system
+parameter; every threshold and limit is a constant in `models/`:
 
-| Parameter | Default | What it does |
+| Constant | File | Default |
 |---|---|---|
-| `c2p_agents.dry_run` | `True` | Master safety catch |
-| `c2p_agents.stale_days` | `21` | Silence before an opportunity is stale |
-| `c2p_agents.proposal_days` | `7` | Days in a proposal stage before chasing |
-| `c2p_agents.lead_scoring_limit` | `200` | Records rescored per night |
-| `c2p_agents.stale_limit` | `50` | Activities raised per night |
-| `c2p_agents.proposal_limit` | `50` | Activities raised per night |
-| `c2p_agents.invoice_chaser_limit` | `50` | Activities raised per night |
+| `LEAD_SCORING_LIMIT` | `models/crm_lead.py` | `200` |
+| `STALE_DAYS` / `STALE_LIMIT` | `models/crm_lead.py` | `21` / `50` |
+| `PROPOSAL_DAYS` / `PROPOSAL_LIMIT` | `models/crm_lead.py` | `7` / `50` |
+| `INVOICE_CHASER_LIMIT` | `models/account_move.py` | `50` |
+
+Changing one is an edit, a commit and a module upgrade (`-u c2p_agents`) —
+which is the point: the value that decides what four nightly agents do to live
+client data should be reviewable, not a row somebody edited in Settings a year
+ago for reasons nobody recorded.
 
 The limits are deliberately low. Raise them once a live run looks right —
 preferably one agent at a time.
@@ -225,7 +228,7 @@ Worth being clear-eyed about what that buys you: the old crons execute an empty
 It is a way to stop the new agents, not a way to get the old ones working.
 
 **Removing the module** — `Apps → C2P Agents → Uninstall` drops the four new
-crons, the `is_proposal_stage` column and the run log. It does **not** remove
+crons and the run log. It does **not** remove
 activities the agents already created; those are ordinary `mail.activity`
 records and stay with their leads and invoices. To clear them:
 
