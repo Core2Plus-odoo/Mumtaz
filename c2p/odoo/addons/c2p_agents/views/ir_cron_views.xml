@@ -53,12 +53,11 @@
                 <separator/>
                 <filter name="filter_c2p" string="C2P Agents"
                         domain="[('name', 'ilike', 'C2P Agent')]"/>
-                <group string="Group By">
-                    <filter name="group_model" string="Model"
-                            context="{'group_by': 'model_id'}"/>
-                    <filter name="group_interval" string="Frequency"
-                            context="{'group_by': 'interval_type'}"/>
-                </group>
+                <separator/>
+                <filter name="group_model" string="Model"
+                        context="{'group_by': 'model_id'}"/>
+                <filter name="group_interval" string="Frequency"
+                        context="{'group_by': 'interval_type'}"/>
             </search>
         </field>
     </record>

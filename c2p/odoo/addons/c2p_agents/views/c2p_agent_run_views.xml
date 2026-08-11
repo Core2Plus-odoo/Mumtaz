@@ -58,12 +58,14 @@
                 <separator/>
                 <filter name="filter_last_week" string="Last 7 Days"
                         domain="[('executed_at', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <group string="Group By">
-                    <filter name="group_agent" string="Agent"
-                            context="{'group_by': 'agent'}"/>
-                    <filter name="group_day" string="Day"
-                            context="{'group_by': 'executed_at:day'}"/>
-                </group>
+                <separator/>
+                <!-- Group-by filters sit at search level. A <group> wrapper is
+                     for fields, not filters, and Odoo 19 rejects both `expand`
+                     and `string` on it. -->
+                <filter name="group_agent" string="Agent"
+                        context="{'group_by': 'agent'}"/>
+                <filter name="group_day" string="Day"
+                        context="{'group_by': 'executed_at:day'}"/>
             </search>
         </field>
     </record>
