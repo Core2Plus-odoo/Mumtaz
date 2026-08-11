@@ -19,7 +19,7 @@
                 <field name="c2p_code_length" string="Code"/>
                 <field name="model_id" optional="show"/>
                 <field name="interval_number" string="Every"/>
-                <field name="interval_type" string=""/>
+                <field name="interval_type" string="Unit"/>
                 <field name="lastcall" string="Last Run"/>
                 <field name="nextcall" string="Next Run"/>
                 <field name="user_id" optional="hide"/>
@@ -53,7 +53,7 @@
                 <separator/>
                 <filter name="filter_c2p" string="C2P Agents"
                         domain="[('name', 'ilike', 'C2P Agent')]"/>
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter name="group_model" string="Model"
                             context="{'group_by': 'model_id'}"/>
                     <filter name="group_interval" string="Frequency"

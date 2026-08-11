@@ -58,7 +58,7 @@
                 <separator/>
                 <filter name="filter_last_week" string="Last 7 Days"
                         domain="[('executed_at', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter name="group_agent" string="Agent"
                             context="{'group_by': 'agent'}"/>
                     <filter name="group_day" string="Day"

@@ -1,35 +1,29 @@
 {
     "name": "C2P Agents",
-    "summary": "The four nightly CRM and receivables agents, as versioned code",
+    "summary": "Seven scheduled CRM and receivables agents, as versioned code",
     "description": """
 C2P Agents
-==========
 
-Four scheduled agents that previously lived as Python in the ``code`` field of
-``ir.actions.server`` records, created directly in the database:
+Seven scheduled agents for the C2P CRM, as a versioned module rather than Python
+stored in ir.actions.server code fields.
 
-* **Lead scoring** — rule-based priority on ``crm.lead``.
-* **Stale opportunity detection** — high-priority opportunities that have gone
-  quiet get a To-Do.
-* **Proposal follow-up** — leads parked in a proposal stage get a Call.
-* **Invoice chaser** — overdue posted customer invoices get a Call on the owner.
+Lead scoring sets priority on crm.lead. Stale opportunity detection raises a
+To-Do on high-priority opportunities that have gone quiet. Proposal follow-up
+chases leads parked in a proposal stage. The invoice chaser raises a call on the
+owner of an overdue posted customer invoice. Email validation checks addresses
+before outreach and routes to WhatsApp when an address is unusable. Owner
+assignment gives every open lead a salesperson. The last agent raises a To-Do on
+any owned lead with nothing scheduled.
 
-All four were found silently empty: the crons ran every night, executed nothing,
-and reported success. Code in a database field cannot be reviewed, diffed,
-tested or rolled back, which is why it moved here.
+The first four are ports of crons that ran as code in database fields, where
+they could not be reviewed, diffed, tested or rolled back.
 
-Safety
-------
+The module installs inert. The system parameter c2p_agents.dry_run defaults to
+True, so the agents run on schedule, record what they would have touched, and
+write nothing until it is set to False. Every run writes a c2p.agent.run row, so
+an agent that quietly stops matching anything is visible rather than silent.
 
-The module installs **inert**. ``c2p_agents.dry_run`` defaults to ``True``, so
-the agents run on schedule, log and record exactly what they would have touched,
-and write nothing. Set the parameter to ``False`` to arm them.
-
-Every run — dry or live — writes a ``c2p.agent.run`` row. A run that scans
-nothing and acts on nothing is visible in the UI rather than buried in the
-server log, which is the failure this module exists to make impossible.
-
-See ``docs/migration-from-server-actions.md`` for moving the existing crons over
+See docs/migration-from-server-actions.md for moving the existing crons over
 without losing their schedules.
 """,
     "version": "19.0.1.0.0",
