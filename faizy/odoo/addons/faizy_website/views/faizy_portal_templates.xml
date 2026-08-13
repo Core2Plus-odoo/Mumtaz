@@ -22,40 +22,99 @@
         </xpath>
     </template>
 
+    <!-- The WhatsApp glyph, in one place so the portal cannot drift from the
+         header's. -->
+    <template id="portal_wa_icon" name="Faizy — WhatsApp icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5 0-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.2.2 2.1 3.2 5.1 4.4.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.2-.6-.4zM12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2z"/></svg>
+    </template>
+
+    <!-- The page header band. Shared so /my/care and /my/orders cannot drift. -->
+    <template id="portal_page_head" name="Faizy — Portal header">
+        <div class="fzp-head">
+            <div>
+                <p class="fzp-eyebrow" t-out="eyebrow"/>
+                <h1 class="fzp-title" t-out="title"/>
+            </div>
+            <a t-if="wa_new_task" class="fzp-wa" t-att-href="wa_new_task"
+               target="_blank" rel="noopener">
+                <t t-call="faizy_website.portal_wa_icon"/>
+                Message us on WhatsApp
+            </a>
+        </div>
+    </template>
+
     <!-- ── One screen: how the family is, and what's left this month ──── -->
     <template id="portal_care_home" name="Faizy — My Care">
         <t t-call="portal.portal_layout">
             <div class="faizy-page">
                 <t t-call="portal.portal_back_in_edit_mode"/>
 
-                <div t-if="subscription" class="faizy-card mb-4">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                        <div>
-                            <p class="text-muted small mb-1">Your plan</p>
-                            <h2 class="h4 mb-0" t-out="subscription.plan_id.name"/>
+                <div class="fzp">
+                  <div class="fzp-inner">
+
+                    <t t-call="faizy_website.portal_page_head">
+                        <t t-set="eyebrow">Your care dashboard</t>
+                        <t t-set="title">Assalam o Alaikum, <t t-out="first_name"/></t>
+                    </t>
+
+                    <!-- The numbers someone opens this page to check, before
+                         any prose. -->
+                    <div class="fzp-stats">
+                        <div t-if="subscription" class="fzp-stat">
+                            <p class="fzp-stat-label">Activities this month</p>
+                            <div class="fzp-stat-value">
+                                <t t-out="subscription.activities_used"/>
+                                <small>of <t t-out="subscription.activities_included"/></small>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <p class="text-muted small mb-1">Renews</p>
-                            <p class="mb-0" t-out="subscription.period_end"
-                               t-options="{'widget': 'date'}"/>
+                        <div t-else="" class="fzp-stat">
+                            <p class="fzp-stat-label">Free activities left</p>
+                            <div class="fzp-stat-value" t-out="partner.faizy_free_activities"></div>
+                        </div>
+
+                        <div class="fzp-stat">
+                            <p class="fzp-stat-label">Family members</p>
+                            <div class="fzp-stat-value" t-out="family_count"></div>
+                        </div>
+
+                        <div class="fzp-stat">
+                            <p class="fzp-stat-label">Open care tasks</p>
+                            <div class="fzp-stat-value" t-out="open_count"></div>
+                        </div>
+
+                        <div t-if="subscription" class="fzp-stat">
+                            <p class="fzp-stat-label">Renews</p>
+                            <div class="fzp-stat-value"
+                                 t-out="subscription.period_end"
+                                 t-options="{'widget': 'date'}"></div>
                         </div>
                     </div>
 
-                    <div class="mt-3">
-                        <div class="d-flex justify-content-between small mb-1">
+                    <!-- Plan, or the prompt to choose one. -->
+                    <div t-if="subscription" class="fzp-card">
+                        <div class="fzp-plan-top">
+                            <div>
+                                <p class="fzp-meta">Your plan</p>
+                                <h2 class="fzp-plan-name" t-out="subscription.plan_id.name"/>
+                            </div>
+                            <a t-if="wa_change_plan" class="fzp-link" t-att-href="wa_change_plan"
+                               target="_blank" rel="noopener">Change plan →</a>
+                        </div>
+
+                        <div class="fzp-meter-row">
                             <span>Care activities used</span>
                             <span>
-                                <span t-out="subscription.activities_used"/> of
-                                <span t-out="subscription.activities_included"/>
+                                <t t-out="subscription.activities_used"/> of
+                                <t t-out="subscription.activities_included"/>
                             </span>
                         </div>
-                        <div class="faizy-meter">
+                        <div class="fzp-meter">
                             <!-- Capped at 100% so an overage month does not
                                  render a bar wider than its track. -->
-                            <div class="faizy-meter-fill"
-                                 t-attf-style="width: #{min(100, subscription.activities_included and round(100.0 * subscription.activities_used / subscription.activities_included) or 0)}%;"/>
+                            <div class="fzp-meter-fill"
+                                 t-attf-style="width: #{min(100, subscription.activities_included and round(100.0 * subscription.activities_used / subscription.activities_included) or 0)}%;"></div>
                         </div>
-                        <p class="text-muted small mt-2 mb-0"
+                        <p class="fzp-meta mt-2 mb-0"
                            t-if="subscription.activities_used &gt; subscription.activities_included">
                             <!-- The subscription's currency, not the plan's: subscribers
                                  are billed in the currency published for their own
@@ -66,104 +125,143 @@
                             <span t-out="subscription.plan_id.overage_display(subscription.currency_id)"/> each.
                         </p>
                     </div>
-                </div>
 
-                <div t-else="" class="faizy-card mb-4">
-                    <h2 class="h5 mb-1">Free activities</h2>
-                    <p class="mb-0">
-                        You have <strong t-out="partner.faizy_free_activities"/> free care
-                        activities remaining. Choose a plan when you are ready.
-                    </p>
-                    <a href="/pricing" class="btn btn-faizy mt-3">See plans</a>
-                </div>
+                    <div t-else="" class="fzp-promo">
+                        <div>
+                            <h2>
+                                You have <t t-out="partner.faizy_free_activities"/> free care activities
+                            </h2>
+                            <p>
+                                Use them whenever you like — no card needed. Choose a plan
+                                when you are ready for something regular.
+                            </p>
+                        </div>
+                        <a href="/pricing" class="fzp-btn">See plans</a>
+                    </div>
 
-                <h2 class="h5 mb-3">Your family</h2>
-                <div class="row g-3 mb-4">
+                    <!-- Family -->
+                    <div class="fzp-section">
+                        <h2>Your family</h2>
+                        <a t-if="wa_add_member" class="fzp-link" t-att-href="wa_add_member"
+                           target="_blank" rel="noopener">Add someone →</a>
+                    </div>
+
                     <t t-foreach="family" t-as="member">
-                        <div class="col-12 col-md-6">
-                            <div class="faizy-card">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h3 class="h6 mb-1" t-out="member.name"/>
-                                        <p class="text-muted small mb-2">
-                                            <span t-out="dict(member._fields['relationship'].selection).get(member.relationship)"/>
-                                            · <span t-out="member.city"/>
-                                        </p>
-                                    </div>
-                                    <span class="faizy-fmb" t-out="member.fmb_id"/>
-                                </div>
+                        <div class="fzp-member">
+                            <!-- Indexing, not .upper() — .fzp-avatar uppercases
+                                 in CSS, so the template calls no string methods. -->
+                            <div class="fzp-avatar" t-out="member.name and member.name[0] or '?'"></div>
+                            <div class="fzp-member-body">
+                                <p class="fzp-member-name" t-out="member.name"/>
+                                <p class="fzp-member-meta">
+                                    <t t-out="dict(member._fields['relationship'].selection).get(member.relationship)"/>
+                                    <t t-if="member.city"> · <t t-out="member.city"/></t>
+                                </p>
                             </div>
+                            <span class="faizy-fmb" t-out="member.fmb_id"/>
                         </div>
                     </t>
-                    <div t-if="not family" class="col-12">
-                        <div class="faizy-card text-muted">
-                            No family members added yet. Message us on WhatsApp and we will
-                            set them up for you.
+
+                    <div t-if="not family" class="fzp-table-wrap">
+                        <div class="fzp-empty">
+                            <div class="fzp-empty-icon">👪</div>
+                            <h3>Nobody added yet</h3>
+                            <p>
+                                Tell us who we are looking after — a parent, a sibling, or
+                                yourself — and we will set them up with their own Faizy ID.
+                            </p>
+                            <a t-if="wa_add_member" class="fzp-btn" t-att-href="wa_add_member"
+                               target="_blank" rel="noopener">Add on WhatsApp</a>
                         </div>
                     </div>
-                </div>
 
-                <h2 class="h5 mb-3">Recent care</h2>
-                <t t-call="faizy_website.portal_order_table">
-                    <t t-set="orders" t-value="recent_orders"/>
-                </t>
-                <a href="/my/orders" class="btn btn-faizy-outline mt-3">See all orders</a>
+                    <!-- Recent care -->
+                    <div class="fzp-section">
+                        <h2>Recent care</h2>
+                        <a t-if="order_count" class="fzp-link" href="/my/orders">See all orders →</a>
+                    </div>
+                    <t t-call="faizy_website.portal_order_table">
+                        <t t-set="orders" t-value="recent_orders"/>
+                    </t>
+
+                  </div>
+                </div>
             </div>
         </t>
     </template>
 
     <!-- Shared table so the list and the summary cannot drift. -->
     <template id="portal_order_table" name="Faizy — Order Table">
-        <div class="table-responsive">
-            <table class="table align-middle">
+        <div class="fzp-table-wrap">
+            <table t-if="orders" class="fzp-table">
                 <thead>
                     <tr>
                         <th>Reference</th>
                         <th>Task</th>
-                        <th class="d-none d-md-table-cell">For</th>
-                        <th class="d-none d-md-table-cell">Date</th>
-                        <th class="text-end">Total</th>
-                        <th class="text-end">Status</th>
+                        <th>For</th>
+                        <th>Date</th>
+                        <th class="num">Total</th>
+                        <th class="num">Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <t t-foreach="orders" t-as="order">
                         <tr>
                             <td>
-                                <a t-attf-href="/my/orders/#{order.id}" t-out="order.name"/>
+                                <a class="fzp-ref" t-attf-href="/my/orders/#{order.id}"
+                                   t-out="order.name"/>
                             </td>
-                            <td t-out="order.title"/>
-                            <td class="d-none d-md-table-cell">
+                            <td class="fzp-task" t-out="order.title"/>
+                            <td>
                                 <span t-if="order.family_member_id" class="faizy-fmb"
                                       t-out="order.family_member_id.fmb_id"/>
                             </td>
-                            <td class="d-none d-md-table-cell" t-out="order.create_date"
-                                t-options="{'widget': 'date'}"/>
-                            <td class="text-end" t-out="order.amount_total"
+                            <td t-out="order.create_date" t-options="{'widget': 'date'}"/>
+                            <td class="num" t-out="order.amount_total"
                                 t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
-                            <td class="text-end">
+                            <td class="num">
                                 <span t-attf-class="faizy-status is-#{order.state}"
                                       t-out="dict(order._fields['state'].selection).get(order.state)"/>
                             </td>
                         </tr>
                     </t>
-                    <tr t-if="not orders">
-                        <td colspan="6" class="text-muted text-center py-4">
-                            Nothing here yet.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
+
+            <!-- An empty portal is what every customer sees on day one, so it
+                 has to say what will appear here and how to start it. -->
+            <div t-if="not orders" class="fzp-empty">
+                <div class="fzp-empty-icon">🌿</div>
+                <h3>No care tasks yet</h3>
+                <p>
+                    When you ask us for something — a prescription collected, a bill
+                    paid, a visit to check in — it will appear here with a photo once
+                    it is done.
+                </p>
+                <a t-if="wa_new_task" class="fzp-btn" t-att-href="wa_new_task"
+                   target="_blank" rel="noopener">Ask on WhatsApp</a>
+            </div>
         </div>
     </template>
 
     <template id="portal_orders" name="Faizy — My Orders">
         <t t-call="portal.portal_layout">
             <div class="faizy-page">
-                <h2 class="h4 mb-3">Care orders</h2>
-                <t t-call="faizy_website.portal_order_table"/>
-                <div class="o_portal_pager text-center">
-                    <t t-call="portal.pager"/>
+                <t t-call="portal.portal_back_in_edit_mode"/>
+
+                <div class="fzp">
+                  <div class="fzp-inner">
+                    <t t-call="faizy_website.portal_page_head">
+                        <t t-set="eyebrow">Your care history</t>
+                        <t t-set="title">Care orders</t>
+                    </t>
+
+                    <t t-call="faizy_website.portal_order_table"/>
+
+                    <div class="o_portal_pager text-center mt-4">
+                        <t t-call="portal.pager"/>
+                    </div>
+                  </div>
                 </div>
             </div>
         </t>
@@ -172,81 +270,91 @@
     <template id="portal_order_detail" name="Faizy — Order Detail">
         <t t-call="portal.portal_layout">
             <div class="faizy-page">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                    <div>
-                        <h2 class="h4 mb-1" t-out="order.title"/>
-                        <p class="text-muted mb-0" t-out="order.name"/>
+                <t t-call="portal.portal_back_in_edit_mode"/>
+
+                <div class="fzp">
+                  <div class="fzp-inner">
+
+                    <div class="fzp-head">
+                        <div>
+                            <p class="fzp-eyebrow" t-out="order.name"/>
+                            <h1 class="fzp-title" t-out="order.title"/>
+                        </div>
+                        <span t-attf-class="faizy-status is-#{order.state}"
+                              t-out="dict(order._fields['state'].selection).get(order.state)"/>
                     </div>
-                    <span t-attf-class="faizy-status is-#{order.state}"
-                          t-out="dict(order._fields['state'].selection).get(order.state)"/>
-                </div>
 
-                <div class="row g-3">
-                    <div class="col-12 col-lg-7">
-                        <div class="faizy-card">
-                            <h3 class="h6 text-muted mb-3">Details</h3>
-                            <dl class="row mb-0">
-                                <dt class="col-5 col-sm-4 fw-normal text-muted">Service</dt>
-                                <dd class="col-7 col-sm-8" t-out="order.service_id.name"/>
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-7">
+                            <div class="fzp-card">
+                                <h2 class="fzp-meta mb-3">Details</h2>
+                                <dl class="row mb-0">
+                                    <dt class="col-5 col-sm-4 fw-normal fzp-meta">Service</dt>
+                                    <dd class="col-7 col-sm-8" t-out="order.service_id.name"/>
 
-                                <dt class="col-5 col-sm-4 fw-normal text-muted">For</dt>
-                                <dd class="col-7 col-sm-8">
-                                    <span t-if="order.family_member_id">
-                                        <span t-out="order.family_member_id.name"/>
-                                        <span class="faizy-fmb ms-1" t-out="order.family_member_id.fmb_id"/>
-                                    </span>
-                                    <span t-else="" class="text-muted">The household</span>
-                                </dd>
+                                    <dt class="col-5 col-sm-4 fw-normal fzp-meta">For</dt>
+                                    <dd class="col-7 col-sm-8">
+                                        <span t-if="order.family_member_id">
+                                            <span t-out="order.family_member_id.name"/>
+                                            <span class="faizy-fmb ms-1"
+                                                  t-out="order.family_member_id.fmb_id"/>
+                                        </span>
+                                        <span t-else="" class="fzp-meta">The household</span>
+                                    </dd>
 
-                                <dt class="col-5 col-sm-4 fw-normal text-muted">Where</dt>
-                                <dd class="col-7 col-sm-8" t-out="order.city"/>
+                                    <dt class="col-5 col-sm-4 fw-normal fzp-meta">Where</dt>
+                                    <dd class="col-7 col-sm-8" t-out="order.city"/>
 
-                                <dt class="col-5 col-sm-4 fw-normal text-muted">Your Faizy</dt>
-                                <dd class="col-7 col-sm-8">
-                                    <span t-if="order.worker_id" t-out="order.worker_id.name"/>
-                                    <span t-else="" class="text-muted">Being assigned</span>
-                                </dd>
-                            </dl>
-                            <div t-if="order.description" class="mt-3">
-                                <h3 class="h6 text-muted mb-1">Notes</h3>
-                                <p class="mb-0" t-out="order.description"/>
+                                    <dt class="col-5 col-sm-4 fw-normal fzp-meta">Your Faizy</dt>
+                                    <dd class="col-7 col-sm-8">
+                                        <span t-if="order.worker_id" t-out="order.worker_id.name"/>
+                                        <span t-else="" class="fzp-meta">Being assigned</span>
+                                    </dd>
+                                </dl>
+                                <div t-if="order.description" class="mt-3">
+                                    <h2 class="fzp-meta mb-1">Notes</h2>
+                                    <p class="mb-0" t-out="order.description"/>
+                                </div>
+                            </div>
+
+                            <div t-if="order.proof_image" class="fzp-card">
+                                <h2 class="fzp-meta mb-3">Proof of delivery</h2>
+                                <img t-attf-src="/web/image/faizy.order/#{order.id}/proof_image"
+                                     class="img-fluid rounded" alt="Proof of delivery"/>
+                                <p t-if="order.completion_note" class="fzp-meta mt-2 mb-0"
+                                   t-out="order.completion_note"/>
                             </div>
                         </div>
 
-                        <div t-if="order.proof_image" class="faizy-card mt-3">
-                            <h3 class="h6 text-muted mb-3">Proof of delivery</h3>
-                            <img t-attf-src="/web/image/faizy.order/#{order.id}/proof_image"
-                                 class="img-fluid rounded" alt="Proof of delivery"/>
-                            <p t-if="order.completion_note" class="text-muted small mt-2 mb-0"
-                               t-out="order.completion_note"/>
+                        <div class="col-12 col-lg-5">
+                            <div class="fzp-card">
+                                <h2 class="fzp-meta mb-3">Charges</h2>
+                                <dl class="row mb-0">
+                                    <dt class="col-7 fw-normal fzp-meta">Purchases</dt>
+                                    <dd class="col-5 text-end" t-out="order.purchase_value"
+                                        t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+
+                                    <dt class="col-7 fw-normal fzp-meta">Service fee</dt>
+                                    <dd class="col-5 text-end" t-out="order.service_fee"
+                                        t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+
+                                    <dt class="col-7 fw-normal fzp-meta">Platform fee</dt>
+                                    <dd class="col-5 text-end" t-out="order.platform_fee"
+                                        t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+
+                                    <dt class="col-7 fw-bold border-top pt-2">Total</dt>
+                                    <dd class="col-5 text-end fw-bold border-top pt-2"
+                                        t-out="order.amount_total"
+                                        t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+                                </dl>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-5">
-                        <div class="faizy-card">
-                            <h3 class="h6 text-muted mb-3">Charges</h3>
-                            <dl class="row mb-0">
-                                <dt class="col-7 fw-normal text-muted">Purchases</dt>
-                                <dd class="col-5 text-end" t-out="order.purchase_value"
-                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
+                    <a href="/my/orders" class="fzp-link d-inline-block mt-4">← Back to orders</a>
 
-                                <dt class="col-7 fw-normal text-muted">Service fee</dt>
-                                <dd class="col-5 text-end" t-out="order.service_fee"
-                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
-
-                                <dt class="col-7 fw-normal text-muted">Platform fee</dt>
-                                <dd class="col-5 text-end" t-out="order.platform_fee"
-                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
-
-                                <dt class="col-7 fw-bold border-top pt-2">Total</dt>
-                                <dd class="col-5 text-end fw-bold border-top pt-2" t-out="order.amount_total"
-                                    t-options="{'widget': 'monetary', 'display_currency': order.currency_id}"/>
-                            </dl>
-                        </div>
-                    </div>
+                  </div>
                 </div>
-
-                <a href="/my/orders" class="btn btn-faizy-outline mt-4">Back to orders</a>
             </div>
         </t>
     </template>

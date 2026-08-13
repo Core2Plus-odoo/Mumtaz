@@ -45,6 +45,11 @@ WHATSAPP_DEEP = "#075e54"
 
 # Alpha-composited text colours, since CSS uses rgba() over a known ground.
 INK_72_ON_SAND = "#6b625b"
+# Same value, promoted to $fz-ink-soft in the v6 portal layer, where it lands
+# on cards as often as on sand — so it is held to both.
+INK_SOFT = "#6b625b"
+# The promo card's body copy, a touch lighter than ink on a warm tint.
+PROMO_BODY = "#4a423b"
 CREAM_78_ON_BLACK = "#c6c2bd"
 CREAM_82_ON_WHATSAPP_DEEP = "#d1dfda"
 
@@ -84,6 +89,20 @@ PAIRS = [
     ("self-check heading on tint",   CLAY,              TINT_7_ON_CARD,  False),
     ("self-check body on tint",      INK,               TINT_7_ON_CARD,  False),
     ("self-check heading, ticked",   CLAY,              TINT_13_ON_CARD, False),
+    # The customer portal (v6 layer). Sand is the page ground and the content
+    # sits on cream cards, so every pair here is one or the other.
+    ("portal eyebrow on sand",       CLAY,              SAND,      False),
+    ("portal title on sand",         INK,               SAND,      True),
+    ("stat label on card",           INK_SOFT,          CARD,      False),
+    ("stat value on card",           INK,               CARD,      False),
+    ("section link on sand",         CLAY,              SAND,      False),
+    ("table header label on card",   INK_SOFT,          CARD,      False),
+    ("order reference on card",      CLAY,              CARD,      False),
+    ("empty-state body on card",     INK_SOFT,          CARD,      False),
+    ("portal WhatsApp button",       WHITE,             WHATSAPP,  False),
+    ("family initial on orange",     BLACK,             ORANGE,    False),
+    ("promo heading on tint",        INK,               TINT_7_ON_CARD,  True),
+    ("promo body on tint",           PROMO_BODY,        TINT_7_ON_CARD,  False),
 ]
 
 

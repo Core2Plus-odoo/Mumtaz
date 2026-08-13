@@ -1602,3 +1602,387 @@ $fz-whatsapp-deep: #075e54;
     .s_website_form_send:hover { background: $fz-orange-600; border-color: $fz-orange-600; }
   }
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  v6 — Customer portal
+//
+//  The portal was styled by reusing the marketing page's classes, and it
+//  showed. `.faizy-page` paints $fz-sand as its own background, which is
+//  right when it IS the page and wrong inside portal.portal_layout, where
+//  it sits in a Bootstrap .container and renders as a floating slab with
+//  white gutters down both sides. `.faizy-card` aliases `.fz-card`, which
+//  carries height:100%, so a customer with one family member got a tall
+//  empty box. Both are fixed here rather than by editing the earlier
+//  layers, which the marketing pages still depend on.
+// ════════════════════════════════════════════════════════════════════════
+
+// Two colours the earlier layers use as literals. Named here so the portal
+// does not scatter more hex around, and so check_contrast.py has something
+// to hold to a threshold.
+$fz-card:     #fffdfa;   // the card white used by .fz-card in the v4 layer
+$fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
+
+.fzp {
+  background: $fz-sand;
+  // Full-bleed out of the container with content still aligned to it. The
+  // ancestor .faizy-page already sets overflow-x:hidden, which is what keeps
+  // 100vw from producing a horizontal scrollbar next to a vertical one.
+  margin-inline: calc(50% - 50vw);
+  padding: 2.25rem calc(50vw - 50% + 0.75rem) 4rem;
+  min-height: 70vh;
+
+  &-inner { max-width: 1140px; margin: 0 auto; }
+}
+
+// ── Header band ─────────────────────────────────────────────────────────
+.fzp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(43, 38, 34, 0.10);
+}
+
+.fzp-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $fz-clay;
+  margin: 0 0 0.35rem;
+}
+
+.fzp-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: $fz-ink;
+  margin: 0;
+}
+
+// WhatsApp's own #25D366 measures 1.88:1 on cream — a brand colour, not a
+// text colour. This is the same hue two steps darker.
+.fzp-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: $fz-whatsapp;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.6rem 1.15rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover, &:focus { background: $fz-whatsapp-deep; color: #fff; }
+  svg { width: 1.05rem; height: 1.05rem; fill: currentColor; }
+}
+
+// ── Stat tiles ──────────────────────────────────────────────────────────
+.fzp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.fzp-stat {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+
+  &-label { font-size: 0.78rem; color: $fz-ink-soft; margin: 0 0 0.3rem; line-height: 1.3; }
+  &-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: $fz-ink;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+
+    small { font-size: 0.95rem; font-weight: 500; color: $fz-ink-soft; letter-spacing: 0; }
+  }
+}
+
+// ── Cards & section headings ────────────────────────────────────────────
+.fzp-card {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 18px;
+  padding: 1.4rem 1.5rem;
+  height: auto;      // not .fz-card's 100% — that is what stretched the box
+
+  + .fzp-card { margin-top: 0.9rem; }
+}
+
+.fzp-section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 0.85rem;
+
+  h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: $fz-ink;
+    margin: 0;
+  }
+}
+
+.fzp-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $fz-clay;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover, &:focus { color: darken($fz-clay, 8%); text-decoration: underline; }
+}
+
+// ── Plan card ───────────────────────────────────────────────────────────
+.fzp-plan-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fzp-plan-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $fz-ink;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.fzp-meta { font-size: 0.8rem; color: $fz-ink-soft; margin: 0 0 0.15rem; }
+
+.fzp-meter-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: $fz-ink;
+  margin: 1.25rem 0 0.45rem;
+}
+
+.fzp-meter {
+  height: 0.6rem;
+  background: rgba(43, 38, 34, 0.09);
+  border-radius: 999px;
+  overflow: hidden;
+
+  &-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $fz-orange, #ffb648);
+    border-radius: 999px;
+  }
+}
+
+// ── Family — a list, not a grid of half-empty cards ──────────────────────
+.fzp-member {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1.25rem;
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 14px;
+
+  + .fzp-member { margin-top: 0.55rem; }
+  .faizy-fmb { white-space: nowrap; flex: 0 0 auto; }
+
+  &-body { flex: 1 1 auto; min-width: 0; }
+  &-name { font-weight: 600; color: $fz-ink; margin: 0; line-height: 1.3; }
+  &-meta { font-size: 0.82rem; color: $fz-ink-soft; margin: 0; }
+}
+
+.fzp-avatar {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: $fz-orange;
+  color: $fz-black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  // Casing lives here so the template can index the name rather than call
+  // .upper() on it inside a QWeb expression.
+  text-transform: uppercase;
+}
+
+// ── Orders table ────────────────────────────────────────────────────────
+.fzp-table-wrap {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.fzp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $fz-ink-soft;
+    padding: 0.8rem 1.25rem;
+    background: rgba(43, 38, 34, 0.025);
+    border-bottom: 1px solid rgba(43, 38, 34, 0.07);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid rgba(43, 38, 34, 0.055);
+    color: $fz-ink;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(246, 158, 34, 0.045); }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fzp-task { font-weight: 500; }
+}
+
+.fzp-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  color: $fz-clay;
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover, &:focus { text-decoration: underline; }
+}
+
+// ── Empty states — a prompt, not a shrug ────────────────────────────────
+.fzp-empty {
+  text-align: center;
+  padding: 2.75rem 1.5rem;
+
+  &-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(246, 158, 34, 0.13);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  h3 { font-size: 1rem; font-weight: 700; color: $fz-ink; margin: 0 0 0.3rem; }
+  p {
+    font-size: 0.9rem;
+    color: $fz-ink-soft;
+    margin: 0 auto 1.1rem;
+    max-width: 30rem;
+    line-height: 1.6;
+  }
+}
+
+// ── The free-activities prompt, for customers with no plan yet ──────────
+.fzp-promo {
+  background: linear-gradient(135deg, #fef6eb 0%, #fdf0dc 100%);
+  border: 1px solid rgba(246, 158, 34, 0.28);
+  border-radius: 18px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $fz-ink;
+    margin: 0 0 0.3rem;
+    letter-spacing: -0.01em;
+  }
+  p { font-size: 0.9rem; color: #4a423b; margin: 0; line-height: 1.55; }
+}
+
+.fzp-btn {
+  display: inline-block;
+  background: $fz-orange;
+  color: $fz-black;
+  border-radius: 999px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.92rem;
+  white-space: nowrap;
+
+  &:hover, &:focus { background: $fz-orange-600; color: $fz-black; }
+}
+
+@media (max-width: 767.98px) {
+  .fzp {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-inline: calc(50% - 50vw);
+  }
+  .fzp-title { font-size: 1.5rem; }
+  .fzp-head { align-items: flex-start; }
+  .fzp-stats { grid-template-columns: repeat(2, 1fr); }
+  .fzp-stat-value { font-size: 1.5rem; }
+
+  // A six-column table does not survive 390px. Dropping columns to make it
+  // fit loses the status, which is the one thing a customer opens this page
+  // to see, so each order becomes a stacked block instead:
+  //
+  //     FZO-01042                          [Completed]
+  //     Blood pressure medicines — monthly refill
+  //     FMB-000011   12 Aug 2026             AED 84.50
+  .fzp-table,
+  .fzp-table tbody,
+  .fzp-table tr,
+  .fzp-table td { display: block; }
+  .fzp-table thead { display: none; }
+
+  .fzp-table tr {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas:
+      "ref  ref  status"
+      "task task task"
+      "for  date total";
+    gap: 0.3rem 0.5rem;
+    align-items: center;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid rgba(43, 38, 34, 0.055);
+
+    &:last-child { border-bottom: 0; }
+  }
+
+  .fzp-table td {
+    padding: 0;
+    border: 0;
+
+    &:nth-child(1) { grid-area: ref; }
+    &:nth-child(2) { grid-area: task; font-size: 0.92rem; line-height: 1.4; }
+    &:nth-child(3) { grid-area: for; }
+    &:nth-child(4) { grid-area: date; font-size: 0.82rem; color: $fz-ink-soft; }
+    &:nth-child(5) { grid-area: total; text-align: right; font-weight: 600; }
+    &:nth-child(6) { grid-area: status; justify-self: end; }
+  }
+}

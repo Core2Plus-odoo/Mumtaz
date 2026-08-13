@@ -11,6 +11,29 @@ _logger = logging.getLogger(__name__)
 CNIC_RE = re.compile(r"^\d{5}-\d{7}-\d$")
 
 
+def whatsapp_url(message):
+    """A wa.me link for the company number, or None if there isn't one.
+
+    `sudo()` because visitors are the public user, and reading res.company
+    from that env comes back empty — which is what made the header's WhatsApp
+    button dead-end to /contactus for everyone who pressed it.
+
+    Module level rather than a method so the portal controller can reach it
+    without importing a page controller; the number handling has to be the
+    same everywhere or the links quietly disagree.
+    """
+    company = request.website.sudo().company_id or request.env.company.sudo()
+    number = re.sub(r"^0+", "", re.sub(r"\D", "", company.phone or ""))
+    if not 8 <= len(number) <= 15:
+        _logger.warning(
+            "Faizy: no usable company phone (%r), so the WhatsApp link was "
+            "left off the page. Set it in Settings > Companies.",
+            company.phone,
+        )
+        return None
+    return f"https://wa.me/{number}?text={quote(message)}"
+
+
 class FaizyWebsite(http.Controller):
     """Public pages: the pitch, the pricing, and the worker sign-up."""
 
@@ -21,22 +44,7 @@ class FaizyWebsite(http.Controller):
     WHATSAPP_SIGNUP_OPENER = "Assalam o Alaikum! I've just signed up for Faizy."
 
     def _whatsapp_url(self, message):
-        """A wa.me link for the company number, or None if there isn't one.
-
-        `sudo()` because visitors are the public user, and reading res.company
-        from that env comes back empty — which is what made the header's
-        WhatsApp button dead-end to /contactus for everyone who pressed it.
-        """
-        company = request.website.sudo().company_id or request.env.company.sudo()
-        number = re.sub(r"^0+", "", re.sub(r"\D", "", company.phone or ""))
-        if not 8 <= len(number) <= 15:
-            _logger.warning(
-                "Faizy: no usable company phone (%r), so the WhatsApp link was "
-                "left off the page. Set it in Settings > Companies.",
-                company.phone,
-            )
-            return None
-        return f"https://wa.me/{number}?text={quote(message)}"
+        return whatsapp_url(message)
 
     # ── Currency ─────────────────────────────────────────────────────────
 
