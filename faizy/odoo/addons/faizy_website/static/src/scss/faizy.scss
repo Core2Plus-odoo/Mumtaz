@@ -2062,3 +2062,223 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
 @media (display-mode: standalone) {
   .fzp { padding-top: 1.5rem; }
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  v8 — Requesting care
+//
+//  The portal's first write. Until this, a customer's only way to ask for
+//  something was to leave for WhatsApp — right for a conversation, wrong
+//  for "collect Ammi's prescription from the usual pharmacy", which is four
+//  fields and needs nobody awake to receive it.
+//
+//  Radios styled as cards rather than a <select>: on a phone a native select
+//  is a modal wheel that hides every option but one, and choosing a service
+//  is exactly the moment the customer wants to see what is on offer.
+// ════════════════════════════════════════════════════════════════════════
+
+.fzp-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: $fz-orange;
+  color: $fz-black;
+  border-radius: 18px;
+  padding: 1.05rem 1.3rem;
+  text-decoration: none;
+  margin-bottom: 1.75rem;
+
+  &:hover, &:focus { background: $fz-orange-600; color: $fz-black; }
+
+  &-icon {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    background: rgba(10, 10, 10, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+  &-title { display: block; font-weight: 700; font-size: 1.05rem; line-height: 1.25; }
+  &-note  { display: block; font-size: 0.83rem; opacity: 0.78; line-height: 1.35; }
+}
+
+.fzp-field { margin-bottom: 1.6rem; }
+
+.fzp-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: $fz-ink;
+  margin-bottom: 0.5rem;
+}
+
+.fzp-group-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $fz-clay;
+  margin: 1rem 0 0.45rem;
+}
+
+.fzp-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.6rem;
+
+  &.is-tight { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+}
+
+// The card is `.fzp-pick-body`, the span AFTER the input — not the <label>
+// wrapping both. That is deliberate: styling the label would need
+// `:has(input:checked)`, and on a browser without :has the selected state
+// would simply not show. The radio is visually hidden, so that customer gets
+// no feedback at all about what they just tapped. `input:checked + .body` is
+// an adjacent-sibling selector and has worked everywhere for twenty years.
+.fzp-pick {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  // Hidden from sight, not from assistive tech or the keyboard.
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  &-body {
+    display: block;
+    background: $fz-card;
+    border: 1.5px solid rgba(43, 38, 34, 0.10);
+    border-radius: 14px;
+    padding: 0.8rem 0.95rem;
+    // Comfortably over the 44px touch minimum even with a one-line label.
+    min-height: 3.25rem;
+  }
+
+  &:hover &-body { border-color: rgba(246, 158, 34, 0.55); }
+
+  input:checked + &-body {
+    border-color: $fz-orange;
+    background: #fef6eb;
+  }
+  // Keyboard focus must be visible even though the input is not.
+  input:focus-visible + &-body {
+    outline: 2px solid $fz-clay;
+    outline-offset: 2px;
+  }
+
+  &-name { display: block; font-weight: 600; color: $fz-ink; line-height: 1.3; }
+  &-note {
+    display: block;
+    font-size: 0.8rem;
+    color: $fz-ink-soft;
+    line-height: 1.4;
+    margin-top: 0.15rem;
+  }
+}
+
+.fzp-input {
+  display: block;
+  width: 100%;
+  background: $fz-card;
+  border: 1.5px solid rgba(43, 38, 34, 0.14);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  // 16px exactly. Anything smaller and iOS Safari zooms the page on focus,
+  // which on a form this long leaves the customer scrolled sideways.
+  font-size: 1rem;
+  color: $fz-ink;
+  font-family: inherit;
+
+  // $fz-ink-soft outright rather than a faded version of it. A placeholder at
+  // 75% measures about 3.4:1 on the card, and a placeholder is often the only
+  // instruction a field carries.
+  &::placeholder { color: $fz-ink-soft; }
+  &:focus {
+    outline: none;
+    border-color: $fz-orange;
+    box-shadow: 0 0 0 3px rgba(246, 158, 34, 0.18);
+  }
+}
+
+textarea.fzp-input { resize: vertical; min-height: 6rem; line-height: 1.55; }
+
+.fzp-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  font-weight: 500;
+  color: $fz-ink;
+  cursor: pointer;
+
+  input { width: 1.15rem; height: 1.15rem; accent-color: $fz-orange; }
+}
+
+.fzp-submit {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+// A <button>, not an <a>: the earlier .fzp-btn is a link style and inherits
+// none of a button's UA defaults.
+button.fzp-btn {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.fzp-error {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #b42318;      // 5.94:1 on sand
+  margin: 0 0 0.45rem;
+}
+
+.fzp-alert {
+  border-radius: 14px;
+  padding: 0.95rem 1.15rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+
+  &.is-good { background: #d1fadf; color: #05603a; }
+  &.is-bad  { background: #fee4e2; color: #912018; }
+}
+
+@media (max-width: 767.98px) {
+  .fzp-picker { grid-template-columns: 1fr; }
+  .fzp-submit { flex-direction: column; align-items: stretch; }
+  .fzp-submit .fzp-btn { text-align: center; }
+  .fzp-submit .fzp-link { text-align: center; }
+
+  // The middle tab is the primary action; it gets the brand fill so the eye
+  // lands on it before the other three.
+  .fzp-tab.is-primary {
+    .fzp-tab-plus {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      margin-bottom: -0.15rem;
+      border-radius: 50%;
+      background: $fz-orange;
+      color: $fz-black;
+    }
+    svg { width: 1.15rem; height: 1.15rem; }
+    color: $fz-clay;
+  }
+}

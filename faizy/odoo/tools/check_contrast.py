@@ -50,6 +50,15 @@ INK_72_ON_SAND = "#6b625b"
 INK_SOFT = "#6b625b"
 # The promo card's body copy, a touch lighter than ink on a warm tint.
 PROMO_BODY = "#4a423b"
+
+# The request CTA's sub-line: black at 78% over brand orange. Orange is a
+# background here, which is the only place the founding rule allows it.
+BLACK_78_ON_ORANGE = "#3e2b0f"
+
+# Form feedback. Red is a text colour here, so it has to be a dark red.
+ERROR = "#b42318"
+ALERT_GOOD_FG, ALERT_GOOD_BG = "#05603a", "#d1fadf"
+ALERT_BAD_FG, ALERT_BAD_BG = "#912018", "#fee4e2"
 CREAM_78_ON_BLACK = "#c6c2bd"
 CREAM_82_ON_WHATSAPP_DEEP = "#d1dfda"
 
@@ -103,6 +112,20 @@ PAIRS = [
     ("family initial on orange",     BLACK,             ORANGE,    False),
     ("promo heading on tint",        INK,               TINT_7_ON_CARD,  True),
     ("promo body on tint",           PROMO_BODY,        TINT_7_ON_CARD,  False),
+    # The request form (v8 layer).
+    ("request CTA title on orange",  BLACK,             ORANGE,    True),
+    ("request CTA note on orange",   BLACK_78_ON_ORANGE, ORANGE,   False),
+    ("field label on sand",          INK,               SAND,      False),
+    ("service group title on sand",  CLAY,              SAND,      False),
+    ("service name on card",         INK,               CARD,      False),
+    ("service note on card",         INK_SOFT,          CARD,      False),
+    ("service name, selected",       INK,               TINT_7_ON_CARD,  False),
+    ("service note, selected",       INK_SOFT,          TINT_7_ON_CARD,  False),
+    ("input placeholder on card",    INK_SOFT,          CARD,      False),
+    ("field error on sand",          ERROR,             SAND,      False),
+    ("success alert",                ALERT_GOOD_FG,     ALERT_GOOD_BG,   False),
+    ("failure alert",                ALERT_BAD_FG,      ALERT_BAD_BG,    False),
+    ("primary tab in the tab bar",   CLAY,              HEADER,    False),
 ]
 
 

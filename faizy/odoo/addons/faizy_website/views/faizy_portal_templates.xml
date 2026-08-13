@@ -71,10 +71,16 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v3H4zm0 5h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5 4v2h6v-2z"/></svg>
                 <span>Orders</span>
             </a>
-            <a t-attf-class="fzp-tab #{page_name == 'faizy_account' and 'is-on' or ''}"
-               href="/my/account">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
-                <span>Account</span>
+            <!-- The primary action, emphasised, in the middle where a thumb
+                 lands. Account is not a tab: it is reachable from the site
+                 header's user menu, and a nav that offers four equal choices
+                 hides the one the customer actually came to do. -->
+            <a t-attf-class="fzp-tab is-primary #{page_name == 'faizy_request' and 'is-on' or ''}"
+               href="/my/care/request">
+                <span class="fzp-tab-plus" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                </span>
+                <span>Request</span>
             </a>
             <a t-if="wa_new_task" class="fzp-tab is-wa" t-att-href="wa_new_task"
                target="_blank" rel="noopener">
@@ -112,6 +118,16 @@
                         <t t-set="eyebrow">Your care dashboard</t>
                         <t t-set="title">Assalam o Alaikum, <t t-out="first_name"/></t>
                     </t>
+
+                    <!-- The one thing a customer comes here to do, above the
+                         fold and not hidden behind a WhatsApp round trip. -->
+                    <a href="/my/care/request" class="fzp-cta">
+                        <span class="fzp-cta-icon" aria-hidden="true">+</span>
+                        <span>
+                            <span class="fzp-cta-title">Request care</span>
+                            <span class="fzp-cta-note">Medicines, bills, a visit — tell us what you need</span>
+                        </span>
+                    </a>
 
                     <!-- The numbers someone opens this page to check, before
                          any prose. -->
@@ -296,8 +312,9 @@
                     paid, a visit to check in — it will appear here with a photo once
                     it is done.
                 </p>
-                <a t-if="wa_new_task" class="fzp-btn" t-att-href="wa_new_task"
-                   target="_blank" rel="noopener">Ask on WhatsApp</a>
+                <a class="fzp-btn" href="/my/care/request">Request care</a>
+                <a t-if="wa_new_task" class="fzp-link d-block mt-3" t-att-href="wa_new_task"
+                   target="_blank" rel="noopener">or message us on WhatsApp →</a>
             </div>
         </div>
     </template>
@@ -327,6 +344,135 @@
         </t>
     </template>
 
+    <!-- ── Request care ─────────────────────────────────────────────────
+         The first write in the portal. Everything about who this belongs to
+         is decided server-side; this form only asks what is needed. Plain
+         HTML inputs and a real POST — no JS — because it has to work on a
+         cheap Android on a bad connection, which is the whole customer base.
+
+         Note every <textarea> and <input> is written closed. A self-closed
+         <textarea/> makes an HTML parser swallow the rest of the document. -->
+    <template id="portal_request_form" name="Faizy — Request Care">
+        <t t-call="portal.portal_layout">
+            <div class="faizy-page">
+                <t t-call="portal.portal_back_in_edit_mode"/>
+
+                <div class="fzp">
+                  <div class="fzp-inner">
+
+                    <t t-call="faizy_website.portal_page_head">
+                        <t t-set="eyebrow">Ask for help</t>
+                        <t t-set="title">What do you need?</t>
+                    </t>
+
+                    <div t-if="errors.get('__all__')" class="fzp-alert is-bad">
+                        <t t-out="errors['__all__']"/>
+                    </div>
+
+                    <form action="/my/care/request/submit" method="post">
+                        <input type="hidden" name="csrf_token"
+                               t-att-value="request.csrf_token()"/>
+
+                        <!-- 1. The service -->
+                        <div class="fzp-field">
+                            <label class="fzp-label">Choose a service</label>
+                            <p t-if="errors.get('service_id')" class="fzp-error"
+                               t-out="errors['service_id']"/>
+                            <t t-foreach="categories" t-as="category">
+                                <p t-if="category.service_ids" class="fzp-group-title">
+                                    <t t-out="category.name"/>
+                                </p>
+                                <div t-if="category.service_ids" class="fzp-picker">
+                                    <t t-foreach="category.service_ids" t-as="service">
+                                        <label t-if="service.active" class="fzp-pick">
+                                            <input type="radio" name="service_id"
+                                                   t-att-value="service.id"
+                                                   t-att-checked="post.get('service_id') == str(service.id) or None"/>
+                                            <span class="fzp-pick-body">
+                                                <span class="fzp-pick-name" t-out="service.name"></span>
+                                                <span t-if="service.description" class="fzp-pick-note"
+                                                      t-out="service.description"></span>
+                                            </span>
+                                        </label>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- 2. Who it is for -->
+                        <div t-if="family" class="fzp-field">
+                            <label class="fzp-label">Who is it for?</label>
+                            <p t-if="errors.get('family_member_id')" class="fzp-error"
+                               t-out="errors['family_member_id']"/>
+                            <div class="fzp-picker is-tight">
+                                <t t-foreach="family" t-as="member">
+                                    <label class="fzp-pick">
+                                        <input type="radio" name="family_member_id"
+                                               t-att-value="member.id"
+                                               t-att-checked="post.get('family_member_id') == str(member.id) or None"/>
+                                        <span class="fzp-pick-body">
+                                            <span class="fzp-pick-name" t-out="member.name"></span>
+                                            <span class="fzp-pick-note">
+                                                <t t-out="dict(member._fields['relationship'].selection).get(member.relationship)"/>
+                                                <t t-if="member.city"> · <t t-out="member.city"/></t>
+                                            </span>
+                                        </span>
+                                    </label>
+                                </t>
+                                <label class="fzp-pick">
+                                    <input type="radio" name="family_member_id" value=""
+                                           t-att-checked="not post.get('family_member_id') or None"/>
+                                    <span class="fzp-pick-body">
+                                        <span class="fzp-pick-name">The household</span>
+                                        <span class="fzp-pick-note">Not for one person in particular</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 3. Where -->
+                        <div class="fzp-field">
+                            <label class="fzp-label" for="fzp-city">Which city?</label>
+                            <p t-if="errors.get('city')" class="fzp-error" t-out="errors['city']"/>
+                            <input id="fzp-city" class="fzp-input" type="text" name="city"
+                                   placeholder="Karachi" required="required"
+                                   t-att-value="post.get('city') or (family and family[0].city) or ''"/>
+                            <input class="fzp-input mt-2" type="text" name="street"
+                                   placeholder="Area or address (optional)"
+                                   t-att-value="post.get('street') or ''"/>
+                        </div>
+
+                        <!-- 4. Anything else -->
+                        <div class="fzp-field">
+                            <label class="fzp-label" for="fzp-notes">
+                                Anything we should know?
+                            </label>
+                            <textarea id="fzp-notes" class="fzp-input" name="description" rows="4"
+                                      placeholder="The pharmacy on Tariq Road has her prescription on file."
+                                      t-out="post.get('description') or ''"></textarea>
+                        </div>
+
+                        <label class="fzp-check">
+                            <input type="checkbox" name="urgent" value="1"
+                                   t-att-checked="post.get('urgent') or None"/>
+                            <span>This is urgent</span>
+                        </label>
+
+                        <div class="fzp-submit">
+                            <button type="submit" class="fzp-btn">Send request</button>
+                            <a t-if="wa_new_task" class="fzp-link" t-att-href="wa_new_task"
+                               target="_blank" rel="noopener">or message us on WhatsApp →</a>
+                        </div>
+                    </form>
+
+                  </div>
+                </div>
+
+                <t t-call="faizy_website.portal_tabbar"/>
+            </div>
+        </t>
+    </template>
+
     <template id="portal_order_detail" name="Faizy — Order Detail">
         <t t-call="portal.portal_layout">
             <div class="faizy-page">
@@ -334,6 +480,12 @@
 
                 <div class="fzp">
                   <div class="fzp-inner">
+
+                    <div t-if="just_created" class="fzp-alert is-good">
+                        <strong>Request received.</strong>
+                        We have it — <t t-out="order.name"/>. Someone will pick it up and
+                        you will see the status change here.
+                    </div>
 
                     <div class="fzp-head">
                         <div>
