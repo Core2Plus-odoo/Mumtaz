@@ -1,4 +1,4 @@
-from odoo import http
+from odoo import fields, http
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.exceptions import AccessError, MissingError
 from odoo.http import request
@@ -139,18 +139,78 @@ class FaizyCustomerPortal(CustomerPortal):
 
     # ── Requesting care ──────────────────────────────────────────────────
 
+    def _member_rows(self, family):
+        """Each family member with a one-line status derived from their orders.
+
+        Derived, never stored: a status somebody has to remember to update is
+        wrong the first week nobody updates it. Everything here comes from
+        orders the customer can already see —
+
+          * a repeating order with its next occurrence near → what is coming up
+          * otherwise the last completed order → when we last helped
+
+        Returns dicts rather than records so the template does no arithmetic.
+        """
+        Order = request.env["faizy.order"]
+        today = fields.Date.context_today(request.env.user)
+        rows = []
+
+        for member in family:
+            hint, tone = None, "quiet"
+
+            upcoming = Order.search(
+                [
+                    ("family_member_id", "=", member.id),
+                    ("is_recurring", "=", True),
+                    ("recurrence_next_date", "!=", False),
+                    ("state", "!=", "cancelled"),
+                ],
+                order="recurrence_next_date asc",
+                limit=1,
+            )
+            if upcoming and upcoming.recurrence_next_date:
+                days = (upcoming.recurrence_next_date - today).days
+                if days <= 14:
+                    when = (
+                        "today" if days <= 0
+                        else "tomorrow" if days == 1
+                        else "in %s days" % days
+                    )
+                    hint = "%s %s" % (upcoming.service_id.name or "Care", when)
+                    tone = "due" if days <= 2 else "soon"
+
+            if not hint:
+                last = Order.search(
+                    [("family_member_id", "=", member.id),
+                     ("state", "=", "completed")],
+                    order="date_completed desc",
+                    limit=1,
+                )
+                if last and last.date_completed:
+                    days = (today - last.date_completed.date()).days
+                    hint = (
+                        "Helped today" if days <= 0
+                        else "Helped yesterday" if days == 1
+                        else "Helped %s days ago" % days
+                    )
+
+            rows.append({"member": member, "hint": hint, "tone": tone})
+        return rows
+
     def _request_values(self, post=None, errors=None):
         partner = request.env.user.partner_id
         post = post or {}
+        family = request.env["faizy.family.member"].search(
+            [("partner_id", "=", partner.id)]
+        )
         return {
             "page_name": "faizy_request",
             "partner": partner,
             "categories": request.env["faizy.service.category"]
             .sudo()
             .search([], order="sequence"),
-            "family": request.env["faizy.family.member"].search(
-                [("partner_id", "=", partner.id)]
-            ),
+            "family": family,
+            "member_rows": self._member_rows(family),
             "post": post,
             "errors": errors or {},
             "wa_new_task": whatsapp_url(WA_NEW_TASK),
@@ -221,6 +281,20 @@ class FaizyCustomerPortal(CustomerPortal):
         if not city:
             errors["city"] = "Tell us which city, so we send someone close by."
 
+        # A date in the past is a typo, not a request. Anything unparseable is
+        # dropped rather than guessed at.
+        preferred = False
+        raw_date = (post.get("scheduled_date") or "").strip()
+        if raw_date:
+            try:
+                preferred = fields.Date.to_date(raw_date)
+            except ValueError:
+                errors["scheduled_date"] = "That date did not look right."
+            else:
+                if preferred < fields.Date.context_today(request.env.user):
+                    errors["scheduled_date"] = "Choose today or a day after it."
+                    preferred = False
+
         open_orders = request.env["faizy.order"].search_count(
             [("partner_id", "=", partner.id),
              ("state", "not in", ("completed", "cancelled"))]
@@ -249,6 +323,13 @@ class FaizyCustomerPortal(CustomerPortal):
                     "city": city,
                     "street": (post.get("street") or "").strip(),
                     "priority": "1" if post.get("urgent") else "0",
+                    # The member's name, phone and notes are withheld from the
+                    # assigned Faizy. Not the same thing as hiding the cost
+                    # from the family, which nothing implements yet.
+                    "privacy_mode": bool(post.get("privacy_mode")),
+                    # What the customer would like, not an agreed slot — the
+                    # order stays pending until ops confirms it.
+                    "scheduled_date": preferred or False,
                     # Never trusted from the form: a customer cannot file an
                     # order that is already assigned, already completed, or
                     # carries a purchase value.

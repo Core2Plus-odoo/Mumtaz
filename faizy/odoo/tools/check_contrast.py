@@ -59,6 +59,15 @@ BLACK_78_ON_ORANGE = "#3e2b0f"
 ERROR = "#b42318"
 ALERT_GOOD_FG, ALERT_GOOD_BG = "#05603a", "#d1fadf"
 ALERT_BAD_FG, ALERT_BAD_BG = "#912018", "#fee4e2"
+
+# The derived status chip on a family member. Its neutral background is ink at
+# 6%, and inside a step card that composites over sand, not over the card.
+HINT_QUIET_BG = "#ebe5db"
+# Clay on the orange tint. $fz-orange-700 on the same tint is 3.56:1 —
+# which is what .faizy-fmb and .faizy-status.is-in_progress had been
+# using since they were written, until this pair was added.
+ORANGE_100 = "#fdeacc"
+BLUE_SOFT, BLUE_INK = "#d1e9ff", "#175cd3"
 CREAM_78_ON_BLACK = "#c6c2bd"
 CREAM_82_ON_WHATSAPP_DEEP = "#d1dfda"
 
@@ -126,6 +135,15 @@ PAIRS = [
     ("success alert",                ALERT_GOOD_FG,     ALERT_GOOD_BG,   False),
     ("failure alert",                ALERT_BAD_FG,      ALERT_BAD_BG,    False),
     ("primary tab in the tab bar",   CLAY,              HEADER,    False),
+    # Person-first booking (v9 layer).
+    ("step label on card",           INK_SOFT,          CARD,      False),
+    ("member name on step ground",   INK,               SAND,      False),
+    ("member meta on step ground",   INK_SOFT,          SAND,      False),
+    ("status chip, neutral",         INK_SOFT,          HINT_QUIET_BG,   False),
+    ("status chip, due soon",        CLAY,              ORANGE_100,      False),
+    ("FMB badge on its tint",        CLAY,              ORANGE_100,      False),
+    ("In Progress status pill",      CLAY,              ORANGE_100,      False),
+    ("status chip, upcoming",        BLUE_INK,          BLUE_SOFT,       False),
 ]
 
 

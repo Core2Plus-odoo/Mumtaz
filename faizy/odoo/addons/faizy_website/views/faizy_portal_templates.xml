@@ -132,14 +132,13 @@
                     <!-- The numbers someone opens this page to check, before
                          any prose. -->
                     <div class="fzp-stats">
-                        <div t-if="subscription" class="fzp-stat">
-                            <p class="fzp-stat-label">Activities this month</p>
-                            <div class="fzp-stat-value">
-                                <t t-out="subscription.activities_used"/>
-                                <small>of <t t-out="subscription.activities_included"/></small>
-                            </div>
-                        </div>
-                        <div t-else="" class="fzp-stat">
+                        <!-- No activity counter here, deliberately. Metering is
+                             the first thing a subscriber saw, and making someone
+                             feel counted before they have asked for help is the
+                             opposite of what this product is for. It lives at the
+                             bottom of the page instead. Free activities stay:
+                             that is an offer, not a meter. -->
+                        <div t-if="not subscription" class="fzp-stat">
                             <p class="fzp-stat-label">Free activities left</p>
                             <div class="fzp-stat-value" t-out="partner.faizy_free_activities"></div>
                         </div>
@@ -162,43 +161,7 @@
                         </div>
                     </div>
 
-                    <!-- Plan, or the prompt to choose one. -->
-                    <div t-if="subscription" class="fzp-card">
-                        <div class="fzp-plan-top">
-                            <div>
-                                <p class="fzp-meta">Your plan</p>
-                                <h2 class="fzp-plan-name" t-out="subscription.plan_id.name"/>
-                            </div>
-                            <a t-if="wa_change_plan" class="fzp-link" t-att-href="wa_change_plan"
-                               target="_blank" rel="noopener">Change plan →</a>
-                        </div>
-
-                        <div class="fzp-meter-row">
-                            <span>Care activities used</span>
-                            <span>
-                                <t t-out="subscription.activities_used"/> of
-                                <t t-out="subscription.activities_included"/>
-                            </span>
-                        </div>
-                        <div class="fzp-meter">
-                            <!-- Capped at 100% so an overage month does not
-                                 render a bar wider than its track. -->
-                            <div class="fzp-meter-fill"
-                                 t-attf-style="width: #{min(100, subscription.activities_included and round(100.0 * subscription.activities_used / subscription.activities_included) or 0)}%;"></div>
-                        </div>
-                        <p class="fzp-meta mt-2 mb-0"
-                           t-if="subscription.activities_used &gt; subscription.activities_included">
-                            <!-- The subscription's currency, not the plan's: subscribers
-                                 are billed in the currency published for their own
-                                 market, so quoting the plan's would show a London
-                                 customer a figure they will never be charged. -->
-                            You are past this month's allowance. Extra activities are billed at
-                            <span t-out="subscription.currency_id.name"/>
-                            <span t-out="subscription.plan_id.overage_display(subscription.currency_id)"/> each.
-                        </p>
-                    </div>
-
-                    <div t-else="" class="fzp-promo">
+                    <div t-if="not subscription" class="fzp-promo">
                         <div>
                             <h2>
                                 You have <t t-out="partner.faizy_free_activities"/> free care activities
@@ -255,6 +218,43 @@
                     <t t-call="faizy_website.portal_order_table">
                         <t t-set="orders" t-value="recent_orders"/>
                     </t>
+
+                    <!-- Your plan, and what is left of it — at the foot of the
+                         page rather than the head of it. -->
+                    <div t-if="subscription" class="fzp-card">
+                        <div class="fzp-plan-top">
+                            <div>
+                                <p class="fzp-meta">Your plan</p>
+                                <h2 class="fzp-plan-name" t-out="subscription.plan_id.name"/>
+                            </div>
+                            <a t-if="wa_change_plan" class="fzp-link" t-att-href="wa_change_plan"
+                               target="_blank" rel="noopener">Change plan →</a>
+                        </div>
+
+                        <div class="fzp-meter-row">
+                            <span>Care activities used</span>
+                            <span>
+                                <t t-out="subscription.activities_used"/> of
+                                <t t-out="subscription.activities_included"/>
+                            </span>
+                        </div>
+                        <div class="fzp-meter">
+                            <!-- Capped at 100% so an overage month does not
+                                 render a bar wider than its track. -->
+                            <div class="fzp-meter-fill"
+                                 t-attf-style="width: #{min(100, subscription.activities_included and round(100.0 * subscription.activities_used / subscription.activities_included) or 0)}%;"></div>
+                        </div>
+                        <p class="fzp-meta mt-2 mb-0"
+                           t-if="subscription.activities_used &gt; subscription.activities_included">
+                            <!-- The subscription's currency, not the plan's: subscribers
+                                 are billed in the currency published for their own
+                                 market, so quoting the plan's would show a London
+                                 customer a figure they will never be charged. -->
+                            You are past this month's allowance. Extra activities are billed at
+                            <span t-out="subscription.currency_id.name"/>
+                            <span t-out="subscription.plan_id.overage_display(subscription.currency_id)"/> each.
+                        </p>
+                    </div>
 
                   </div>
                 </div>
@@ -345,12 +345,15 @@
     </template>
 
     <!-- ── Request care ─────────────────────────────────────────────────
-         The first write in the portal. Everything about who this belongs to
-         is decided server-side; this form only asks what is needed. Plain
-         HTML inputs and a real POST — no JS — because it has to work on a
-         cheap Android on a bad connection, which is the whole customer base.
+         Person first, then the task. A customer thinks "Ammi needs her BP
+         medicine", not "I require service SKU-04", and asking for the service
+         first makes them translate their own problem into our catalogue
+         before we have helped with anything.
 
-         Note every <textarea> and <input> is written closed. A self-closed
+         Three numbered steps on one page rather than three screens: no JS, one
+         POST, and the whole thing survives a bad connection and a back button.
+
+         Every <textarea> and <input> is written closed. A self-closed
          <textarea/> makes an HTML parser swallow the rest of the document. -->
     <template id="portal_request_form" name="Faizy — Request Care">
         <t t-call="portal.portal_layout">
@@ -362,7 +365,7 @@
 
                     <t t-call="faizy_website.portal_page_head">
                         <t t-set="eyebrow">Ask for help</t>
-                        <t t-set="title">What do you need?</t>
+                        <t t-set="title">Who needs help?</t>
                     </t>
 
                     <div t-if="errors.get('__all__')" class="fzp-alert is-bad">
@@ -373,15 +376,71 @@
                         <input type="hidden" name="csrf_token"
                                t-att-value="request.csrf_token()"/>
 
-                        <!-- 1. The service -->
-                        <div class="fzp-field">
-                            <label class="fzp-label">Choose a service</label>
+                        <!-- 1 · The person -->
+                        <div class="fzp-step">
+                            <p class="fzp-step-label">1 · Who is it for?</p>
+                            <p t-if="errors.get('family_member_id')" class="fzp-error"
+                               t-out="errors['family_member_id']"/>
+
+                            <div class="fzp-picker is-tight">
+                                <t t-foreach="member_rows" t-as="row">
+                                    <label class="fzp-pick">
+                                        <input type="radio" name="family_member_id"
+                                               t-att-value="row['member'].id"
+                                               t-att-checked="post.get('family_member_id') == str(row['member'].id) or None"/>
+                                        <span class="fzp-pick-body">
+                                            <span class="fzp-pick-head">
+                                                <span class="fzp-avatar fzp-avatar--sm"
+                                                      t-out="row['member'].name and row['member'].name[0] or '?'"></span>
+                                                <span>
+                                                    <span class="fzp-pick-name" t-out="row['member'].name"></span>
+                                                    <span class="fzp-pick-note">
+                                                        <t t-out="dict(row['member']._fields['relationship'].selection).get(row['member'].relationship)"/>
+                                                        <t t-if="row['member'].city"> · <t t-out="row['member'].city"/></t>
+                                                    </span>
+                                                </span>
+                                            </span>
+                                            <!-- Derived from their own orders, so it can never go
+                                                 stale the way a field somebody has to update would. -->
+                                            <span t-if="row['hint']"
+                                                  t-attf-class="fzp-hint is-#{row['tone']}"
+                                                  t-out="row['hint']"></span>
+                                        </span>
+                                    </label>
+                                </t>
+
+                                <label class="fzp-pick">
+                                    <input type="radio" name="family_member_id" value=""
+                                           t-att-checked="not post.get('family_member_id') or None"/>
+                                    <span class="fzp-pick-body">
+                                        <span class="fzp-pick-head">
+                                            <span class="fzp-avatar fzp-avatar--sm">·</span>
+                                            <span>
+                                                <span class="fzp-pick-name">The household</span>
+                                                <span class="fzp-pick-note">Not for one person in particular</span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <p t-if="not family" class="fzp-meta mb-0">
+                                Nobody is set up yet — we can still help, and we will add
+                                them for you.
+                                <a t-if="wa_add_member" class="fzp-link" t-att-href="wa_add_member"
+                                   target="_blank" rel="noopener">Add someone →</a>
+                            </p>
+                        </div>
+
+                        <!-- 2 · The task -->
+                        <div class="fzp-step">
+                            <p class="fzp-step-label">2 · What do you need?</p>
                             <p t-if="errors.get('service_id')" class="fzp-error"
                                t-out="errors['service_id']"/>
+
                             <t t-foreach="categories" t-as="category">
-                                <p t-if="category.service_ids" class="fzp-group-title">
-                                    <t t-out="category.name"/>
-                                </p>
+                                <p t-if="category.service_ids" class="fzp-group-title"
+                                   t-out="category.name"></p>
                                 <div t-if="category.service_ids" class="fzp-picker">
                                     <t t-foreach="category.service_ids" t-as="service">
                                         <label t-if="service.active" class="fzp-pick">
@@ -389,9 +448,15 @@
                                                    t-att-value="service.id"
                                                    t-att-checked="post.get('service_id') == str(service.id) or None"/>
                                             <span class="fzp-pick-body">
-                                                <span class="fzp-pick-name" t-out="service.name"></span>
-                                                <span t-if="service.description" class="fzp-pick-note"
-                                                      t-out="service.description"></span>
+                                                <span class="fzp-pick-head">
+                                                    <span class="fzp-sico"
+                                                          t-out="service.icon or category.icon or '•'"></span>
+                                                    <span>
+                                                        <span class="fzp-pick-name" t-out="service.name"></span>
+                                                        <span t-if="service.description" class="fzp-pick-note"
+                                                              t-out="service.description"></span>
+                                                    </span>
+                                                </span>
                                             </span>
                                         </label>
                                     </t>
@@ -399,64 +464,58 @@
                             </t>
                         </div>
 
-                        <!-- 2. Who it is for -->
-                        <div t-if="family" class="fzp-field">
-                            <label class="fzp-label">Who is it for?</label>
-                            <p t-if="errors.get('family_member_id')" class="fzp-error"
-                               t-out="errors['family_member_id']"/>
-                            <div class="fzp-picker is-tight">
-                                <t t-foreach="family" t-as="member">
-                                    <label class="fzp-pick">
-                                        <input type="radio" name="family_member_id"
-                                               t-att-value="member.id"
-                                               t-att-checked="post.get('family_member_id') == str(member.id) or None"/>
-                                        <span class="fzp-pick-body">
-                                            <span class="fzp-pick-name" t-out="member.name"></span>
-                                            <span class="fzp-pick-note">
-                                                <t t-out="dict(member._fields['relationship'].selection).get(member.relationship)"/>
-                                                <t t-if="member.city"> · <t t-out="member.city"/></t>
-                                            </span>
-                                        </span>
-                                    </label>
-                                </t>
-                                <label class="fzp-pick">
-                                    <input type="radio" name="family_member_id" value=""
-                                           t-att-checked="not post.get('family_member_id') or None"/>
-                                    <span class="fzp-pick-body">
-                                        <span class="fzp-pick-name">The household</span>
-                                        <span class="fzp-pick-note">Not for one person in particular</span>
-                                    </span>
-                                </label>
+                        <!-- 3 · The details -->
+                        <div class="fzp-step">
+                            <p class="fzp-step-label">3 · Anything we should know?</p>
+
+                            <div class="fzp-field">
+                                <label class="fzp-label" for="fzp-city">Which city?</label>
+                                <p t-if="errors.get('city')" class="fzp-error" t-out="errors['city']"/>
+                                <input id="fzp-city" class="fzp-input" type="text" name="city"
+                                       placeholder="Karachi" required="required"
+                                       t-att-value="post.get('city') or (family and family[0].city) or ''"/>
+                                <input class="fzp-input mt-2" type="text" name="street"
+                                       placeholder="Area or address (optional)"
+                                       t-att-value="post.get('street') or ''"/>
                             </div>
-                        </div>
 
-                        <!-- 3. Where -->
-                        <div class="fzp-field">
-                            <label class="fzp-label" for="fzp-city">Which city?</label>
-                            <p t-if="errors.get('city')" class="fzp-error" t-out="errors['city']"/>
-                            <input id="fzp-city" class="fzp-input" type="text" name="city"
-                                   placeholder="Karachi" required="required"
-                                   t-att-value="post.get('city') or (family and family[0].city) or ''"/>
-                            <input class="fzp-input mt-2" type="text" name="street"
-                                   placeholder="Area or address (optional)"
-                                   t-att-value="post.get('street') or ''"/>
-                        </div>
+                            <div class="fzp-field">
+                                <label class="fzp-label" for="fzp-when">Preferred day (optional)</label>
+                                <p t-if="errors.get('scheduled_date')" class="fzp-error"
+                                   t-out="errors['scheduled_date']"/>
+                                <input id="fzp-when" class="fzp-input" type="date" name="scheduled_date"
+                                       t-att-value="post.get('scheduled_date') or ''"/>
+                                <p class="fzp-meta mt-1 mb-0">We will confirm before anyone sets out.</p>
+                            </div>
 
-                        <!-- 4. Anything else -->
-                        <div class="fzp-field">
-                            <label class="fzp-label" for="fzp-notes">
-                                Anything we should know?
+                            <div class="fzp-field">
+                                <label class="fzp-label" for="fzp-notes">Care notes</label>
+                                <textarea id="fzp-notes" class="fzp-input" name="description" rows="4"
+                                          placeholder="Buy the same BP medicine as last time. Please call before delivering."
+                                          t-out="post.get('description') or ''"></textarea>
+                            </div>
+
+                            <label class="fzp-check">
+                                <input type="checkbox" name="urgent" value="1"
+                                       t-att-checked="post.get('urgent') or None"/>
+                                <span>This is urgent</span>
                             </label>
-                            <textarea id="fzp-notes" class="fzp-input" name="description" rows="4"
-                                      placeholder="The pharmacy on Tariq Road has her prescription on file."
-                                      t-out="post.get('description') or ''"></textarea>
-                        </div>
 
-                        <label class="fzp-check">
-                            <input type="checkbox" name="urgent" value="1"
-                                   t-att-checked="post.get('urgent') or None"/>
-                            <span>This is urgent</span>
-                        </label>
+                            <!-- The real faizy.order.privacy_mode, described the way it
+                                 actually behaves. It withholds the member's identity from
+                                 the assigned Faizy; it does not hide what anything cost. -->
+                            <label class="fzp-check">
+                                <input type="checkbox" name="privacy_mode" value="1"
+                                       t-att-checked="post.get('privacy_mode') or None"/>
+                                <span>
+                                    Keep this private
+                                    <span class="fzp-check-note">
+                                        The Faizy sees the task and the address, but not their
+                                        name, phone or these notes.
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
 
                         <div class="fzp-submit">
                             <button type="submit" class="fzp-btn">Send request</button>

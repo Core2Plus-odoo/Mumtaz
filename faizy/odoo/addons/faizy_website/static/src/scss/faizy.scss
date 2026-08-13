@@ -499,7 +499,11 @@ $fz-accent-amber:  #f7b209;
   display: inline-flex;
   align-items: center;
   background: $fz-orange-100;
-  color: $fz-orange-700;
+  // $fz-clay, not $fz-orange-700: that pair measures 3.56:1 on this
+  // tint. Caught by check_contrast.py after the same combination was
+  // added for the status chip — it had been shipping on every FMB
+  // badge and every In Progress pill since they were written.
+  color: #8f4f08;   // $fz-clay, declared below this layer
   border: 1px solid rgba(246, 158, 34, 0.35);
   border-radius: 999px;
   padding: 0.15rem 0.6rem;
@@ -520,7 +524,7 @@ $fz-accent-amber:  #f7b209;
 
   &.is-pending     { background: #e3e3e3; color: #434343; }
   &.is-assigned    { background: #d1e9ff; color: #175cd3; }
-  &.is-in_progress { background: $fz-orange-100; color: $fz-orange-700; }
+  &.is-in_progress { background: $fz-orange-100; color: #8f4f08; }
   &.is-completed   { background: #d1fadf; color: #027a48; }
   &.is-cancelled   { background: #fee4e2; color: #b42318; }
 }
@@ -2281,4 +2285,98 @@ button.fzp-btn {
     svg { width: 1.15rem; height: 1.15rem; }
     color: $fz-clay;
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  v9 — Person-first booking
+//
+//  From the suggested app design, and it is right: a customer thinks "Ammi
+//  needs her BP medicine", not "I require service SKU-04". Asking for the
+//  service first makes them translate their own problem into our catalogue
+//  before we have helped with anything.
+//
+//  Three numbered cards on one page rather than three screens — no JS, one
+//  POST, and it survives a bad connection and a back button.
+// ════════════════════════════════════════════════════════════════════════
+
+.fzp-step {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 18px;
+  padding: 1.25rem 1.35rem 1.4rem;
+  margin-bottom: 1rem;
+
+  &-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $fz-ink-soft;
+    margin: 0 0 0.9rem;
+  }
+
+  // Inside a step card the pickers sit on the card, so they need their own
+  // ground to read as choices rather than as more card.
+  .fzp-pick-body { background: $fz-sand; }
+  input:checked + .fzp-pick-body { background: #fef6eb; }
+  .fzp-field:last-of-type { margin-bottom: 0; }
+}
+
+// Icon or emoji from faizy.service.icon, with the category's as a fallback.
+.fzp-sico {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 14px;
+  background: $fz-sand-deep;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.fzp-pick-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fzp-avatar--sm {
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 0.85rem;
+}
+
+// The derived one-liner on a family member — what is coming up, or when we
+// last helped. Never a stored field: a status somebody has to remember to
+// update is wrong the first week nobody updates it.
+.fzp-hint {
+  display: inline-block;
+  margin-top: 0.6rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(43, 38, 34, 0.06);
+  color: $fz-ink-soft;
+
+  &.is-due  { background: $fz-orange-100; color: $fz-clay; }
+  &.is-soon { background: #d1e9ff; color: #175cd3; }
+}
+
+.fzp-check-note {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: $fz-ink-soft;
+  line-height: 1.45;
+  margin-top: 0.1rem;
+}
+
+.fzp-check { align-items: flex-start; }
+.fzp-check input { margin-top: 0.2rem; flex: 0 0 auto; }
+
+@media (max-width: 767.98px) {
+  .fzp-step { padding: 1.1rem 1rem 1.2rem; }
 }
