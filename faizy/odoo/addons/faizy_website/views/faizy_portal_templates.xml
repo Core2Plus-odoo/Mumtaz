@@ -22,10 +22,66 @@
         </xpath>
     </template>
 
+    <!-- ── Installable web app ──────────────────────────────────────────
+         Four tags and a manifest are the whole difference between a page in
+         a browser tab and an icon on the home screen that opens full-screen.
+         Site-wide rather than portal-only: someone who signs up at /start
+         should be able to keep Faizy on their phone straight away.
+
+         `apple-mobile-web-app-capable` is the deprecated spelling iOS still
+         needs; `mobile-web-app-capable` is the standard one. Both, because
+         dropping either loses a platform. -->
+    <template id="faizy_app_head" name="Faizy — web app head"
+              inherit_id="website.layout">
+        <xpath expr="//head" position="inside">
+            <link rel="manifest" href="/faizy/manifest.webmanifest"/>
+            <meta name="theme-color" content="#fdf8f0"/>
+            <meta name="mobile-web-app-capable" content="yes"/>
+            <meta name="apple-mobile-web-app-capable" content="yes"/>
+            <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+            <meta name="apple-mobile-web-app-title" content="Faizy"/>
+            <link rel="apple-touch-icon"
+                  href="/faizy_website/static/src/img/icon-180.png"/>
+        </xpath>
+    </template>
+
     <!-- The WhatsApp glyph, in one place so the portal cannot drift from the
          header's. -->
     <template id="portal_wa_icon" name="Faizy — WhatsApp icon">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5 0-.2 0-.4 0-.5 0-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.2.2 2.1 3.2 5.1 4.4.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.2-.3-.2-.6-.4zM12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2z"/></svg>
+    </template>
+
+    <!-- ── Bottom tab bar ───────────────────────────────────────────────
+         Phone only. On a phone the top of the screen is the hardest place to
+         reach and the site header is up there with a dropdown in it; an app
+         puts its navigation under the thumb. Hidden from 768px up, where the
+         site header is already a usable navigation.
+
+         `role="navigation"` and a real <a> per tab, not JS: this has to work
+         on a cheap Android with a bad connection. -->
+    <template id="portal_tabbar" name="Faizy — Portal tab bar">
+        <nav class="fzp-tabbar" role="navigation" aria-label="Faizy">
+            <a t-attf-class="fzp-tab #{page_name == 'faizy_care' and 'is-on' or ''}"
+               href="/my/care">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+                <span>Care</span>
+            </a>
+            <a t-attf-class="fzp-tab #{page_name == 'faizy_orders' and 'is-on' or ''}"
+               href="/my/orders">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v3H4zm0 5h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5 4v2h6v-2z"/></svg>
+                <span>Orders</span>
+            </a>
+            <a t-attf-class="fzp-tab #{page_name == 'faizy_account' and 'is-on' or ''}"
+               href="/my/account">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+                <span>Account</span>
+            </a>
+            <a t-if="wa_new_task" class="fzp-tab is-wa" t-att-href="wa_new_task"
+               target="_blank" rel="noopener">
+                <t t-call="faizy_website.portal_wa_icon"/>
+                <span>Ask</span>
+            </a>
+        </nav>
     </template>
 
     <!-- The page header band. Shared so /my/care and /my/orders cannot drift. -->
@@ -186,6 +242,8 @@
 
                   </div>
                 </div>
+
+                <t t-call="faizy_website.portal_tabbar"/>
             </div>
         </t>
     </template>
@@ -263,6 +321,8 @@
                     </div>
                   </div>
                 </div>
+
+                <t t-call="faizy_website.portal_tabbar"/>
             </div>
         </t>
     </template>
@@ -355,6 +415,8 @@
 
                   </div>
                 </div>
+
+                <t t-call="faizy_website.portal_tabbar"/>
             </div>
         </t>
     </template>

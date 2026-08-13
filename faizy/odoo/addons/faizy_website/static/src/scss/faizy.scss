@@ -1986,3 +1986,79 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
     &:nth-child(6) { grid-area: status; justify-self: end; }
   }
 }
+
+// ════════════════════════════════════════════════════════════════════════
+//  v7 — App feel on a phone
+//
+//  Faizy is checked on a phone, briefly, by someone between other things.
+//  A bottom tab bar under the thumb, tap targets that clear 44px, and the
+//  manifest that lets it be installed to the home screen are what separate
+//  "a website I have to find again" from "the thing I open twice a day".
+//  All of it is phone-only: from 768px up the site header is already fine.
+// ════════════════════════════════════════════════════════════════════════
+
+.fzp-tabbar { display: none; }
+
+@media (max-width: 767.98px) {
+  .fzp-tabbar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1030;          // above Odoo's sticky header, below its modals
+    background: rgba(253, 248, 240, 0.94);
+    backdrop-filter: saturate(160%) blur(12px);
+    border-top: 1px solid rgba(43, 38, 34, 0.10);
+    // The home indicator on a notched iPhone sits over the bottom ~34px.
+    // Without this the last row of tabs is under it and unpressable.
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .fzp-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    // 3.25rem + the label keeps every tab over the 44px minimum target.
+    min-height: 3.25rem;
+    padding: 0.5rem 0.25rem 0.45rem;
+    text-decoration: none;
+    color: $fz-ink-soft;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+
+    svg { width: 1.35rem; height: 1.35rem; fill: currentColor; }
+
+    &.is-on { color: $fz-clay; }
+    &.is-wa { color: $fz-whatsapp; }
+    &:hover, &:focus { color: $fz-clay; }
+    &:active { background: rgba(43, 38, 34, 0.05); }
+  }
+
+  // Clear the bar, or the last order row sits permanently underneath it.
+  .fzp {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  // Everything tappable on the portal clears the 44px target on a phone.
+  .fzp-btn { padding: 0.85rem 1.6rem; }
+  .fzp-wa  { padding: 0.75rem 1.25rem; }
+  .fzp-link { padding: 0.35rem 0; }
+  .fzp-ref { padding: 0.2rem 0; display: inline-block; }
+  .fzp-member { padding: 0.95rem 1.1rem; }
+
+  // The header's WhatsApp button is redundant once the tab bar carries one,
+  // and two of them on a 390px screen is clutter.
+  .fzp-head .fzp-wa { display: none; }
+}
+
+// Installed to the home screen there is no browser chrome, so the page is
+// flush against the status bar. Odoo's header handles its own offset; this
+// only guards the portal ground from sitting under a notch.
+@media (display-mode: standalone) {
+  .fzp { padding-top: 1.5rem; }
+}

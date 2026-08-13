@@ -534,3 +534,54 @@ class FaizyWebsite(http.Controller):
                 "phone": phone,
             },
         )
+
+    # ── Installable web app ──────────────────────────────────────────────
+    #
+    # Faizy is used on a phone, by people checking on a parent between other
+    # things. A tab in a browser with an address bar above it does not feel
+    # like something you open twice a day; an icon on the home screen that
+    # opens full-screen does. That difference is a manifest and four meta
+    # tags, not a native build.
+    #
+    # Served from a route rather than a static file so name, colours and
+    # start_url follow the website record instead of being frozen at build
+    # time — a second Faizy site would otherwise advertise the first one's
+    # name on the customer's home screen.
+    @http.route(
+        "/faizy/manifest.webmanifest",
+        type="http",
+        auth="public",
+        website=True,
+        sitemap=False,
+    )
+    def faizy_manifest(self, **kw):
+        website = request.website.sudo()
+        icons = [
+            {"src": "/faizy_website/static/src/img/icon-192.png",
+             "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "/faizy_website/static/src/img/icon-512.png",
+             "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "/faizy_website/static/src/img/icon-512.png",
+             "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ]
+        manifest = {
+            "name": website.name or "Faizy",
+            "short_name": "Faizy",
+            "description": "Family care for Pakistanis living abroad.",
+            # Opening on /my lands a signed-in customer on their own care
+            # dashboard and everyone else on the login, which is the right
+            # first screen either way for someone who installed this.
+            "start_url": "/my",
+            "scope": "/",
+            "display": "standalone",
+            "orientation": "portrait",
+            "background_color": "#f7f1e7",   # $fz-sand, so the splash matches
+            "theme_color": "#fdf8f0",        # the header, so the status bar does
+            "lang": "en",
+            "dir": "ltr",
+            "icons": icons,
+        }
+        return request.make_json_response(
+            manifest,
+            headers=[("Content-Type", "application/manifest+json")],
+        )

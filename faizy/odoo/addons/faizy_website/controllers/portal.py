@@ -121,5 +121,11 @@ class FaizyCustomerPortal(CustomerPortal):
 
         return request.render(
             "faizy_website.portal_order_detail",
-            {"page_name": "faizy_orders", "order": order},
+            {
+                "page_name": "faizy_orders",
+                "order": order,
+                # The tab bar renders on this page too, and its WhatsApp tab
+                # guards on this being present.
+                "wa_new_task": whatsapp_url(WA_NEW_TASK),
+            },
         )
