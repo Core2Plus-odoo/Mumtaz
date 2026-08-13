@@ -30,7 +30,7 @@ access_faizy_wallet_ops,faizy.wallet.transaction.ops,model_faizy_wallet_transact
 access_faizy_wallet_manager,faizy.wallet.transaction.manager,model_faizy_wallet_transaction,faizy_core.group_faizy_manager,1,1,1,1
 access_faizy_whatsapp_user,faizy.whatsapp.message.user,model_faizy_whatsapp_message,faizy_core.group_faizy_user,1,0,0,0
 access_faizy_whatsapp_manager,faizy.whatsapp.message.manager,model_faizy_whatsapp_message,faizy_core.group_faizy_manager,1,1,1,1
-access_faizy_order_portal,faizy.order.portal,model_faizy_order,base.group_portal,1,1,0,0
+access_faizy_order_portal,faizy.order.portal,model_faizy_order,base.group_portal,1,0,0,0
 access_faizy_family_member_portal,faizy.family.member.portal,model_faizy_family_member,base.group_portal,1,0,0,0
 access_faizy_subscription_portal,faizy.subscription.portal,model_faizy_subscription,base.group_portal,1,0,0,0
 access_faizy_plan_public,faizy.plan.public,model_faizy_plan,base.group_public,1,0,0,0
