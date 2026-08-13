@@ -47,6 +47,13 @@ jobs:
       - name: Check core-model fields against Odoo 19
         run: python3 faizy/odoo/tools/check_core_fields.py
 
+      # Catches `self.<field>` on a Faizy model where the model never declares
+      # that field — an AttributeError that only fires when the line runs, and
+      # which shipped once inside the guard that gates invoicing, silently
+      # blocking every non-PKR invoice while appearing to work correctly.
+      - name: Check self.<field> references resolve
+        run: python3 faizy/odoo/tools/check_self_fields.py
+
       # Runs Odoo's own RelaxNG schemas over the view definitions — the same
       # validation Odoo performs at install, where a failure is an RNG error
       # pointing at a generated string rather than at your file.

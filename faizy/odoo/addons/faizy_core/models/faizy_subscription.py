@@ -314,7 +314,12 @@ class FaizySubscription(models.Model):
         is a number somebody has to supply.
         """
         self.ensure_one()
-        company = self.company_id or self.env.company
+        # `self.env.company`, deliberately, and not a `company_id` on the
+        # subscription: this model has no such field, and the invoice created
+        # below does not set one either — so `account.move` resolves its company
+        # to `self.env.company`. Checking against anything else would validate a
+        # different company from the one the entry actually posts to.
+        company = self.env.company
         if self.currency_id == company.currency_id:
             return
 
