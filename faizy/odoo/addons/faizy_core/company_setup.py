@@ -42,6 +42,13 @@ LOGO_STAMP = "faizy_core.logo_source_sha"
 # is what a customer recognises at the top of an invoice.
 COMPANY_NAME = "Faizy"
 
+# Mirrors res.company.faizy_free_activity_grant's own default. Needed here too
+# because a field default applies when a RECORD is created, not when a COLUMN
+# is added: installing onto an existing database leaves the company row at 0,
+# and every customer then signs up with no free activities while /start
+# promises three.
+DEFAULT_FREE_GRANT = 3
+
 # The entity that actually bills. Still needed, because "Faizy" is a brand and
 # the money is taken by a registered company — a customer disputing a charge,
 # or a bank tracing one, needs a legal name to find. Keeping it in
@@ -163,6 +170,14 @@ def apply_company_profile(env, overwrite_name=True):
     # Country is not set here any more. accounting_setup owns it, and it runs
     # first — this used to default to base.ae, which now contradicts the
     # decision that the books are Pakistani.
+
+    if not company.faizy_free_activity_grant:
+        values["faizy_free_activity_grant"] = DEFAULT_FREE_GRANT
+        _logger.warning(
+            "faizy_core: company had no free-activity grant; setting %s. "
+            "Anyone who signed up before this got none.",
+            DEFAULT_FREE_GRANT,
+        )
 
     values.update(_report_style_values(env, company))
 
