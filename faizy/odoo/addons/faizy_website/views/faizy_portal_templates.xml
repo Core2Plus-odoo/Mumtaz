@@ -162,7 +162,8 @@
                         </div>
                     </div>
 
-                    <div t-if="not subscription" class="fzp-promo">
+                    <div t-if="not subscription and partner.faizy_free_activities &gt; 0"
+                         class="fzp-promo">
                         <div>
                             <h2>
                                 You have <t t-out="partner.faizy_free_activities"/> free care activities
@@ -173,6 +174,24 @@
                             </p>
                         </div>
                         <a href="/pricing" class="fzp-btn">See plans</a>
+                    </div>
+
+                    <!-- Out of free activities and no plan. The server already
+                         refuses to confirm a booking in this state; saying so
+                         here is the difference between the customer choosing a
+                         plan and the customer waiting for an answer that never
+                         comes. -->
+                    <div t-if="not subscription and partner.faizy_free_activities &lt;= 0"
+                         class="fzp-promo is-spent">
+                        <div>
+                            <h2>Your free activities are used up</h2>
+                            <p>
+                                We hope they were useful. Choose a plan to keep us
+                                looking after your family — from PKR 1,999 a month,
+                                cancel any time.
+                            </p>
+                        </div>
+                        <a href="/pricing" class="fzp-btn">Choose a plan</a>
                     </div>
 
                     <!-- Family -->
@@ -379,7 +398,29 @@
                         <t t-out="errors['__all__']"/>
                     </div>
 
-                    <form action="/care/request/submit" method="post">
+                    <!-- No free activities left and no live plan. The server
+                         refuses to confirm a booking in this state, so offering
+                         the form would take a request we cannot act on. Said
+                         here instead, where the customer can do something
+                         about it. -->
+                    <div t-if="needs_plan" class="fzp-gate">
+                        <div class="fzp-gate-icon" aria-hidden="true">🌙</div>
+                        <h2>You have used your free activities</h2>
+                        <p>
+                            We hope they helped. To keep asking us for medicines,
+                            bills, visits and errands, choose a plan — from
+                            PKR 1,999 a month, cancel any time.
+                        </p>
+                        <a href="/pricing" class="fzp-btn">Choose a plan</a>
+                        <p t-if="wa_new_task" class="fzp-gate-alt">
+                            Something urgent?
+                            <a class="fzp-link" t-att-href="wa_new_task"
+                               target="_blank" rel="noopener">Message us on WhatsApp</a>
+                            and we will work it out.
+                        </p>
+                    </div>
+
+                    <form t-if="not needs_plan" action="/care/request/submit" method="post">
                         <input type="hidden" name="csrf_token"
                                t-att-value="request.csrf_token()"/>
 
@@ -602,6 +643,18 @@
                                      class="img-fluid rounded" alt="Proof of delivery"/>
                                 <p t-if="order.completion_note" class="fzp-meta mt-2 mb-0"
                                    t-out="order.completion_note"/>
+                            </div>
+
+                            <!-- The paper behind what they were charged. Shown
+                                 whenever it exists, not only once completed —
+                                 a customer who has been billed for purchases
+                                 should not have to wait to see why. -->
+                            <div t-if="order.receipt_image" class="fzp-card">
+                                <h2 class="fzp-meta mb-3">Receipt</h2>
+                                <img t-attf-src="/web/image/faizy.order/#{order.id}/receipt_image"
+                                     class="img-fluid rounded" alt="Receipt"/>
+                                <p t-if="order.receipt_note" class="fzp-meta mt-2 mb-0"
+                                   t-out="order.receipt_note"/>
                             </div>
                         </div>
 

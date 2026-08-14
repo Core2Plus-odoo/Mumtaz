@@ -179,6 +179,22 @@ class FaizyCustomerPortal(CustomerPortal):
 
     # ── Requesting care ──────────────────────────────────────────────────
 
+    @staticmethod
+    def _needs_plan(partner):
+        """True when this customer cannot have another booking confirmed.
+
+        Mirrors `faizy.order.action_confirm`, which refuses to meter an
+        activity for a customer with no free grant left and no live
+        subscription. That refusal lands on ops in the backend; without this,
+        the customer files a request that can never be confirmed and waits for
+        an answer nobody can give. `faizy_subscription_id` already excludes
+        draft, so an unstarted subscription correctly does not count.
+        """
+        return (
+            partner.faizy_free_activities <= 0
+            and not partner.faizy_subscription_id
+        )
+
     def _member_rows(self, family):
         """Each family member with a one-line status derived from their orders.
 
@@ -253,6 +269,7 @@ class FaizyCustomerPortal(CustomerPortal):
             "member_rows": self._member_rows(family),
             "post": post,
             "errors": errors or {},
+            "needs_plan": self._needs_plan(partner),
             "wa_new_task": whatsapp_url(WA_NEW_TASK),
         }
 
@@ -297,6 +314,13 @@ class FaizyCustomerPortal(CustomerPortal):
         """
         partner = request.env.user.partner_id
         errors = {}
+
+        if self._needs_plan(partner):
+            # Checked again here, not only on the GET: a form can be posted
+            # without ever loading the page it came from.
+            return request.render(
+                "faizy_website.portal_request_form", self._request_values(post)
+            )
 
         service = (
             request.env["faizy.service"]

@@ -150,10 +150,22 @@
                         <page string="Completion" name="completion"
                               invisible="state not in ('in_progress', 'completed')">
                             <group>
-                                <field name="proof_image" widget="image"
-                                       options="{'size': [200, 200]}"/>
-                                <field name="completion_note"/>
-                                <field name="date_completed" readonly="1"/>
+                                <group string="Proof of delivery">
+                                    <field name="proof_image" widget="image" nolabel="1"
+                                           options="{'size': [200, 200]}"/>
+                                    <field name="completion_note"/>
+                                    <field name="date_completed" readonly="1"/>
+                                </group>
+                                <!-- The paper behind purchase_value. The customer is
+                                     charged what the shop charged plus a fee; they can
+                                     see this on their own order page. -->
+                                <group string="Receipt">
+                                    <field name="receipt_image" widget="image" nolabel="1"
+                                           options="{'size': [200, 200]}"/>
+                                    <field name="receipt_note"
+                                           placeholder="e.g. Pharmacy — 3 items"/>
+                                    <field name="purchase_value"/>
+                                </group>
                             </group>
                         </page>
                         <page string="Feedback" name="feedback" invisible="state != 'completed'">

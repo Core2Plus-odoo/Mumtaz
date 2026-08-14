@@ -2398,3 +2398,56 @@ button.fzp-btn {
   padding-top: 1.25rem;
   border-top: 1px solid rgba(43, 38, 34, 0.10);
 }
+
+// ── The end of the free grant ───────────────────────────────────────────
+// faizy.order.action_confirm refuses to meter an activity for a customer with
+// no free grant left and no live subscription. That refusal reaches ops in the
+// backend and nobody else, so the customer would file a request that can never
+// be confirmed and then wait. These two states say it where they can act on it.
+
+.fzp-promo.is-spent {
+  background: $fz-card;
+  border-color: rgba(43, 38, 34, 0.10);
+}
+
+.fzp-gate {
+  background: linear-gradient(135deg, #fef6eb 0%, #fdf0dc 100%);
+  border: 1px solid rgba(246, 158, 34, 0.28);
+  border-radius: 18px;
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+
+  &-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: rgba(246, 158, 34, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.85rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: $fz-ink;
+    margin: 0 0 0.45rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+    color: #4a423b;
+    line-height: 1.6;
+    margin: 0 auto 1.4rem;
+    max-width: 30rem;
+  }
+
+  &-alt {
+    font-size: 0.875rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 1.25rem !important;
+  }
+}

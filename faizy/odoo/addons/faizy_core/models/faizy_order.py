@@ -200,6 +200,20 @@ class FaizyOrder(models.Model):
         max_height=1920,
         help="Photo captured by the Faizy on completion.",
     )
+    # The evidence behind purchase_value. The customer is charged what the
+    # shop charged plus a platform fee, so "we spent PKR 4,200 on her
+    # medicines" is a number they are entitled to see the paper for. Separate
+    # from proof_image: one shows the task was done, the other what it cost.
+    receipt_image = fields.Image(
+        string="Receipt",
+        max_width=1920,
+        max_height=1920,
+        help="Photo of the shop receipt or bill behind the purchase value.",
+    )
+    receipt_note = fields.Char(
+        string="Receipt Note",
+        help="What the receipt covers, when a task has more than one purchase.",
+    )
     completion_note = fields.Text()
     rating = fields.Selection(
         [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5")],

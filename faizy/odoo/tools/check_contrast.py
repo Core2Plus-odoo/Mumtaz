@@ -144,6 +144,12 @@ PAIRS = [
     ("FMB badge on its tint",        CLAY,              ORANGE_100,      False),
     ("In Progress status pill",      CLAY,              ORANGE_100,      False),
     ("status chip, upcoming",        BLUE_INK,          BLUE_SOFT,       False),
+    # The end of the free grant.
+    ("plan-gate heading on tint",    INK,               TINT_7_ON_CARD,  True),
+    ("plan-gate body on tint",       PROMO_BODY,        TINT_7_ON_CARD,  False),
+    ("plan-gate WhatsApp link",      CLAY,              TINT_7_ON_CARD,  False),
+    ("spent-grant heading on card",  INK,               CARD,            True),
+    ("spent-grant body on card",     PROMO_BODY,        CARD,            False),
 ]
 
 
