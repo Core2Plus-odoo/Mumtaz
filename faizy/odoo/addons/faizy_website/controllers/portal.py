@@ -41,7 +41,7 @@ class FaizyCustomerPortal(CustomerPortal):
             ].search_count([("partner_id", "=", partner.id)])
         return values
 
-    @http.route(["/my/care"], type="http", auth="user", website=True)
+    @http.route(["/care"], type="http", auth="user", website=True)
     def portal_care_home(self, **kw):
         """One screen answering "how is my family, and what have I got left?"."""
         partner = request.env.user.partner_id
@@ -84,7 +84,8 @@ class FaizyCustomerPortal(CustomerPortal):
             },
         )
 
-    @http.route(["/my/orders", "/my/orders/page/<int:page>"], type="http", auth="user", website=True)
+    @http.route(["/care/orders", "/care/orders/page/<int:page>"],
+                type="http", auth="user", website=True)
     def portal_faizy_orders(self, page=1, **kw):
         partner = request.env.user.partner_id
         Order = request.env["faizy.order"]
@@ -92,7 +93,7 @@ class FaizyCustomerPortal(CustomerPortal):
 
         total = Order.search_count(domain)
         pager = request.website.pager(
-            url="/my/orders",
+            url="/care/orders",
             total=total,
             page=page,
             step=self._items_per_page,
@@ -111,7 +112,7 @@ class FaizyCustomerPortal(CustomerPortal):
             },
         )
 
-    @http.route(["/my/orders/<int:order_id>"], type="http", auth="user", website=True)
+    @http.route(["/care/orders/<int:order_id>"], type="http", auth="user", website=True)
     def portal_faizy_order_detail(self, order_id, **kw):
         try:
             order = request.env["faizy.order"].browse(order_id)
@@ -120,7 +121,7 @@ class FaizyCustomerPortal(CustomerPortal):
             order.check_access("read")
             order.read(["name"])
         except (AccessError, MissingError):
-            return request.redirect("/my")
+            return request.redirect("/care")
 
         return request.render(
             "faizy_website.portal_order_detail",
@@ -143,6 +144,38 @@ class FaizyCustomerPortal(CustomerPortal):
                 "wa_new_task": whatsapp_url(WA_NEW_TASK),
             },
         )
+
+    # ── Where a customer lands ───────────────────────────────────────────
+
+    @http.route(["/my", "/my/home"], type="http", auth="user", website=True)
+    def home(self, **kw):
+        """Send customers to their own app, not Odoo's account console.
+
+        `/my` is Odoo's: Your Invoices, Addresses, Connection & Security. It is
+        the right page for a supplier logging into an ERP and the wrong first
+        thing to show someone checking on their mother. Staff still get it —
+        they are the ones who occasionally need it.
+        """
+        if request.env.user.has_group("base.group_portal"):
+            return request.redirect("/care")
+        return super().home(**kw)
+
+    # Old links, bookmarks and anything already sent over WhatsApp.
+    @http.route(["/my/care"], type="http", auth="user", website=True)
+    def legacy_care(self, **kw):
+        return request.redirect("/care")
+
+    @http.route(["/my/care/request"], type="http", auth="user", website=True)
+    def legacy_request(self, **kw):
+        return request.redirect("/care/request")
+
+    @http.route(["/my/orders"], type="http", auth="user", website=True)
+    def legacy_orders(self, **kw):
+        return request.redirect("/care/orders")
+
+    @http.route(["/my/orders/<int:order_id>"], type="http", auth="user", website=True)
+    def legacy_order_detail(self, order_id, **kw):
+        return request.redirect("/care/orders/%s" % order_id)
 
     # ── Requesting care ──────────────────────────────────────────────────
 
@@ -223,7 +256,7 @@ class FaizyCustomerPortal(CustomerPortal):
             "wa_new_task": whatsapp_url(WA_NEW_TASK),
         }
 
-    @http.route(["/my/care/request"], type="http", auth="user", website=True)
+    @http.route(["/care/request"], type="http", auth="user", website=True)
     def portal_request_form(self, **kw):
         """The form a customer fills in to ask for something.
 
@@ -238,7 +271,7 @@ class FaizyCustomerPortal(CustomerPortal):
         )
 
     @http.route(
-        ["/my/care/request/submit"],
+        ["/care/request/submit"],
         type="http",
         auth="user",
         website=True,
@@ -344,4 +377,4 @@ class FaizyCustomerPortal(CustomerPortal):
                 }
             )
         )
-        return request.redirect("/my/orders/%s?new=1" % order.id)
+        return request.redirect("/care/orders/%s?new=1" % order.id)

@@ -6,17 +6,17 @@
               inherit_id="portal.portal_my_home" priority="30">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/faizy_core/static/description/icon.png'"/>
+                <t t-set="icon" t-value="'/faizy_website/static/src/img/portal-family.svg'"/>
                 <t t-set="title">My Family</t>
                 <t t-set="text">Who we are caring for</t>
-                <t t-set="url" t-value="'/my/care'"/>
+                <t t-set="url" t-value="'/care'"/>
                 <t t-set="placeholder_count" t-value="'faizy_family_count'"/>
             </t>
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/faizy_core/static/description/icon.png'"/>
+                <t t-set="icon" t-value="'/faizy_website/static/src/img/portal-orders.svg'"/>
                 <t t-set="title">Care Orders</t>
                 <t t-set="text">Every task, with proof</t>
-                <t t-set="url" t-value="'/my/orders'"/>
+                <t t-set="url" t-value="'/care/orders'"/>
                 <t t-set="placeholder_count" t-value="'faizy_order_count'"/>
             </t>
         </xpath>
@@ -62,12 +62,12 @@
     <template id="portal_tabbar" name="Faizy — Portal tab bar">
         <nav class="fzp-tabbar" role="navigation" aria-label="Faizy">
             <a t-attf-class="fzp-tab #{page_name == 'faizy_care' and 'is-on' or ''}"
-               href="/my/care">
+               href="/care">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
                 <span>Care</span>
             </a>
             <a t-attf-class="fzp-tab #{page_name == 'faizy_orders' and 'is-on' or ''}"
-               href="/my/orders">
+               href="/care/orders">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v3H4zm0 5h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zm5 4v2h6v-2z"/></svg>
                 <span>Orders</span>
             </a>
@@ -76,7 +76,7 @@
                  header's user menu, and a nav that offers four equal choices
                  hides the one the customer actually came to do. -->
             <a t-attf-class="fzp-tab is-primary #{page_name == 'faizy_request' and 'is-on' or ''}"
-               href="/my/care/request">
+               href="/care/request">
                 <span class="fzp-tab-plus" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
                 </span>
@@ -90,7 +90,7 @@
         </nav>
     </template>
 
-    <!-- The page header band. Shared so /my/care and /my/orders cannot drift. -->
+    <!-- The page header band. Shared so /care and /care/orders cannot drift. -->
     <template id="portal_page_head" name="Faizy — Portal header">
         <div class="fzp-head">
             <div>
@@ -107,8 +107,9 @@
 
     <!-- ── One screen: how the family is, and what's left this month ──── -->
     <template id="portal_care_home" name="Faizy — My Care">
-        <t t-call="portal.portal_layout">
-            <div class="faizy-page">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Your care</t>
+            <div id="wrap" class="faizy-page">
                 <t t-call="portal.portal_back_in_edit_mode"/>
 
                 <div class="fzp">
@@ -121,7 +122,7 @@
 
                     <!-- The one thing a customer comes here to do, above the
                          fold and not hidden behind a WhatsApp round trip. -->
-                    <a href="/my/care/request" class="fzp-cta">
+                    <a href="/care/request" class="fzp-cta">
                         <span class="fzp-cta-icon" aria-hidden="true">+</span>
                         <span>
                             <span class="fzp-cta-title">Request care</span>
@@ -213,7 +214,7 @@
                     <!-- Recent care -->
                     <div class="fzp-section">
                         <h2>Recent care</h2>
-                        <a t-if="order_count" class="fzp-link" href="/my/orders">See all orders →</a>
+                        <a t-if="order_count" class="fzp-link" href="/care/orders">See all orders →</a>
                     </div>
                     <t t-call="faizy_website.portal_order_table">
                         <t t-set="orders" t-value="recent_orders"/>
@@ -256,6 +257,10 @@
                         </p>
                     </div>
 
+                    <p class="fzp-foot-links">
+                        <a class="fzp-link" href="/my/invoices">Your invoices →</a>
+                    </p>
+
                   </div>
                 </div>
 
@@ -282,7 +287,7 @@
                     <t t-foreach="orders" t-as="order">
                         <tr>
                             <td>
-                                <a class="fzp-ref" t-attf-href="/my/orders/#{order.id}"
+                                <a class="fzp-ref" t-attf-href="/care/orders/#{order.id}"
                                    t-out="order.name"/>
                             </td>
                             <td class="fzp-task" t-out="order.title"/>
@@ -312,7 +317,7 @@
                     paid, a visit to check in — it will appear here with a photo once
                     it is done.
                 </p>
-                <a class="fzp-btn" href="/my/care/request">Request care</a>
+                <a class="fzp-btn" href="/care/request">Request care</a>
                 <a t-if="wa_new_task" class="fzp-link d-block mt-3" t-att-href="wa_new_task"
                    target="_blank" rel="noopener">or message us on WhatsApp →</a>
             </div>
@@ -320,8 +325,9 @@
     </template>
 
     <template id="portal_orders" name="Faizy — My Orders">
-        <t t-call="portal.portal_layout">
-            <div class="faizy-page">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Care orders</t>
+            <div id="wrap" class="faizy-page">
                 <t t-call="portal.portal_back_in_edit_mode"/>
 
                 <div class="fzp">
@@ -356,8 +362,9 @@
          Every <textarea> and <input> is written closed. A self-closed
          <textarea/> makes an HTML parser swallow the rest of the document. -->
     <template id="portal_request_form" name="Faizy — Request Care">
-        <t t-call="portal.portal_layout">
-            <div class="faizy-page">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Request care</t>
+            <div id="wrap" class="faizy-page">
                 <t t-call="portal.portal_back_in_edit_mode"/>
 
                 <div class="fzp">
@@ -372,7 +379,7 @@
                         <t t-out="errors['__all__']"/>
                     </div>
 
-                    <form action="/my/care/request/submit" method="post">
+                    <form action="/care/request/submit" method="post">
                         <input type="hidden" name="csrf_token"
                                t-att-value="request.csrf_token()"/>
 
@@ -533,8 +540,9 @@
     </template>
 
     <template id="portal_order_detail" name="Faizy — Order Detail">
-        <t t-call="portal.portal_layout">
-            <div class="faizy-page">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Care order</t>
+            <div id="wrap" class="faizy-page">
                 <t t-call="portal.portal_back_in_edit_mode"/>
 
                 <div class="fzp">
@@ -622,7 +630,7 @@
                         </div>
                     </div>
 
-                    <a href="/my/orders" class="fzp-link d-inline-block mt-4">← Back to orders</a>
+                    <a href="/care/orders" class="fzp-link d-inline-block mt-4">← Back to orders</a>
 
                   </div>
                 </div>

@@ -568,10 +568,10 @@ class FaizyWebsite(http.Controller):
             "name": website.name or "Faizy",
             "short_name": "Faizy",
             "description": "Family care for Pakistanis living abroad.",
-            # Opening on /my lands a signed-in customer on their own care
-            # dashboard and everyone else on the login, which is the right
-            # first screen either way for someone who installed this.
-            "start_url": "/my",
+            # Opens straight on the customer's own app. /my is Odoo's account
+            # console and is not where someone who installed this to check on
+            # their mother should land.
+            "start_url": "/care",
             "scope": "/",
             "display": "standalone",
             "orientation": "portrait",

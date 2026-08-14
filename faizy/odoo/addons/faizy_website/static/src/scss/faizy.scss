@@ -2380,3 +2380,21 @@ button.fzp-btn {
 @media (max-width: 767.98px) {
   .fzp-step { padding: 1.1rem 1rem 1.2rem; }
 }
+
+// ── Odoo's own /my, which only staff reach now ──────────────────────────
+// The Faizy cards there pointed at the 256px app tile with nothing to bound
+// it, so the image rendered full size and squeezed its own label into a
+// two-word column. Proper line-art icons now, and a hard cap so no future
+// icon can do it again.
+.o_portal_docs img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.fzp-foot-links {
+  margin: 1.75rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(43, 38, 34, 0.10);
+}
