@@ -47,6 +47,14 @@ jobs:
       - name: Check core-model fields against Odoo 19
         run: python3 faizy/odoo/tools/check_core_fields.py
 
+      # Catches a portal template following a Many2one into a model that
+      # base.group_portal cannot read — a 500 for a real customer that renders
+      # perfectly for anyone testing it, because an internal user bypasses the
+      # ACL. Two of these were live: faizy.service on every order detail page,
+      # and faizy.worker on every assigned one.
+      - name: Check portal templates against portal ACLs
+        run: python3 faizy/odoo/tools/check_portal_access.py
+
       # Catches `self.<field>` on a Faizy model where the model never declares
       # that field — an AttributeError that only fires when the line runs, and
       # which shipped once inside the guard that gates invoicing, silently

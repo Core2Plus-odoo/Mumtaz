@@ -578,7 +578,7 @@
 
                                     <dt class="col-5 col-sm-4 fw-normal fzp-meta">Your Faizy</dt>
                                     <dd class="col-7 col-sm-8">
-                                        <span t-if="order.worker_id" t-out="order.worker_id.name"/>
+                                        <span t-if="worker_name" t-out="worker_name"/>
                                         <span t-else="" class="fzp-meta">Being assigned</span>
                                     </dd>
                                 </dl>

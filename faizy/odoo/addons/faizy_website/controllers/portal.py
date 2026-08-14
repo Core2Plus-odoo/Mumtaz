@@ -127,6 +127,13 @@ class FaizyCustomerPortal(CustomerPortal):
             {
                 "page_name": "faizy_orders",
                 "order": order,
+                # The customer is entitled to know who is coming; they are not
+                # entitled to the roster. faizy.worker carries cnic, phone,
+                # email and base_rate, so there is no portal ACL on it — this
+                # reads the single field the page needs, as superuser, rather
+                # than opening the model. `order.worker_id` is a field on
+                # faizy.order and costs no read of faizy.worker by itself.
+                "worker_name": order.worker_id.sudo().name,
                 # Set by the redirect after a request is filed, so the customer
                 # lands on a page that confirms it rather than one that merely
                 # happens to contain it.
