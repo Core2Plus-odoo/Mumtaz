@@ -287,21 +287,23 @@ class FaizyCustomerPortal(CustomerPortal):
             "faizy_website.portal_request_form", self._request_values(kw)
         )
 
-    @http.route(
-        ["/care/request/submit"],
-        type="http",
-        auth="user",
-        website=True,
-        methods=["POST"],
-    )
-    def portal_request_submit(self, **post):
-        """Create the order, or re-render the form saying what was wrong.
+    def _create_care_request(self, partner, post):
+        """Validate and create a care request. Returns (order_or_None, errors).
 
-        `sudo()` on the create, deliberately, and every field that decides
-        who this belongs to is taken from the session rather than the form:
+        Shared by the web form and the JSON API used by the mobile app, so the
+        two can never come to validate a booking differently — MAX_OPEN_ORDERS,
+        the field checks and the create call are one function, not a pair
+        maintained by hand in parallel. `_needs_plan` is checked by each
+        caller before this runs, not inside it: whether to show a gate instead
+        of a form is a presentation choice the two callers make differently,
+        not a validation error this shares.
 
-          * `partner_id` is `request.env.user.partner_id`, never posted.
-          * `family_member_id` is re-read from the customer's own family, so
+        `sudo()` on the create, deliberately, and every field that decides who
+        this belongs to is taken from `partner`/the session rather than the
+        posted data:
+
+          * `partner_id` is the caller's own partner, never posted.
+          * `family_member_id` is re-read from that partner's own family, so
             posting somebody else's id selects nothing rather than filing an
             order against a stranger's mother.
           * `service_id` must be an active catalogue service.
@@ -312,15 +314,7 @@ class FaizyCustomerPortal(CustomerPortal):
         closed on the write side. One audited function is a smaller surface
         than a permission.
         """
-        partner = request.env.user.partner_id
         errors = {}
-
-        if self._needs_plan(partner):
-            # Checked again here, not only on the GET: a form can be posted
-            # without ever loading the page it came from.
-            return request.render(
-                "faizy_website.portal_request_form", self._request_values(post)
-            )
 
         service = (
             request.env["faizy.service"]
@@ -371,8 +365,7 @@ class FaizyCustomerPortal(CustomerPortal):
             )
 
         if errors:
-            values = self._request_values(post, errors)
-            return request.render("faizy_website.portal_request_form", values)
+            return None, errors
 
         order = (
             request.env["faizy.order"]
@@ -401,4 +394,29 @@ class FaizyCustomerPortal(CustomerPortal):
                 }
             )
         )
+        return order, {}
+
+    @http.route(
+        ["/care/request/submit"],
+        type="http",
+        auth="user",
+        website=True,
+        methods=["POST"],
+    )
+    def portal_request_submit(self, **post):
+        """Create the order, or re-render the form saying what was wrong."""
+        partner = request.env.user.partner_id
+
+        if self._needs_plan(partner):
+            # Checked again here, not only on the GET: a form can be posted
+            # without ever loading the page it came from.
+            return request.render(
+                "faizy_website.portal_request_form", self._request_values(post)
+            )
+
+        order, errors = self._create_care_request(partner, post)
+        if errors:
+            values = self._request_values(post, errors)
+            return request.render("faizy_website.portal_request_form", values)
+
         return request.redirect("/care/orders/%s?new=1" % order.id)

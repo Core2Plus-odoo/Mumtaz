@@ -16,7 +16,7 @@ The customer-facing half of Faizy.
 The site's domain is configured on the Website record (Settings > Website), not
 hardcoded here — see faizy/docs/02-odoo-deployment.md.
 """,
-    "version": "19.0.1.17.0",
+    "version": "19.0.1.18.0",
     "category": "Website",
     "author": "C2P Consultants FZC LLC",
     "website": "https://faizy.pk",
