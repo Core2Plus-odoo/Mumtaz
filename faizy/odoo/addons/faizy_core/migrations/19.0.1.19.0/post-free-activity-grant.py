@@ -1,4 +1,18 @@
-"""Give the company its free-activity grant, and the customers who never got it.
+"""Guard the free-activity grant against a zero that would silently deny it.
+
+CORRECTION (15 Aug): this was written believing the live company had no grant
+and every customer had signed up with none. It ran on production and changed
+nothing, and the database was then measured directly: the grant is 3, the
+public website environment resolves the company correctly, and a /start signup
+receives {'faizy_free_activities': 3}. Nothing was broken. The reasoning below
+about column defaults is wrong and is kept only so the mistake is legible.
+
+What remains true is that a grant of 0 would deny every new customer the offer
+the site advertises, silently, and nothing else checks for it. That is worth a
+guard, so this is kept — but it is a guard, not a repair, and it should not be
+cited as evidence that the offer ever failed.
+
+Original reasoning, retained and incorrect:
 
 `res.company.faizy_free_activity_grant` carries `default=3`. An Odoo field
 default applies when a *record* is created, not when a *column* is added — and

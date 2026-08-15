@@ -540,3 +540,39 @@ open.
 
 **Already started, no input needed:** monorepo scaffold, brand/design system, database migrations,
 auth flow, provider interfaces for WhatsApp and payments.
+
+---
+
+## 11. Corrections
+
+**The free-activity grant was never broken.** On 14 Aug I reported that
+`/start` had been handing out zero free activities since launch, and shipped
+migration `19.0.1.19.0` plus a seed in `apply_company_profile` to repair it.
+That was wrong, twice over.
+
+The migration ran on production and changed nothing — no company row and no
+partner matched. Measured afterwards on the live database:
+
+    grant as admin       : 3
+    public env.company   : 1 'Faizy'
+    grant as public      : 3
+    a /start signup gets : {'faizy_free_activities': 3}
+
+So the company grant was correct, the public website environment resolves the
+company correctly, and a signup receives three. Both diagnoses were wrong: the
+column-default premise, and the follow-up guess that `env.company` reads empty
+on a public route the way it does in `whatsapp_url`.
+
+What actually prompted it was one contact — partner 32, Muhammad Umer — sitting
+at `faizy_free_activities = 0`. That is a fact about one record, not about the
+signup flow, and it was generalised without evidence. Its cause is still
+unexplained and is worth a look before anyone treats it as a pattern:
+`faizy.subscription.consume_activity` spends the free grant first, so a
+subscription touching that partner would explain it.
+
+The shipped code is kept. The migration is idempotent and only acts on a grant
+of 0 or NULL, and the `apply_company_profile` seed only fires when the grant is
+falsy — both are harmless guards against a state that would be a genuine
+problem if it ever occurred. Only the claim was wrong, and commit `4024183`'s
+message overstates it as a live incident.
+
