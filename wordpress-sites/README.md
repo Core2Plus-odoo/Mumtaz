@@ -19,13 +19,27 @@ edits required.
 
 ## Deploying
 
-These are theme directories only — they assume WordPress core is already
-installed (per the LEMP setup script covered separately). To go live:
+`deploy/setup-lemp.sh` provisions both sites end-to-end on the shared
+Hostinger VPS: installs Nginx + MariaDB + PHP-FPM, creates two isolated
+databases (one per site, so odditytrend and youngcraze can never read each
+other's data), installs WordPress core, deploys both themes from this repo,
+adds Nginx server blocks, opens the firewall, and issues Let's Encrypt
+certificates. It's safe to re-run (every step checks current state first)
+and never touches the existing c2p-delivery-system Nginx config on the same
+box.
 
-1. Copy `odditytrend-theme/` to `/var/www/odditytrend.com/wp-content/themes/`
-   and `youngcraze-theme/` to `/var/www/youngcraze.com/wp-content/themes/`.
-2. Activate each theme under **Appearance → Themes** on its respective site.
-3. Follow the per-theme `README.md` for menu setup and ad slot configuration.
+Run it as root on the VPS, after DNS for both domains already points at the
+VPS IP (the script checks this first and aborts if it doesn't):
+
+```bash
+sudo bash deploy/setup-lemp.sh
+```
+
+It deliberately stops short of the WordPress install wizard — visit
+`https://<domain>/wp-admin/install.php` yourself afterward to set each
+site's title and admin account, then activate the matching theme under
+**Appearance → Themes**. See the per-theme `README.md` for menu setup and
+ad slot configuration.
 
 Publishing plugins (Rank Math, a caching plugin) and content are handled
 separately via wp-admin, per the project plan.
