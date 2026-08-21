@@ -35,6 +35,8 @@ yarn-error.log*
 .env.*.local
 # Explicitly keep the template
 !.env.example
+wordpress-sites/deploy/setup-lemp.env
+!wordpress-sites/deploy/setup-lemp.env.example
 
 # ── Odoo ──────────────────────────────────────────────────────────────
 *.pot
