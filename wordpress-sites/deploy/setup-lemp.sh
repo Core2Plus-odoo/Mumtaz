@@ -116,6 +116,7 @@ if [ -f "$PHP_FPM_INI" ]; then
 else
 	warn "Could not locate php.ini at ${PHP_FPM_INI} to raise upload limits — bump upload_max_filesize/post_max_size manually if theme/plugin uploads fail with a size error."
 fi
+
 # ─────────────────────────────────────────────────────────────────────────
 log "Step 3/10 — Securing MariaDB (equivalent of mysql_secure_installation)"
 # ─────────────────────────────────────────────────────────────────────────
