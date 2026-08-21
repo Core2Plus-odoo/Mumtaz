@@ -149,7 +149,7 @@ if ! command -v wp >/dev/null 2>&1; then
 	curl -sS -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 	chmod +x /usr/local/bin/wp
 fi
-wp --info --allow-root | head -n1
+wp --version --allow-root
 
 # ─────────────────────────────────────────────────────────────────────────
 log "Step 6/10 — Fetching theme source from the repo"
