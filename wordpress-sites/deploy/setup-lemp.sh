@@ -104,6 +104,19 @@ PHP_FPM_SOCK="$(find /run/php -maxdepth 1 -name 'php*-fpm.sock' 2>/dev/null | so
 [ -n "$PHP_FPM_SOCK" ] || die "Could not detect a php-fpm socket under /run/php — check the PHP-FPM package name for this OS release and adjust manually."
 log "Detected PHP-FPM socket: $PHP_FPM_SOCK"
 
+# Raise upload limits so WordPress theme/plugin zip uploads (often 10-50MB+)
+# don't hit PHP's stock 2M/8M defaults. Nginx's own client_max_body_size is
+# set per-site in Step 7 below.
+PHP_FPM_INI="/etc/php/$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')/fpm/php.ini"
+PHP_FPM_SERVICE="$(systemctl list-units --type=service --all --no-legend 2>/dev/null | awk '{print $1}' | grep -m1 -E '^php[0-9.]*-fpm\.service$')"
+if [ -f "$PHP_FPM_INI" ]; then
+	sed -i 's/^upload_max_filesize = .*/upload_max_filesize = 64M/' "$PHP_FPM_INI"
+	sed -i 's/^post_max_size = .*/post_max_size = 64M/' "$PHP_FPM_INI"
+	[ -n "$PHP_FPM_SERVICE" ] && systemctl restart "$PHP_FPM_SERVICE"
+else
+	warn "Could not locate php.ini at ${PHP_FPM_INI} to raise upload limits — bump upload_max_filesize/post_max_size manually if theme/plugin uploads fail with a size error."
+fi
+
 # ─────────────────────────────────────────────────────────────────────────
 log "Step 3/10 — Securing MariaDB (equivalent of mysql_secure_installation)"
 # ─────────────────────────────────────────────────────────────────────────
@@ -213,6 +226,10 @@ write_server_block() {
 
 		    root ${root};
 		    index index.php;
+
+		    # WordPress plugin/theme uploads (zip files) can exceed Nginx's
+		    # 1M default well before hitting PHP's own upload_max_filesize.
+		    client_max_body_size 64M;
 
 		    access_log /var/log/nginx/${domain}.access.log;
 		    error_log  /var/log/nginx/${domain}.error.log;
