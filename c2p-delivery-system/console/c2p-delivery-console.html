@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   :root{
@@ -1215,6 +1216,7 @@ function renderNav(){
   const proj=eng?eng.company:'';
   const simple=[
     navBtn('dashboard','▦','Dashboard'),
+    navBtn('assistant','✦','Assistant'),
 
     navSec('Sales'),
     navBtn('leads','⊕','Leads'),
@@ -1319,6 +1321,7 @@ function renderView(){
   if(activeView==='comms')return renderComms(c);
   if(activeView==='approvals')return renderApprovals(c);
   if(activeView==='activity')return renderActivity(c);
+  if(activeView==='assistant')return renderAssistant(c);
   if(activeView==='settings')return renderSettings(c);
   return renderStageView(c);
 }
@@ -3228,6 +3231,69 @@ async function upgradePlan(edition){try{const r=await api("POST","/billing/check
   renderAll();
   refreshApprovalsCount();
 })();
+
+/* ---------- assistant (read-only Q&A over live Odoo) ---------- */
+/* State lives here rather than on window so a re-render keeps the thread. */
+let asstThread=[], asstBusy=false, asstTools=null;
+
+function asstSuggestions(){
+  return ["What is overdue?","How is the pipeline?","Which proposals are stuck?",
+          "Did the agents run last night?","Any unassigned leads?"];
+}
+function renderAssistant(c){
+  const chips=asstSuggestions().map(q=>
+    `<button class="btn" onclick="asstAsk(${JSON.stringify(q).replace(/"/g,'&quot;')})">${esc(q)}</button>`).join(' ');
+  const thread=asstThread.length?asstThread.map(asstBubble).join(''):
+    `<div class="placeholder">Ask about your own CRM — the answer comes from live records, not from memory.<br><br>${chips}</div>`;
+  c.innerHTML=`<div class="view">
+    <div class="cp"><div class="cp-l"><h2>Assistant</h2></div>
+      <div class="cp-r">${asstThread.length?'<button class="btn" onclick="asstClear()">Clear</button>':''}</div></div>
+    <div class="panel"><div class="panel-body">
+      <div id="asstThread" style="max-height:60vh;overflow-y:auto">${thread}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input id="asstInput" class="inp" style="flex:1" placeholder="Ask about leads, invoices, proposals, agents…"
+               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();asstSend();}">
+        <button class="btn primary" onclick="asstSend()" ${asstBusy?'disabled':''}>${asstBusy?'…':'Ask'}</button>
+      </div>
+      ${asstThread.length?('<div style="margin-top:10px">'+chips+'</div>'):''}
+    </div></div>
+  </div>`;
+  const t=document.getElementById('asstThread'); if(t)t.scrollTop=t.scrollHeight;
+  const i=document.getElementById('asstInput'); if(i&&!asstBusy)i.focus();
+}
+function asstBubble(m){
+  if(m.role==='you')
+    return `<div style="margin:10px 0"><div style="font-size:11px;opacity:.6;text-transform:uppercase">You</div>
+            <div>${esc(m.text)}</div></div>`;
+  if(m.role==='error')
+    return `<div style="margin:10px 0;color:#b3261e"><div style="font-size:11px;text-transform:uppercase">Failed</div>
+            <div>${esc(m.text)}</div></div>`;
+  /* The badge says whether a model wrote the prose. The figures are from Odoo
+     either way, and saying so is more honest than letting it look uniform. */
+  const badge=m.llm?'':' · offline (no model)';
+  return `<div style="margin:10px 0"><div style="font-size:11px;opacity:.6;text-transform:uppercase">Assistant · ${esc(m.tool||'')}${badge}</div>
+          <div style="white-space:pre-wrap">${esc(m.text)}</div></div>`;
+}
+function asstClear(){asstThread=[];renderView();}
+function asstSend(){
+  const i=document.getElementById('asstInput'); if(!i)return;
+  const q=i.value.trim(); if(!q)return; i.value='';
+  asstAsk(q);
+}
+async function asstAsk(q){
+  if(asstBusy)return;
+  asstThread.push({role:'you',text:q});
+  asstBusy=true; renderView();
+  try{
+    const r=await api("POST","/assistant/ask",{question:q});
+    asstThread.push({role:'bot',text:r.answer,tool:r.tool,llm:r.llm});
+  }catch(e){
+    asstThread.push({role:'error',text:e.message});
+  }
+  asstBusy=false; renderView();
+}
+
+
 </script>
 </body>
 </html>

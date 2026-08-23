@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_c2p_agent_run_list" model="ir.ui.view">
+        <field name="name">c2p.agent.run.list</field>
+        <field name="model">c2p.agent.run</field>
+        <field name="arch" type="xml">
+            <!-- A run that touched nothing is greyed out: the row worth
+                 noticing, and the one nobody noticed last time. -->
+            <list string="Agent Runs" decoration-muted="acted == 0">
+                <field name="executed_at"/>
+                <field name="agent"/>
+                <field name="scanned"/>
+                <field name="acted"/>
+                <field name="limit_applied" optional="hide"/>
+                <field name="dry_run" widget="boolean_toggle" readonly="1"/>
+                <field name="note" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_c2p_agent_run_form" model="ir.ui.view">
+        <field name="name">c2p.agent.run.form</field>
+        <field name="model">c2p.agent.run</field>
+        <field name="arch" type="xml">
+            <form string="Agent Run">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="agent"/>
+                            <field name="executed_at"/>
+                            <field name="dry_run"/>
+                        </group>
+                        <group>
+                            <field name="scanned"/>
+                            <field name="acted"/>
+                            <field name="limit_applied"/>
+                        </group>
+                    </group>
+                    <group string="Summary">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_c2p_agent_run_search" model="ir.ui.view">
+        <field name="name">c2p.agent.run.search</field>
+        <field name="model">c2p.agent.run</field>
+        <field name="arch" type="xml">
+            <search string="Agent Runs">
+                <field name="agent"/>
+                <filter name="filter_did_nothing" string="Acted on Nothing"
+                        domain="[('acted', '=', 0)]"/>
+                <filter name="filter_live" string="Live Runs"
+                        domain="[('dry_run', '=', False)]"/>
+                <separator/>
+                <filter name="filter_last_week" string="Last 7 Days"
+                        domain="[('executed_at', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <!-- Group-by filters sit at search level. A <group> wrapper is
+                     for fields, not filters, and Odoo 19 rejects both `expand`
+                     and `string` on it. -->
+                <filter name="group_agent" string="Agent"
+                        context="{'group_by': 'agent'}"/>
+                <filter name="group_day" string="Day"
+                        context="{'group_by': 'executed_at:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_c2p_agent_run" model="ir.actions.act_window">
+        <field name="name">C2P Agent Runs</field>
+        <field name="res_model">c2p.agent.run</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_agent': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No agent has run yet</p>
+            <p>
+                Each nightly agent records a row here every time it runs,
+                including the runs where it changed nothing. If this list stops
+                growing, the agents have stopped.
+            </p>
+        </field>
+    </record>
+
+    <!-- Under Settings > Technical rather than CRM > Configuration: this is an
+         operational audit trail, not a CRM feature, and the CRM menu is for
+         people selling. -->
+    <menuitem id="menu_c2p_agent_run"
+              name="C2P Agent Runs"
+              parent="base.menu_custom"
+              action="action_c2p_agent_run"
+              sequence="90"
+              groups="base.group_system"/>
+
+</odoo>
