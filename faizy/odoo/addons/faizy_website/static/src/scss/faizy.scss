@@ -499,7 +499,11 @@ $fz-accent-amber:  #f7b209;
   display: inline-flex;
   align-items: center;
   background: $fz-orange-100;
-  color: $fz-orange-700;
+  // $fz-clay, not $fz-orange-700: that pair measures 3.56:1 on this
+  // tint. Caught by check_contrast.py after the same combination was
+  // added for the status chip — it had been shipping on every FMB
+  // badge and every In Progress pill since they were written.
+  color: #8f4f08;   // $fz-clay, declared below this layer
   border: 1px solid rgba(246, 158, 34, 0.35);
   border-radius: 999px;
   padding: 0.15rem 0.6rem;
@@ -520,7 +524,7 @@ $fz-accent-amber:  #f7b209;
 
   &.is-pending     { background: #e3e3e3; color: #434343; }
   &.is-assigned    { background: #d1e9ff; color: #175cd3; }
-  &.is-in_progress { background: $fz-orange-100; color: $fz-orange-700; }
+  &.is-in_progress { background: $fz-orange-100; color: #8f4f08; }
   &.is-completed   { background: #d1fadf; color: #027a48; }
   &.is-cancelled   { background: #fee4e2; color: #b42318; }
 }
@@ -624,22 +628,6 @@ $fz-accent-amber:  #f7b209;
   }
 }
 
-// ── Footer legal strip ──────────────────────────────────────────────────
-// Sits above Odoo's copyright bar. Quiet by design: it is there to be found
-// when someone goes looking for who charged them, not to be read.
-.fz-footer-legal {
-  padding: 1rem 0;
-  font-size: 0.8125rem;
-  color: rgba(10, 10, 10, 0.6);
-  border-top: 1px solid rgba(10, 10, 10, 0.08);
-
-  a {
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    &:hover { color: $fz-orange-700; }
-  }
-}
 
 // ── The people on the ground ────────────────────────────────────────────
 // Real Faizies from the database. Circular crops at a small size because a
@@ -958,7 +946,98 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   }
 }
 
-.fz-footer-legal { border-top-color: rgba(43, 38, 34, 0.08); }
+
+// ── Header, v8: composition ─────────────────────────────────────────────
+//
+// "Make it look professional" — which, on a bar this small, is almost entirely
+// rhythm rather than decoration. Four changes, each fixing something specific:
+//
+//   1. Navigation and actions were one undifferentiated run of items at equal
+//      spacing, so "Start free" read as the fifth link rather than the thing
+//      to press. They are now two groups with real air between them.
+//   2. The links sat at inherited sizes and default padding, which left them
+//      slightly too large and unevenly spaced against the pills.
+//   3. The active marker was a 2px orange bar under the whole item, heavy
+//      enough to compete with the button it sits beside.
+//   4. Nothing was vertically centred against the pills, so the text rode
+//      high.
+#wrapwrap > header {
+  .navbar-nav {
+    align-items: center;
+    // The gap before the action pills. `.nav-link` items keep their own tight
+    // rhythm; anything button-shaped gets pushed away from them.
+    gap: 0.15rem;
+  }
+
+  .nav-link,
+  .navbar-nav > li > a {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    line-height: 1.2;
+    border-radius: 8px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+
+    &:hover { background: rgba(143, 79, 8, 0.06); }
+  }
+
+  // Separate the two action pills from the links. A margin on the first of
+  // them rather than a wrapper, because the markup belongs to whichever header
+  // variant is active and is not ours to restructure.
+  a[href="/whatsapp"] { margin-left: 0.6rem; }
+  a[href="/whatsapp"] + li > a,
+  li:has(a[href="/whatsapp"]) + li { margin-left: 0.15rem; }
+
+  // A quieter current-page marker: a short centred rule instead of a full
+  // underline, and no background on hover fighting it.
+  .nav-item.active > .nav-link,
+  .nav-link.active {
+    color: $fz-ink;
+    font-weight: 600;
+    box-shadow: none;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0.85rem;
+      right: 0.85rem;
+      bottom: 0.15rem;
+      height: 2px;
+      border-radius: 2px;
+      background: $fz-orange;
+    }
+  }
+
+  // The dropdown caret Odoo renders for a menu with children. Default size
+  // makes it look bolted on next to 15px type.
+  .nav-link .fa-angle-down,
+  .dropdown-toggle::after { opacity: 0.55; }
+
+  .dropdown-menu {
+    border: 1px solid rgba(43, 38, 34, 0.1);
+    border-radius: var(--fz-r-md, 1rem);
+    box-shadow: 0 18px 40px -24px rgba(43, 38, 34, 0.45);
+    padding: 0.4rem;
+
+    .dropdown-item {
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      padding: 0.5rem 0.75rem;
+      &:hover, &:focus { background: rgba(143, 79, 8, 0.07); color: $fz-clay; }
+    }
+  }
+
+  // Slightly smaller pills. At the old size they were the loudest thing in a
+  // bar that is mostly quiet type.
+  a[href="/start"], a[href="/whatsapp"] {
+    font-size: 0.9375rem;
+    padding: 0.42rem 1.05rem !important;
+  }
+
+  .navbar-brand { padding-top: 0; padding-bottom: 0; }
+}
+
 
 // ── Compact pass ────────────────────────────────────────────────────────
 // Same design, less of it. The warm layer above traded density for calm and
@@ -1159,4 +1238,1216 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   font-size: clamp(1.35rem, 3vw, 1.9rem);
   letter-spacing: -0.02em;
   line-height: 1.2;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Footer
+// ════════════════════════════════════════════════════════════════════════
+// Outside .faizy-page, so no scoping — the footer renders on every page
+// including the portal, and scoping it would compile fine and style nothing.
+
+.fz-footer {
+  background: #efe5d6;
+  color: #2b2622;
+  padding: clamp(2.25rem, 5vw, 3.25rem) 0 1.25rem;
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  .fz-footer-mark {
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #8f4f08;
+  }
+
+  .fz-footer-blurb {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: rgba(43, 38, 34, 0.7);
+    max-width: 26rem;
+  }
+
+  .fz-footer-head {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(43, 38, 34, 0.5);
+    margin-bottom: 0.6rem;
+    // Uppercase tracking leaves a gap after the last letter, which pushes the
+    // heading visually left of the list beneath it.
+    margin-right: -0.1em;
+  }
+
+  .fz-footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9375rem;
+
+    li { margin-bottom: 0.4rem; }
+
+    a {
+      color: rgba(43, 38, 34, 0.78);
+      text-decoration: none;
+      &:hover { color: #8f4f08; text-decoration: underline; text-underline-offset: 2px; }
+      &:focus-visible { outline: 2px solid #8f4f08; outline-offset: 3px; border-radius: 3px; }
+    }
+  }
+
+  .fz-footer-legal {
+    margin-top: clamp(1.5rem, 4vw, 2.25rem);
+    padding-top: 1rem;
+    border-top: 1px solid rgba(43, 38, 34, 0.1);
+    font-size: 0.8125rem;
+    color: rgba(43, 38, 34, 0.55);
+  }
+}
+
+// Odoo's copyright bar sits below ours and says "Copyright © Company name"
+// until somebody edits it. Ours already names the operating entity, so the
+// stock line is noise.
+#wrapwrap .o_footer_copyright { display: none; }
+
+// ── The dark CTA panel ──────────────────────────────────────────────────
+// .fz-cta sets color: cream on itself, but .fz-lead sets its own colour and
+// the warm layer redefined that to dark ink for the light page. A class on the
+// element beats an inherited value, so the sub-copy rendered dark-on-dark at
+// 3.32:1 — technically visible, practically not, and it was the sentence that
+// says "no card needed".
+//
+// The same trap as .fz-card inheriting cream text onto white, in the opposite
+// direction. Any component with its own colour has to be re-stated when it
+// lands on a panel of the other polarity.
+.fz-cta {
+  padding: clamp(2rem, 4.5vw, 3rem);
+
+  h1, h2, h3 { color: $fz-cream; }
+
+  .fz-lead,
+  p:not(.faizy-urdu) {
+    color: rgba(253, 251, 247, 0.78);   // 11.17:1 on #0a0a0a
+  }
+
+  .faizy-urdu { color: $fz-orange; }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  WhatsApp in the header
+// ════════════════════════════════════════════════════════════════════════
+//
+// The service runs on WhatsApp, so the header carries the same door. Selected
+// by href, like "Start free" — the menu is marketing's to reorder, and an
+// nth-child rule would silently move to the wrong item the first time they do.
+//
+// Deliberately an OUTLINE pill, not a filled one. Two solid pills side by side
+// is two primary actions, which is none: "Start free" stays the filled orange
+// and this reads as the second, quieter way in.
+//
+// #0b7a68 rather than WhatsApp's own #25D366 — the brand green measures 1.88:1
+// on this header, which is decoration, not text. This is the same hue family
+// two steps darker: 4.97:1 as text, 5.25:1 white-on-green when it fills.
+$fz-whatsapp:      #0b7a68;
+$fz-whatsapp-deep: #075e54;
+
+#wrapwrap > header a[href="/whatsapp"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1.5px solid rgba(11, 122, 104, 0.45);
+  border-radius: 999px;
+  padding: 0.4rem 1rem !important;
+  font-weight: 600;
+  color: $fz-whatsapp !important;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  // FontAwesome 4.7.0 ships with Odoo and \f232 is fa-whatsapp — checked
+  // against addons/web/static/src/libs/fontawesome, not remembered.
+  &::before {
+    font: normal normal normal 1.05em/1 FontAwesome;
+    content: "\f232";
+  }
+
+  &:hover {
+    background: $fz-whatsapp-deep;
+    border-color: $fz-whatsapp-deep;
+    color: #fff !important;
+  }
+
+  // The active-page underline marker would sit outside the pill.
+  &.active { box-shadow: none; }
+}
+
+
+// "This one is for me" on the signup form. A whole clickable band rather than
+// a bare checkbox, because it changes what the next two fields mean and a
+// 13px tickbox does not carry that weight.
+.fz-selfcheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(143, 79, 8, 0.28);
+  background: rgba(246, 158, 34, 0.07);
+  border-radius: var(--fz-r-md, 1rem);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  input { margin-top: 0.25rem; flex: 0 0 auto; }
+  strong { color: $fz-clay; }          // 6.29:1 on the tint
+
+  &:hover { border-color: rgba(143, 79, 8, 0.45); }
+  &:focus-within { outline: 2px solid $fz-clay; outline-offset: 2px; }
+  &:has(input:checked) {
+    border-color: $fz-clay;
+    background: rgba(246, 158, 34, 0.13);
+  }
+}
+
+
+// The one action on the page after signing up. Solid green, not the outline
+// used in the header: here there is nothing to compete with and this is the
+// step that actually starts the service.
+.fz-welcome-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.6rem;
+  border-radius: 999px;
+  background: $fz-whatsapp-deep;
+  color: #fff;                       // 7.67:1
+  font-weight: 600;
+  font-size: 1.0625rem;
+  text-decoration: none;
+  box-shadow: 0 12px 28px -18px rgba(7, 94, 84, 0.95);
+  transition: transform 0.18s ease, filter 0.18s ease;
+
+  .fa { font-size: 1.3em; }
+  &:hover { transform: translateY(-1px); filter: brightness(1.07); color: #fff; }
+  &:focus-visible { outline: 2px solid $fz-whatsapp-deep; outline-offset: 3px; }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  Legal pages
+// ════════════════════════════════════════════════════════════════════════
+//
+// A privacy policy nobody can read is a compliance artefact, not a promise.
+// Narrow measure, generous leading, real heading hierarchy — the same care as
+// the marketing pages, because this is the page that decides whether somebody
+// hands over their mother's address.
+.fz-legal {
+  max-width: 46rem;
+  margin: 0 auto;
+
+  // Inline links in prose. Without this they fall back to Bootstrap's blue,
+  // which on a warm sand page reads as an unstyled page rather than a design
+  // choice. 6.29:1 on the card, 5.68:1 on sand.
+  p a, li a { color: $fz-clay; text-underline-offset: 2px; }
+
+  // ~70 characters. Long lines are where legal text loses people.
+  p, li { line-height: 1.8; }
+
+  h2 {
+    font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+    margin-top: 2.25rem;
+    margin-bottom: 0.6rem;
+    scroll-margin-top: 5rem;    // so the contents links don't land under the header
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.35rem;
+  }
+
+  ul { padding-left: 1.15rem; }
+  li { margin-bottom: 0.35rem; }
+
+  // The plain-language summary that opens each section. Set apart so a reader
+  // who only reads these still knows what they agreed to.
+  .fz-legal-plain {
+    border-left: 3px solid $fz-orange;
+    background: rgba(246, 158, 34, 0.07);
+    padding: 0.8rem 1rem;
+    border-radius: 0 var(--fz-r-sm, 0.75rem) var(--fz-r-sm, 0.75rem) 0;
+    margin-bottom: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .fz-legal-updated {
+    font-size: 0.875rem;
+    color: $fz-ink-400;
+  }
+
+  .fz-legal-toc {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    columns: 2;
+    column-gap: 1.5rem;
+    font-size: 0.9375rem;
+
+    li { margin-bottom: 0.3rem; break-inside: avoid; }
+    a { color: $fz-clay; text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 2px; }
+  }
+
+  @media (max-width: 575.98px) {
+    .fz-legal-toc { columns: 1; }
+  }
+
+  table {
+    width: 100%;
+    font-size: 0.9375rem;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid rgba(43, 38, 34, 0.1);
+      text-align: left;
+      vertical-align: top;
+    }
+    th { font-weight: 600; }
+  }
+
+  // Tables carry the retention schedule and would otherwise push the page
+  // sideways on a phone.
+  .fz-legal-table { overflow-x: auto; }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+//  Contact
+// ════════════════════════════════════════════════════════════════════════
+//
+// WhatsApp first and the form second, because that is the honest order: this
+// is a WhatsApp business, and a contact form that takes a day to answer should
+// not be the biggest thing on the page.
+.fz-contact-page {
+  // The polish layer gives .fz-card height:100% so tiles in a row line up.
+  // Here that is wrong: the channels column is short and the form column is
+  // long, so the card stretched into a mostly-empty white box the height of
+  // the form. Cards on this page size to their content.
+  .fz-card { height: auto; }
+  .fz-card p a { color: $fz-clay; text-underline-offset: 2px; }
+
+  .fz-contact-primary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.15rem 1.35rem;
+    border-radius: var(--fz-r-lg, 1.35rem);
+    background: $fz-whatsapp-deep;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 10px 26px -18px rgba(7, 94, 84, 0.9);
+    transition: transform 0.18s ease, filter 0.18s ease;
+
+    &:hover { transform: translateY(-2px); filter: brightness(1.06); color: #fff; }
+
+    .fz-contact-primary-icon { font-size: 1.75rem; line-height: 1; }
+    .fz-contact-primary-label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      // 7.42:1 on #075e54 at full cream; held above AA at 78%.
+      color: rgba(253, 251, 247, 0.82);
+    }
+    .fz-contact-primary-value { display: block; font-weight: 600; font-size: 1.05rem; }
+  }
+
+  .fz-contact-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(43, 38, 34, 0.08);
+      font-size: 0.9375rem;
+    }
+    li:last-child { border-bottom: 0; }
+
+    i { color: $fz-clay; width: 1.1rem; text-align: center; margin-top: 0.15rem; }
+    a { color: $fz-ink; text-decoration: none; }
+    a:hover { color: $fz-clay; text-decoration: underline; text-underline-offset: 2px; }
+  }
+
+  // Odoo's form snippet ships Bootstrap defaults and its own purple submit.
+  // Restyled here rather than in the template so the website editor can add a
+  // field without it arriving unstyled.
+  .s_website_form {
+    .form-control, .form-select {
+      border-radius: var(--fz-r-sm, 0.75rem);
+      border: 1px solid rgba(43, 38, 34, 0.16);
+      padding: 0.6rem 0.85rem;
+      background: #fffdfa;
+    }
+
+    .s_website_form_label { font-weight: 500; font-size: 0.9375rem; margin-bottom: 0.3rem; }
+    .s_website_form_mark { color: $fz-clay; }
+
+    .s_website_form_send, .s_website_form_send:hover {
+      background: $fz-orange;
+      border-color: $fz-orange;
+      color: $fz-black;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 0.55rem 1.5rem;
+    }
+    .s_website_form_send:hover { background: $fz-orange-600; border-color: $fz-orange-600; }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  v6 — Customer portal
+//
+//  The portal was styled by reusing the marketing page's classes, and it
+//  showed. `.faizy-page` paints $fz-sand as its own background, which is
+//  right when it IS the page and wrong inside portal.portal_layout, where
+//  it sits in a Bootstrap .container and renders as a floating slab with
+//  white gutters down both sides. `.faizy-card` aliases `.fz-card`, which
+//  carries height:100%, so a customer with one family member got a tall
+//  empty box. Both are fixed here rather than by editing the earlier
+//  layers, which the marketing pages still depend on.
+// ════════════════════════════════════════════════════════════════════════
+
+// Two colours the earlier layers use as literals. Named here so the portal
+// does not scatter more hex around, and so check_contrast.py has something
+// to hold to a threshold.
+$fz-card:     #fffdfa;   // the card white used by .fz-card in the v4 layer
+$fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
+
+.fzp {
+  background: $fz-sand;
+  // Full-bleed out of the container with content still aligned to it. The
+  // ancestor .faizy-page already sets overflow-x:hidden, which is what keeps
+  // 100vw from producing a horizontal scrollbar next to a vertical one.
+  margin-inline: calc(50% - 50vw);
+  padding: 2.25rem calc(50vw - 50% + 0.75rem) 4rem;
+  min-height: 70vh;
+
+  &-inner { max-width: 1140px; margin: 0 auto; }
+}
+
+// ── Header band ─────────────────────────────────────────────────────────
+.fzp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid rgba(43, 38, 34, 0.10);
+}
+
+.fzp-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $fz-clay;
+  margin: 0 0 0.35rem;
+}
+
+.fzp-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: $fz-ink;
+  margin: 0;
+}
+
+// WhatsApp's own #25D366 measures 1.88:1 on cream — a brand colour, not a
+// text colour. This is the same hue two steps darker.
+.fzp-wa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: $fz-whatsapp;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.6rem 1.15rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover, &:focus { background: $fz-whatsapp-deep; color: #fff; }
+  svg { width: 1.05rem; height: 1.05rem; fill: currentColor; }
+}
+
+// ── Stat tiles ──────────────────────────────────────────────────────────
+.fzp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.75rem;
+}
+
+.fzp-stat {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+
+  &-label { font-size: 0.78rem; color: $fz-ink-soft; margin: 0 0 0.3rem; line-height: 1.3; }
+  &-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: $fz-ink;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+
+    small { font-size: 0.95rem; font-weight: 500; color: $fz-ink-soft; letter-spacing: 0; }
+  }
+}
+
+// ── Cards & section headings ────────────────────────────────────────────
+.fzp-card {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 18px;
+  padding: 1.4rem 1.5rem;
+  height: auto;      // not .fz-card's 100% — that is what stretched the box
+
+  + .fzp-card { margin-top: 0.9rem; }
+}
+
+.fzp-section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 0.85rem;
+
+  h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: $fz-ink;
+    margin: 0;
+  }
+}
+
+.fzp-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $fz-clay;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover, &:focus { color: darken($fz-clay, 8%); text-decoration: underline; }
+}
+
+// ── Plan card ───────────────────────────────────────────────────────────
+.fzp-plan-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fzp-plan-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $fz-ink;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.fzp-meta { font-size: 0.8rem; color: $fz-ink-soft; margin: 0 0 0.15rem; }
+
+.fzp-meter-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: $fz-ink;
+  margin: 1.25rem 0 0.45rem;
+}
+
+.fzp-meter {
+  height: 0.6rem;
+  background: rgba(43, 38, 34, 0.09);
+  border-radius: 999px;
+  overflow: hidden;
+
+  &-fill {
+    height: 100%;
+    background: linear-gradient(90deg, $fz-orange, #ffb648);
+    border-radius: 999px;
+  }
+}
+
+// ── Family — a list, not a grid of half-empty cards ──────────────────────
+.fzp-member {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem 1.25rem;
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 14px;
+
+  + .fzp-member { margin-top: 0.55rem; }
+  .faizy-fmb { white-space: nowrap; flex: 0 0 auto; }
+
+  &-body { flex: 1 1 auto; min-width: 0; }
+  &-name { font-weight: 600; color: $fz-ink; margin: 0; line-height: 1.3; }
+  &-meta { font-size: 0.82rem; color: $fz-ink-soft; margin: 0; }
+}
+
+.fzp-avatar {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: $fz-orange;
+  color: $fz-black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  // Casing lives here so the template can index the name rather than call
+  // .upper() on it inside a QWeb expression.
+  text-transform: uppercase;
+}
+
+// ── Orders table ────────────────────────────────────────────────────────
+.fzp-table-wrap {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.fzp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $fz-ink-soft;
+    padding: 0.8rem 1.25rem;
+    background: rgba(43, 38, 34, 0.025);
+    border-bottom: 1px solid rgba(43, 38, 34, 0.07);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid rgba(43, 38, 34, 0.055);
+    color: $fz-ink;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: rgba(246, 158, 34, 0.045); }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fzp-task { font-weight: 500; }
+}
+
+.fzp-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  color: $fz-clay;
+  text-decoration: none;
+  font-weight: 600;
+
+  &:hover, &:focus { text-decoration: underline; }
+}
+
+// ── Empty states — a prompt, not a shrug ────────────────────────────────
+.fzp-empty {
+  text-align: center;
+  padding: 2.75rem 1.5rem;
+
+  &-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(246, 158, 34, 0.13);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  h3 { font-size: 1rem; font-weight: 700; color: $fz-ink; margin: 0 0 0.3rem; }
+  p {
+    font-size: 0.9rem;
+    color: $fz-ink-soft;
+    margin: 0 auto 1.1rem;
+    max-width: 30rem;
+    line-height: 1.6;
+  }
+}
+
+// ── The free-activities prompt, for customers with no plan yet ──────────
+.fzp-promo {
+  background: linear-gradient(135deg, #fef6eb 0%, #fdf0dc 100%);
+  border: 1px solid rgba(246, 158, 34, 0.28);
+  border-radius: 18px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $fz-ink;
+    margin: 0 0 0.3rem;
+    letter-spacing: -0.01em;
+  }
+  p { font-size: 0.9rem; color: #4a423b; margin: 0; line-height: 1.55; }
+}
+
+.fzp-btn {
+  display: inline-block;
+  background: $fz-orange;
+  color: $fz-black;
+  border-radius: 999px;
+  padding: 0.7rem 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.92rem;
+  white-space: nowrap;
+
+  &:hover, &:focus { background: $fz-orange-600; color: $fz-black; }
+}
+
+@media (max-width: 767.98px) {
+  .fzp {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-inline: calc(50% - 50vw);
+  }
+  .fzp-title { font-size: 1.5rem; }
+  .fzp-head { align-items: flex-start; }
+  .fzp-stats { grid-template-columns: repeat(2, 1fr); }
+  .fzp-stat-value { font-size: 1.5rem; }
+
+  // A six-column table does not survive 390px. Dropping columns to make it
+  // fit loses the status, which is the one thing a customer opens this page
+  // to see, so each order becomes a stacked block instead:
+  //
+  //     FZO-01042                          [Completed]
+  //     Blood pressure medicines — monthly refill
+  //     FMB-000011   12 Aug 2026             AED 84.50
+  .fzp-table,
+  .fzp-table tbody,
+  .fzp-table tr,
+  .fzp-table td { display: block; }
+  .fzp-table thead { display: none; }
+
+  .fzp-table tr {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas:
+      "ref  ref  status"
+      "task task task"
+      "for  date total";
+    gap: 0.3rem 0.5rem;
+    align-items: center;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid rgba(43, 38, 34, 0.055);
+
+    &:last-child { border-bottom: 0; }
+  }
+
+  .fzp-table td {
+    padding: 0;
+    border: 0;
+
+    &:nth-child(1) { grid-area: ref; }
+    &:nth-child(2) { grid-area: task; font-size: 0.92rem; line-height: 1.4; }
+    &:nth-child(3) { grid-area: for; }
+    &:nth-child(4) { grid-area: date; font-size: 0.82rem; color: $fz-ink-soft; }
+    &:nth-child(5) { grid-area: total; text-align: right; font-weight: 600; }
+    &:nth-child(6) { grid-area: status; justify-self: end; }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  v7 — App feel on a phone
+//
+//  Faizy is checked on a phone, briefly, by someone between other things.
+//  A bottom tab bar under the thumb, tap targets that clear 44px, and the
+//  manifest that lets it be installed to the home screen are what separate
+//  "a website I have to find again" from "the thing I open twice a day".
+//  All of it is phone-only: from 768px up the site header is already fine.
+// ════════════════════════════════════════════════════════════════════════
+
+.fzp-tabbar { display: none; }
+
+@media (max-width: 767.98px) {
+  .fzp-tabbar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1030;          // above Odoo's sticky header, below its modals
+    background: rgba(253, 248, 240, 0.94);
+    backdrop-filter: saturate(160%) blur(12px);
+    border-top: 1px solid rgba(43, 38, 34, 0.10);
+    // The home indicator on a notched iPhone sits over the bottom ~34px.
+    // Without this the last row of tabs is under it and unpressable.
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .fzp-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    // 3.25rem + the label keeps every tab over the 44px minimum target.
+    min-height: 3.25rem;
+    padding: 0.5rem 0.25rem 0.45rem;
+    text-decoration: none;
+    color: $fz-ink-soft;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+
+    svg { width: 1.35rem; height: 1.35rem; fill: currentColor; }
+
+    &.is-on { color: $fz-clay; }
+    &.is-wa { color: $fz-whatsapp; }
+    &:hover, &:focus { color: $fz-clay; }
+    &:active { background: rgba(43, 38, 34, 0.05); }
+  }
+
+  // Clear the bar, or the last order row sits permanently underneath it.
+  .fzp {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  // Everything tappable on the portal clears the 44px target on a phone.
+  .fzp-btn { padding: 0.85rem 1.6rem; }
+  .fzp-wa  { padding: 0.75rem 1.25rem; }
+  .fzp-link { padding: 0.35rem 0; }
+  .fzp-ref { padding: 0.2rem 0; display: inline-block; }
+  .fzp-member { padding: 0.95rem 1.1rem; }
+
+  // The header's WhatsApp button is redundant once the tab bar carries one,
+  // and two of them on a 390px screen is clutter.
+  .fzp-head .fzp-wa { display: none; }
+}
+
+// Installed to the home screen there is no browser chrome, so the page is
+// flush against the status bar. Odoo's header handles its own offset; this
+// only guards the portal ground from sitting under a notch.
+@media (display-mode: standalone) {
+  .fzp { padding-top: 1.5rem; }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  v8 — Requesting care
+//
+//  The portal's first write. Until this, a customer's only way to ask for
+//  something was to leave for WhatsApp — right for a conversation, wrong
+//  for "collect Ammi's prescription from the usual pharmacy", which is four
+//  fields and needs nobody awake to receive it.
+//
+//  Radios styled as cards rather than a <select>: on a phone a native select
+//  is a modal wheel that hides every option but one, and choosing a service
+//  is exactly the moment the customer wants to see what is on offer.
+// ════════════════════════════════════════════════════════════════════════
+
+.fzp-cta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: $fz-orange;
+  color: $fz-black;
+  border-radius: 18px;
+  padding: 1.05rem 1.3rem;
+  text-decoration: none;
+  margin-bottom: 1.75rem;
+
+  &:hover, &:focus { background: $fz-orange-600; color: $fz-black; }
+
+  &-icon {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    background: rgba(10, 10, 10, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1;
+  }
+  &-title { display: block; font-weight: 700; font-size: 1.05rem; line-height: 1.25; }
+  &-note  { display: block; font-size: 0.83rem; opacity: 0.78; line-height: 1.35; }
+}
+
+.fzp-field { margin-bottom: 1.6rem; }
+
+.fzp-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: $fz-ink;
+  margin-bottom: 0.5rem;
+}
+
+.fzp-group-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $fz-clay;
+  margin: 1rem 0 0.45rem;
+}
+
+.fzp-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.6rem;
+
+  &.is-tight { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+}
+
+// The card is `.fzp-pick-body`, the span AFTER the input — not the <label>
+// wrapping both. That is deliberate: styling the label would need
+// `:has(input:checked)`, and on a browser without :has the selected state
+// would simply not show. The radio is visually hidden, so that customer gets
+// no feedback at all about what they just tapped. `input:checked + .body` is
+// an adjacent-sibling selector and has worked everywhere for twenty years.
+.fzp-pick {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  // Hidden from sight, not from assistive tech or the keyboard.
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  &-body {
+    display: block;
+    background: $fz-card;
+    border: 1.5px solid rgba(43, 38, 34, 0.10);
+    border-radius: 14px;
+    padding: 0.8rem 0.95rem;
+    // Comfortably over the 44px touch minimum even with a one-line label.
+    min-height: 3.25rem;
+  }
+
+  &:hover &-body { border-color: rgba(246, 158, 34, 0.55); }
+
+  input:checked + &-body {
+    border-color: $fz-orange;
+    background: #fef6eb;
+  }
+  // Keyboard focus must be visible even though the input is not.
+  input:focus-visible + &-body {
+    outline: 2px solid $fz-clay;
+    outline-offset: 2px;
+  }
+
+  &-name { display: block; font-weight: 600; color: $fz-ink; line-height: 1.3; }
+  &-note {
+    display: block;
+    font-size: 0.8rem;
+    color: $fz-ink-soft;
+    line-height: 1.4;
+    margin-top: 0.15rem;
+  }
+}
+
+.fzp-input {
+  display: block;
+  width: 100%;
+  background: $fz-card;
+  border: 1.5px solid rgba(43, 38, 34, 0.14);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  // 16px exactly. Anything smaller and iOS Safari zooms the page on focus,
+  // which on a form this long leaves the customer scrolled sideways.
+  font-size: 1rem;
+  color: $fz-ink;
+  font-family: inherit;
+
+  // $fz-ink-soft outright rather than a faded version of it. A placeholder at
+  // 75% measures about 3.4:1 on the card, and a placeholder is often the only
+  // instruction a field carries.
+  &::placeholder { color: $fz-ink-soft; }
+  &:focus {
+    outline: none;
+    border-color: $fz-orange;
+    box-shadow: 0 0 0 3px rgba(246, 158, 34, 0.18);
+  }
+}
+
+textarea.fzp-input { resize: vertical; min-height: 6rem; line-height: 1.55; }
+
+.fzp-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0;
+  font-weight: 500;
+  color: $fz-ink;
+  cursor: pointer;
+
+  input { width: 1.15rem; height: 1.15rem; accent-color: $fz-orange; }
+}
+
+.fzp-submit {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+// A <button>, not an <a>: the earlier .fzp-btn is a link style and inherits
+// none of a button's UA defaults.
+button.fzp-btn {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.fzp-error {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #b42318;      // 5.94:1 on sand
+  margin: 0 0 0.45rem;
+}
+
+.fzp-alert {
+  border-radius: 14px;
+  padding: 0.95rem 1.15rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+
+  &.is-good { background: #d1fadf; color: #05603a; }
+  &.is-bad  { background: #fee4e2; color: #912018; }
+}
+
+@media (max-width: 767.98px) {
+  .fzp-picker { grid-template-columns: 1fr; }
+  .fzp-submit { flex-direction: column; align-items: stretch; }
+  .fzp-submit .fzp-btn { text-align: center; }
+  .fzp-submit .fzp-link { text-align: center; }
+
+  // The middle tab is the primary action; it gets the brand fill so the eye
+  // lands on it before the other three.
+  .fzp-tab.is-primary {
+    .fzp-tab-plus {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      margin-bottom: -0.15rem;
+      border-radius: 50%;
+      background: $fz-orange;
+      color: $fz-black;
+    }
+    svg { width: 1.15rem; height: 1.15rem; }
+    color: $fz-clay;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  v9 — Person-first booking
+//
+//  From the suggested app design, and it is right: a customer thinks "Ammi
+//  needs her BP medicine", not "I require service SKU-04". Asking for the
+//  service first makes them translate their own problem into our catalogue
+//  before we have helped with anything.
+//
+//  Three numbered cards on one page rather than three screens — no JS, one
+//  POST, and it survives a bad connection and a back button.
+// ════════════════════════════════════════════════════════════════════════
+
+.fzp-step {
+  background: $fz-card;
+  border: 1px solid rgba(43, 38, 34, 0.07);
+  border-radius: 18px;
+  padding: 1.25rem 1.35rem 1.4rem;
+  margin-bottom: 1rem;
+
+  &-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $fz-ink-soft;
+    margin: 0 0 0.9rem;
+  }
+
+  // Inside a step card the pickers sit on the card, so they need their own
+  // ground to read as choices rather than as more card.
+  .fzp-pick-body { background: $fz-sand; }
+  input:checked + .fzp-pick-body { background: #fef6eb; }
+  .fzp-field:last-of-type { margin-bottom: 0; }
+}
+
+// Icon or emoji from faizy.service.icon, with the category's as a fallback.
+.fzp-sico {
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 14px;
+  background: $fz-sand-deep;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.fzp-pick-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fzp-avatar--sm {
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 0.85rem;
+}
+
+// The derived one-liner on a family member — what is coming up, or when we
+// last helped. Never a stored field: a status somebody has to remember to
+// update is wrong the first week nobody updates it.
+.fzp-hint {
+  display: inline-block;
+  margin-top: 0.6rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(43, 38, 34, 0.06);
+  color: $fz-ink-soft;
+
+  &.is-due  { background: $fz-orange-100; color: $fz-clay; }
+  &.is-soon { background: #d1e9ff; color: #175cd3; }
+}
+
+.fzp-check-note {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: $fz-ink-soft;
+  line-height: 1.45;
+  margin-top: 0.1rem;
+}
+
+.fzp-check { align-items: flex-start; }
+.fzp-check input { margin-top: 0.2rem; flex: 0 0 auto; }
+
+@media (max-width: 767.98px) {
+  .fzp-step { padding: 1.1rem 1rem 1.2rem; }
+}
+
+// ── Odoo's own /my, which only staff reach now ──────────────────────────
+// The Faizy cards there pointed at the 256px app tile with nothing to bound
+// it, so the image rendered full size and squeezed its own label into a
+// two-word column. Proper line-art icons now, and a hard cap so no future
+// icon can do it again.
+.o_portal_docs img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.fzp-foot-links {
+  margin: 1.75rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(43, 38, 34, 0.10);
+}
+
+// ── The end of the free grant ───────────────────────────────────────────
+// faizy.order.action_confirm refuses to meter an activity for a customer with
+// no free grant left and no live subscription. That refusal reaches ops in the
+// backend and nobody else, so the customer would file a request that can never
+// be confirmed and then wait. These two states say it where they can act on it.
+
+.fzp-promo.is-spent {
+  background: $fz-card;
+  border-color: rgba(43, 38, 34, 0.10);
+}
+
+.fzp-gate {
+  background: linear-gradient(135deg, #fef6eb 0%, #fdf0dc 100%);
+  border: 1px solid rgba(246, 158, 34, 0.28);
+  border-radius: 18px;
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+
+  &-icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: rgba(246, 158, 34, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.85rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: $fz-ink;
+    margin: 0 0 0.45rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+    color: #4a423b;
+    line-height: 1.6;
+    margin: 0 auto 1.4rem;
+    max-width: 30rem;
+  }
+
+  &-alt {
+    font-size: 0.875rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 1.25rem !important;
+  }
 }

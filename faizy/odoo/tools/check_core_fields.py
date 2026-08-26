@@ -47,6 +47,13 @@ CORE_SOURCES = [
     "addons/website/models/website_menu.py",
     "odoo/addons/base/models/res_company.py",
     "addons/social_media/models/res_company.py",  # social_facebook et al
+    # res.partner is spread across modules. All of them are needed, because a
+    # field missing from one file is not a missing field — `currency_id` comes
+    # from account, `lang` and `country_id` from base, the messaging fields
+    # from mail. Indexing only base would produce a wall of false failures.
+    "odoo/addons/base/models/res_partner.py",
+    "addons/account/models/partner.py",
+    "addons/mail/models/res_partner.py",
 ]
 
 # ir.cron delegates to ir.actions.server via _inherits, so these are legal on a
@@ -262,6 +269,63 @@ def main() -> int:
                     f"it raises at render, not at install"
                 )
         checked.add("res.company (templates)")
+
+    # ── Python ──────────────────────────────────────────────────────────
+    #
+    # The third time a field Odoo 19 removed has reached production, and the
+    # first time it was in Python rather than XML:
+    #
+    #   res.groups.category_id   data file      — blocked the install
+    #   res.company.mobile       QWeb template  — 500 on the home page
+    #   res.partner.mobile       PYTHON         — /start/submit wrote it on
+    #       every customer signup, so signup 500'd; the WhatsApp queue read it,
+    #       so every customer notification raised; and the vendor loader
+    #       crashed on its first row.
+    #
+    # Odoo 18 declared `phone` AND `mobile` on res.partner; 19.0 declares
+    # `phone = fields.Char()` alone.
+    #
+    # This is a deny-list, not an existence check, and that is deliberate. The
+    # first attempt indexed res.partner's fields and flagged anything missing —
+    # it produced 28 failures, every one of them wrong, because res.partner is
+    # assembled from a dozen modules and any index built from a handful of
+    # files is incomplete. A checker that cries wolf gets switched off, and
+    # then it catches nothing at all. So: name the fields we know were removed
+    # and that we know we used, and say exactly what to use instead.
+    REMOVED_IN_19 = {
+        "mobile": (
+            "removed from res.partner and res.company in Odoo 19 — 18.0 "
+            "declared phone AND mobile, 19.0 declares phone alone. Use `phone`."
+        ),
+    }
+    roots = [ADDONS, ADDONS.parent / "tools"]
+    for source_file in sorted(
+        f for root in roots for pat in ("*.py", "*.xml", "*.csv")
+        for f in root.rglob(pat)
+    ):
+        if "__pycache__" in source_file.parts:
+            continue
+        # This file necessarily names the fields it forbids — the deny-list is
+        # a dict of them. Skipping it is not an exemption, it is the only way
+        # the tool can state its own rule.
+        if source_file.resolve() == Path(__file__).resolve():
+            continue
+        text = source_file.read_text()
+        # Strip comments and docstrings first. Every fix for one of these bugs
+        # explains itself in prose that names the very field it removed, and a
+        # checker that flags its own documentation is one people stop trusting.
+        text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+        text = re.sub(r"#.*", "", text)
+        text = re.sub(r'""".*?"""|\'\'\'.*?\'\'\'', "", text, flags=re.S)
+        for name, reason in REMOVED_IN_19.items():
+            # As an attribute (`partner.mobile`), a dict key or domain term
+            # (`"mobile"`), or a CSV column header.
+            if re.search(rf"""\.{name}\b|["']{name}["']|(?:^|,){name}(?:,|$)""",
+                         text, flags=re.M):
+                problems.append(
+                    f"{source_file.name}: uses {name!r} — {reason}"
+                )
+    checked.add("removed-field deny-list (py/xml/csv)")
 
     print("Checked against:", ", ".join(sorted(checked)) or "nothing")
     if problems:

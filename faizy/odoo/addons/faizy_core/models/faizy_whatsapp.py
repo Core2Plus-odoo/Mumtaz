@@ -148,7 +148,10 @@ class FaizyWhatsappMessage(models.Model):
         phone = None
         lang = "en"
         if partner:
-            phone = partner.mobile or partner.phone
+            # `phone` alone: Odoo 19 dropped res.partner.mobile, so the old
+            # `partner.mobile or partner.phone` raised AttributeError and took
+            # down every transition that notifies a customer.
+            phone = partner.phone
             lang = "ur" if (partner.lang or "").startswith("ur") else "en"
         elif worker:
             phone = worker.phone

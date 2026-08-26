@@ -152,6 +152,14 @@ log "Installing Python dependencies"
 sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/pip" install --quiet --upgrade pip wheel setuptools
 sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/pip" install --quiet -r "$FAIZY_HOME/odoo/requirements.txt"
 
+# Not in Odoo's requirements, and Odoo only mentions it once at INFO level:
+# "contact numbers will not be verified". For most Odoo installs that is
+# cosmetic. Here the phone number IS the customer's identity — it is how
+# signup matches a returning subscriber, what the wa.me link is built from,
+# and the only address a WhatsApp message has. Without this, +92 334 3043970
+# and +923343043970 are two different customers.
+sudo -u "$FAIZY_USER" "$FAIZY_HOME/venv/bin/pip" install --quiet phonenumbers
+
 # ── 5. Faizy addons ─────────────────────────────────────────────────────────
 if [[ -d "$FAIZY_HOME/src/.git" ]]; then
   log "Updating Faizy addons"
@@ -297,6 +305,20 @@ else
 fi
 
 cat > /etc/nginx/sites-available/faizy <<EOF
+# A websocket handshake needs the Upgrade and Connection headers passed
+# through, and nginx only forwards them over HTTP/1.1. Without this the
+# handshake is answered with 400 and Odoo's realtime bus never connects —
+# chatter stops updating live and nothing says why.
+#
+# Deliberately a Faizy-specific variable name: this box serves C2P, IG2 and
+# the mumtaz.digital sites from the same nginx, and a second map defining
+# \$connection_upgrade would be a duplicate-directive error that takes every
+# vhost down at reload.
+map \$http_upgrade \$faizy_connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 upstream faizy_odoo     { server 127.0.0.1:$FAIZY_ODOO_PORT; }
 upstream faizy_longpoll { server 127.0.0.1:$FAIZY_LONGPOLL_PORT; }
 
@@ -315,9 +337,15 @@ server {
     proxy_set_header X-Forwarded-Proto \$scheme;
     proxy_read_timeout 720s;
 
-    # Long-polling needs its own upstream or realtime updates stall.
+    # Long-polling and websockets need their own upstream or realtime updates
+    # stall — the chatter stops refreshing and nobody knows why.
     location /longpolling { proxy_pass http://faizy_longpoll; }
-    location /websocket   { proxy_pass http://faizy_longpoll; }
+    location /websocket {
+        proxy_pass http://faizy_longpoll;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade    \$http_upgrade;
+        proxy_set_header Connection \$faizy_connection_upgrade;
+    }
 
     location / {
         proxy_pass http://faizy_odoo;

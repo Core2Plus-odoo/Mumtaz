@@ -11,3 +11,5 @@ from . import faizy_document
 from . import faizy_sample_data
 from . import faizy_dashboard
 from . import res_partner
+from . import faizy_vendor
+from . import faizy_order_alert

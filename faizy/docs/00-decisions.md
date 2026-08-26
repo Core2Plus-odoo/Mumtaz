@@ -100,6 +100,119 @@ with the row they are the fallback for.
 
 ---
 
+## ⚠️ DECIDED: vendors are a segment of contacts, not a model
+
+**Muhammad's call: "make vendor segment in faizy core."** Built as fields on
+`res.partner` behind an `is_faizy_vendor` flag, with its own kanban/list/form
+and a *Faizy → Network → Vendors* menu.
+
+**Why not a `faizy.vendor` model.** `faizy.order.vendor_id` already pointed at
+`res.partner`, and so do vendor bills, payments and anything the accountant
+will eventually want to reconcile. A separate table would mean the same
+pharmacy exists twice, and the day the two rows disagree nobody can say which
+is right. That is the failure this codebase avoids everywhere else — customers
+are `res.partner` too — so vendors follow the same rule. Flagging a partner as
+a vendor also sets `supplier_rank`, so they are a vendor everywhere in Odoo,
+not only on our screens.
+
+**Commission is per vendor now.** The company rate in Settings is still the
+default; `faizy_vendor_custom_commission` + `faizy_vendor_commission_rate` is
+the exception. A boolean rather than "0.0 means inherit", because 0% is a real
+arrangement — a partner clinic we take nothing from — and "blank means inherit"
+would make it impossible to express.
+
+The rate is deliberately **not** in `_compute_amounts`'s `@api.depends`.
+Renegotiating terms must not silently rewrite the commission on orders already
+delivered and reconciled; new orders pick up the new rate, old ones keep the
+figure they were actually computed with. Same principle as the company rate.
+
+**One bug this surfaced.** The sample-data loader's `order()` helper took a
+`vendor=None` parameter and never wrote it. Every sample order therefore had
+zero commission — the one number that proves the revenue model was the one the
+demo could not show. Four sample vendors now exist, three of them attached to
+completed orders, one on a negotiated 15%.
+
+---
+
+## Privacy policy — published, and three numbers need your sign-off
+
+`/privacy` is live in `faizy_website`, linked from the footer and from the
+contact form. It is written from what the software actually does — every claim
+maps to a model in `faizy_core`, including the per-task privacy setting that
+hides the family member's name, phone and notes from the assigned Faizy.
+
+**The retention periods are mine, not yours.** I picked working defaults so the
+page could say something concrete rather than "TBD", which is worse than
+useless on a privacy policy. Confirm or change:
+
+| What | Currently says |
+|---|---|
+| Account and family records | While subscribed, then 12 months |
+| Task history and proof-of-delivery photos | 24 months |
+| Stored documents | Until deleted, or 12 months after leaving |
+| Invoices, wallet ledger, accounting | 7 years (tax) |
+| WhatsApp message log | 24 months |
+| Vetting records, unsuccessful applicants | 12 months after the decision |
+
+Two other lines are deliberately non-committal until you decide: the payment
+processor is unnamed ("when a provider is in place we will name it"), and there
+is no privacy email address because the company record has no email set — the
+page routes those requests to WhatsApp and the contact form instead.
+
+Nothing on that page is enforced by code yet. A retention promise without a
+cron that deletes is a promise, not a control — worth building before the
+customer base is large enough for anyone to ask.
+
+---
+
+## ⚠️ DECIDED: the accounting entity is Pakistani — PKR books, l10n_pk
+
+**Muhammad's call**, asked because it is expensive to reverse: Odoo will not
+stop you changing a company's currency under existing journal entries, it
+simply restates every one of them.
+
+- **Company currency: PKR.** Was AED.
+- **Country: Pakistan**, which is what makes Odoo offer the right taxes.
+- **Chart of accounts: `l10n_pk`** — Pakistan - Accounting, which ships in
+  Community and carries the CoA, taxes, the VAT report and the withholding tax
+  report. It is now a hard dependency of `faizy_core` rather than something ops
+  installs by hand: without a chart, Invoicing is present but cannot post, and
+  that is the state this database was in.
+- **Default price: PKR.** The work is done in Pakistan and costed in rupees.
+  Every other market price — AED, SAR, USD, GBP — is a commercial decision made
+  on top of that one, not a conversion of it, and the per-market rows are
+  unchanged: a subscriber in Dubai still pays the AED figure published for
+  Dubai.
+
+**The window this fitted through.** The currency could only be changed because
+the books were empty — and they were empty for a bad reason. No plan had a
+`product_id`, so `_prepare_invoice_lines` raised `UserError` on every run of the
+daily billing cron, which caught it and wrote the failure into the
+subscription's chatter. **The recurring billing has never raised a single
+invoice.** Six service products now exist and the plans point at them.
+
+Migration order matters and is enforced by the version numbers: `19.0.1.9.0`
+gives the plans their products and moves them to PKR, `19.0.1.10.0` moves the
+company. Both refuse, loudly and in the log, if the window has closed.
+
+### What this leaves inconsistent, and needs your answer
+
+`res.company.report_footer` still reads **"Faizy is a service of C2P
+Consultants FZC LLC"** — a UAE free-zone entity — and it prints on every
+invoice. The books are now Pakistani. One of those two is wrong and I have not
+guessed which: you told me the accounting entity is Pakistani, you have never
+told me the legal entity changed. Either the footer needs the Pakistani
+company's name, or the books belong somewhere else after all.
+
+Also still true: orders never reach accounting at all. `purchase_value`,
+`platform_fee` and `service_fee` are computed and stored on `faizy.order` and
+no `account.move` is ever created, so the 5% platform fee is not in the books.
+Vendor commission is computed and never billed. The wallet ledger is
+append-only and has no journal entries behind it. Subscriptions are the only
+thing that invoices.
+
+---
+
 ## TL;DR
 
 *(Sections below predate the decision above. Kept as the record of the analysis;
@@ -427,3 +540,39 @@ open.
 
 **Already started, no input needed:** monorepo scaffold, brand/design system, database migrations,
 auth flow, provider interfaces for WhatsApp and payments.
+
+---
+
+## 11. Corrections
+
+**The free-activity grant was never broken.** On 14 Aug I reported that
+`/start` had been handing out zero free activities since launch, and shipped
+migration `19.0.1.19.0` plus a seed in `apply_company_profile` to repair it.
+That was wrong, twice over.
+
+The migration ran on production and changed nothing — no company row and no
+partner matched. Measured afterwards on the live database:
+
+    grant as admin       : 3
+    public env.company   : 1 'Faizy'
+    grant as public      : 3
+    a /start signup gets : {'faizy_free_activities': 3}
+
+So the company grant was correct, the public website environment resolves the
+company correctly, and a signup receives three. Both diagnoses were wrong: the
+column-default premise, and the follow-up guess that `env.company` reads empty
+on a public route the way it does in `whatsapp_url`.
+
+What actually prompted it was one contact — partner 32, Muhammad Umer — sitting
+at `faizy_free_activities = 0`. That is a fact about one record, not about the
+signup flow, and it was generalised without evidence. Its cause is still
+unexplained and is worth a look before anyone treats it as a pattern:
+`faizy.subscription.consume_activity` spends the free grant first, so a
+subscription touching that partner would explain it.
+
+The shipped code is kept. The migration is idempotent and only acts on a grant
+of 0 or NULL, and the `apply_company_profile` seed only fires when the grant is
+falsy — both are harmless guards against a state that would be a genuine
+problem if it ever occurred. Only the claim was wrong, and commit `4024183`'s
+message overstates it as a live incident.
+

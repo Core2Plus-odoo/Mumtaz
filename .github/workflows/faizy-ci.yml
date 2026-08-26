@@ -47,6 +47,21 @@ jobs:
       - name: Check core-model fields against Odoo 19
         run: python3 faizy/odoo/tools/check_core_fields.py
 
+      # Catches a portal template following a Many2one into a model that
+      # base.group_portal cannot read — a 500 for a real customer that renders
+      # perfectly for anyone testing it, because an internal user bypasses the
+      # ACL. Two of these were live: faizy.service on every order detail page,
+      # and faizy.worker on every assigned one.
+      - name: Check portal templates against portal ACLs
+        run: python3 faizy/odoo/tools/check_portal_access.py
+
+      # Catches `self.<field>` on a Faizy model where the model never declares
+      # that field — an AttributeError that only fires when the line runs, and
+      # which shipped once inside the guard that gates invoicing, silently
+      # blocking every non-PKR invoice while appearing to work correctly.
+      - name: Check self.<field> references resolve
+        run: python3 faizy/odoo/tools/check_self_fields.py
+
       # Runs Odoo's own RelaxNG schemas over the view definitions — the same
       # validation Odoo performs at install, where a failure is an RNG error
       # pointing at a generated string rather than at your file.
@@ -61,6 +76,13 @@ jobs:
       # rather than as an error.
       - name: Check the plan price matrix
         run: python3 faizy/odoo/tools/check_plan_prices.py
+
+      # Contrast is not something you can eyeball — 3.3:1 and 4.6:1 look
+      # about equally readable on a good monitor and only one of them works
+      # on a phone in sunlight. Three separate failures were found on live
+      # pages before this existed.
+      - name: Check colour contrast
+        run: python3 faizy/odoo/tools/check_contrast.py
 
       - name: Lint
         run: |
