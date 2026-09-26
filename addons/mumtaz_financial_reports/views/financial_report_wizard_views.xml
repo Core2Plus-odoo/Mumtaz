@@ -12,11 +12,20 @@
                         <field name="target_move" widget="radio"/>
                     </group>
                     <group>
-                        <field name="date_from" invisible="report_type == 'balance_sheet'"
-                               required="report_type != 'balance_sheet'"/>
+                        <field name="date_from"
+                               invisible="report_type in ('balance_sheet', 'aged_receivable', 'aged_payable')"
+                               required="report_type not in ('balance_sheet', 'aged_receivable', 'aged_payable')"/>
                         <field name="date_to"/>
                         <field name="hide_zero"/>
                     </group>
+                </group>
+                <group>
+                    <field name="account_ids" widget="many2many_tags"
+                           invisible="report_type != 'general_ledger'"
+                           options="{'no_create': True}"/>
+                    <field name="partner_ids" widget="many2many_tags"
+                           invisible="report_type not in ('aged_receivable', 'aged_payable')"
+                           options="{'no_create': True}"/>
                 </group>
                 <footer>
                     <button name="action_print" type="object" string="Print PDF" class="btn-primary"/>

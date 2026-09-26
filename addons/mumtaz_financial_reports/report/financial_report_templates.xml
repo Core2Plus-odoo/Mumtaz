@@ -27,7 +27,7 @@
                         <h2 class="mfr-title" t-out="report.get('title')"/>
                         <div class="mfr-sub">
                             <span t-out="report.get('company')"/>
-                            <t t-if="report.get('type') == 'balance_sheet'">
+                            <t t-if="report.get('type') in ('balance_sheet', 'aged_receivable', 'aged_payable')">
                                 &#160;&#183;&#160; As of <span t-out="report.get('date_to')" t-options="{'widget': 'date'}"/>
                             </t>
                             <t t-else="">
@@ -105,6 +105,76 @@
                                     <td class="r"><span t-out="report.get('total_debit')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
                                     <td class="r"><span t-out="report.get('total_credit')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
                                     <td class="r"><span t-out="report.get('total_balance')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                </tr>
+                            </table>
+                        </t>
+
+                        <!-- ===== General Ledger ===== -->
+                        <t t-if="report.get('type') == 'general_ledger'">
+                            <table class="mfr-tbl" style="font-size:10px;">
+                                <t t-foreach="report.get('accounts', [])" t-as="acc">
+                                    <tr class="mfr-sec">
+                                        <td colspan="5"><span t-out="acc['code']"/> <span t-out="acc['name']"/></td>
+                                        <td class="r">Opening</td>
+                                        <td class="r"><span t-out="acc['opening']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                    </tr>
+                                    <tr class="mfr-sec" style="background:#41506a;">
+                                        <td>Date</td><td>Entry</td><td>Journal</td><td>Partner</td><td>Label</td>
+                                        <td class="r">Debit</td><td class="r">Credit / Balance</td>
+                                    </tr>
+                                    <tr t-foreach="acc['lines']" t-as="ln" class="mfr-row">
+                                        <td t-out="ln['date']"/>
+                                        <td t-out="ln['move']"/>
+                                        <td t-out="ln['journal']"/>
+                                        <td t-out="ln['partner']"/>
+                                        <td t-out="ln['label']"/>
+                                        <td class="r"><span t-out="ln['debit']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                        <td class="r">
+                                            <span t-out="ln['credit']" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                            &#160;/&#160;
+                                            <b><span t-out="ln['balance']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></b>
+                                        </td>
+                                    </tr>
+                                    <tr class="mfr-tot">
+                                        <td colspan="5">Total &#8212; <span t-out="acc['code']"/></td>
+                                        <td class="r"><span t-out="acc['debit_total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                        <td class="r">
+                                            <span t-out="acc['credit_total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                            &#160;/&#160;
+                                            <b><span t-out="acc['closing']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></b>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <tr t-if="not report.get('accounts')" class="mfr-row">
+                                    <td colspan="7" class="text-muted">No movement in this period.</td>
+                                </tr>
+                            </table>
+                        </t>
+
+                        <!-- ===== Aged Receivable / Payable ===== -->
+                        <t t-if="report.get('type') in ('aged_receivable', 'aged_payable')">
+                            <table class="mfr-tbl">
+                                <tr class="mfr-sec">
+                                    <td>Partner</td>
+                                    <td class="r" t-foreach="report.get('buckets', [])" t-as="b" t-out="b"/>
+                                    <td class="r">Total</td>
+                                </tr>
+                                <tr t-foreach="report.get('rows', [])" t-as="r" class="mfr-row">
+                                    <td t-out="r['partner']"/>
+                                    <td class="r" t-foreach="r['b']" t-as="amt">
+                                        <span t-out="amt" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                    </td>
+                                    <td class="r"><b><span t-out="r['total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></b></td>
+                                </tr>
+                                <tr t-if="not report.get('rows')" class="mfr-row">
+                                    <td colspan="8" class="text-muted">No open items as of this date.</td>
+                                </tr>
+                                <tr class="mfr-tot">
+                                    <td>Total</td>
+                                    <td class="r" t-foreach="report.get('totals', [])" t-as="t">
+                                        <span t-out="t" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                                    </td>
+                                    <td class="r"><span t-out="report.get('grand_total')" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
                                 </tr>
                             </table>
                         </t>

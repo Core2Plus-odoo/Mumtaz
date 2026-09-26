@@ -31,13 +31,16 @@ class MumtazFinancialReportWizard(models.TransientModel):
     report_type = fields.Selection(
         [("profit_loss", "Profit & Loss"),
          ("balance_sheet", "Balance Sheet"),
-         ("trial_balance", "Trial Balance")],
+         ("trial_balance", "Trial Balance"),
+         ("general_ledger", "General Ledger"),
+         ("aged_receivable", "Aged Receivable"),
+         ("aged_payable", "Aged Payable")],
         string="Report", required=True, default="profit_loss")
     company_id = fields.Many2one(
         "res.company", string="Company", required=True,
         default=lambda self: self.env.company)
     date_from = fields.Date(
-        string="From", required=True,
+        string="From",
         default=lambda self: fields.Date.context_today(self).replace(month=1, day=1))
     date_to = fields.Date(
         string="To", required=True, default=fields.Date.context_today)
@@ -45,8 +48,17 @@ class MumtazFinancialReportWizard(models.TransientModel):
         [("posted", "Posted Entries"), ("all", "All Entries")],
         string="Entries", required=True, default="posted")
     hide_zero = fields.Boolean(string="Hide zero-balance accounts", default=True)
+    account_ids = fields.Many2many(
+        "account.account", string="Accounts",
+        help="Optional — limit the General Ledger to these accounts.")
+    partner_ids = fields.Many2many(
+        "res.partner", string="Partners",
+        help="Optional — limit the aged report to these partners.")
     xlsx_file = fields.Binary(string="Excel File", readonly=True)
     xlsx_name = fields.Char(string="Excel Filename", readonly=True)
+
+    # Report types that are a snapshot as of the 'To' date (no 'From' needed).
+    _ASOF_REPORTS = ("balance_sheet", "aged_receivable", "aged_payable")
 
     # ── Data ────────────────────────────────────────────────────────────────
     def _base_domain(self):
@@ -83,7 +95,7 @@ class MumtazFinancialReportWizard(models.TransientModel):
         self.ensure_one()
         if not self.date_to:
             raise UserError("Please set the 'To' date.")
-        if self.report_type != "balance_sheet" and not self.date_from:
+        if self.report_type not in self._ASOF_REPORTS and not self.date_from:
             raise UserError("Please set the 'From' date.")
         if self.date_from and self.date_to and self.date_from > self.date_to:
             raise UserError("'From' date must be on or before the 'To' date.")
@@ -95,11 +107,17 @@ class MumtazFinancialReportWizard(models.TransientModel):
             "target_move": dict(self._fields["target_move"].selection)[self.target_move],
             "printed_on": fields.Date.context_today(self),
         }
-        if self.report_type == "profit_loss":
-            return {**meta, **self._profit_loss()}
-        if self.report_type == "balance_sheet":
-            return {**meta, **self._balance_sheet()}
-        return {**meta, **self._trial_balance()}
+        builders = {
+            "profit_loss": self._profit_loss,
+            "balance_sheet": self._balance_sheet,
+            "trial_balance": self._trial_balance,
+            "general_ledger": self._general_ledger,
+            "aged_receivable": lambda: self._aged(
+                ("asset_receivable",), "Aged Receivable", "aged_receivable"),
+            "aged_payable": lambda: self._aged(
+                ("liability_payable",), "Aged Payable", "aged_payable"),
+        }
+        return {**meta, **builders[self.report_type]()}
 
     def _keep(self, amount):
         return not (self.hide_zero and self.company_id.currency_id.is_zero(amount))
@@ -209,6 +227,104 @@ class MumtazFinancialReportWizard(models.TransientModel):
             "total_debit": td, "total_credit": tc, "total_balance": tb,
         }
 
+    # ── General Ledger ──────────────────────────────────────────────────────
+    def _general_ledger(self):
+        AML = self.env["account.move.line"]
+        base = self._base_domain()
+        if not self.account_ids:
+            count = AML.search_count(
+                base + [("date", ">=", self.date_from), ("date", "<=", self.date_to)])
+            if count > 5000:
+                raise UserError(
+                    "The General Ledger for this period has %s entries. Please "
+                    "select specific accounts or narrow the date range." % count)
+        if self.account_ids:
+            accounts = self.account_ids
+        else:
+            grp = AML._read_group(
+                base + [("date", "<=", self.date_to)], groupby=["account_id"])
+            accounts = self.env["account.account"].browse(
+                [a.id for (a,) in grp if a])
+        accounts = accounts.sorted(
+            lambda a: (a.with_company(self.company_id).code or "", a.name or ""))
+
+        out, g_debit, g_credit = [], 0.0, 0.0
+        for acc in accounts:
+            adom = base + [("account_id", "=", acc.id)]
+            orows = AML._read_group(
+                adom + [("date", "<", self.date_from)], aggregates=["balance:sum"])
+            opening = (orows[0][0] or 0.0) if orows else 0.0
+            mls = AML.search(
+                adom + [("date", ">=", self.date_from), ("date", "<=", self.date_to)],
+                order="date, id")
+            if not mls and self.company_id.currency_id.is_zero(opening):
+                continue
+            running, lines, d_tot, c_tot = opening, [], 0.0, 0.0
+            for ml in mls:
+                running += ml.balance
+                d_tot += ml.debit
+                c_tot += ml.credit
+                lines.append({
+                    "date": fields.Date.to_string(ml.date) or "",
+                    "move": ml.move_id.name or "",
+                    "journal": ml.journal_id.code or ml.journal_id.name or "",
+                    "partner": ml.partner_id.display_name or "",
+                    "label": ml.name or "",
+                    "debit": ml.debit, "credit": ml.credit, "balance": running,
+                })
+            g_debit += d_tot
+            g_credit += c_tot
+            out.append({
+                "code": acc.with_company(self.company_id).code or "",
+                "name": acc.name or "", "opening": opening, "lines": lines,
+                "debit_total": d_tot, "credit_total": c_tot,
+                "closing": opening + d_tot - c_tot,
+            })
+        return {
+            "type": "general_ledger", "title": "General Ledger",
+            "accounts": out, "total_debit": g_debit, "total_credit": g_credit,
+        }
+
+    # ── Aged Receivable / Payable ───────────────────────────────────────────
+    def _aged(self, account_types, title, rtype):
+        AML = self.env["account.move.line"]
+        dom = self._base_domain() + [
+            ("account_id.account_type", "in", account_types),
+            ("date", "<=", self.date_to),
+            ("reconciled", "=", False),
+        ]
+        if self.partner_ids:
+            dom.append(("partner_id", "in", self.partner_ids.ids))
+        buckets = ["Not Due", "1-30", "31-60", "61-90", "91-120", "Older"]
+        sign = 1.0 if rtype == "aged_receivable" else -1.0
+        cur = self.company_id.currency_id
+        as_of = self.date_to
+        data = {}
+        for ml in AML.search(dom):
+            residual = ml.amount_residual * sign
+            if cur.is_zero(residual):
+                continue
+            due = ml.date_maturity or ml.date
+            days = (as_of - due).days
+            idx = (0 if days <= 0 else 1 if days <= 30 else 2 if days <= 60
+                   else 3 if days <= 90 else 4 if days <= 120 else 5)
+            pname = ml.partner_id.display_name or "(no partner)"
+            data.setdefault(pname, [0.0] * 6)[idx] += residual
+
+        rows, totals = [], [0.0] * 6
+        for pname in sorted(data):
+            vals = data[pname]
+            tot = sum(vals)
+            if self.hide_zero and cur.is_zero(tot):
+                continue
+            for i in range(6):
+                totals[i] += vals[i]
+            rows.append({"partner": pname, "b": vals, "total": tot})
+        return {
+            "type": rtype, "title": title, "buckets": buckets,
+            "rows": rows, "totals": totals, "grand_total": sum(totals),
+        }
+
     # ── Output ──────────────────────────────────────────────────────────────
     def _report_filename(self):
         self.ensure_one()
@@ -233,7 +349,10 @@ class MumtazFinancialReportWizard(models.TransientModel):
             "hdr_r": wb.add_format({"bold": True, "font_color": "#FFFFFF", "bg_color": "#0a4d94",
                                     "border": 1, "align": "right", "valign": "vcenter"}),
             "sec": wb.add_format({"bold": True, "font_color": "#FFFFFF", "bg_color": "#063463", "border": 1}),
+            "sec_r": wb.add_format({"bold": True, "font_color": "#FFFFFF", "bg_color": "#063463",
+                                    "border": 1, "align": "right", "num_format": money}),
             "cell": wb.add_format({"border": 1, "border_color": "#dbe4ef"}),
+            "small": wb.add_format({"border": 1, "border_color": "#dbe4ef", "font_size": 9}),
             "muted": wb.add_format({"border": 1, "border_color": "#dbe4ef", "font_color": "#8794a3"}),
             "num": wb.add_format({"border": 1, "border_color": "#dbe4ef", "align": "right", "num_format": money}),
             "tot_l": wb.add_format({"bold": True, "top": 2, "border_color": "#063463"}),
@@ -246,28 +365,32 @@ class MumtazFinancialReportWizard(models.TransientModel):
 
     def _write_xlsx(self, wb, report):
         f = self._xlsx_formats(wb)
+        rtype = report["type"]
         ws = wb.add_worksheet(report["title"][:31])
-        # Force everything onto a single printed page.
-        ws.fit_to_pages(1, 1)
         ws.set_paper(9)  # A4
         ws.set_margins(0.3, 0.3, 0.5, 0.5)
         ws.center_horizontally()
         ws.hide_gridlines(2)
-
-        currency = self.company_id.currency_id.name or ""
-        if report["type"] == "trial_balance":
-            headers = ["Code", "Account", "Debit", "Credit", "Balance"]
-            widths = [12, 44, 15, 15, 15]
+        # Statements fit on one page; ledgers/aged fit to one page WIDE and flow down.
+        if rtype in ("profit_loss", "balance_sheet"):
+            ws.fit_to_pages(1, 1)
         else:
-            headers = ["Code", "Account", "Amount (%s)" % currency]
-            widths = [12, 54, 18]
+            ws.fit_to_pages(1, 0)
+
+        cur = self.company_id.currency_id.name or ""
+        widths = {
+            "profit_loss": [12, 54, 18], "balance_sheet": [12, 54, 18],
+            "trial_balance": [12, 44, 15, 15, 15],
+            "general_ledger": [12, 16, 10, 26, 30, 14, 14, 15],
+            "aged_receivable": [34, 14, 12, 12, 12, 12, 13, 15],
+            "aged_payable": [34, 14, 12, 12, 12, 12, 13, 15],
+        }[rtype]
         for c, w in enumerate(widths):
             ws.set_column(c, c, w)
-        last = len(headers) - 1
+        last = len(widths) - 1
 
-        # Title block
         ws.merge_range(0, 0, 0, last, report["title"], f["title"])
-        if report["type"] == "balance_sheet":
+        if rtype in self._ASOF_REPORTS:
             period = "As of %s" % report["date_to"]
         else:
             period = "%s to %s" % (report["date_from"], report["date_to"])
@@ -276,10 +399,10 @@ class MumtazFinancialReportWizard(models.TransientModel):
                        f["sub"])
         row = 3
 
-        if report["type"] in ("profit_loss", "balance_sheet"):
+        if rtype in ("profit_loss", "balance_sheet"):
             ws.write(row, 0, "Code", f["hdr"])
             ws.write(row, 1, "Account", f["hdr"])
-            ws.write(row, 2, headers[2], f["hdr_r"])
+            ws.write(row, 2, "Amount (%s)" % cur, f["hdr_r"])
             row += 1
             for sec in report["sections"]:
                 ws.merge_range(row, 0, row, 1, sec["name"], f["sec"])
@@ -300,11 +423,12 @@ class MumtazFinancialReportWizard(models.TransientModel):
             ws.merge_range(row, 0, row, 1, report["net_label"], f["net_l"])
             ws.write_number(row, 2, report["net"], f["net"])
             row += 1
-            if report["type"] == "balance_sheet":
+            if rtype == "balance_sheet":
                 ws.merge_range(row, 0, row, 1, report["check_label"], f["net_l"])
                 ws.write_number(row, 2, report["check"], f["net"])
-        else:  # trial_balance
-            for c, h in enumerate(headers):
+
+        elif rtype == "trial_balance":
+            for c, h in enumerate(["Code", "Account", "Debit", "Credit", "Balance"]):
                 ws.write(row, c, h, f["hdr_r"] if c >= 2 else f["hdr"])
             row += 1
             for ln in report["rows"]:
@@ -322,6 +446,59 @@ class MumtazFinancialReportWizard(models.TransientModel):
             ws.write_number(row, 2, report["total_debit"], f["tot"])
             ws.write_number(row, 3, report["total_credit"], f["tot"])
             ws.write_number(row, 4, report["total_balance"], f["tot"])
+
+        elif rtype == "general_ledger":
+            heads = ["Date", "Entry", "Journal", "Partner", "Label",
+                     "Debit", "Credit", "Balance"]
+            for c, h in enumerate(heads):
+                ws.write(row, c, h, f["hdr_r"] if c >= 5 else f["hdr"])
+            row += 1
+            for acc in report["accounts"]:
+                ws.merge_range(row, 0, row, 4,
+                               "%s  %s" % (acc["code"], acc["name"]), f["sec"])
+                ws.write(row, 5, "", f["sec"])
+                ws.write(row, 6, "Opening", f["sec_r"])
+                ws.write_number(row, 7, acc["opening"], f["sec_r"])
+                row += 1
+                for ln in acc["lines"]:
+                    ws.write(row, 0, ln["date"], f["small"])
+                    ws.write(row, 1, ln["move"], f["small"])
+                    ws.write(row, 2, ln["journal"], f["small"])
+                    ws.write(row, 3, ln["partner"], f["small"])
+                    ws.write(row, 4, ln["label"], f["small"])
+                    ws.write_number(row, 5, ln["debit"], f["num"])
+                    ws.write_number(row, 6, ln["credit"], f["num"])
+                    ws.write_number(row, 7, ln["balance"], f["num"])
+                    row += 1
+                ws.merge_range(row, 0, row, 4, "Total — %s" % acc["code"], f["tot_l"])
+                ws.write_number(row, 5, acc["debit_total"], f["tot"])
+                ws.write_number(row, 6, acc["credit_total"], f["tot"])
+                ws.write_number(row, 7, acc["closing"], f["tot"])
+                row += 1
+            ws.merge_range(row, 0, row, 4, "Grand Total", f["net_l"])
+            ws.write_number(row, 5, report["total_debit"], f["net"])
+            ws.write_number(row, 6, report["total_credit"], f["net"])
+            ws.write(row, 7, "", f["net"])
+
+        else:  # aged_receivable / aged_payable
+            heads = ["Partner"] + report["buckets"] + ["Total"]
+            for c, h in enumerate(heads):
+                ws.write(row, c, h, f["hdr_r"] if c >= 1 else f["hdr"])
+            row += 1
+            for r in report["rows"]:
+                ws.write(row, 0, r["partner"], f["cell"])
+                for i in range(6):
+                    ws.write_number(row, 1 + i, r["b"][i], f["num"])
+                ws.write_number(row, 7, r["total"], f["num"])
+                row += 1
+            if not report["rows"]:
+                ws.write(row, 0, "", f["muted"])
+                ws.merge_range(row, 1, row, 7, "No open items as of this date.", f["muted"])
+                row += 1
+            ws.write(row, 0, "Total", f["tot_l"])
+            for i in range(6):
+                ws.write_number(row, 1 + i, report["totals"][i], f["tot"])
+            ws.write_number(row, 7, report["grand_total"], f["tot"])
 
     def action_export_xlsx(self):
         self.ensure_one()

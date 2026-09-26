@@ -1,7 +1,8 @@
 {
     "name": "Mumtaz Financial Statements",
-    "version": "19.0.1.0.0",
-    "summary": "Profit & Loss, Balance Sheet and Trial Balance as branded PDF reports.",
+    "version": "19.0.2.0.0",
+    "summary": "P&L, Balance Sheet, Trial Balance, General Ledger and Aged "
+               "Receivable/Payable as branded PDF and single-page Excel.",
     "description": """
 Mumtaz Financial Statements
 ===========================
