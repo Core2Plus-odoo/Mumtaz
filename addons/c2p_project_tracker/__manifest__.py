@@ -28,6 +28,9 @@ Community only — no Enterprise dependency.
         "views/project_task_views.xml",
         "views/c2p_raid_views.xml",
         "views/c2p_dashboard_actions.xml",
+        "report/c2p_paperformat.xml",
+        "report/c2p_portfolio_report.xml",
+        "report/c2p_report_actions.xml",
         # Menus last: they reference the actions defined above.
         "views/c2p_menus.xml",
     ],

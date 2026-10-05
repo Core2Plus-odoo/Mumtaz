@@ -1383,3 +1383,36 @@ each component's `static template` exists; every asset glob matches files.
 11 further tests cover both payloads, the refusal for a Delivery Member, the
 absence of money keys, roadmap undated reporting, attention ranking, and that
 no money trend is fabricated.
+
+### QWeb PDFs — Portfolio Executive Summary and Client Status Report ✅
+Two reports, both bound to `project.project`:
+- **Portfolio Executive Summary** (A4 landscape, internal): KPI strip, the
+  engagement table, a "why each status" section listing every RAG factor, and
+  the attention items — reusing `c2p.dashboard._attention()` so the PDF and the
+  dashboard cannot disagree. Restricted to the Portfolio Manager group, and the
+  commercial KPI row is additionally gated on the group at render time.
+- **Client Status Report** (A4 portrait, client-facing): status, progress, the
+  milestone table, and the actions required *from the client* — derived from
+  delivery tasks in Waiting on Client plus open RAID dependencies. **No
+  commercial figure anywhere**, since this document leaves the building.
+
+wkhtmltopdf 0.12.x notes honoured: every margin in the two paper formats is in
+**millimetres**, never a percentage, which is the documented cause of the
+trailing blank page; CSS is inlined rather than loaded as an asset, which the
+PDF renderer cannot be relied on to fetch; and rows carry
+`page-break-inside: avoid`.
+
+Payloads are built in Python and return display strings, because QWeb's
+evaluation context exposes neither `str()` nor formatting helpers. Three bugs
+were caught doing that:
+- `models.fields.Date` is not a valid path — `fields` must be imported
+  directly. `pyflakes` cannot see this, and it would have raised only at render.
+- The client-actions sort key mixed a `date` with a `str`, which raises
+  `TypeError` the moment a RAID dependency and a blocked task appear together.
+  It now sorts oldest-first with undated last, verified against both kinds.
+- A first draft formatted the date through `ir.qweb.field.date.value_to_html`;
+  passing the date object lets QWeb render it in the reader's own format.
+
+Verified mechanically: XML parses; every `report_name` resolves to a defined
+template; every internal `t-call` target exists; every payload method the
+templates call is defined.
