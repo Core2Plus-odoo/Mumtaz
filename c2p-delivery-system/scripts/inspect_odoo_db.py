@@ -2,9 +2,13 @@
 """Inspect a live Odoo database and print a readable report.
 
 Read-only: every call is a search/read/search_count — nothing is created or
-written. Reuses the delivery_api Odoo bridge, so credentials resolve exactly
-the way the API resolves them (encrypted console connection first via
-CONN_PROVIDER, then ODOO_URL/ODOO_USER/ODOO_PASSWORD from the env file).
+written. Reuses the delivery_api Odoo bridge.
+
+Credentials: ODOO_URL/ODOO_USER/ODOO_PASSWORD from the environment or
+delivery_api/.env win, and anything they leave unset falls back to the
+console's encrypted Odoo Connection. That is deliberately the reverse of the
+API, which lets the stored connection override env — on a command line the
+operator typing a credential should get the credential they typed.
 
 Usage, on the VPS:
 
@@ -39,6 +43,39 @@ def load_env(path: Path) -> None:
         key, _, val = line.partition("=")
         key, val = key.strip(), val.strip().strip('"').strip("'")
         os.environ.setdefault(key, val)
+
+
+def wire_console_connection() -> None:
+    """Let the console's encrypted Odoo Connection fill in credentials the
+    environment does not supply.
+
+    `delivery_api.odoo` only consults a connection store through its module
+    global CONN_PROVIDER, which `main.py` installs at app startup. A standalone
+    script never gets that, so without this the stored connection is invisible
+    here and env is the only source. Anything already in the environment is
+    left alone, so an explicit credential on the command line still wins.
+    """
+    try:
+        from delivery_api import odoo as odoo_mod, store, tenancy
+    except Exception:
+        return  # store unavailable (no DB, no key) — env-only is still fine
+
+    def resolver(_db: str):
+        try:
+            s = store.get_setting("odoo_connection") or {}
+        except Exception:
+            return None
+        url = os.environ.get("ODOO_URL") or s.get("url")
+        user = os.environ.get("ODOO_USER") or s.get("user")
+        pw = os.environ.get("ODOO_PASSWORD")
+        if not pw and s.get("key_enc"):
+            try:
+                pw = tenancy.dec_secret(s["key_enc"])
+            except Exception:
+                pw = None
+        return (url, user, pw) if url and user and pw else None
+
+    odoo_mod.CONN_PROVIDER = resolver
 
 
 # Counts worth knowing before touching anything, as (label, model, domain).
@@ -220,6 +257,7 @@ def main() -> int:
         parser.error("give a database name, or --list to see what is available")
 
     load_env(ROOT / "delivery_api" / ".env")
+    wire_console_connection()
 
     if args.list_dbs:
         return report_databases()

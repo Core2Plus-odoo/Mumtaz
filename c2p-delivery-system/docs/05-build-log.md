@@ -969,3 +969,23 @@ count and the local `mumtaz|c2p|zaki` modules. `--json` emits the full payload.
   **no database named `MUMTAZ_C2P` exists** on `187.77.128.199` — the name is
   absent from the repo too, so it is either named differently or not yet
   created.
+
+### First inspection of `Mumtaz_C2P` (production) ✅
+The C2P tenant database on the VPS is **`Mumtaz_C2P`** — mixed case; neither
+`MUMTAZ_C2P` nor `mumtaz_c2p` exists, and the server also holds `Mumtaz_ERP`,
+`mumtaz_erp`, `Mumtaz_IG2`, `IG2`, `Mumtaz_C2P_staging`, `mumtaz_platform`,
+`faizy_prod` and `scratch_pre`.
+
+Odoo **19.0** (build 20260719), 144 modules installed, 41 active users.
+- Three companies: C2P Solutions (PKR/Pakistan), Core 2 Plus (AED/Pakistan),
+  C2P Consultants FZC LLC (AED/UAE).
+- **11,698 CRM leads** against 4 sale orders, 1 customer invoice, 1 journal
+  entry: a very large top-of-funnel (consistent with `mumtaz_lead_scraper`) and
+  effectively no recorded conversion or accounting activity, despite a 307-line
+  chart of accounts being configured.
+- Delivery side is live: 19 projects, 233 tasks, 34 employees.
+- Native automation in use: 14 automation rules, 137 server actions, 40 crons.
+- **0 Studio customisations**; customisation lives in five local modules
+  (`c2p_appointment`, `c2p_master_agent`, `c2p_proposal`,
+  `mumtaz_lead_nurture`, `mumtaz_lead_scraper`).
+- Stock is not installed (`stock.picking` reported n/a), as are purchases (0).
