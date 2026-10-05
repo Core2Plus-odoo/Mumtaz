@@ -21,6 +21,16 @@ empty string:
 systemctl cat odoo4.service | grep -iE 'ExecStart|Environment|WorkingDirectory'
 ```
 
+As measured on 2026-10-05 this server's unit is:
+
+```
+ExecStart=/usr/bin/python3 /usr/bin/odoo --config /etc/odoo4.conf
+```
+
+so the config is **`/etc/odoo4.conf`** — `--config`, not `-c`, and not under
+`/etc/odoo/`. Confirm rather than assume; the fallback chain below covers the
+other forms.
+
 Then resolve the config from whichever form it uses — an explicit `-c` or
 `--config`, an `ODOO_RC` environment variable, or Odoo's defaults
 (`$ODOO_RC`, then `~odoo/.odoorc`, then `/etc/odoo/odoo.conf`):
