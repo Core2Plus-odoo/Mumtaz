@@ -12,7 +12,9 @@
 
 set -euo pipefail
 
-ODOO_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
+# /etc/odoo4.conf is this server's real path (the unit passes
+# --config /etc/odoo4.conf); override with ODOO_CONF elsewhere.
+ODOO_CONF="${ODOO_CONF:-/etc/odoo4.conf}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEST="$REPO_ROOT/addons"
 
