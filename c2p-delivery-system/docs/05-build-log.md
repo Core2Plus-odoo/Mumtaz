@@ -941,3 +941,478 @@ The five delivery stages (presales → developer) now render as an Odoo form vie
 - renderRunBtn now keeps both the Run and Document buttons.
 - Verified: JS syntax + no dup names + headless render (5-step statusbar with the
   correct done/current states, form sheet present) — no page errors.
+
+### Read-only Odoo database inspector ✅
+`scripts/inspect_odoo_db.py <DB>` prints a one-screen report on a live tenant
+database — server version, companies (currency/country/VAT), record counts
+across ~20 probes (CRM, sales, accounting, project, HR, purchase, stock, plus
+automation rules / server actions / crons / Studio models), installed module
+count and the local `mumtaz|c2p|zaki` modules. `--json` emits the full payload.
+- Strictly read-only: every call is `search_read` / `search_count`.
+- Credentials resolve through `delivery_api.odoo.OdooClient`, so the encrypted
+  console connection wins over env, exactly as the API does; `delivery_api/.env`
+  is loaded when present (existing env always wins).
+- Models whose app isn't installed report `n/a (<Error>)` instead of aborting
+  the run, so a partially-configured database still yields a full report.
+- Failures are classified rather than blamed on credentials: a missing database
+  says so (and lists the server's databases, or gives the `psql -lqt` fallback
+  when `list_db = False`), refused auth points at ODOO_USER/ODOO_PASSWORD, an
+  unreachable server at ODOO_URL. `--list` shows the available databases.
+- Odoo returns server errors as an XML-RPC Fault whose `str()` is a repr with
+  escaped newlines; `error_text()` reads `faultString` so the cause can be
+  reduced to one line instead of a 40-frame traceback.
+- Verified: `py_compile` + `pyflakes` clean, `--help` and the no-args error
+  render, and the three failure paths (missing db from the real production Fault
+  text, refused auth, unreachable server) each produce the right one-line
+  summary and hint.
+- First run against the VPS: credentials resolved and Odoo answered, but
+  **no database named `MUMTAZ_C2P` exists** on `187.77.128.199` — the name is
+  absent from the repo too, so it is either named differently or not yet
+  created.
+
+### First inspection of `Mumtaz_C2P` (production) ✅
+The C2P tenant database on the VPS is **`Mumtaz_C2P`** — mixed case; neither
+`MUMTAZ_C2P` nor `mumtaz_c2p` exists, and the server also holds `Mumtaz_ERP`,
+`mumtaz_erp`, `Mumtaz_IG2`, `IG2`, `Mumtaz_C2P_staging`, `mumtaz_platform`,
+`faizy_prod` and `scratch_pre`.
+
+Odoo **19.0** (build 20260719), 144 modules installed, 41 active users.
+- Three companies: C2P Solutions (PKR/Pakistan), Core 2 Plus (AED/Pakistan),
+  C2P Consultants FZC LLC (AED/UAE).
+- **11,698 CRM leads** against 4 sale orders, 1 customer invoice, 1 journal
+  entry: a very large top-of-funnel (consistent with `mumtaz_lead_scraper`) and
+  effectively no recorded conversion or accounting activity, despite a 307-line
+  chart of accounts being configured.
+- Delivery side is live: 19 projects, 233 tasks, 34 employees.
+- Native automation in use: 14 automation rules, 137 server actions, 40 crons.
+- **0 Studio customisations**; customisation lives in five local modules
+  (`c2p_appointment`, `c2p_master_agent`, `c2p_proposal`,
+  `mumtaz_lead_nurture`, `mumtaz_lead_scraper`).
+- Stock is not installed (`stock.picking` reported n/a), as are purchases (0).
+
+### CRM lead drill-down (`--leads`) ✅
+`inspect_odoo_db.py <DB> --leads` breaks the lead pile down instead of
+reporting the whole database: totals, the create-date span (one bulk import vs
+ongoing capture), actionability probes (won, lost, missing email/phone, has
+expected revenue, no activity logged) with each as a share of the total, and
+counts grouped by type, stage, source, medium, sales team, salesperson and
+company.
+- Aggregation is server-side via `read_group`, so ~12k leads cost a handful of
+  queries rather than a 12k-record fetch; still strictly read-only.
+- A grouping that errors (a field absent on this version) degrades to an `n/a`
+  row rather than losing the whole report.
+- Verified: `py_compile` + `pyflakes` clean, `--help` lists the flag, and
+  `render_leads` exercised against synthetic data covering many2one labels,
+  unset values, percentage shares and a failed grouping.
+
+### Fix: archived leads were invisible (both reports) ⚠️→✅
+The first `--leads` run on `Mumtaz_C2P` printed `Lost (inactive): 29484 (252%)`
+— a share above 100% that exposed the bug. Odoo's `search` only applies its
+`active_test` filter when the domain does not mention `active`, so
+`search_count([])` counted active leads only (11,698) while the lost probe,
+naming `active` explicitly, saw all 29,484 archived ones. The denominator was
+the active subset, not the population.
+- `analyse_leads()` now counts with `context={"active_test": False}` throughout
+  and reports `total (active, archived)`, so shares are against all ~41k leads.
+- The whole-database report split its CRM row into `CRM leads (active)` and
+  `CRM leads (archived/lost)`; the single row had understated CRM by 29k.
+- Lesson for future probes: on any model with `active`, an unqualified
+  `search_count` is a count of the *unarchived* subset, not the total.
+
+### Diagnostics: the Leads gate, and who archives leads (`--diagnose`) ✅
+`inspect_odoo_db.py <DB> --diagnose` answers the two questions the lead
+breakdown raised, still read-only:
+- **Leads stage gate** — resolves `crm.group_use_lead` through `ir.model.data`
+  (xml_ids are not fields) and counts its members, then asks the server what
+  `crm.lead.default_get(['type'])` actually returns. With the group empty the
+  default is `opportunity`, so scraped records bypass qualification entirely;
+  the report says so and names the setting that fixes it.
+- **Bulk archiving** — groups archived leads by `write_uid` (one user behind
+  tens of thousands of writes means an automation running as that user) and by
+  `lost_reason_id` (no reason given = a sweep, not a judgement), then lists the
+  crons, automation rules and server actions bound to `crm.lead`.
+- Verified: `py_compile` + `pyflakes` clean, flag in `--help`, and
+  `render_diagnose` exercised against synthetic data covering a disabled gate,
+  an errored automation row and an inactive cron.
+
+### `collect_production_addons.sh` — untracked production code into git ✅
+The first inspection found five custom modules installed on the VPS, of which
+**`c2p_appointment`, `c2p_master_agent` and `c2p_proposal` are in no repo** —
+production code with no history, no review and no way to redeploy it.
+`scripts/collect_production_addons.sh` copies named modules (or auto-discovers
+every `c2p_*`/`mumtaz_*`/`zaki_*` module the repo lacks) from the addons path
+in `odoo.conf` into `addons/`.
+- Copies files only — it touches neither Odoo nor PostgreSQL — strips
+  `__pycache__`, `*.pyc`/`*.pyo` and any nested `.git`, skips modules already
+  in the repo unless `FORCE=1`, and deliberately does **not** commit.
+- Uses `cp` + `find -delete` rather than `rsync`, which is absent on many Odoo
+  hosts. Counters are `n=$((n+1))`, not `((n++))`, which returns the old value
+  and so aborts the script under `set -e` on the first increment.
+- Verified in a sandbox: named copy, a missing module reported, caches stripped,
+  re-run skips instead of clobbering, auto-discovery ignores stock addons.
+
+Also added `.env.production.save` to `.gitignore` — production was carrying it
+as an uncommitted local edit, which blocked `git checkout` there.
+
+### Diagnose run on `Mumtaz_C2P` — hypothesis refuted ⚠️
+The `--diagnose` run disproved the standing theory that the Leads gate was off.
+`crm.lead.default_get(['type'])` returns **`'lead'`**: the gate is ON, so the
+10,932 opportunities are *not* a default — something sets or converts them.
+Candidates among the active automation: `C2P BD Engine 1: Qualify, score &
+assign leads` (hourly cron), `C2P: Sourced lead -> AI agents` (on_create), and
+the `Lead Nurture: Auto-Convert Qualified Leads` server action.
+
+Two script bugs the run exposed, both fixed:
+- `res.groups.users` does not exist on Odoo 19 (it is `user_ids`), so the group
+  probe raised `ValueError: Invalid field 'users'`. It now tries `user_ids`
+  then `users`, and the report leads with `default_get`, which is the
+  authoritative answer rather than an inference from group membership.
+- `collect_production_addons.sh` reported "already in repo" for anything
+  present on disk. Presence on disk is not the question — git tracking is, and
+  an untracked module in the working tree is exactly what the script exists to
+  find. It now distinguishes tracked / UNTRACKED / GITIGNORED.
+
+`--action NAME` prints matching `ir.actions.server` code (a read of
+`ir.actions.server.code`), so a sweep can be read instead of guessed at.
+
+Findings from the same run:
+- **The archiving is attributable**: 29,337 of the 29,484 archived leads have
+  `write_uid` = Muhammad Umer and **no lost reason at all**. The prime suspect
+  is the active daily cron `C2P — Archive bounced/dead-email leads (reversible)`
+  (next 04:00), which has a matching server action.
+- `Automation Rules: check and execute` — the base cron that fires *time-based*
+  automation rules — is **INACTIVE**, so any `on_time` rule never runs.
+- Of 12 automation rules on `crm.lead`, only 4 are active (`Auto-assign unowned
+  leads`, `Website form -> tag as Website`, `Sourced lead -> AI agents`,
+  `BD Engine 3: Handle prospect replies`); the routing, scoring and
+  Won→project rules are all off.
+- Production's addons path is `/usr/lib/.../odoo/addons`, `/opt/custom_addons`
+  and **`/opt/custom_addons/Mumtaz/addons`** — a second checkout of this repo,
+  separate from `/opt/mumtaz` which `deploy/update.sh` manages.
+- `c2p_master_agent` is listed as installed but is **not on the addons path**.
+
+### Read the sweep and the engine — root causes found ✅
+`--action` dumps confirmed where the CRM numbers come from, and `--tags IDS`
+was added to resolve the sweep's hardcoded tag ids to names with lead counts.
+Findings and proposed patches are written up in
+`docs/07-mumtaz-c2p-crm-findings.md`:
+- The 29,484 archives come from the daily `C2P — Archive bounced/dead-email
+  leads` cron doing `recs.write({'active': False})` — archiving with **no lost
+  reason**, which is exactly why every archived lead reports none. Its domain
+  keys off hardcoded tag ids `2237`, `18`, `2245`.
+- `C2P BD Engine 1` assigns **every** qualified lead to hardcoded `user_id = 42`
+  and non-qualified ones to `11`/`12`. That, not the scraper source defaults, is
+  the operative cause of the per-rep skew — the engine overwrites the owner the
+  mapper set an hour earlier.
+- The engine runs an unindexable `=ilike '%@domain'` `search_count` **per lead**
+  (150/run, hourly) against a 41k-row table; hoisting it to one `read_group`
+  removes up to 150 sequential scans per run.
+- `Automation Rules: check and execute`, Odoo's base cron for time-based rules,
+  is INACTIVE, so every `on_time` rule in the database is dead code.
+- All of this logic lives in `ir.actions.server.code` **records in the
+  database** — 25 on `crm.lead` — with no version history, review or rollback.
+  That, plus the untracked modules, is the finding above all the others.
+
+Correction to an earlier entry: the whole-database report's
+"Studio customisations: 0" counts manual *models*, not manual *fields*, so it
+does not rule out Studio-added fields such as the `x_bd_*` set.
+
+### `register_engagement.py` — point an engagement at a tenant DB ✅
+`Mumtaz_C2P` appeared nowhere in the repo, and the pipeline drives a tenant
+through an `Engagement`: with no `odoo_db` set, `sync` logs "Odoo unavailable"
+and every live-write stage refuses. `scripts/register_engagement.py <DB> [name]`
+registers one, verifying the database authenticates first so a mistyped name
+fails there rather than at the first stage run (`--skip-check` to bypass,
+`--list` to show what already points at a database).
+
+Writes only to the delivery system's own SQLite store — never Odoo or Postgres.
+
+Three mistakes this script's testing caught, all mine:
+- **`delivery_api` modules import each other flatly** (`from models import ...`),
+  which resolves only with that directory on `sys.path` — the service runs with
+  it as its working directory. Both scripts now add it.
+- **`wire_console_connection()` was a silent no-op in production.** It imported
+  `delivery_api.store`/`tenancy`, which cannot resolve for the reason above, and
+  its bare `except Exception: return` swallowed the `ModuleNotFoundError`. It
+  now imports flatly and, when the store genuinely is unavailable, says so on
+  stderr instead of vanishing. The "console connection fills credentials env
+  omits" feature had never actually worked on the VPS.
+- **`store` in `main.py` is an instance**, `tenancy.StoreProxy(EngagementStore())`,
+  not the module, so module-level `store.create(...)` does not exist. Both
+  scripts build the default `EngagementStore()`.
+- **`EngagementStore.list()` projects only `id`, `company`, `account_id` and
+  `stages`** — not `odoo_db`. The idempotency check filtered on a key that is
+  never present, so every run created a duplicate engagement. It now fetches
+  each record with `get()` to match on the target database.
+- Verified end to end against a temporary `C2P_STORE`: create, idempotent
+  re-run, rename-in-place, a second database kept separate, and a refusal when
+  the database is unreachable.
+
+### Tag lookup refutes the archive attribution ⚠️
+`--tags 18,2237,2245` resolved the sweep's hardcoded ids to `Email Invalid`,
+`Email Invalid — No MX (skip)` and `Email Invalid — Bad Syntax` — **all three
+carried by zero leads**, archived records included. Three of the domain's four
+legs match nothing, leaving `message_bounce > 0` as the only live condition, so
+"this cron produced the 29,484 archives" is no longer established: it would
+require ~29k bounced sends, which would be a sender-reputation problem in its
+own right.
+
+`--leads` now probes `message_bounce > 0`, `Bounced AND archived` and
+`Archived but never bounced`, which settles the attribution either way — the
+cron did it and the story is 29k bounces, or something else archived them.
+`docs/07-mumtaz-c2p-crm-findings.md` corrected accordingly.
+
+The run also showed the new stderr note doing its job: *"console connection
+unavailable (ModuleNotFoundError: No module named 'pydantic')"*. The store needs
+the service venv, so credentials come from the console connection only when the
+script runs under `delivery_api/.venv/bin/python`; under the system interpreter
+it is env-only, now said out loud instead of silently.
+
+### Inspection modes for module planning (`--schema`, `--projects`) ✅
+Groundwork for `c2p_project_tracker`, whose brief says to confirm the live
+schema and ids before writing code:
+- `--schema MODEL` lists a model's fields (type, relation, required, stored) so
+  a v19 module is written against the real schema instead of remembered version
+  differences, and reports plainly when a model does not exist.
+- `--projects` dumps companies, projects (with task and milestone counts),
+  `project.task.type` stages, `project.milestone` records, project-related
+  groups and active users — all with ids — plus whether standard
+  `project.update` and `project.milestone` exist.
+
+`project.update` matters: Odoo's standard Project Updates already covers a
+periodic status post with a RAG-style status, progress and description, and
+`project.project.last_update_status` stores it. If present, the brief's custom
+`c2p.status.report` largely duplicates standard functionality, which the
+standard-first ladder says to extend rather than replace.
+
+### v19 field drift: `res.groups.category_id` → `privilege_id` ⚠️→✅
+The first `--projects` run against `Mumtaz_C2P` died on
+`ValueError: Invalid field 'category_id' on 'res.groups'` — Odoo 19 replaced it
+with `privilege_id`, which corroborates the `res.groups.privilege` note in the
+`c2p_project_tracker` brief. Losing the whole landscape report to one unknown
+field was the same mistake as the earlier swallowed error, so every section now
+goes through a `read()` helper that tries candidate field sets in order and
+degrades to a labelled `n/a` row; the renderer tolerates an error row in any
+section and flags when group fields differ.
+
+Confirmed from `--schema project.milestone` (39 fields): `deadline`,
+`is_reached`, `reached_date`, `sequence`, `project_id` and `task_ids` all exist
+and are stored, so the sync engine's contract holds. There is no `description`
+field, and `sale_line_id` exists for the optional SO link.
+
+### Archive attribution RESOLVED — not the bounce cron ✅
+`--leads` with the new probes: `message_bounce > 0` matches **8** leads,
+`Bounced AND archived` is **0**, `Archived but never bounced` is **29,484**.
+Zero overlap, so the `C2P — Archive bounced/dead-email leads` cron archived
+none of them, and both of my earlier attributions were wrong.
+
+The shape points elsewhere: 27,603 of 41,182 leads have no email, and only
+2,382 of the 11,698 active ones do, so ~86% of the archived set is email-less.
+Whatever ran selected on **missing email**, not bounces. With `write_uid` = the
+admin on 29,337, no lost reason on any, and no automation whose domain fits,
+the likeliest cause is a manual or ad-hoc scripted bulk archive.
+
+Counting archived records, the largest lead holder is **Muhammad Umer with
+25,099** (61%), not Aisha Rahman; user `42` in BD Engine 1 is confirmed as
+`bd@core2plus.com` (Aisha Rahman, 5,327). Also fixed a gap this run exposed:
+the group lookup searched only group *names* for "project", missing the
+standard groups, which are named "User"/"Administrator" under a Project
+privilege — it now matches the privilege/category name too.
+
+### `c2p_project_tracker` — scaffold, models, security (step 1–2) ✅
+Built against the live landscape rather than the brief's figures, which differ
+in three consequential ways:
+- **Portfolio projects hold ordinary tasks as well as milestones** — project 14
+  has 16 tasks for 8 milestones, project 16 has 11 for 6. So `c2p_is_milestone`
+  is `portfolio layer AND name matches ^M\d+`, never "any task in a portfolio
+  project", or progress and RAG would count non-milestones.
+- **Every one of the 24 `project.milestone` records has `deadline = False` and
+  `is_reached = False`.** The sync engine therefore propagates a deadline only
+  when the delivery side has a real one; blanking the portfolio deadline would
+  destroy the baseline it is compared against. Expect every project Amber on
+  "open milestones have no deadline" until deadlines are entered.
+- **Stages are per-project `project.task.type` records**, not shared (portfolio
+  14 → 334–338, delivery 17 → 349–354, and so on). Stage resolution is by name
+  within the project; no stage id is hardcoded anywhere.
+
+Shipped: `__manifest__` (depends `project`, `mail` only — no Enterprise),
+`c2p.milestone.history` (append-only, with a delivery-side snapshot per row so
+trends need no re-derivation), `project.task` (milestone code/weight/baseline +
+slippage, delivery hygiene and blocked-reason constraints, `waiting_since`
+bookkeeping, manager-only baseline reset), `project.project` (layer,
+reciprocal counterpart with a pairing constraint, engagement fields, weighted
+progress, RAG with per-factor reasons and configurable thresholds, and the sync
+engine with the five ordered stage rules), and the three privilege-based groups
+with a `company_ids` record rule.
+
+Standard-first notes: `project.update` **exists** on this instance, so the
+brief's `c2p.status.report` should extend it rather than duplicate it; and
+`project.task.allocated_hours` already covers planned effort, so no
+`estimated_hours` field was added.
+
+### Commercials on the portfolio layer ✅
+Finished the data model with the commercial fields, all twelve carrying
+`groups="…group_c2p_portfolio_manager"` so no AED figure is readable by a
+Delivery Lead or Member, including over RPC: contract value, received (manual
+plus an effective value taken from the linked sale order's paid customer
+invoices when there are any), outstanding, subcontract % (default 60),
+subcontract value/paid/outstanding, the Consultants margin — computed on money
+**collected**, not on contract value, since an uncollected invoice has earned
+nothing — and `commercials_missing`.
+
+Two of the brief's amber rules now have their inputs: commercials missing, and
+outstanding above half the contract while progress is past 50%. Health reads
+those figures with `sudo()` and the reason text deliberately names no amounts,
+so a Delivery Lead can see *why* a project is amber without seeing the numbers.
+
+Named `c2p_currency_id`, `c2p_sale_order_id` and `c2p_company_currency_id`
+rather than the bare names on purpose: `project.project` and `project.task` may
+already define `currency_id`, `sale_order_id` and `company_currency_id` through
+`sale_project` or analytic, and attaching `groups=` to a *standard* field would
+strip it from every non-manager and can break stock views. Worth confirming
+either way with `--schema project.project`.
+
+### `c2p_project_tracker` tests ✅
+Test suite written ahead of the views, since it is the part most likely to
+catch an error when the module is first installed. 48 assertions across five
+files on shared fixtures that mirror production — two companies, a
+portfolio/delivery pair, and **per-project** stage records, so the tests
+exercise the name-based stage resolution rather than a convenient shared set.
+
+- `test_sync` — each of the five ordered stage rules, including that rule 2
+  (a waiting task) outranks rule 3 (all tasks done) and rule 1 (reached)
+  outranks everything; the Waiting → Blocked → resolved → In Progress loop with
+  `waiting_since` set and cleared; deadline propagation with the baseline set
+  **once** and slippage measured from it; that an empty delivery deadline does
+  **not** clear the portfolio date (the production state); `sync_locked`; a
+  history row per change; that the chatter note carries no `partner_ids`, which
+  is the "no email is sent" acceptance criterion; and that only `M`-coded tasks
+  count as milestones, with lower case normalised.
+- `test_hygiene` — the assignee/deadline/milestone trio enforced on leaving
+  Backlog with all three named in the message, partial hygiene still refused,
+  portfolio tasks exempt, Waiting on Client needing a reason, baseline reset
+  denied to a Delivery Member, and the counterpart pairing rules.
+- `test_commercials` — outstanding, the 60/40 split and its configurability,
+  subcontract paid reducing what is owed, an out-of-range share rejected, the
+  missing-commercials flag, and that the margin is computed on **collected**
+  money (40% of 3,000, not of 15,000).
+- `test_health` — green, each amber and red trigger separately, blocker age
+  crossing both thresholds, go-live slippage, weighted progress, the override
+  with its reason, and that non-portfolio projects are grey.
+- `test_security` — every one of the twelve commercial fields unreadable by a
+  Delivery Member via `read()` (the RPC path) **and** absent from
+  `fields_get()`, writes refused, a Portfolio Manager able to read them, the
+  RAG reason text visible to a Delivery Lead while containing no amount or
+  currency, and multi-company isolation on history rows.
+
+Flagged for the first install: `res.users.group_ids` is the v19 name
+(`groups_id` up to 17); an unknown-field error there is that rename.
+
+### `c2p_project_tracker` — RAID, change requests, install hook, views ✅
+- **RAID** is its own model, not a task type: `project.task` conflates work to
+  do with risk being carried, and Odoo Community has no standard RAID log.
+  Risks score impact × probability; the other types scale on impact alone so
+  sorting stays comparable on one 1–9 range. Probability is hidden for
+  non-risks, since an issue has already happened.
+- **Change requests** move the contract value exactly once — `value_applied`
+  guards re-approval from doubling it — and log before/after on the project.
+- **`post_init_hook`** re-matches every project by name and partner rather than
+  trusting the brief's ids, because ids drift between databases and that
+  fallback is what makes the hook safe on a duplicate; a miss is logged and
+  skipped, never raised. Groups are assigned by login, so the brief's second
+  Portfolio Manager ("Abid Imtiaz"), who has no account here, is logged as a
+  skip instead of guessed at.
+- **Views** — portfolio form (engagement, health with a "why this status"
+  factor list, and a Commercials page restricted at *page* level as well as per
+  field, so a Delivery Lead never sees an empty tab), the portfolio table with
+  RAG decoration and column-level `groups=` on every money column, the delivery
+  hygiene queue and team load, RAID and change-request list/form, and the
+  menus with Portfolio restricted to the manager group.
+- Verified mechanically, not by eye: XML parses; no `<tree>`, `attrs=` or
+  `states=` anywhere (the v19 rules); every `type="object"` button resolves to
+  a real method; every action a menu references is defined.
+- **`scripts/backup_and_install.md`** reads the addons path and config out of
+  `odoo4.service` rather than assuming them, records that `/opt/mumtaz/addons`
+  is **not** on that path, disables crons and outgoing mail on the restored copy
+  before anything touches it (a restored `Mumtaz_C2P` otherwise re-runs the BD
+  engine and emails real clients), and prefers restoring the dump over
+  uninstalling, which would drop every history row.
+
+### Dashboards — Portfolio and Delivery (OWL, no chart library) ✅
+`c2p.dashboard`, an AbstractModel, serves both views. Every entry point
+re-checks the group, because a client action's menu visibility is **not** access
+control. Commercial figures are **omitted, not zeroed**, for a non-manager, so
+nothing can be inferred from the response shape; `delivery_data()` returns no
+money key at all.
+
+Portfolio: KPI tiles (clickable into filtered lists), portfolio composition,
+the engagement table with expandable milestone detail and RAG reasons, an SVG
+milestone roadmap with baseline ghost markers and a today line, a
+cost-of-delay-ranked attention panel, and SVG trends from
+`c2p.milestone.history`. Delivery: team load (on-time vs overdue per assignee),
+the four hygiene checks as drill-downs, and no money anywhere.
+
+Three deliberate deviations from the brief, each for a stated reason:
+- **A labelled segmented bar, not a counts donut.** With four engagements a
+  donut compares near-identical tiny integers, which the data-viz
+  anti-pattern catalogue names directly. Part-to-whole is still read at a
+  glance.
+- **Inline SVG, not Chart.js.** The asset path for Odoo's bundled copy moves
+  between versions and a wrong path takes the whole dashboard down. Nothing
+  here needs a charting library.
+- **No collected-versus-outstanding trend.** Nothing records historical
+  balances, so that series would be invented rather than measured. The UI says
+  so, and a test asserts `trends["money"] is None`. It needs a periodic
+  snapshot first.
+
+Colour was computed, not eyeballed. The brand status palette fails the
+categorical chroma floor on grey — correctly, since grey *is* the "no data"
+status — but its **contrast WARN is real**: amber at 2.19:1 and grey at 2.57:1
+against the surface. So every status indicator carries a glyph **and** a text
+label, never colour alone. The two-series charts use brand red `#BE1E2D` with
+`#2a78d6`, which passes all six checks (CVD ΔE 25.8 deutan, normal-vision
+ΔE 32.4, contrast ≥ 3:1). Dark mode is a selected second set under both the
+media query and the `data-theme` scope.
+
+`allocated_hours` is probed against `_fields` with a `planned_hours` fallback,
+so a field rename degrades instead of crashing the view.
+
+Verified mechanically: JS parses; all XML parses; SCSS braces balance and every
+`var(--…)` is declared; each `ir.actions.client` tag matches a registry key;
+each component's `static template` exists; every asset glob matches files.
+11 further tests cover both payloads, the refusal for a Delivery Member, the
+absence of money keys, roadmap undated reporting, attention ranking, and that
+no money trend is fabricated.
+
+### QWeb PDFs — Portfolio Executive Summary and Client Status Report ✅
+Two reports, both bound to `project.project`:
+- **Portfolio Executive Summary** (A4 landscape, internal): KPI strip, the
+  engagement table, a "why each status" section listing every RAG factor, and
+  the attention items — reusing `c2p.dashboard._attention()` so the PDF and the
+  dashboard cannot disagree. Restricted to the Portfolio Manager group, and the
+  commercial KPI row is additionally gated on the group at render time.
+- **Client Status Report** (A4 portrait, client-facing): status, progress, the
+  milestone table, and the actions required *from the client* — derived from
+  delivery tasks in Waiting on Client plus open RAID dependencies. **No
+  commercial figure anywhere**, since this document leaves the building.
+
+wkhtmltopdf 0.12.x notes honoured: every margin in the two paper formats is in
+**millimetres**, never a percentage, which is the documented cause of the
+trailing blank page; CSS is inlined rather than loaded as an asset, which the
+PDF renderer cannot be relied on to fetch; and rows carry
+`page-break-inside: avoid`.
+
+Payloads are built in Python and return display strings, because QWeb's
+evaluation context exposes neither `str()` nor formatting helpers. Three bugs
+were caught doing that:
+- `models.fields.Date` is not a valid path — `fields` must be imported
+  directly. `pyflakes` cannot see this, and it would have raised only at render.
+- The client-actions sort key mixed a `date` with a `str`, which raises
+  `TypeError` the moment a RAID dependency and a blocked task appear together.
+  It now sorts oldest-first with undated last, verified against both kinds.
+- A first draft formatted the date through `ir.qweb.field.date.value_to_html`;
+  passing the date object lets QWeb render it in the reader's own format.
+
+Verified mechanically: XML parses; every `report_name` resolves to a defined
+template; every internal `t-call` target exists; every payload method the
+templates call is defined.

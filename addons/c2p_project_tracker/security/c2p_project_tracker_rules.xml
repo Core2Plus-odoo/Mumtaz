@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Multi-company: history rows follow the allowed-companies switcher,
+             not a single company, so a user in both Consultants and Solutions
+             sees both without a second rule. -->
+        <record id="rule_milestone_history_company" model="ir.rule">
+            <field name="name">Milestone history: allowed companies</field>
+            <field name="model_id" ref="model_c2p_milestone_history"/>
+            <field name="domain_force">
+                ['|', ('company_id', '=', False),
+                      ('company_id', 'in', company_ids)]
+            </field>
+            <field name="global" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

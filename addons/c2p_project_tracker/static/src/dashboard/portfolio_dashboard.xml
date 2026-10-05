@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="c2p_project_tracker.PortfolioDashboard">
+    <div class="o_c2p_dash viz-root">
+
+        <div t-if="state.loading" class="o_c2p_state">Loading portfolio…</div>
+
+        <div t-elif="state.error" class="o_c2p_state o_c2p_error">
+            <h3>Portfolio unavailable</h3>
+            <p t-esc="state.error"/>
+        </div>
+
+        <t t-elif="state.data">
+
+            <!-- Filters: one row above everything, per the interaction rules. -->
+            <div class="o_c2p_filters">
+                <div class="o_c2p_filter_group">
+                    <label>Status</label>
+                    <select t-on-change="(ev) => this.setFilter('rag', ev.target.value)">
+                        <option value="">All</option>
+                        <option value="red" t-att-selected="state.filters.rag === 'red'">Red</option>
+                        <option value="amber" t-att-selected="state.filters.rag === 'amber'">Amber</option>
+                        <option value="green" t-att-selected="state.filters.rag === 'green'">Green</option>
+                    </select>
+                </div>
+                <div class="o_c2p_filter_group">
+                    <label>Type</label>
+                    <select t-on-change="(ev) => this.setFilter('engagement_type', ev.target.value)">
+                        <option value="">All</option>
+                        <t t-foreach="state.data.filters.engagement_types" t-as="opt" t-key="opt.value">
+                            <option t-att-value="opt.value"
+                                    t-att-selected="state.filters.engagement_type === opt.value"
+                                    t-esc="opt.label"/>
+                        </t>
+                    </select>
+                </div>
+                <div class="o_c2p_filter_group" t-if="state.data.filters.account_managers.length">
+                    <label>Account manager</label>
+                    <select t-on-change="(ev) => this.setFilter('account_manager_id', ev.target.value)">
+                        <option value="">All</option>
+                        <t t-foreach="state.data.filters.account_managers" t-as="am" t-key="am.id">
+                            <option t-att-value="am.id" t-esc="am.name"/>
+                        </t>
+                    </select>
+                </div>
+                <button t-if="hasFilters" class="btn btn-link btn-sm"
+                        t-on-click="clearFilters">Clear</button>
+                <span class="o_c2p_synced">Synced <t t-esc="state.data.synced_at"/></span>
+            </div>
+
+            <!-- KPI tiles. A number is the chart; no plot on these. -->
+            <div class="o_c2p_kpis">
+                <div class="o_c2p_kpi" t-on-click="() => this.openKpi('engagements')">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.kpis.engagements"/>
+                    <span class="o_c2p_kpi_l">Active engagements</span>
+                </div>
+                <div class="o_c2p_kpi">
+                    <span class="o_c2p_kpi_v"><t t-esc="state.data.kpis.progress_pct"/>%</span>
+                    <span class="o_c2p_kpi_l">Weighted progress</span>
+                </div>
+                <div class="o_c2p_kpi" t-on-click="() => this.openKpi('overdue_milestones')"
+                     t-att-class="{ o_c2p_kpi_bad: state.data.kpis.overdue_milestones }">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.kpis.overdue_milestones"/>
+                    <span class="o_c2p_kpi_l">Milestones overdue</span>
+                </div>
+                <div class="o_c2p_kpi" t-on-click="() => this.openKpi('blockers')"
+                     t-att-class="{ o_c2p_kpi_bad: state.data.kpis.blockers }">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.kpis.blockers"/>
+                    <span class="o_c2p_kpi_l">Client blockers</span>
+                </div>
+                <t t-if="state.data.show_money">
+                    <div class="o_c2p_kpi">
+                        <span class="o_c2p_kpi_v" t-esc="money(state.data.kpis.portfolio_value)"/>
+                        <span class="o_c2p_kpi_l">Portfolio value</span>
+                    </div>
+                    <div class="o_c2p_kpi">
+                        <span class="o_c2p_kpi_v" t-esc="money(state.data.kpis.collected)"/>
+                        <span class="o_c2p_kpi_l">Collected</span>
+                    </div>
+                    <div class="o_c2p_kpi" t-on-click="() => this.openKpi('outstanding')">
+                        <span class="o_c2p_kpi_v" t-esc="money(state.data.kpis.outstanding)"/>
+                        <span class="o_c2p_kpi_l">Outstanding</span>
+                    </div>
+                    <div class="o_c2p_kpi" t-on-click="() => this.openKpi('payable_to_solutions')">
+                        <span class="o_c2p_kpi_v" t-esc="money(state.data.kpis.payable_to_solutions)"/>
+                        <span class="o_c2p_kpi_l">Payable to Solutions</span>
+                    </div>
+                    <div class="o_c2p_kpi">
+                        <span class="o_c2p_kpi_v" t-esc="money(state.data.kpis.consultants_margin)"/>
+                        <span class="o_c2p_kpi_l">Consultants margin</span>
+                    </div>
+                </t>
+            </div>
+
+            <!-- Composition: a labelled segmented bar, not a donut. Four
+                 near-equal integers in a pie is unreadable. -->
+            <div class="o_c2p_card" t-if="ragSegments.length">
+                <h3>Portfolio status</h3>
+                <div class="o_c2p_segbar">
+                    <t t-foreach="ragSegments" t-as="seg" t-key="seg.key">
+                        <div class="o_c2p_seg" t-att-class="'o_c2p_seg_' + seg.key"
+                             t-attf-style="width: {{ seg.pct }}%"
+                             t-attf-title="{{ seg.label }}: {{ seg.count }}"/>
+                    </t>
+                </div>
+                <div class="o_c2p_seglegend">
+                    <t t-foreach="ragSegments" t-as="seg" t-key="seg.key">
+                        <span class="o_c2p_legend_item">
+                            <span class="o_c2p_swatch" t-att-class="'o_c2p_seg_' + seg.key"/>
+                            <t t-esc="seg.label"/>: <strong t-esc="seg.count"/>
+                        </span>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Attention panel: ranked by cost of delay. -->
+            <div class="o_c2p_card" t-if="state.data.attention.length">
+                <h3>Needs a decision</h3>
+                <ul class="o_c2p_attention">
+                    <t t-foreach="state.data.attention" t-as="item" t-key="item_index">
+                        <li t-att-class="'o_c2p_att_' + item.kind">
+                            <button class="o_c2p_att_link"
+                                    t-on-click="() => this.openProject(item.project_id)">
+                                <strong t-esc="item.project"/>
+                            </button>
+                            <span t-esc="item.text"/>
+                        </li>
+                    </t>
+                </ul>
+            </div>
+            <div class="o_c2p_card o_c2p_empty" t-else="">
+                <h3>Needs a decision</h3>
+                <p>Nothing is waiting on you.</p>
+            </div>
+
+            <!-- Portfolio table. -->
+            <div class="o_c2p_card">
+                <h3>Engagements</h3>
+                <table class="o_c2p_table">
+                    <thead>
+                        <tr>
+                            <th/>
+                            <th>Engagement</th>
+                            <th>Status</th>
+                            <th class="text-end">Health</th>
+                            <th>Progress</th>
+                            <th>Current milestone</th>
+                            <th>Next</th>
+                            <th>Go-live</th>
+                            <th class="text-end">Idle</th>
+                            <th class="text-end">Blockers</th>
+                            <t t-if="state.data.show_money">
+                                <th class="text-end">Contract</th>
+                                <th class="text-end">Received</th>
+                                <th class="text-end">Outstanding</th>
+                            </t>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.data.rows" t-as="row" t-key="row.id">
+                            <tr class="o_c2p_row" t-on-click="() => this.toggleRow(row.id)">
+                                <td class="o_c2p_initials"><span t-esc="row.initials"/></td>
+                                <td>
+                                    <div class="o_c2p_name" t-esc="row.name"/>
+                                    <div class="o_c2p_sub">
+                                        <t t-esc="row.client"/>
+                                        <t t-if="row.engagement_type"> · <t t-esc="row.engagement_type"/></t>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="o_c2p_pill" t-att-class="'o_c2p_seg_' + row.rag"
+                                          t-attf-title="{{ row.rag_reasons.join('\n') }}">
+                                        <span class="o_c2p_glyph" t-esc="ragGlyph(row.rag)"/>
+                                        <t t-esc="ragLabel(row.rag)"/>
+                                    </span>
+                                </td>
+                                <td class="text-end" t-esc="row.health_score"/>
+                                <td>
+                                    <div class="o_c2p_meter">
+                                        <div class="o_c2p_meter_fill"
+                                             t-attf-style="width: {{ row.progress_pct }}%"/>
+                                    </div>
+                                    <span class="o_c2p_sub"><t t-esc="row.progress_pct"/>%</span>
+                                </td>
+                                <td t-esc="row.current_milestone or '—'"/>
+                                <td t-esc="row.next_milestone_date or '—'"/>
+                                <td>
+                                    <t t-esc="row.forecast_golive or '—'"/>
+                                    <span t-if="row.slippage_days" class="o_c2p_badge"
+                                          t-esc="slippageLabel(row.slippage_days)"/>
+                                </td>
+                                <td class="text-end" t-esc="row.days_since_activity + 'd'"/>
+                                <td class="text-end" t-esc="row.blockers"/>
+                                <t t-if="state.data.show_money">
+                                    <td class="text-end" t-esc="money(row.contract_value)"/>
+                                    <td class="text-end" t-esc="money(row.received)"/>
+                                    <td class="text-end" t-esc="money(row.outstanding)"/>
+                                </t>
+                            </tr>
+                            <tr t-if="state.expanded[row.id]" class="o_c2p_expand">
+                                <td/>
+                                <td t-attf-colspan="{{ state.data.show_money ? 12 : 9 }}">
+                                    <div class="o_c2p_reasons" t-if="row.rag_reasons.length">
+                                        <t t-foreach="row.rag_reasons" t-as="reason" t-key="reason_index">
+                                            <div t-esc="reason"/>
+                                        </t>
+                                    </div>
+                                    <table class="o_c2p_subtable">
+                                        <thead>
+                                            <tr>
+                                                <th>Code</th><th>Milestone</th><th>Stage</th>
+                                                <th>Deadline</th><th>Baseline</th><th class="text-end">Slip</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="row.milestones" t-as="m" t-key="m.id">
+                                                <tr>
+                                                    <td t-esc="m.code"/>
+                                                    <td t-esc="m.name"/>
+                                                    <td t-esc="m.stage"/>
+                                                    <td t-esc="m.deadline or '—'"/>
+                                                    <td t-esc="m.baseline or '—'"/>
+                                                    <td class="text-end"
+                                                        t-esc="m.slippage_days ? m.slippage_days + 'd' : '—'"/>
+                                                </tr>
+                                            </t>
+                                            <tr t-if="!row.milestones.length">
+                                                <td colspan="6">No milestones defined.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </t>
+                        <tr t-if="!state.data.rows.length">
+                            <td colspan="13">No engagements match these filters.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Milestone roadmap: one swimlane per engagement. -->
+            <div class="o_c2p_card">
+                <h3>Milestone roadmap</h3>
+                <t t-if="roadmap">
+                    <svg class="o_c2p_roadmap" t-att-viewBox="'0 0 ' + roadmap.width + ' ' + roadmap.height"
+                         preserveAspectRatio="xMinYMin meet" role="img"
+                         aria-label="Milestone roadmap by engagement">
+                        <text x="190" y="16" class="o_c2p_axis_lbl" t-esc="roadmap.startLabel"/>
+                        <text t-att-x="roadmap.width - 24" y="16" text-anchor="end"
+                              class="o_c2p_axis_lbl" t-esc="roadmap.endLabel"/>
+                        <line t-if="roadmap.todayX" t-att-x1="roadmap.todayX"
+                              t-att-x2="roadmap.todayX" y1="22" t-att-y2="roadmap.height"
+                              class="o_c2p_today"/>
+                        <t t-foreach="roadmap.lanes" t-as="lane" t-key="lane.project_id">
+                            <text x="8" t-att-y="lane.y + 4" class="o_c2p_lane_lbl">
+                                <t t-esc="lane.name.slice(0, 26)"/>
+                            </text>
+                            <line t-att-x1="roadmap.leftW" t-att-x2="roadmap.width - 24"
+                                  t-att-y1="lane.y" t-att-y2="lane.y" class="o_c2p_lane_rule"/>
+                            <t t-foreach="lane.points" t-as="pt" t-key="pt.id">
+                                <!-- Baseline ghost, so slippage is visible rather than stated. -->
+                                <circle t-if="pt.ghostCx" t-att-cx="pt.ghostCx" t-att-cy="lane.y"
+                                        r="4" class="o_c2p_ghost"/>
+                                <line t-if="pt.ghostCx" t-att-x1="pt.ghostCx" t-att-x2="pt.cx"
+                                      t-att-y1="lane.y" t-att-y2="lane.y" class="o_c2p_slipline"/>
+                                <rect t-att-x="pt.cx - 5" t-att-y="lane.y - 5" width="10" height="10"
+                                      t-attf-transform="rotate(45 {{ pt.cx }} {{ lane.y }})"
+                                      t-attf-class="o_c2p_ms o_c2p_ms_{{ pt.status }}">
+                                    <title><t t-esc="pt.code"/> <t t-esc="pt.name"/> — <t t-esc="pt.stage"/> (<t t-esc="pt.deadline"/>)</title>
+                                </rect>
+                                <text t-att-x="pt.cx" t-att-y="lane.y - 10" text-anchor="middle"
+                                      class="o_c2p_ms_lbl" t-esc="pt.code"/>
+                            </t>
+                            <text t-if="lane.undated_count" t-att-x="roadmap.leftW - 6"
+                                  t-att-y="lane.y + 4" text-anchor="end" class="o_c2p_undated">
+                                +<t t-esc="lane.undated_count"/> undated
+                            </text>
+                        </t>
+                    </svg>
+                    <p class="o_c2p_note" t-if="roadmap.undatedTotal">
+                        <t t-esc="roadmap.undatedTotal"/> milestones have no deadline and
+                        cannot be placed on the timeline.
+                    </p>
+                </t>
+                <p t-else="" class="o_c2p_empty">
+                    No milestone has a deadline yet, so there is nothing to place on a
+                    timeline. Set deadlines on the delivery milestones and they will
+                    propagate here.
+                </p>
+            </div>
+
+            <!-- Trends, from the milestone history. -->
+            <div class="o_c2p_card">
+                <h3>Trends</h3>
+                <t t-if="trends">
+                    <div class="o_c2p_trends">
+                        <figure>
+                            <figcaption>Milestones completed per week</figcaption>
+                            <svg t-att-viewBox="'0 0 ' + trends.w + ' ' + trends.h" role="img"
+                                 aria-label="Milestones completed per week">
+                                <line t-att-x1="trends.pad" t-att-x2="trends.w - trends.pad"
+                                      t-att-y1="trends.h - trends.pad" t-att-y2="trends.h - trends.pad"
+                                      class="o_c2p_axis"/>
+                                <t t-foreach="trends.bars" t-as="bar" t-key="bar.week">
+                                    <rect t-att-x="bar.x" t-att-y="bar.y" t-att-width="bar.width"
+                                          t-att-height="bar.height" rx="3" class="o_c2p_bar">
+                                        <title><t t-esc="bar.week"/>: <t t-esc="bar.value"/></title>
+                                    </rect>
+                                </t>
+                            </svg>
+                        </figure>
+                        <figure>
+                            <figcaption>Average deadline movement (days)</figcaption>
+                            <svg t-att-viewBox="'0 0 ' + trends.w + ' ' + trends.h" role="img"
+                                 aria-label="Average deadline movement per week in days">
+                                <line t-att-x1="trends.pad" t-att-x2="trends.w - trends.pad"
+                                      t-att-y1="trends.zeroY" t-att-y2="trends.zeroY"
+                                      class="o_c2p_axis"/>
+                                <path t-if="!trends.singleWeek" t-att-d="trends.slipPath"
+                                      class="o_c2p_line" fill="none"/>
+                                <t t-foreach="trends.slipPoints" t-as="pt" t-key="pt.week">
+                                    <circle t-att-cx="pt.x" t-att-cy="pt.y" r="4" class="o_c2p_dot">
+                                        <title><t t-esc="pt.week"/>: <t t-esc="pt.value"/>d</title>
+                                    </circle>
+                                </t>
+                            </svg>
+                        </figure>
+                    </div>
+                    <p class="o_c2p_note">
+                        No collected-versus-outstanding trend is shown: nothing records
+                        historical balances, so it would be invented rather than measured.
+                    </p>
+                </t>
+                <p t-else="" class="o_c2p_empty">
+                    No milestone changes recorded yet — trends appear once the sync
+                    engine has something to report.
+                </p>
+            </div>
+
+        </t>
+    </div>
+</t>
+
+</templates>

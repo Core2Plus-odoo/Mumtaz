@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Executive summary: internal, carries commercials, so it is
+             restricted to the Portfolio Manager group. -->
+        <record id="action_report_c2p_portfolio" model="ir.actions.report">
+            <field name="name">Portfolio Executive Summary</field>
+            <field name="model">project.project</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">c2p_project_tracker.report_portfolio_summary</field>
+            <field name="report_file">c2p_project_tracker.report_portfolio_summary</field>
+            <field name="paperformat_id" ref="paperformat_c2p_landscape"/>
+            <field name="binding_model_id" ref="project.model_project_project"/>
+            <field name="binding_type">report</field>
+            <field name="groups_id"
+                   eval="[(4, ref('c2p_project_tracker.group_c2p_portfolio_manager'))]"/>
+        </record>
+
+        <!-- Client status report: client-facing, no commercials anywhere, so a
+             Delivery Lead may produce it. -->
+        <record id="action_report_c2p_client_status" model="ir.actions.report">
+            <field name="name">Client Status Report</field>
+            <field name="model">project.project</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">c2p_project_tracker.report_client_status</field>
+            <field name="report_file">c2p_project_tracker.report_client_status</field>
+            <field name="paperformat_id" ref="paperformat_c2p_portrait"/>
+            <field name="binding_model_id" ref="project.model_project_project"/>
+            <field name="binding_type">report</field>
+            <field name="groups_id"
+                   eval="[(4, ref('c2p_project_tracker.group_c2p_delivery_lead'))]"/>
+        </record>
+
+    </data>
+</odoo>
