@@ -17,6 +17,7 @@ Usage, on the VPS:
     python3 scripts/inspect_odoo_db.py MUMTAZ_C2P --json > /tmp/mumtaz_c2p.json
     python3 scripts/inspect_odoo_db.py --list
     python3 scripts/inspect_odoo_db.py Mumtaz_C2P --leads
+    python3 scripts/inspect_odoo_db.py Mumtaz_C2P --diagnose
 
 Env is read from delivery_api/.env (the service env file) when present.
 """
@@ -224,6 +225,149 @@ def analyse_leads(db: str, top: int = 12) -> dict:
     return out
 
 
+def diagnose(db: str) -> dict:
+    """Answer two questions the breakdown raised: is the Leads stage gate
+    switched on, and what is archiving leads in bulk."""
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    out: dict = {"db": db}
+
+    # ── 1. Is the Leads feature on? ──────────────────────────────────────
+    # crm.lead.type defaults to 'lead' only when the user has
+    # crm.group_use_lead; otherwise every created record is an opportunity.
+    # Resolve the group through ir.model.data since xml_ids are not fields.
+    try:
+        ref = client.execute("ir.model.data", "search_read",
+                             [("module", "=", "crm"), ("name", "=", "group_use_lead")],
+                             fields=["res_id"], limit=1)
+        if ref:
+            grp = client.execute("res.groups", "read", [ref[0]["res_id"]],
+                                 fields=["name", "users"])
+            members = len(grp[0].get("users") or []) if grp else 0
+            out["leads_feature"] = {"group_found": True, "members": members,
+                                    "enabled": members > 0}
+        else:
+            out["leads_feature"] = {"group_found": False}
+    except Exception as exc:
+        out["leads_feature"] = {"error": f"{type(exc).__name__}: {exc}"}
+
+    # What a new lead would actually default to, straight from the field.
+    try:
+        out["type_default"] = client.execute("crm.lead", "default_get", ["type"])
+    except Exception as exc:
+        out["type_default"] = {"error": type(exc).__name__}
+
+    # ── 2. Who or what is archiving leads ────────────────────────────────
+    # write_uid on the archived rows names the actor; a single user behind
+    # tens of thousands of writes means an automation running as that user.
+    try:
+        rows = client.execute("crm.lead", "read_group",
+                              [("active", "=", False)], ["write_uid"], ["write_uid"],
+                              lazy=False, context=ALL_RECORDS)
+        actors = []
+        for r in rows:
+            who = r.get("write_uid")
+            label = who[1] if isinstance(who, (list, tuple)) else "— unknown —"
+            actors.append((label, r.get("__count") or 0))
+        actors.sort(key=lambda kv: kv[1], reverse=True)
+        out["archived_by"] = actors[:12]
+    except Exception as exc:
+        out["archived_by"] = [("n/a", type(exc).__name__)]
+
+    # Lost reasons say whether the archiving was a judgement or a sweep.
+    try:
+        rows = client.execute("crm.lead", "read_group",
+                              [("active", "=", False)], ["lost_reason_id"],
+                              ["lost_reason_id"], lazy=False, context=ALL_RECORDS)
+        reasons = []
+        for r in rows:
+            v = r.get("lost_reason_id")
+            label = v[1] if isinstance(v, (list, tuple)) else "— none given —"
+            reasons.append((label, r.get("__count") or 0))
+        reasons.sort(key=lambda kv: kv[1], reverse=True)
+        out["lost_reasons"] = reasons[:12]
+    except Exception as exc:
+        out["lost_reasons"] = [("n/a", type(exc).__name__)]
+
+    # ── 3. Automation touching crm.lead ──────────────────────────────────
+    automation: dict = {}
+    try:
+        automation["Scheduled actions (crons)"] = client.execute(
+            "ir.cron", "search_read", [], context=ALL_RECORDS,
+            fields=["name", "active", "interval_type", "interval_number", "nextcall"])
+    except Exception as exc:
+        automation["Scheduled actions (crons)"] = [{"error": type(exc).__name__}]
+    for label, model, domain in [
+        ("Automation rules on crm.lead", "base.automation",
+         [("model_id.model", "=", "crm.lead")]),
+        ("Server actions on crm.lead", "ir.actions.server",
+         [("model_id.model", "=", "crm.lead")]),
+    ]:
+        try:
+            automation[label] = client.execute(
+                model, "search_read", domain, context=ALL_RECORDS,
+                fields=["name", "state"] if "server" in model
+                else ["name", "trigger", "active"])
+        except Exception as exc:
+            automation[label] = [{"error": f"{type(exc).__name__}: {exc}"}]
+    out["automation"] = automation
+
+    return out
+
+
+def render_diagnose(rep: dict) -> str:
+    out = [f"Diagnostics for {rep['db']}", ""]
+
+    lf = rep.get("leads_feature", {})
+    out.append("Leads feature (crm.group_use_lead)")
+    if lf.get("error"):
+        out.append(f"  could not resolve: {lf['error']}")
+    elif not lf.get("group_found"):
+        out.append("  group not found — CRM may not be installed as expected")
+    else:
+        state = "ENABLED" if lf.get("enabled") else "DISABLED"
+        out.append(f"  {state}  ({lf.get('members', 0)} users in the group)")
+        if not lf.get("enabled"):
+            out.append("  -> every new crm.lead defaults to type 'opportunity',")
+            out.append("     so scraped records skip the qualification gate.")
+            out.append("     Fix: CRM > Configuration > Settings > enable Leads.")
+    td = rep.get("type_default")
+    if isinstance(td, dict) and "type" in td:
+        out.append(f"  default type for a new lead: {td['type']!r}")
+    out.append("")
+
+    out.append("Archived leads by last writer")
+    for label, count in rep.get("archived_by", []):
+        out.append(f"  {str(label)[:48].ljust(34)} : {count}")
+    out.append("")
+
+    out.append("Archived leads by lost reason")
+    for label, count in rep.get("lost_reasons", []):
+        out.append(f"  {str(label)[:48].ljust(34)} : {count}")
+
+    for heading, rows in rep.get("automation", {}).items():
+        out.append("")
+        out.append(f"{heading} ({len(rows)})")
+        for r in rows:
+            if r.get("error"):
+                out.append(f"  n/a ({r['error']})")
+                continue
+            bits = [str(r.get("name", "?"))[:46]]
+            if "trigger" in r:
+                bits.append(f"trigger={r['trigger']}")
+            if "state" in r:
+                bits.append(f"state={r['state']}")
+            if "interval_type" in r:
+                bits.append(f"every {r.get('interval_number')} {r.get('interval_type')}")
+            if r.get("nextcall"):
+                bits.append(f"next {r['nextcall']}")
+            if r.get("active") is False:
+                bits.append("INACTIVE")
+            out.append("  " + "  ".join(bits))
+    return "\n".join(out)
+
+
 def render_leads(rep: dict) -> str:
     out = [f"CRM leads in {rep['db']} : {rep['total']}"
            f"  ({rep['active']} active, {rep['archived']} archived)"]
@@ -368,6 +512,9 @@ def main() -> int:
     parser.add_argument("--leads", action="store_true",
                         help="break the CRM lead pile down instead of the "
                              "whole-database report")
+    parser.add_argument("--diagnose", action="store_true",
+                        help="check the Leads stage gate and find what is "
+                             "archiving leads in bulk")
     parser.add_argument("--json", action="store_true",
                         help="emit the full report as JSON instead of a summary")
     args = parser.parse_args()
@@ -381,7 +528,12 @@ def main() -> int:
         return report_databases()
 
     try:
-        report = analyse_leads(args.db) if args.leads else inspect(args.db)
+        if args.diagnose:
+            report = diagnose(args.db)
+        elif args.leads:
+            report = analyse_leads(args.db)
+        else:
+            report = inspect(args.db)
     except Exception as exc:
         print(f"Inspection failed for '{args.db}': {summarise_error(exc)}",
               file=sys.stderr)
@@ -391,7 +543,12 @@ def main() -> int:
     if args.json:
         print(json.dumps(report, indent=2, default=str))
     else:
-        print(render_leads(report) if args.leads else render(report))
+        if args.diagnose:
+            print(render_diagnose(report))
+        elif args.leads:
+            print(render_leads(report))
+        else:
+            print(render(report))
     return 0
 
 

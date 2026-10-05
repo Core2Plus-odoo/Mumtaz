@@ -1018,3 +1018,38 @@ the active subset, not the population.
   `CRM leads (archived/lost)`; the single row had understated CRM by 29k.
 - Lesson for future probes: on any model with `active`, an unqualified
   `search_count` is a count of the *unarchived* subset, not the total.
+
+### Diagnostics: the Leads gate, and who archives leads (`--diagnose`) ✅
+`inspect_odoo_db.py <DB> --diagnose` answers the two questions the lead
+breakdown raised, still read-only:
+- **Leads stage gate** — resolves `crm.group_use_lead` through `ir.model.data`
+  (xml_ids are not fields) and counts its members, then asks the server what
+  `crm.lead.default_get(['type'])` actually returns. With the group empty the
+  default is `opportunity`, so scraped records bypass qualification entirely;
+  the report says so and names the setting that fixes it.
+- **Bulk archiving** — groups archived leads by `write_uid` (one user behind
+  tens of thousands of writes means an automation running as that user) and by
+  `lost_reason_id` (no reason given = a sweep, not a judgement), then lists the
+  crons, automation rules and server actions bound to `crm.lead`.
+- Verified: `py_compile` + `pyflakes` clean, flag in `--help`, and
+  `render_diagnose` exercised against synthetic data covering a disabled gate,
+  an errored automation row and an inactive cron.
+
+### `collect_production_addons.sh` — untracked production code into git ✅
+The first inspection found five custom modules installed on the VPS, of which
+**`c2p_appointment`, `c2p_master_agent` and `c2p_proposal` are in no repo** —
+production code with no history, no review and no way to redeploy it.
+`scripts/collect_production_addons.sh` copies named modules (or auto-discovers
+every `c2p_*`/`mumtaz_*`/`zaki_*` module the repo lacks) from the addons path
+in `odoo.conf` into `addons/`.
+- Copies files only — it touches neither Odoo nor PostgreSQL — strips
+  `__pycache__`, `*.pyc`/`*.pyo` and any nested `.git`, skips modules already
+  in the repo unless `FORCE=1`, and deliberately does **not** commit.
+- Uses `cp` + `find -delete` rather than `rsync`, which is absent on many Odoo
+  hosts. Counters are `n=$((n+1))`, not `((n++))`, which returns the old value
+  and so aborts the script under `set -e` on the first increment.
+- Verified in a sandbox: named copy, a missing module reported, caches stripped,
+  re-run skips instead of clobbering, auto-discovery ignores stock addons.
+
+Also added `.env.production.save` to `.gitignore` — production was carrying it
+as an uncommitted local edit, which blocked `git checkout` there.
