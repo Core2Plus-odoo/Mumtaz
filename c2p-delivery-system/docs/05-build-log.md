@@ -941,3 +941,19 @@ The five delivery stages (presales → developer) now render as an Odoo form vie
 - renderRunBtn now keeps both the Run and Document buttons.
 - Verified: JS syntax + no dup names + headless render (5-step statusbar with the
   correct done/current states, form sheet present) — no page errors.
+
+### Read-only Odoo database inspector ✅
+`scripts/inspect_odoo_db.py <DB>` prints a one-screen report on a live tenant
+database — server version, companies (currency/country/VAT), record counts
+across ~20 probes (CRM, sales, accounting, project, HR, purchase, stock, plus
+automation rules / server actions / crons / Studio models), installed module
+count and the local `mumtaz|c2p|zaki` modules. `--json` emits the full payload.
+- Strictly read-only: every call is `search_read` / `search_count`.
+- Credentials resolve through `delivery_api.odoo.OdooClient`, so the encrypted
+  console connection wins over env, exactly as the API does; `delivery_api/.env`
+  is loaded when present (existing env always wins).
+- Models whose app isn't installed report `n/a (<Error>)` instead of aborting
+  the run, so a partially-configured database still yields a full report.
+- Verified: `py_compile` + `pyflakes` clean, `--help` renders, and the failure
+  path against an unreachable server exits 1 with the credentials hint rather
+  than a traceback.
