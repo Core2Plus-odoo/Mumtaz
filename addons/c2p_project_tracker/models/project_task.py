@@ -63,8 +63,11 @@ class ProjectTask(models.Model):
     # ── Billing (optional, per milestone) ────────────────────────────────
     billing_pct = fields.Float(string="Billing %")
     billing_amount = fields.Monetary(
-        string="Billing Amount", currency_field="company_currency_id")
-    company_currency_id = fields.Many2one(
+        string="Billing Amount", currency_field="c2p_company_currency_id")
+    # Prefixed for the same reason as the project fields: project.task may
+    # already define company_currency_id through another module, and
+    # redefining a standard field is a needless risk.
+    c2p_company_currency_id = fields.Many2one(
         "res.currency", related="company_id.currency_id", readonly=True)
     invoice_status = fields.Selection(
         [("not_due", "Not Due"), ("due", "Due"),

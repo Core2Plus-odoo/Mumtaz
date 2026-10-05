@@ -1249,3 +1249,25 @@ Standard-first notes: `project.update` **exists** on this instance, so the
 brief's `c2p.status.report` should extend it rather than duplicate it; and
 `project.task.allocated_hours` already covers planned effort, so no
 `estimated_hours` field was added.
+
+### Commercials on the portfolio layer ✅
+Finished the data model with the commercial fields, all twelve carrying
+`groups="…group_c2p_portfolio_manager"` so no AED figure is readable by a
+Delivery Lead or Member, including over RPC: contract value, received (manual
+plus an effective value taken from the linked sale order's paid customer
+invoices when there are any), outstanding, subcontract % (default 60),
+subcontract value/paid/outstanding, the Consultants margin — computed on money
+**collected**, not on contract value, since an uncollected invoice has earned
+nothing — and `commercials_missing`.
+
+Two of the brief's amber rules now have their inputs: commercials missing, and
+outstanding above half the contract while progress is past 50%. Health reads
+those figures with `sudo()` and the reason text deliberately names no amounts,
+so a Delivery Lead can see *why* a project is amber without seeing the numbers.
+
+Named `c2p_currency_id`, `c2p_sale_order_id` and `c2p_company_currency_id`
+rather than the bare names on purpose: `project.project` and `project.task` may
+already define `currency_id`, `sale_order_id` and `company_currency_id` through
+`sale_project` or analytic, and attaching `groups=` to a *standard* field would
+strip it from every non-manager and can break stock views. Worth confirming
+either way with `--schema project.project`.

@@ -48,6 +48,62 @@ class ProjectProject(models.Model):
     golive_slippage_days = fields.Integer(
         compute="_compute_golive_slippage_days", store=True)
 
+    # ── Commercials (portfolio only, Portfolio Manager only) ─────────────
+    # Every field here carries groups= so a Delivery Lead or Member cannot read
+    # an AED figure anywhere, including over RPC.
+    COMMERCIAL_GROUP = "c2p_project_tracker.group_c2p_portfolio_manager"
+
+    # Deliberately NOT named currency_id / sale_order_id: project.project may
+    # already carry those (sale_project, analytic), and adding groups= to a
+    # standard field would strip it from every non-manager and can break stock
+    # views. A c2p_ prefix keeps the restriction to fields this module owns.
+    c2p_currency_id = fields.Many2one(
+        "res.currency", string="Contract Currency",
+        default=lambda self: self.env.company.currency_id,
+        groups=COMMERCIAL_GROUP)
+    contract_value = fields.Monetary(
+        string="Contract Value", currency_field="c2p_currency_id",
+        groups=COMMERCIAL_GROUP, tracking=True)
+    amount_received = fields.Monetary(
+        string="Received (manual)", currency_field="c2p_currency_id",
+        groups=COMMERCIAL_GROUP, tracking=True,
+        help="Fallback when no sale order is linked, or when it is not invoiced "
+             "through Odoo.")
+    amount_received_effective = fields.Monetary(
+        string="Received", currency_field="c2p_currency_id",
+        compute="_compute_commercials", store=True, groups=COMMERCIAL_GROUP,
+        help="Paid customer invoices for the linked sale order when there are "
+             "any, otherwise the manual figure.")
+    amount_outstanding = fields.Monetary(
+        string="Outstanding", currency_field="c2p_currency_id",
+        compute="_compute_commercials", store=True, groups=COMMERCIAL_GROUP)
+
+    subcontract_pct = fields.Float(
+        string="Subcontract %", default=60.0, groups=COMMERCIAL_GROUP,
+        help="Share of project revenue payable to C2P Solutions. The group "
+             "default is 60%, leaving 40% with C2P Consultants.")
+    subcontract_value = fields.Monetary(
+        string="Payable to Solutions", currency_field="c2p_currency_id",
+        compute="_compute_commercials", store=True, groups=COMMERCIAL_GROUP)
+    subcontract_paid = fields.Monetary(
+        string="Paid to Solutions", currency_field="c2p_currency_id",
+        groups=COMMERCIAL_GROUP, tracking=True)
+    subcontract_outstanding = fields.Monetary(
+        string="Owed to Solutions", currency_field="c2p_currency_id",
+        compute="_compute_commercials", store=True, groups=COMMERCIAL_GROUP)
+    consultants_margin = fields.Monetary(
+        string="Consultants Margin", currency_field="c2p_currency_id",
+        compute="_compute_commercials", store=True, groups=COMMERCIAL_GROUP,
+        help="The Consultants share earned on money actually collected, not on "
+             "the contract value — an uncollected invoice has earned nothing.")
+    commercials_missing = fields.Boolean(
+        compute="_compute_commercials", store=True, groups=COMMERCIAL_GROUP)
+
+    c2p_sale_order_id = fields.Many2one(
+        "sale.order", string="Sale Order", groups=COMMERCIAL_GROUP,
+        help="Optional. When set and invoiced, Received is taken from its paid "
+             "customer invoices instead of the manual field.")
+
     # ── Health ───────────────────────────────────────────────────────────
     rag_status = fields.Selection(
         [("green", "Green"), ("amber", "Amber"), ("red", "Red"),
@@ -148,6 +204,41 @@ class ProjectProject(models.Model):
             order="c2p_code, id")
 
     # ── Computes ─────────────────────────────────────────────────────────
+    @api.depends("contract_value", "amount_received", "subcontract_pct",
+                 "subcontract_paid", "c2p_sale_order_id",
+                 "c2p_sale_order_id.invoice_ids.payment_state",
+                 "c2p_sale_order_id.invoice_ids.amount_total",
+                 "c2p_sale_order_id.invoice_ids.state",
+                 "c2p_sale_order_id.invoice_ids.move_type")
+    def _compute_commercials(self):
+        for project in self:
+            received = project.amount_received
+            invoices = project.c2p_sale_order_id.invoice_ids.filtered(
+                lambda m: m.move_type == "out_invoice"
+                and m.state == "posted" and m.payment_state == "paid")
+            if invoices:
+                # A linked, invoiced SO is authoritative; the manual figure is
+                # only a fallback for work billed outside Odoo.
+                received = sum(invoices.mapped("amount_total"))
+
+            project.amount_received_effective = received
+            project.amount_outstanding = project.contract_value - received
+            project.subcontract_value = (
+                project.contract_value * project.subcontract_pct / 100.0)
+            project.subcontract_outstanding = (
+                project.subcontract_value - project.subcontract_paid)
+            project.consultants_margin = (
+                received * (100.0 - project.subcontract_pct) / 100.0)
+            project.commercials_missing = (
+                project.c2p_layer == "portfolio" and not project.contract_value)
+
+    @api.constrains("subcontract_pct")
+    def _check_subcontract_pct(self):
+        for project in self:
+            if not 0.0 <= project.subcontract_pct <= 100.0:
+                raise ValidationError(
+                    _("The subcontract share must be between 0 and 100%."))
+
     @api.depends("baseline_golive_date", "forecast_golive_date")
     def _compute_golive_slippage_days(self):
         for project in self:
@@ -268,6 +359,19 @@ class ProjectProject(models.Model):
 
             if not milestones:
                 amber.append(_("No milestones are defined."))
+
+            # Read commercials with sudo: the health of a project is visible to
+            # the Delivery Lead even though the figures behind it are not, so
+            # the reason text deliberately states no amounts.
+            money = project.sudo()
+            if money.commercials_missing:
+                amber.append(_("Commercials are missing."))
+            elif (money.contract_value
+                  and money.amount_outstanding > money.contract_value / 2.0
+                  and project.progress_pct > 50.0):
+                amber.append(_(
+                    "More than half the contract is outstanding while delivery "
+                    "is past halfway."))
 
             status = "red" if red else ("amber" if amber else "green")
             reasons = red + amber
