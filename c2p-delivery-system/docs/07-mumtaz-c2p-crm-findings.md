@@ -40,18 +40,35 @@ if recs:
     recs.write({'active': False})
 ```
 
-This accounts for the archived population: 29,337 of 29,484 archived leads have
-`write_uid` = the admin user this cron runs as, and **not one has a lost
-reason** — because `write({'active': False})` archives without recording why.
-Three consequences:
+**Its tag conditions are dead.** Tags `18`, `2237` and `2245` resolve to
+`Email Invalid`, `Email Invalid — No MX (skip)` and `Email Invalid — Bad
+Syntax`, and **all three are carried by zero leads** (counted with archived
+records included). Three of the domain's four legs therefore match nothing, and
+`message_bounce > 0` is the only live condition.
+
+That makes the attribution an open question rather than a settled one. What is
+established: 29,337 of 29,484 archived leads have `write_uid` = the admin user
+this cron runs as, and **not one has a lost reason** — consistent with
+`write({'active': False})`, which archives without recording why. What is *not*
+established is that this cron produced them: it would require ~29k leads with
+`message_bounce > 0`, which would itself be a serious sender-reputation
+problem. `--leads` now probes `message_bounce > 0`, its overlap with the
+archived set, and "archived but never bounced", which settles it either way:
+
+- a large "Bounced AND archived" number means this cron did it, and the real
+  story is 29k bounced sends;
+- a large "Archived but never bounced" number means something else archived
+  them and this cron is a red herring.
+
+Either way, these consequences hold:
 
 - Nobody can tell afterwards which rule caught a given lead, or audit whether
   the sweep was right. 72% of all leads ever created are in this state.
 - Odoo's own lost-reason reporting is empty, so win/loss analysis is impossible.
-- The tag ids `2237`, `18` and `2245` are hardcoded magic numbers. Resolve them
-  before trusting the rule at all: `--tags 18,2237,2245`. If any is a
-  broadly-applied tag (for instance one of the `BD Trigger:` tags this same
-  engine creates), the sweep is a mass archive wearing a precise-looking domain.
+- The tag ids are hardcoded magic numbers that now match nothing, so the rule
+  silently does less than it reads as doing. Whether the tags were never
+  applied, or were applied by something since removed, the ids are not a safe
+  way to express this and the replacement below matches tags by name.
 
 Proposed replacement — records the reason, and reads as what it is:
 

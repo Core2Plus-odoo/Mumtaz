@@ -1147,3 +1147,23 @@ Three mistakes this script's testing caught, all mine:
 - Verified end to end against a temporary `C2P_STORE`: create, idempotent
   re-run, rename-in-place, a second database kept separate, and a refusal when
   the database is unreachable.
+
+### Tag lookup refutes the archive attribution ⚠️
+`--tags 18,2237,2245` resolved the sweep's hardcoded ids to `Email Invalid`,
+`Email Invalid — No MX (skip)` and `Email Invalid — Bad Syntax` — **all three
+carried by zero leads**, archived records included. Three of the domain's four
+legs match nothing, leaving `message_bounce > 0` as the only live condition, so
+"this cron produced the 29,484 archives" is no longer established: it would
+require ~29k bounced sends, which would be a sender-reputation problem in its
+own right.
+
+`--leads` now probes `message_bounce > 0`, `Bounced AND archived` and
+`Archived but never bounced`, which settles the attribution either way — the
+cron did it and the story is 29k bounces, or something else archived them.
+`docs/07-mumtaz-c2p-crm-findings.md` corrected accordingly.
+
+The run also showed the new stderr note doing its job: *"console connection
+unavailable (ModuleNotFoundError: No module named 'pydantic')"*. The store needs
+the service venv, so credentials come from the console connection only when the
+script runs under `delivery_api/.venv/bin/python`; under the system interpreter
+it is env-only, now said out loud instead of silently.

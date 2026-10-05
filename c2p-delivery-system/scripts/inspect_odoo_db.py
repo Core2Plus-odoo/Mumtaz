@@ -218,6 +218,14 @@ def analyse_leads(db: str, top: int = 12) -> dict:
         "No email and no phone": [("email_from", "in", [False, ""]),
                                   ("phone", "in", [False, ""])],
         "Has an expected revenue": [("expected_revenue", ">", 0)],
+        # The archive sweep's only live condition, and its overlap with the
+        # archived population — the two numbers that say whether that cron
+        # actually produced the archives attributed to it.
+        "Bounced (message_bounce > 0)": [("message_bounce", ">", 0)],
+        "Bounced AND archived": [("message_bounce", ">", 0),
+                                 ("active", "=", False)],
+        "Archived but never bounced": [("message_bounce", "=", 0),
+                                       ("active", "=", False)],
         "Never contacted (no activity)": [("activity_ids", "=", False)],
     }
     quality: dict = {}
