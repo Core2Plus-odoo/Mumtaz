@@ -46,21 +46,26 @@ Syntax`, and **all three are carried by zero leads** (counted with archived
 records included). Three of the domain's four legs therefore match nothing, and
 `message_bounce > 0` is the only live condition.
 
-That makes the attribution an open question rather than a settled one. What is
-established: 29,337 of 29,484 archived leads have `write_uid` = the admin user
+**RESOLVED, and not this cron.** The probes came back:
+`message_bounce > 0` matches **8** leads, `Bounced AND archived` is **0**, and
+`Archived but never bounced` is **29,484** — every archived lead. There is zero
+overlap, so this cron archived none of them. Its tag legs match nothing and its
+bounce leg matches 8 records, none archived.
+
+What did it is still unidentified, but the shape is informative: of 41,182
+leads, 27,603 have no email, and since only 2,382 of the 11,698 *active* ones
+lack an email, roughly 25,200 of the 29,484 archived records (86%) are
+email-less. Whatever ran selected on **missing email**, not on bounces. With
+`write_uid` = the admin user on 29,337 of them, no lost reason on any, and no
+automation whose domain fits, the likeliest explanation is a manual or ad-hoc
+scripted bulk archive of email-less scrapes rather than a scheduled rule.
+
+Also established: 29,337 of 29,484 archived leads have `write_uid` = the admin user
 this cron runs as, and **not one has a lost reason** — consistent with
 `write({'active': False})`, which archives without recording why. What is *not*
 established is that this cron produced them: it would require ~29k leads with
 `message_bounce > 0`, which would itself be a serious sender-reputation
-problem. `--leads` now probes `message_bounce > 0`, its overlap with the
-archived set, and "archived but never bounced", which settles it either way:
-
-- a large "Bounced AND archived" number means this cron did it, and the real
-  story is 29k bounced sends;
-- a large "Archived but never bounced" number means something else archived
-  them and this cron is a red herring.
-
-Either way, these consequences hold:
+problem. These consequences hold regardless:
 
 - Nobody can tell afterwards which rule caught a given lead, or audit whether
   the sweep was right. 72% of all leads ever created are in this state.

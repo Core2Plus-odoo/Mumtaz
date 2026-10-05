@@ -1199,3 +1199,53 @@ Confirmed from `--schema project.milestone` (39 fields): `deadline`,
 `is_reached`, `reached_date`, `sequence`, `project_id` and `task_ids` all exist
 and are stored, so the sync engine's contract holds. There is no `description`
 field, and `sale_line_id` exists for the optional SO link.
+
+### Archive attribution RESOLVED — not the bounce cron ✅
+`--leads` with the new probes: `message_bounce > 0` matches **8** leads,
+`Bounced AND archived` is **0**, `Archived but never bounced` is **29,484**.
+Zero overlap, so the `C2P — Archive bounced/dead-email leads` cron archived
+none of them, and both of my earlier attributions were wrong.
+
+The shape points elsewhere: 27,603 of 41,182 leads have no email, and only
+2,382 of the 11,698 active ones do, so ~86% of the archived set is email-less.
+Whatever ran selected on **missing email**, not bounces. With `write_uid` = the
+admin on 29,337, no lost reason on any, and no automation whose domain fits,
+the likeliest cause is a manual or ad-hoc scripted bulk archive.
+
+Counting archived records, the largest lead holder is **Muhammad Umer with
+25,099** (61%), not Aisha Rahman; user `42` in BD Engine 1 is confirmed as
+`bd@core2plus.com` (Aisha Rahman, 5,327). Also fixed a gap this run exposed:
+the group lookup searched only group *names* for "project", missing the
+standard groups, which are named "User"/"Administrator" under a Project
+privilege — it now matches the privilege/category name too.
+
+### `c2p_project_tracker` — scaffold, models, security (step 1–2) ✅
+Built against the live landscape rather than the brief's figures, which differ
+in three consequential ways:
+- **Portfolio projects hold ordinary tasks as well as milestones** — project 14
+  has 16 tasks for 8 milestones, project 16 has 11 for 6. So `c2p_is_milestone`
+  is `portfolio layer AND name matches ^M\d+`, never "any task in a portfolio
+  project", or progress and RAG would count non-milestones.
+- **Every one of the 24 `project.milestone` records has `deadline = False` and
+  `is_reached = False`.** The sync engine therefore propagates a deadline only
+  when the delivery side has a real one; blanking the portfolio deadline would
+  destroy the baseline it is compared against. Expect every project Amber on
+  "open milestones have no deadline" until deadlines are entered.
+- **Stages are per-project `project.task.type` records**, not shared (portfolio
+  14 → 334–338, delivery 17 → 349–354, and so on). Stage resolution is by name
+  within the project; no stage id is hardcoded anywhere.
+
+Shipped: `__manifest__` (depends `project`, `mail` only — no Enterprise),
+`c2p.milestone.history` (append-only, with a delivery-side snapshot per row so
+trends need no re-derivation), `project.task` (milestone code/weight/baseline +
+slippage, delivery hygiene and blocked-reason constraints, `waiting_since`
+bookkeeping, manager-only baseline reset), `project.project` (layer,
+reciprocal counterpart with a pairing constraint, engagement fields, weighted
+progress, RAG with per-factor reasons and configurable thresholds, and the sync
+engine with the five ordered stage rules), and the three privilege-based groups
+with a `company_ids` record rule.
+
+Standard-first notes: `project.update` **exists** on this instance, so the
+brief's `c2p.status.report` should extend it rather than duplicate it; and
+`project.task.allocated_hours` already covers planned effort, so no
+`estimated_hours` field was added.

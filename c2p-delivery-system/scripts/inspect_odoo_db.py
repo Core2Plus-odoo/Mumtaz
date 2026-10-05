@@ -487,11 +487,24 @@ def show_projects(db: str) -> dict:
 
     # Groups and users are needed to wire security without guessing ids.
     # res.groups.category_id became privilege_id in Odoo 19.
+    # Standard project groups are named "User"/"Administrator" under the
+    # Project privilege, so searching names for "project" misses them. Match
+    # the privilege (v19) or category (older) as well.
     out["groups"] = read(
         "res.groups",
-        ["|", ("name", "ilike", "project"), ("name", "ilike", "tracker")],
-        [["id", "name", "privilege_id"], ["id", "name", "category_id"],
-         ["id", "name"]])
+        ["|", "|", "|",
+         ("name", "ilike", "project"), ("name", "ilike", "tracker"),
+         ("privilege_id.name", "ilike", "project"),
+         ("privilege_id.name", "ilike", "tracker")],
+        [["id", "name", "privilege_id"]])
+    if out["groups"] and out["groups"][0].get("error"):
+        out["groups"] = read(
+            "res.groups",
+            ["|", "|", "|",
+             ("name", "ilike", "project"), ("name", "ilike", "tracker"),
+             ("category_id.name", "ilike", "project"),
+             ("category_id.name", "ilike", "tracker")],
+            [["id", "name", "category_id"], ["id", "name"]])
     out["users"] = read("res.users", [("active", "=", True)],
                         [["id", "login", "name", "company_id"]], order="id")
 
