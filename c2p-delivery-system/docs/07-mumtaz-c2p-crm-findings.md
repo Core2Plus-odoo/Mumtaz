@@ -16,7 +16,7 @@ Both routines below are **`ir.actions.server` records stored in the database**,
 not code in this repository. There are 25 such actions on `crm.lead`. They
 carry the company's lead qualification, scoring, assignment and archival rules,
 and they have no version history, no review, no tests and no way to roll back a
-bad edit. Along`c2p_appointment` and `c2p_proposal` sitting untracked in the
+bad edit. Alongside `c2p_appointment` and `c2p_proposal` sitting untracked in the
 production working tree, and `c2p_master_agent` installed with no source on the
 addons path, the business logic of this database is substantially outside git.
 
