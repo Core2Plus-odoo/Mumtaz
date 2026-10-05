@@ -27,9 +27,17 @@ Community only — no Enterprise dependency.
         "views/project_project_views.xml",
         "views/project_task_views.xml",
         "views/c2p_raid_views.xml",
+        "views/c2p_dashboard_actions.xml",
         # Menus last: they reference the actions defined above.
         "views/c2p_menus.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "c2p_project_tracker/static/src/dashboard/dashboard.scss",
+            "c2p_project_tracker/static/src/dashboard/*.js",
+            "c2p_project_tracker/static/src/dashboard/*.xml",
+        ],
+    },
     "post_init_hook": "post_init_hook",
     "installable": True,
     "application": False,

@@ -1,0 +1,388 @@
+// C2P Tracker dashboards.
+//
+// Colour is declared once as custom properties and referenced by role, so the
+// light/dark values swap in one place. Dark values are *selected* for the dark
+// surface, not an automatic inversion.
+//
+// The status palette is the brand's. Validated: amber (2.19:1) and grey
+// (2.57:1) fall below 3:1 against the surface, so every status indicator
+// carries a glyph and a text label — colour is never the only cue.
+// The two-series charts use brand red + a blue that passes all six checks
+// (CVD ΔE 25.8 deutan, normal-vision ΔE 32.4, contrast >= 3:1).
+.o_c2p_dash {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --surface-2: #ffffff;
+    --border: #e4e4e1;
+    --text-primary: #0f0f0f;
+    --text-secondary: #52514e;
+    --text-muted: #85847f;
+
+    --status-green: #1e8e3e;
+    --status-amber: #f29900;
+    --status-red: #be1e2d;
+    --status-grey: #9aa0a6;
+
+    --series-1: #be1e2d;   // brand red
+    --series-2: #2a78d6;   // validated partner hue
+
+    padding: 16px;
+    background: var(--surface-1);
+    color: var(--text-primary);
+    font-family: Arial, Helvetica, sans-serif;
+    overflow-x: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .o_c2p_dash {
+        color-scheme: dark;
+        --surface-1: #1a1a19;
+        --surface-2: #232322;
+        --border: #3a3a38;
+        --text-primary: #ffffff;
+        --text-secondary: #c3c2b7;
+        --text-muted: #96958c;
+        --status-green: #37a855;
+        --status-amber: #ffb020;
+        --status-red: #e0414f;
+        --series-1: #e0414f;
+        --series-2: #3987e5;
+    }
+}
+:root[data-theme="dark"] .o_c2p_dash {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --border: #3a3a38;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #96958c;
+    --status-green: #37a855;
+    --status-amber: #ffb020;
+    --status-red: #e0414f;
+    --series-1: #e0414f;
+    --series-2: #3987e5;
+}
+
+.o_c2p_state {
+    padding: 48px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+.o_c2p_error {
+    color: var(--status-red);
+    h3 { color: var(--status-red); }
+}
+
+// ── Filters ─────────────────────────────────────────────────────────────
+.o_c2p_filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+
+    .o_c2p_filter_group {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        select {
+            min-width: 140px;
+            padding: 4px 8px;
+            background: var(--surface-2);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+    }
+    .o_c2p_synced {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+}
+
+// ── KPI tiles ───────────────────────────────────────────────────────────
+.o_c2p_kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.o_c2p_kpi {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    cursor: pointer;
+
+    &:hover { border-color: var(--text-muted); }
+
+    .o_c2p_kpi_v {
+        font-size: 22px;
+        font-weight: 700;
+        line-height: 1.1;
+        // Values wear text ink, never a series colour.
+        color: var(--text-primary);
+    }
+    .o_c2p_kpi_l {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--text-muted);
+    }
+    &.o_c2p_kpi_bad .o_c2p_kpi_v { color: var(--status-red); }
+}
+
+// ── Cards ───────────────────────────────────────────────────────────────
+.o_c2p_card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+
+    h3 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--text-muted);
+        margin: 0 0 10px;
+    }
+}
+.o_c2p_empty, .o_c2p_note {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin: 6px 0 0;
+}
+
+// ── Status colours ──────────────────────────────────────────────────────
+.o_c2p_seg_red { background: var(--status-red); }
+.o_c2p_seg_amber { background: var(--status-amber); }
+.o_c2p_seg_green { background: var(--status-green); }
+.o_c2p_seg_grey { background: var(--status-grey); }
+
+// Segmented composition bar. A 2px surface gap separates fills.
+.o_c2p_segbar {
+    display: flex;
+    height: 14px;
+    border-radius: 4px;
+    overflow: hidden;
+    gap: 2px;
+    background: var(--surface-1);
+}
+.o_c2p_seg { height: 100%; }
+.o_c2p_seglegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.o_c2p_legend_item { display: inline-flex; align-items: center; gap: 5px; }
+.o_c2p_swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.o_c2p_pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    // White on amber fails contrast, so the pill text is always dark ink on
+    // the light statuses and the glyph carries the redundant cue.
+    color: #ffffff;
+    &.o_c2p_seg_amber, &.o_c2p_seg_grey { color: #0f0f0f; }
+}
+.o_c2p_glyph { font-size: 9px; }
+
+// ── Table ───────────────────────────────────────────────────────────────
+.o_c2p_table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th {
+        text-align: left;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+        padding: 6px 8px;
+        font-weight: 600;
+    }
+    td {
+        padding: 8px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+    }
+    .text-end { text-align: right; }
+}
+.o_c2p_row { cursor: pointer; &:hover { background: var(--surface-1); } }
+.o_c2p_name { font-weight: 600; }
+.o_c2p_sub { font-size: 11px; color: var(--text-muted); }
+.o_c2p_initials span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+.o_c2p_meter {
+    width: 90px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.o_c2p_meter_fill { height: 100%; background: var(--series-2); }
+.o_c2p_badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+.o_c2p_expand { background: var(--surface-1); }
+.o_c2p_reasons {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+.o_c2p_subtable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    th, td { padding: 4px 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 600; text-align: left; }
+    .text-end { text-align: right; }
+}
+
+// ── Attention panel ─────────────────────────────────────────────────────
+.o_c2p_attention {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        padding: 6px 0 6px 10px;
+        border-left: 3px solid var(--border);
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    .o_c2p_att_overdue_milestone, .o_c2p_att_blocker {
+        border-left-color: var(--status-red);
+    }
+    .o_c2p_att_stale, .o_c2p_att_receivable {
+        border-left-color: var(--status-amber);
+    }
+}
+.o_c2p_att_link {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--text-primary);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+// ── Roadmap ─────────────────────────────────────────────────────────────
+.o_c2p_roadmap {
+    width: 100%;
+    height: auto;
+
+    .o_c2p_axis_lbl, .o_c2p_lane_lbl, .o_c2p_ms_lbl, .o_c2p_undated {
+        font-size: 10px;
+        fill: var(--text-muted);
+    }
+    .o_c2p_lane_lbl { font-size: 11px; fill: var(--text-secondary); }
+    .o_c2p_lane_rule { stroke: var(--border); stroke-width: 1; }
+    .o_c2p_today { stroke: var(--series-1); stroke-width: 2; stroke-dasharray: 3 3; }
+    .o_c2p_slipline { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 2 2; }
+    .o_c2p_ghost { fill: none; stroke: var(--text-muted); stroke-width: 1; }
+
+    // A 2px surface ring keeps overlapping diamonds readable.
+    .o_c2p_ms { stroke: var(--surface-2); stroke-width: 2; }
+    .o_c2p_ms_done { fill: var(--status-green); }
+    .o_c2p_ms_blocked { fill: var(--status-red); }
+    .o_c2p_ms_review { fill: var(--status-amber); }
+    .o_c2p_ms_active { fill: var(--series-2); }
+    .o_c2p_ms_pending { fill: var(--status-grey); }
+}
+
+// ── Trends ──────────────────────────────────────────────────────────────
+.o_c2p_trends {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+
+    figure { margin: 0; }
+    figcaption {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+    svg { width: 100%; height: auto; }
+
+    .o_c2p_axis { stroke: var(--border); stroke-width: 1; }
+    .o_c2p_bar { fill: var(--series-2); }
+    .o_c2p_line { stroke: var(--series-1); stroke-width: 2; }
+    .o_c2p_dot { fill: var(--series-1); stroke: var(--surface-2); stroke-width: 2; }
+}
+
+// ── Delivery dashboard ──────────────────────────────────────────────────
+.o_c2p_load_row {
+    display: grid;
+    grid-template-columns: 180px 1fr 70px;
+    gap: 10px;
+    align-items: center;
+    font-size: 13px;
+    padding: 3px 0;
+
+    .o_c2p_load_name { color: var(--text-secondary); }
+    .o_c2p_load_track {
+        height: 12px;
+        background: var(--surface-1);
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        display: flex;
+        gap: 2px;
+    }
+    .o_c2p_load_open { background: var(--series-2); }
+    .o_c2p_load_overdue { background: var(--status-red); }
+    .o_c2p_load_num { text-align: right; color: var(--text-muted); font-size: 12px; }
+}

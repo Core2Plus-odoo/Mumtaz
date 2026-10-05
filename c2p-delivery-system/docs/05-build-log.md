@@ -1337,3 +1337,49 @@ Flagged for the first install: `res.users.group_ids` is the v19 name
   before anything touches it (a restored `Mumtaz_C2P` otherwise re-runs the BD
   engine and emails real clients), and prefers restoring the dump over
   uninstalling, which would drop every history row.
+
+### Dashboards — Portfolio and Delivery (OWL, no chart library) ✅
+`c2p.dashboard`, an AbstractModel, serves both views. Every entry point
+re-checks the group, because a client action's menu visibility is **not** access
+control. Commercial figures are **omitted, not zeroed**, for a non-manager, so
+nothing can be inferred from the response shape; `delivery_data()` returns no
+money key at all.
+
+Portfolio: KPI tiles (clickable into filtered lists), portfolio composition,
+the engagement table with expandable milestone detail and RAG reasons, an SVG
+milestone roadmap with baseline ghost markers and a today line, a
+cost-of-delay-ranked attention panel, and SVG trends from
+`c2p.milestone.history`. Delivery: team load (on-time vs overdue per assignee),
+the four hygiene checks as drill-downs, and no money anywhere.
+
+Three deliberate deviations from the brief, each for a stated reason:
+- **A labelled segmented bar, not a counts donut.** With four engagements a
+  donut compares near-identical tiny integers, which the data-viz
+  anti-pattern catalogue names directly. Part-to-whole is still read at a
+  glance.
+- **Inline SVG, not Chart.js.** The asset path for Odoo's bundled copy moves
+  between versions and a wrong path takes the whole dashboard down. Nothing
+  here needs a charting library.
+- **No collected-versus-outstanding trend.** Nothing records historical
+  balances, so that series would be invented rather than measured. The UI says
+  so, and a test asserts `trends["money"] is None`. It needs a periodic
+  snapshot first.
+
+Colour was computed, not eyeballed. The brand status palette fails the
+categorical chroma floor on grey — correctly, since grey *is* the "no data"
+status — but its **contrast WARN is real**: amber at 2.19:1 and grey at 2.57:1
+against the surface. So every status indicator carries a glyph **and** a text
+label, never colour alone. The two-series charts use brand red `#BE1E2D` with
+`#2a78d6`, which passes all six checks (CVD ΔE 25.8 deutan, normal-vision
+ΔE 32.4, contrast ≥ 3:1). Dark mode is a selected second set under both the
+media query and the `data-theme` scope.
+
+`allocated_hours` is probed against `_fields` with a `planned_hours` fallback,
+so a field rename degrades instead of crashing the view.
+
+Verified mechanically: JS parses; all XML parses; SCSS braces balance and every
+`var(--…)` is declared; each `ir.actions.client` tag matches a registry key;
+each component's `static template` exists; every asset glob matches files.
+11 further tests cover both payloads, the refusal for a Delivery Member, the
+absence of money keys, roadmap undated reporting, attention ranking, and that
+no money trend is fabricated.

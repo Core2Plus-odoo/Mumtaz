@@ -4,3 +4,4 @@ from . import test_health
 from . import test_hygiene
 from . import test_commercials
 from . import test_security
+from . import test_dashboard

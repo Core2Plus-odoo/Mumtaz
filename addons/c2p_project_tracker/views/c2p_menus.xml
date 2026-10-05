@@ -11,6 +11,9 @@
     <menuitem id="menu_c2p_portfolio" name="Portfolio"
               parent="menu_c2p_root" sequence="10"
               groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+    <menuitem id="menu_c2p_portfolio_dashboard" name="Dashboard"
+              parent="menu_c2p_portfolio" action="action_c2p_portfolio_dashboard"
+              sequence="5"/>
     <menuitem id="menu_c2p_portfolio_engagements" name="Engagements"
               parent="menu_c2p_portfolio" action="action_c2p_portfolio"
               sequence="10"/>
@@ -18,6 +21,9 @@
     <menuitem id="menu_c2p_delivery" name="Delivery"
               parent="menu_c2p_root" sequence="20"
               groups="c2p_project_tracker.group_c2p_delivery_member"/>
+    <menuitem id="menu_c2p_delivery_dashboard" name="Dashboard"
+              parent="menu_c2p_delivery" action="action_c2p_delivery_dashboard"
+              sequence="5"/>
     <menuitem id="menu_c2p_delivery_load" name="Team load"
               parent="menu_c2p_delivery" action="action_c2p_team_load"
               sequence="10"/>
