@@ -26,15 +26,60 @@ As inspected on 2026-10-05 the addons path was:
 `/usr/lib/python3/dist-packages/odoo/addons`, `/opt/custom_addons`,
 `/opt/custom_addons/Mumtaz/addons`.
 
-**`/opt/mumtaz/addons` was NOT on that path.** This module lives in the repo at
-`addons/c2p_project_tracker`, so decide one of:
+**`/opt/mumtaz/addons` was NOT on that path**, so the module cannot load until
+it is reachable. There are two ways, and they are not equally safe.
 
-- add the repo's `addons/` directory to `addons_path` in the config, or
-- deploy into `/opt/custom_addons/Mumtaz/addons`, which is itself a checkout of
-  this repository — confirm which branch it tracks before relying on it.
+### Check for shadowing first — this decides the answer
 
-Whichever is chosen, record it: the same ambiguity is why `c2p_appointment` and
-`c2p_proposal` are on disk in production but in no repository.
+`/opt/custom_addons/Mumtaz/addons` is *another checkout of this same
+repository*. Adding `/opt/mumtaz/addons` to the path would therefore put a
+second copy of `mumtaz_lead_scraper`, `mumtaz_lead_nurture`, `c2p_appointment`
+and `c2p_proposal` on it. Odoo resolves a module name to the **first** matching
+directory in `addons_path` order, so whichever copy wins is decided by config
+order rather than intent — and the code running the BD engine could change on a
+restart that nobody associates with a deploy.
+
+```bash
+for d in /opt/mumtaz/addons /opt/custom_addons /opt/custom_addons/Mumtaz/addons; do
+  echo "== $d"; ls "$d" 2>/dev/null
+done
+```
+
+Any name appearing under more than one path is a shadowing risk.
+
+### Preferred: symlink the one module
+
+Adds exactly one module, shadows nothing, and keeps git as the source of truth —
+`git pull` in `/opt/mumtaz` updates the deployed code.
+
+```bash
+ln -sfn /opt/mumtaz/addons/c2p_project_tracker \
+        /opt/custom_addons/Mumtaz/addons/c2p_project_tracker
+ls -l /opt/custom_addons/Mumtaz/addons/c2p_project_tracker
+```
+
+First confirm what that checkout tracks, since it is a clone of this repo and
+will fight a different branch:
+
+```bash
+git -C /opt/custom_addons/Mumtaz status -sb
+```
+
+### Alternative: extend `addons_path`
+
+Only after the shadowing check comes back clean. Back the config up, and put the
+new entry **last** so existing modules keep resolving as they do today:
+
+```bash
+cp -a "$CONF" "$CONF.bak-$(date +%F-%H%M)"
+grep -n addons_path "$CONF"
+# append ,/opt/mumtaz/addons to that line, then restart against the TEST
+# database on the spare port — never production first.
+```
+
+Whichever is chosen, record it. The same ambiguity is why `c2p_appointment` and
+`c2p_proposal` are on disk in production but in no repository, and why
+`c2p_master_agent` is installed with no source on the path at all.
 
 ## 2. Back up the database
 
