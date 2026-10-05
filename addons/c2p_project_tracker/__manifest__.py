@@ -24,6 +24,11 @@ Community only — no Enterprise dependency.
         "security/c2p_project_tracker_rules.xml",
         "data/ir_sequence.xml",
         "data/ir_cron.xml",
+        "views/project_project_views.xml",
+        "views/project_task_views.xml",
+        "views/c2p_raid_views.xml",
+        # Menus last: they reference the actions defined above.
+        "views/c2p_menus.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

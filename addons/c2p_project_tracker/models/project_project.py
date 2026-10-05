@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 from .project_task import (
     PORTFOLIO_BLOCKED,
@@ -491,6 +491,73 @@ class ProjectProject(models.Model):
         if any(t._is_done_stage() or t._is_in_flight() for t in tasks):
             return PORTFOLIO_IN_PROGRESS
         return None
+
+    # ── Smart-button actions ─────────────────────────────────────────────
+    def action_c2p_open_milestones(self):
+        """The project's milestone tasks, not every task."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Milestones — %s", self.name),
+            "res_model": "project.task",
+            "view_mode": "list,form",
+            "domain": [("project_id", "=", self.id),
+                       ("c2p_is_milestone", "=", True)],
+            "context": {"default_project_id": self.id},
+        }
+
+    def action_c2p_open_blockers(self):
+        """Delivery tasks waiting on the client.
+
+        Opened for the counterpart project, which is in another company, so a
+        user without that company allowed will see nothing rather than an
+        error — the count on the button is the aggregate they are entitled to.
+        """
+        self.ensure_one()
+        delivery = self.sudo().c2p_counterpart_id
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Client blockers — %s", self.name),
+            "res_model": "project.task",
+            "view_mode": "list,form",
+            "domain": [("project_id", "=", delivery.id),
+                       ("waiting_since", "!=", False)],
+        }
+
+    def action_c2p_open_raid(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("RAID — %s", self.name),
+            "res_model": "c2p.raid.item",
+            "view_mode": "list,form",
+            "domain": [("project_id", "=", self.id)],
+            "context": {"default_project_id": self.id},
+        }
+
+    def action_c2p_open_changes(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Change requests — %s", self.name),
+            "res_model": "c2p.change.request",
+            "view_mode": "list,form",
+            "domain": [("project_id", "=", self.id)],
+            "context": {"default_project_id": self.id},
+        }
+
+    def action_c2p_open_counterpart(self):
+        self.ensure_one()
+        counterpart = self.sudo().c2p_counterpart_id
+        if not counterpart:
+            raise UserError(_("This project has no counterpart linked."))
+        return {
+            "type": "ir.actions.act_window",
+            "name": counterpart.name,
+            "res_model": "project.project",
+            "res_id": counterpart.id,
+            "view_mode": "form",
+        }
 
     @api.model
     def _c2p_cron_sync(self):

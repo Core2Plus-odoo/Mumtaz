@@ -1307,3 +1307,33 @@ exercise the name-based stage resolution rather than a convenient shared set.
 
 Flagged for the first install: `res.users.group_ids` is the v19 name
 (`groups_id` up to 17); an unknown-field error there is that rename.
+
+### `c2p_project_tracker` — RAID, change requests, install hook, views ✅
+- **RAID** is its own model, not a task type: `project.task` conflates work to
+  do with risk being carried, and Odoo Community has no standard RAID log.
+  Risks score impact × probability; the other types scale on impact alone so
+  sorting stays comparable on one 1–9 range. Probability is hidden for
+  non-risks, since an issue has already happened.
+- **Change requests** move the contract value exactly once — `value_applied`
+  guards re-approval from doubling it — and log before/after on the project.
+- **`post_init_hook`** re-matches every project by name and partner rather than
+  trusting the brief's ids, because ids drift between databases and that
+  fallback is what makes the hook safe on a duplicate; a miss is logged and
+  skipped, never raised. Groups are assigned by login, so the brief's second
+  Portfolio Manager ("Abid Imtiaz"), who has no account here, is logged as a
+  skip instead of guessed at.
+- **Views** — portfolio form (engagement, health with a "why this status"
+  factor list, and a Commercials page restricted at *page* level as well as per
+  field, so a Delivery Lead never sees an empty tab), the portfolio table with
+  RAG decoration and column-level `groups=` on every money column, the delivery
+  hygiene queue and team load, RAID and change-request list/form, and the
+  menus with Portfolio restricted to the manager group.
+- Verified mechanically, not by eye: XML parses; no `<tree>`, `attrs=` or
+  `states=` anywhere (the v19 rules); every `type="object"` button resolves to
+  a real method; every action a menu references is defined.
+- **`scripts/backup_and_install.md`** reads the addons path and config out of
+  `odoo4.service` rather than assuming them, records that `/opt/mumtaz/addons`
+  is **not** on that path, disables crons and outgoing mail on the restored copy
+  before anything touches it (a restored `Mumtaz_C2P` otherwise re-runs the BD
+  engine and emails real clients), and prefers restoring the dump over
+  uninstalling, which would drop every history row.

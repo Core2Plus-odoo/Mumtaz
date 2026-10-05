@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Portfolio form: engagement, health and a group-restricted
+         Commercials page. Odoo 19 uses invisible= expressions, not attrs. -->
+    <record id="view_project_form_c2p" model="ir.ui.view">
+        <field name="name">project.project.form.c2p</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_c2p_open_milestones" type="object"
+                        class="oe_stat_button" icon="fa-flag-checkered"
+                        invisible="c2p_layer != 'portfolio'">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="progress_pct" widget="percentage"/>
+                        </span>
+                        <span class="o_stat_text">Progress</span>
+                    </div>
+                </button>
+                <button name="action_c2p_open_blockers" type="object"
+                        class="oe_stat_button" icon="fa-hand-paper-o"
+                        invisible="c2p_layer != 'portfolio' or open_blockers_count == 0">
+                    <field name="open_blockers_count" widget="statinfo"
+                           string="Blockers"/>
+                </button>
+                <button name="action_c2p_open_raid" type="object"
+                        class="oe_stat_button" icon="fa-exclamation-triangle"
+                        invisible="c2p_layer != 'portfolio'">
+                    <span class="o_stat_text">RAID</span>
+                </button>
+                <button name="action_c2p_open_changes" type="object"
+                        class="oe_stat_button" icon="fa-exchange"
+                        invisible="c2p_layer != 'portfolio'">
+                    <span class="o_stat_text">Changes</span>
+                </button>
+                <button name="action_c2p_open_counterpart" type="object"
+                        class="oe_stat_button" icon="fa-arrow-right"
+                        groups="c2p_project_tracker.group_c2p_portfolio_manager"
+                        invisible="not c2p_counterpart_id">
+                    <span class="o_stat_text">Counterpart</span>
+                </button>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+
+                <page name="c2p_engagement" string="Engagement"
+                      invisible="c2p_layer not in ('portfolio', 'delivery')">
+                    <group>
+                        <group string="Classification">
+                            <field name="c2p_layer"/>
+                            <field name="c2p_counterpart_id"
+                                   options="{'no_create': True}"/>
+                            <field name="engagement_type"
+                                   invisible="c2p_layer != 'portfolio'"/>
+                            <field name="account_manager_id"
+                                   invisible="c2p_layer != 'portfolio'"/>
+                            <field name="client_contact_id"
+                                   invisible="c2p_layer != 'portfolio'"/>
+                        </group>
+                        <group string="Schedule"
+                               invisible="c2p_layer != 'portfolio'">
+                            <field name="start_date"/>
+                            <field name="baseline_golive_date"/>
+                            <field name="forecast_golive_date"/>
+                            <field name="golive_slippage_days"/>
+                        </group>
+                    </group>
+                    <group string="Health" invisible="c2p_layer != 'portfolio'">
+                        <group>
+                            <field name="rag_status" widget="badge"
+                                   decoration-success="rag_status == 'green'"
+                                   decoration-warning="rag_status == 'amber'"
+                                   decoration-danger="rag_status == 'red'"/>
+                            <field name="health_score"/>
+                            <field name="progress_pct" widget="percentage"/>
+                            <field name="current_milestone_id"/>
+                            <field name="next_milestone_date"/>
+                        </group>
+                        <group>
+                            <field name="days_since_activity"/>
+                            <field name="open_blockers_count"/>
+                            <field name="overdue_milestones_count"/>
+                            <field name="overdue_tasks_count"/>
+                            <field name="rag_override"
+                                   groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                            <field name="rag_override_reason"
+                                   required="rag_override != False"
+                                   groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                        </group>
+                    </group>
+                    <!-- Why this score: the factors, not just the colour. -->
+                    <group string="Why this status"
+                           invisible="c2p_layer != 'portfolio'">
+                        <field name="rag_reasons" nolabel="1" readonly="1"/>
+                    </group>
+                </page>
+
+                <!-- The whole page is group-restricted as well as each field,
+                     so a Delivery Lead never sees an empty Commercials tab. -->
+                <page name="c2p_commercials" string="Commercials"
+                      groups="c2p_project_tracker.group_c2p_portfolio_manager"
+                      invisible="c2p_layer != 'portfolio'">
+                    <group>
+                        <group string="Client">
+                            <field name="c2p_currency_id"/>
+                            <field name="contract_value"/>
+                            <field name="c2p_sale_order_id"
+                                   options="{'no_create': True}"/>
+                            <field name="amount_received"/>
+                            <field name="amount_received_effective"/>
+                            <field name="amount_outstanding"/>
+                        </group>
+                        <group string="C2P Solutions">
+                            <field name="subcontract_pct"/>
+                            <field name="subcontract_value"/>
+                            <field name="subcontract_paid"/>
+                            <field name="subcontract_outstanding"/>
+                            <field name="consultants_margin"/>
+                            <field name="commercials_missing"/>
+                        </group>
+                    </group>
+                </page>
+
+            </xpath>
+        </field>
+    </record>
+
+    <!-- The portfolio table. -->
+    <record id="view_project_list_c2p_portfolio" model="ir.ui.view">
+        <field name="name">project.project.list.c2p.portfolio</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <list string="Engagements" create="false"
+                  decoration-danger="rag_status == 'red'"
+                  decoration-warning="rag_status == 'amber'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="engagement_type"/>
+                <field name="rag_status" widget="badge"
+                       decoration-success="rag_status == 'green'"
+                       decoration-warning="rag_status == 'amber'"
+                       decoration-danger="rag_status == 'red'"/>
+                <field name="health_score"/>
+                <field name="progress_pct" widget="percentage"/>
+                <field name="current_milestone_id" optional="show"/>
+                <field name="next_milestone_date" optional="show"/>
+                <field name="forecast_golive_date" optional="hide"/>
+                <field name="golive_slippage_days" optional="show"/>
+                <field name="days_since_activity" optional="show"/>
+                <field name="open_blockers_count" optional="show"/>
+                <field name="contract_value" optional="show" sum="Contract"
+                       groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                <field name="amount_received_effective" optional="show" sum="Received"
+                       groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                <field name="amount_outstanding" optional="show" sum="Outstanding"
+                       groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                <field name="subcontract_outstanding" optional="hide" sum="Owed to Solutions"
+                       groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                <field name="c2p_layer" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_project_search_c2p" model="ir.ui.view">
+        <field name="name">project.project.search.c2p</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <search string="Engagements">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter name="rag_red" string="Red"
+                        domain="[('rag_status', '=', 'red')]"/>
+                <filter name="rag_amber" string="Amber"
+                        domain="[('rag_status', '=', 'amber')]"/>
+                <filter name="rag_green" string="Green"
+                        domain="[('rag_status', '=', 'green')]"/>
+                <separator/>
+                <filter name="has_blockers" string="Has client blockers"
+                        domain="[('open_blockers_count', '>', 0)]"/>
+                <filter name="overdue" string="Overdue milestones"
+                        domain="[('overdue_milestones_count', '>', 0)]"/>
+                <filter name="stale" string="No activity for 7 days"
+                        domain="[('days_since_activity', '>=', 7)]"/>
+                <separator/>
+                <filter name="commercials_missing" string="Commercials missing"
+                        domain="[('commercials_missing', '=', True)]"
+                        groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_rag" string="RAG"
+                            context="{'group_by': 'rag_status'}"/>
+                    <filter name="group_type" string="Engagement Type"
+                            context="{'group_by': 'engagement_type'}"/>
+                    <filter name="group_am" string="Account Manager"
+                            context="{'group_by': 'account_manager_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_c2p_portfolio" model="ir.actions.act_window">
+        <field name="name">Engagements</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('c2p_layer', '=', 'portfolio')]</field>
+        <field name="search_view_id" ref="view_project_search_c2p"/>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No engagements classified yet</p>
+            <p>Set the C2P Layer to "Portfolio" on a milestone project, or run
+               the module's install hook, to populate this view.</p>
+        </field>
+    </record>
+
+    <record id="action_c2p_portfolio_list_only" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_project_list_c2p_portfolio"/>
+        <field name="act_window_id" ref="action_c2p_portfolio"/>
+    </record>
+
+</odoo>

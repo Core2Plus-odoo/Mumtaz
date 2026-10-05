@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_raid_list" model="ir.ui.view">
+        <field name="name">c2p.raid.item.list</field>
+        <field name="model">c2p.raid.item</field>
+        <field name="arch" type="xml">
+            <list string="RAID log" decoration-danger="is_overdue"
+                  decoration-muted="state == 'closed'">
+                <field name="project_id"/>
+                <field name="item_type"/>
+                <field name="name"/>
+                <field name="owner_id" widget="many2one_avatar_user"/>
+                <field name="raised_date"/>
+                <field name="due_date"/>
+                <field name="impact"/>
+                <field name="probability" optional="show"/>
+                <field name="score"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'closed'"
+                       decoration-warning="state == 'mitigating'"
+                       decoration-danger="state == 'open'"/>
+                <field name="is_overdue" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_raid_form" model="ir.ui.view">
+        <field name="name">c2p.raid.item.form</field>
+        <field name="model">c2p.raid.item</field>
+        <field name="arch" type="xml">
+            <form string="RAID item">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Short title"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"
+                                   options="{'no_create': True}"/>
+                            <field name="item_type"/>
+                            <field name="owner_id"/>
+                            <field name="state"/>
+                        </group>
+                        <group>
+                            <field name="raised_date"/>
+                            <field name="due_date"/>
+                            <field name="impact"/>
+                            <!-- Probability is meaningless for an issue: it
+                                 has already happened. -->
+                            <field name="probability"
+                                   invisible="item_type != 'risk'"
+                                   required="item_type == 'risk'"/>
+                            <field name="score"/>
+                            <field name="blocked_task_id"
+                                   invisible="item_type != 'dependency'"
+                                   options="{'no_create': True}"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="description" string="Description">
+                            <field name="description"/>
+                        </page>
+                        <page name="resolution" string="Resolution"
+                              invisible="state == 'open'">
+                            <field name="resolution"
+                                   placeholder="What was done, or decided."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_raid" model="ir.actions.act_window">
+        <field name="name">RAID log</field>
+        <field name="res_model">c2p.raid.item</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_change_request_list" model="ir.ui.view">
+        <field name="name">c2p.change.request.list</field>
+        <field name="model">c2p.change.request</field>
+        <field name="arch" type="xml">
+            <list string="Change requests">
+                <field name="reference"/>
+                <field name="project_id"/>
+                <field name="name"/>
+                <field name="impact_days"/>
+                <field name="impact_amount" sum="Impact"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+                <field name="approved_date" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_change_request_form" model="ir.ui.view">
+        <field name="name">c2p.change.request.form</field>
+        <field name="model">c2p.change.request</field>
+        <field name="arch" type="xml">
+            <form string="Change request">
+                <header>
+                    <button name="action_submit" type="object"
+                            string="Submit to client" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object"
+                            string="Approve" class="btn-primary"
+                            confirm="Approving adds the commercial impact to the engagement's contract value. Continue?"
+                            invisible="state != 'submitted'"/>
+                    <button name="action_reject" type="object"
+                            string="Reject"
+                            invisible="state != 'submitted'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h2><field name="reference" readonly="1"/></h2>
+                        <h1><field name="name" placeholder="What is changing"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"
+                                   options="{'no_create': True}"
+                                   readonly="state != 'draft'"/>
+                            <field name="requested_by_id"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="impact_days"
+                                   readonly="state in ('approved', 'rejected')"/>
+                            <field name="impact_amount"
+                                   readonly="state in ('approved', 'rejected')"/>
+                            <field name="approved_date"/>
+                            <field name="value_applied"/>
+                        </group>
+                    </group>
+                    <field name="description"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_change_request" model="ir.actions.act_window">
+        <field name="name">Change requests</field>
+        <field name="res_model">c2p.change.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>
