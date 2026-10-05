@@ -402,6 +402,149 @@ def render_diagnose(rep: dict) -> str:
     return "\n".join(out)
 
 
+def show_schema(db: str, model: str) -> dict:
+    """Field list for a model, so a module is written against the real schema
+    rather than remembered version differences."""
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    fields = client.execute(
+        "ir.model.fields", "search_read", [("model", "=", model)],
+        fields=["name", "ttype", "required", "store", "relation", "field_description"],
+        context=ALL_RECORDS, order="name")
+    return {"db": db, "model": model, "fields": fields}
+
+
+def render_schema(rep: dict) -> str:
+    if not rep["fields"]:
+        return (f"Model {rep['model']!r} has no fields in {rep['db']} — "
+                "the model does not exist or its module is not installed.")
+    out = [f"{rep['model']} — {len(rep['fields'])} fields in {rep['db']}", "-" * 78]
+    for f in rep["fields"]:
+        bits = [f["name"].ljust(32), (f.get("ttype") or "?").ljust(12)]
+        if f.get("relation"):
+            bits.append(f"-> {f['relation']}")
+        flags = []
+        if f.get("required"):
+            flags.append("required")
+        if f.get("store") is False:
+            flags.append("not stored")
+        if flags:
+            bits.append("[" + ", ".join(flags) + "]")
+        out.append("  " + " ".join(bits))
+    return "\n".join(out)
+
+
+def show_projects(db: str) -> dict:
+    """The project/task/milestone/group landscape, with ids, for planning a
+    module against an existing structure."""
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    out: dict = {"db": db}
+
+    out["projects"] = client.execute(
+        "project.project", "search_read", [],
+        fields=["id", "name", "company_id", "partner_id", "active"],
+        context=ALL_RECORDS, order="id")
+    for proj in out["projects"]:
+        for label, model, domain in (
+                ("tasks", "project.task", [("project_id", "=", proj["id"])]),
+                ("milestones", "project.milestone",
+                 [("project_id", "=", proj["id"])])):
+            try:
+                proj[label] = client.execute(model, "search_count", domain,
+                                             context=ALL_RECORDS)
+            except Exception as exc:
+                proj[label] = f"n/a ({type(exc).__name__})"
+
+    out["stages"] = client.execute(
+        "project.task.type", "search_read", [],
+        fields=["id", "name", "sequence", "project_ids", "fold"],
+        context=ALL_RECORDS, order="sequence, id")
+
+    try:
+        out["milestones"] = client.execute(
+            "project.milestone", "search_read", [],
+            fields=["id", "name", "project_id", "deadline", "is_reached"],
+            context=ALL_RECORDS, order="project_id, name")
+    except Exception as exc:
+        out["milestones"] = [{"error": type(exc).__name__}]
+
+    out["companies"] = client.execute(
+        "res.company", "search_read", [],
+        fields=["id", "name", "currency_id", "parent_id"], context=ALL_RECORDS)
+
+    # Groups and users are needed to wire security without guessing ids.
+    out["groups"] = client.execute(
+        "res.groups", "search_read",
+        ["|", ("name", "ilike", "project"), ("name", "ilike", "tracker")],
+        fields=["id", "name", "category_id"], context=ALL_RECORDS)
+    out["users"] = client.execute(
+        "res.users", "search_read", [("active", "=", True)],
+        fields=["id", "login", "name", "company_id"],
+        context=ALL_RECORDS, order="id")
+
+    # Does standard Project Updates exist here? It decides whether a custom
+    # status-report model is needed at all.
+    for model in ("project.update", "project.milestone"):
+        try:
+            out[f"has_{model.replace('.', '_')}"] = client.execute(
+                "ir.model", "search_count", [("model", "=", model)],
+                context=ALL_RECORDS) > 0
+        except Exception:
+            out[f"has_{model.replace('.', '_')}"] = "?"
+    return out
+
+
+def render_projects(rep: dict) -> str:
+    out = [f"Companies in {rep['db']}"]
+    for c in rep["companies"]:
+        cur = (c.get("currency_id") or [None, "?"])[1]
+        parent = (c.get("parent_id") or [None, "—"])[1]
+        out.append(f"  {c['id']:>3}  {c['name'][:40]:<40} {cur}  parent: {parent}")
+
+    out += ["", "Projects (id, company, partner, tasks, milestones)"]
+    for p in rep["projects"]:
+        co = (p.get("company_id") or [None, "—"])[1]
+        pt = (p.get("partner_id") or [None, "—"])[1]
+        flag = "" if p.get("active", True) else "  [ARCHIVED]"
+        out.append(f"  {p['id']:>3}  {p['name'][:46]:<46} co={str(co)[:22]:<22} "
+                   f"partner={str(pt)[:22]:<22} t={p.get('tasks')} m={p.get('milestones')}{flag}")
+
+    out += ["", "Task stages (id, sequence, name, projects, folded)"]
+    for st in rep["stages"]:
+        pids = st.get("project_ids") or []
+        out.append(f"  {st['id']:>3}  seq={st.get('sequence'):>3}  "
+                   f"{str(st['name'])[:34]:<34} projects={pids} fold={st.get('fold')}")
+
+    out += ["", "project.milestone records"]
+    for m in rep["milestones"]:
+        if m.get("error"):
+            out.append(f"  n/a ({m['error']})")
+            continue
+        pr = (m.get("project_id") or [None, "—"])[1]
+        out.append(f"  {m['id']:>4}  {str(m['name'])[:38]:<38} "
+                   f"project={str(pr)[:34]:<34} deadline={m.get('deadline')} "
+                   f"reached={m.get('is_reached')}")
+
+    out += ["", "Groups matching project/tracker"]
+    for g in rep["groups"]:
+        cat = (g.get("category_id") or [None, "—"])[1]
+        out.append(f"  {g['id']:>4}  {str(g['name'])[:40]:<40} category={cat}")
+
+    out += ["", "Active users (id, login, company)"]
+    for u in rep["users"]:
+        co = (u.get("company_id") or [None, "—"])[1]
+        out.append(f"  {u['id']:>3}  {str(u['login'])[:34]:<34} "
+                   f"{str(u['name'])[:26]:<26} {co}")
+
+    out += ["", "Standard models present"]
+    for key in ("has_project_update", "has_project_milestone"):
+        out.append(f"  {key.replace('has_', '').replace('_', '.')}: {rep.get(key)}")
+    return "\n".join(out)
+
+
 def show_tags(db: str, ids: list[int] | None = None, top: int = 25) -> dict:
     """Resolve crm.tag ids to names with how many leads carry each.
 
@@ -619,6 +762,12 @@ def main() -> int:
     parser.add_argument("--diagnose", action="store_true",
                         help="check the Leads stage gate and find what is "
                              "archiving leads in bulk")
+    parser.add_argument("--schema", metavar="MODEL",
+                        help="list a model's fields (name, type, relation, "
+                             "required, stored)")
+    parser.add_argument("--projects", action="store_true",
+                        help="projects, stages, milestones, companies, groups "
+                             "and users with their ids, for module planning")
     parser.add_argument("--tags", metavar="IDS", nargs="?", const="",
                         help="resolve crm.tag ids (comma-separated) to names "
                              "with lead counts; bare --tags lists the biggest")
@@ -638,7 +787,11 @@ def main() -> int:
         return report_databases()
 
     try:
-        if args.tags is not None:
+        if args.schema:
+            report = show_schema(args.db, args.schema)
+        elif args.projects:
+            report = show_projects(args.db)
+        elif args.tags is not None:
             ids = [int(x) for x in args.tags.split(",") if x.strip()] or None
             report = show_tags(args.db, ids)
         elif args.action:
@@ -658,7 +811,11 @@ def main() -> int:
     if args.json:
         print(json.dumps(report, indent=2, default=str))
     else:
-        if args.tags is not None:
+        if args.schema:
+            print(render_schema(report))
+        elif args.projects:
+            print(render_projects(report))
+        elif args.tags is not None:
             print(render_tags(report))
         elif args.action:
             print(render_action(report))

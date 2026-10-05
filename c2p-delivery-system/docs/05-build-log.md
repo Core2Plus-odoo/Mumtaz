@@ -1167,3 +1167,20 @@ unavailable (ModuleNotFoundError: No module named 'pydantic')"*. The store needs
 the service venv, so credentials come from the console connection only when the
 script runs under `delivery_api/.venv/bin/python`; under the system interpreter
 it is env-only, now said out loud instead of silently.
+
+### Inspection modes for module planning (`--schema`, `--projects`) ✅
+Groundwork for `c2p_project_tracker`, whose brief says to confirm the live
+schema and ids before writing code:
+- `--schema MODEL` lists a model's fields (type, relation, required, stored) so
+  a v19 module is written against the real schema instead of remembered version
+  differences, and reports plainly when a model does not exist.
+- `--projects` dumps companies, projects (with task and milestone counts),
+  `project.task.type` stages, `project.milestone` records, project-related
+  groups and active users — all with ids — plus whether standard
+  `project.update` and `project.milestone` exist.
+
+`project.update` matters: Odoo's standard Project Updates already covers a
+periodic status post with a RAG-style status, progress and description, and
+`project.project.last_update_status` stores it. If present, the brief's custom
+`c2p.status.report` largely duplicates standard functionality, which the
+standard-first ladder says to extend rather than replace.
