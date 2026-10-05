@@ -1184,3 +1184,18 @@ periodic status post with a RAG-style status, progress and description, and
 `project.project.last_update_status` stores it. If present, the brief's custom
 `c2p.status.report` largely duplicates standard functionality, which the
 standard-first ladder says to extend rather than replace.
+
+### v19 field drift: `res.groups.category_id` → `privilege_id` ⚠️→✅
+The first `--projects` run against `Mumtaz_C2P` died on
+`ValueError: Invalid field 'category_id' on 'res.groups'` — Odoo 19 replaced it
+with `privilege_id`, which corroborates the `res.groups.privilege` note in the
+`c2p_project_tracker` brief. Losing the whole landscape report to one unknown
+field was the same mistake as the earlier swallowed error, so every section now
+goes through a `read()` helper that tries candidate field sets in order and
+degrades to a labelled `n/a` row; the renderer tolerates an error row in any
+section and flags when group fields differ.
+
+Confirmed from `--schema project.milestone` (39 fields): `deadline`,
+`is_reached`, `reached_date`, `sequence`, `project_id` and `task_ids` all exist
+and are stored, so the sync engine's contract holds. There is no `description`
+field, and `sale_line_id` exists for the optional SO link.

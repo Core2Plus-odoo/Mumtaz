@@ -443,11 +443,26 @@ def show_projects(db: str) -> dict:
     client = OdooClient(db)
     out: dict = {"db": db}
 
-    out["projects"] = client.execute(
-        "project.project", "search_read", [],
-        fields=["id", "name", "company_id", "partner_id", "active"],
-        context=ALL_RECORDS, order="id")
-    for proj in out["projects"]:
+    def read(model, domain, field_sets, **kw):
+        """search_read trying each candidate field set in turn.
+
+        Field names move between Odoo versions — res.groups.category_id became
+        privilege_id in 19 — and one unknown field must not cost the whole
+        report, so fall back and finally degrade to a labelled error row.
+        """
+        last = None
+        for fields in field_sets:
+            try:
+                return client.execute(model, "search_read", domain,
+                                      fields=fields, context=ALL_RECORDS, **kw)
+            except Exception as exc:
+                last = exc
+        return [{"error": f"{type(last).__name__}: {str(last).splitlines()[-1][:90]}"}]
+
+    out["projects"] = read("project.project", [],
+                           [["id", "name", "company_id", "partner_id", "active"]],
+                           order="id")
+    for proj in [p for p in out["projects"] if not p.get("error")]:
         for label, model, domain in (
                 ("tasks", "project.task", [("project_id", "=", proj["id"])]),
                 ("milestones", "project.milestone",
@@ -458,32 +473,27 @@ def show_projects(db: str) -> dict:
             except Exception as exc:
                 proj[label] = f"n/a ({type(exc).__name__})"
 
-    out["stages"] = client.execute(
-        "project.task.type", "search_read", [],
-        fields=["id", "name", "sequence", "project_ids", "fold"],
-        context=ALL_RECORDS, order="sequence, id")
+    out["stages"] = read("project.task.type", [],
+                         [["id", "name", "sequence", "project_ids", "fold"]],
+                         order="sequence, id")
 
-    try:
-        out["milestones"] = client.execute(
-            "project.milestone", "search_read", [],
-            fields=["id", "name", "project_id", "deadline", "is_reached"],
-            context=ALL_RECORDS, order="project_id, name")
-    except Exception as exc:
-        out["milestones"] = [{"error": type(exc).__name__}]
+    out["milestones"] = read(
+        "project.milestone", [],
+        [["id", "name", "project_id", "deadline", "is_reached", "reached_date"]],
+        order="project_id, name")
 
-    out["companies"] = client.execute(
-        "res.company", "search_read", [],
-        fields=["id", "name", "currency_id", "parent_id"], context=ALL_RECORDS)
+    out["companies"] = read("res.company", [],
+                            [["id", "name", "currency_id", "parent_id"]])
 
     # Groups and users are needed to wire security without guessing ids.
-    out["groups"] = client.execute(
-        "res.groups", "search_read",
+    # res.groups.category_id became privilege_id in Odoo 19.
+    out["groups"] = read(
+        "res.groups",
         ["|", ("name", "ilike", "project"), ("name", "ilike", "tracker")],
-        fields=["id", "name", "category_id"], context=ALL_RECORDS)
-    out["users"] = client.execute(
-        "res.users", "search_read", [("active", "=", True)],
-        fields=["id", "login", "name", "company_id"],
-        context=ALL_RECORDS, order="id")
+        [["id", "name", "privilege_id"], ["id", "name", "category_id"],
+         ["id", "name"]])
+    out["users"] = read("res.users", [("active", "=", True)],
+                        [["id", "login", "name", "company_id"]], order="id")
 
     # Does standard Project Updates exist here? It decides whether a custom
     # status-report model is needed at all.
@@ -498,14 +508,23 @@ def show_projects(db: str) -> dict:
 
 
 def render_projects(rep: dict) -> str:
+    def err(rows):
+        return rows and isinstance(rows[0], dict) and rows[0].get("error")
+
     out = [f"Companies in {rep['db']}"]
     for c in rep["companies"]:
+        if c.get("error"):
+            out.append(f"  n/a ({c['error']})")
+            continue
         cur = (c.get("currency_id") or [None, "?"])[1]
         parent = (c.get("parent_id") or [None, "—"])[1]
         out.append(f"  {c['id']:>3}  {c['name'][:40]:<40} {cur}  parent: {parent}")
 
     out += ["", "Projects (id, company, partner, tasks, milestones)"]
     for p in rep["projects"]:
+        if p.get("error"):
+            out.append(f"  n/a ({p['error']})")
+            continue
         co = (p.get("company_id") or [None, "—"])[1]
         pt = (p.get("partner_id") or [None, "—"])[1]
         flag = "" if p.get("active", True) else "  [ARCHIVED]"
@@ -514,6 +533,9 @@ def render_projects(rep: dict) -> str:
 
     out += ["", "Task stages (id, sequence, name, projects, folded)"]
     for st in rep["stages"]:
+        if st.get("error"):
+            out.append(f"  n/a ({st['error']})")
+            continue
         pids = st.get("project_ids") or []
         out.append(f"  {st['id']:>3}  seq={st.get('sequence'):>3}  "
                    f"{str(st['name'])[:34]:<34} projects={pids} fold={st.get('fold')}")
@@ -530,14 +552,25 @@ def render_projects(rep: dict) -> str:
 
     out += ["", "Groups matching project/tracker"]
     for g in rep["groups"]:
-        cat = (g.get("category_id") or [None, "—"])[1]
-        out.append(f"  {g['id']:>4}  {str(g['name'])[:40]:<40} category={cat}")
+        if g.get("error"):
+            out.append(f"  n/a ({g['error']})")
+            continue
+        priv = g.get("privilege_id") or g.get("category_id") or [None, "—"]
+        out.append(f"  {g['id']:>4}  {str(g['name'])[:40]:<40} "
+                   f"privilege={priv[1]}")
 
     out += ["", "Active users (id, login, company)"]
     for u in rep["users"]:
+        if u.get("error"):
+            out.append(f"  n/a ({u['error']})")
+            continue
         co = (u.get("company_id") or [None, "—"])[1]
         out.append(f"  {u['id']:>3}  {str(u['login'])[:34]:<34} "
                    f"{str(u['name'])[:26]:<26} {co}")
+
+    if err(rep.get("groups", [])):
+        out.append("  (group fields differ on this version — module security "
+                   "must be written against res.groups.privilege)")
 
     out += ["", "Standard models present"]
     for key in ("has_project_update", "has_project_milestone"):
