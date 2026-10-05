@@ -1116,3 +1116,34 @@ Findings and proposed patches are written up in
 Correction to an earlier entry: the whole-database report's
 "Studio customisations: 0" counts manual *models*, not manual *fields*, so it
 does not rule out Studio-added fields such as the `x_bd_*` set.
+
+### `register_engagement.py` — point an engagement at a tenant DB ✅
+`Mumtaz_C2P` appeared nowhere in the repo, and the pipeline drives a tenant
+through an `Engagement`: with no `odoo_db` set, `sync` logs "Odoo unavailable"
+and every live-write stage refuses. `scripts/register_engagement.py <DB> [name]`
+registers one, verifying the database authenticates first so a mistyped name
+fails there rather than at the first stage run (`--skip-check` to bypass,
+`--list` to show what already points at a database).
+
+Writes only to the delivery system's own SQLite store — never Odoo or Postgres.
+
+Three mistakes this script's testing caught, all mine:
+- **`delivery_api` modules import each other flatly** (`from models import ...`),
+  which resolves only with that directory on `sys.path` — the service runs with
+  it as its working directory. Both scripts now add it.
+- **`wire_console_connection()` was a silent no-op in production.** It imported
+  `delivery_api.store`/`tenancy`, which cannot resolve for the reason above, and
+  its bare `except Exception: return` swallowed the `ModuleNotFoundError`. It
+  now imports flatly and, when the store genuinely is unavailable, says so on
+  stderr instead of vanishing. The "console connection fills credentials env
+  omits" feature had never actually worked on the VPS.
+- **`store` in `main.py` is an instance**, `tenancy.StoreProxy(EngagementStore())`,
+  not the module, so module-level `store.create(...)` does not exist. Both
+  scripts build the default `EngagementStore()`.
+- **`EngagementStore.list()` projects only `id`, `company`, `account_id` and
+  `stages`** — not `odoo_db`. The idempotency check filtered on a key that is
+  never present, so every run created a duplicate engagement. It now fetches
+  each record with `get()` to match on the target database.
+- Verified end to end against a temporary `C2P_STORE`: create, idempotent
+  re-run, rename-in-place, a second database kept separate, and a refusal when
+  the database is unreachable.

@@ -31,7 +31,12 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# delivery_api's modules import each other flatly (`from models import ...`),
+# which only resolves with that directory itself on the path — the service runs
+# with it as its working directory. Both entries are needed: `delivery_api.odoo`
+# for the client, and the flat path for whatever `store` and `tenancy` import.
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "delivery_api"))
 
 
 def load_env(path: Path) -> None:
@@ -58,13 +63,24 @@ def wire_console_connection() -> None:
     left alone, so an explicit credential on the command line still wins.
     """
     try:
-        from delivery_api import odoo as odoo_mod, store, tenancy
-    except Exception:
-        return  # store unavailable (no DB, no key) — env-only is still fine
+        import tenancy
+        from store import EngagementStore
+        from delivery_api import odoo as odoo_mod
+        # `store` in main.py is an instance, not the module, so build the
+        # default one here rather than calling module-level functions.
+        st = EngagementStore()
+    except Exception as exc:
+        # Env-only is a valid setup, but say so rather than vanishing: this
+        # swallowed a ModuleNotFoundError once and the fallback silently
+        # no-opped in production.
+        print(f"note: console connection unavailable "
+              f"({type(exc).__name__}: {exc}); using environment only",
+              file=sys.stderr)
+        return
 
     def resolver(_db: str):
         try:
-            s = store.get_setting("odoo_connection") or {}
+            s = st.get_setting("odoo_connection") or {}
         except Exception:
             return None
         url = os.environ.get("ODOO_URL") or s.get("url")
