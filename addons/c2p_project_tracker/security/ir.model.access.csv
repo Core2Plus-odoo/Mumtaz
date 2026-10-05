@@ -2,3 +2,8 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_milestone_history_member,c2p.milestone.history member,model_c2p_milestone_history,group_c2p_delivery_member,1,0,0,0
 access_milestone_history_lead,c2p.milestone.history lead,model_c2p_milestone_history,group_c2p_delivery_lead,1,0,0,0
 access_milestone_history_manager,c2p.milestone.history manager,model_c2p_milestone_history,group_c2p_portfolio_manager,1,1,1,1
+access_raid_member,c2p.raid.item member,model_c2p_raid_item,group_c2p_delivery_member,1,0,0,0
+access_raid_lead,c2p.raid.item lead,model_c2p_raid_item,group_c2p_delivery_lead,1,1,1,0
+access_raid_manager,c2p.raid.item manager,model_c2p_raid_item,group_c2p_portfolio_manager,1,1,1,1
+access_cr_lead,c2p.change.request lead,model_c2p_change_request,group_c2p_delivery_lead,1,0,0,0
+access_cr_manager,c2p.change.request manager,model_c2p_change_request,group_c2p_portfolio_manager,1,1,1,1

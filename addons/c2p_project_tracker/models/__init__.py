@@ -1,3 +1,4 @@
 from . import c2p_milestone_history
+from . import c2p_raid_item
 from . import project_project
 from . import project_task
