@@ -85,7 +85,10 @@ PROBES = [
     ("Active users", "res.users", [("active", "=", True)]),
     ("Partners (companies)", "res.partner", [("is_company", "=", True)]),
     ("Partners (contacts)", "res.partner", [("is_company", "=", False)]),
-    ("CRM leads/opportunities", "crm.lead", []),
+    # Odoo's search drops archived records unless the domain names `active`,
+    # and a lost lead is archived — so an unqualified count hides the losses.
+    ("CRM leads (active)", "crm.lead", []),
+    ("CRM leads (archived/lost)", "crm.lead", [("active", "=", False)]),
     ("Sale orders", "sale.order", []),
     ("Customer invoices", "account.move", [("move_type", "=", "out_invoice")]),
     ("Vendor bills", "account.move", [("move_type", "=", "in_invoice")]),
@@ -149,19 +152,28 @@ LEAD_GROUPINGS = [
 ]
 
 
+# Odoo hides archived records unless asked. A lost lead IS archived, so every
+# count here must opt in or the lost population vanishes from the report.
+ALL_RECORDS = {"active_test": False}
+
+
 def analyse_leads(db: str, top: int = 12) -> dict:
     """Break the CRM pile down server-side. read_group does the counting in
-    PostgreSQL, so this stays cheap even at ~12k leads."""
+    PostgreSQL, so this stays cheap even at tens of thousands of leads."""
     from delivery_api.odoo import OdooClient
 
     client = OdooClient(db)
-    out: dict = {"db": db, "total": client.execute("crm.lead", "search_count", [])}
+    total = client.execute("crm.lead", "search_count", [], context=ALL_RECORDS)
+    live = client.execute("crm.lead", "search_count", [("active", "=", True)],
+                          context=ALL_RECORDS)
+    out: dict = {"db": db, "total": total, "active": live,
+                 "archived": total - live}
 
     groups: dict = {}
     for heading, field in LEAD_GROUPINGS:
         try:
             rows = client.execute("crm.lead", "read_group", [], [field], [field],
-                                  lazy=False)
+                                  lazy=False, context=ALL_RECORDS)
         except Exception as exc:
             groups[heading] = [("n/a", f"{type(exc).__name__}")]
             continue
@@ -183,7 +195,7 @@ def analyse_leads(db: str, top: int = 12) -> dict:
     # actionable, which is the main thing to know about a bulk-imported pile.
     probes = {
         "Won": [("stage_id.is_won", "=", True)],
-        "Lost (inactive)": [("active", "=", False)],
+        "Archived (lost)": [("active", "=", False)],
         "No email": [("email_from", "in", [False, ""])],
         "No phone": [("phone", "in", [False, ""])],
         "No email and no phone": [("email_from", "in", [False, ""]),
@@ -194,7 +206,8 @@ def analyse_leads(db: str, top: int = 12) -> dict:
     quality: dict = {}
     for label, domain in probes.items():
         try:
-            quality[label] = client.execute("crm.lead", "search_count", domain)
+            quality[label] = client.execute("crm.lead", "search_count", domain,
+                                            context=ALL_RECORDS)
         except Exception as exc:
             quality[label] = f"n/a ({type(exc).__name__})"
     out["quality"] = quality
@@ -203,7 +216,7 @@ def analyse_leads(db: str, top: int = 12) -> dict:
     for label, order in (("oldest", "create_date asc"), ("newest", "create_date desc")):
         try:
             rec = client.execute("crm.lead", "search_read", [], fields=["create_date"],
-                                 limit=1, order=order)
+                                 limit=1, order=order, context=ALL_RECORDS)
             out[label] = rec[0]["create_date"] if rec else None
         except Exception:
             out[label] = None
@@ -212,7 +225,8 @@ def analyse_leads(db: str, top: int = 12) -> dict:
 
 
 def render_leads(rep: dict) -> str:
-    out = [f"CRM leads in {rep['db']} : {rep['total']}"]
+    out = [f"CRM leads in {rep['db']} : {rep['total']}"
+           f"  ({rep['active']} active, {rep['archived']} archived)"]
     if rep.get("oldest") or rep.get("newest"):
         out.append(f"Created between      : {rep.get('oldest')}  ..  {rep.get('newest')}")
     out.append("")

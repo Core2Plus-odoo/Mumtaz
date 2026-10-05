@@ -1004,3 +1004,17 @@ company.
 - Verified: `py_compile` + `pyflakes` clean, `--help` lists the flag, and
   `render_leads` exercised against synthetic data covering many2one labels,
   unset values, percentage shares and a failed grouping.
+
+### Fix: archived leads were invisible (both reports) ⚠️→✅
+The first `--leads` run on `Mumtaz_C2P` printed `Lost (inactive): 29484 (252%)`
+— a share above 100% that exposed the bug. Odoo's `search` only applies its
+`active_test` filter when the domain does not mention `active`, so
+`search_count([])` counted active leads only (11,698) while the lost probe,
+naming `active` explicitly, saw all 29,484 archived ones. The denominator was
+the active subset, not the population.
+- `analyse_leads()` now counts with `context={"active_test": False}` throughout
+  and reports `total (active, archived)`, so shares are against all ~41k leads.
+- The whole-database report split its CRM row into `CRM leads (active)` and
+  `CRM leads (archived/lost)`; the single row had understated CRM by 29k.
+- Lesson for future probes: on any model with `active`, an unqualified
+  `search_count` is a count of the *unarchived* subset, not the total.
