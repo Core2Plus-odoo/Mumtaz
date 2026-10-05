@@ -13,13 +13,28 @@ Do not assume paths — read them from the unit file.
 systemctl cat odoo4.service
 ```
 
-Note the `ExecStart` line. It contains `-c <config>`; read that file for the
-addons path and the database settings:
+Read the whole unit — on this server `ExecStart` does **not** carry `-c`, so a
+grep for it returns nothing and every later `"$CONF"` silently expands to an
+empty string:
 
 ```bash
-CONF=$(systemctl cat odoo4.service | grep -oP '(?<=-c )\S+' | head -1)
-echo "config: $CONF"
-grep -E '^(addons_path|db_host|db_user|db_port|xmlrpc_port|http_port)' "$CONF"
+systemctl cat odoo4.service | grep -iE 'ExecStart|Environment|WorkingDirectory'
+```
+
+Then resolve the config from whichever form it uses — an explicit `-c` or
+`--config`, an `ODOO_RC` environment variable, or Odoo's defaults
+(`$ODOO_RC`, then `~odoo/.odoorc`, then `/etc/odoo/odoo.conf`):
+
+```bash
+CONF=$(systemctl cat odoo4.service \
+       | grep -oP '(?<=(-c|--config=))\s*\S+' | tr -d ' ' | head -1)
+[ -z "$CONF" ] && CONF=$(systemctl show odoo4.service -p Environment \
+       | grep -oP '(?<=ODOO_RC=)\S+')
+[ -z "$CONF" ] && for c in ~odoo/.odoorc /etc/odoo/odoo.conf /etc/odoo.conf; do
+    [ -r "$c" ] && CONF="$c" && break
+done
+echo "config: ${CONF:-NOT FOUND}"
+[ -n "$CONF" ] && grep -E '^(addons_path|db_host|db_user|db_port|http_port)' "$CONF"
 ```
 
 As inspected on 2026-10-05 the addons path was:
@@ -46,6 +61,12 @@ done
 ```
 
 Any name appearing under more than one path is a shadowing risk.
+
+**Measured on 2026-10-05, this is not hypothetical.** `/opt/mumtaz/addons` and
+`/opt/custom_addons/Mumtaz/addons` hold the **same 37 modules** — they are two
+checkouts of this repository — and `/opt/custom_addons` itself carries a third
+copy of `c2p_appointment` plus a second `mumtaz_einvoicing`. Adding
+`/opt/mumtaz/addons` to the path would shadow all 37. Use the symlink.
 
 ### Preferred: symlink the one module
 
