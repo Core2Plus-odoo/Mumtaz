@@ -1090,3 +1090,29 @@ Findings from the same run:
   and **`/opt/custom_addons/Mumtaz/addons`** — a second checkout of this repo,
   separate from `/opt/mumtaz` which `deploy/update.sh` manages.
 - `c2p_master_agent` is listed as installed but is **not on the addons path**.
+
+### Read the sweep and the engine — root causes found ✅
+`--action` dumps confirmed where the CRM numbers come from, and `--tags IDS`
+was added to resolve the sweep's hardcoded tag ids to names with lead counts.
+Findings and proposed patches are written up in
+`docs/07-mumtaz-c2p-crm-findings.md`:
+- The 29,484 archives come from the daily `C2P — Archive bounced/dead-email
+  leads` cron doing `recs.write({'active': False})` — archiving with **no lost
+  reason**, which is exactly why every archived lead reports none. Its domain
+  keys off hardcoded tag ids `2237`, `18`, `2245`.
+- `C2P BD Engine 1` assigns **every** qualified lead to hardcoded `user_id = 42`
+  and non-qualified ones to `11`/`12`. That, not the scraper source defaults, is
+  the operative cause of the per-rep skew — the engine overwrites the owner the
+  mapper set an hour earlier.
+- The engine runs an unindexable `=ilike '%@domain'` `search_count` **per lead**
+  (150/run, hourly) against a 41k-row table; hoisting it to one `read_group`
+  removes up to 150 sequential scans per run.
+- `Automation Rules: check and execute`, Odoo's base cron for time-based rules,
+  is INACTIVE, so every `on_time` rule in the database is dead code.
+- All of this logic lives in `ir.actions.server.code` **records in the
+  database** — 25 on `crm.lead` — with no version history, review or rollback.
+  That, plus the untracked modules, is the finding above all the others.
+
+Correction to an earlier entry: the whole-database report's
+"Studio customisations: 0" counts manual *models*, not manual *fields*, so it
+does not rule out Studio-added fields such as the `x_bd_*` set.

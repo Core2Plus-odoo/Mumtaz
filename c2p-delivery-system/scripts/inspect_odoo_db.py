@@ -378,6 +378,47 @@ def render_diagnose(rep: dict) -> str:
     return "\n".join(out)
 
 
+def show_tags(db: str, ids: list[int] | None = None, top: int = 25) -> dict:
+    """Resolve crm.tag ids to names with how many leads carry each.
+
+    The archive sweep keys off hardcoded tag ids, so the names and volumes
+    behind those ids decide whether it is a precise rule or a mass sweep.
+    """
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    domain = [("id", "in", ids)] if ids else []
+    tags = client.execute("crm.tag", "search_read", domain,
+                          fields=["id", "name"], context=ALL_RECORDS)
+    rows = []
+    for t in tags:
+        counts = {}
+        for label, extra in (("all", []), ("archived", [("active", "=", False)])):
+            try:
+                counts[label] = client.execute(
+                    "crm.lead", "search_count",
+                    [("tag_ids", "in", [t["id"]])] + extra, context=ALL_RECORDS)
+            except Exception:
+                counts[label] = "?"
+        rows.append((t["id"], t["name"], counts["all"], counts["archived"]))
+    # Without an explicit id list, show only the tags that actually matter.
+    if not ids:
+        rows.sort(key=lambda r: (r[2] if isinstance(r[2], int) else 0), reverse=True)
+        rows = rows[:top]
+    else:
+        rows.sort(key=lambda r: r[0])
+    return {"db": db, "rows": rows, "explicit": bool(ids)}
+
+
+def render_tags(rep: dict) -> str:
+    if not rep["rows"]:
+        return f"No matching crm.tag records in {rep['db']}."
+    out = [f"{'id':>6}  {'tag':<40} {'leads':>8} {'archived':>9}", "-" * 68]
+    for tid, name, total, archived in rep["rows"]:
+        out.append(f"{tid:>6}  {str(name)[:40]:<40} {total:>8} {archived:>9}")
+    return "\n".join(out)
+
+
 def show_action(db: str, needle: str) -> dict:
     """Print the code of server actions whose name matches, so a sweep can be
     read rather than guessed at. Reading ir.actions.server.code is a read."""
@@ -554,6 +595,9 @@ def main() -> int:
     parser.add_argument("--diagnose", action="store_true",
                         help="check the Leads stage gate and find what is "
                              "archiving leads in bulk")
+    parser.add_argument("--tags", metavar="IDS", nargs="?", const="",
+                        help="resolve crm.tag ids (comma-separated) to names "
+                             "with lead counts; bare --tags lists the biggest")
     parser.add_argument("--action", metavar="NAME",
                         help="print the code of server actions whose name "
                              "matches NAME (substring, case-insensitive)")
@@ -570,7 +614,10 @@ def main() -> int:
         return report_databases()
 
     try:
-        if args.action:
+        if args.tags is not None:
+            ids = [int(x) for x in args.tags.split(",") if x.strip()] or None
+            report = show_tags(args.db, ids)
+        elif args.action:
             report = show_action(args.db, args.action)
         elif args.diagnose:
             report = diagnose(args.db)
@@ -587,7 +634,9 @@ def main() -> int:
     if args.json:
         print(json.dumps(report, indent=2, default=str))
     else:
-        if args.action:
+        if args.tags is not None:
+            print(render_tags(report))
+        elif args.action:
             print(render_action(report))
         elif args.diagnose:
             print(render_diagnose(report))
