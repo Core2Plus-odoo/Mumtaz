@@ -75,7 +75,16 @@ for name in "${WANTED[@]}"; do
     missing=$((missing+1)); continue
   fi
   if [[ -e "$DEST/$name" && "${FORCE:-0}" != "1" ]]; then
-    printf '%-22s already in repo — skipped (FORCE=1 to overwrite)\n' "$name"
+    # On disk is not the same as in git: a module can sit in the working tree
+    # untracked or ignored, which is the state this script exists to find.
+    if git -C "$REPO_ROOT" ls-files --error-unmatch "addons/$name" >/dev/null 2>&1; then
+      state="tracked in git"
+    elif git -C "$REPO_ROOT" check-ignore -q "addons/$name" 2>/dev/null; then
+      state="ON DISK BUT GITIGNORED"
+    else
+      state="ON DISK BUT UNTRACKED"
+    fi
+    printf '%-22s %s — skipped (FORCE=1 to re-copy)\n' "$name" "$state"
     skipped=$((skipped+1)); continue
   fi
   rm -rf "$DEST/$name"

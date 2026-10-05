@@ -242,11 +242,19 @@ def diagnose(db: str) -> dict:
                              [("module", "=", "crm"), ("name", "=", "group_use_lead")],
                              fields=["res_id"], limit=1)
         if ref:
-            grp = client.execute("res.groups", "read", [ref[0]["res_id"]],
-                                 fields=["name", "users"])
-            members = len(grp[0].get("users") or []) if grp else 0
+            # The members field is `user_ids` on modern Odoo and `users` on
+            # older releases; try both rather than guess the version.
+            members = None
+            for field in ("user_ids", "users"):
+                try:
+                    grp = client.execute("res.groups", "read", [ref[0]["res_id"]],
+                                         fields=[field])
+                    members = len(grp[0].get(field) or []) if grp else 0
+                    break
+                except Exception:
+                    continue
             out["leads_feature"] = {"group_found": True, "members": members,
-                                    "enabled": members > 0}
+                                    "enabled": bool(members)}
         else:
             out["leads_feature"] = {"group_found": False}
     except Exception as exc:
@@ -320,21 +328,23 @@ def render_diagnose(rep: dict) -> str:
     out = [f"Diagnostics for {rep['db']}", ""]
 
     lf = rep.get("leads_feature", {})
-    out.append("Leads feature (crm.group_use_lead)")
-    if lf.get("error"):
-        out.append(f"  could not resolve: {lf['error']}")
-    elif not lf.get("group_found"):
-        out.append("  group not found — CRM may not be installed as expected")
-    else:
-        state = "ENABLED" if lf.get("enabled") else "DISABLED"
-        out.append(f"  {state}  ({lf.get('members', 0)} users in the group)")
-        if not lf.get("enabled"):
-            out.append("  -> every new crm.lead defaults to type 'opportunity',")
-            out.append("     so scraped records skip the qualification gate.")
-            out.append("     Fix: CRM > Configuration > Settings > enable Leads.")
+    out.append("Leads stage gate")
     td = rep.get("type_default")
-    if isinstance(td, dict) and "type" in td:
-        out.append(f"  default type for a new lead: {td['type']!r}")
+    default_type = td.get("type") if isinstance(td, dict) else None
+    if default_type:
+        out.append(f"  a new crm.lead defaults to type {default_type!r}")
+        if default_type == "lead":
+            out.append("  -> the gate is ON. Records arriving as 'opportunity'")
+            out.append("     are being set or converted by something else;")
+            out.append("     check the automation listed below.")
+        else:
+            out.append("  -> the gate is OFF, so everything created skips")
+            out.append("     qualification. Fix: CRM > Settings > enable Leads.")
+    lf = rep.get("leads_feature", {})
+    if lf.get("error"):
+        out.append(f"  (group lookup failed: {lf['error'][:120]})")
+    elif lf.get("group_found"):
+        out.append(f"  crm.group_use_lead members: {lf.get('members')}")
     out.append("")
 
     out.append("Archived leads by last writer")
@@ -365,6 +375,35 @@ def render_diagnose(rep: dict) -> str:
             if r.get("active") is False:
                 bits.append("INACTIVE")
             out.append("  " + "  ".join(bits))
+    return "\n".join(out)
+
+
+def show_action(db: str, needle: str) -> dict:
+    """Print the code of server actions whose name matches, so a sweep can be
+    read rather than guessed at. Reading ir.actions.server.code is a read."""
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    rows = client.execute("ir.actions.server", "search_read",
+                          [("name", "ilike", needle)],
+                          fields=["name", "state", "model_id", "code"],
+                          context=ALL_RECORDS)
+    return {"db": db, "needle": needle, "actions": rows}
+
+
+def render_action(rep: dict) -> str:
+    rows = rep["actions"]
+    if not rows:
+        return f"No server action matching {rep['needle']!r} in {rep['db']}."
+    out = []
+    for r in rows:
+        model = r.get("model_id")
+        model = model[1] if isinstance(model, (list, tuple)) else "?"
+        out.append("=" * 72)
+        out.append(f"{r['name']}   [model: {model}, state: {r.get('state')}]")
+        out.append("=" * 72)
+        out.append(r.get("code") or "(no code on this action)")
+        out.append("")
     return "\n".join(out)
 
 
@@ -515,6 +554,9 @@ def main() -> int:
     parser.add_argument("--diagnose", action="store_true",
                         help="check the Leads stage gate and find what is "
                              "archiving leads in bulk")
+    parser.add_argument("--action", metavar="NAME",
+                        help="print the code of server actions whose name "
+                             "matches NAME (substring, case-insensitive)")
     parser.add_argument("--json", action="store_true",
                         help="emit the full report as JSON instead of a summary")
     args = parser.parse_args()
@@ -528,7 +570,9 @@ def main() -> int:
         return report_databases()
 
     try:
-        if args.diagnose:
+        if args.action:
+            report = show_action(args.db, args.action)
+        elif args.diagnose:
             report = diagnose(args.db)
         elif args.leads:
             report = analyse_leads(args.db)
@@ -543,7 +587,9 @@ def main() -> int:
     if args.json:
         print(json.dumps(report, indent=2, default=str))
     else:
-        if args.diagnose:
+        if args.action:
+            print(render_action(report))
+        elif args.diagnose:
             print(render_diagnose(report))
         elif args.leads:
             print(render_leads(report))

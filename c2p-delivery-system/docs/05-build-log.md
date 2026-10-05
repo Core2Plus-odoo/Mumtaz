@@ -1053,3 +1053,40 @@ in `odoo.conf` into `addons/`.
 
 Also added `.env.production.save` to `.gitignore` — production was carrying it
 as an uncommitted local edit, which blocked `git checkout` there.
+
+### Diagnose run on `Mumtaz_C2P` — hypothesis refuted ⚠️
+The `--diagnose` run disproved the standing theory that the Leads gate was off.
+`crm.lead.default_get(['type'])` returns **`'lead'`**: the gate is ON, so the
+10,932 opportunities are *not* a default — something sets or converts them.
+Candidates among the active automation: `C2P BD Engine 1: Qualify, score &
+assign leads` (hourly cron), `C2P: Sourced lead -> AI agents` (on_create), and
+the `Lead Nurture: Auto-Convert Qualified Leads` server action.
+
+Two script bugs the run exposed, both fixed:
+- `res.groups.users` does not exist on Odoo 19 (it is `user_ids`), so the group
+  probe raised `ValueError: Invalid field 'users'`. It now tries `user_ids`
+  then `users`, and the report leads with `default_get`, which is the
+  authoritative answer rather than an inference from group membership.
+- `collect_production_addons.sh` reported "already in repo" for anything
+  present on disk. Presence on disk is not the question — git tracking is, and
+  an untracked module in the working tree is exactly what the script exists to
+  find. It now distinguishes tracked / UNTRACKED / GITIGNORED.
+
+`--action NAME` prints matching `ir.actions.server` code (a read of
+`ir.actions.server.code`), so a sweep can be read instead of guessed at.
+
+Findings from the same run:
+- **The archiving is attributable**: 29,337 of the 29,484 archived leads have
+  `write_uid` = Muhammad Umer and **no lost reason at all**. The prime suspect
+  is the active daily cron `C2P — Archive bounced/dead-email leads (reversible)`
+  (next 04:00), which has a matching server action.
+- `Automation Rules: check and execute` — the base cron that fires *time-based*
+  automation rules — is **INACTIVE**, so any `on_time` rule never runs.
+- Of 12 automation rules on `crm.lead`, only 4 are active (`Auto-assign unowned
+  leads`, `Website form -> tag as Website`, `Sourced lead -> AI agents`,
+  `BD Engine 3: Handle prospect replies`); the routing, scoring and
+  Won→project rules are all off.
+- Production's addons path is `/usr/lib/.../odoo/addons`, `/opt/custom_addons`
+  and **`/opt/custom_addons/Mumtaz/addons`** — a second checkout of this repo,
+  separate from `/opt/mumtaz` which `deploy/update.sh` manages.
+- `c2p_master_agent` is listed as installed but is **not on the addons path**.
