@@ -954,6 +954,18 @@ count and the local `mumtaz|c2p|zaki` modules. `--json` emits the full payload.
   is loaded when present (existing env always wins).
 - Models whose app isn't installed report `n/a (<Error>)` instead of aborting
   the run, so a partially-configured database still yields a full report.
-- Verified: `py_compile` + `pyflakes` clean, `--help` renders, and the failure
-  path against an unreachable server exits 1 with the credentials hint rather
-  than a traceback.
+- Failures are classified rather than blamed on credentials: a missing database
+  says so (and lists the server's databases, or gives the `psql -lqt` fallback
+  when `list_db = False`), refused auth points at ODOO_USER/ODOO_PASSWORD, an
+  unreachable server at ODOO_URL. `--list` shows the available databases.
+- Odoo returns server errors as an XML-RPC Fault whose `str()` is a repr with
+  escaped newlines; `error_text()` reads `faultString` so the cause can be
+  reduced to one line instead of a 40-frame traceback.
+- Verified: `py_compile` + `pyflakes` clean, `--help` and the no-args error
+  render, and the three failure paths (missing db from the real production Fault
+  text, refused auth, unreachable server) each produce the right one-line
+  summary and hint.
+- First run against the VPS: credentials resolved and Odoo answered, but
+  **no database named `MUMTAZ_C2P` exists** on `187.77.128.199` — the name is
+  absent from the repo too, so it is either named differently or not yet
+  created.

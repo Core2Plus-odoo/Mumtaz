@@ -11,6 +11,7 @@ Usage, on the VPS:
     cd /opt/mumtaz/c2p-delivery-system
     python3 scripts/inspect_odoo_db.py MUMTAZ_C2P
     python3 scripts/inspect_odoo_db.py MUMTAZ_C2P --json > /tmp/mumtaz_c2p.json
+    python3 scripts/inspect_odoo_db.py --list
 
 Env is read from delivery_api/.env (the service env file) when present.
 """
@@ -127,23 +128,108 @@ def render(report: dict) -> str:
     return "\n".join(out)
 
 
+def error_text(exc: Exception) -> str:
+    """The human-readable text of an exception. An XML-RPC Fault's str() is a
+    repr with the newlines escaped, so the real server message only comes out
+    of faultString."""
+    return getattr(exc, "faultString", None) or str(exc)
+
+
+def summarise_error(exc: Exception) -> str:
+    """One line out of an exception. Odoo wraps server errors in a Fault
+    carrying a full server traceback; its last non-empty line is the actual
+    cause, so surface that instead of 40 lines of frames."""
+    text = error_text(exc)
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if "Traceback" in text and lines:
+        return f"{type(exc).__name__}: {lines[-1]}"
+    return f"{type(exc).__name__}: {text}"
+
+
+def server_databases(url: str) -> list[str] | None:
+    """Databases the server admits to, or None when the db service is blocked
+    (the common case on a hardened instance: list_db = False)."""
+    from delivery_api.odoo import list_databases
+
+    try:
+        return list_databases(url)
+    except Exception:
+        return None
+
+
+def hint_for(exc: Exception, db: str) -> str:
+    """Point at the actual cause rather than guessing credentials."""
+    text = error_text(exc)
+
+    if "does not exist" in text:
+        url = os.getenv("ODOO_URL", "http://localhost:8069")
+        msg = [f"The server is reachable, but it has no database named '{db}'.",
+               "Database names are case-sensitive."]
+        names = server_databases(url)
+        if names:
+            msg.append("Databases this server serves: " + ", ".join(names))
+        elif names is None:
+            msg.append("The server will not list its databases (list_db = False); "
+                       "on the host try:  sudo -u postgres psql -lqt | cut -d'|' -f1")
+        else:
+            msg.append("The server reports no databases at all.")
+        return "\n".join(msg)
+
+    if isinstance(exc, PermissionError) or "AccessDenied" in text:
+        return ("Reached the database but authentication was refused. Check "
+                "ODOO_USER / ODOO_PASSWORD in delivery_api/.env, or the "
+                "console's Odoo Connection.")
+
+    if isinstance(exc, (ConnectionError, OSError)):
+        return (f"Could not reach the Odoo server at "
+                f"{os.getenv('ODOO_URL', 'http://localhost:8069')}. Check "
+                "ODOO_URL and that the service is up.")
+
+    return ("Check ODOO_URL / ODOO_USER / ODOO_PASSWORD in delivery_api/.env, "
+            "or the console's Odoo Connection.")
+
+
+def report_databases() -> int:
+    url = os.getenv("ODOO_URL", "http://localhost:8069")
+    names = server_databases(url)
+    if names is None:
+        print(f"{url} will not list its databases (list_db = False).",
+              file=sys.stderr)
+        print("On the host try:  sudo -u postgres psql -lqt | cut -d'|' -f1",
+              file=sys.stderr)
+        return 1
+    if not names:
+        print(f"{url} reports no databases.", file=sys.stderr)
+        return 1
+    print(f"Databases served by {url}:")
+    for name in names:
+        print(f"  - {name}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("db", help="Odoo database name, e.g. MUMTAZ_C2P")
+    parser.add_argument("db", nargs="?",
+                        help="Odoo database name, e.g. MUMTAZ_C2P")
+    parser.add_argument("--list", action="store_true", dest="list_dbs",
+                        help="list the databases this server serves, then exit")
     parser.add_argument("--json", action="store_true",
                         help="emit the full report as JSON instead of a summary")
     args = parser.parse_args()
+    if not args.db and not args.list_dbs:
+        parser.error("give a database name, or --list to see what is available")
 
     load_env(ROOT / "delivery_api" / ".env")
+
+    if args.list_dbs:
+        return report_databases()
 
     try:
         report = inspect(args.db)
     except Exception as exc:
-        print(f"Inspection failed for '{args.db}': {type(exc).__name__}: {exc}",
+        print(f"Inspection failed for '{args.db}': {summarise_error(exc)}",
               file=sys.stderr)
-        print("Check ODOO_URL / ODOO_USER / ODOO_PASSWORD in "
-              "delivery_api/.env, or the console's Odoo Connection.",
-              file=sys.stderr)
+        print(hint_for(exc, args.db), file=sys.stderr)
         return 1
 
     print(json.dumps(report, indent=2, default=str) if args.json else render(report))
