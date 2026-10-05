@@ -989,3 +989,18 @@ Odoo **19.0** (build 20260719), 144 modules installed, 41 active users.
   (`c2p_appointment`, `c2p_master_agent`, `c2p_proposal`,
   `mumtaz_lead_nurture`, `mumtaz_lead_scraper`).
 - Stock is not installed (`stock.picking` reported n/a), as are purchases (0).
+
+### CRM lead drill-down (`--leads`) ✅
+`inspect_odoo_db.py <DB> --leads` breaks the lead pile down instead of
+reporting the whole database: totals, the create-date span (one bulk import vs
+ongoing capture), actionability probes (won, lost, missing email/phone, has
+expected revenue, no activity logged) with each as a share of the total, and
+counts grouped by type, stage, source, medium, sales team, salesperson and
+company.
+- Aggregation is server-side via `read_group`, so ~12k leads cost a handful of
+  queries rather than a 12k-record fetch; still strictly read-only.
+- A grouping that errors (a field absent on this version) degrades to an `n/a`
+  row rather than losing the whole report.
+- Verified: `py_compile` + `pyflakes` clean, `--help` lists the flag, and
+  `render_leads` exercised against synthetic data covering many2one labels,
+  unset values, percentage shares and a failed grouping.

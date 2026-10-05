@@ -16,6 +16,7 @@ Usage, on the VPS:
     python3 scripts/inspect_odoo_db.py MUMTAZ_C2P
     python3 scripts/inspect_odoo_db.py MUMTAZ_C2P --json > /tmp/mumtaz_c2p.json
     python3 scripts/inspect_odoo_db.py --list
+    python3 scripts/inspect_odoo_db.py Mumtaz_C2P --leads
 
 Env is read from delivery_api/.env (the service env file) when present.
 """
@@ -136,6 +137,106 @@ def inspect(db: str) -> dict:
     return report
 
 
+# How the lead pile breaks down, as (heading, grouping field).
+LEAD_GROUPINGS = [
+    ("By type", "type"),
+    ("By stage", "stage_id"),
+    ("By source", "source_id"),
+    ("By medium", "medium_id"),
+    ("By sales team", "team_id"),
+    ("By salesperson", "user_id"),
+    ("By company", "company_id"),
+]
+
+
+def analyse_leads(db: str, top: int = 12) -> dict:
+    """Break the CRM pile down server-side. read_group does the counting in
+    PostgreSQL, so this stays cheap even at ~12k leads."""
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    out: dict = {"db": db, "total": client.execute("crm.lead", "search_count", [])}
+
+    groups: dict = {}
+    for heading, field in LEAD_GROUPINGS:
+        try:
+            rows = client.execute("crm.lead", "read_group", [], [field], [field],
+                                  lazy=False)
+        except Exception as exc:
+            groups[heading] = [("n/a", f"{type(exc).__name__}")]
+            continue
+        counted = []
+        for r in rows:
+            value = r.get(field)
+            if isinstance(value, (list, tuple)):   # many2one -> (id, label)
+                label = value[1]
+            elif value in (False, None):
+                label = "— not set —"
+            else:
+                label = str(value)
+            counted.append((label, r.get("__count") or r.get(f"{field}_count") or 0))
+        counted.sort(key=lambda kv: kv[1], reverse=True)
+        groups[heading] = counted[:top]
+    out["groups"] = groups
+
+    # Contactability: a scraped lead with neither email nor phone is not
+    # actionable, which is the main thing to know about a bulk-imported pile.
+    probes = {
+        "Won": [("stage_id.is_won", "=", True)],
+        "Lost (inactive)": [("active", "=", False)],
+        "No email": [("email_from", "in", [False, ""])],
+        "No phone": [("phone", "in", [False, ""])],
+        "No email and no phone": [("email_from", "in", [False, ""]),
+                                  ("phone", "in", [False, ""])],
+        "Has an expected revenue": [("expected_revenue", ">", 0)],
+        "Never contacted (no activity)": [("activity_ids", "=", False)],
+    }
+    quality: dict = {}
+    for label, domain in probes.items():
+        try:
+            quality[label] = client.execute("crm.lead", "search_count", domain)
+        except Exception as exc:
+            quality[label] = f"n/a ({type(exc).__name__})"
+    out["quality"] = quality
+
+    # Age span: when this pile arrived says whether it is one import or ongoing.
+    for label, order in (("oldest", "create_date asc"), ("newest", "create_date desc")):
+        try:
+            rec = client.execute("crm.lead", "search_read", [], fields=["create_date"],
+                                 limit=1, order=order)
+            out[label] = rec[0]["create_date"] if rec else None
+        except Exception:
+            out[label] = None
+
+    return out
+
+
+def render_leads(rep: dict) -> str:
+    out = [f"CRM leads in {rep['db']} : {rep['total']}"]
+    if rep.get("oldest") or rep.get("newest"):
+        out.append(f"Created between      : {rep.get('oldest')}  ..  {rep.get('newest')}")
+    out.append("")
+
+    out.append("Quality / actionability")
+    width = max(len(k) for k in rep["quality"])
+    for label, value in rep["quality"].items():
+        share = ""
+        if isinstance(value, int) and rep["total"]:
+            share = f"  ({value * 100 // rep['total']}%)"
+        out.append(f"  {label.ljust(width)} : {value}{share}")
+
+    for heading, rows in rep["groups"].items():
+        out.append("")
+        out.append(heading)
+        if not rows:
+            out.append("  (none)")
+            continue
+        width = min(48, max(len(str(r[0])) for r in rows))
+        for label, count in rows:
+            out.append(f"  {str(label)[:48].ljust(width)} : {count}")
+    return "\n".join(out)
+
+
 def render(report: dict) -> str:
     out = []
     add = out.append
@@ -250,6 +351,9 @@ def main() -> int:
                         help="Odoo database name, e.g. MUMTAZ_C2P")
     parser.add_argument("--list", action="store_true", dest="list_dbs",
                         help="list the databases this server serves, then exit")
+    parser.add_argument("--leads", action="store_true",
+                        help="break the CRM lead pile down instead of the "
+                             "whole-database report")
     parser.add_argument("--json", action="store_true",
                         help="emit the full report as JSON instead of a summary")
     args = parser.parse_args()
@@ -263,14 +367,17 @@ def main() -> int:
         return report_databases()
 
     try:
-        report = inspect(args.db)
+        report = analyse_leads(args.db) if args.leads else inspect(args.db)
     except Exception as exc:
         print(f"Inspection failed for '{args.db}': {summarise_error(exc)}",
               file=sys.stderr)
         print(hint_for(exc, args.db), file=sys.stderr)
         return 1
 
-    print(json.dumps(report, indent=2, default=str) if args.json else render(report))
+    if args.json:
+        print(json.dumps(report, indent=2, default=str))
+    else:
+        print(render_leads(report) if args.leads else render(report))
     return 0
 
 
