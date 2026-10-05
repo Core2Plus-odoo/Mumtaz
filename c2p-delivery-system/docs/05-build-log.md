@@ -1271,3 +1271,39 @@ already define `currency_id`, `sale_order_id` and `company_currency_id` through
 `sale_project` or analytic, and attaching `groups=` to a *standard* field would
 strip it from every non-manager and can break stock views. Worth confirming
 either way with `--schema project.project`.
+
+### `c2p_project_tracker` tests ✅
+Test suite written ahead of the views, since it is the part most likely to
+catch an error when the module is first installed. 48 assertions across five
+files on shared fixtures that mirror production — two companies, a
+portfolio/delivery pair, and **per-project** stage records, so the tests
+exercise the name-based stage resolution rather than a convenient shared set.
+
+- `test_sync` — each of the five ordered stage rules, including that rule 2
+  (a waiting task) outranks rule 3 (all tasks done) and rule 1 (reached)
+  outranks everything; the Waiting → Blocked → resolved → In Progress loop with
+  `waiting_since` set and cleared; deadline propagation with the baseline set
+  **once** and slippage measured from it; that an empty delivery deadline does
+  **not** clear the portfolio date (the production state); `sync_locked`; a
+  history row per change; that the chatter note carries no `partner_ids`, which
+  is the "no email is sent" acceptance criterion; and that only `M`-coded tasks
+  count as milestones, with lower case normalised.
+- `test_hygiene` — the assignee/deadline/milestone trio enforced on leaving
+  Backlog with all three named in the message, partial hygiene still refused,
+  portfolio tasks exempt, Waiting on Client needing a reason, baseline reset
+  denied to a Delivery Member, and the counterpart pairing rules.
+- `test_commercials` — outstanding, the 60/40 split and its configurability,
+  subcontract paid reducing what is owed, an out-of-range share rejected, the
+  missing-commercials flag, and that the margin is computed on **collected**
+  money (40% of 3,000, not of 15,000).
+- `test_health` — green, each amber and red trigger separately, blocker age
+  crossing both thresholds, go-live slippage, weighted progress, the override
+  with its reason, and that non-portfolio projects are grey.
+- `test_security` — every one of the twelve commercial fields unreadable by a
+  Delivery Member via `read()` (the RPC path) **and** absent from
+  `fields_get()`, writes refused, a Portfolio Manager able to read them, the
+  RAG reason text visible to a Delivery Lead while containing no amount or
+  currency, and multi-company isolation on history rows.
+
+Flagged for the first install: `res.users.group_ids` is the v19 name
+(`groups_id` up to 17); an unknown-field error there is that rename.
