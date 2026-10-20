@@ -44,10 +44,14 @@
                     </field>
                     <group class="oe_subtotal_footer">
                         <field name="total_selected"/>
-                        <field name="apply_wht"/>
-                        <field name="wht_tax_id" invisible="not apply_wht"
+                        <field name="wht_it_tax_id"
                                options="{'no_create': True}"/>
-                        <field name="wht_amount" invisible="not apply_wht"/>
+                        <field name="wht_it_base" invisible="not wht_it_tax_id"/>
+                        <field name="wht_it_amount" invisible="not wht_it_tax_id"/>
+                        <field name="wht_st_tax_id"
+                               options="{'no_create': True}"/>
+                        <field name="wht_st_base" invisible="not wht_st_tax_id"/>
+                        <field name="wht_st_amount" invisible="not wht_st_tax_id"/>
                         <field name="net_amount"/>
                     </group>
                 </div>
