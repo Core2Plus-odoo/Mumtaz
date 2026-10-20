@@ -88,13 +88,21 @@ def login(page):
         page.click("button[type='submit']", timeout=8000)
     except Exception as e:
         log("login form issue:", repr(e)[:160])
-    page.wait_for_load_state("networkidle", timeout=60000)
+    # Odoo keeps a long-poll bus connection open, so "networkidle" never
+    # fires. Wait for the web client navbar instead.
+    try:
+        page.wait_for_selector(".o_main_navbar", timeout=30000)
+        log("login OK (navbar visible)")
+    except Exception as e:
+        log("post-login navbar NOT seen (login may have failed):",
+            repr(e)[:120])
     page.wait_for_timeout(HOLD)
 
 
 @scene
 def s_dashboard(page):
-    page.goto(URL + "/odoo/accounting", wait_until="networkidle", timeout=60000)
+    page.goto(URL + "/odoo/accounting", wait_until="domcontentloaded",
+              timeout=60000)
     page.wait_for_timeout(HOLD)
 
 
@@ -124,7 +132,7 @@ def s_financial_reports(page):
 @scene
 def s_vendor_wht(page):
     page.goto(URL + "/odoo/action-base.action_partner_form",
-              wait_until="networkidle", timeout=60000)
+              wait_until="domcontentloaded", timeout=60000)
     page.wait_for_timeout(BEAT)
     try:
         page.get_by_role("searchbox").first.fill(VENDOR)
