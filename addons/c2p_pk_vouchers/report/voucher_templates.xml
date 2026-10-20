@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_voucher">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="v" t-value="o._voucher_data()"/>
+                <t t-set="cur" t-value="o.currency_id"/>
+                <div class="page">
+                    <style>
+                        .vhdr { width:100%; border-collapse:collapse; margin-bottom:6px; }
+                        .vhdr td { vertical-align:top; }
+                        .co { font-size:20px; font-weight:bold; color:#222; }
+                        .vtitle { display:inline-block; border:1px solid #222; padding:3px 14px;
+                                  font-size:14px; font-weight:bold; margin-top:6px; }
+                        .vbox { border-collapse:collapse; font-size:11px; float:right; }
+                        .vbox td { border:1px solid #222; padding:3px 8px; }
+                        .vbox .k { font-weight:bold; background:#f2f2f2; }
+                        .posted { font-weight:bold; font-size:12px; margin:4px 0; }
+                        .meta { font-size:12px; margin:2px 0; }
+                        .lines { width:100%; border-collapse:collapse; font-size:11px; margin-top:10px; }
+                        .lines th { border:1px solid #222; background:#f2f2f2; padding:5px 6px; }
+                        .lines td { border:1px solid #222; padding:5px 6px; }
+                        .r { text-align:right; } .c { text-align:center; }
+                        .tot td { font-weight:bold; }
+                        .inw { font-size:11px; margin-top:8px; }
+                        .sigs { width:100%; border-collapse:collapse; margin-top:46px; font-size:11px; }
+                        .sigs td { text-align:center; padding-top:2px; }
+                        .signame { font-weight:bold; min-height:14px; }
+                        .sigline { border-top:1px solid #222; margin:2px 18px 2px 18px; padding-top:3px; font-weight:bold; }
+                    </style>
+
+                    <table class="vhdr">
+                        <tr>
+                            <td style="width:72px;">
+                                <img t-if="o.company_id.logo" t-att-src="image_data_uri(o.company_id.logo)" style="height:54px;"/>
+                            </td>
+                            <td>
+                                <div class="co" t-out="o.company_id.name"/>
+                                <div class="vtitle" t-out="v['title']"/>
+                            </td>
+                            <td style="width:240px;">
+                                <table class="vbox">
+                                    <tr><td class="k">Voucher No:</td><td t-out="o.name"/></tr>
+                                    <tr><td class="k">Dated:</td><td><span t-out="o.date" t-options="{'widget': 'date'}"/></td></tr>
+                                    <t t-if="v['show_cheque']">
+                                        <tr><td class="k">Cheque No:</td><td t-out="o.cheque_no or ''"/></tr>
+                                        <tr><td class="k">Cheque Dt.:</td><td><span t-if="o.cheque_date" t-out="o.cheque_date" t-options="{'widget': 'date'}"/></td></tr>
+                                    </t>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="posted" t-if="v['posted']">POSTED</div>
+                    <div class="meta" t-if="v['party_label']">
+                        <b><span t-out="v['party_label']"/>:</b> <span t-out="v['party']"/>
+                    </div>
+                    <div class="meta"><b>Narration:</b> <span t-out="o.ref or ''"/></div>
+
+                    <table class="lines">
+                        <thead>
+                            <tr>
+                                <th style="width:13%;">A/c Code</th>
+                                <th>A/c Name</th>
+                                <th class="c" style="width:6%;">CC</th>
+                                <th class="c" style="width:6%;">J/C</th>
+                                <th class="r" style="width:16%;">Debit-<span t-out="cur.name"/></th>
+                                <th class="r" style="width:16%;">Credit-<span t-out="cur.name"/></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="v['lines']" t-as="line">
+                                <t t-set="ccjc" t-value="o._voucher_cc_jc(line)"/>
+                                <td t-out="line.account_id.code"/>
+                                <td t-out="line.account_id.name"/>
+                                <td class="c" t-out="ccjc[0]"/>
+                                <td class="c" t-out="ccjc[1]"/>
+                                <td class="r"><span t-out="line.debit" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                <td class="r"><span t-out="line.credit" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                            </tr>
+                            <tr class="tot">
+                                <td colspan="4" class="r">Total</td>
+                                <td class="r"><span t-out="v['total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                <td class="r"><span t-out="v['total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="inw"><b>In words:</b> <span t-out="v['in_words']"/></div>
+
+                    <table class="sigs">
+                        <tr>
+                            <td t-foreach="v['signatures']" t-as="s">
+                                <div class="signame" t-out="o.create_uid.name if s_index == 0 else ''"/>
+                                <div class="sigline" t-out="s"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

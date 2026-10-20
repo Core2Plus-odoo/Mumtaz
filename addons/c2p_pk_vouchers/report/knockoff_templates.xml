@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_voucher_knockoff">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="recs" t-value="o._voucher_knockoff()"/>
+                <t t-set="cur" t-value="o.currency_id"/>
+                <t t-set="kind" t-value="o._voucher_kind()"/>
+                <div class="page">
+                    <style>
+                        .ko-co { text-align:center; font-size:17px; font-weight:bold; }
+                        .ko-t { text-align:center; font-size:14px; font-weight:bold; margin:6px 0 12px; }
+                        .ko-party { font-weight:bold; font-size:12px; }
+                        .ko-vno { text-align:right; font-size:12px; margin-bottom:4px; }
+                        .ko { width:100%; border-collapse:collapse; font-size:11px; }
+                        .ko th { border:1px solid #222; background:#f2f2f2; padding:5px 6px; }
+                        .ko td { border:1px solid #222; padding:5px 6px; }
+                        .r { text-align:right; }
+                        .ko-tot { font-weight:bold; font-size:12px; text-align:right; margin-top:6px; }
+                        .ko-sigs { width:60%; border-collapse:collapse; margin-top:44px; font-size:11px; }
+                        .ko-sigs td { text-align:center; }
+                        .sigline { border-top:1px solid #222; margin:2px 18px; padding-top:3px; font-weight:bold; }
+                    </style>
+
+                    <div class="ko-co" t-out="o.company_id.name"/>
+                    <div class="ko-t">INVOICES KNOCKED-OFF AGAINST
+                        <span t-out="'RECEIPT' if kind == 'receipt' else 'PAYMENT'"/>
+                    </div>
+                    <div class="ko-party" t-out="o.partner_id.display_name"/>
+                    <div class="ko-vno">Voucher No: <b t-out="o.name"/></div>
+
+                    <table class="ko">
+                        <thead>
+                            <tr>
+                                <th style="width:24%;">Invoice/Ref. No.</th>
+                                <th>Particulars</th>
+                                <th class="r" style="width:18%;">Invoice Amt.</th>
+                                <th class="r" style="width:18%;">Paid Amt.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="recs" t-as="rec">
+                                <td t-out="rec['invoice']"/>
+                                <td t-out="rec['ref']"/>
+                                <td class="r"><span t-out="rec['inv_amt']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                <td class="r"><span t-out="rec['paid']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                            </tr>
+                            <tr t-if="not recs">
+                                <td colspan="4">No invoices were knocked off against this voucher.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="ko-tot">Total Paid:
+                        <span t-out="sum(r['paid'] for r in recs)" t-options="{'widget': 'monetary', 'display_currency': cur}"/>
+                    </div>
+
+                    <table class="ko-sigs">
+                        <tr>
+                            <td><div class="sigline">Prepared By</div></td>
+                            <td><div class="sigline">Checked &amp; Verified By</div></td>
+                        </tr>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

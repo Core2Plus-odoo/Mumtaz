@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_journal_form_voucher" model="ir.ui.view">
+        <field name="name">account.journal.form.c2p.voucher</field>
+        <field name="model">account.journal</field>
+        <field name="inherit_id" ref="account.view_account_journal_form"/>
+        <field name="arch" type="xml">
+            <field name="type" position="after">
+                <field name="is_journal_voucher"
+                       invisible="type not in ('general',)"/>
+            </field>
+        </field>
+    </record>
+</odoo>

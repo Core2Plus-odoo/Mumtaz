@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cheque / instrument details on journal entries (bank & cash) -->
+    <record id="view_move_form_voucher_cheque" model="ir.ui.view">
+        <field name="name">account.move.form.c2p.cheque</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <field name="date" position="after">
+                <field name="cheque_no"
+                       invisible="journal_id and journal_id.type not in ('bank', 'cash')"/>
+                <field name="cheque_date"
+                       invisible="journal_id and journal_id.type not in ('bank', 'cash')"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Cheque / instrument details on payments -->
+    <record id="view_account_payment_form_voucher_cheque" model="ir.ui.view">
+        <field name="name">account.payment.form.c2p.cheque</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <field name="date" position="after">
+                <field name="cheque_no"/>
+                <field name="cheque_date"/>
+            </field>
+        </field>
+    </record>
+</odoo>
