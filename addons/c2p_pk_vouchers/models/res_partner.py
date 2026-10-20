@@ -51,18 +51,18 @@ class ResPartner(models.Model):
         help="Sales-tax withholding payable ledger (FBR/SRB). Shared by every "
              "partner on this code; set it once here.")
     wht_sale_rate = fields.Float(
-        related="wht_sale_tax_id.rate", string="Income WHT Rate (%)",
+        related="wht_sale_tax_id.rate", string="Cust. Income WHT Rate (%)",
         readonly=True)
     wht_sale_account_id = fields.Many2one(
-        related="wht_sale_tax_id.account_id", string="Income WHT Account",
+        related="wht_sale_tax_id.account_id", string="Cust. Income WHT Account",
         readonly=False,
         help="Advance-tax / income-WHT receivable ledger. Shared by every "
              "partner on this code; set it once here.")
     wht_sale_stax_rate = fields.Float(
-        related="wht_sale_stax_id.rate", string="Sales WHT Rate (%)",
+        related="wht_sale_stax_id.rate", string="Cust. Sales WHT Rate (%)",
         readonly=True)
     wht_sale_stax_account_id = fields.Many2one(
-        related="wht_sale_stax_id.account_id", string="Sales WHT Account",
+        related="wht_sale_stax_id.account_id", string="Cust. Sales WHT Account",
         readonly=False,
         help="Sales-tax withheld receivable ledger. Shared by every partner on "
              "this code; set it once here.")
