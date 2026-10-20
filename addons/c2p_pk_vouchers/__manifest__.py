@@ -1,6 +1,6 @@
 {
     "name": "C2P Pakistan Vouchers",
-    "version": "19.0.2.0.0",
+    "version": "19.0.3.0.0",
     "summary": "PK-format Payment/Receipt/Journal/Payable/Receivable vouchers, "
                "invoice knock-off, JV control, withholding tax + certificate, "
                "intercompany marker and Cost Center / Job Code analytic plans.",
@@ -20,8 +20,14 @@ the controls IG Square requested — standard-first, built on top of
 - **Journal Voucher control** — a journal flagged as a Journal Voucher cannot
   carry bank/cash lines, so payments/receipts stay in PV/RV only.
 
-Not included yet (separate, quoted scope): the Pakistan income-tax / sales-tax
-withholding engine and intercompany auto-mirroring.
+- **Withholding tax** bound to the partner (Purchase WHT / Sales WHT). On the
+  Register Payment screen the applicable code is suggested automatically, the
+  net payable and withholding amount are shown, and the deduction is posted to
+  its WHT ledger (via the standard payment-difference write-off) while the
+  invoice is knocked off in full. A WHT Deduction Certificate can be printed.
+
+Separate, quoted scope not included: intercompany auto-mirroring across
+companies.
 """,
     "category": "Accounting/Accounting",
     "author": "C2P Consultants",
@@ -38,6 +44,8 @@ withholding engine and intercompany auto-mirroring.
         "report/wht_certificate_templates.xml",
         "views/account_journal_views.xml",
         "views/account_move_views.xml",
+        "views/res_partner_views.xml",
+        "views/account_payment_register_views.xml",
         "views/wht_views.xml",
     ],
     "installable": True,

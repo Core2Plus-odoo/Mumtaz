@@ -94,7 +94,7 @@
               parent="account.menu_finance"
               sequence="90"/>
     <menuitem id="menu_c2p_wht_record"
-              name="Record Withholding"
+              name="Manual WHT Entry"
               parent="menu_c2p_wht_root"
               action="action_c2p_wht_wizard"
               sequence="10"/>
