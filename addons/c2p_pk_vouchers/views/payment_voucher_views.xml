@@ -39,20 +39,25 @@
                             <field name="amount_total"/>
                             <field name="residual"/>
                             <field name="to_pay"/>
+                            <field name="wht_it" string="Income WHT"/>
+                            <field name="wht_st" string="Sales WHT"/>
+                            <field name="net_pay" string="Net"/>
                             <field name="currency_id" column_invisible="1"/>
                         </list>
                     </field>
-                    <group class="oe_subtotal_footer">
-                        <field name="total_selected"/>
-                        <field name="wht_it_tax_id"
-                               options="{'no_create': True}"/>
-                        <field name="wht_it_base" invisible="not wht_it_tax_id"/>
-                        <field name="wht_it_amount" invisible="not wht_it_tax_id"/>
-                        <field name="wht_st_tax_id"
-                               options="{'no_create': True}"/>
-                        <field name="wht_st_base" invisible="not wht_st_tax_id"/>
-                        <field name="wht_st_amount" invisible="not wht_st_tax_id"/>
-                        <field name="net_amount"/>
+                    <group>
+                        <group>
+                            <field name="wht_it_tax_id"
+                                   options="{'no_create': True}"/>
+                            <field name="wht_st_tax_id"
+                                   options="{'no_create': True}"/>
+                        </group>
+                        <group class="oe_subtotal_footer">
+                            <field name="total_selected"/>
+                            <field name="wht_it_amount"/>
+                            <field name="wht_st_amount"/>
+                            <field name="net_amount"/>
+                        </group>
                     </group>
                 </div>
 

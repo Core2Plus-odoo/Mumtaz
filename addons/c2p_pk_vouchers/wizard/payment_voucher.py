@@ -27,30 +27,23 @@ class C2pPaymentVoucher(models.TransientModel):
         help="Due-from / Due-to current account of the group company.")
     amount = fields.Monetary(string="Transfer Amount")
 
-    # --- Income-tax withholding (u/s 153 etc.) ---
+    # Withholding codes bound to the partner (income tax + sales tax), shown so
+    # the operator can see which ledgers drive the per-line WHT columns.
     wht_it_tax_id = fields.Many2one(
         "c2p.wht.tax", string="Income Tax WHT", compute="_compute_wht_codes",
         store=True, readonly=False, domain="[('company_id', '=', company_id)]")
-    wht_it_base = fields.Monetary(
-        string="Income WHT Base", compute="_compute_bases",
-        store=True, readonly=False)
-    wht_it_amount = fields.Monetary(
-        string="Income WHT", compute="_compute_totals", store=True)
-
-    # --- Sales-tax withholding (WHST, on the GST portion) ---
     wht_st_tax_id = fields.Many2one(
         "c2p.wht.tax", string="Sales Tax WHT (WHST)",
         compute="_compute_wht_codes", store=True, readonly=False,
         domain="[('company_id', '=', company_id)]")
-    wht_st_base = fields.Monetary(
-        string="Sales WHT Base", compute="_compute_bases",
-        store=True, readonly=False)
-    wht_st_amount = fields.Monetary(
-        string="Sales WHT", compute="_compute_totals", store=True)
 
     line_ids = fields.One2many(
         "c2p.payment.voucher.line", "voucher_id", string="Open Items")
     total_selected = fields.Monetary(compute="_compute_totals", store=True)
+    wht_it_amount = fields.Monetary(
+        string="Income WHT", compute="_compute_totals", store=True)
+    wht_st_amount = fields.Monetary(
+        string="Sales WHT", compute="_compute_totals", store=True)
     wht_total = fields.Monetary(compute="_compute_totals", store=True)
     net_amount = fields.Monetary(
         string="Net Payable / Receivable", compute="_compute_totals", store=True)
@@ -70,35 +63,16 @@ class C2pPaymentVoucher(models.TransientModel):
             v.wht_it_tax_id = it
             v.wht_st_tax_id = st
 
-    @api.depends("line_ids.selected", "line_ids.to_pay", "line_ids.move_id")
-    def _compute_bases(self):
-        for v in self:
-            selected = v.line_ids.filtered("selected")
-            # Income WHT is charged on the amount paid.
-            v.wht_it_base = sum(line.to_pay for line in selected)
-            # Sales-tax WHT is charged on the GST portion of the bills, prorated
-            # to the amount being paid.
-            stax = 0.0
-            for line in selected:
-                bill = line.move_id
-                if bill and bill.amount_total:
-                    stax += bill.amount_tax * (line.to_pay / bill.amount_total)
-            v.wht_st_base = round(stax, 2)
-
     @api.depends("line_ids.selected", "line_ids.to_pay",
-                 "wht_it_tax_id", "wht_it_base", "wht_st_tax_id", "wht_st_base")
+                 "line_ids.wht_it", "line_ids.wht_st")
     def _compute_totals(self):
         for v in self:
-            total = sum(line.to_pay for line in v.line_ids if line.selected)
-            it = (v.wht_it_tax_id.compute_wht(v.wht_it_base)
-                  if v.wht_it_tax_id else 0.0)
-            st = (v.wht_st_tax_id.compute_wht(v.wht_st_base)
-                  if v.wht_st_tax_id else 0.0)
-            v.total_selected = total
-            v.wht_it_amount = it
-            v.wht_st_amount = st
-            v.wht_total = it + st
-            v.net_amount = total - it - st
+            selected = v.line_ids.filtered("selected")
+            v.total_selected = sum(selected.mapped("to_pay"))
+            v.wht_it_amount = sum(selected.mapped("wht_it"))
+            v.wht_st_amount = sum(selected.mapped("wht_st"))
+            v.wht_total = v.wht_it_amount + v.wht_st_amount
+            v.net_amount = v.total_selected - v.wht_total
 
     def action_load_open_items(self):
         self.ensure_one()
@@ -124,6 +98,7 @@ class C2pPaymentVoucher(models.TransientModel):
                 "name": move.name,
                 "ref": move.ref or move.payment_reference or "",
                 "amount_total": move.amount_total,
+                "amount_tax": move.amount_tax,
                 "residual": move.amount_residual,
                 "to_pay": move.amount_residual,
                 "selected": True,
@@ -175,8 +150,7 @@ class C2pPaymentVoucher(models.TransientModel):
         cur = self.company_id.currency_id
         outbound = self.payment_type == "outbound"
         wht = self._wht_components()
-        wht_total = sum(a for _, a in wht)
-        net = self.total_selected - wht_total
+        net = self.net_amount
         if cur.compare_amounts(net, 0.0) < 0:
             raise UserError("Withholding exceeds the amount being paid.")
 
@@ -230,7 +204,7 @@ class C2pPaymentVoucher(models.TransientModel):
             "cheque_date": self.cheque_date,
             "is_wht": bool(wht),
             "wht_tax_id": wht[0][0].id if wht else False,
-            "wht_base": self.wht_it_base,
+            "wht_base": self.total_selected,
             "line_ids": move_lines,
         })
         move.action_post()
@@ -294,6 +268,34 @@ class C2pPaymentVoucherLine(models.TransientModel):
     name = fields.Char(string="Number")
     ref = fields.Char(string="Reference")
     amount_total = fields.Monetary(string="Invoice Amount")
+    amount_tax = fields.Monetary(string="Invoice Tax")
     residual = fields.Monetary(string="Open")
     to_pay = fields.Monetary(string="To Pay")
     selected = fields.Boolean(string="Pay", default=True)
+
+    # Per-line withholding, driven by the codes bound to the partner.
+    wht_it = fields.Monetary(
+        string="Income WHT", compute="_compute_line_wht", store=True)
+    wht_st = fields.Monetary(
+        string="Sales WHT", compute="_compute_line_wht", store=True)
+    net_pay = fields.Monetary(
+        string="Net", compute="_compute_line_wht", store=True)
+
+    @api.depends("to_pay", "amount_total", "amount_tax",
+                 "voucher_id.wht_it_tax_id", "voucher_id.wht_st_tax_id")
+    def _compute_line_wht(self):
+        for line in self:
+            v = line.voucher_id
+            # Income WHT is charged on the amount being paid.
+            it = (v.wht_it_tax_id.compute_wht(line.to_pay)
+                  if v.wht_it_tax_id else 0.0)
+            # Sales-tax WHT is charged on the GST portion of this bill, prorated
+            # to the amount being paid.
+            stax_base = 0.0
+            if line.amount_total:
+                stax_base = line.amount_tax * (line.to_pay / line.amount_total)
+            st = (v.wht_st_tax_id.compute_wht(stax_base)
+                  if v.wht_st_tax_id else 0.0)
+            line.wht_it = it
+            line.wht_st = st
+            line.net_pay = line.to_pay - it - st
