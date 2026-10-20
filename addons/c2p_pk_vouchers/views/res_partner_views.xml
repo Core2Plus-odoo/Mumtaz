@@ -7,7 +7,17 @@
         <field name="arch" type="xml">
             <field name="property_account_payable_id" position="after">
                 <field name="wht_purchase_tax_id"/>
+                <field name="wht_purchase_rate"
+                       invisible="not wht_purchase_tax_id"/>
+                <field name="wht_purchase_account_id"
+                       invisible="not wht_purchase_tax_id"
+                       options="{'no_create': True}"/>
                 <field name="wht_sale_tax_id"/>
+                <field name="wht_sale_rate"
+                       invisible="not wht_sale_tax_id"/>
+                <field name="wht_sale_account_id"
+                       invisible="not wht_sale_tax_id"
+                       options="{'no_create': True}"/>
             </field>
         </field>
     </record>

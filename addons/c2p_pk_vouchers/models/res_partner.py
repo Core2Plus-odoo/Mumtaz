@@ -14,3 +14,22 @@ class ResPartner(models.Model):
         domain="[('transaction_type', '=', 'sale')]",
         help="Withholding tax this customer deducts from our receipts. "
              "Suggested automatically on the receipt screen.")
+
+    # Rate + ledger surfaced from the selected code so the whole withholding
+    # setup can be completed here on the vendor/customer form.
+    wht_purchase_rate = fields.Float(
+        related="wht_purchase_tax_id.rate", string="Purchase WHT Rate (%)",
+        readonly=True)
+    wht_purchase_account_id = fields.Many2one(
+        related="wht_purchase_tax_id.account_id", string="Purchase WHT Account",
+        readonly=False,
+        help="WHT payable ledger (FBR/SRB). Shared by every partner on this "
+             "code; set it once here and it applies to the code.")
+    wht_sale_rate = fields.Float(
+        related="wht_sale_tax_id.rate", string="Sales WHT Rate (%)",
+        readonly=True)
+    wht_sale_account_id = fields.Many2one(
+        related="wht_sale_tax_id.account_id", string="Sales WHT Account",
+        readonly=False,
+        help="Advance-tax / WHT receivable ledger. Shared by every partner on "
+             "this code; set it once here and it applies to the code.")
