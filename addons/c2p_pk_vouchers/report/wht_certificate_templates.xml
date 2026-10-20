@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_wht_certificate" model="ir.actions.report">
+        <field name="name">WHT Certificate</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">c2p_pk_vouchers.report_wht_certificate</field>
+        <field name="report_file">c2p_pk_vouchers.report_wht_certificate</field>
+        <field name="print_report_name">'WHT Certificate - %s' % ((object.name or '').replace('/', '-'))</field>
+    </record>
+
+    <template id="report_wht_certificate">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="cur" t-value="o.currency_id"/>
+                <t t-set="amt" t-value="o.wht_tax_id.compute_wht(o.wht_base) if o.wht_tax_id else 0.0"/>
+                <div class="page">
+                    <style>
+                        .wc-co { text-align:center; font-size:18px; font-weight:bold; }
+                        .wc-sub { text-align:center; font-size:11px; color:#444; }
+                        .wc-t { text-align:center; font-size:14px; font-weight:bold;
+                                border:1px solid #222; display:inline-block; padding:4px 16px;
+                                margin:14px auto; }
+                        .wc-center { text-align:center; }
+                        .wc-meta { width:100%; border-collapse:collapse; font-size:12px; margin:14px 0; }
+                        .wc-meta td { padding:4px 6px; vertical-align:top; }
+                        .wc-meta .k { font-weight:bold; width:28%; }
+                        .wc-tbl { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+                        .wc-tbl th, .wc-tbl td { border:1px solid #222; padding:6px 8px; }
+                        .r { text-align:right; }
+                        .wc-sig { margin-top:60px; font-size:12px; }
+                        .wc-foot { margin-top:30px; font-size:10px; color:#666; }
+                    </style>
+
+                    <t t-if="not o.is_wht">
+                        <p>This document is not a withholding-tax entry.</p>
+                    </t>
+                    <t t-else="">
+                        <div class="wc-co" t-out="o.company_id.name"/>
+                        <div class="wc-sub">
+                            <span t-if="o.company_id.vat">NTN: <span t-out="o.company_id.vat"/> &#183; </span>
+                            <span t-out="o.company_id.partner_id.contact_address or ''"/>
+                        </div>
+                        <div class="wc-center">
+                            <div class="wc-t">WITHHOLDING TAX DEDUCTION CERTIFICATE</div>
+                        </div>
+
+                        <table class="wc-meta">
+                            <tr>
+                                <td class="k">Certificate No.</td><td t-out="o.name"/>
+                                <td class="k">Date</td><td><span t-out="o.date" t-options="{'widget': 'date'}"/></td>
+                            </tr>
+                            <tr>
+                                <td class="k">Deducted From</td><td t-out="o.partner_id.display_name"/>
+                                <td class="k">Party NTN</td><td t-out="o.partner_id.vat or '-'"/>
+                            </tr>
+                            <tr>
+                                <td class="k">Tax</td>
+                                <td t-out="dict(o.wht_tax_id._fields['tax_scope'].selection).get(o.wht_tax_id.tax_scope) if o.wht_tax_id else ''"/>
+                                <td class="k">Section / SRO</td><td t-out="o.wht_tax_id.section_code or '' if o.wht_tax_id else ''"/>
+                            </tr>
+                        </table>
+
+                        <table class="wc-tbl">
+                            <tr>
+                                <th>Gross / Taxable Amount</th>
+                                <th class="r" style="width:16%;">Rate (%)</th>
+                                <th class="r" style="width:24%;">Tax Withheld (<span t-out="cur.name"/>)</th>
+                            </tr>
+                            <tr>
+                                <td class="r"><span t-out="o.wht_base" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                <td class="r"><span t-out="o.wht_tax_id.rate if o.wht_tax_id else 0.0"/></td>
+                                <td class="r"><span t-out="amt" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                            </tr>
+                        </table>
+
+                        <p style="font-size:11px; margin-top:8px;">
+                            <b>In words:</b> <span t-out="cur.amount_to_text(amt)"/>
+                        </p>
+                        <p style="font-size:11px; margin-top:6px;" t-if="o.ref">
+                            <b>Remarks:</b> <span t-out="o.ref"/>
+                        </p>
+
+                        <div class="wc-sig">
+                            _______________________________<br/>
+                            <b>Authorised Signatory</b><br/>
+                            <span t-out="o.company_id.name"/>
+                        </div>
+                        <div class="wc-foot">
+                            This certificate is issued under the Income Tax Ordinance, 2001 / Sales Tax
+                            Act, 1990 and the rules made thereunder. Computer-generated document.
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -15,6 +15,14 @@ class AccountMove(models.Model):
 
     cheque_no = fields.Char(string="Cheque / Instrument No.", copy=False, tracking=True)
     cheque_date = fields.Date(string="Cheque Date", copy=False, tracking=True)
+    is_intercompany = fields.Boolean(
+        string="Intercompany", copy=False,
+        help="Mark this voucher as an intercompany transaction "
+             "(posted to a Due-from / Due-to current account).")
+    # Withholding (set by the Record Withholding wizard)
+    is_wht = fields.Boolean(string="Withholding Entry", copy=False)
+    wht_tax_id = fields.Many2one("c2p.wht.tax", string="WHT Code", copy=False)
+    wht_base = fields.Monetary(string="WHT Base", copy=False)
 
     # ── Voucher classification ──────────────────────────────────────────────
     def _voucher_kind(self):
@@ -69,6 +77,7 @@ class AccountMove(models.Model):
             "signatures": signatures,
             "in_words": in_words,
             "posted": self.state == "posted",
+            "intercompany": self.is_intercompany,
         }
 
     def _voucher_cc_jc(self, line):

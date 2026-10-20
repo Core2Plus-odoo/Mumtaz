@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- WHT code master -->
+    <record id="view_c2p_wht_tax_list" model="ir.ui.view">
+        <field name="name">c2p.wht.tax.list</field>
+        <field name="model">c2p.wht.tax</field>
+        <field name="arch" type="xml">
+            <list string="Withholding Codes" editable="bottom">
+                <field name="name"/>
+                <field name="tax_scope"/>
+                <field name="transaction_type"/>
+                <field name="section_code"/>
+                <field name="rate"/>
+                <field name="account_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_c2p_wht_tax_form" model="ir.ui.view">
+        <field name="name">c2p.wht.tax.form</field>
+        <field name="model">c2p.wht.tax</field>
+        <field name="arch" type="xml">
+            <form string="Withholding Code">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="tax_scope"/>
+                            <field name="transaction_type"/>
+                            <field name="section_code"/>
+                        </group>
+                        <group>
+                            <field name="rate"/>
+                            <field name="account_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Notes / basis of rate..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_wht_tax" model="ir.actions.act_window">
+        <field name="name">Withholding Codes</field>
+        <field name="res_model">c2p.wht.tax</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Record Withholding wizard -->
+    <record id="view_c2p_wht_wizard_form" model="ir.ui.view">
+        <field name="name">c2p.wht.wizard.form</field>
+        <field name="model">c2p.wht.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Record Withholding">
+                <group>
+                    <group>
+                        <field name="transaction_type" widget="radio"/>
+                        <field name="partner_id"/>
+                        <field name="wht_tax_id"/>
+                        <field name="company_id" invisible="1"/>
+                        <field name="currency_id" invisible="1"/>
+                    </group>
+                    <group>
+                        <field name="base_amount"/>
+                        <field name="wht_amount"/>
+                        <field name="date"/>
+                        <field name="journal_id"/>
+                        <field name="partner_account_id"/>
+                        <field name="memo"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_record" type="object" string="Record &amp; Post"
+                            class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_wht_wizard" model="ir.actions.act_window">
+        <field name="name">Record Withholding</field>
+        <field name="res_model">c2p.wht.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="menu_c2p_wht_root"
+              name="Withholding"
+              parent="account.menu_finance"
+              sequence="90"/>
+    <menuitem id="menu_c2p_wht_record"
+              name="Record Withholding"
+              parent="menu_c2p_wht_root"
+              action="action_c2p_wht_wizard"
+              sequence="10"/>
+    <menuitem id="menu_c2p_wht_tax"
+              name="Withholding Codes"
+              parent="menu_c2p_wht_root"
+              action="action_c2p_wht_tax"
+              sequence="20"/>
+</odoo>

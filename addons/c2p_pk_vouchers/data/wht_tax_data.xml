@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Starter Pakistan withholding codes. Rates are indicative defaults —
+         confirm against the current Finance Act / SROs and set the WHT Account
+         per your chart before use. noupdate keeps your edits on upgrade. -->
+    <data noupdate="1">
+        <record id="wht_it_153_1a_goods" model="c2p.wht.tax">
+            <field name="name">Income Tax 153(1)(a) - Supply of Goods</field>
+            <field name="tax_scope">income_tax</field>
+            <field name="transaction_type">purchase</field>
+            <field name="section_code">153(1)(a)</field>
+            <field name="rate">4.5</field>
+        </record>
+        <record id="wht_it_153_1b_services" model="c2p.wht.tax">
+            <field name="name">Income Tax 153(1)(b) - Services</field>
+            <field name="tax_scope">income_tax</field>
+            <field name="transaction_type">purchase</field>
+            <field name="section_code">153(1)(b)</field>
+            <field name="rate">10.0</field>
+        </record>
+        <record id="wht_it_153_1c_contracts" model="c2p.wht.tax">
+            <field name="name">Income Tax 153(1)(c) - Contracts</field>
+            <field name="tax_scope">income_tax</field>
+            <field name="transaction_type">purchase</field>
+            <field name="section_code">153(1)(c)</field>
+            <field name="rate">7.5</field>
+        </record>
+        <record id="wht_st_withholding" model="c2p.wht.tax">
+            <field name="name">Sales Tax Withholding (on purchase)</field>
+            <field name="tax_scope">sales_tax</field>
+            <field name="transaction_type">purchase</field>
+            <field name="section_code">STWH Rules</field>
+            <field name="rate">2.0</field>
+        </record>
+        <record id="wht_it_153_on_receipt" model="c2p.wht.tax">
+            <field name="name">Income Tax 153 - Withheld by Client (on receipt)</field>
+            <field name="tax_scope">income_tax</field>
+            <field name="transaction_type">sale</field>
+            <field name="section_code">153</field>
+            <field name="rate">8.0</field>
+        </record>
+    </data>
+</odoo>
