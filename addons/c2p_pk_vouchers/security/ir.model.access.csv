@@ -2,3 +2,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_c2p_wht_tax_user,c2p.wht.tax user,model_c2p_wht_tax,account.group_account_user,1,0,0,0
 access_c2p_wht_tax_manager,c2p.wht.tax manager,model_c2p_wht_tax,account.group_account_manager,1,1,1,1
 access_c2p_wht_wizard_user,c2p.wht.wizard user,model_c2p_wht_wizard,account.group_account_user,1,1,1,1
+access_c2p_payment_voucher_user,c2p.payment.voucher user,model_c2p_payment_voucher,account.group_account_user,1,1,1,1
+access_c2p_payment_voucher_line_user,c2p.payment.voucher.line user,model_c2p_payment_voucher_line,account.group_account_user,1,1,1,1

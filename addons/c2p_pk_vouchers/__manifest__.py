@@ -1,6 +1,6 @@
 {
     "name": "C2P Pakistan Vouchers",
-    "version": "19.0.3.0.0",
+    "version": "19.0.4.0.0",
     "summary": "PK-format Payment/Receipt/Journal/Payable/Receivable vouchers, "
                "invoice knock-off, JV control, withholding tax + certificate, "
                "intercompany marker and Cost Center / Job Code analytic plans.",
@@ -46,6 +46,7 @@ companies.
         "views/account_move_views.xml",
         "views/res_partner_views.xml",
         "views/account_payment_register_views.xml",
+        "views/payment_voucher_views.xml",
         "views/wht_views.xml",
     ],
     "installable": True,
