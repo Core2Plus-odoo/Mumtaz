@@ -23,9 +23,20 @@
                     </group>
                 </group>
 
-                <group string="Intercompany Transfer" invisible="not is_intercompany">
-                    <field name="intercompany_account_id"/>
-                    <field name="amount"/>
+                <group invisible="not is_intercompany">
+                    <group string="This Company">
+                        <field name="intercompany_account_id"/>
+                        <field name="amount"/>
+                    </group>
+                    <group string="Mirror in Other Company (optional)">
+                        <field name="dest_company_id" options="{'no_create': True}"/>
+                        <field name="dest_bank_journal_id"
+                               invisible="not dest_company_id"
+                               required="dest_company_id"/>
+                        <field name="dest_intercompany_account_id"
+                               invisible="not dest_company_id"
+                               required="dest_company_id"/>
+                    </group>
                 </group>
 
                 <group string="Interbank Transfer (same company)"

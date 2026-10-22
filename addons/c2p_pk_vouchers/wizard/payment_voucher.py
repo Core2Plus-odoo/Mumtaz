@@ -24,8 +24,20 @@ class C2pPaymentVoucher(models.TransientModel):
     is_intercompany = fields.Boolean(string="Intercompany Transfer")
     intercompany_account_id = fields.Many2one(
         "account.account", string="Intercompany Account",
-        help="Due-from / Due-to current account of the group company.")
+        help="This company's Due-from / Due-to current account.")
     amount = fields.Monetary(string="Transfer Amount")
+    # Optional mirror in the other group company.
+    dest_company_id = fields.Many2one(
+        "res.company", string="Other Company",
+        domain="[('id', '!=', company_id)]",
+        help="Post the matching entry in this company's books too.")
+    dest_bank_journal_id = fields.Many2one(
+        "account.journal", string="Other Co. Bank / Cash",
+        domain="[('type', 'in', ('bank', 'cash')), "
+               "('company_id', '=', dest_company_id)]")
+    dest_intercompany_account_id = fields.Many2one(
+        "account.account", string="Other Co. Intercompany Account",
+        help="The other company's Due-to / Due-from current account.")
 
     is_bank_transfer = fields.Boolean(
         string="Interbank Transfer",
@@ -277,33 +289,77 @@ class C2pPaymentVoucher(models.TransientModel):
             raise UserError("Select the intercompany (Due-from/Due-to) account.")
         if not self.amount:
             raise UserError("Enter the transfer amount.")
-        bank_account = self.journal_id.default_account_id
-        if not bank_account:
+        a_bank = self.journal_id.default_account_id
+        if not a_bank:
             raise UserError("The selected journal has no bank/cash account set.")
-        inter_vals = {"account_id": self.intercompany_account_id.id,
-                      "partner_id": self.partner_id.id,
-                      "name": self.memo or "Intercompany"}
-        bank_vals = {"account_id": bank_account.id,
-                     "name": self.memo or "Intercompany"}
-        if self.payment_type == "outbound":
-            inter_vals.update(debit=self.amount, credit=0.0)
-            bank_vals.update(debit=0.0, credit=self.amount)
-        else:
-            bank_vals.update(debit=self.amount, credit=0.0)
-            inter_vals.update(debit=0.0, credit=self.amount)
-        move = self.env["account.move"].create({
+        outbound = self.payment_type == "outbound"
+        label = self.memo or "Intercompany Transfer"
+        other = self.dest_company_id
+        # On this company's side, tag the line with the other company's partner.
+        a_partner = (other.partner_id.id if other
+                     else (self.partner_id.id if self.partner_id else False))
+
+        # --- This company (A) ---
+        a_inter = {"account_id": self.intercompany_account_id.id,
+                   "partner_id": a_partner, "name": label}
+        a_bank_l = {"account_id": a_bank.id, "partner_id": a_partner,
+                    "name": label}
+        if outbound:                      # A sends money
+            a_inter.update(debit=self.amount, credit=0.0)
+            a_bank_l.update(debit=0.0, credit=self.amount)
+        else:                             # A receives money
+            a_bank_l.update(debit=self.amount, credit=0.0)
+            a_inter.update(debit=0.0, credit=self.amount)
+        move_a = self.env["account.move"].create({
             "move_type": "entry",
             "journal_id": self.journal_id.id,
             "date": self.date,
-            "ref": self.memo or "Intercompany Transfer",
-            "partner_id": self.partner_id.id,
+            "ref": label,
+            "partner_id": a_partner,
             "is_intercompany": True,
             "cheque_no": self.cheque_no,
             "cheque_date": self.cheque_date,
-            "line_ids": [(0, 0, inter_vals), (0, 0, bank_vals)],
+            "line_ids": [(0, 0, a_inter), (0, 0, a_bank_l)],
         })
-        move.action_post()
-        return self._open_result(move)
+        move_a.action_post()
+        moves = move_a
+
+        # --- Other company (B): mirror entry ---
+        if other:
+            if not (self.dest_bank_journal_id
+                    and self.dest_intercompany_account_id):
+                raise UserError(
+                    "For the mirror entry, set the other company's bank journal "
+                    "and intercompany account.")
+            b_bank = self.dest_bank_journal_id.default_account_id
+            if not b_bank:
+                raise UserError(
+                    "The other company's journal has no bank/cash account set.")
+            b_partner = self.company_id.partner_id.id
+            b_inter = {"account_id": self.dest_intercompany_account_id.id,
+                       "partner_id": b_partner, "name": label}
+            b_bank_l = {"account_id": b_bank.id, "partner_id": b_partner,
+                        "name": label}
+            if outbound:                  # B receives the money
+                b_bank_l.update(debit=self.amount, credit=0.0)
+                b_inter.update(debit=0.0, credit=self.amount)
+            else:                         # B sends the money
+                b_inter.update(debit=self.amount, credit=0.0)
+                b_bank_l.update(debit=0.0, credit=self.amount)
+            move_b = self.env["account.move"].sudo().with_company(other).create({
+                "move_type": "entry",
+                "company_id": other.id,
+                "journal_id": self.dest_bank_journal_id.id,
+                "date": self.date,
+                "ref": label,
+                "partner_id": b_partner,
+                "is_intercompany": True,
+                "line_ids": [(0, 0, b_inter), (0, 0, b_bank_l)],
+            })
+            move_b.action_post()
+            moves = move_a | move_b
+
+        return self._open_result(moves)
 
 
 class C2pPaymentVoucherLine(models.TransientModel):
