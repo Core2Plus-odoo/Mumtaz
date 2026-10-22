@@ -27,6 +27,14 @@ class C2pPaymentVoucher(models.TransientModel):
         help="Due-from / Due-to current account of the group company.")
     amount = fields.Monetary(string="Transfer Amount")
 
+    is_bank_transfer = fields.Boolean(
+        string="Interbank Transfer",
+        help="Move funds between two of this company's own bank/cash accounts.")
+    dest_journal_id = fields.Many2one(
+        "account.journal", string="To Bank / Cash Journal",
+        domain="[('type', 'in', ('bank', 'cash')), ('company_id', '=', company_id)]",
+        help="Destination account. The 'Bank / Cash Journal' above is the source.")
+
     # Withholding codes bound to the partner (income tax + sales tax), shown so
     # the operator can see which ledgers drive the per-line WHT columns.
     wht_it_tax_id = fields.Many2one(
@@ -117,11 +125,53 @@ class C2pPaymentVoucher(models.TransientModel):
             "target": "current",
         }
 
+    @api.onchange("is_bank_transfer")
+    def _onchange_is_bank_transfer(self):
+        if self.is_bank_transfer:
+            self.is_intercompany = False
+
+    @api.onchange("is_intercompany")
+    def _onchange_is_intercompany(self):
+        if self.is_intercompany:
+            self.is_bank_transfer = False
+
     def action_post(self):
         self.ensure_one()
+        if self.is_bank_transfer:
+            return self._post_bank_transfer()
         if self.is_intercompany:
             return self._post_intercompany()
         return self._post_voucher()
+
+    def _post_bank_transfer(self):
+        self.ensure_one()
+        if not self.dest_journal_id:
+            raise UserError("Select the destination (To) bank/cash journal.")
+        if self.dest_journal_id == self.journal_id:
+            raise UserError("Source and destination journals must be different.")
+        if not self.amount:
+            raise UserError("Enter the transfer amount.")
+        src = self.journal_id.default_account_id
+        dst = self.dest_journal_id.default_account_id
+        if not src or not dst:
+            raise UserError("Both journals must have a bank/cash account set.")
+        label = self.memo or "Interbank Transfer"
+        move = self.env["account.move"].create({
+            "move_type": "entry",
+            "journal_id": self.journal_id.id,
+            "date": self.date,
+            "ref": label,
+            "cheque_no": self.cheque_no,
+            "cheque_date": self.cheque_date,
+            "line_ids": [
+                (0, 0, {"account_id": dst.id, "name": label,
+                        "debit": self.amount, "credit": 0.0}),
+                (0, 0, {"account_id": src.id, "name": label,
+                        "debit": 0.0, "credit": self.amount}),
+            ],
+        })
+        move.action_post()
+        return self._open_result(move)
 
     def _wht_components(self):
         """Return [(code, amount), ...] for the withholdings that apply."""

@@ -19,6 +19,7 @@
                         <field name="cheque_date"/>
                         <field name="memo"/>
                         <field name="is_intercompany"/>
+                        <field name="is_bank_transfer"/>
                     </group>
                 </group>
 
@@ -27,7 +28,13 @@
                     <field name="amount"/>
                 </group>
 
-                <div invisible="is_intercompany">
+                <group string="Interbank Transfer (same company)"
+                       invisible="not is_bank_transfer">
+                    <field name="dest_journal_id"/>
+                    <field name="amount"/>
+                </group>
+
+                <div invisible="is_intercompany or is_bank_transfer">
                     <button name="action_load_open_items" type="object"
                             string="Load Open Items" class="btn-secondary"/>
                     <field name="line_ids">
