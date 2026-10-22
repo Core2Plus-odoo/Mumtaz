@@ -17,9 +17,9 @@
                         .vbox .k { font-weight:bold; background:#f2f2f2; }
                         .posted { font-weight:bold; font-size:12px; margin:4px 0; }
                         .meta { font-size:12px; margin:2px 0; }
-                        .lines { width:100%; border-collapse:collapse; font-size:11px; margin-top:10px; }
+                        .lines { width:100%; border-collapse:collapse; font-size:11px; margin-top:10px; table-layout:fixed; }
                         .lines th { border:1px solid #222; background:#f2f2f2; padding:5px 6px; }
-                        .lines td { border:1px solid #222; padding:5px 6px; }
+                        .lines td { border:1px solid #222; padding:5px 6px; word-wrap:break-word; overflow-wrap:anywhere; }
                         .r { text-align:right; } .c { text-align:center; }
                         .tot td { font-weight:bold; }
                         .inw { font-size:11px; margin-top:8px; }
@@ -60,8 +60,9 @@
                     <table class="lines">
                         <thead>
                             <tr>
-                                <th style="width:13%;">A/c Code</th>
-                                <th>A/c Name</th>
+                                <th style="width:10%;">A/c Code</th>
+                                <th style="width:24%;">A/c Name</th>
+                                <th style="width:22%;">Narration</th>
                                 <th class="c" style="width:6%;">CC</th>
                                 <th class="c" style="width:6%;">J/C</th>
                                 <th class="r" style="width:16%;">Debit-<span t-out="cur.name"/></th>
@@ -72,16 +73,24 @@
                             <tr t-foreach="v['lines']" t-as="line">
                                 <t t-set="ccjc" t-value="o._voucher_cc_jc(line)"/>
                                 <td t-out="line.account_id.code"/>
-                                <td t-out="line.account_id.name"/>
+                                <td>
+                                    <t t-if="line.account_id.account_type in ('asset_receivable', 'liability_payable') and line.partner_id">
+                                        <span t-out="line.partner_id.display_name"/>
+                                    </t>
+                                    <t t-else="">
+                                        <span t-out="line.account_id.name"/>
+                                    </t>
+                                </td>
+                                <td t-out="line.name or ''"/>
                                 <td class="c" t-out="ccjc[0]"/>
                                 <td class="c" t-out="ccjc[1]"/>
-                                <td class="r"><span t-out="line.debit" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
-                                <td class="r"><span t-out="line.credit" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                <td class="r" t-out="'{:,.2f}'.format(line.debit) if line.debit else ''"/>
+                                <td class="r" t-out="'{:,.2f}'.format(line.credit) if line.credit else ''"/>
                             </tr>
                             <tr class="tot">
-                                <td colspan="4" class="r">Total</td>
-                                <td class="r"><span t-out="v['total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
-                                <td class="r"><span t-out="v['total']" t-options="{'widget': 'monetary', 'display_currency': cur}"/></td>
+                                <td colspan="5" class="r">Total</td>
+                                <td class="r" t-out="'{:,.2f}'.format(v['total'])"/>
+                                <td class="r" t-out="'{:,.2f}'.format(v['total'])"/>
                             </tr>
                         </tbody>
                     </table>
