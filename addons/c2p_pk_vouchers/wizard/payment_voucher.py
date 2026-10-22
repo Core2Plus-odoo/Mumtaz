@@ -14,7 +14,7 @@ class C2pPaymentVoucher(models.TransientModel):
         string="Type", required=True, default="outbound")
     partner_id = fields.Many2one("res.partner", string="Party", required=True)
     journal_id = fields.Many2one(
-        "account.journal", string="Bank / Cash Journal", required=True,
+        "account.journal", string="Bank / Cash Journal",
         domain="[('type', 'in', ('bank', 'cash')), ('company_id', '=', company_id)]")
     date = fields.Date(required=True, default=fields.Date.context_today)
     cheque_no = fields.Char(string="Cheque / Instrument No.")
@@ -41,11 +41,20 @@ class C2pPaymentVoucher(models.TransientModel):
 
     is_bank_transfer = fields.Boolean(
         string="Interbank Transfer",
-        help="Move funds between two of this company's own bank/cash accounts.")
+        help="Move funds between two bank/cash accounts of the same company.")
+    src_journal_id = fields.Many2one(
+        "account.journal", string="From Bank / Cash",
+        domain="[('type', 'in', ('bank', 'cash'))]",
+        help="Source bank. Pick any bank you have access to; the destination "
+             "is then limited to the same company.")
+    src_company_id = fields.Many2one(
+        "res.company", related="src_journal_id.company_id")
     dest_journal_id = fields.Many2one(
-        "account.journal", string="To Bank / Cash Journal",
-        domain="[('type', 'in', ('bank', 'cash')), ('company_id', '=', company_id)]",
-        help="Destination account. The 'Bank / Cash Journal' above is the source.")
+        "account.journal", string="To Bank / Cash",
+        domain="[('type', 'in', ('bank', 'cash')), "
+               "('company_id', '=', src_company_id), "
+               "('id', '!=', src_journal_id)]",
+        help="Destination bank of the same company as the source.")
 
     # Withholding codes bound to the partner (income tax + sales tax), shown so
     # the operator can see which ledgers drive the per-line WHT columns.
@@ -157,20 +166,24 @@ class C2pPaymentVoucher(models.TransientModel):
 
     def _post_bank_transfer(self):
         self.ensure_one()
-        if not self.dest_journal_id:
-            raise UserError("Select the destination (To) bank/cash journal.")
-        if self.dest_journal_id == self.journal_id:
-            raise UserError("Source and destination journals must be different.")
+        if not (self.src_journal_id and self.dest_journal_id):
+            raise UserError("Select both the From and To bank/cash journals.")
+        if self.src_journal_id == self.dest_journal_id:
+            raise UserError("Source and destination banks must be different.")
+        if self.src_journal_id.company_id != self.dest_journal_id.company_id:
+            raise UserError("Both banks must belong to the same company.")
         if not self.amount:
             raise UserError("Enter the transfer amount.")
-        src = self.journal_id.default_account_id
+        company = self.src_journal_id.company_id
+        src = self.src_journal_id.default_account_id
         dst = self.dest_journal_id.default_account_id
         if not src or not dst:
             raise UserError("Both journals must have a bank/cash account set.")
         label = self.memo or "Interbank Transfer"
-        move = self.env["account.move"].create({
+        move = self.env["account.move"].with_company(company).create({
             "move_type": "entry",
-            "journal_id": self.journal_id.id,
+            "company_id": company.id,
+            "journal_id": self.src_journal_id.id,
             "date": self.date,
             "ref": label,
             "cheque_no": self.cheque_no,
@@ -206,6 +219,8 @@ class C2pPaymentVoucher(models.TransientModel):
             raise UserError(
                 "Select at least one invoice/bill to knock off, or tick "
                 "Intercompany Transfer.")
+        if not self.journal_id:
+            raise UserError("Select the bank/cash journal.")
         bank_account = self.journal_id.default_account_id
         if not bank_account:
             raise UserError("The selected journal has no bank/cash account set.")
@@ -289,6 +304,8 @@ class C2pPaymentVoucher(models.TransientModel):
             raise UserError("Select the intercompany (Due-from/Due-to) account.")
         if not self.amount:
             raise UserError("Enter the transfer amount.")
+        if not self.journal_id:
+            raise UserError("Select the bank/cash journal.")
         a_bank = self.journal_id.default_account_id
         if not a_bank:
             raise UserError("The selected journal has no bank/cash account set.")

@@ -9,9 +9,11 @@
                 <field name="currency_id" invisible="1"/>
                 <group>
                     <group>
-                        <field name="payment_type" widget="radio"/>
-                        <field name="partner_id"/>
-                        <field name="journal_id"/>
+                        <field name="payment_type" widget="radio"
+                               invisible="is_bank_transfer"/>
+                        <field name="partner_id" invisible="is_bank_transfer"/>
+                        <field name="journal_id" invisible="is_bank_transfer"
+                               required="not is_bank_transfer"/>
                         <field name="date"/>
                     </group>
                     <group>
@@ -41,7 +43,9 @@
 
                 <group string="Interbank Transfer (same company)"
                        invisible="not is_bank_transfer">
-                    <field name="dest_journal_id"/>
+                    <field name="src_company_id" invisible="1"/>
+                    <field name="src_journal_id" required="is_bank_transfer"/>
+                    <field name="dest_journal_id" required="is_bank_transfer"/>
                     <field name="amount"/>
                 </group>
 
