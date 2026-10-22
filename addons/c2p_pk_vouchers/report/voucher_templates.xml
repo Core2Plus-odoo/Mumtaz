@@ -84,13 +84,13 @@
                                 <td t-out="line.name or ''"/>
                                 <td class="c" t-out="ccjc[0]"/>
                                 <td class="c" t-out="ccjc[1]"/>
-                                <td class="r" t-out="'{:,.2f}'.format(line.debit) if line.debit else ''"/>
-                                <td class="r" t-out="'{:,.2f}'.format(line.credit) if line.credit else ''"/>
+                                <td class="r" t-out="'{:,.0f}'.format(line.debit) if line.debit else ''"/>
+                                <td class="r" t-out="'{:,.0f}'.format(line.credit) if line.credit else ''"/>
                             </tr>
                             <tr class="tot">
                                 <td colspan="5" class="r">Total</td>
-                                <td class="r" t-out="'{:,.2f}'.format(v['total'])"/>
-                                <td class="r" t-out="'{:,.2f}'.format(v['total'])"/>
+                                <td class="r" t-out="'{:,.0f}'.format(v['total'])"/>
+                                <td class="r" t-out="'{:,.0f}'.format(v['total'])"/>
                             </tr>
                         </tbody>
                     </table>

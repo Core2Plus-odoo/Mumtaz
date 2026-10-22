@@ -19,6 +19,9 @@ class AccountMove(models.Model):
         string="Intercompany", copy=False,
         help="Mark this voucher as an intercompany transaction "
              "(posted to a Due-from / Due-to current account).")
+    is_interbank = fields.Boolean(
+        string="Interbank Transfer", copy=False,
+        help="Internal transfer between two bank/cash accounts of the company.")
     # Withholding (set by the Record Withholding wizard)
     is_wht = fields.Boolean(string="Withholding Entry", copy=False)
     wht_tax_id = fields.Many2one("c2p.wht.tax", string="WHT Code", copy=False)
@@ -58,6 +61,12 @@ class AccountMove(models.Model):
         lines = self._voucher_lines()
         total = sum(lines.mapped("debit"))
         party_label = {"payment": "Payee", "receipt": "Received From"}.get(kind)
+        party = self.partner_id.display_name or ""
+        if self.is_interbank:
+            party_label = "Transfer"
+            frm = lines.filtered(lambda line: line.credit)[:1].account_id.name or ""
+            to = lines.filtered(lambda line: line.debit)[:1].account_id.name or ""
+            party = "From %s to %s" % (frm, to)
         if kind in ("payment", "receipt"):
             signatures = ["Prepared By", "Checked/Verified By", "Approved By", "Received By"]
         else:
@@ -70,7 +79,7 @@ class AccountMove(models.Model):
             "kind": kind,
             "title": VOUCHER_TITLES.get(kind, "VOUCHER"),
             "party_label": party_label,
-            "party": self.partner_id.display_name or "",
+            "party": party,
             "show_cheque": kind in ("payment", "receipt"),
             "lines": lines,
             "total": total,

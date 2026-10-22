@@ -186,6 +186,7 @@ class C2pPaymentVoucher(models.TransientModel):
             "journal_id": self.src_journal_id.id,
             "date": self.date,
             "ref": label,
+            "is_interbank": True,
             "cheque_no": self.cheque_no,
             "cheque_date": self.cheque_date,
             "line_ids": [
