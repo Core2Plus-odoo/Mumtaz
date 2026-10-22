@@ -11,7 +11,8 @@
                     <group>
                         <field name="payment_type" widget="radio"
                                invisible="is_bank_transfer"/>
-                        <field name="partner_id" invisible="is_bank_transfer"/>
+                        <field name="partner_id" invisible="is_bank_transfer"
+                               required="not is_bank_transfer and not is_intercompany"/>
                         <field name="journal_id" invisible="is_bank_transfer"
                                required="not is_bank_transfer"/>
                         <field name="date"/>

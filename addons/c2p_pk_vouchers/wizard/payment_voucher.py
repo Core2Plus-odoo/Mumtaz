@@ -12,7 +12,7 @@ class C2pPaymentVoucher(models.TransientModel):
     payment_type = fields.Selection(
         [("outbound", "Payment (Send)"), ("inbound", "Receipt (Receive)")],
         string="Type", required=True, default="outbound")
-    partner_id = fields.Many2one("res.partner", string="Party", required=True)
+    partner_id = fields.Many2one("res.partner", string="Party")
     journal_id = fields.Many2one(
         "account.journal", string="Bank / Cash Journal",
         domain="[('type', 'in', ('bank', 'cash')), ('company_id', '=', company_id)]")
@@ -219,6 +219,8 @@ class C2pPaymentVoucher(models.TransientModel):
             raise UserError(
                 "Select at least one invoice/bill to knock off, or tick "
                 "Intercompany Transfer.")
+        if not self.partner_id:
+            raise UserError("Select the party (vendor/customer).")
         if not self.journal_id:
             raise UserError("Select the bank/cash journal.")
         bank_account = self.journal_id.default_account_id
