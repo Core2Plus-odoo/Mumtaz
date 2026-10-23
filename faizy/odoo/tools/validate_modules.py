@@ -47,6 +47,28 @@ INHERITED_FIELDS = {
 }
 
 
+# Core models that already carry mail.thread, so a module extending them may
+# set tracking=True without declaring the mixin itself. Without this the check
+# below fires on every `_inherit = "res.partner"` field, which is a false
+# failure — and a checker that cries wolf gets switched off.
+#
+# Only models checked against 19.0 source are listed. A wrong entry here does
+# not fail loudly — it quietly switches the check off for that model — so
+# "probably has a chatter" is not good enough:
+#   addons/mail/models/res_partner.py     _inherit = ['res.partner',
+#       'mail.activity.mixin', 'mail.thread.blacklist'], and
+#       mail_thread_blacklist.py is _inherit = ['mail.thread'].
+#   addons/account/models/account_move.py _inherit = [...,
+#       'mail.thread.main.attachment', ...]
+# res.users and res.company were checked and are NOT mail.thread — res.users
+# only reaches res.partner through _inherits delegation, which does not carry
+# a mixin. So tracking=True on a res.users field really would be ignored.
+CORE_MAIL_THREAD_MODELS = {
+    "res.partner",
+    "account.move",
+}
+
+
 # Fields removed from Odoo core models in 19.0. Writing one in a data file is
 # accepted by every static check and then fails at install with
 # "Invalid field 'x' in 'model'" — from inside XML parsing, so the traceback
@@ -76,6 +98,47 @@ def check_removed_core_fields(module: Path, failures: list[str]) -> None:
                     failures.append(
                         f"{module.name}: {xml_file.name} sets "
                         f"{record.get('model')}.{field.get('name')} — {reason}"
+                    )
+
+
+# QWeb helpers that no longer exist in an Odoo 19 kanban card. Verified against
+# addons/web/static/src/views/kanban/kanban_record.js — `renderingContext` is
+# exactly {context, JSON, luxon, record, selection_mode, widget, __comp__} and
+# nothing else is in scope.
+#
+# This class of error is nastier than a missing field. It survives install, it
+# survives the RNG schema, and it only fires in the browser the first time the
+# view has a record to draw — at which point it is not a broken avatar, it is
+# "UncaughtPromiseError > OwlError" and the entire screen is blank. The Faizies
+# kanban shipped with this and looked fine for weeks purely because the list was
+# empty on production.
+REMOVED_KANBAN_HELPERS = {
+    "kanban_image": (
+        "removed in Odoo 19 — use <field name=\"...\" widget=\"image\" "
+        "options=\"{'img_class': '...'}\"/> the way Odoo's own partner kanban does"
+    ),
+    "kanban_color": "removed in Odoo 19 — use the `color` field with widget/decoration",
+    "kanban_getcolor": "removed in Odoo 19 — use the `color` field with widget/decoration",
+}
+
+
+def check_kanban_helpers(module: Path, failures: list[str]) -> None:
+    """Flag kanban templates calling helpers Odoo 19 no longer provides."""
+    for xml_file in module.rglob("*.xml"):
+        try:
+            tree = ET.parse(xml_file)
+        except ET.ParseError:
+            continue  # reported elsewhere
+        for kanban in tree.iter("kanban"):
+            # Any attribute value can hold an expression — t-att-src, t-if,
+            # t-attf-class and so on — so scan the serialised subtree rather
+            # than guessing which attribute someone used.
+            arch = ET.tostring(kanban, encoding="unicode")
+            for helper, reason in REMOVED_KANBAN_HELPERS.items():
+                if f"{helper}(" in arch:
+                    failures.append(
+                        f"{module.name}: {xml_file.name} kanban calls "
+                        f"{helper}() — {reason}"
                     )
 
 
@@ -229,7 +292,11 @@ def check_field_definitions(module: Path, failures: list[str]) -> None:
     #    "Field x.y: unknown parameter 'tracking'". You believe you have an
     #    audit trail and you have nothing.
     for entry in definitions:
-        if entry["kwargs"].get("tracking") and "mail.thread" not in entry["inherits"]:
+        tracked = (
+            "mail.thread" in entry["inherits"]
+            or entry["model"] in CORE_MAIL_THREAD_MODELS
+        )
+        if entry["kwargs"].get("tracking") and not tracked:
             failures.append(
                 f"{module.name}: {entry['file']}:{entry['line']} "
                 f"{entry['model']}.{entry['field']} sets tracking=True but the "
@@ -299,6 +366,10 @@ def main() -> int:
 
         # 3b. Field keywords that Odoo only warns about at load.
         check_field_definitions(module, failures)
+
+        # 3c. Kanban helpers Odoo 19 removed. Invisible until the view has a
+        #     record to draw, then the whole screen goes blank.
+        check_kanban_helpers(module, failures)
 
         models = collect_models(module)
         all_models.update(models)

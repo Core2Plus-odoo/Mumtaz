@@ -10,11 +10,44 @@
         <field name="sequence">20</field>
     </record>
 
+    <!-- "Become a Faizy" recruits ground staff. It matters, but it is not what
+         a visitor came for — the customer is an expat worrying about their
+         parents, and a recruitment link sitting between "Plans" and the way to
+         reach us competes with the thing they actually need. So it moves into
+         a group with the other pages people look for rather than land on.
+
+         The parent has url "#" because it is a grouping, not a destination.
+         Odoo renders a menu with children as a dropdown. -->
+    <record id="menu_faizy_about" model="website.menu">
+        <field name="name">About Us</field>
+        <field name="url">#</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">30</field>
+    </record>
+
     <record id="menu_faizy_join" model="website.menu">
         <field name="name">Become a Faizy</field>
         <field name="url">/join</field>
+        <field name="parent_id" ref="menu_faizy_about"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <record id="menu_faizy_privacy" model="website.menu">
+        <field name="name">Privacy policy</field>
+        <field name="url">/privacy</field>
+        <field name="parent_id" ref="menu_faizy_about"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- The product IS WhatsApp, so the header carries the same door the
+         service runs through. `/whatsapp` rather than a wa.me link typed in
+         here: the number lives on res.company and a copy of it in a data
+         record becomes a second number the day the first one changes. -->
+    <record id="menu_faizy_whatsapp" model="website.menu">
+        <field name="name">WhatsApp</field>
+        <field name="url">/whatsapp</field>
         <field name="parent_id" ref="website.main_menu"/>
-        <field name="sequence">30</field>
+        <field name="sequence">35</field>
     </record>
 
     <!-- Last, so it reads as the end of the journey rather than another

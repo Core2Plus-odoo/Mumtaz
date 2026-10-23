@@ -251,6 +251,13 @@ nothing to update the next time the server moves. Keep whichever record already
 exists rather than adding a second: two records for one name is the failure that
 looks exactly like a propagation delay.
 
+### If realtime updates are not working
+
+`/websocket` answering **400** in the log means nginx is not passing the
+upgrade headers through. Re-run `setup-domain.sh` — it writes them now. Odoo's
+bus is what refreshes the chatter and notifications live; without it the
+backend still works, it just stops updating until you reload.
+
 ### What it does on the box
 
 - nginx serves `myfaizy.com` by name on 80/443, sharing those ports with the

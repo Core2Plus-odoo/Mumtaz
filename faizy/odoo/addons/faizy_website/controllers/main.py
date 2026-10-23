@@ -1,14 +1,50 @@
+import logging
 import re
+from urllib.parse import quote
 
 from odoo import fields, http
 from odoo.http import request
+
+_logger = logging.getLogger(__name__)
 
 # 00000-0000000-0
 CNIC_RE = re.compile(r"^\d{5}-\d{7}-\d$")
 
 
+def whatsapp_url(message):
+    """A wa.me link for the company number, or None if there isn't one.
+
+    `sudo()` because visitors are the public user, and reading res.company
+    from that env comes back empty — which is what made the header's WhatsApp
+    button dead-end to /contactus for everyone who pressed it.
+
+    Module level rather than a method so the portal controller can reach it
+    without importing a page controller; the number handling has to be the
+    same everywhere or the links quietly disagree.
+    """
+    company = request.website.sudo().company_id or request.env.company.sudo()
+    number = re.sub(r"^0+", "", re.sub(r"\D", "", company.phone or ""))
+    if not 8 <= len(number) <= 15:
+        _logger.warning(
+            "Faizy: no usable company phone (%r), so the WhatsApp link was "
+            "left off the page. Set it in Settings > Companies.",
+            company.phone,
+        )
+        return None
+    return f"https://wa.me/{number}?text={quote(message)}"
+
+
 class FaizyWebsite(http.Controller):
     """Public pages: the pitch, the pricing, and the worker sign-up."""
+
+    # Prefilled so the first message is already a sentence. Someone opening
+    # WhatsApp to a blank compose box has to decide how to introduce
+    # themselves, and a good share of them simply close it.
+    WHATSAPP_OPENER = "Assalam o Alaikum! I'd like to know more about Faizy."
+    WHATSAPP_SIGNUP_OPENER = "Assalam o Alaikum! I've just signed up for Faizy."
+
+    def _whatsapp_url(self, message):
+        return whatsapp_url(message)
 
     # ── Currency ─────────────────────────────────────────────────────────
 
@@ -26,7 +62,12 @@ class FaizyWebsite(http.Controller):
         Customers are anywhere — the CRM has people in Dubai, Riyadh, London,
         Manchester and New York — so the price shown should be the one we
         published for that market. Preference order: what the visitor picked,
-        then the currency of the country GeoIP puts them in, then the company's.
+        then the currency of the country GeoIP puts them in, then PKR.
+
+        PKR last rather than the company currency: the work is done in Pakistan
+        and costed in rupees, and every other market price is a decision made
+        on top of that one. A visitor we cannot place should see the rupee
+        price, not whichever currency the company happens to report in.
 
         Only currencies with a published price are eligible. We never convert:
         a subscription price that moves with the exchange rate is not a price.
@@ -51,7 +92,7 @@ class FaizyWebsite(http.Controller):
             if local:
                 return local
 
-        return request.env.company.currency_id
+        return plans[:1].default_currency() if plans else request.env.company.currency_id
 
     def _pricing_values(self, currency=None):
         plans = (
@@ -101,6 +142,54 @@ class FaizyWebsite(http.Controller):
     @http.route("/pricing", type="http", auth="public", website=True, sitemap=True)
     def faizy_pricing(self, currency=None, **kw):
         return request.render("faizy_website.pricing", self._pricing_values(currency))
+
+    @http.route("/privacy", type="http", auth="public", website=True, sitemap=True)
+    def faizy_privacy(self, **kw):
+        """The privacy policy.
+
+        Not optional paperwork for this product. We hold a family's home
+        address, a mother's prescription and a worker's CNIC, and we send it
+        all over WhatsApp — people are entitled to read what happens to that
+        before they hand it over.
+        """
+        return request.render(
+            "faizy_website.privacy",
+            {
+                "company": request.env.company,
+                "whatsapp_number": request.env[
+                    "faizy.whatsapp.message"
+                ].sudo().contact_number(),
+            },
+        )
+
+    @http.route("/whatsapp", type="http", auth="public", website=True, sitemap=False)
+    def faizy_whatsapp(self, text=None, **kw):
+        """Open a WhatsApp chat with us.
+
+        A redirect rather than a wa.me link in the menu record, so the number
+        has exactly one home — res.company.phone, the same field the FMB
+        welcome message and the footer read. Change it in Settings and every
+        surface follows.
+
+        `sudo()` is load-bearing. Visitors are the public user, and reading
+        res.company from that env comes back empty — so the number was blank,
+        the guard below fired, and the button quietly landed on /contactus
+        instead of opening WhatsApp. The footer never showed the symptom
+        because QWeb reads `website.company_id`, which is already sudo'd.
+        Nothing secret is exposed: this is the number printed in the footer.
+
+        Falls back to the contact page rather than 404ing, but says so in the
+        log — a header button that dead-ends because nobody filled in the
+        company phone is worse than one that lands somewhere a human can still
+        be reached, and a silent fallback is how this went unnoticed.
+        """
+        url = self._whatsapp_url(text or self.WHATSAPP_OPENER)
+        if not url:
+            # A header button that dead-ends because nobody filled in the
+            # company phone is worse than one that lands somewhere a human can
+            # still be reached. _whatsapp_url has already logged why.
+            return request.redirect("/contactus")
+        return request.redirect(url, local=False)
 
     @http.route(
         "/faizy/worker/<int:worker_id>/photo",
@@ -196,16 +285,34 @@ class FaizyWebsite(http.Controller):
         member_city = (post.get("member_city") or "").strip()
         plan_code = post.get("plan") or "standard"
 
+        # "This one is for me." Half the catalogue — passport, NADRA, FBR
+        # filing, property visits — is the subscriber's own business waiting in
+        # Pakistan, and the form used to insist on a family member, so there
+        # was no way to buy the thing they came for.
+        #
+        # Resolved server-side rather than by hiding a field with script: a
+        # checkbox that only changes the UI leaves the requirement in place,
+        # and the person who has JS off gets an error they cannot clear.
+        for_self = bool(post.get("for_self"))
+        relationship = post.get("relationship") or "other"
+        if for_self:
+            relationship = "self"
+            member_name = member_name or name
+
         if not name:
             errors["name"] = "Please tell us your name."
         if not phone:
             errors["phone"] = "We need your WhatsApp number — that is how we reach you."
         if not country_id:
             errors["country_id"] = "Where are you based?"
+        # Only reachable when the box is unticked AND no name was typed —
+        # ticking it borrows the subscriber's own name above.
         if not member_name:
-            errors["member_name"] = "Who are we caring for?"
+            errors["member_name"] = (
+                "Who are we caring for? Tick the box above if it is for you."
+            )
         if not member_city:
-            errors["member_city"] = "Which city are they in?"
+            errors["member_city"] = "Which city in Pakistan is the help needed in?"
 
         plan = env["faizy.plan"].sudo().search([("code", "=", plan_code)], limit=1)
         if not plan:
@@ -220,9 +327,13 @@ class FaizyWebsite(http.Controller):
         Partner = env["res.partner"].sudo()
         # Someone who signs up twice is a returning customer, not a duplicate.
         # Matching on phone keeps their FMB IDs and history attached.
-        partner = Partner.search(
-            ["|", ("phone", "=", phone), ("mobile", "=", phone)], limit=1
-        )
+        #
+        # `phone` only: Odoo 19 removed res.partner.mobile — checked in
+        # odoo/addons/base/models/res_partner.py, where 18.0 declares both and
+        # 19.0 declares `phone = fields.Char()` alone. Searching or writing
+        # `mobile` raises ValueError, which is what this route did on every
+        # single signup until it was found.
+        partner = Partner.search([("phone", "=", phone)], limit=1)
         if partner:
             partner.write({"is_faizy_customer": True, "name": partner.name or name})
         else:
@@ -230,7 +341,6 @@ class FaizyWebsite(http.Controller):
                 {
                     "name": name,
                     "phone": phone,
-                    "mobile": phone,
                     "email": (post.get("email") or "").strip() or False,
                     "country_id": int(country_id),
                     "is_faizy_customer": True,
@@ -241,7 +351,7 @@ class FaizyWebsite(http.Controller):
             {
                 "partner_id": partner.id,
                 "name": member_name,
-                "relationship": post.get("relationship") or "other",
+                "relationship": relationship,
                 "city": member_city,
             }
         )
@@ -274,7 +384,21 @@ class FaizyWebsite(http.Controller):
         "/start/welcome", type="http", auth="public", website=True, sitemap=False
     )
     def faizy_start_welcome(self, fmb=None, **kw):
-        return request.render("faizy_website.signup_welcome", {"fmb": fmb})
+        """The page after signing up.
+
+        Carries a WhatsApp link with the member ID already written into it, so
+        the first message ops receives identifies the customer instead of
+        starting with "hi". Built here rather than in the template because the
+        number needs the same sudo and the same digits-only normalisation as
+        /whatsapp, and two places building the same URL is one place too many.
+        """
+        opener = self.WHATSAPP_SIGNUP_OPENER
+        if fmb:
+            opener = f"{opener} My family member ID is {fmb}."
+        return request.render(
+            "faizy_website.signup_welcome",
+            {"fmb": fmb, "whatsapp_url": self._whatsapp_url(opener)},
+        )
 
     # ── Worker sign-up ───────────────────────────────────────────────────
 
@@ -409,4 +533,55 @@ class FaizyWebsite(http.Controller):
                 "reference": reference,
                 "phone": phone,
             },
+        )
+
+    # ── Installable web app ──────────────────────────────────────────────
+    #
+    # Faizy is used on a phone, by people checking on a parent between other
+    # things. A tab in a browser with an address bar above it does not feel
+    # like something you open twice a day; an icon on the home screen that
+    # opens full-screen does. That difference is a manifest and four meta
+    # tags, not a native build.
+    #
+    # Served from a route rather than a static file so name, colours and
+    # start_url follow the website record instead of being frozen at build
+    # time — a second Faizy site would otherwise advertise the first one's
+    # name on the customer's home screen.
+    @http.route(
+        "/faizy/manifest.webmanifest",
+        type="http",
+        auth="public",
+        website=True,
+        sitemap=False,
+    )
+    def faizy_manifest(self, **kw):
+        website = request.website.sudo()
+        icons = [
+            {"src": "/faizy_website/static/src/img/icon-192.png",
+             "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": "/faizy_website/static/src/img/icon-512.png",
+             "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": "/faizy_website/static/src/img/icon-512.png",
+             "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ]
+        manifest = {
+            "name": website.name or "Faizy",
+            "short_name": "Faizy",
+            "description": "Family care for Pakistanis living abroad.",
+            # Opens straight on the customer's own app. /my is Odoo's account
+            # console and is not where someone who installed this to check on
+            # their mother should land.
+            "start_url": "/care",
+            "scope": "/",
+            "display": "standalone",
+            "orientation": "portrait",
+            "background_color": "#f7f1e7",   # $fz-sand, so the splash matches
+            "theme_color": "#fdf8f0",        # the header, so the status bar does
+            "lang": "en",
+            "dir": "ltr",
+            "icons": icons,
+        }
+        return request.make_json_response(
+            manifest,
+            headers=[("Content-Type", "application/manifest+json")],
         )
