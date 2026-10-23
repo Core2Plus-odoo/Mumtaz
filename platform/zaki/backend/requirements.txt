@@ -4,3 +4,4 @@ anthropic
 httpx
 asyncpg
 python-dotenv
+pyjwt

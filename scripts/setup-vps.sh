@@ -2,7 +2,7 @@
 # One-shot VPS setup for Mumtaz Digital Platform
 #
 # Run as root (or with sudo) on a fresh Ubuntu 22.04 / 24.04 VPS:
-#   git clone ... /opt/Mumtaz && cd /opt/Mumtaz
+#   git clone ... /opt/mumtaz && cd /opt/mumtaz
 #   sudo bash scripts/setup-vps.sh
 set -euo pipefail
 

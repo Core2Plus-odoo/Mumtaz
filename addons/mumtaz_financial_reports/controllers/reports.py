@@ -225,6 +225,127 @@ class FinancialReports(http.Controller):
         return rows, tiles
 
     # ------------------------------------------------------------------ #
+    #  Cash Flow Statement (indirect method)
+    # ------------------------------------------------------------------ #
+    def _cash_types(self):
+        return ("asset_cash",)
+
+    def _flows(self, dfrom, dto):
+        """Scalar cash-flow figures for one period, all in cash terms.
+
+        Every balance-sheet movement contributes ``-(closing - opening)`` to
+        cash: an asset increase is a use of cash, a liability/equity increase a
+        source. Net profit (the period's P&L result) plus the movement of all
+        non-cash balance-sheet accounts equals the movement in cash — so the
+        statement always reconciles to the actual cash-account movement.
+        """
+        accs = self._accounts()
+        openb = self._balances(dfrom - relativedelta(days=1))
+        close = self._balances(dto)
+
+        def impact(types):
+            tot, ids = 0.0, []
+            for a in accs:
+                if a.account_type not in types:
+                    continue
+                cl = close.get(a.id, {}).get("balance", 0.0)
+                op = openb.get(a.id, {}).get("balance", 0.0)
+                tot += -(cl - op)
+                if round(cl, 2) or round(op, 2):
+                    ids.append(a.id)
+            return tot, ids
+
+        # period P&L result (net profit) and depreciation add-back
+        pl = self._balances(dto, dfrom, PL_TYPES)
+        np_ = -sum(v.get("balance", 0.0) for v in pl.values())
+        dep = self._balances(dto, dfrom, ("expense_depreciation",))
+        dep_amt = sum(v.get("balance", 0.0) for v in dep.values())
+        pl_ids = list(pl.keys())
+
+        recv, recv_a = impact(("asset_receivable",))
+        prepay, prepay_a = impact(("asset_prepayments",))
+        othca, othca_a = impact(("asset_current",))
+        pay, pay_a = impact(("liability_payable", "liability_credit_card"))
+        othcl, othcl_a = impact(("liability_current",))
+        nca, nca_a = impact(BS_NONCUR_ASSET)
+        ncl, ncl_a = impact(BS_NONCUR_LIAB)
+        eq, eq_a = impact(BS_EQUITY)
+
+        cfo = np_ + dep_amt + recv + prepay + othca + pay + othcl
+        cfi = nca - dep_amt          # gross capex = net-book change + depreciation
+        cff = ncl + eq
+        net = cfo + cfi + cff
+
+        open_cash = sum(openb.get(a.id, {}).get("balance", 0.0)
+                        for a in accs if a.account_type in self._cash_types())
+        close_cash = sum(close.get(a.id, {}).get("balance", 0.0)
+                         for a in accs if a.account_type in self._cash_types())
+
+        return {
+            "np": np_, "dep": dep_amt, "recv": recv, "prepay": prepay,
+            "othca": othca, "pay": pay, "othcl": othcl, "nca": nca - dep_amt,
+            "ncl": ncl, "eq": eq, "cfo": cfo, "cfi": cfi, "cff": cff,
+            "net": net, "open_cash": open_cash, "close_cash": close_cash,
+            "a": {"np": pl_ids, "recv": recv_a, "prepay": prepay_a,
+                  "othca": othca_a, "pay": pay_a, "othcl": othcl_a,
+                  "nca": nca_a, "ncl": ncl_a, "eq": eq_a},
+        }
+
+    def _cf(self, dfrom, dto):
+        c = self._flows(dfrom, dto)
+        p = self._flows(dfrom - relativedelta(years=1),
+                        dto - relativedelta(years=1))
+        rows = []
+
+        def line(label, key, kind="line"):
+            row = {"t": kind, "l": label,
+                   "c": _num(c.get(key, 0.0)), "p": _num(p.get(key, 0.0))}
+            ids = c.get("a", {}).get(key)
+            if ids:
+                row["a"] = ids
+            rows.append(row)
+
+        rows.append({"t": "section", "l": "Cash Flows from Operating Activities"})
+        line("Net profit / (loss) for the period", "np")
+        line("Adjustment for depreciation & amortisation", "dep")
+        line("(Increase) / decrease in trade receivables", "recv")
+        line("(Increase) / decrease in prepayments", "prepay")
+        line("(Increase) / decrease in inventory & other current assets", "othca")
+        line("Increase / (decrease) in trade & other payables", "pay")
+        line("Increase / (decrease) in other current liabilities", "othcl")
+        line("Net Cash from Operating Activities", "cfo", "sub")
+        rows.append({"t": "spacer"})
+
+        rows.append({"t": "section", "l": "Cash Flows from Investing Activities"})
+        line("Acquisition of non-current assets (net)", "nca")
+        line("Net Cash used in Investing Activities", "cfi", "sub")
+        rows.append({"t": "spacer"})
+
+        rows.append({"t": "section", "l": "Cash Flows from Financing Activities"})
+        line("Proceeds from / (repayment of) borrowings", "ncl")
+        line("Equity contributions / (distributions)", "eq")
+        line("Net Cash from Financing Activities", "cff", "sub")
+        rows.append({"t": "spacer"})
+
+        line("Net Increase / (Decrease) in Cash", "net", "total")
+        line("Cash & Equivalents — Opening", "open_cash")
+        line("Cash & Equivalents — Closing", "close_cash", "grand")
+
+        tiles = [
+            {"lab": "Operating Cash Flow", "val": _num(c["cfo"]),
+             "sub": ("healthy" if c["cfo"] >= 0 else "under pressure"),
+             "kind": "g" if c["cfo"] >= 0 else "b"},
+            {"lab": "Free Cash Flow", "val": _num(c["cfo"] + c["cfi"]),
+             "sub": "operating less investing", "kind": ""},
+            {"lab": "Net Change in Cash", "val": _num(c["net"]),
+             "sub": (f"{'+' if c['net'] >= 0 else ''}{c['net']:,.0f} this period"),
+             "kind": "g" if c["net"] >= 0 else "b"},
+            {"lab": "Closing Cash", "val": _num(c["close_cash"]),
+             "sub": (f"from {_num(c['open_cash']):,.0f} opening"), "kind": "n"},
+        ]
+        return rows, tiles
+
+    # ------------------------------------------------------------------ #
     #  Trial Balance
     # ------------------------------------------------------------------ #
     def _tb(self, dto):
@@ -298,6 +419,9 @@ class FinancialReports(http.Controller):
             return {"rows": rows, "tiles": tiles, "meta": meta}
         if report == "bs":
             rows, tiles = self._bs(date_to)
+            return {"rows": rows, "tiles": tiles, "meta": meta}
+        if report == "cf":
+            rows, tiles = self._cf(date_from, date_to)
             return {"rows": rows, "tiles": tiles, "meta": meta}
         if report == "tb":
             return {"rows": self._tb(date_to), "meta": meta}

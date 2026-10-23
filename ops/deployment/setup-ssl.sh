@@ -8,7 +8,7 @@ set -e
 
 DOMAINS="-d mumtaz.digital -d www.mumtaz.digital -d app.mumtaz.digital -d erp.mumtaz.digital -d zaki.mumtaz.digital -d marketplace.mumtaz.digital -d admin.mumtaz.digital"
 EMAIL="admin@mumtaz.digital"
-REPO="/opt/Mumtaz"
+REPO="/opt/mumtaz"
 NGINX_CONF="$REPO/ops/deployment/nginx-mumtaz-platform.conf"
 ZAKI_FRONTEND="$REPO/apps/zaki/frontend"
 

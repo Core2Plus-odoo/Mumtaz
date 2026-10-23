@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
     "name": "Mumtaz Financial Statements",
-    "version": "19.0.1.0.0",
-    "summary": "Standard-format P&L, Balance Sheet, Trial Balance and Aged "
-               "Partners — on-screen, foldable, drill-down, printable.",
+    "version": "19.0.1.1.0",
+    "summary": "Standard-format P&L, Balance Sheet, Cash Flow, Trial Balance and "
+               "Aged Partners — on-screen, foldable, drill-down, printable.",
     "description": """
 Mumtaz Financial Statements
 ===========================
@@ -15,6 +15,8 @@ action, computed live from the chart of accounts and posted journal entries:
   comparison and variance %.
 * Statement of Financial Position (Balance Sheet) — Assets / Equity &
   Liabilities, current vs non-current, with a live balance check.
+* Statement of Cash Flows (indirect method) — Operating / Investing / Financing
+  activities, reconciled to the movement in cash & equivalents.
 * Trial Balance — closing debit/credit per account, footed.
 * Aged Partners — receivables & payables in Current / 1-30 / 31-60 / 60+ buckets.
 

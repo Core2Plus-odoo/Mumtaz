@@ -8,10 +8,17 @@ from Claude (official Anthropic SDK). Voice via ElevenLabs.
 
 Secrets/config come from /opt/mumtaz/.env — nothing hardcoded.
 
-SECURITY NOTE: financial routes are keyed by tenant_id (per product spec).
-Set ZAKI_REQUIRE_JWT=1 in .env to require a platform Bearer token on those
-routes before public exposure. CORS is restricted to the allowlist.
+SECURITY: every tenant-scoped route is authenticated and fails closed. A
+caller must present ``Authorization: Bearer <token>`` that is either the shared
+``ZAKI_SERVICE_TOKEN`` (trusted server-to-server) or a platform-issued HS256
+JWT whose tenant claim matches the requested ``tenant_id`` (per-tenant
+isolation — blocks tenant-ID enumeration / IDOR). If neither secret is
+configured the routes refuse with 503, unless ``ZAKI_ALLOW_ANON=1`` is set to
+explicitly restore the legacy open behaviour for local/dev use. CORS only
+enables credentials when an explicit origin allowlist is configured (never the
+``*`` + credentials anti-pattern).
 """
+import hmac
 import json
 import os
 import xmlrpc.client
@@ -38,10 +45,22 @@ ODOO_PASS  = os.environ.get("ODOO_ADMIN_PASS", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 EL_KEY  = os.environ.get("ELEVENLABS_API_KEY", "")
 EL_VOICE = os.environ.get("ELEVENLABS_VOICE_ID", "pNInz6obpgDQGcFmaJgB")
-CORS = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()] or ["*"]
+
+# ── auth / CORS config ───────────────────────────────────────────────
+PLATFORM_JWT_SECRET = os.environ.get("PLATFORM_JWT_SECRET", "")
+PLATFORM_JWT_ALG    = os.environ.get("PLATFORM_JWT_ALG", "HS256")
+ZAKI_SERVICE_TOKEN  = os.environ.get("ZAKI_SERVICE_TOKEN", "")
+ALLOW_ANON = os.environ.get("ZAKI_ALLOW_ANON", "0") == "1"
+
+# Only pair credentials with an explicit allowlist — "*" + credentials is
+# invalid and browsers reject it. These APIs are Bearer-token, not cookie, so
+# credentials are off unless origins are pinned.
+_cors_explicit = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+CORS = _cors_explicit or ["*"]
+ALLOW_CREDS = bool(_cors_explicit)
 
 app = FastAPI(title="ZAKI AI CFO", version="2.0")
-app.add_middleware(CORSMiddleware, allow_origins=CORS, allow_credentials=True,
+app.add_middleware(CORSMiddleware, allow_origins=CORS, allow_credentials=ALLOW_CREDS,
                    allow_methods=["*"], allow_headers=["*"])
 _pool: asyncpg.Pool | None = None
 _ai = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
@@ -176,10 +195,42 @@ class KBReq(BaseModel):
     importance: int = 2; source: str = "chat"
 
 
-def _require(cfg: BriefReq, authorization: str | None):
-    if os.environ.get("ZAKI_REQUIRE_JWT", "0") == "1":
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(401, "Authorization required")
+def _verify(authorization: str | None, tenant_id: int | None = None) -> int | None:
+    """Authenticate a request and enforce tenant isolation. Fails closed.
+
+    Returns the authenticated tenant id (or ``None`` for a service token, which
+    has cross-tenant access). Raises 401/403/503 on any failure. When a
+    ``tenant_id`` is supplied and the caller presents a per-tenant JWT, the
+    token's tenant claim MUST match — this is what blocks tenant-ID enumeration.
+    """
+    if ALLOW_ANON:
+        return tenant_id
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Authorization required")
+    token = authorization[7:].strip()
+
+    # Trusted server-to-server shared secret (constant-time compare).
+    if ZAKI_SERVICE_TOKEN and hmac.compare_digest(token, ZAKI_SERVICE_TOKEN):
+        return tenant_id
+
+    # Platform-issued per-tenant JWT.
+    if PLATFORM_JWT_SECRET:
+        try:
+            import jwt  # PyJWT — lazy so the service-token path needs no dep
+            claims = jwt.decode(token, PLATFORM_JWT_SECRET, algorithms=[PLATFORM_JWT_ALG])
+        except Exception:
+            raise HTTPException(401, "Invalid or expired token")
+        claim = claims.get("tenant_id", claims.get("tid", claims.get("sub")))
+        try:
+            tok_tid = int(claim)
+        except (TypeError, ValueError):
+            raise HTTPException(403, "Token has no tenant claim")
+        if tenant_id is not None and tok_tid != int(tenant_id):
+            raise HTTPException(403, "Token is not valid for this tenant")
+        return tok_tid
+
+    # Nothing to verify against and anon not permitted → refuse.
+    raise HTTPException(503, "Authentication is not configured")
 
 
 # ── routes ───────────────────────────────────────────────────────────
@@ -190,14 +241,15 @@ async def health():
 
 
 @app.get("/api/v1/financials/{tenant_id}")
-async def financials(tenant_id: int):
+async def financials(tenant_id: int, authorization: str = Header(None)):
+    _verify(authorization, tenant_id)
     return {"status": "ok", "data": await get_odoo_snapshot(tenant_id),
             "timestamp": datetime.now().isoformat()}
 
 
 @app.post("/api/v1/briefing/stream")
 async def briefing(req: BriefReq, authorization: str = Header(None)):
-    _require(req, authorization)
+    _verify(authorization, req.tenant_id)
     snap = await get_odoo_snapshot(req.tenant_id)
     kb = await get_kb_context(req.tenant_id)
     system = build_prompt(req.model_dump(), snap, kb)
@@ -211,7 +263,7 @@ async def briefing(req: BriefReq, authorization: str = Header(None)):
 
 @app.post("/api/v1/chat/stream")
 async def chat(req: ChatReq, authorization: str = Header(None)):
-    _require(req, authorization)
+    _verify(authorization, req.tenant_id)
     # Auto-capture salient statements to the KB.
     if any(k in req.message.lower() for k in ("decided", "client", "worried", "plan to",
                                               "signed", "agreed")):
@@ -231,7 +283,8 @@ async def chat(req: ChatReq, authorization: str = Header(None)):
 
 
 @app.post("/api/v1/voice")
-async def voice(req: VoiceReq):
+async def voice(req: VoiceReq, authorization: str = Header(None)):
+    _verify(authorization)  # any valid credential — stops open ElevenLabs abuse
     if not EL_KEY:
         raise HTTPException(503, "Voice not configured")
     vid = req.voice_id or EL_VOICE
@@ -248,7 +301,8 @@ async def voice(req: VoiceReq):
 
 
 @app.get("/api/v1/health-score/{tenant_id}")
-async def health_score(tenant_id: int):
+async def health_score(tenant_id: int, authorization: str = Header(None)):
+    _verify(authorization, tenant_id)
     s = await get_odoo_snapshot(tenant_id)
     margin = s.get("net_margin", 0); runway = s.get("cash_runway", 0)
     ar_t = s.get("ar_total", 0) or 0; ar_o = s.get("ar_overdue", 0) or 0
@@ -267,7 +321,8 @@ async def health_score(tenant_id: int):
 
 
 @app.get("/api/v1/opportunities/{tenant_id}")
-async def opportunities(tenant_id: int):
+async def opportunities(tenant_id: int, authorization: str = Header(None)):
+    _verify(authorization, tenant_id)
     s = await get_odoo_snapshot(tenant_id)
     cur = "AED"; out = []
     if (s.get("ar_overdue", 0) or 0) > 0:
@@ -291,7 +346,8 @@ async def opportunities(tenant_id: int):
 
 
 @app.post("/api/v1/kb/save")
-async def kb_save(req: KBReq):
+async def kb_save(req: KBReq, authorization: str = Header(None)):
+    _verify(authorization, req.tenant_id)
     async with _pool.acquire() as c:
         rid = await c.fetchval(
             "INSERT INTO zaki_kb (tenant_id,category,title,content,importance,source)"
@@ -301,7 +357,8 @@ async def kb_save(req: KBReq):
 
 
 @app.get("/api/v1/kb/{tenant_id}")
-async def kb_list(tenant_id: int):
+async def kb_list(tenant_id: int, authorization: str = Header(None)):
+    _verify(authorization, tenant_id)
     async with _pool.acquire() as c:
         rows = await c.fetch(
             "SELECT id,category,title,content,importance,updated_at FROM zaki_kb "
@@ -311,7 +368,12 @@ async def kb_list(tenant_id: int):
 
 
 @app.delete("/api/v1/kb/{entry_id}")
-async def kb_delete(entry_id: int):
+async def kb_delete(entry_id: int, authorization: str = Header(None)):
+    tid = _verify(authorization)
     async with _pool.acquire() as c:
-        await c.execute("UPDATE zaki_kb SET archived=TRUE WHERE id=$1", entry_id)
+        if tid is not None:  # per-tenant caller: only their own entries
+            await c.execute("UPDATE zaki_kb SET archived=TRUE WHERE id=$1 AND tenant_id=$2",
+                            entry_id, tid)
+        else:  # service token / anon: cross-tenant
+            await c.execute("UPDATE zaki_kb SET archived=TRUE WHERE id=$1", entry_id)
     return {"status": "ok"}

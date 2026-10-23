@@ -32,6 +32,7 @@ const SHELL = `
       <div class="fs-tabs" data-el="tabs">
         <button data-view="pl" aria-selected="true">Profit &amp; Loss</button>
         <button data-view="bs" aria-selected="false">Balance Sheet</button>
+        <button data-view="cf" aria-selected="false">Cash Flow</button>
         <button data-view="tb" aria-selected="false">Trial Balance</button>
         <button data-view="aged" aria-selected="false">Aged Partners</button>
       </div>
@@ -168,6 +169,9 @@ class FinancialStatements extends Component {
                 continue;
             }
             const p = this.pct(r.c, r.p);
+            // a total/grand ends the current foldable section; trailing lines
+            // (e.g. cash-flow reconciliation) must not be tied to it
+            if (r.t === "total" || r.t === "grand") cur = 0;
             const cls = r.t === "line" ? "r-line" : r.t === "sub" ? "r-sub" : r.t === "total" ? "r-total" : "r-grand";
             const showPct = r.t !== "line";
             const drill = (r.t === "line" && r.a && r.a.length) ? ` drill" data-acc="${r.a.join(",")}` : "";
@@ -179,10 +183,10 @@ class FinancialStatements extends Component {
                 <td class="amt"><span class="pct ${showPct ? p.c : "mut"}">${showPct ? p.t : ""}</span></td>
             </tr>`;
         }
-        const titles = { pl: "Statement of Profit & Loss", bs: "Statement of Financial Position", tb: "Trial Balance" };
+        const titles = { pl: "Statement of Profit & Loss", bs: "Statement of Financial Position", cf: "Statement of Cash Flows", tb: "Trial Balance" };
         const curFy = this.fyLabel(this.meta.date_from, this.meta.date_to);
         const priFy = this.fyLabel(this.shiftYear(this.meta.date_from), this.shiftYear(this.meta.date_to));
-        const period = this.report === "pl"
+        const period = (this.report === "pl" || this.report === "cf")
             ? `For the year ended ${this.fmtDate(this.meta.date_to)}`
             : `As at ${this.fmtDate(this.meta.date_to)}`;
         const head = this.report === "tb"
