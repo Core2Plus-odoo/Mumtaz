@@ -10,7 +10,7 @@ One page in Odoo that shows everything happening across C2P, for the Managing Pa
 | Pipeline | Every deal past *Contacted*, by stage, with value, idle days and next step (stale ≥14 days, overdue next step) | the lead |
 | Money | Receivable, paid this month, every unpaid customer invoice with days late, drafts | the invoice |
 | AI agents | Review queue (with preview links), per-agent cards by stage, overdue, next due | the card / work board |
-| Client delivery | Every *Delivery* / *Milestones* project: open, overdue, due in 7 days, last activity, RAG | the project's tasks |
+| Client delivery | Every client project (customer set, not a C2P company): open, overdue, due in 7 days, last activity, RAG | the project's tasks |
 | Content | Posts published in 30 days, drafts, latest posts, warning when nothing published for 7+ days | the post |
 | Automation health | Every C2P / BD Engine / AI Agents scheduled action: last and next run, late or switched off | the scheduled action |
 

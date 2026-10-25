@@ -6,7 +6,6 @@ from odoo.exceptions import AccessError
 GROUP = "c2p_command_center.group_c2p_command_center"
 BD_AUTHOR_LOGIN = "bd@core2plus.com"       # the outreach engine posts as this user
 AGENT_BOARD_NAME = "AI Agents"             # matches "🤖 AI Agents · Work Board"
-DELIVERY_PROJECT_HINTS = ("Delivery", "Milestones")
 GST = timedelta(hours=4)                   # C2P works on Dubai time
 
 
@@ -56,6 +55,10 @@ class C2pCommandCenter(models.AbstractModel):
     def _bd_partner(self):
         user = self.env["res.users"].sudo().search([("login", "=", BD_AUTHOR_LOGIN)], limit=1)
         return user.partner_id
+
+    def _own_partner_ids(self):
+        """Partners of every C2P group company — their invoices are intercompany, not receivables."""
+        return self.env["res.company"].sudo().search([]).mapped("partner_id.commercial_partner_id").ids
 
     @staticmethod
     def _act(model, domain, name, views="list"):
@@ -176,8 +179,10 @@ class C2pCommandCenter(models.AbstractModel):
     def _money(self, ctx):
         Move = self.env["account.move"].sudo()
         today = ctx["local_today"]
+        own = self._own_partner_ids()
         unpaid = Move.search([("move_type", "=", "out_invoice"), ("state", "=", "posted"),
-                              ("payment_state", "in", ("not_paid", "partial"))],
+                              ("payment_state", "in", ("not_paid", "partial")),
+                              ("commercial_partner_id", "not in", own)],
                              order="invoice_date_due")
         rows = []
         for m in unpaid:
@@ -192,6 +197,7 @@ class C2pCommandCenter(models.AbstractModel):
         month_start = today.replace(day=1)
         paid_month = Move.search([("move_type", "=", "out_invoice"), ("state", "=", "posted"),
                                   ("payment_state", "in", ("paid", "in_payment")),
+                                  ("commercial_partner_id", "not in", own),
                                   ("invoice_date", ">=", fields.Date.to_string(month_start))])
         draft_bills = Move.search_count([("move_type", "in", ("in_invoice", "out_invoice")),
                                          ("state", "=", "draft")])
@@ -203,7 +209,8 @@ class C2pCommandCenter(models.AbstractModel):
             "drafts": draft_bills,
             "currency": self.env.company.currency_id.symbol or "AED",
             "act_unpaid": self._act("account.move", [("move_type", "=", "out_invoice"), ("state", "=", "posted"),
-                                                     ("payment_state", "in", ["not_paid", "partial"])],
+                                                     ("payment_state", "in", ["not_paid", "partial"]),
+                                                     ("commercial_partner_id", "not in", own)],
                                     "Unpaid customer invoices"),
             "act_drafts": self._act("account.move", [("state", "=", "draft"),
                                                      ("move_type", "in", ["in_invoice", "out_invoice"])],
@@ -275,8 +282,11 @@ class C2pCommandCenter(models.AbstractModel):
     # ── client delivery ──────────────────────────────────────────────────
     def _delivery(self, ctx):
         Project = self.env["project.project"].sudo().with_context(allowed_company_ids=self.env.user.company_ids.ids)
-        dom = ["|"] * (len(DELIVERY_PROJECT_HINTS) - 1) + [("name", "ilike", h) for h in DELIVERY_PROJECT_HINTS]
-        projects = Project.search(dom, order="name")
+        # Client projects only: a customer is set and it is not one of our own companies
+        # (excludes templates such as "Web & Digital Delivery" and internal projects).
+        projects = Project.search([("partner_id", "!=", False),
+                                   ("partner_id.commercial_partner_id", "not in", self._own_partner_ids())],
+                                  order="name")
         Task = self.env["project.task"].sudo()
         now = ctx["now"]
         week = now + timedelta(days=7)
