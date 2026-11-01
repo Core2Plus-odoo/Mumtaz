@@ -7,6 +7,8 @@ Provides JSON HTTP endpoints for:
 - Cancelling a submitted e-invoice.
 
 All endpoints require an authenticated Odoo session (auth='user').
+POST endpoints also require the header 'X-Requested-With: XMLHttpRequest'
+(CSRF defence; see _csrf_guard).
 For machine-to-machine access, use Odoo's API key authentication.
 """
 import json
@@ -25,6 +27,30 @@ def _json_response(data: dict, status: int = 200) -> Response:
         content_type='application/json',
         status=status,
     )
+
+
+# Cross-site requests cannot add a custom header without a CORS preflight, and
+# this API sends no CORS headers. Requiring this header on every POST closes
+# the CSRF hole left by csrf=False (browser-session cookies + forged forms).
+# API clients must send:  X-Requested-With: XMLHttpRequest
+_REQUIRED_HEADER = 'X-Requested-With'
+_REQUIRED_HEADER_VALUE = 'XMLHttpRequest'
+
+
+def _csrf_guard():
+    """Return a 403 Response if the anti-CSRF header is missing, else None."""
+    sent = request.httprequest.headers.get(_REQUIRED_HEADER, '')
+    if sent != _REQUIRED_HEADER_VALUE:
+        _logger.warning(
+            'E-invoice API: rejected POST without %s header (from %s)',
+            _REQUIRED_HEADER, request.httprequest.remote_addr,
+        )
+        return _json_response(
+            {'error': 'Missing required header %s: %s.'
+                      % (_REQUIRED_HEADER, _REQUIRED_HEADER_VALUE)},
+            status=403,
+        )
+    return None
 
 
 class EInvoiceAPIController(http.Controller):
@@ -57,6 +83,10 @@ class EInvoiceAPIController(http.Controller):
         Response 422:  Validation error (invoice not posted, wrong country, etc.).
         Response 500:  Unexpected server error.
         """
+        blocked = _csrf_guard()
+        if blocked is not None:
+            return blocked
+
         invoice = request.env['account.move'].browse(move_id)
         if not invoice.exists():
             return _json_response({'error': 'Invoice not found.'}, status=404)
@@ -195,6 +225,10 @@ class EInvoiceAPIController(http.Controller):
                 "einvoice_status": "cancelled"
             }
         """
+        blocked = _csrf_guard()
+        if blocked is not None:
+            return blocked
+
         invoice = request.env['account.move'].browse(move_id)
         if not invoice.exists():
             return _json_response({'error': 'Invoice not found.'}, status=404)
@@ -240,6 +274,10 @@ class EInvoiceAPIController(http.Controller):
                 ]
             }
         """
+        blocked = _csrf_guard()
+        if blocked is not None:
+            return blocked
+
         try:
             body = request.httprequest.get_data(as_text=True)
             data = json.loads(body)
