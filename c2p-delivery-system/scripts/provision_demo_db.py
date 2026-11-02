@@ -52,6 +52,7 @@ C2P_ODOO_MASTER_PWD; it is never written to disk or echoed back.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -107,6 +108,7 @@ MODULES = [
     "stock_landed_costs",  # step 3: landed cost into the product cost
     "account",             # step 10: customer invoices and collection
     "base_automation",     # steps 4/9: approval and POD automation rules
+    "account_payment",     # step 10: payment registration and reconciliation
 ]
 
 # Odoo settings to switch on, as {res.config.settings field: value}. These are
@@ -125,6 +127,7 @@ SETTINGS = {
     "group_stock_adv_location": False,
     "group_stock_multi_locations": True,    # step 8: stock allocation
     "group_stock_tracking_lot": True,       # step 9: packages on dispatch
+    "group_analytic_accounting": True,      # step 11: profitability per deal
 }
 
 
@@ -397,6 +400,51 @@ def configure_company(p: Provisioner, name: str, currency: str) -> int:
     return cid
 
 
+def enable_accounting(p: Provisioner, company_id: int) -> None:
+    """Switch on Odoo's full accounting features and give the demo somewhere
+    for money to move.
+
+    In Community the Accounting *app* is `account` (installed as Invoicing);
+    what is missing by default is the full-features group and a bank journal.
+    Granting the group is what turns the cut-down Invoicing menu into the full
+    Accounting one — chart of accounts, journal entries, reconciliation.
+    """
+    for xmlid in ("account.group_account_manager", "account.group_account_user",
+                  "analytic.group_analytic_accounting"):
+        try:
+            gid = p.ex("ir.model.data", "check_object_reference",
+                       xmlid.split(".")[0], xmlid.split(".")[1])[1]
+        except Exception:
+            p.skipped.append(f"accounting group {xmlid} not found")
+            continue
+        group_field = ("group_ids" if "group_ids" in p.fields_of("res.users")
+                       else "groups_id")
+        # The connected user is who will be demoing, so grant it there too.
+        p.write("res.users", [p.uid], {group_field: [(4, gid)]},
+                f"accounting rights · {xmlid.split('.')[1]} → admin")
+
+    # A bank account on the company partner, and a journal pointing at it, so
+    # payments land somewhere and reconciliation is demonstrable.
+    try:
+        company = p.ex("res.company", "read", [company_id], fields=["partner_id"])
+        owner = company[0]["partner_id"][0] if company else None
+    except Exception as exc:
+        p.skipped.append(f"company partner lookup: {brief(exc)}")
+        return
+    if not owner:
+        p.skipped.append("company has no partner; bank journal not created")
+        return
+    iban = "AE070331234567890123456"
+    bank = p.ensure("res.partner.bank", [("acc_number", "=", iban)],
+                    {"acc_number": iban, "partner_id": owner},
+                    "company bank account")
+    if bank:
+        p.ensure("account.journal", [("type", "=", "bank"), ("code", "=", "DBNK")],
+                 {"name": "Demo Bank — ADCB", "type": "bank", "code": "DBNK",
+                  "bank_account_id": bank, "company_id": company_id},
+                 "bank journal · Demo Bank")
+
+
 # The eleven-step cast. Sales raise and chase, Estimation costs, the Manager
 # approves margin — so the approval gate at step 4 has someone to route to.
 USERS = [
@@ -406,11 +454,12 @@ USERS = [
      ["sales_team.group_sale_salesman_all_leads", "purchase.group_purchase_user"]),
     ("Rania Farouk", "rania.manager@demo.local", "manager",
      ["sales_team.group_sale_manager", "purchase.group_purchase_manager",
-      "account.group_account_invoice", "stock.group_stock_manager"]),
+      "account.group_account_manager", "stock.group_stock_manager"]),
     ("Tariq Nasser", "tariq.warehouse@demo.local", "warehouse",
      ["stock.group_stock_user"]),
     ("Hana Yusuf", "hana.finance@demo.local", "finance",
-     ["account.group_account_invoice", "sales_team.group_sale_salesman"]),
+     ["account.group_account_manager", "account.group_account_user",
+      "sales_team.group_sale_salesman"]),
 ]
 
 
@@ -449,6 +498,24 @@ PRODUCTS = [
     ("motor",   "Explosion-proof Motor 90 kW",     "consu", 5600.0, 7560.0, "EM-090"),
     ("commiss", "Installation & Commissioning",    "service", 1800.0, 3500.0, "SVC-IC"),
     ("freight", "Freight & Handling",              "service",  600.0,  850.0, "SVC-FR"),
+    # Wider catalogue for the historical volume and the step 11 reporting.
+    ("pump_sm", "Centrifugal Pump CP-080 (22 kW)", "consu", 1850.0, 2590.0, "CP-080"),
+    ("bfvalve", "Butterfly Valve 8in Wafer",       "consu",  420.0,  630.0, "BV-200"),
+    ("ctrlvlv", "Control Valve 4in Pneumatic",     "consu", 2450.0, 3430.0, "CV-100"),
+    ("bearing", "Spherical Roller Bearing 22320",  "consu",  290.0,  435.0, "BR-320"),
+    ("coupling", "Flexible Coupling F-140",        "consu",  365.0,  511.0, "CP-140"),
+    ("sealkit", "Mechanical Seal Kit 65mm",        "consu",  480.0,  720.0, "MS-065"),
+    ("strainer", "Y-Strainer 6in CS",              "consu",  215.0,  322.0, "YS-150"),
+    ("expjoint", "Rubber Expansion Joint 6in",     "consu",  185.0,  277.0, "EJ-150"),
+    ("actuator", "Electric Actuator 24V",          "consu",  940.0, 1316.0, "EA-024"),
+    ("transmit", "Pressure Transmitter 4-20mA",    "consu",  310.0,  465.0, "PT-420"),
+    ("switchgr", "LV Switchgear Panel 400A",       "consu", 3850.0, 5390.0, "SG-400"),
+    ("cable",   "XLPE Cable 4C x 35mm (per m)",    "consu",   18.0,   27.0, "CB-435"),
+    ("gasket",  "Spiral Wound Gasket 6in",         "consu",   32.0,   51.0, "GS-150"),
+    ("bolts",   "Stud Bolt Set M20 (per set)",     "consu",   44.0,   70.0, "SB-M20"),
+    ("calib",   "On-site Calibration Service",     "service", 450.0,  950.0, "SVC-CL"),
+    ("mainten", "Annual Maintenance Contract",     "service", 4200.0, 7800.0, "SVC-AMC"),
+    ("survey",  "Site Survey & Technical Study",   "service", 700.0, 1450.0, "SVC-SV"),
 ]
 
 CUSTOMERS = [
@@ -458,6 +525,15 @@ CUSTOMERS = [
     ("emsteel",   "Emirates Steel Trading Co.",  200000.0, 30),
     ("desert",    "Desert Rock Contracting LLC", 150000.0, 60),
     ("sharjah",   "Sharjah Water Authority",     750000.0, 90),
+    # Wider customer base for the historical volume.
+    ("adnoc",     "Al Dhafra Industrial Services",400000.0, 45),
+    ("jebel",     "Jebel Ali Marine Works LLC",   180000.0, 30),
+    ("oasis",     "Oasis Water Treatment Co.",    260000.0, 45),
+    ("falcon",    "Falcon Facilities Management", 120000.0, 30),
+    ("ajman",     "Ajman Cement Industries",      320000.0, 60),
+    ("rakpower",  "RAK Power & Utilities",        600000.0, 90),
+    ("marina",    "Marina Towers Facility Co.",    90000.0, 30),
+    ("gulfsteel", "Gulf Steel Fabricators FZC",   210000.0, 45),
 ]
 
 SUPPLIERS = [
@@ -465,6 +541,10 @@ SUPPLIERS = [
     ("shanghai", "Shanghai Valve Industrial Ltd"),
     ("deutsche", "Deutsche Fittings GmbH"),
     ("logistics", "Khaleej Freight & Logistics"),
+    ("italvalve", "Italvalve Produzione SRL"),
+    ("bearingco", "Nippon Bearing Trading Co."),
+    ("emirates_cbl", "Emirates Cable Industries"),
+    ("instrum",  "Precision Instruments Pte Ltd"),
 ]
 
 # Which supplier quotes which product, at what price, valid until when — the
@@ -1518,6 +1598,163 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
     _ = lead_a, inv_g   # kept for readability of the scenario flow
 
 
+# ── phase 5b: historical volume ─────────────────────────────────────────────
+# Months of closed business behind the eight showcase scenarios, so the step 11
+# reporting, the ageing and the cash forecast have a real population to work
+# on rather than seven orders. Everything is derived from the record's own
+# reference, so the same reference always produces the same order — which is
+# what keeps a re-run idempotent without storing any state.
+
+def roll(token: str, modulus: int) -> int:
+    """A stable pseudo-random integer for a reference. Deterministic across
+    runs and machines, unlike random.seed, which would drift if the call order
+    ever changed."""
+    return int(hashlib.md5(token.encode()).hexdigest(), 16) % modulus
+
+
+# Baskets a trading company actually ships, as (product key, low qty, high qty).
+BASKETS = [
+    [("valve", 4, 20), ("flange", 4, 20), ("gasket", 10, 40), ("bolts", 10, 30)],
+    [("pump_sm", 1, 4), ("sealkit", 1, 4), ("coupling", 1, 3), ("commiss", 1, 1)],
+    [("pipe", 10, 60), ("expjoint", 2, 8), ("strainer", 1, 6)],
+    [("ctrlvlv", 1, 3), ("actuator", 1, 3), ("transmit", 2, 8), ("calib", 1, 1)],
+    [("motor", 1, 3), ("switchgr", 1, 2), ("cable", 50, 300)],
+    [("bfvalve", 2, 10), ("gauge", 4, 16), ("bearing", 2, 10)],
+    [("pump", 1, 3), ("freight", 1, 1), ("survey", 1, 1)],
+    [("mainten", 1, 1), ("calib", 1, 2), ("sealkit", 2, 6)],
+]
+
+
+def history_lines(p: Provisioner, refs: dict, ref: str) -> list:
+    """A deterministic basket for this reference, priced at list with the
+    product's own cost carried onto the line for margin reporting."""
+    basket = BASKETS[roll(ref + "basket", len(BASKETS))]
+    spec = []
+    for key, low, high in basket:
+        tmpl = refs["product"].get(key)
+        if not tmpl:
+            continue
+        qty = low + roll(ref + key, max(high - low, 1))
+        meta = next((x for x in PRODUCTS if x[0] == key), None)
+        if not meta:
+            continue
+        _k, _name, _kind, cost, price, _code = meta
+        # A little price movement, so not every deal lands on the same margin.
+        discount = (0.0, 0.0, 2.5, 5.0)[roll(ref + key + "disc", 4)]
+        spec.append((key, qty, price, cost, discount))
+    return order_lines(p, refs, spec)
+
+
+def seed_history(p: Provisioner, refs: dict, users: dict,
+                 months: int, per_month: int) -> None:
+    """Closed and in-flight business across the past `months` months."""
+    cust = sorted(refs["customer"])
+    supp = sorted(refs["supplier"])
+    sellers = [k for k in ("sales", "estimation", "manager") if users.get(k)]
+    made = 0
+    for back in range(months, 0, -1):
+        stamp = (TODAY - timedelta(days=back * 30)).strftime("%Y%m")
+        for i in range(per_month):
+            ref = f"HIST-{stamp}-{i:02d}"
+            lines = history_lines(p, refs, ref)
+            if not lines:
+                continue
+            days_ago = back * 30 - roll(ref + "day", 25)
+            customer = cust[roll(ref + "cust", len(cust))]
+            owner = sellers[roll(ref + "own", len(sellers))] if sellers else "sales"
+            fate = roll(ref + "fate", 10)
+
+            order = p.ensure("sale.order", [("x_cost_sheet_ref", "=", ref)], {
+                "partner_id": refs["customer"].get(customer),
+                "user_id": users.get(owner), "team_id": refs.get("team"),
+                "date_order": dt(-days_ago), "validity_date": d(-days_ago + 30),
+                "client_order_ref": f"PO-{stamp}-{i:02d}",
+                "x_cost_sheet_ref": ref, "x_margin_approved": True,
+                "order_line": lines,
+            }, f"history · {ref} ({customer})")
+            if not order:
+                continue
+            made += 1
+
+            if fate == 0:      # still an open quotation
+                advance(p, "sale.order", "action_quotation_sent", order,
+                        f"history · {ref} quotation sent", ("draft",))
+                continue
+            if fate == 1:      # lost
+                advance(p, "sale.order", "action_cancel", order,
+                        f"history · {ref} cancelled", ("draft", "sent"))
+                continue
+
+            advance(p, "sale.order", "action_confirm", order,
+                    f"history · {ref} confirmed", ("draft", "sent"))
+            for pick in outgoing_pickings(p, order):
+                validate_picking(p, pick, f"history · {ref} delivered")
+                p.write("stock.picking", [pick],
+                        {"x_pod_received": True, "x_pod_date": d(-days_ago + 7),
+                         "x_pod_signed_by": "Site representative"},
+                        f"history · {ref} POD")
+            inv = invoice_order(p, order, f"history · {ref} invoiced",
+                                inv_date_offset=-days_ago + 8,
+                                due_offset=-days_ago + 38)
+            # Most are settled; the recent tail stays open so the ageing report
+            # and the collection alerts have live receivables to show.
+            if inv and fate >= 3 and days_ago > 45:
+                pay_invoice(p, inv, f"history · {ref} paid",
+                            date_offset=-days_ago + 34)
+            elif inv and fate == 2:
+                pay_invoice(p, inv, f"history · {ref} part paid",
+                            amount=round(500 + roll(ref + "amt", 2000), 2),
+                            date_offset=-days_ago + 30)
+
+            # Every third order gets its supply side too, so payables, the
+            # vendor ledger and the cash forecast are not one-sided.
+            if roll(ref + "buy", 3) == 0:
+                vendor = supp[roll(ref + "sup", len(supp))]
+                pref = f"{ref}-PO"
+                basket = BASKETS[roll(ref + "basket", len(BASKETS))]
+                pspec = []
+                for key, low, _high in basket[:2]:
+                    meta = next((x for x in PRODUCTS if x[0] == key), None)
+                    if meta:
+                        pspec.append((key, low, round(meta[3] * 0.95, 2)))
+                po = make_purchase(p, refs, users, pref, vendor, pspec,
+                                   ordered_days_ago=days_ago + 20, origin=ref)
+                advance(p, "purchase.order", "button_confirm", po,
+                        f"history · {pref} issued", ("draft", "sent"))
+                if po and po > 0 and not p.dry_run:
+                    for rcv in (p.ex("stock.picking", "search",
+                                     [("purchase_id", "=", po),
+                                      ("state", "!=", "cancel")]) or []):
+                        validate_picking(p, rcv, f"history · {pref} received")
+                    bill_purchase(p, po, f"history · {pref} billed",
+                                  days_ago - 5)
+    p.say(f"   ~ historical orders present: {made}")
+
+
+def bill_purchase(p: Provisioner, po_id: Optional[int], label: str,
+                  days_ago: int) -> None:
+    """Vendor bill from a purchase order, posted — this is what gives the demo
+    a payables side and makes the cash forecast alert meaningful."""
+    if p.dry_run or not po_id or po_id < 0:
+        p.say(f"   > {label} (would bill)")
+        return
+    try:
+        existing = p.ex("purchase.order", "read", [po_id], fields=["invoice_ids"])
+        if existing and existing[0]["invoice_ids"]:
+            return
+        p.ex("purchase.order", "action_create_invoice", [po_id])
+        refreshed = p.ex("purchase.order", "read", [po_id], fields=["invoice_ids"])
+        for bill in (refreshed[0]["invoice_ids"] if refreshed else []):
+            p.ex("account.move", "write", [bill],
+                 {"invoice_date": d(-days_ago),
+                  "invoice_date_due": d(-days_ago + 30)})
+            p.ex("account.move", "action_post", [bill])
+        p.say(f"   > {label}")
+    except Exception as exc:
+        p.skipped.append(f"{label}: {brief(exc)}")
+        p.say(f"   ! {label} — {brief(exc)}")
+
+
 # ── phase 6: verification ────────────────────────────────────────────────────
 # What each step of the chart should look like once the script has run, as
 # (step, label, model, domain). The report is the proof the demo is walkable.
@@ -1561,6 +1798,12 @@ CHECKS = [
      [("move_type", "=", "out_invoice"), ("payment_state", "=", "partial")]),
     ("10", "…paid and reconciled", "account.move",
      [("move_type", "=", "out_invoice"), ("payment_state", "in", ["paid", "in_payment"])]),
+    ("10", "Vendor bills posted", "account.move",
+     [("move_type", "=", "in_invoice"), ("state", "=", "posted")]),
+    ("10", "Payments registered", "account.payment", []),
+    ("11", "Chart of accounts", "account.account", []),
+    ("11", "Journal entries", "account.move", [("state", "=", "posted")]),
+    ("11", "Journals", "account.journal", []),
     ("11", "Automation rules (approvals, POD, statuses)", "base.automation", []),
     ("11", "Scheduled alerts and exceptions", "ir.cron",
      [("name", "like", "E2C %")]),
@@ -1608,7 +1851,7 @@ def render_report(p: Provisioner, rows: list, db: str, url: str) -> str:
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 PHASES = ["create", "install", "config", "fields", "automation", "alerts",
-          "seed", "verify"]
+          "seed", "history", "verify"]
 
 
 def main() -> int:
@@ -1642,6 +1885,11 @@ def main() -> int:
     parser.add_argument("--odoo-demo-data", action="store_true",
                         help="also load Odoo's own demo data into the new "
                              "database (off by default — this script seeds its own)")
+    parser.add_argument("--months", type=int, default=6, metavar="N",
+                        help="months of historical business to seed "
+                             "(default 6; 0 disables the history phase)")
+    parser.add_argument("--per-month", type=int, default=6, metavar="N",
+                        help="orders per historical month (default 6)")
     parser.add_argument("--only", metavar="PHASES",
                         help="run only these comma-separated phases: "
                              + ", ".join(PHASES))
@@ -1672,7 +1920,7 @@ def main() -> int:
           + ("   [DRY RUN — nothing will be written]" if args.dry_run else ""))
 
     if "create" in phases:
-        print("\n[1/8] Database")
+        print("\n[1/9] Database")
         try:
             print("   " + create_database(url, args.db, master, password,
                                           args.country, args.lang,
@@ -1698,26 +1946,27 @@ def main() -> int:
     users: dict = {}
     try:
         if "install" in phases:
-            print("\n[2/8] Applications")
+            print("\n[2/9] Applications")
             install_modules(p, MODULES)
         if "config" in phases:
-            print("\n[3/8] Standard configuration")
+            print("\n[3/9] Standard configuration")
             apply_settings(p)
-            configure_company(p, args.company, args.currency)
+            company_id = configure_company(p, args.company, args.currency)
+            enable_accounting(p, company_id)
             users = ensure_users(p, args.demo_user_password)
             refs = ensure_master_data(p)
             refs.update(ensure_pipeline(p, users))
         if "fields" in phases:
-            print("\n[4/8] Studio-equivalent fields")
+            print("\n[4/9] Studio-equivalent fields")
             ensure_manual_fields(p)
         if "automation" in phases:
-            print("\n[5/8] Automation rules")
+            print("\n[5/9] Automation rules")
             ensure_automations(p)
         if "alerts" in phases:
-            print("\n[6/8] Scheduled alerts and exceptions")
+            print("\n[6/9] Scheduled alerts and exceptions")
             ensure_alerts(p)
         if "seed" in phases:
-            print("\n[7/8] Demonstration transactions")
+            print("\n[7/9] Demonstration transactions")
             if not refs:
                 # Running --only seed against an already-configured database:
                 # rebuild the references without re-applying the settings.
@@ -1726,13 +1975,22 @@ def main() -> int:
                 refs.update(ensure_pipeline(p, users))
             stock_in(p, refs)
             seed_transactions(p, refs, users)
+        if "history" in phases and args.months > 0:
+            print(f"\n[8/9] Historical volume "
+                  f"({args.months} months x {args.per_month} orders)")
+            if not refs:
+                users = ensure_users(p, args.demo_user_password)
+                refs = ensure_master_data(p)
+                refs.update(ensure_pipeline(p, users))
+                stock_in(p, refs)
+            seed_history(p, refs, users, args.months, args.per_month)
     except KeyboardInterrupt:
         print("\ninterrupted — re-run to continue; every step is idempotent",
               file=sys.stderr)
         return 130
 
     if "verify" in phases and not args.dry_run:
-        print("\n[8/8] Verification")
+        print("\n[9/9] Verification")
         rows = verify(p)
         if args.json:
             print(json.dumps({"db": args.db, "url": url,

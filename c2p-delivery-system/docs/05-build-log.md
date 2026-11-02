@@ -1532,3 +1532,42 @@ are not defects: those records were created on the earlier run, before the
 automations existed, and automations fire on write, not retroactively. They
 need a clean database to show, which is why the doc now says to rebuild rather
 than re-run after a fix to the rules.
+
+### Volume and accounting
+
+Two additions on request: a lot more demo data, and accounting switched on
+properly.
+
+**Accounting.** In Community the Accounting app *is* `account`, already
+installed as Invoicing — so there was no module to enable. What was missing
+was the `account.group_account_manager` group, which is what turns the
+cut-down Invoicing menu into the full Accounting one (chart of accounts,
+journal entries, reconciliation). The script now grants it, plus analytic
+accounting for per-deal profitability, to the connected user and the manager
+and finance roles, and creates a company bank account and bank journal so
+payments have somewhere to land. No Enterprise `account_accountant`.
+
+**Volume.** The catalogue goes from 8 products to 25, customers from 5 to 13,
+suppliers from 4 to 8. A new `history` phase seeds months of closed business
+behind the eight showcase scenarios — `--months` x `--per-month`, 6 x 6 by
+default — with confirmed orders, deliveries with POD, invoices, payments, and
+a vendor bill on roughly every third order so payables exist and the cash
+forecast alert has both sides to compare.
+
+Every historical order is derived from its own reference through an MD5 roll
+rather than `random.seed`, which would drift the moment the call order
+changed. The same reference therefore always produces the same customer,
+basket, quantities and fate, which is what makes the phase idempotent without
+storing any state.
+
+The harness needed a fix before it could test any of this: the stub returned
+no `product.product` for a template, so every order line came out empty and
+the entire history phase silently did nothing — it reported "0 historical
+orders" and passed. Worth noting as a harness failure mode: a stub that is
+too thin does not fail, it quietly certifies untested code. With variants
+stubbed, the phase builds 16 orders at 4 x 4 and reproduces them exactly.
+
+That run also caught a convoluted bank-account lookup (`p.find(...) and
+p.ex(...)` chained into a dict value) that could have silently passed `False`
+as a partner id; it is now a plain read with a guard. Final harness state:
+151 created, then 0 created and 150 reused.

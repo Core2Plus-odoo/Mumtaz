@@ -31,9 +31,17 @@ python3 scripts/provision_demo_db.py C2P_DEMO_E2C --no-create
 ```
 
 Useful flags: `--only <phases>` re-runs part of it (`create, install, config,
-fields, automation, alerts, seed, verify`), `--country` picks the fiscal
-localization and chart of accounts, `--company` / `--currency` name the demo
-entity, `--json` emits the verification counts for a health check.
+fields, automation, alerts, seed, history, verify`), `--country` picks the
+fiscal localization and chart of accounts, `--company` / `--currency` name the
+demo entity, `--json` emits the verification counts for a health check.
+
+**Volume.** `--months N` and `--per-month N` control the historical business
+seeded behind the eight showcase scenarios (default 6 x 6 = 36 orders).
+`--months 0` skips it. More volume makes the step 11 reporting, the ageing and
+the cash forecast look like a real company rather than a handful of records;
+it also makes the run take longer, roughly a minute per ten orders. Each
+historical order is derived from its own reference, so the same reference
+always produces the same order and a re-run adds nothing.
 
 Credentials follow `scripts/inspect_odoo_db.py`: `ODOO_URL` / `ODOO_USER` /
 `ODOO_PASSWORD` from the environment or `delivery_api/.env`, with anything you
@@ -124,6 +132,21 @@ Five role logins, password `demo1234` (change it with `--demo-user-password`):
 6. Settings → Technical → Scheduled Actions, filter `E2C` — the nine alerts.
    Run one by hand to show it raising activities.
 7. Sales → Reporting → Margin for the step 11 view.
+
+## Accounting
+
+In Odoo Community the Accounting *app* is `account`, which installs as
+Invoicing. What is missing by default is not a module but a **group**: the
+script grants `account.group_account_manager` (and analytic accounting) to the
+connected user and to the manager and finance roles, which is what turns the
+cut-down Invoicing menu into the full Accounting one — chart of accounts,
+journal entries, reconciliation. There is no Enterprise `account_accountant`
+involved.
+
+It also creates a company bank account and a bank journal, so payments have
+somewhere to land, and bills roughly a third of the historical purchase orders
+so the demo has a payables side. Without that the cash forecast alert only
+ever sees receivables and never fires.
 
 ## After changing an automation rule, rebuild
 
