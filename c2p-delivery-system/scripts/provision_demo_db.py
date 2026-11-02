@@ -387,10 +387,15 @@ def apply_settings(p: Provisioner) -> None:
 def configure_company(p: Provisioner, name: str, currency: str) -> int:
     """Name the demo company and put it on the right currency."""
     cid = p.find("res.company", []) or 1
-    # stock_sms rides in as a dependency and puts an SMS confirmation wizard in
-    # front of every delivery validation. It is a company field, not a settings
-    # one, in 19. `validate_picking` answers the wizard too, belt and braces.
-    vals = {"name": name, "stock_move_sms_validation": False}
+    vals = {"name": name}
+    # stock_sms can ride in as a dependency and put an SMS confirmation wizard
+    # in front of every delivery validation. Switch it off only where that
+    # module is actually installed — setting it unconditionally made every run
+    # report a dropped field under "Not applied", which is noise that teaches
+    # people to stop reading that list. `validate_picking` answers the wizard
+    # if it appears anyway.
+    if "stock_move_sms_validation" in p.fields_of("res.company"):
+        vals["stock_move_sms_validation"] = False
     cur = p.find("res.currency", [("name", "=", currency)])
     if cur:
         p.call("res.currency", "write", [cur], f"activate currency {currency}",

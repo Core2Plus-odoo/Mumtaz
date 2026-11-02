@@ -1571,3 +1571,28 @@ That run also caught a convoluted bank-account lookup (`p.find(...) and
 p.ex(...)` chained into a dict value) that could have silently passed `False`
 as a partner id; it is now a plain read with a guard. Final harness state:
 151 created, then 0 created and 150 reused.
+
+### Green on a live Odoo 19
+
+A clean rebuild against the real server came back with everything the chart
+asks for and one cosmetic line:
+
+- step 4 **held 1 quotation at the margin gate** — the approval automation
+  firing on a record created after it existed, which is the whole point of the
+  rebuild-don't-re-run rule;
+- **11 open activities** scheduled by the rules;
+- accounting live: 52 accounts, 63 journal entries, 8 journals, 10 vendor
+  bills, 24 payments;
+- 36 historical orders behind the 8 showcase scenarios, giving 43 quotations,
+  29 confirmed orders, 28 deliveries, 29 invoices split 17 paid / 7 partial /
+  6 overdue — a believable ageing profile rather than a handful of records.
+
+177 records created, 2 reused.
+
+The one remaining line, `res.company: ignored unknown field(s)
+stock_move_sms_validation`, was a non-issue — `stock_sms` is not installed on
+this database, so there is no wizard to suppress — but it appeared on every
+run. That is worth fixing rather than explaining: a "Not applied" list with
+permanent noise in it stops being read, and the whole value of that list is
+that a half-built demo reports itself. The field is now set only where the
+module is installed.
