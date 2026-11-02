@@ -1416,3 +1416,183 @@ were caught doing that:
 Verified mechanically: XML parses; every `report_name` resolves to a defined
 template; every internal `t-call` target exists; every payload method the
 templates call is defined.
+
+## Enquiry-to-Cash demonstration database
+
+`scripts/provision_demo_db.py` provisions an Odoo database that walks the
+eleven-step Enquiry-to-Cash process in `docs/assets/enquiry-to-cash-flow.jpg`:
+it creates the database, installs the apps, applies the configuration, adds
+the automation and the nine exception alerts, and seeds eight scenarios that
+cover every branch of the chart — including lost and revised. Written up in
+`docs/08-enquiry-to-cash-demo.md`.
+
+Built standard-first, the house ladder visible in the structure: standard
+apps and configuration carry steps 1-3 and 5-8; Automation Rules carry the
+step 4 margin/discount gate and the step 9 POD transitions; Studio-equivalent
+`x_` fields exist only where standard Odoo has no field for a status the chart
+names (POD capture, the approval stamp, the quote/PO/delivery/collection
+sub-statuses). No custom module. Community modules only, so it runs on the
+VPS as-is — `sale_margin` for the costing and margin at steps 3 and 11,
+`purchase_requisition` for the requisition at step 8, `stock_landed_costs`
+for landed cost.
+
+Every operation is an `ensure`: search first, create only when missing. The
+script is therefore safe to re-run, resumable with `--only <phase>`, and can
+be pointed at an existing database with `--no-create`. The final phase counts
+what landed step by step and lists everything it could not apply, so a
+half-built demo reports itself instead of looking complete.
+
+Verification, given no live Odoo was reachable from the build session:
+`py_compile` and `pyflakes` clean, and the whole script driven end to end
+against a throwaway XML-RPC stub that speaks enough Odoo to exercise control
+flow — 103 records created on the first pass, **0 created and 102 reused on
+the second**, which is the idempotency claim actually tested rather than
+asserted. The stub also caught two real defects: `invoice_order` recorded
+"no invoice produced" without printing it, so a scenario silently skipped a
+step; and `action_cancel` on an already-sent quotation returns Odoo's
+`sale.order.cancel` wizard rather than cancelling, which left the requote
+scenario's original quotation live — both fixed.
+
+Not yet run against a live Odoo 19. `--dry-run` first, then read the
+verification table on the first real run.
+
+### First live run against Odoo 19 — seven defects, all fixed
+
+The provisioner met a real Odoo 19 (self-hosted, Community) for the first time
+and the verification table did its job: the run completed, built 91 records,
+and reported every failure instead of looking finished. What it caught:
+
+1. **`allow_none` not set on the XML-RPC proxies.** Any Odoo method returning
+   `None` — `action_quotation_sent`, `action_set_lost`,
+   `action_apply_inventory` — died on "cannot marshal None". That alone cost
+   the stock seeding, three quotation submissions and the lost-reason step.
+2. **`safe_eval` forbids attribute assignment.** Six of eight automation rules
+   and three of nine alerts were rejected with "forbidden opcode STORE_ATTR"
+   because the code did `record.field = value`. All twelve assignments now go
+   through `record.write({...})`.
+3. **`getattr` is not in the server-action eval context** — replaced with a
+   direct `order.margin`, which `sale_margin` guarantees.
+4. **Odoo 19 renamed `res.users.groups_id` to `group_ids`.** `prune` silently
+   dropped the old name, so all five demo users were created with no groups at
+   all. The script now probes for whichever field the build has — and this is
+   the failure mode `prune` is prone to: it turns a hard error into a quiet
+   omission, which is why it reports every drop under "Not applied".
+5. **`stock_sms` rides in as a dependency** and interposes a
+   `confirm.stock.sms` wizard on delivery validation. The old code assumed one
+   wizard with a `process` method; validation now switches
+   `stock_move_sms_validation` off and answers a *chain* of wizards, each by
+   its own method (`dont_send_sms`, `process`).
+6. **`po_lead` and `use_quotation_validity_days` are gone from
+   `res.config.settings`** in 19 — dropped from the list.
+7. **`purchase.requisition` has no `origin` field** in 19, so the idempotency
+   key was being pruned away and a second run would have made a duplicate.
+
+Deployment notes worth keeping: the VPS has `list_db = False`, so the XML-RPC
+database service cannot create anything and `--no-create` is the only route;
+and `dbfilter = ^Mumtaz` means a demo database must be named to match or Odoo
+will not serve it in the browser at all.
+
+A new offline check compiles every embedded server-action body and scans the
+bytecode for the opcodes `safe_eval` rejects — 17/17 pass. That check caught
+nothing on its own first outing beyond confirming the fix, but it is the thing
+that would have caught defect 2 before the server did. The stub harness still
+reports 102 created, then 0 created / 101 reused on a re-run.
+
+### Second live run — the real `allow_none` root cause, and re-run noise
+
+The re-run proved the automation fixes landed (8 rules and 9 alerts all
+created, against 2 and 6 before), and exposed two more things.
+
+**`allow_none` on the client was treating a symptom.** Odoo's own XML-RPC
+endpoint serialises responses with `allow_none=False`, so any method returning
+`None` — `action_quotation_sent`, `action_set_lost`,
+`action_apply_inventory` — fails on the way back regardless of what the client
+permits. Nothing the caller sets can change that.
+
+The important part is that **the call has already run and committed** when the
+serialisation fails. The run proved it: `action_set_lost` reported the error
+and the lost-enquiry count still went from 1 to 3. So `ex()` now catches that
+specific error and returns `None`, which is the truthful result: the call
+succeeded, only its reply did not. Guessing at this would have been
+unjustified; the count in the verification table is what settled it.
+
+**Transitions are not idempotent the way records are.** `ensure` makes records
+safe to re-run, but workflow calls were fired blind, so a second run reported
+"Only draft orders can be marked as sent" and "Some orders are not in a state
+requiring confirmation" as failures when the order was simply already past
+that step. A new `advance()` helper reads the record's state first and reports
+"already past this step" instead. `validate_picking` and `cancel_order` got
+the same guard.
+
+Also: `stock_move_sms_validation` is on `res.company` in 19, not on
+`res.config.settings` where the first fix put it.
+
+Two counts in that run — margin approvals held at 0, open activities at 0 —
+are not defects: those records were created on the earlier run, before the
+automations existed, and automations fire on write, not retroactively. They
+need a clean database to show, which is why the doc now says to rebuild rather
+than re-run after a fix to the rules.
+
+### Volume and accounting
+
+Two additions on request: a lot more demo data, and accounting switched on
+properly.
+
+**Accounting.** In Community the Accounting app *is* `account`, already
+installed as Invoicing — so there was no module to enable. What was missing
+was the `account.group_account_manager` group, which is what turns the
+cut-down Invoicing menu into the full Accounting one (chart of accounts,
+journal entries, reconciliation). The script now grants it, plus analytic
+accounting for per-deal profitability, to the connected user and the manager
+and finance roles, and creates a company bank account and bank journal so
+payments have somewhere to land. No Enterprise `account_accountant`.
+
+**Volume.** The catalogue goes from 8 products to 25, customers from 5 to 13,
+suppliers from 4 to 8. A new `history` phase seeds months of closed business
+behind the eight showcase scenarios — `--months` x `--per-month`, 6 x 6 by
+default — with confirmed orders, deliveries with POD, invoices, payments, and
+a vendor bill on roughly every third order so payables exist and the cash
+forecast alert has both sides to compare.
+
+Every historical order is derived from its own reference through an MD5 roll
+rather than `random.seed`, which would drift the moment the call order
+changed. The same reference therefore always produces the same customer,
+basket, quantities and fate, which is what makes the phase idempotent without
+storing any state.
+
+The harness needed a fix before it could test any of this: the stub returned
+no `product.product` for a template, so every order line came out empty and
+the entire history phase silently did nothing — it reported "0 historical
+orders" and passed. Worth noting as a harness failure mode: a stub that is
+too thin does not fail, it quietly certifies untested code. With variants
+stubbed, the phase builds 16 orders at 4 x 4 and reproduces them exactly.
+
+That run also caught a convoluted bank-account lookup (`p.find(...) and
+p.ex(...)` chained into a dict value) that could have silently passed `False`
+as a partner id; it is now a plain read with a guard. Final harness state:
+151 created, then 0 created and 150 reused.
+
+### Green on a live Odoo 19
+
+A clean rebuild against the real server came back with everything the chart
+asks for and one cosmetic line:
+
+- step 4 **held 1 quotation at the margin gate** — the approval automation
+  firing on a record created after it existed, which is the whole point of the
+  rebuild-don't-re-run rule;
+- **11 open activities** scheduled by the rules;
+- accounting live: 52 accounts, 63 journal entries, 8 journals, 10 vendor
+  bills, 24 payments;
+- 36 historical orders behind the 8 showcase scenarios, giving 43 quotations,
+  29 confirmed orders, 28 deliveries, 29 invoices split 17 paid / 7 partial /
+  6 overdue — a believable ageing profile rather than a handful of records.
+
+177 records created, 2 reused.
+
+The one remaining line, `res.company: ignored unknown field(s)
+stock_move_sms_validation`, was a non-issue — `stock_sms` is not installed on
+this database, so there is no wizard to suppress — but it appeared on every
+run. That is worth fixing rather than explaining: a "Not applied" list with
+permanent noise in it stops being read, and the whole value of that list is
+that a half-built demo reports itself. The field is now set only where the
+module is installed.
