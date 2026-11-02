@@ -1455,3 +1455,45 @@ scenario's original quotation live — both fixed.
 
 Not yet run against a live Odoo 19. `--dry-run` first, then read the
 verification table on the first real run.
+
+### First live run against Odoo 19 — seven defects, all fixed
+
+The provisioner met a real Odoo 19 (self-hosted, Community) for the first time
+and the verification table did its job: the run completed, built 91 records,
+and reported every failure instead of looking finished. What it caught:
+
+1. **`allow_none` not set on the XML-RPC proxies.** Any Odoo method returning
+   `None` — `action_quotation_sent`, `action_set_lost`,
+   `action_apply_inventory` — died on "cannot marshal None". That alone cost
+   the stock seeding, three quotation submissions and the lost-reason step.
+2. **`safe_eval` forbids attribute assignment.** Six of eight automation rules
+   and three of nine alerts were rejected with "forbidden opcode STORE_ATTR"
+   because the code did `record.field = value`. All twelve assignments now go
+   through `record.write({...})`.
+3. **`getattr` is not in the server-action eval context** — replaced with a
+   direct `order.margin`, which `sale_margin` guarantees.
+4. **Odoo 19 renamed `res.users.groups_id` to `group_ids`.** `prune` silently
+   dropped the old name, so all five demo users were created with no groups at
+   all. The script now probes for whichever field the build has — and this is
+   the failure mode `prune` is prone to: it turns a hard error into a quiet
+   omission, which is why it reports every drop under "Not applied".
+5. **`stock_sms` rides in as a dependency** and interposes a
+   `confirm.stock.sms` wizard on delivery validation. The old code assumed one
+   wizard with a `process` method; validation now switches
+   `stock_move_sms_validation` off and answers a *chain* of wizards, each by
+   its own method (`dont_send_sms`, `process`).
+6. **`po_lead` and `use_quotation_validity_days` are gone from
+   `res.config.settings`** in 19 — dropped from the list.
+7. **`purchase.requisition` has no `origin` field** in 19, so the idempotency
+   key was being pruned away and a second run would have made a duplicate.
+
+Deployment notes worth keeping: the VPS has `list_db = False`, so the XML-RPC
+database service cannot create anything and `--no-create` is the only route;
+and `dbfilter = ^Mumtaz` means a demo database must be named to match or Odoo
+will not serve it in the browser at all.
+
+A new offline check compiles every embedded server-action body and scans the
+bytecode for the opcodes `safe_eval` rejects — 17/17 pass. That check caught
+nothing on its own first outing beyond confirming the fix, but it is the thing
+that would have caught defect 2 before the server did. The stub harness still
+reports 102 created, then 0 created / 101 reused on a re-run.

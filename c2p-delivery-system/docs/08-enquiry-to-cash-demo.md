@@ -137,19 +137,50 @@ python3 scripts/provision_demo_db.py C2P_DEMO_E2C --no-create --only verify
 A count of zero against a step means that step did not build — read the
 "Not applied" list underneath for the reason.
 
+## Creating the database when `list_db = False`
+
+A hardened deployment (ours included) switches off Odoo's database service,
+so `--master-password` cannot work and `--no-create` is the only route. Two
+things to get right first:
+
+- **`dbfilter`**. If the config has `dbfilter = ^Mumtaz`, Odoo only serves
+  databases whose name matches, so a demo called `C2P_DEMO_E2C` is invisible
+  in the browser however well it is built. Name it `Mumtaz_Demo_E2C`.
+- **The fiscal localization** has to be installed when the database is
+  created, because step 10 has nowhere to post invoices without a chart of
+  accounts.
+
+```bash
+sudo -u odoo createdb Mumtaz_Demo_E2C
+sudo -u odoo /usr/bin/odoo -c /etc/odoo/odoo.conf \
+     -d Mumtaz_Demo_E2C -i base,l10n_ae --without-demo=all --stop-after-init
+
+cd /opt/mumtaz/c2p-delivery-system
+python3 scripts/provision_demo_db.py Mumtaz_Demo_E2C --no-create \
+    --admin-user admin --admin-password admin
+```
+
+A freshly initialised database has `admin`/`admin`, which the script must be
+told explicitly or it picks up the production credentials from
+`delivery_api/.env`. Change that password before anyone outside the team sees
+the database.
+
 ## Known limits
 
 - **Odoo Community only.** Every module it installs ships with CE 19; nothing
   needs an Enterprise subscription. Approvals are automation rules and
   activities, not the Enterprise Approvals app.
-- The script was developed against the XML-RPC contract and exercised end to
-  end on a local stub server, **not yet against a live Odoo 19**. Run it with
-  `--dry-run` first, and read the verification table on the first real run —
-  anything the server rejects is reported rather than silently skipped, so the
-  table is the thing to check.
+- **Automation and alert code runs under `safe_eval`**, which rejects
+  attribute assignment (`record.field = x` raises "forbidden opcode
+  STORE_ATTR"). Every embedded block writes through `record.write({...})`
+  instead. Lambdas and comprehensions are fine. If you add a rule, keep to
+  that, and note `getattr` is not in the eval context either.
+- **`stock_sms` arrives as a dependency** and puts an SMS confirmation wizard
+  in front of every delivery validation. The script switches
+  `stock_move_sms_validation` off and also answers the wizard if it appears.
 - `res.config.settings` field names move between versions. Unknown settings
   are dropped and listed under "Not applied" rather than failing the run; if
   one you need is listed there, check its current name in this Odoo build.
-- Creating a database needs Odoo's `db` service to be reachable, which some
-  hardened deployments disable. Use `--no-create` against a database created
-  by hand in that case.
+  Known Odoo 19 removals: `po_lead`, `use_quotation_validity_days`.
+- **Odoo 19 renamed `res.users.groups_id` to `group_ids`.** The script probes
+  for whichever exists; the same trap applies to anything else you add.

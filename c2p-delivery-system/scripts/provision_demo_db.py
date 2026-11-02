@@ -118,12 +118,13 @@ SETTINGS = {
     "group_uom": True,                      # step 2: units on technical specs
     "group_product_variant": False,
     "group_sale_delivery_address": True,    # step 9: ship-to vs bill-to
-    "use_quotation_validity_days": True,    # step 5: validity period
-    "quotation_validity_days": 30,
+    "quotation_validity_days": 30,          # step 5: validity period
     "group_warning_sale": True,             # step 7: blocking warnings
     "group_auto_done_setting": False,
     "lock_confirmed_po": False,
-    "po_lead": 2.0,                         # step 8: supplier lead time buffer
+    # stock_sms rides in as a dependency and puts an SMS confirmation wizard
+    # in front of every delivery validation. Off, or step 9 cannot complete.
+    "stock_move_sms_validation": False,
     "group_stock_adv_location": False,
     "group_stock_multi_locations": True,    # step 8: stock allocation
     "group_stock_tracking_lot": True,       # step 9: packages on dispatch
@@ -414,8 +415,12 @@ def ensure_users(p: Provisioner, password: str) -> dict:
                 gids.append(gid[1])
             except Exception:
                 p.skipped.append(f"group {xmlid} not found (app not installed?)")
+        # Odoo 19 renamed this field; `prune` silently dropped the old name,
+        # which left all five demo users with no groups.
+        group_field = ("group_ids" if "group_ids" in p.fields_of("res.users")
+                       else "groups_id")
         vals = {"name": name, "login": login, "password": password,
-                "email": login, "groups_id": [(4, g) for g in gids]}
+                "email": login, group_field: [(4, g) for g in gids]}
         out[key] = p.ensure("res.users", [("login", "=", login)], vals,
                             f"user · {name} ({key})")
     return out
@@ -665,12 +670,12 @@ for order in records:
     if order.x_margin_approved:
         continue
     base = order.amount_untaxed or 0.0
-    margin = getattr(order, 'margin', 0.0) or 0.0
+    margin = order.margin or 0.0
     pct = (margin / base * 100.0) if base else 0.0
     deep = any((l.discount or 0.0) > disc_limit for l in order.order_line)
     if base and (pct < floor or deep):
         if order.x_quote_status != 'pending_approval':
-            order.x_quote_status = 'pending_approval'
+            order.write({'x_quote_status': 'pending_approval'})
             reason = 'margin %%.1f%%%% below the %%s%%%% floor' %% (pct, floor)
             if deep:
                 reason = reason + ' / line discount over %%s%%%%' %% disc_limit
@@ -683,7 +688,7 @@ for order in records:
                     summary='Margin Approval', user_id=approver.id,
                     note='Approve the price and margin, or send back for re-costing.')
     elif order.x_quote_status in (False, 'pending_approval'):
-        order.x_quote_status = 'draft'
+        order.write({'x_quote_status': 'draft'})
 """ % {"floor": MARGIN_FLOOR, "disc": DISCOUNT_LIMIT},
     ),
     (
@@ -714,7 +719,7 @@ for order in records:
         """
 for order in records:
     if order.x_quote_status not in ('submitted', 'followup', 'won', 'lost'):
-        order.x_quote_status = 'submitted'
+        order.write({'x_quote_status': 'submitted'})
     if not order.activity_ids.filtered(lambda a: a.summary == 'Quotation Follow-up'):
         order.activity_schedule(
             summary='Quotation Follow-up',
@@ -730,7 +735,7 @@ for order in records:
         """
 for order in records:
     if order.x_quote_status != 'won':
-        order.x_quote_status = 'won'
+        order.write({'x_quote_status': 'won'})
     if not order.client_order_ref:
         order.message_post(
             body='Customer PO reference is missing — verify the PO before execution (step 7).')
@@ -743,7 +748,8 @@ for order in records:
         """
 for po in records:
     if po.x_po_status in (False, 'draft', 'pending_approval', 'approved'):
-        po.x_po_status = 'direct_ship' if po.x_direct_ship else 'po_issued'
+        po.write({'x_po_status':
+                  'direct_ship' if po.x_direct_ship else 'po_issued'})
 """,
     ),
     (
@@ -756,7 +762,7 @@ for pick in records:
     if pick.x_pod_received:
         continue
     if pick.x_delivery_status != 'pod_pending':
-        pick.x_delivery_status = 'pod_pending'
+        pick.write({'x_delivery_status': 'pod_pending'})
     if not pick.activity_ids.filtered(lambda a: a.summary == 'POD Collection'):
         pick.activity_schedule(
             summary='POD Collection', user_id=env.uid,
@@ -789,7 +795,7 @@ for pick in records:
 assigned = env['crm.stage'].search([('name', '=', 'Assigned')], limit=1)
 for lead in records:
     if assigned and lead.stage_id and lead.stage_id.name == 'New':
-        lead.stage_id = assigned.id
+        lead.write({'stage_id': assigned.id})
 """,
     ),
 ]
@@ -872,7 +878,7 @@ quotes = env['sale.order'].search([('state', '=', 'sent'),
                                    ('date_order', '<', cutoff)])
 for order in quotes:
     if order.x_quote_status != 'followup':
-        order.x_quote_status = 'followup'
+        order.write({'x_quote_status': 'followup'})
     if not order.activity_ids.filtered(lambda a: a.summary == 'Quotation Follow-up'):
         order.activity_schedule(summary='Quotation Follow-up',
                                 user_id=(order.user_id or order.create_uid).id,
@@ -919,7 +925,7 @@ for inv in invoices:
     overdue = inv.invoice_date_due and inv.invoice_date_due < today
     status = 'overdue' if overdue else 'due'
     if inv.x_collection_status != status:
-        inv.x_collection_status = status
+        inv.write({'x_collection_status': status})
     if overdue and not inv.activity_ids.filtered(lambda a: a.summary == 'Collection Call'):
         inv.activity_schedule(summary='Collection Call',
                               user_id=(inv.invoice_user_id or env.user).id,
@@ -929,7 +935,7 @@ paid = env['account.move'].search([('move_type', '=', 'out_invoice'),
                                    ('payment_state', 'in', ['paid', 'in_payment', 'reversed'])])
 for inv in paid:
     if inv.x_collection_status != 'reconciled':
-        inv.x_collection_status = 'reconciled'
+        inv.write({'x_collection_status': 'reconciled'})
 """,
     ),
     (
@@ -963,7 +969,7 @@ lapsed = env['sale.order'].search([('state', 'in', ['draft', 'sent']),
                                    ('validity_date', '<', today)])
 for order in lapsed:
     if order.x_quote_status != 'expired':
-        order.x_quote_status = 'expired'
+        order.write({'x_quote_status': 'expired'})
         order.message_post(body='Quotation validity has lapsed (step 5).')
 """,
     ),
@@ -1065,12 +1071,26 @@ def validate_picking(p: Provisioner, picking_id: int, label: str,
                  {"quantity": round(move["product_uom_qty"] * ratio, 2),
                   "picked": True})
         result = p.ex("stock.picking", "button_validate", [picking_id])
-        if isinstance(result, dict) and result.get("res_model"):
-            ctx = result.get("context") or {}
+        # Validation can return a wizard, and answering that wizard can return
+        # another (SMS confirmation, then the backorder question). Each wizard
+        # has its own confirm method — `process` is not universal.
+        methods = {
+            "stock.backorder.confirmation": "process",
+            "stock.immediate.transfer": "process",
+            "confirm.stock.sms": "dont_send_sms",
+        }
+        for _ in range(4):
+            if not (isinstance(result, dict) and result.get("res_model")):
+                break
             wiz = result["res_model"]
+            method = methods.get(wiz)
+            if not method:
+                p.skipped.append(f"{label}: unhandled wizard {wiz}")
+                p.say(f"   ! {label} — unhandled wizard {wiz}")
+                return
+            ctx = result.get("context") or {}
             wid = p.ex(wiz, "create", {}, context=ctx)
-            method = "process" if wiz == "stock.backorder.confirmation" else "process"
-            p.ex(wiz, method, [wid], context=ctx)
+            result = p.ex(wiz, method, [wid], context=ctx)
         p.say(f"   > {label}")
     except Exception as exc:
         p.skipped.append(f"{label}: {brief(exc)}")
@@ -1443,10 +1463,15 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
             if variant:
                 lines.append((0, 0, {"product_id": variant, "product_qty": qty,
                                      "price_unit": price}))
-        p.ensure("purchase.requisition", [("origin", "=", "DEMO-02")],
-                 {"origin": "DEMO-02", "user_id": users.get("estimation"),
-                  "date_end": dt(7), "line_ids": lines},
-                 "purchase requisition · DEMO-02 (step 8)")
+        # No stable text key on this model in 19 (`origin` is gone and the
+        # name is a sequence), so key off "does the demo already have one".
+        if p.dry_run or not p.find("purchase.requisition", []):
+            p.ensure("purchase.requisition", [("id", "=", 0)],
+                     {"user_id": users.get("estimation"),
+                      "date_end": dt(7), "line_ids": lines},
+                     "purchase requisition · DEMO-02 (step 8)")
+        else:
+            p.say("   = purchase requisition (exists)")
     _ = lead_a, inv_g   # kept for readability of the scenario flow
 
 
