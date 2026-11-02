@@ -122,9 +122,6 @@ SETTINGS = {
     "group_warning_sale": True,             # step 7: blocking warnings
     "group_auto_done_setting": False,
     "lock_confirmed_po": False,
-    # stock_sms rides in as a dependency and puts an SMS confirmation wizard
-    # in front of every delivery validation. Off, or step 9 cannot complete.
-    "stock_move_sms_validation": False,
     "group_stock_adv_location": False,
     "group_stock_multi_locations": True,    # step 8: stock allocation
     "group_stock_tracking_lot": True,       # step 9: packages on dispatch
@@ -168,9 +165,20 @@ class Provisioner:
                     f"Odoo auth failed for db '{self.db}' as '{self.user}'")
         return self._uid
 
+    # Odoo serialises XML-RPC responses with allow_none=False, so a method
+    # that returns None (action_quotation_sent, action_set_lost,
+    # action_apply_inventory) fails on the way back even though it ran and
+    # committed server-side. Nothing the client sets can change that.
+    NONE_RESULT = "cannot marshal None"
+
     def ex(self, model: str, method: str, *args, **kw) -> Any:
-        return self._models.execute_kw(
-            self.db, self.uid, self.password, model, method, list(args), kw)
+        try:
+            return self._models.execute_kw(
+                self.db, self.uid, self.password, model, method, list(args), kw)
+        except Exception as exc:
+            if self.NONE_RESULT in str(exc):
+                return None      # the call succeeded; only its reply did not
+            raise
 
     def say(self, line: str) -> None:
         self.log.append(line)
@@ -376,7 +384,10 @@ def apply_settings(p: Provisioner) -> None:
 def configure_company(p: Provisioner, name: str, currency: str) -> int:
     """Name the demo company and put it on the right currency."""
     cid = p.find("res.company", []) or 1
-    vals = {"name": name}
+    # stock_sms rides in as a dependency and puts an SMS confirmation wizard in
+    # front of every delivery validation. It is a company field, not a settings
+    # one, in 19. `validate_picking` answers the wizard too, belt and braces.
+    vals = {"name": name, "stock_move_sms_validation": False}
     cur = p.find("res.currency", [("name", "=", currency)])
     if cur:
         p.call("res.currency", "write", [cur], f"activate currency {currency}",
@@ -1063,6 +1074,10 @@ def validate_picking(p: Provisioner, picking_id: int, label: str,
         p.say(f"   > {label} (would validate, ratio={ratio})")
         return
     try:
+        state = p.ex("stock.picking", "read", [picking_id], fields=["state"])
+        if state and state[0]["state"] in ("done", "cancel"):
+            p.say(f"   = {label} (already {state[0]['state']})")
+            return
         moves = p.ex("stock.move", "search_read",
                      [("picking_id", "=", picking_id)],
                      fields=["product_uom_qty"])
@@ -1168,6 +1183,10 @@ def cancel_order(p: Provisioner, order_id: Optional[int], label: str) -> None:
         p.say(f"   > {label} (would cancel)")
         return
     try:
+        state = p.ex("sale.order", "read", [order_id], fields=["state"])
+        if state and state[0]["state"] == "cancel":
+            p.say(f"   = {label} (already cancelled)")
+            return
         result = p.ex("sale.order", "action_cancel", [order_id])
         if isinstance(result, dict) and result.get("res_model") == "sale.order.cancel":
             ctx = result.get("context") or {}
@@ -1258,6 +1277,27 @@ def make_purchase(p: Provisioner, refs: dict, users: dict, ref: str,
                     f"purchase order · {ref} ({supplier_key})")
 
 
+def advance(p: Provisioner, model: str, method: str, rec_id: Optional[int],
+            label: str, states: tuple, field: str = "state") -> None:
+    """Fire a workflow transition only when the record is in a state that
+    accepts it. Records are idempotent through `ensure`; transitions need
+    this, or a re-run reports "already confirmed" as a failure."""
+    if p.dry_run or not rec_id or rec_id < 0:
+        p.say(f"   > {label} (would call {model}.{method})")
+        return
+    try:
+        rec = p.ex(model, "read", [rec_id], fields=[field])
+    except Exception as exc:
+        p.skipped.append(f"{label}: {brief(exc)}")
+        p.say(f"   ! {label} — {brief(exc)}")
+        return
+    current = rec[0][field] if rec else None
+    if current not in states:
+        p.say(f"   = {label} (already past this step; {field}={current})")
+        return
+    p.call(model, method, [rec_id], label)
+
+
 def outgoing_pickings(p: Provisioner, order_id: int) -> list:
     """The deliveries a confirmed sales order generated."""
     if p.dry_run or not order_id or order_id < 0:
@@ -1289,15 +1329,17 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
          ("freight", 1, 850.0, 600.0, 0.0)],
         ordered_days_ago=40, validity_in=-10, client_po="PO-ALM-88214",
         approved=True, origin="ENQ/2026/001")
-    p.call("sale.order", "action_quotation_sent", [quote_a],
-           "DEMO-01 · step 5 — quotation submitted to the customer")
-    p.call("sale.order", "action_confirm", [quote_a],
-           "DEMO-01 · step 7 — customer PO verified, sales order confirmed")
+    advance(p, "sale.order", "action_quotation_sent", quote_a,
+            "DEMO-01 · step 5 — quotation submitted to the customer", ("draft",))
+    advance(p, "sale.order", "action_confirm", quote_a,
+            "DEMO-01 · step 7 — customer PO verified, sales order confirmed",
+            ("draft", "sent"))
     po_a = make_purchase(
         p, refs, users, "DEMO-01-PO", "nordic",
         [("pump", 2, 3980.0)], ordered_days_ago=36, origin="DEMO-01")
-    p.call("purchase.order", "button_confirm", [po_a],
-           "DEMO-01 · step 8 — supplier PO issued to Nordic Pump Works")
+    advance(p, "purchase.order", "button_confirm", po_a,
+            "DEMO-01 · step 8 — supplier PO issued to Nordic Pump Works",
+            ("draft", "sent"))
     if not p.dry_run and po_a and po_a > 0:
         receipts = p.ex("stock.picking", "search",
                         [("purchase_id", "=", po_a), ("state", "!=", "cancel")])
@@ -1327,8 +1369,8 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
          ("flange", 20, 142.0, 95.0, 0.0)],
         ordered_days_ago=25, validity_in=5, client_po="GPS/PO/4471",
         approved=True, origin="ENQ/2026/002")
-    p.call("sale.order", "action_confirm", [quote_b],
-           "DEMO-02 · step 7 — sales order confirmed")
+    advance(p, "sale.order", "action_confirm", quote_b,
+            "DEMO-02 · step 7 — sales order confirmed", ("draft", "sent"))
     picks_b = outgoing_pickings(p, quote_b)
     if picks_b:
         validate_picking(p, picks_b[0],
@@ -1370,8 +1412,9 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
         [("pipe", 25, 252.0, 180.0, 0.0), ("flange", 14, 142.0, 95.0, 0.0)],
         ordered_days_ago=9, validity_in=21, approved=True,
         origin="ENQ/2026/004")
-    p.call("sale.order", "action_quotation_sent", [quote_d],
-           "DEMO-04 · step 5 — quotation submitted, follow-up cadence started")
+    advance(p, "sale.order", "action_quotation_sent", quote_d,
+            "DEMO-04 · step 5 — quotation submitted, follow-up cadence started",
+            ("draft",))
 
     # ── E · DEMO-05 — lost, with a reason (step 6, Lost branch) ─────────────
     p.say("\n   ── Scenario E · DEMO-05 Sharjah Water — enquiry lost")
@@ -1392,8 +1435,8 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
         p, refs, users, "DEMO-06-R0", "almazroui",
         [("pump", 1, 5880.0, 4200.0, 0.0), ("commiss", 1, 3500.0, 1800.0, 0.0)],
         ordered_days_ago=16, validity_in=-2, origin="ENQ/2026/006")
-    p.call("sale.order", "action_quotation_sent", [original],
-           "DEMO-06 · step 5 — original quotation submitted")
+    advance(p, "sale.order", "action_quotation_sent", original,
+            "DEMO-06 · step 5 — original quotation submitted", ("draft",))
     cancel_order(p, original,
                  "DEMO-06 · step 6 — customer asked for a revision")
     make_quote(
@@ -1411,8 +1454,8 @@ def seed_transactions(p: Provisioner, refs: dict, users: dict) -> None:
         [("valve", 8, 465.0, 310.0, 0.0), ("gauge", 12, 72.0, 45.0, 0.0)],
         ordered_days_ago=70, validity_in=-40, client_po="DRC-PO-2291",
         approved=True, origin="ENQ/2026/007")
-    p.call("sale.order", "action_confirm", [quote_g],
-           "DEMO-07 · step 7 — sales order confirmed")
+    advance(p, "sale.order", "action_confirm", quote_g,
+            "DEMO-07 · step 7 — sales order confirmed", ("draft", "sent"))
     for pick in outgoing_pickings(p, quote_g):
         validate_picking(p, pick, "DEMO-07 · step 9 — delivered")
         p.write("stock.picking", [pick],

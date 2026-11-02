@@ -125,6 +125,26 @@ Five role logins, password `demo1234` (change it with `--demo-user-password`):
    Run one by hand to show it raising activities.
 7. Sales → Reporting → Margin for the step 11 view.
 
+## After changing an automation rule, rebuild
+
+Automation rules fire on create and write, never retroactively, so records
+seeded before a rule existed will not carry what it sets. If you change a rule
+or an alert, drop the database and run again rather than re-running over the
+old data — otherwise steps 4 and the activity counts read zero and look like
+failures when they are just history.
+
+```bash
+sudo -u postgres dropdb Mumtaz_Demo_E2C && sudo -u odoo createdb Mumtaz_Demo_E2C
+sudo -u odoo /usr/bin/odoo -c /etc/odoo/odoo.conf \
+     -d Mumtaz_Demo_E2C -i base,l10n_ae --without-demo=all --stop-after-init
+python3 scripts/provision_demo_db.py Mumtaz_Demo_E2C --no-create \
+    --admin-user admin --admin-password admin
+```
+
+Re-running over an unchanged database is still safe and quiet: records are
+`ensure`d and workflow transitions check the record's state first, so the
+second run reports "already past this step" rather than a failure.
+
 ## Verification
 
 The last phase counts what actually landed, step by step, and lists anything

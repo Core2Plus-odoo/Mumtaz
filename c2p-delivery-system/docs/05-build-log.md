@@ -1497,3 +1497,38 @@ bytecode for the opcodes `safe_eval` rejects — 17/17 pass. That check caught
 nothing on its own first outing beyond confirming the fix, but it is the thing
 that would have caught defect 2 before the server did. The stub harness still
 reports 102 created, then 0 created / 101 reused on a re-run.
+
+### Second live run — the real `allow_none` root cause, and re-run noise
+
+The re-run proved the automation fixes landed (8 rules and 9 alerts all
+created, against 2 and 6 before), and exposed two more things.
+
+**`allow_none` on the client was treating a symptom.** Odoo's own XML-RPC
+endpoint serialises responses with `allow_none=False`, so any method returning
+`None` — `action_quotation_sent`, `action_set_lost`,
+`action_apply_inventory` — fails on the way back regardless of what the client
+permits. Nothing the caller sets can change that.
+
+The important part is that **the call has already run and committed** when the
+serialisation fails. The run proved it: `action_set_lost` reported the error
+and the lost-enquiry count still went from 1 to 3. So `ex()` now catches that
+specific error and returns `None`, which is the truthful result: the call
+succeeded, only its reply did not. Guessing at this would have been
+unjustified; the count in the verification table is what settled it.
+
+**Transitions are not idempotent the way records are.** `ensure` makes records
+safe to re-run, but workflow calls were fired blind, so a second run reported
+"Only draft orders can be marked as sent" and "Some orders are not in a state
+requiring confirmation" as failures when the order was simply already past
+that step. A new `advance()` helper reads the record's state first and reports
+"already past this step" instead. `validate_picking` and `cancel_order` got
+the same guard.
+
+Also: `stock_move_sms_validation` is on `res.company` in 19, not on
+`res.config.settings` where the first fix put it.
+
+Two counts in that run — margin approvals held at 0, open activities at 0 —
+are not defects: those records were created on the earlier run, before the
+automations existed, and automations fire on write, not retroactively. They
+need a clean database to show, which is why the doc now says to rebuild rather
+than re-run after a fix to the rules.
