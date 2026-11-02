@@ -1416,3 +1416,42 @@ were caught doing that:
 Verified mechanically: XML parses; every `report_name` resolves to a defined
 template; every internal `t-call` target exists; every payload method the
 templates call is defined.
+
+## Enquiry-to-Cash demonstration database
+
+`scripts/provision_demo_db.py` provisions an Odoo database that walks the
+eleven-step Enquiry-to-Cash process in `docs/assets/enquiry-to-cash-flow.jpg`:
+it creates the database, installs the apps, applies the configuration, adds
+the automation and the nine exception alerts, and seeds eight scenarios that
+cover every branch of the chart — including lost and revised. Written up in
+`docs/08-enquiry-to-cash-demo.md`.
+
+Built standard-first, the house ladder visible in the structure: standard
+apps and configuration carry steps 1-3 and 5-8; Automation Rules carry the
+step 4 margin/discount gate and the step 9 POD transitions; Studio-equivalent
+`x_` fields exist only where standard Odoo has no field for a status the chart
+names (POD capture, the approval stamp, the quote/PO/delivery/collection
+sub-statuses). No custom module. Community modules only, so it runs on the
+VPS as-is — `sale_margin` for the costing and margin at steps 3 and 11,
+`purchase_requisition` for the requisition at step 8, `stock_landed_costs`
+for landed cost.
+
+Every operation is an `ensure`: search first, create only when missing. The
+script is therefore safe to re-run, resumable with `--only <phase>`, and can
+be pointed at an existing database with `--no-create`. The final phase counts
+what landed step by step and lists everything it could not apply, so a
+half-built demo reports itself instead of looking complete.
+
+Verification, given no live Odoo was reachable from the build session:
+`py_compile` and `pyflakes` clean, and the whole script driven end to end
+against a throwaway XML-RPC stub that speaks enough Odoo to exercise control
+flow — 103 records created on the first pass, **0 created and 102 reused on
+the second**, which is the idempotency claim actually tested rather than
+asserted. The stub also caught two real defects: `invoice_order` recorded
+"no invoice produced" without printing it, so a scenario silently skipped a
+step; and `action_cancel` on an already-sent quotation returns Odoo's
+`sale.order.cancel` wizard rather than cancelling, which left the requote
+scenario's original quotation live — both fixed.
+
+Not yet run against a live Odoo 19. `--dry-run` first, then read the
+verification table on the first real run.
