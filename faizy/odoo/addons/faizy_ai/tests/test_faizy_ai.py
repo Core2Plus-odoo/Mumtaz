@@ -120,7 +120,8 @@ class TestFaizyAI(TransactionCase):
         self.assertEqual(order.state, 'pending')
         self.assertEqual(order.partner_id, self.customer)
 
-        worker = self.env['faizy.worker'].create({'name': 'Ali', 'state': 'active', 'phone': '+923001234567', 'city': 'Karachi'})
+        worker = self.env['faizy.worker'].create({
+            'name': 'Ali', 'state': 'active', 'phone': '+923001234567', 'city': 'Karachi'})
         update = self._draft(
             kind='order_update', order_id=order.id, subject='Assign Ali',
             payload=json.dumps({'write': {'worker_id': worker.id}, 'action': 'action_assign'}))

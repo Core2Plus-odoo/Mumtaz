@@ -7,7 +7,7 @@ from odoo.exceptions import AccessError, UserError, ValidationError
 
 from .utils import (
     G_COMMS, G_OPS, can_approve, has_stale_number, is_approver, normalize_phone,
-    require_approver, within_hours,
+    within_hours,
 )
 
 # What an AI agent may touch on a draft it owns while the draft is still a draft.
