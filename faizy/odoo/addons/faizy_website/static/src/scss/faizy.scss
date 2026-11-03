@@ -2451,3 +2451,121 @@ button.fzp-btn {
     margin-top: 1.25rem !important;
   }
 }
+
+
+// ── Our AI team ─────────────────────────────────────────────────────────
+// Same rule as the rest of the site: orange is a field, never text. The AI badge and the
+// voice button are black with cream type; the playing state turns the button orange with
+// black type (about 9:1).
+.fz-agents {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;   // a short last row sits in the middle, not hard left
+  align-items: stretch;      // equal-height cards, so the voice buttons line up
+  gap: 1rem;
+}
+
+.fz-agent {
+  flex: 1 1 12.75rem;
+  align-self: stretch;
+  height: auto;
+  max-width: 17rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  @media (max-width: 575.98px) { max-width: none; }
+
+  .fz-agent-avatar {
+    position: relative;
+    width: 7rem;
+    height: 7rem;
+    margin-bottom: 0.25rem;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: block;
+      box-shadow: 0 8px 20px -8px rgba(10, 10, 10, 0.3);
+    }
+  }
+
+  .fz-agent-badge {
+    position: absolute;
+    right: -0.35rem;
+    bottom: 0.1rem;
+    padding: 0.05rem 0.55rem;
+    background: $fz-black;
+    color: $fz-cream;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .fz-agent-name { margin: 0; font-size: 1.5rem; font-weight: 700; line-height: 1.25; }
+  .fz-agent-title { margin: 0; color: $fz-ink-600; font-weight: 500; }
+
+  .fz-agent-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 0.1rem 0.65rem;
+      background: $fz-cream-200;
+      color: $fz-black;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+  }
+
+  .fz-agent-bullets { margin: 0; padding-left: 1.25rem; color: $fz-ink-900; }
+  .fz-agent-bullets li { margin-bottom: 0.25rem; }
+  .fz-agent-approver { margin: 0; color: $fz-ink-600; font-size: 0.875rem; }
+
+  .fz-agent-foot {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .fz-agent-voice {
+    align-self: flex-start;
+    min-height: 2.75rem;
+    padding: 0 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: $fz-black;
+    color: $fz-cream;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover { background: $fz-ink-900; }
+    &:focus-visible { outline: 3px solid $fz-orange; outline-offset: 2px; }
+    &.is-playing { background: $fz-orange; color: $fz-black; }
+    &.is-playing .fa-play::before { content: "\f04d"; }   // stop icon while playing
+  }
+
+  .fz-agent-transcript {
+    font-size: 0.9375rem;
+
+    summary { cursor: pointer; color: $fz-ink-600; }
+    .fz-urdu {
+      margin: 0.5rem 0 0;
+      font-family: "Noto Nastaliq Urdu", serif;
+      line-height: 2.3;
+      color: $fz-ink-900;
+    }
+  }
+}

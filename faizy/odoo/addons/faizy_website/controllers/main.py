@@ -5,6 +5,8 @@ from urllib.parse import quote
 from odoo import fields, http
 from odoo.http import request
 
+from ..ai_team_data import AI_TEAM_GROUPS
+
 _logger = logging.getLogger(__name__)
 
 # 00000-0000000-0
@@ -159,6 +161,22 @@ class FaizyWebsite(http.Controller):
                 "whatsapp_number": request.env[
                     "faizy.whatsapp.message"
                 ].sudo().contact_number(),
+            },
+        )
+
+    @http.route("/ai-team", type="http", auth="public", website=True, sitemap=True)
+    def faizy_ai_team(self, **kw):
+        """The AI team: who they are, what they do, and who approves them.
+
+        Each agent is labelled AI and carries a voice clip. The page is explicit that
+        people approve everything that reaches a family, which is how the faizy_ai
+        add-on actually works: agents draft, a named person approves.
+        """
+        return request.render(
+            "faizy_website.ai_team",
+            {
+                "groups": AI_TEAM_GROUPS,
+                "whatsapp_url": self._whatsapp_url(self.WHATSAPP_OPENER),
             },
         )
 

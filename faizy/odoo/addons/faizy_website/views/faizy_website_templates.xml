@@ -1576,4 +1576,88 @@
         </t>
     </template>
 
+    <!-- ── Our AI team ───────────────────────────────────────────────────────
+         Nine agents, each labelled AI, each with a short voice clip and the text of
+         what it says. Content comes from ai_team_data.py. The message is the same
+         one the faizy_ai add-on enforces: agents draft, a person approves. -->
+    <template id="ai_team" name="Faizy — Our AI team">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Our AI team</t>
+            <t t-set="website_meta_description">The AI agents working alongside the Faizy team. Every agent is labelled AI, and a person approves everything that reaches a family.</t>
+
+            <div id="wrap" class="faizy-page">
+
+                <section class="fz-hero" style="padding-bottom: clamp(2rem, 5vw, 3rem);">
+                    <div class="container position-relative">
+                        <div class="row align-items-center g-4">
+                            <div class="col-12 col-lg-7">
+                                <p class="fz-eyebrow mb-2">Our AI team</p>
+                                <h1 class="fz-display mb-3" style="font-size: clamp(2rem, 5.5vw, 3.5rem);">
+                                    AI agents working alongside the Faizy team
+                                </h1>
+                                <p class="fz-hero-sub fz-lead mb-4">
+                                    Every agent here is labelled AI. People approve everything that
+                                    reaches a family: Mashood, Raza and Umer.
+                                </p>
+                                <a t-if="whatsapp_url" t-att-href="whatsapp_url" rel="noopener"
+                                   class="btn btn-faizy btn-lg">Message Faizy on WhatsApp</a>
+                            </div>
+                            <div class="col-12 col-lg-5">
+                                <div class="fz-card">
+                                    <h2 class="h6 text-uppercase text-muted mb-3" style="letter-spacing:.1em;">
+                                        How it works
+                                    </h2>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span><strong>Agents draft.</strong> Replies, orders and reports are prepared by AI.</span></div>
+                                    <div class="fz-plan-feature"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span><strong>People approve.</strong> Nothing is sent, posted or changed without a person.</span></div>
+                                    <div class="fz-plan-feature mb-0"><i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/><span><strong>Faizy delivers.</strong> Customer messages go out 10am to 9pm, Karachi time.</span></div>
+                                    <p class="small text-muted mt-3 mb-0">Portraits are AI-generated and show fictional people. The voices are AI voices.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section t-foreach="groups" t-as="group" class="fz-section">
+                    <div class="container">
+                        <h2 class="h3 mb-1" t-out="group['title']"/>
+                        <p class="fz-lead mb-4" t-out="group['sub']"/>
+                        <div class="fz-agents">
+                            <article t-foreach="group['agents']" t-as="agent" class="fz-card fz-agent">
+                                <div class="fz-agent-avatar">
+                                    <img t-attf-src="/faizy_website/static/src/img/ai-team/#{agent['key']}.jpg"
+                                         t-attf-alt="AI-generated portrait for #{agent['name']}, a fictional person"
+                                         width="112" height="112" loading="lazy"/>
+                                    <span class="fz-agent-badge">AI</span>
+                                </div>
+                                <h3 class="fz-agent-name" t-out="agent['name']"/>
+                                <p class="fz-agent-title" t-out="agent['title']"/>
+                                <ul class="fz-agent-tags">
+                                    <li t-foreach="agent['tags']" t-as="tag" t-out="tag"/>
+                                </ul>
+                                <ul class="fz-agent-bullets">
+                                    <li t-foreach="agent['bullets']" t-as="bullet" t-out="bullet"/>
+                                </ul>
+                                <p class="fz-agent-approver">Approved by <t t-out="agent['approver']"/></p>
+                                <div class="fz-agent-foot">
+                                <button type="button" class="fz-agent-voice" aria-pressed="false"
+                                        t-attf-data-src="/faizy_website/static/src/audio/ai-team/#{agent['key']}.mp3"
+                                        t-att-data-name="agent['name']"
+                                        t-attf-data-label="Hear #{agent['name']}">
+                                    <i class="fa fa-play" aria-hidden="true"/>
+                                    <span class="fz-agent-voice-label">Hear <t t-out="agent['name']"/></span>
+                                </button>
+                                <details class="fz-agent-transcript">
+                                    <summary>Transcript</summary>
+                                    <p lang="ur" dir="rtl" class="fz-urdu" t-out="agent['transcript']"/>
+                                </details>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </t>
+    </template>
+
 </odoo>
