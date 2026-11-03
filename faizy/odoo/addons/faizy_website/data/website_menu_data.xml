@@ -32,6 +32,13 @@
         <field name="sequence">10</field>
     </record>
 
+    <record id="menu_faizy_ai_team" model="website.menu">
+        <field name="name">Our AI team</field>
+        <field name="url">/ai-team</field>
+        <field name="parent_id" ref="menu_faizy_about"/>
+        <field name="sequence">15</field>
+    </record>
+
     <record id="menu_faizy_privacy" model="website.menu">
         <field name="name">Privacy policy</field>
         <field name="url">/privacy</field>
