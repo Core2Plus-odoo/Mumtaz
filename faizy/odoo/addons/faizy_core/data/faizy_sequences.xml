@@ -66,6 +66,16 @@
         <field name="number_next">1001</field>
     </record>
 
+    <!-- FZV-10001. Quoted on vendor bills so ops and the shop are talking
+         about the same record. -->
+    <record id="seq_faizy_vendor" model="ir.sequence">
+        <field name="name">Faizy Vendor</field>
+        <field name="code">faizy.vendor</field>
+        <field name="prefix">FZV-</field>
+        <field name="padding">5</field>
+        <field name="number_next">10001</field>
+    </record>
+
     <record id="seq_faizy_wallet" model="ir.sequence">
         <field name="name">Faizy Wallet Transaction</field>
         <field name="code">faizy.wallet</field>
