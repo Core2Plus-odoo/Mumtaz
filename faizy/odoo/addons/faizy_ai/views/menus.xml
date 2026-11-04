@@ -6,6 +6,8 @@
               action="action_faizy_ai_draft" sequence="10"/>
     <menuitem id="menu_faizy_ai_inbound" name="Inbound WhatsApp" parent="menu_faizy_ai_root"
               action="action_faizy_ai_inbound" sequence="20"/>
+    <menuitem id="menu_faizy_ai_knowledge" name="Knowledge" parent="menu_faizy_ai_root"
+              action="action_faizy_ai_knowledge" sequence="25"/>
     <menuitem id="menu_faizy_ai_agents" name="AI team" parent="menu_faizy_ai_root"
               action="action_faizy_ai_agent" sequence="30"/>
 </odoo>

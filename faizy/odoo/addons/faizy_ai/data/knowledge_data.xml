@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="knowledge_brand_facts" model="faizy.ai.knowledge">
+        <field name="name">Approved brand facts</field>
+        <field name="category">brand</field>
+        <field name="sequence">1</field>
+        <field name="body">Website: https://myfaizy.com
+WhatsApp: +92 334 2726048 (the only WhatsApp number to write)
+Facebook: FaizyHaiNa
+Tagline: Simplifying Life Across Borders.
+Customers are overseas Pakistanis with family in Pakistan; agents work in Karachi.
+Faizy handles everyday assistance tasks directly. Repairs and skilled trade work are done by verified experts that Faizy coordinates and supervises; a Faizy representative is never described or shown doing the repair.</field>
+    </record>
+    <record id="knowledge_house_rules" model="faizy.ai.knowledge">
+        <field name="name">House rules for every draft</field>
+        <field name="category">rule</field>
+        <field name="sequence">2</field>
+        <field name="body">Nothing is sent, posted or changed without a person's approval.
+Customer messages go out only 10:00 to 21:00 Karachi time, every day.
+Never invent services, prices, plans, statistics, testimonials or contact details. If a fact is not in these notes or the order record, say it needs checking.
+Medical tasks are logistics only. Never give medical advice. An emergency goes to a person immediately.
+An order is not done without photo proof and an itemised receipt.
+Completing or cancelling an order, refunds and price changes are done by people.
+Urdu drafts are read by Mashood before approval.</field>
+    </record>
+</odoo>
