@@ -213,7 +213,8 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
       </a>
       <div class="links">
         <a href="#clients">The client book</a>
-        <a href="#screens">Screens</a>
+        <a href="#interface">Interface</a>
+        <a href="#screens">Engine</a>
         <a href="#modules">Modules</a>
         <a href="#agents">AI teammates</a>
         <a href="#status">Where it is today</a>
@@ -239,7 +240,7 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
       </p>
       <div class="hero-cta">
         <a class="btn btn-gold" href="#contact">Request a demo</a>
-        <a class="btn btn-ghost" href="#status">See what is built today</a>
+        <a class="btn btn-ghost" href="preview/">See the interface</a>
       </div>
       <p class="note">
         Every suggestion says why it was suggested, and every figure comes from
@@ -331,15 +332,90 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
   </div>
 </section>
 
+<section id="interface">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The interface · in design</div>
+      <h2>A front end built for the counter, not for an ERP</h2>
+      <p class="muted">
+        Odoo 19 Community is the engine: stock, accounting, permissions and the
+        approval rules all live there, and they work today. On top of it goes
+        an interface designed for the people who actually use it — an associate
+        with a client in front of them, and an owner with four minutes.
+        <b>These four screens are a clickable prototype</b>, not the shipped
+        product: nothing in them is wired to a database and every client is
+        invented.
+      </p>
+      <p style="margin-top:14px">
+        <a class="btn btn-gold" href="preview/">Open the prototype</a>
+      </p>
+    </div>
+
+    <div class="shots">
+      <div class="shot">
+        <a href="preview/#clients"><img src="site/img/ui-clients.png" loading="lazy" width="2160" height="1350"
+             alt="Client 360 screen: client header with tier and AML status, pieces owned as photographs, a visit timeline, a compliance panel and taste and occasions."></a>
+        <div class="cap">
+          <b>Client 360</b>
+          <span>Everything about one client on one screen: tier and relationship
+          manager, lifetime value and gold held, the pieces she owns as
+          photographs taken at handover, every visit with who served her and
+          what was shown, her taste and her next occasion — and a compliance
+          panel with identity, expiry, screening, risk band and how close the
+          year's cash is to the reporting threshold.</span>
+        </div>
+      </div>
+
+      <div class="shot">
+        <a href="preview/#pos"><img src="site/img/ui-pos.png" loading="lazy" width="2160" height="1350"
+             alt="Counter screen: tag scan, a piece with its full price breakdown, old gold taken in exchange, and a payment panel."></a>
+        <div class="cap">
+          <b>The counter</b>
+          <span>Scan the tag, see the piece priced from this morning's approved
+          rate with every component shown, take old gold in exchange at a
+          computed credit, and split the payment. Nobody types over a figure,
+          and if the connection drops the counter keeps selling against the
+          locked rate and reconciles afterwards.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="shots shots-2" style="margin-top:22px">
+      <div class="shot">
+        <a href="preview/#ops"><img src="site/img/ui-ops.png" loading="lazy" width="2160" height="1350"
+             alt="Operations screen: metal held and stock value, a daily gold reconciliation table per store with a variance flagged, store list and transfers in flight."></a>
+        <div class="cap">
+          <b>Operations</b>
+          <span>Metal held, stock value at today's rate, and the daily
+          reconciliation in grams per store — with a 2.4 g shortfall at one
+          store flagged and held open until someone explains it.</span>
+        </div>
+      </div>
+      <div class="shot">
+        <a href="preview/#agents"><img src="site/img/ui-agents.png" loading="lazy" width="2160" height="1350"
+             alt="AI layer screen: four agents with their autonomy levels, a queue of drafts waiting for a person, and an audit table showing a blocked call."></a>
+        <div class="cap">
+          <b>The AI layer</b>
+          <span>Each agent with the autonomy it is allowed, a queue of drafts
+          waiting for a person, and an audit of every call — including one
+          refused, because an automated message to a Royal-tier client is not
+          permitted.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="screens">
   <div class="wrap">
     <div class="sec-head">
-      <div class="eyebrow">The product</div>
-      <h2>Real screens, not mock-ups</h2>
+      <div class="eyebrow">The engine · working today</div>
+      <h2>Underneath: Odoo 19, already running</h2>
       <p class="muted">
-        Captured from a running Odoo 19 database with the demo data loaded.
-        Every client, piece and figure below is synthetic; the behaviour is
-        not.
+        The screens above are design. These are not: they are captured from a
+        running Odoo 19 Community database with the demo module loaded. Every
+        client, piece and figure is synthetic — the behaviour is real, and it
+        is what the interface above will sit on.
       </p>
     </div>
 
