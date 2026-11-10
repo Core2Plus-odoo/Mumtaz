@@ -153,6 +153,25 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 .paybtn{border:1px solid var(--paper3);background:var(--surface);border-radius:10px;padding:11px;text-align:center;font-size:.84rem;font-weight:600}
 
+/* pipeline */
+.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:1180px){.stages{grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:680px){.stages{grid-template-columns:1fr 1fr}}
+.stg{background:var(--surface);border:1px solid var(--paper3);border-radius:10px;padding:13px 14px}
+.stg small{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.stg b{display:block;font-size:1.22rem;margin-top:5px;font-weight:700}
+.stg .c{font-size:.76rem;color:var(--ink3)}
+.stg .bar{height:4px;border-radius:99px;background:var(--paper2);margin-top:9px;overflow:hidden}
+.stg .bar i{display:block;height:100%;background:var(--gold)}
+.prog{height:9px;border-radius:99px;background:var(--paper2);overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;border-radius:99px;background:var(--gold)}
+.prog i.ok{background:var(--teal)}
+.pct{display:inline-flex;align-items:center;justify-content:center;min-width:42px;font-size:.78rem;font-weight:700;padding:2px 7px;border-radius:6px}
+.p-hi{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.p-mid{background:var(--gold-bg);color:var(--gold-dark);border:1px solid var(--gold-border)}
+.p-lo{background:var(--paper2);color:var(--ink3);border:1px solid var(--paper3)}
+.why{font-size:.75rem;color:var(--ink3);margin-top:3px}
+
 /* voice */
 .voice{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:16px 18px;background:linear-gradient(100deg,var(--ink) 0%,var(--rail2) 100%);border-radius:var(--r);color:#C9D2DC}
 .voice .orb{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 32%,var(--gold2),var(--gold) 58%,#1E2A4D);display:grid;place-items:center;flex:none;box-shadow:0 0 0 4px rgba(85,112,223,.16)}
@@ -328,6 +347,14 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
     <button class="navb" data-s="clients">
       <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0"/><path d="M16 11a3 3 0 100-6M18 20a6 6 0 00-3-5.2"/></svg>
       Clients <span class="pill">3</span>
+    </button>
+    <button class="navb" data-s="crm">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15V9M12 15v-3M16 15V7"/></svg>
+      Pipeline
+    </button>
+    <button class="navb" data-s="out">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 10h8M8 13h5"/></svg>
+      Outreach <span class="pill">6</span>
     </button>
     <button class="navb" data-s="pos">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>
@@ -600,6 +627,173 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               </div>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PIPELINE / CRM ============ -->
+      <section class="screen" id="s-crm">
+        <div class="g g4" style="margin-bottom:16px">
+          <div class="card kpi"><small>Target, this quarter</small><b class="num">1.80 M</b><div class="d muted">set by the owner</div></div>
+          <div class="card kpi"><small>Won to date</small><b class="num">1.21 M</b><div class="d up">67% of target &middot; 31 days left</div></div>
+          <div class="card kpi"><small>Weighted forecast</small><b class="num">1.74 M</b><div class="d down">60k short at today's odds</div></div>
+          <div class="card kpi"><small>Open opportunities</small><b class="num">38</b><div class="d muted">842k unweighted</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="hd"><h3>Pipeline by stage</h3><span class="sp"></span>
+            <span class="filt on">This quarter</span><span class="filt">All stores</span><span class="filt">Nadia M.</span></div>
+          <div class="pad">
+            <div class="stages">
+              <div class="stg"><small>Enquiry</small><b class="num">186k</b><span class="c">14 open &middot; avg 12%</span><div class="bar"><i style="width:18%"></i></div></div>
+              <div class="stg"><small>Viewing booked</small><b class="num">241k</b><span class="c">11 open &middot; avg 34%</span><div class="bar"><i style="width:36%"></i></div></div>
+              <div class="stg"><small>Tray shared</small><b class="num">208k</b><span class="c">8 open &middot; avg 56%</span><div class="bar"><i style="width:58%"></i></div></div>
+              <div class="stg"><small>Reserved</small><b class="num">147k</b><span class="c">4 open &middot; avg 81%</span><div class="bar"><i style="width:82%"></i></div></div>
+              <div class="stg"><small>Won, 90 days</small><b class="num">1.21 M</b><span class="c">52 closed</span><div class="bar"><i class="ok" style="width:100%;background:var(--teal)"></i></div></div>
+            </div>
+            <p class="note">A stage is a real step in how a piece gets sold: an enquiry, a viewing in the diary, a tray shared with the client, a piece reserved. The percentages are not typed in &mdash; they are the odds the system has learned from what actually closed.</p>
+          </div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Most likely to close</h3><span class="sp"></span><span class="chip c-teal">scored from 52 won and 23 lost</span></div>
+            <table>
+              <thead><tr><th>Client</th><th>What</th><th>Value</th><th>Odds</th><th>Next</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><b>A. K.</b><div class="tiny muted">Private &middot; Nadia M.</div></td>
+                  <td>22K necklace &amp; bangle<div class="why">Wedding in 21 days &middot; tray opened twice</div></td>
+                  <td class="num">78,400</td>
+                  <td><span class="pct p-hi">84%</span></td>
+                  <td class="tiny muted">Viewing, Thu</td>
+                </tr>
+                <tr>
+                  <td><b>DEMO Client Bravo</b><div class="tiny muted">Preferred</div></td>
+                  <td>21K set<div class="why">Anniversary in 14 days &middot; within usual spend</div></td>
+                  <td class="num">34,900</td>
+                  <td><span class="pct p-hi">71%</span></td>
+                  <td class="tiny muted">Call back</td>
+                </tr>
+                <tr>
+                  <td><b>DEMO Client Delta</b><div class="tiny muted">Royal &middot; R. Haddad</div></td>
+                  <td>Bespoke commission<div class="why">No contact in 40 days &middot; was 62% a month ago</div></td>
+                  <td class="num">210,000</td>
+                  <td><span class="pct p-mid">46%</span></td>
+                  <td class="tiny muted">Owner to call</td>
+                </tr>
+                <tr>
+                  <td><b>DEMO Client Alpha</b><div class="tiny muted">Standard</div></td>
+                  <td>18K ring<div class="why">Enquiry only &middot; no viewing booked</div></td>
+                  <td class="num">9,200</td>
+                  <td><span class="pct p-lo">14%</span></td>
+                  <td class="tiny muted">Book a viewing</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">The odds come from the pattern in your own closed business &mdash; stage, tier, value band, source, how long since the last contact. They move on their own as things change, and a person can always override one and say why.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:16px">
+            <div class="card">
+              <div class="hd"><h3>Against target</h3></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">Target</span><b class="num">1,800,000</b></div>
+                <div class="amlrow"><span class="muted">Won</span><b class="num">1,210,000</b></div>
+                <div class="amlrow"><span class="muted">Weighted pipeline</span><b class="num">528,000</b></div>
+                <div class="amlrow"><span class="muted">Forecast</span><b class="num">1,738,000</b></div>
+                <div class="prog"><i style="width:67%"></i></div>
+                <p class="note" style="margin-top:8px">67% won with 31 days to run. On today's odds you land about 62,000 short &mdash; roughly one Private-tier viewing that converts.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Why we lose</h3><span class="sp"></span><span class="tiny muted">23 lost, 90 days</span></div>
+              <table>
+                <tbody>
+                  <tr><td>Price against another jeweller</td><td class="num">9</td></tr>
+                  <tr><td>Piece not in stock in time</td><td class="num">6</td></tr>
+                  <tr><td>Went quiet after the viewing</td><td class="num">5</td></tr>
+                  <tr><td>Postponed the occasion</td><td class="num">3</td></tr>
+                </tbody>
+              </table>
+              <div class="pad" style="border-top:1px solid var(--paper3)">
+                <p class="note" style="margin:0">Six of these were stock, not price. That is a buying decision, and it is the kind of thing the pipeline can tell you and a sales report cannot.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ OUTREACH & UPSELL ============ -->
+      <section class="screen" id="s-out">
+        <div class="awork" style="margin-bottom:16px">
+          <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents here</span>
+          <span class="arun"><b>Stylist</b> 6 upsells ranked <span class="st st-done">done 08:12</span></span>
+          <span class="arun"><b>Relationship</b> 4 notes drafted <span class="st st-wait">waiting for a person</span></span>
+          <span class="arun"><b>Outreach</b> 2 held back <span class="st st-stop">consent refused</span></span>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Upsell &amp; next piece</h3><span class="sp"></span>
+              <span class="filt on">Ranked</span><span class="filt">By value</span><span class="filt">By occasion</span></div>
+            <table>
+              <thead><tr><th>Client</th><th>Suggested</th><th>Why</th><th>Value</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><b>A. K.</b><div class="tiny muted">Private</div></td><td>22K necklace</td>
+                    <td class="tiny muted">Matches preferred karat &middot; completes the bangle she owns &middot; asked to see it</td>
+                    <td class="num">42,100</td><td><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Build tray</button></td></tr>
+                <tr><td><b>DEMO Client Bravo</b><div class="tiny muted">Preferred</div></td><td>21K earrings</td>
+                    <td class="tiny muted">Anniversary in 14 days &middot; 78% of usual spend</td>
+                    <td class="num">18,600</td><td><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Build tray</button></td></tr>
+                <tr><td><b>DEMO Client Charlie</b><div class="tiny muted">Private</div></td><td>Bespoke commission</td>
+                    <td class="tiny muted">Bought three times in 18 months &middot; no open enquiry</td>
+                    <td class="num">96,000</td><td><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Assign</button></td></tr>
+                <tr><td><b>DEMO Client Alpha</b><div class="tiny muted">Standard</div></td><td>18K pendant</td>
+                    <td class="tiny muted">Birthday in 30 days &middot; first purchase was a ring</td>
+                    <td class="num">6,400</td><td><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Assign</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Every suggestion carries its reasons, and the price beside it is the live one from the approved rate. The ranking is deterministic: the same client and the same stock give the same list, and you can read why.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:16px">
+            <div class="card">
+              <div class="hd"><h3>Outreach queue</h3><span class="sp"></span><span class="chip c-gold">4 to send</span></div>
+              <div class="pad">
+                <div class="tp"><span class="tpi tp-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1121 11.5z"/></svg></span>
+                  <div><b>Anniversary note &middot; Bravo</b><span>WhatsApp &middot; consented &middot; drafted, Nadia sends</span></div></div>
+                <div class="tp"><span class="tpi tp-call"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></span>
+                  <div><b>Call back &middot; Delta</b><span>Royal &middot; owner to call personally, not staff</span></div></div>
+                <div class="tp"><span class="tpi tp-link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg></span>
+                  <div><b>Tray link &middot; A. K.</b><span>Copy the link, hand it over &mdash; no automated send</span></div></div>
+                <div class="tp"><span class="tpi tp-store"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>
+                  <div><b>Repair ready &middot; Alpha</b><span>SMS &middot; transactional &middot; allowed without marketing consent</span></div></div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>2 held back.</b> One client refused marketing; one is Royal tier, where automated outbound is never sent. Both are drafted for a person instead.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>What outreach is worth</h3><span class="sp"></span><span class="tiny muted">last 90 days</span></div>
+              <table>
+                <tbody>
+                  <tr><td><b>Occasion notes</b><div class="tiny muted">41 sent</div></td><td class="num">11 viewings</td><td class="num">214k</td></tr>
+                  <tr><td><b>Tray links</b><div class="tiny muted">18 shared</div></td><td class="num">7 viewings</td><td class="num">186k</td></tr>
+                  <tr><td><b>Repair follow-up</b><div class="tiny muted">63 sent</div></td><td class="num">4 viewings</td><td class="num">31k</td></tr>
+                </tbody>
+              </table>
+              <div class="pad" style="border-top:1px solid var(--paper3)">
+                <p class="note" style="margin:0">Trays convert nearly twice as well as notes on a quarter of the volume. Worth knowing before anyone buys a bulk-messaging tool.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -966,6 +1160,8 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
   var titles = {
     dash:    ['Today','Owner · Overview','Refresh'],
     clients: ['Client 360','Sales Hub · Clients','New client'],
+    crm:     ['Pipeline','Sales Hub · Opportunities','New opportunity'],
+    out:     ['Outreach & upsell','Sales Hub · Follow-up','New campaign'],
     pos:     ['Counter','Sales Hub · Till 2','Park sale'],
     inv:     ['Pieces','Inventory Hub · Stock book','Add piece'],
     ops:     ['Stores & transfers','Inventory Hub · Operations','New transfer'],
