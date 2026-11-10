@@ -153,6 +153,30 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 .paybtn{border:1px solid var(--paper3);background:var(--surface);border-radius:10px;padding:11px;text-align:center;font-size:.84rem;font-weight:600}
 
+/* chat */
+.thread{display:flex;flex-direction:column;gap:11px;padding:4px 2px}
+.msg{max-width:84%;padding:10px 13px;border-radius:13px;font-size:.89rem;line-height:1.5}
+.m-them{align-self:flex-start;background:var(--paper2);border:1px solid var(--paper3);border-bottom-left-radius:4px}
+.m-ai{align-self:flex-start;background:var(--pri-bg,var(--gold-bg));border:1px solid var(--gold-border);border-bottom-left-radius:4px}
+.m-ai .by{display:flex;align-items:center;gap:6px;font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-dark);font-weight:700;margin-bottom:5px}
+.m-ai .by svg{width:13px;height:13px;stroke:var(--gold-dark);fill:none;stroke-width:2}
+.m-me{align-self:flex-end;background:var(--ink);color:#EDF0F4;border-bottom-right-radius:4px}
+.pcards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.pcard{background:var(--surface);border:1px solid var(--paper3);border-radius:10px;overflow:hidden}
+.pcard .im{height:58px;background:linear-gradient(160deg,#CBD5E1,#94A3B8);display:grid;place-items:center}
+.pcard .im svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.6}
+.pcard .lb{padding:7px 9px}
+.pcard .lb b{display:block;font-size:.76rem}
+.pcard .lb span{font-size:.72rem;color:var(--ink3)}
+.quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.quick span{font-size:.78rem;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--paper3);color:var(--ink2)}
+/* integrations */
+.intg{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;padding:13px 16px;border-top:1px solid var(--paper3)}
+.intg:first-of-type{border-top:0}
+.ilogo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--paper2);border:1px solid var(--paper3);font-size:.72rem;font-weight:800;color:var(--ink2)}
+.intg b{display:block;font-size:.92rem}
+.intg span{font-size:.79rem;color:var(--ink3)}
+
 /* pipeline */
 .stages{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 @media (max-width:1180px){.stages{grid-template-columns:1fr 1fr 1fr}}
@@ -356,6 +380,10 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
       <svg viewBox="0 0 24 24"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 10h8M8 13h5"/></svg>
       Outreach <span class="pill">6</span>
     </button>
+    <button class="navb" data-s="styl">
+      <svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+      Stylist
+    </button>
     <button class="navb" data-s="pos">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>
       Counter
@@ -369,6 +397,11 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
     <button class="navb" data-s="ops">
       <svg viewBox="0 0 24 24"><path d="M3 9h4l2-4h6l2 4h4"/><path d="M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9"/><path d="M9 14h6"/></svg>
       Stores &amp; transfers
+    </button>
+
+    <button class="navb" data-s="chan">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg>
+      Channels
     </button>
 
     <div class="railsec">Finance Hub</div>
@@ -798,6 +831,147 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
         </div>
       </section>
 
+      <!-- ============ STYLIST ============ -->
+      <section class="screen" id="s-styl">
+        <div class="g split">
+          <div class="card">
+            <div class="hd">
+              <img class="ph ph-sm" src="../site/img/people/sameer.png" alt="">
+              <div><h3 style="font-size:.95rem">DEMO Client Alpha</h3><span class="sub tiny muted">Standard tier &middot; signed in by one-time code &middot; consented to chat</span></div>
+              <span class="sp"></span><span class="chip c-teal">Client app</span>
+            </div>
+            <div class="pad">
+              <div class="thread">
+                <div class="msg m-me">I bought the 22K bangle in March. I have a wedding next month — what would go with it without being too much?</div>
+
+                <div class="msg m-ai">
+                  <span class="by"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Stylist</span>
+                  You wear 22K yellow and you tend to keep stones out of it, so I would stay in that family and let the bangle lead.
+                  Two directions. A fine 22K chain sits above the wrist and reads quieter beside a wide bangle — good if you want the bangle to be the piece people notice.
+                  Or drop earrings in the same karat, which balance the weight on the wrist without competing with it.
+                  <div class="pcards">
+                    <div class="pcard"><div class="im"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1014 0"/><path d="M5 12V9a7 7 0 0114 0v3"/></svg></div>
+                      <div class="lb"><b>22K fine chain</b><span>18.7 g &middot; 4,980</span></div></div>
+                    <div class="pcard"><div class="im"><svg viewBox="0 0 24 24"><path d="M12 4l3 5-3 11-3-11z"/><path d="M9 9h6"/></svg></div>
+                      <div class="lb"><b>22K drop earrings</b><span>9.4 g &middot; 2,640</span></div></div>
+                  </div>
+                </div>
+
+                <div class="msg m-me">The earrings. Would they work with a high neckline?</div>
+
+                <div class="msg m-ai">
+                  <span class="by"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Stylist</span>
+                  Yes — drops do more work with a high neckline than a chain does, because there is nothing at the collar competing with them.
+                  If you are wearing your hair up, they will read as the main piece and the bangle becomes the supporting one.
+                  Both are at Deira. Shall I ask Nadia to put them aside so you can see them beside the bangle you already own?
+                  <div class="quick"><span>Yes, ask her</span><span>Show me more like this</span><span>What would these cost together?</span><span>Talk to a person</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="g" style="gap:16px">
+            <div class="card">
+              <div class="hd"><h3>What the stylist may and may not do</h3></div>
+              <div class="pad">
+                <div class="ok"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  <div><b>Every price is read from the engine</b> at the approved rate. It quotes; it never calculates.</div></div>
+                <div class="ok"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  <div><b>It speaks only to a verified client</b> about her own file — signed in by one-time code, and it sees only what she may see.</div></div>
+                <div class="warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>It cannot reserve, discount or take payment.</b> "Ask Nadia to put them aside" creates a request for a person, not a hold on stock.</div></div>
+                <div class="warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>A person is always one tap away</b>, and the whole thread goes with the handover.</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>The same question, from a Private client</h3><span class="sp"></span><span class="chip c-coral">not sent</span></div>
+              <div class="pad">
+                <div class="inline-ai">
+                  <span class="av"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg></span>
+                  <div><span class="by">Stylist &middot; drafted for Nadia M.</span>
+                  <b>A. K. asked what to wear with the 22K bangle for the wedding on the 29th.</b>
+                  Suggested: the 22K necklace she asked about on 2 Nov, and the drop earrings. Both at Deira. Draft reply prepared in English and Arabic.</div>
+                </div>
+                <p class="note">Private and Royal clients never receive an automated message. The same reasoning runs, the same pieces come up, and the answer is handed to the person who knows her — with the wording ready, so the reply is hers and not a bot's.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CHANNELS ============ -->
+      <section class="screen" id="s-chan">
+        <div class="g g4" style="margin-bottom:16px">
+          <div class="card kpi"><small>Listed online</small><b class="num">312</b><div class="d muted">of 1,284 pieces</div></div>
+          <div class="card kpi"><small>On marketplaces</small><b class="num">86</b><div class="d muted">one channel live</div></div>
+          <div class="card kpi"><small>Tagged with RFID</small><b class="num">1,284</b><div class="d up">100% &middot; last count 2 days ago</div></div>
+          <div class="card kpi"><small>Tax-free claims</small><b class="num">14</b><div class="d muted">this month</div></div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Connections</h3><span class="sp"></span><span class="chip c-coral">none connected yet</span></div>
+            <div class="intg"><span class="ilogo">EC</span>
+              <div><b>Online shop</b><span>Catalogue, live gold price per piece, click and reserve. One piece, one listing &mdash; a serial cannot be in two baskets.</span></div>
+              <span class="chip c-grey">Standard in Odoo</span></div>
+            <div class="intg"><span class="ilogo">MP</span>
+              <div><b>Marketplaces</b><span>Per-channel listing and de-listing the moment a piece sells anywhere. Commission and settlement reconciled back to the piece.</span></div>
+              <span class="chip c-gold">Needs an account</span></div>
+            <div class="intg"><span class="ilogo">TF</span>
+              <div><b>Tax-free refunds</b><span>Tourist refund at the till: passport capture, form issued, refund tracked to settlement. Validated per country and operator.</span></div>
+              <span class="chip c-gold">Needs an account</span></div>
+            <div class="intg"><span class="ilogo">AML</span>
+              <div><b>AML / KYC screening</b><span>Identity, sanctions and PEP screening on a schedule, with the result dated on the client file.</span></div>
+              <span class="chip c-gold">Needs a provider</span></div>
+            <div class="intg"><span class="ilogo">RF</span>
+              <div><b>RFID readers</b><span>Tray and cabinet counts in seconds instead of hours. Tags are already on every piece.</span></div>
+              <span class="chip c-gold">Needs hardware</span></div>
+            <div class="intg"><span class="ilogo">PAY</span>
+              <div><b>Payment terminals</b><span>Card at the counter, reconciled to the sale, split payment supported.</span></div>
+              <span class="chip c-grey">Standard in Odoo</span></div>
+            <div class="intg"><span class="ilogo">RT</span>
+              <div><b>Gold rate feed</b><span>A market rate arrives as a draft. A person still approves it before anything is priced.</span></div>
+              <span class="chip c-gold">Provider not chosen</span></div>
+            <div class="intg"><span class="ilogo">EI</span>
+              <div><b>E-invoicing</b><span>ZATCA for Saudi, with the Gulf bilingual invoice layout.</span></div>
+              <span class="chip c-grey">Standard in Odoo</span></div>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Nothing here is connected. Each one is validated per country and per operator before it is switched on, and the ones marked standard are configuration on the Odoo underneath rather than something to build.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:16px">
+            <div class="card">
+              <div class="hd"><h3>Where one piece is</h3><span class="sp"></span><span class="tiny muted">NCK-0114</span></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">In stock</span><b>Deira &middot; cabinet 3</b></div>
+                <div class="amlrow"><span class="muted">Online shop</span><b>Listed &middot; 10,918.20</b></div>
+                <div class="amlrow"><span class="muted">Marketplace</span><b>Listed &middot; 11,464.11</b></div>
+                <div class="amlrow"><span class="muted">Reserved for</span><b>A. K. &middot; viewing Thu</b></div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>One serial, three places it can sell.</b> The moment it goes in any basket it comes off the other two. This is the hard part of selling unique pieces online, and it is why listing is per serial rather than per product.</div>
+                </div>
+                <p class="note">Marketplace price differs because the channel's commission is priced in. The metal underneath is the same approved rate.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>RFID count</h3><span class="sp"></span><span class="chip c-teal">2 days ago</span></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">Expected</span><b class="num">512 pieces</b></div>
+                <div class="amlrow"><span class="muted">Read</span><b class="num">511</b></div>
+                <div class="amlrow"><span class="muted">Missing</span><b class="num">1 &middot; RNG-0002</b></div>
+                <div class="amlrow"><span class="muted">Explained</span><b>Out on approval</b></div>
+                <p class="note" style="margin-top:10px">A full cabinet count took four minutes. The one piece not read was with a client, and the system already knew that &mdash; so it closes itself rather than becoming a variance.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ============ COUNTER / POS ============ -->
       <section class="screen" id="s-pos">
 
@@ -1162,6 +1336,8 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
     clients: ['Client 360','Sales Hub · Clients','New client'],
     crm:     ['Pipeline','Sales Hub · Opportunities','New opportunity'],
     out:     ['Outreach & upsell','Sales Hub · Follow-up','New campaign'],
+    styl:    ['Stylist','Sales Hub · Client conversations','Open thread'],
+    chan:    ['Channels','Inventory Hub · Where pieces sell','Connect'],
     pos:     ['Counter','Sales Hub · Till 2','Park sale'],
     inv:     ['Pieces','Inventory Hub · Stock book','Add piece'],
     ops:     ['Stores & transfers','Inventory Hub · Operations','New transfer'],
