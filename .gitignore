@@ -73,3 +73,9 @@ certs/
 *.log
 logs/
 .env.production.save
+
+# ── Mumtaz Jewel staging ──────────────────────────────────────────────
+# Rendered by deploy/jewel-staging/deploy.sh from odoo.conf.tmpl; holds the
+# staging Postgres and Odoo master passwords in plain text.
+deploy/jewel-staging/odoo.rendered.conf
+deploy/jewel-staging/.htpasswd*

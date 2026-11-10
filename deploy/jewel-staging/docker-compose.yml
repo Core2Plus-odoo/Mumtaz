@@ -1,0 +1,81 @@
+# Mumtaz Jewel staging/demo stack for jewel.mumtaz.digital.
+#
+# A SEPARATE compose project from the C2P CRM and from the repo-root
+# docker-compose.staging.yml: its own project name, its own network, its own
+# Postgres volume. It must never share a database, volume or env file with the
+# live CRM or any production tenant (docs/mumtaz-jewel/CLAUDE.md).
+#
+# Nothing here has been run on any server. Starting it on the VPS is an
+# APPROVAL gate (docs/mumtaz-jewel/CLAUDE_CODE_HANDOFF.md, section 3).
+#
+#   cd deploy/jewel-staging
+#   cp .env.example .env     # then set the two passwords
+#   docker compose up -d
+#
+# The repo-root compose files are deliberately untouched.
+name: mumtaz-jewel-staging
+
+services:
+  db:
+    # Pinned to 16 because that is what the Slice 0 suite was actually run
+    # against. The production CRM compose pins postgres:15-alpine; moving this
+    # to 15 means re-running scripts/jewel_ci.sh against 15 first.
+    image: postgres:16-alpine
+    container_name: jewel-staging-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - jewel_staging_db:/var/lib/postgresql/data
+    networks: [jewel_staging]
+    # Deliberately not published: only the odoo service on this network
+    # reaches Postgres, and it is a different cluster from the CRM's.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  odoo:
+    image: odoo:19
+    container_name: jewel-staging-odoo
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      USER: ${POSTGRES_USER}
+      PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      # Bound to localhost only, so the stack is reachable just through nginx.
+      # 8069 is the Odoo default and 8070 is the existing staging stack, so
+      # Jewel takes 8072 and 8073.
+      - "127.0.0.1:${JEWEL_HTTP_PORT}:8069"
+      - "127.0.0.1:${JEWEL_POLL_PORT}:8072"
+    volumes:
+      - jewel_staging_odoo:/var/lib/odoo
+      # The addons come from the branch checkout, read-only: a demo container
+      # must not be able to edit the working tree.
+      - ../../addons:/mnt/extra-addons:ro
+      - ./odoo.rendered.conf:/etc/odoo/odoo.conf:ro
+    networks: [jewel_staging]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8069/web/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+networks:
+  jewel_staging:
+    name: mumtaz-jewel-staging
+
+volumes:
+  jewel_staging_db:
+    name: mumtaz-jewel-staging-db
+  jewel_staging_odoo:
+    name: mumtaz-jewel-staging-filestore
