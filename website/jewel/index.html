@@ -167,6 +167,26 @@ tr:last-child td{border-bottom:0}
 footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);font-size:.88rem}
 .disclaimer{background:var(--coral-bg);border:1px solid var(--paper3);border-radius:12px;padding:14px 16px;font-size:.86rem;color:var(--ink2);margin-top:18px}
 
+/* screens gallery */
+.shots{display:grid;gap:22px}
+.shot{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.shot img{display:block;width:100%;height:auto;border-bottom:1px solid var(--paper3);background:var(--paper2)}
+.shot .cap{padding:15px 18px}
+.shot .cap b{display:block;font-size:.98rem;margin-bottom:3px}
+.shot .cap span{font-size:.89rem;color:var(--ink3)}
+.shots-2{grid-template-columns:1fr 1fr}
+@media (max-width:860px){.shots-2{grid-template-columns:1fr}}
+
+/* module list */
+.mod{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow)}
+.mod code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84rem;background:var(--paper2);border:1px solid var(--paper3);padding:2px 7px;border-radius:6px;color:var(--ink2);white-space:nowrap}
+.mod h3{margin-bottom:4px}
+.mod p{margin:0 0 8px;font-size:.93rem;color:var(--ink3)}
+.mod ul{margin:0;padding-left:18px;font-size:.9rem;color:var(--ink2)}
+.mod ul li{padding:1px 0}
+.mod .dep{font-size:.8rem;color:var(--ink4);margin-top:9px;display:block}
+@media (max-width:720px){.mod{grid-template-columns:1fr;gap:10px}.mod code{justify-self:start}}
+
 @media (max-width:560px){
   .nav{height:auto;padding:11px 0;gap:10px}
   .brand small{display:none}
@@ -193,7 +213,8 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
       </a>
       <div class="links">
         <a href="#clients">The client book</a>
-        <a href="#moments">Moments</a>
+        <a href="#screens">Screens</a>
+        <a href="#modules">Modules</a>
         <a href="#agents">AI teammates</a>
         <a href="#status">Where it is today</a>
       </div>
@@ -305,6 +326,87 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M3 21L21 3"/></svg></div>
         <h3>Who has looked <span class="tag built">Built</span></h3>
         <p>Private and Royal records reach only the named manager, the deputy and VIP managers — and every single view is written to a log.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The product</div>
+      <h2>Real screens, not mock-ups</h2>
+      <p class="muted">
+        Captured from a running Odoo 19 database with the demo data loaded.
+        Every client, piece and figure below is synthetic; the behaviour is
+        not.
+      </p>
+    </div>
+
+    <div class="shots">
+      <div class="shot">
+        <img src="site/img/vip-client.png" loading="lazy" width="2160" height="1290"
+             alt="A client record open on the Jewellery client tab, showing tier, discretion settings and taste, with a planned activity to prepare an anniversary.">
+        <div class="cap">
+          <b>The client file</b>
+          <span>Tier, relationship manager, discretion and taste on the client
+          record. On the right, the occasion calendar has prepared an
+          anniversary activity three weeks out — a draft for the relationship
+          manager, with "nothing is sent automatically" written into the note
+          itself.</span>
+        </div>
+      </div>
+
+      <div class="shot">
+        <img src="site/img/rate-form.png" loading="lazy" width="2160" height="1290"
+             alt="A gold rate record in the Approved state, showing Approved By DEMO Rate Checker while the chatter shows DEMO Rate Maker created it.">
+        <div class="cap">
+          <b>Maker-checker on the gold rate</b>
+          <span>The rate is <b>Approved</b>, approved by <b>DEMO Rate
+          Checker</b> — while the log on the right shows <b>DEMO Rate
+          Maker</b> entered it. Two different people, recorded on the record.
+          The seed data gets there through the real buttons, not by writing
+          the state.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="shots shots-2" style="margin-top:22px">
+      <div class="shot">
+        <img src="site/img/owner-cards.png" loading="lazy" width="2160" height="1290"
+             alt="The owner Command Centre, a kanban of decision cards grouped by kind.">
+        <div class="cap">
+          <b>Owner command centre</b>
+          <span>One screen of decisions, each with what happened, the
+          recommendation and the money involved.</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="site/img/pieces.png" loading="lazy" width="2160" height="1290"
+             alt="The Pieces list, showing serial-tracked jewellery pieces with karat, net weight, RFID tag and live price.">
+        <div class="cap">
+          <b>Pieces</b>
+          <span>Serial-tracked, with karat, net metal weight, RFID tag and the
+          live price computed from the approved rate.</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="site/img/oldgold.png" loading="lazy" width="2160" height="1290"
+             alt="An old-gold exchange record showing gross weight, karat, melt loss, the applied rate and the computed value.">
+        <div class="cap">
+          <b>Old-gold exchange</b>
+          <span>Melt loss and buy-back margin applied, valued at the approved
+          rate, with the rate used saved on the record.</span>
+        </div>
+      </div>
+      <div class="shot">
+        <img src="site/img/rates-list.png" loading="lazy" width="2160" height="1290"
+             alt="The gold rates list showing effective date, rate per gram, currency, source and state.">
+        <div class="cap">
+          <b>Rate history</b>
+          <span>Every rate kept with its state and source, so you can see what
+          a piece was priced at and when.</span>
+        </div>
       </div>
     </div>
   </div>
@@ -439,6 +541,85 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
         <h3>Old gold is computed <span class="tag built">Built</span></h3>
         <p>Melt loss and buy-back margin applied at the approved rate, the rate used saved on the record, and a second person above the limit you set. Nobody types the payout.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="modules">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">What gets installed</div>
+      <h2>Four modules, on standard Odoo 19</h2>
+      <p class="muted">
+        No fork and no Enterprise licence. They install on Odoo 19 Community
+        and extend the standard models rather than replacing them, so stock,
+        contacts and accounting stay where Odoo keeps them.
+      </p>
+    </div>
+    <div class="grid" style="gap:16px">
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div>
+          <h3>Jewellery core</h3>
+          <p>The rate, the engine, the pieces and old gold.</p>
+          <ul>
+            <li>Gold rate with maker-checker approval and a guard that cannot be written around</li>
+            <li>Pricing engine: karat or fineness, wastage, making charge, stones, VAT, dealer discount on making only</li>
+            <li>Pieces as serial-tracked stock lots, with weights, RFID tag and certificate</li>
+            <li>Old-gold exchange with melt loss, valuation and an approval threshold</li>
+          </ul>
+          <span class="dep">Extends <code>stock</code>, <code>sale_management</code>, <code>mail</code></span>
+        </div>
+        <code>mumtaz_jewellery</code>
+      </div>
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.4-7 10-7 10z"/></svg></div>
+        <div>
+          <h3>Clients &amp; VIP</h3>
+          <p>The client book, and the rules that keep it private.</p>
+          <ul>
+            <li>Tiers from Standard to Royal, relationship manager and deputy</li>
+            <li>Private and Royal records restricted by record rule, every view logged</li>
+            <li>Occasion calendar that prepares drafts, and pieces on approval with reminders</li>
+            <li>Explainable next-piece ranking — deterministic, with the reasons written out</li>
+          </ul>
+          <span class="dep">Extends <code>mumtaz_jewellery</code>, <code>res.partner</code></span>
+        </div>
+        <code>mumtaz_jewellery_vip</code>
+      </div>
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg></div>
+        <div>
+          <h3>Owner command centre</h3>
+          <p>The morning screen of decisions.</p>
+          <ul>
+            <li>Decision cards: rates to approve, exchanges waiting, pieces overdue back, stock value, slow stock</li>
+            <li>Each card opens the real record, under that person's own permissions</li>
+            <li>Cards about Private and Royal clients are visible only to VIP managers</li>
+          </ul>
+          <span class="dep">Extends <code>mumtaz_jewellery_vip</code></span>
+        </div>
+        <code>mumtaz_jewellery_owner</code>
+      </div>
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M4 11h16M9 7v12"/></svg></div>
+        <div>
+          <h3>Demo data</h3>
+          <p>What the screens above are showing.</p>
+          <ul>
+            <li>Synthetic clients across all four tiers, products, pieces, an exchange and an occasion</li>
+            <li>The gold rate is seeded through the real approval path, by two different demo users</li>
+            <li>Every record is prefixed DEMO, and installing twice changes nothing</li>
+          </ul>
+          <span class="dep">Never installed on a database holding real client data</span>
+        </div>
+        <code>mumtaz_jewellery_demo</code>
+      </div>
+
     </div>
   </div>
 </section>
