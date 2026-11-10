@@ -26,29 +26,29 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* Mumtaz brand tokens (brand/tokens.css) — gold primary, teal secondary,
    warm ivory ground. Inlined so this page serves from any document root. */
 :root{
-  --paper:#F5F3EF; --paper2:#EDEAE3; --paper3:#E0DDD6; --surface:#FFFFFF;
-  --ink:#0C1118; --ink2:#1E2A3A; --ink3:#6B7A90; --ink4:#9BAAB8;
-  --gold:#B8862A; --gold2:#D4A84C; --gold3:#F0CC78; --gold-bg:#FDF6E4;
-  --gold-border:#E8CC88; --gold-dark:#8E641A;
-  --teal:#0B7A64; --teal2:#0EA882; --teal3:#4DC4A8; --teal-bg:#E6F7F3;
-  --teal-border:#9FD9CC;
-  --coral:#C0402A; --coral-bg:#FCECEA;
-  --display:'Fraunces',Georgia,serif;
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  --gold:#3D56C4; --gold2:#5570DF; --gold3:#A9B8F5; --gold-bg:#EEF1FD;
+  --gold-border:#C8D2F7; --gold-dark:#2B3E96;
+  --teal:#0E7490; --teal2:#0EA5BE; --teal3:#67D3E8; --teal-bg:#E7F6FA;
+  --teal-border:#B3E2EE;
+  --coral:#B42318; --coral-bg:#FDECEA;
+  --display:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
   --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
-  --wrap:1120px; --r:14px;
-  --shadow:0 1px 2px rgba(12,17,24,.04),0 8px 24px rgba(12,17,24,.06);
+  --wrap:1120px; --r:10px;
+  --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
     --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
-    --gold-bg:#2A2010; --gold-border:#5C4518; --gold:#D4A84C; --gold2:#F0CC78;
-    --teal-bg:#0C2A24; --teal-border:#1B5146; --teal:#4DC4A8;
+    --gold-bg:#1A2140; --gold-border:#33406F; --gold:#8FA3F0; --gold2:#A9B8F5;
+    --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
     --coral-bg:#2E1512;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
   }
@@ -56,14 +56,14 @@
 :root[data-theme="dark"]{
   --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
   --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
-  --gold-bg:#2A2010; --gold-border:#5C4518; --gold:#D4A84C; --gold2:#F0CC78;
-  --teal-bg:#0C2A24; --teal-border:#1B5146; --teal:#4DC4A8; --coral-bg:#2E1512;
+  --gold-bg:#1A2140; --gold-border:#33406F; --gold:#8FA3F0; --gold2:#A9B8F5;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8; --coral-bg:#2E1512;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 16px}
-h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.15;margin:0}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.18;letter-spacing:-.015em;margin:0}
 h1{font-size:clamp(2.1rem,5vw,3.5rem);letter-spacing:-.02em}
 h2{font-size:clamp(1.6rem,3.4vw,2.35rem);letter-spacing:-.01em}
 h3{font-size:1.1rem;font-family:var(--body);font-weight:700}
@@ -76,7 +76,7 @@ a{color:var(--teal)}
 .head{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--paper3)}
 .nav{display:flex;align-items:center;gap:18px;height:66px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800}
-.mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(145deg,var(--gold2),var(--gold));color:#fff;font-family:var(--display);font-size:1rem;line-height:1}
+.mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--gold);color:#fff;font-family:var(--display);font-size:1rem;line-height:1}
 .brand small{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:700}
 .links{display:flex;gap:20px;margin-left:14px}
 .links a{color:var(--ink2);text-decoration:none;font-size:.93rem;font-weight:500}
@@ -213,6 +213,7 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
       </a>
       <div class="links">
         <a href="#clients">The client book</a>
+        <a href="modules/sales-hub/">Sales Hub</a>
         <a href="#interface">Interface</a>
         <a href="#screens">Engine</a>
         <a href="#modules">Modules</a>
@@ -693,7 +694,7 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
       <div class="mod">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.4-7 10-7 10z"/></svg></div>
         <div>
-          <h3>Clients &amp; VIP</h3>
+          <h3>Clients &amp; VIP &mdash; <a href="modules/sales-hub/">see the Sales Hub module &rarr;</a></h3>
           <p>The client book, and the rules that keep it private.</p>
           <ul>
             <li>Tiers from Standard to Royal, relationship manager and deputy</li>
