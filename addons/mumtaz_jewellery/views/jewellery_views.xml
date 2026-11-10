@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Gold rates -->
+    <record id="view_gold_rate_list" model="ir.ui.view">
+        <field name="name">jewellery.gold.rate.list</field>
+        <field name="model">jewellery.gold.rate</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="effective_at"/>
+                <field name="rate_per_gram"/>
+                <field name="currency_id"/>
+                <field name="source"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_gold_rate_form" model="ir.ui.view">
+        <field name="name">jewellery.gold.rate.form</field>
+        <field name="model">jewellery.gold.rate</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="rate_per_gram"/>
+                            <field name="currency_id"/>
+                            <field name="effective_at"/>
+                        </group>
+                        <group>
+                            <field name="source"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="approved_by_id"/>
+                            <field name="approved_at"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_gold_rate" model="ir.actions.act_window">
+        <field name="name">Gold Rates</field>
+        <field name="res_model">jewellery.gold.rate</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Pieces (stock.lot) -->
+    <record id="view_piece_list" model="ir.ui.view">
+        <field name="name">jewellery.piece.list</field>
+        <field name="model">stock.lot</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="product_id"/>
+                <field name="karat"/>
+                <field name="net_weight_g"/>
+                <field name="rfid_tag"/>
+                <field name="jewellery_price"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_piece_form" model="ir.ui.view">
+        <field name="name">jewellery.piece.form</field>
+        <field name="model">stock.lot</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group string="Piece">
+                            <field name="name"/>
+                            <field name="product_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="rfid_tag"/>
+                            <field name="certificate_ref"/>
+                        </group>
+                        <group string="Weights and metal">
+                            <field name="gross_weight_g"/>
+                            <field name="stone_weight_g"/>
+                            <field name="net_weight_g"/>
+                            <field name="karat"/>
+                        </group>
+                    </group>
+                    <group string="Pricing">
+                        <group>
+                            <field name="wastage_pct"/>
+                            <field name="making_type"/>
+                            <field name="making_value"/>
+                            <field name="stones_value"/>
+                        </group>
+                        <group>
+                            <field name="jewellery_price"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_piece" model="ir.actions.act_window">
+        <field name="name">Pieces</field>
+        <field name="res_model">stock.lot</field>
+        <field name="domain">[('product_id.is_jewellery', '=', True)]</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_piece_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_piece_form')})]"/>
+    </record>
+
+    <!-- Jewellery products -->
+    <record id="view_product_list" model="ir.ui.view">
+        <field name="name">jewellery.product.list</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="jewellery_karat"/>
+                <field name="jewellery_making_type"/>
+                <field name="jewellery_making_value"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_product_form" model="ir.ui.view">
+        <field name="name">jewellery.product.form</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="is_jewellery"/>
+                            <field name="tracking"/>
+                            <field name="categ_id"/>
+                        </group>
+                        <group string="Pricing defaults">
+                            <field name="jewellery_karat"/>
+                            <field name="jewellery_wastage_pct"/>
+                            <field name="jewellery_making_type"/>
+                            <field name="jewellery_making_value"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_jewellery_product" model="ir.actions.act_window">
+        <field name="name">Jewellery Products</field>
+        <field name="res_model">product.template</field>
+        <field name="domain">[('is_jewellery', '=', True)]</field>
+        <field name="context">{'default_is_jewellery': True, 'default_tracking': 'serial', 'default_is_storable': True}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_product_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_product_form')})]"/>
+    </record>
+
+    <!-- Old gold exchange -->
+    <record id="view_old_gold_list" model="ir.ui.view">
+        <field name="name">jewellery.old.gold.list</field>
+        <field name="model">jewellery.old.gold</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="gross_weight_g"/>
+                <field name="karat"/>
+                <field name="value"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_old_gold_form" model="ir.ui.view">
+        <field name="name">jewellery.old.gold.form</field>
+        <field name="model">jewellery.old.gold</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Value and confirm"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="btn-primary" invisible="state != 'to_approve'"/>
+                    <button name="action_issue_to_production" type="object"
+                            string="Issue to production" invisible="state != 'confirmed'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('issued', 'cancelled')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <h1><field name="name"/></h1>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="gross_weight_g" readonly="state != 'draft'"/>
+                            <field name="karat" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="melt_loss_pct" readonly="state != 'draft'"/>
+                            <field name="buyback_discount_pct" readonly="state != 'draft'"/>
+                            <field name="fine_weight_g"/>
+                            <field name="applied_rate_per_g"/>
+                            <field name="value"/>
+                            <field name="rate_id"/>
+                            <field name="approved_by_id"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_old_gold" model="ir.actions.act_window">
+        <field name="name">Old Gold Exchange</field>
+        <field name="res_model">jewellery.old.gold</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="menu_jewellery_root" name="Jewellery"
+              groups="group_jewellery_user" sequence="30"/>
+    <menuitem id="menu_gold_rate" name="Gold Rates" parent="menu_jewellery_root"
+              action="action_gold_rate" sequence="10"/>
+    <menuitem id="menu_piece" name="Pieces" parent="menu_jewellery_root"
+              action="action_piece" sequence="20"/>
+    <menuitem id="menu_jewellery_product" name="Products" parent="menu_jewellery_root"
+              action="action_jewellery_product" sequence="30"/>
+    <menuitem id="menu_old_gold" name="Old Gold Exchange" parent="menu_jewellery_root"
+              action="action_old_gold" sequence="40"/>
+</odoo>

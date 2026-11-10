@@ -1,0 +1,22 @@
+from odoo import fields, models
+
+KARATS = [
+    ('24', '24K'), ('22', '22K'), ('21', '21K'),
+    ('18', '18K'), ('14', '14K'), ('9', '9K'),
+]
+MAKING_TYPES = [
+    ('percent', 'Percent of metal value'),
+    ('per_gram', 'Amount per gram'),
+    ('fixed', 'Fixed amount'),
+]
+
+
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'
+
+    is_jewellery = fields.Boolean(string='Jewellery item')
+    jewellery_karat = fields.Selection(KARATS, string='Default karat')
+    jewellery_wastage_pct = fields.Float(string='Default wastage %')
+    jewellery_making_type = fields.Selection(
+        MAKING_TYPES, string='Default making type', default='percent')
+    jewellery_making_value = fields.Float(string='Default making value')

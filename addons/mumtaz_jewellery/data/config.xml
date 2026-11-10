@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Configuration defaults. Compliance values are settings, not code: a
+     person must confirm each before go-live. -->
+<odoo noupdate="1">
+    <!-- UAE standard VAT rate. CONFIRM before go-live; change per country. -->
+    <record id="param_vat_rate" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.vat_rate</field>
+        <field name="value">5</field>
+    </record>
+    <!-- Exchange value at or above which a second person must approve.
+         0 disables the check. Set by the owner. -->
+    <record id="param_exchange_threshold" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.exchange_approval_threshold</field>
+        <field name="value">0</field>
+    </record>
+    <!-- 1 lets one person enter and approve a rate. Keep 0 in production. -->
+    <record id="param_allow_self_approval" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.allow_self_approval</field>
+        <field name="value">0</field>
+    </record>
+</odoo>

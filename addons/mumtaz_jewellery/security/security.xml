@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_jewellery_user" model="res.groups">
+        <field name="name">Jewellery User</field>
+        <!-- Pieces are serial-tracked stock lots, so staff need inventory user rights. -->
+        <field name="implied_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
+    </record>
+    <record id="group_jewellery_manager" model="res.groups">
+        <field name="name">Jewellery Manager</field>
+        <field name="implied_ids" eval="[(4, ref('group_jewellery_user'))]"/>
+    </record>
+</odoo>

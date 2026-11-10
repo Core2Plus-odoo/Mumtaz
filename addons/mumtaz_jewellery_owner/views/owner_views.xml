@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_owner_card_kanban" model="ir.ui.view">
+        <field name="name">jewellery.owner.card.kanban</field>
+        <field name="model">jewellery.owner.card</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="kind" create="0" edit="0" group_create="0" quick_create="0">
+                <field name="title"/>
+                <field name="detail"/>
+                <field name="recommendation"/>
+                <field name="impact"/>
+                <field name="res_id"/>
+                <field name="restricted"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="fw-bold fs-5" t-out="record.title.value"/>
+                        <div class="text-muted mt-1" t-out="record.detail.value"/>
+                        <div class="mt-2"><span class="fw-semibold">Recommended: </span><t t-out="record.recommendation.value"/></div>
+                        <div class="mt-1 fw-semibold" t-if="record.impact.value" t-out="record.impact.value"/>
+                        <div class="mt-2 d-flex gap-2">
+                            <button name="action_open" type="object" class="btn btn-sm btn-primary" t-if="record.res_id.raw_value">Open</button>
+                            <button name="action_dismiss" type="object" class="btn btn-sm btn-secondary">Dismiss</button>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+    <record id="action_owner_cards" model="ir.actions.act_window">
+        <field name="name">Command Centre</field>
+        <field name="res_model">jewellery.owner.card</field>
+        <field name="view_mode">kanban</field>
+        <field name="domain">[('state', '=', 'open')]</field>
+    </record>
+    <record id="action_owner_refresh" model="ir.actions.server">
+        <field name="name">Refresh decisions</field>
+        <field name="model_id" ref="model_jewellery_owner_card"/>
+        <field name="state">code</field>
+        <field name="code">model.refresh()
+action = {'type': 'ir.actions.client', 'tag': 'soft_reload'}</field>
+    </record>
+    <menuitem id="menu_owner" name="Command Centre" parent="mumtaz_jewellery.menu_jewellery_root"
+              action="action_owner_cards" sequence="1" groups="mumtaz_jewellery.group_jewellery_manager"/>
+    <menuitem id="menu_owner_refresh" name="Refresh decisions" parent="mumtaz_jewellery.menu_jewellery_root"
+              action="action_owner_refresh" sequence="2" groups="mumtaz_jewellery.group_jewellery_manager"/>
+</odoo>
