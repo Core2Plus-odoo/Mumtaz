@@ -147,6 +147,41 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 .paybtn{border:1px solid var(--paper3);background:var(--surface);border-radius:10px;padding:11px;text-align:center;font-size:.84rem;font-weight:600}
 
+/* enterprise chrome */
+.util{display:flex;align-items:center;gap:10px;padding:0 24px;height:38px;background:var(--rail);color:#8E9CAC;font-size:.76rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.util .env{display:inline-flex;align-items:center;gap:6px;background:rgba(240,204,120,.12);color:var(--gold3);border:1px solid rgba(240,204,120,.26);padding:2px 9px;border-radius:999px;font-weight:700;font-size:.68rem;letter-spacing:.05em}
+.util a{color:#8E9CAC;text-decoration:none}
+.util a:hover{color:#fff}
+.store{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:3px 10px;color:#C9D2DC;font-weight:600;font-size:.76rem}
+.store svg{width:12px;height:12px;stroke:#8E9CAC;fill:none;stroke-width:2.4}
+.search{flex:1;max-width:430px;display:flex;align-items:center;gap:9px;background:var(--paper2);border:1px solid var(--paper3);border-radius:9px;padding:7px 12px;color:var(--ink3);font-size:.85rem}
+.search svg{width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2}
+.kbd{margin-left:auto;font-size:.68rem;font-weight:700;color:var(--ink4);background:var(--surface);border:1px solid var(--paper3);border-radius:5px;padding:1px 6px}
+.iconbtn{position:relative;width:34px;height:34px;border-radius:9px;border:1px solid var(--paper3);background:var(--surface);display:grid;place-items:center}
+.iconbtn svg{width:16px;height:16px;stroke:var(--ink2);fill:none;stroke-width:1.9;stroke-linecap:round}
+.iconbtn .bdg{position:absolute;top:-5px;right:-5px;background:var(--coral);color:#fff;font-size:.62rem;font-weight:700;border-radius:999px;padding:1px 5px;border:2px solid var(--surface)}
+.pagebar{display:flex;align-items:center;gap:12px;padding:14px 24px 0}
+.pagebar h2{font-family:var(--display);font-size:1.3rem;font-weight:600}
+.pagebar .bc{font-size:.76rem;color:var(--ink3)}
+.toolbar{display:flex;align-items:center;gap:8px;padding:11px 18px;border-bottom:1px solid var(--paper3);background:var(--paper2);border-radius:var(--r) var(--r) 0 0}
+.filt{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--paper3);border-radius:8px;padding:5px 10px;font-size:.78rem;font-weight:600;color:var(--ink2)}
+.filt.on{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold-dark)}
+.statusbar{display:flex;align-items:center;gap:16px;padding:8px 24px;background:var(--surface);border-top:1px solid var(--paper3);font-size:.73rem;color:var(--ink3)}
+.statusbar .dotg{width:7px;height:7px;border-radius:50%;background:var(--teal2);display:inline-block;margin-right:6px}
+.chart{display:flex;align-items:flex-end;gap:6px;height:118px;padding-top:8px}
+.chart i{flex:1;background:linear-gradient(180deg,var(--gold2),var(--gold));border-radius:3px 3px 0 0;display:block;position:relative}
+.chart i.alt{background:linear-gradient(180deg,var(--teal3),var(--teal))}
+.chartx{display:flex;gap:6px;margin-top:6px}
+.chartx span{flex:1;text-align:center;font-size:.66rem;color:var(--ink4)}
+.don{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--gold) 0 54%,var(--gold3) 54% 78%,var(--teal3) 78% 92%,var(--paper3) 92% 100%);display:grid;place-items:center;margin:0 auto}
+.don .hole{width:74px;height:74px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;line-height:1.15}
+.don .hole b{font-family:var(--display);font-size:1.15rem;font-weight:600}
+.don .hole small{font-size:.63rem;color:var(--ink3)}
+.leg{display:flex;flex-direction:column;gap:7px;font-size:.8rem}
+.leg div{display:flex;align-items:center;gap:8px}
+.leg i{width:9px;height:9px;border-radius:2px;display:block}
+@media (max-width:900px){.util{display:none}.pagebar{padding:12px 16px 0}}
+
 /* counter: client context */
 .cstrip{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:14px 18px;background:
   linear-gradient(100deg,var(--ink) 0%,var(--rail2) 58%,#1E2A3A 100%);color:#fff;border-radius:var(--r);box-shadow:var(--shadow)}
@@ -211,6 +246,19 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
   <a href="../index.html">Back to Mumtaz Jewel</a>
 </div>
 
+<div class="util">
+  <span class="env">STAGING</span>
+  <span>Mumtaz Jewel</span>
+  <span style="color:#3F4D5E">/</span>
+  <span>Al Noor Jewellery</span>
+  <span class="sp" style="flex:1"></span>
+  <span>Engine: Odoo 19 Community</span>
+  <span style="color:#3F4D5E">·</span>
+  <span>Rate approved 09:12 by R. Haddad</span>
+  <span style="color:#3F4D5E">·</span>
+  <a href="../index.html">Exit prototype</a>
+</div>
+
 <div class="shell">
   <nav class="rail">
     <div class="brandrow">
@@ -218,8 +266,14 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
       <span><b>Mumtaz Jewel</b><small>Al Noor · Deira</small></span>
     </div>
 
+    <div class="railsec">Overview</div>
+    <button class="navb on" data-s="dash">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Today
+    </button>
+
     <div class="railsec">Front of house</div>
-    <button class="navb on" data-s="clients">
+    <button class="navb" data-s="clients">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg>
       Clients <span class="pill">3</span>
     </button>
@@ -229,6 +283,10 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
     </button>
 
     <div class="railsec">Back of house</div>
+    <button class="navb" data-s="inv">
+      <svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>
+      Pieces
+    </button>
     <button class="navb" data-s="ops">
       <svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M12 12l9-4M12 12v9M12 12L3 8"/></svg>
       Operations
@@ -246,20 +304,130 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
   <div class="main">
     <div class="top">
-      <div class="crumb"><b id="t-title">Clients</b><span id="t-sub">Client 360</span></div>
+      <div class="store">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Deira
+        <svg viewBox="0 0 24 24" style="width:10px"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Search clients, pieces, tags, orders…
+        <span class="kbd">⌘K</span>
+      </div>
       <div class="sp"></div>
       <div class="rate">
         <span class="dot"></span>
         <span><small>24K approved</small><b class="num">245.80 <span class="muted" style="font-weight:400">/g</span></b></span>
       </div>
-      <button class="btn b-ghost">Search</button>
-      <span class="who">NM</span>
+      <button class="iconbtn" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span class="bdg">4</span>
+      </button>
+      <button class="iconbtn" title="Help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 113.5 2.3c-.6.3-1 .9-1 1.7M12 17h.01"/></svg></button>
+      <span class="who" title="Nadia M. · Relationship manager">NM</span>
+    </div>
+
+    <div class="pagebar">
+      <div>
+        <div class="bc" id="t-bc">Front of house · Clients</div>
+        <h2 id="t-title">Client 360</h2>
+      </div>
+      <div class="sp" style="flex:1"></div>
+      <button class="btn b-ghost">Export</button>
+      <button class="btn b-gold" id="t-cta">New client</button>
     </div>
 
     <div class="canvas">
 
+<!-- ============ TODAY / OWNER ============ -->
+      <section class="screen on" id="s-dash">
+        <div class="g g4" style="margin-bottom:16px">
+          <div class="card kpi"><small>Sold today</small><b class="num">148,920</b><div class="d up">+18% on last Tuesday</div></div>
+          <div class="card kpi"><small>Metal moved</small><b class="num">612 g</b><div class="d muted">out 684 g · in 72 g</div></div>
+          <div class="card kpi"><small>Stock value</small><b class="num">2.91 M</b><div class="d up">+1.2% on the rate</div></div>
+          <div class="card kpi"><small>Needs you</small><b class="num">4</b><div class="d down">1 overdue</div></div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Sales this week</h3><span class="sp"></span>
+              <span class="filt on">7 days</span><span class="filt">30 days</span><span class="filt">Quarter</span></div>
+            <div class="pad">
+              <div class="chart">
+                <i style="height:48%"></i><i style="height:62%"></i><i style="height:41%"></i>
+                <i style="height:74%"></i><i style="height:56%"></i><i class="alt" style="height:92%"></i><i style="height:38%"></i>
+              </div>
+              <div class="chartx"><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span><span>Mon</span><span>Tue</span></div>
+              <p class="note" style="margin-top:12px">Monday was the wedding season opening. Teal marks the day the 22K necklace line sold out at Deira.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="hd"><h3>Where the metal sits</h3></div>
+            <div class="pad" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center">
+              <div class="don"><div class="hole"><b class="num">11.84</b><small>kg fine</small></div></div>
+              <div class="leg">
+                <div><i style="background:var(--gold)"></i> Deira · 4.14 kg</div>
+                <div><i style="background:var(--gold3)"></i> Marina · 3.93 kg</div>
+                <div><i style="background:var(--teal3)"></i> Sharjah · 3.64 kg</div>
+                <div><i style="background:var(--paper3)"></i> In transit · 0.13 kg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="hd"><h3>Decisions waiting</h3><span class="sp"></span><span class="chip c-coral">1 overdue</span></div>
+          <table>
+            <thead><tr><th>What</th><th>Why it matters</th><th>Worth</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><b>Approve gold rate 246.40/g</b><div class="tiny muted">entered 08:51 by R. Haddad</div></td>
+                  <td class="tiny muted">Prices stay on this morning's rate until a different manager approves it</td>
+                  <td class="num">—</td><td><button class="btn b-gold" style="padding:5px 12px;font-size:.78rem">Review</button></td></tr>
+              <tr><td><b>Old-gold exchange OGX/00042</b><div class="tiny muted">taken in at Marina, over the threshold</div></td>
+                  <td class="tiny muted">Needs a second person before the credit is given</td>
+                  <td class="num">8,410</td><td><button class="btn b-gold" style="padding:5px 12px;font-size:.78rem">Approve</button></td></tr>
+              <tr><td><b>MEMO/00017 overdue</b><div class="tiny muted">2 pieces with a Private client since 28 Oct</div></td>
+                  <td class="tiny muted">Insured value is on your book until it comes back</td>
+                  <td class="num">31,200</td><td><button class="btn b-ghost" style="padding:5px 12px;font-size:.78rem">Open</button></td></tr>
+              <tr><td><b>Marina reconciliation open</b><div class="tiny muted">−2.4 g unexplained</div></td>
+                  <td class="tiny muted">Held open until someone accounts for it</td>
+                  <td class="num">590</td><td><button class="btn b-ghost" style="padding:5px 12px;font-size:.78rem">Open</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ PIECES / INVENTORY ============ -->
+      <section class="screen" id="s-inv">
+        <div class="card">
+          <div class="toolbar">
+            <span class="filt on">All stores</span>
+            <span class="filt">22K</span>
+            <span class="filt">On approval</span>
+            <span class="filt">Unsold 90+ days</span>
+            <span class="sp" style="flex:1"></span>
+            <span class="tiny muted">1,284 pieces · 11.84 kg fine · priced at 245.80/g</span>
+          </div>
+          <table>
+            <thead><tr><th>Tag</th><th>Piece</th><th>Karat</th><th>Net</th><th>Store</th><th>Age</th><th>Price</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="num">BNG-0001</td><td><b>Bangle</b><div class="tiny muted">cert 55121</div></td><td>22K</td><td class="num">24.500 g</td><td>Deira</td><td class="tiny muted">12 d</td><td class="num">6,491.74</td><td><span class="chip c-teal">In stock</span></td></tr>
+              <tr><td class="num">NCK-0114</td><td><b>Necklace</b><div class="tiny muted">asked for by A. K.</div></td><td>22K</td><td class="num">41.200 g</td><td>Deira</td><td class="tiny muted">31 d</td><td class="num">10,918.20</td><td><span class="chip c-gold">Reserved</span></td></tr>
+              <tr><td class="num">RNG-0002</td><td><b>Ring with stones</b><div class="tiny muted">cert 55122</div></td><td>18K</td><td class="num">6.300 g</td><td>Marina</td><td class="tiny muted">8 d</td><td class="num">4,102.55</td><td><span class="chip c-gold">On approval</span></td></tr>
+              <tr><td class="num">CHN-0002</td><td><b>Chain</b></td><td>21K</td><td class="num">42.100 g</td><td>Sharjah</td><td class="tiny muted">114 d</td><td class="num">11,236.40</td><td><span class="chip c-coral">Slow</span></td></tr>
+              <tr><td class="num">PND-0031</td><td><b>Pendant</b></td><td>21K</td><td class="num">9.400 g</td><td>Marina</td><td class="tiny muted">46 d</td><td class="num">2,508.90</td><td><span class="chip c-teal">In stock</span></td></tr>
+              <tr><td class="num">BNG-0002</td><td><b>Bangle</b></td><td>22K</td><td class="num">31.200 g</td><td>In transit</td><td class="tiny muted">3 d</td><td class="num">8,266.08</td><td><span class="chip c-grey">Transfer</span></td></tr>
+            </tbody>
+          </table>
+          <div class="pad" style="border-top:1px solid var(--paper3)">
+            <p class="note" style="margin:0">Every price on this list is computed live from the approved rate — change the rate and the whole book reprices. The slow row is 114 days old: the Command Centre raises those for a markdown, a transfer or a remake.</p>
+          </div>
+        </div>
+      </section>
+
       <!-- ============ CLIENT 360 ============ -->
-      <section class="screen on" id="s-clients">
+      <section class="screen" id="s-clients">
         <div class="card" style="margin-bottom:16px">
           <div class="hero360">
             <div class="ava">AK</div>
@@ -602,16 +770,27 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
       </section>
 
     </div>
+
+    <div class="statusbar">
+      <span><span class="dotg"></span>Connected · last sync 12 s ago</span>
+      <span>Store: Deira · till 2</span>
+      <span>Shift open 09:00 · Nadia M.</span>
+      <span class="sp" style="flex:1"></span>
+      <span>Rate snapshot locked until 18:00</span>
+      <span>v0.4.0-preview</span>
+    </div>
   </div>
 </div>
 
 <script>
 (function(){
   var titles = {
-    clients: ['Clients','Client 360'],
-    pos:     ['Counter','Sell, exchange, take payment'],
-    ops:     ['Operations','Stores, stock and the daily reconciliation'],
-    agents:  ['AI layer','Agents, approvals and the audit trail']
+    dash:    ['Today','Owner · Overview','Refresh'],
+    clients: ['Client 360','Front of house · Clients','New client'],
+    pos:     ['Counter','Front of house · Till 2','Park sale'],
+    inv:     ['Pieces','Back of house · Inventory','Add piece'],
+    ops:     ['Operations','Back of house · Stores and stock','New transfer'],
+    agents:  ['AI layer','Back of house · Agents','Agent settings']
   };
   var btns = document.querySelectorAll('.navb');
   btns.forEach(function(b){
@@ -622,7 +801,8 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
         sc.classList.toggle('on', sc.id === 's-' + s);
       });
       document.getElementById('t-title').textContent = titles[s][0];
-      document.getElementById('t-sub').textContent = titles[s][1];
+      document.getElementById('t-bc').textContent = titles[s][1];
+      document.getElementById('t-cta').textContent = titles[s][2];
       document.querySelector('.canvas').scrollTop = 0;
       try { location.hash = s; } catch(e) {}
     });
