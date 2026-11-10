@@ -70,6 +70,10 @@ if [ -f "$HERE/.env" ]; then
 fi
 
 REQUIRED_VARS="POSTGRES_USER POSTGRES_PASSWORD ADMIN_PASSWORD JEWEL_BRANCH"
+# ADMIN_PASSWORD guards the database manager. It does NOT set the admin
+# user's login, so a fresh database would accept admin/admin until this is
+# set. On a host reachable from the internet that is not acceptable.
+[ "$DO_INSTALL" = "1" ] && REQUIRED_VARS="$REQUIRED_VARS DEMO_LOGIN_PASSWORD"
 [ "$SITE_ONLY" = "1" ] && REQUIRED_VARS="JEWEL_BRANCH"
 for required in $REQUIRED_VARS; do
   if [ -z "${!required:-}" ]; then
@@ -176,6 +180,38 @@ if [ "$DO_INSTALL" = "1" ]; then
   compose run --rm --no-deps odoo odoo \
     -c /etc/odoo/odoo.conf -d "$DEMO_DB" -i "$MODULES" \
     --without-demo=True --no-http --stop-after-init
+fi
+
+if [ "$DO_INSTALL" = "1" ]; then
+  info "Setting the admin user's login password on '$DEMO_DB'"
+  # Look the user up by login rather than by xmlid, so this does not depend on
+  # an internal name. Require the sentinel in the output: odoo shell can exit 0
+  # even when the snippet raised, and a password we only assumed was set is
+  # worse than one we know failed.
+  set_pw_out="$(printf '%s\n' \
+      "import os" \
+      "u = env['res.users'].search([('login', '=', 'admin')], limit=1)" \
+      "assert u, 'no user with login admin'" \
+      "u.write({'password': os.environ['DEMO_LOGIN_PASSWORD']})" \
+      "env.cr.commit()" \
+      "print('JEWEL_PW_SET_OK')" \
+    | compose run --rm --no-deps -e DEMO_LOGIN_PASSWORD="$DEMO_LOGIN_PASSWORD" \
+        odoo odoo shell -c /etc/odoo/odoo.conf -d "$DEMO_DB" --no-http 2>&1 || true)"
+
+  if printf '%s' "$set_pw_out" | grep -q JEWEL_PW_SET_OK; then
+    ok "admin login password set from DEMO_LOGIN_PASSWORD"
+  else
+    red "FAILED to set the admin login password."
+    red "The database may still accept admin/admin. Do NOT expose it until"
+    red "this is fixed. Last output follows:"
+    printf '%s\n' "$set_pw_out" | tail -15 >&2
+    red "To fix by hand:"
+    red "  docker compose -p $PROJECT run --rm --no-deps odoo \\"
+    red "    odoo shell -c /etc/odoo/odoo.conf -d $DEMO_DB --no-http"
+    red "  >>> u = env['res.users'].search([('login','=','admin')], limit=1)"
+    red "  >>> u.write({'password': '<your password>'}); env.cr.commit()"
+    exit 1
+  fi
 fi
 
 if [ "$DO_SEED" = "1" ]; then
