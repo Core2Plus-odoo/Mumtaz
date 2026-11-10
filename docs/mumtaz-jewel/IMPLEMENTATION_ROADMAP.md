@@ -42,7 +42,8 @@ The blueprint is hybrid (Odoo plus independent services). For a small team I pro
 
 | Risk | Mitigation |
 | --- | --- |
-| Offline POS is hard (double sales of one piece, rate staleness) | Spike first; offline price uses a locked rate snapshot with a time limit; conflicts go to a visible queue |
+| Offline POS is hard (double sales of one piece, rate staleness) | Reduced: `POS_NATIVE_AUDIT.md` shows the offline mechanism is standard in Community, so the risk narrows to the rate snapshot and the double-sold serial. Spike those two; offline price uses a locked rate snapshot with a time limit; conflicts go to a visible queue |
+| A connected scale at the counter may not be available in Community | `iot_base` ships and `product.template.to_weight` exists, but `pos_iot` is **not** among the Community `pos_*` modules. Weigh something on a real scale before promising it to a jeweller |
 | Gulf Arabic voice accuracy on jewellery terms | Test set of real utterances validated by native-speaker jewellers before any client exposure |
 | Voice and chat leaking private data | Identity check before account facts; restricted clients capped; every answer's numbers come from the engine |
 | Recording and privacy law | Consent notices and retention as configuration; to be confirmed by counsel (UAE and each country) |
@@ -92,7 +93,7 @@ decisions D1 to D8.
 ### Slice 2: Counter, offline and old gold
 | Item | Detail |
 | --- | --- |
-| Features | **Week-one offline spike** on Odoo 19 POS. Tag scan, price from locked rate snapshot with expiry, offline sale queue with idempotent sync and a conflict queue, old-gold intake and credit at the counter, split payment and deposit, discount limits by role, shift close, bilingual receipts and tags |
+| Features | **Week-one offline spike** on Odoo 19 POS — narrowed by `POS_NATIVE_AUDIT.md`, which found the offline mechanism (service worker, IndexedDB, connectivity detection, sync) already standard in Community, along with serial-per-line, shift close with cash variance, and manager-only price changes. The spike now asks the three questions that are actually ours: which rate an offline sale prices against and when that snapshot expires; what happens when the same serial sells on two offline terminals; and whether the engine's price pushes onto a POS line and survives a sync. Tag scan, price from locked rate snapshot with expiry, offline sale queue with idempotent sync and a conflict queue, old-gold intake and credit at the counter, split payment and deposit, discount limits by role, shift close, bilingual receipts and tags |
 | Database | POS line extension, `jewellery.pos.sync.conflict`, `jewellery.pos.shift.report` |
 | Odoo | Install and extend `point_of_sale`; service-worker behaviour verified |
 | Microservices | None |
