@@ -1,0 +1,133 @@
+# Mumtaz Jewel: feature gap analysis
+
+The register `docs/mumtaz-jewel/CLAUDE.md` requires every change to update.
+One row per capability: what it is, whether standard Odoo covers it, what
+state it is in, and who has to decide what next.
+
+Sources, all in this folder: `POS_NATIVE_AUDIT.md` (what `point_of_sale`
+already does), `FUNCTIONAL_REVIEW.md` (what the three addons do and where
+they fall short), `ARCHITECTURE_REVIEW.md` (standard-first options and the
+Community module availability). Module availability was read from the Odoo
+19.0 Community source, not recalled.
+
+**Status key** — `Built` verified by tests · `Partial` works with a named
+limitation · `Standard` ships with Odoo, install and configure · `Planned`
+not started · `Gap` needed and nothing covers it · `Decision` waiting on the
+owner.
+
+## Pricing and the rate
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Gold rate, two-person approval | No | **Built** | Guarded in `create`/`write`, sudo included |
+| Pricing engine (karat, wastage, making, stones, VAT) | No | **Built** | Pure library, 19 unit tests |
+| Price per gram / tola / ounce | No | **Built** | |
+| Dealer discount on making only | No | **Built** | |
+| No price without an approved rate | No | **Built** | |
+| Price carried into quote, order, invoice | Partly (`sale`) | **Planned** | Slice 1 |
+| Rate feed adapter | No | **Planned** | Slice 1, provider not chosen |
+| Piece cost basis, real margin | Partly (`stock`) | **Planned** | Slice 1 |
+
+## Pieces and inventory
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Serial-tracked pieces, weights, karat | `stock` extended | **Built** | |
+| RFID tag, certificate reference | No | **Built** | Tag uniqueness enforced per company |
+| Live price on a piece | No | **Built** | |
+| Multi-warehouse / per-store stock | **`stock`** | **Standard** | Configure, do not build |
+| Inter-store transfers | **`stock`** | **Standard** | Two-sided receipt is configuration |
+| Stock count by barcode | **`stock`**, `barcodes` | **Standard** | |
+| Daily reconciliation in fine grams | No | **Gap** | Slice 3. Odoo reconciles value and quantity, not grams |
+
+## Counter
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Offline operation | **`point_of_sale`** | **Standard** | Service worker, IndexedDB, sync. Not a build |
+| Serial number per sold line | **`point_of_sale`** | **Standard** | `pos.pack.operation.lot` |
+| Shift close with cash variance | **`point_of_sale`** | **Standard** | |
+| Price changes restricted to managers | **`point_of_sale`** | **Standard** | `restrict_price_control` |
+| Barcode / tag scan | **`barcodes`** | **Standard** | |
+| Who served | **`pos_hr`** | **Standard** | |
+| Price a POS line from the approved rate | No | **Gap** | Slice 2. Must be server-side, not a manual price |
+| Rate snapshot and expiry in an offline session | No | **Gap** | Slice 2. The real offline risk |
+| Same serial sold on two offline tills | No | **Gap** | Slice 2 |
+| Old gold at the till | No | **Gap** | Slice 2 |
+| Weight and making breakdown on the receipt | No | **Gap** | Slice 2 |
+| Connected scale | **Enterprise** | **Decision** | `iot`/`pos_iot` are not in Community. Weigh on real hardware before promising it |
+
+## Clients
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Tiers, relationship manager, deputy | `res.partner` extended | **Built** | |
+| Private / Royal record restriction | `ir.rule` | **Built** | |
+| Access log on a restricted client | No | **Partial** | **Only `web_read` logs.** A list view, `search_read`, an export or a report writes nothing. See finding 1 |
+| Preferences, usual spend, taste notes | `res.partner` extended | **Built** | |
+| Occasion calendar with prepared drafts | No | **Built** | |
+| Pieces on approval, reminders | No | **Built** | |
+| Pieces on approval move stock | `stock` | **Gap** | State only today, so stock value counts metal that is with a client. See finding 2 |
+| Explainable next-piece ranking | No | **Built** | Deterministic, reasons stored |
+| Tray: share, viewing request, reserve | **`crm` + `sale`** | **Planned** | Slice 2B. **Mostly standard** — build the token link and the ranking only |
+| Loyalty, wishlist, campaigns | **`loyalty`** | **Standard** | Slice 8 |
+| Touchpoints across channels | `mail`, `sms` | **Partial** | Email and SMS standard; WhatsApp is not |
+
+## Owner and operations
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Decision cards | No | **Built** | |
+| Cards scoped per company | No | **Gap** | No `company_id`; cards cross companies. See finding 3 |
+| Consolidated multi-store view | Partly | **Planned** | Slice 3 |
+| Owner summary by WhatsApp | **Enterprise** | **Decision** | `whatsapp` is not in Community — Meta Cloud API integration, custom |
+
+## Finance and compliance
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| VAT | **`l10n_ae`** | **Standard** | Install early; painful to retrofit |
+| Arabic on invoices and credit notes | **`l10n_gcc_invoice`** | **Standard** | **Do not build a bilingual layout** |
+| ZATCA e-invoicing (Saudi) | **`l10n_sa_edi`** | **Standard** | UBL 2.1, certificates, clearance — in Community |
+| Old-gold exchange with threshold approval | No | **Built** | Guard covers state, approver and valuation |
+| AML / KYC status, screening, risk band | No | **Gap** | Slice 11. No standard equivalent |
+| Cash threshold per client per year | No | **Gap** | Shown in the prototype at the till |
+| Metal journals | Partly (`account`) | **Planned** | Slice 11 |
+
+## AI and channels
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Agent gateway, autonomy levels, audit | No | **Planned** | Slice 5 |
+| Voice (speech in, speech out) | No | **Planned** | Slice 5/7. A demo clip exists; no live stack |
+| WhatsApp | **Enterprise** | **Decision** | Custom against Meta Cloud API |
+| Client app | No | **Planned** | Slice 6 |
+
+## Platform
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| Odoo 19 Community only | — | **Built** | No Enterprise dependency anywhere |
+| Studio | **Enterprise** | **Decision** | `web_studio` is not in Community. The ladder is config → views and `base_automation` → custom |
+| Front end | — | **Decision** | OWL inside Odoo keeps the record rules; a separate app re-proves them on an API. See `ARCHITECTURE_REVIEW.md` |
+| Repairs | **`repair`** | **Standard** | Slice 10 |
+| Workshop / custom orders | **`mrp`** | **Standard** | Slice 10 |
+| Multi-company | `base` | **Partial** | New models must carry `company_id` from the start |
+
+## Open findings, by the order I would fix them
+
+| # | Finding | Severity | Why this order |
+| --- | --- | --- | --- |
+| 3 | Owner cards have no `company_id` | Medium | Smallest change, and it is a leak shape. Do before a second company exists |
+| 2 | Pieces on approval do not move stock | Medium | Falls out of Slice 1; until then show the on-approval value separately so stock is not read as free and clear |
+| 1 | Access log covers `web_read` only | Medium | Needs a decision on cost: logging every row of a 200-client list is not free |
+| 4 | Dead `if False` in `offer.py` | Trivial | **Closed** |
+
+## Waiting on the owner
+
+1. Fix finding 3 now, or wait for a multi-company need?
+2. Widen the access log, and if so, log rows or log queries?
+3. Front end: OWL inside Odoo, or a separate app?
+4. Does `deploy.sh --install` set the Odoo admin password? It is the default on a fresh database today.
+5. Should the landing page move to the new indigo, or stay on Mumtaz brand gold?
+6. Who weighs something on a real scale before a connected scale is promised?

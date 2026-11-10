@@ -37,7 +37,6 @@ class OfferSuggestion(models.Model):
 
     @api.model
     def generate_for(self, partner):
-        partner = partner.sudo() if False else partner
         in_stock = self.env['stock.quant'].sudo().search([
             ('location_id.usage', '=', 'internal'), ('quantity', '>', 0), ('lot_id', '!=', False),
             ('lot_id.product_id.product_tmpl_id.is_jewellery', '=', True)]).mapped('lot_id')
