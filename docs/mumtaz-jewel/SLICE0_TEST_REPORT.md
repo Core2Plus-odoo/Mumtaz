@@ -13,16 +13,16 @@ database name it did not generate, and never calls `deploy/update.sh`.
 | 0 | Pure-Python engine tests (no database) | **19 passed, 0 failed** |
 | 1 | Fresh database `jewel_ci_accept` created | OK |
 | 2 | Install `mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner` | OK, no ERROR or CRITICAL in the log |
-| 3 | `TransactionCase` suite | **41 passed, 0 failed, 0 errors** |
+| 3 | `TransactionCase` suite | **54 passed, 0 failed, 0 errors** |
 | 4 | Seed `mumtaz_jewellery_demo` (synthetic DEMO data) | OK |
 
 Odoo's own summary line, verbatim:
 
 ```
-odoo.tests.result: 0 failed, 0 error(s) of 41 tests when loading database 'jewel_ci_guard'
+odoo.tests.result: 0 failed, 0 error(s) of 54 tests when loading database 'jewel_ci_oldgold2'
 ```
 
-Total: **60 tests, 0 failures, 0 errors.**
+Total: **73 tests, 0 failures, 0 errors.**
 
 ## Environment the numbers come from
 
@@ -37,13 +37,14 @@ Total: **60 tests, 0 failures, 0 errors.**
 Not yet verified anywhere: Postgres 15 (production compose pins
 `postgres:15-alpine`), and any browser or tour test.
 
-## The 41 TransactionCase tests
+## The 54 TransactionCase tests
 
 | Class | Tests | Covers |
 | --- | --- | --- |
 | `TestGoldRateApproval` | 15 | same-user refusal, non-manager refusal, approved-rate-only, two managers succeed, terminal states, the `allow_self_approval` escape hatch |
 | `TestRateStateGuard` | 11 | the state guard described below: the ORM bypass is refused, for staff, managers and sudo alike, while draft rates stay editable and the buttons still work |
 | `TestOldGoldExchange` | 5 | valuation from the approved rate, rate snapshot, threshold maker-checker, issued records cannot be cancelled, sequence |
+| `TestOldGoldStateGuard` | 13 | the same guard on old gold: the approver cannot be skipped, a draft cannot jump to `confirmed` unvalued, the payout cannot be written by hand, sudo refused, every button still works |
 | `TestPiece` | 7 | net weight, stone-weight and RFID constraints, breakdown equals the engine, dealer discount never touches metal, no price without an approved rate |
 | `TestVipManagerCannotApproveRates` | 3 | the fifth user type: a VIP manager is not a jewellery manager |
 
@@ -69,7 +70,7 @@ User, two distinct Jewellery Managers (maker and checker), and a VIP Manager.
    `approved`, `approved_by_id` is B, `approved_at` set, `create_uid` differs
    from `approved_by_id`, and `get_current` then returns that rate. Confirmed.
 
-## Fixed during Slice 0: the maker-checker bypass
+## Fixed during Slice 0: the maker-checker bypasses
 
 The gap flagged in the handoff was **verified real** by this suite and then,
 on the owner's instruction, **fixed**:
@@ -99,14 +100,37 @@ correct a mistyped figure, which `test_the_other_fields_of_a_draft_are_still_edi
 covers. `TestRateStateGuard` has the 11 tests, including that managers and
 `sudo` are refused too, and that the buttons still work through the guard.
 
-### Still open: the same shape of hole on old gold
+### The same guard on old gold
 
-`jewellery.old.gold.state` is writable the same way — the ACL grants the user
-group write, and `action_approve` is the only thing enforcing maker-checker, so
-a user could in principle write `state` to `confirmed` and skip the second
-person above the threshold. That was outside the change the owner approved, so
-nothing was altered and no test asserts a refusal there yet. The remedy is the
-same guard; it needs the same go-ahead.
+`jewellery.old.gold` had the hole in the same shape, and the owner then asked
+for it closed too. Two ways it could be abused, both now refused:
+
+- writing `state` to `confirmed` on a record sitting in `to_approve` skipped
+  the second person above the approval threshold;
+- writing `state` to `confirmed` on a *draft* skipped `action_confirm`
+  altogether, so the intake was never valued — it would have been confirmed
+  with `value` 0.00 and no rate snapshot. This is the worse of the two, and
+  `test_a_draft_cannot_be_written_straight_to_confirmed` covers it.
+
+`create` refuses any state but `draft` and refuses a preset `approved_by_id`;
+`write` refuses `state` and `approved_by_id` outside the `action_*` methods,
+for `sudo` as well; and `state`, `approved_by_id`, `rate_id`,
+`applied_rate_per_g` and `value` are `copy=False`, so a duplicate is a fresh
+draft rather than one carrying someone else's approval and a stale rate.
+All four buttons (confirm, approve, issue, cancel) are covered as still
+working, and a draft intake stays editable so a mistyped weight can be fixed.
+
+The valuation fields are guarded with them. On the gold rate the guard covers
+every field the approve action sets, and on old gold `action_confirm` sets
+`rate_id`, `applied_rate_per_g` and `value` as well, so leaving those writable
+would have been the same hole in the shape that matters most: a Jewellery User
+overwriting the payout figure on a confirmed intake. They are now written only
+by `_price_now`, from the approved rate through the pricing engine, which is
+what "prices come only from the approved gold rate and the pricing engine"
+requires. `test_the_payout_cannot_be_written_by_hand` and
+`test_a_draft_cannot_be_given_a_payout_before_valuation` cover it.
+
+Nothing on these two models is now left knowingly unguarded.
 
 ## Deviations and things to know
 

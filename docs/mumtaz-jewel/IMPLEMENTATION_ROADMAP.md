@@ -57,9 +57,9 @@ Every slice ends with a written test report of actual results.
 ### Slice 0: Foundation and decisions
 
 Status 10 Nov 2026: **test suite, CI script and seed module done and run**;
-actual results in `SLICE0_TEST_REPORT.md` (60 tests, 0 failures: 19
-pure-Python plus 41 Odoo `TransactionCase`). The maker-checker bypass found
-while testing is fixed (issue 10 below). Still open in this slice: closing
+actual results in `SLICE0_TEST_REPORT.md` (73 tests, 0 failures: 19
+pure-Python plus 54 Odoo `TransactionCase`). The maker-checker bypasses found
+while testing are fixed on both approval models (issue 10 below). Still open in this slice: closing
 decisions D1 to D8.
 
 | Item | Detail |
@@ -234,5 +234,11 @@ Deleting functionality, destructive migrations, replacing the pricing engine, ch
     `action_approve` or `action_reject`, which run the maker-checker checks
     first. The guard holds for `sudo` too, so a future rate feed enters a
     draft and a person decides on it. Covered by `TestRateStateGuard`.
-    The same shape of hole remains open on `jewellery.old.gold.state`, which
-    was outside the approved change; see `SLICE0_TEST_REPORT.md`.
+    The same guard was then applied to `jewellery.old.gold`, where the
+    second-person rule above the approval threshold was advisory in the same
+    way and an intake could also skip valuation entirely by going straight to
+    `confirmed`, leaving it confirmed but never valued. The old-gold guard
+    also covers the valuation fields (`rate_id`, `applied_rate_per_g`,
+    `value`), so the payout is only ever written by `_price_now` from the
+    approved rate. Covered by `TestOldGoldStateGuard`. See
+    `SLICE0_TEST_REPORT.md`.
