@@ -43,6 +43,8 @@ The blueprint is hybrid (Odoo plus independent services). For a small team I pro
 | Risk | Mitigation |
 | --- | --- |
 | Offline POS is hard (double sales of one piece, rate staleness) | Reduced: `POS_NATIVE_AUDIT.md` shows the offline mechanism is standard in Community, so the risk narrows to the rate snapshot and the double-sold serial. Spike those two; offline price uses a locked rate snapshot with a time limit; conflicts go to a visible queue |
+| Studio was assumed available; `web_studio` is Enterprise | The ladder for this project is standard config → views and `base_automation` → custom module. Replan anything filed as "Studio will do it" (`ARCHITECTURE_REVIEW.md`) |
+| WhatsApp was assumed to be a module; `whatsapp` is Enterprise | Every WhatsApp feature is custom integration against the Meta Cloud API, with template approval and opt-in. Do not promise a date before an account exists |
 | A connected scale at the counter may not be available in Community | `iot_base` ships and `product.template.to_weight` exists, but `pos_iot` is **not** among the Community `pos_*` modules. Weigh something on a real scale before promising it to a jeweller |
 | Gulf Arabic voice accuracy on jewellery terms | Test set of real utterances validated by native-speaker jewellers before any client exposure |
 | Voice and chat leaking private data | Identity check before account facts; restricted clients capped; every answer's numbers come from the engine |
@@ -79,7 +81,7 @@ decisions D1 to D8.
 ### Slice 1: Price to sale
 | Item | Detail |
 | --- | --- |
-| Features | Rate source adapter (fake feed first), piece cost and real margin, price carried into quote, order and invoice with rate snapshot, dealer-tier discount never on metal, Arabic and English translation files and right-to-left checks started; quote validity with expiry and rate-lock policy (reprice or renew after expiry); price snapshot incl. rule version and rounding; actual cost basis recorded separately from market-value margin; atomic reservation; payment-timeout reconciliation state |
+| Features | Rate source adapter (fake feed first), piece cost and real margin, price carried into quote, order and invoice with rate snapshot, dealer-tier discount never on metal, Arabic and English translation files and right-to-left checks started (**the bilingual invoice is standard: install `l10n_gcc_invoice`, do not build a layout** — see `ARCHITECTURE_REVIEW.md`); quote validity with expiry and rate-lock policy (reprice or renew after expiry); price snapshot incl. rule version and rounding; actual cost basis recorded separately from market-value margin; atomic reservation; payment-timeout reconciliation state |
 | Database | `jewellery.rate.source`, `.feed.log`; `stock.lot.cost_value`; sale line link and snapshot |
 | Odoo | `sale.order` and invoice report extension, bilingual invoice layout |
 | Microservices | None (feed is a scheduled action) |
@@ -110,7 +112,7 @@ decisions D1 to D8.
 | Features | Preference/intent records with source, confidence and expiry; consent per channel and purpose; eligibility-then-ranking (starting weights 30/25/20/15/10, normalised when signals are missing, confidence shown); 3-5 piece tray; staff review and reorder; branded expiring revocable tokenised link in Arabic and English; client like/dislike/question/viewing request (not a reservation); stored candidate set, reasons, policy version, stock timestamp |
 | Odoo | Extend `mumtaz_jewellery_vip` (`nbo.py` becomes the ranking policy) |
 | Security | Restricted tiers cannot appear in trays, search, exports or tray links of unauthorised users; tokens stored as digests; no internal IDs in URLs |
-| Dependencies | Slice 1 (price and availability); no outbound messaging yet (copy link only) |
+| Dependencies | Slice 1 (price and availability); no outbound messaging yet (copy link only). **Most of the tray is standard `crm`: lead, stages, activities, with the reservation a draft `sale.order`. Build only the tokenised link and the ranking** |
 | Tests | Expired and revoked links fail; tray never lists sold or reserved-elsewhere pieces; restricted-tier leak tests |
 | Acceptance | Associate records budget and preference, shares a tray, client requests a viewing, staff reserve the piece |
 
@@ -191,7 +193,7 @@ decisions D1 to D8.
 | 8 Clients and VIP completion | Wishlist alerts, campaigns, discreet-billing effects, gifting plans | WhatsApp |
 | 9 B2B | Dealer tiers, consignment, metal accounts, credit limits, portal | None |
 | 10 Workshop | Custom orders, repairs, metal issue and return, job cards | None |
-| 11 Compliance and finance | VAT wiring, AML parameters, tax-free scheme, e-invoicing link, metal journals | Named compliance confirmer |
+| 11 Compliance and finance | VAT wiring, AML parameters, tax-free scheme, e-invoicing link, metal journals. **`l10n_ae`, `l10n_gcc_invoice` and ZATCA (`l10n_sa_edi`) all ship in Community — this is configuration, not a build** | Named compliance confirmer |
 | 12 SaaS hardening | Billing, white-label packaging, disaster-recovery drill, load and security tests | Hosting decision |
 
 Deferred: manufacturing bills of materials, e-commerce synchronisation, message broker, RFID readers (hardware choice), outbound phone-call voice agents.
