@@ -147,6 +147,31 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 .paybtn{border:1px solid var(--paper3);background:var(--surface);border-radius:10px;padding:11px;text-align:center;font-size:.84rem;font-weight:600}
 
+/* counter: client context */
+.cstrip{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:14px 18px;background:
+  linear-gradient(100deg,var(--ink) 0%,var(--rail2) 58%,#1E2A3A 100%);color:#fff;border-radius:var(--r);box-shadow:var(--shadow)}
+.cstrip .ava{width:52px;height:52px;border-radius:14px;font-size:1.2rem}
+.cstrip h3{font-family:var(--display);font-size:1.2rem;font-weight:600;color:#fff}
+.cstrip .meta{margin-top:6px}
+.cstrip .chip{border-color:rgba(255,255,255,.18)}
+.cstrip .c-dark{background:rgba(255,255,255,.08);color:#C9D2DC}
+.cstrip .facts div small{color:#8E9CAC}
+.cstrip .facts div b{color:#fff}
+.owns{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.owns .pc .im{height:52px}
+.owns .pc .im svg{width:22px;height:22px}
+.owns .pc .lb{padding:5px 7px}
+.owns .pc .lb b{font-size:.72rem}
+.owns .pc .lb span{font-size:.67rem}
+.warn{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--coral-bg);border:1px solid var(--coral-border);border-radius:10px;font-size:.82rem;color:var(--ink2);margin-top:11px}
+.warn svg{width:16px;height:16px;stroke:var(--coral);fill:none;stroke-width:2;flex:none;margin-top:2px}
+.ok{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:10px;font-size:.82rem;color:var(--ink2);margin-top:11px}
+.ok svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2;flex:none;margin-top:2px}
+.lastv{padding:11px 13px;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;font-size:.83rem}
+.lastv b{display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.counter3{display:grid;grid-template-columns:1.35fr .65fr;gap:16px;margin-top:16px}
+@media (max-width:1180px){.counter3{grid-template-columns:1fr}.cstrip{grid-template-columns:1fr;text-align:left}}
+
 /* agents */
 .agent{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;padding:16px 18px;border-top:1px solid var(--paper3)}
 .agent:first-of-type{border-top:0}
@@ -324,15 +349,38 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ COUNTER / POS ============ -->
       <section class="screen" id="s-pos">
-        <div class="scan" style="margin-bottom:16px">
+
+        <div class="cstrip">
+          <div class="ava">AK</div>
+          <div>
+            <h3>A. K. <span class="tiny" style="font-weight:400;color:#8E9CAC">· at the counter with Nadia M.</span></h3>
+            <div class="meta">
+              <span class="chip c-gold">Private tier</span>
+              <span class="chip c-teal">AML verified</span>
+              <span class="chip c-coral">No marketing</span>
+              <span class="chip c-dark">Discreet billing</span>
+              <span class="chip c-dark">Prefers 22K, 21K · yellow</span>
+              <span class="chip c-dark">Avoids white gold</span>
+            </div>
+          </div>
+          <div class="facts">
+            <div><small>Usual spend</small><b class="num">45,000</b></div>
+            <div><small>Lifetime</small><b class="num">612,400</b></div>
+            <div><small>Gold held</small><b class="num">284 g</b></div>
+            <div><small>Last visit</small><b>2 Nov</b></div>
+          </div>
+        </div>
+
+        <div class="scan" style="margin-top:16px">
           <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--gold3);fill:none;stroke-width:2"><path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M7 12h10"/></svg>
           <input placeholder="Scan a tag, or type a piece number…" value="DEMO-BNG-0001">
           <span class="chip c-teal">Online</span>
           <button class="btn b-gold">Add</button>
         </div>
 
-        <div class="pos">
+        <div class="counter3">
           <div class="g" style="gap:16px">
+
             <div class="card">
               <div class="hd"><h3>22K bangle · DEMO-BNG-0001</h3><span class="sp"></span><span class="chip c-gold">Priced at the approved rate</span></div>
               <div class="pad">
@@ -350,7 +398,11 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <div class="r"><span class="muted">VAT 5%</span><b class="num">309.13</b></div>
                 </div>
                 <div class="tot"><span>Total</span><b class="num">6,491.74</b></div>
-                <p class="note">Every line comes from the pricing engine at the rate approved this morning. Staff cannot type over a figure; a discount applies to making only, never to metal.</p>
+                <div class="ok">
+                  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  <div><b>22K, and she prefers 22K.</b> Within her usual spend at 14% above — an upgrade, not a stretch.</div>
+                </div>
+                <p class="note">Every line comes from the pricing engine at the rate approved this morning. Staff cannot type over a figure; a discount applies to making only, never to metal, and Nadia's role caps hers at 15%.</p>
               </div>
             </div>
 
@@ -363,28 +415,58 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <div><small class="tiny muted">Melt loss</small><div><b class="num">2%</b></div></div>
                   <div><small class="tiny muted">Credit</small><div><b class="num">3,829.11</b></div></div>
                 </div>
-                <p class="note">Computed, never typed. Above the threshold the finance manager sets, a second person has to approve before the credit is given.</p>
+                <p class="note">Computed, never typed. Her gold held drops to 266 g once this is taken in, and the client file records which piece it came from.</p>
               </div>
             </div>
+
           </div>
 
-          <div class="card" style="align-self:start">
-            <div class="hd"><h3>Payment</h3></div>
-            <div class="pad">
-              <div class="brk">
-                <div class="r"><span class="muted">Pieces</span><b class="num">6,491.74</b></div>
-                <div class="r"><span class="muted">Old gold credit</span><b class="num">− 3,829.11</b></div>
+          <div class="g" style="gap:16px;align-content:start">
+
+            <div class="card">
+              <div class="hd"><h3>She already owns</h3><span class="sp"></span><span class="tiny muted">don't sell twice</span></div>
+              <div class="pad">
+                <div class="owns">
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg></div><div class="lb"><b>Bangle 22K</b><span>Mar 2026</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M12 4l4 5-4 11-4-11z"/><path d="M8 9h8"/></svg></div><div class="lb"><b>Pendant 21K</b><span>Dec 2025</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1014 0"/><path d="M5 12V9a7 7 0 0114 0v3"/></svg></div><div class="lb"><b>Necklace</b><span>Shown 2 Nov</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="3"/><circle cx="12" cy="12" r="2"/></svg></div><div class="lb"><b>Ring 18K</b><span>On approval</span></div></div>
+                </div>
+                <div class="lastv" style="margin-top:11px">
+                  <b>Last visit · 2 Nov</b>
+                  Shown 4 pieces. Liked the 22K necklace and asked to see it beside the bangle she owns. Nadia M., 45 min.
+                </div>
+                <div class="ok">
+                  <svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6L12 15.9 6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg>
+                  <div><b>The necklace she asked about is in stock at Deira.</b> Suggest it beside this bangle.</div>
+                </div>
               </div>
-              <div class="tot"><span>Due</span><b class="num">2,662.63</b></div>
-              <div class="pay">
-                <div class="paybtn">Card</div>
-                <div class="paybtn">Cash</div>
-                <div class="paybtn">Split</div>
-                <div class="paybtn">Deposit</div>
-              </div>
-              <button class="btn b-dark" style="width:100%;margin-top:12px">Take payment</button>
-              <p class="note">If the connection drops, the counter keeps selling against the rate locked this morning and syncs when it returns. Anything that clashes goes to a visible queue, never silently.</p>
             </div>
+
+            <div class="card">
+              <div class="hd"><h3>Payment</h3></div>
+              <div class="pad">
+                <div class="brk">
+                  <div class="r"><span class="muted">Pieces</span><b class="num">6,491.74</b></div>
+                  <div class="r"><span class="muted">Old gold credit</span><b class="num">− 3,829.11</b></div>
+                </div>
+                <div class="tot"><span>Due</span><b class="num">2,662.63</b></div>
+                <div class="pay">
+                  <div class="paybtn">Card</div>
+                  <div class="paybtn">Cash</div>
+                  <div class="paybtn">Split</div>
+                  <div class="paybtn">Deposit</div>
+                </div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>Taking this in cash crosses the reporting threshold.</b>
+                  Her year-to-date cash goes from 38% to 104% of the configured limit. Card or split keeps it under. The threshold is set by the finance manager, per country.</div>
+                </div>
+                <button class="btn b-dark" style="width:100%;margin-top:12px">Take payment</button>
+                <p class="note">Discreet billing is on, so the invoice goes to her billing contact, not to her. If the connection drops the counter keeps selling against the locked rate and reconciles after.</p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
