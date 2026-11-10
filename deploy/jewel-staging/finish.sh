@@ -107,14 +107,38 @@ nginx -t || {
 systemctl reload nginx
 
 echo "== 7) checks =="
-curl -s -o /dev/null -w "   https://$DOMAIN/            -> HTTP %{http_code}  (expect 200, the landing page)\n" "https://$DOMAIN/"
+# Give nginx a moment to finish reloading before the first request.
+sleep 2
+CODE="$(curl -s -o /dev/null --max-time 20 -w '%{http_code}' "https://$DOMAIN/" || echo 000)"
+echo "   https://$DOMAIN/            -> HTTP $CODE  (expect 200, the landing page)"
 if [ "${SKIP_DEMO:-0}" = "1" ]; then
   echo "   SKIP_DEMO=1, not checking the demo system"
 else
-  curl -s -o /dev/null -w "   https://$DOMAIN/odoo        -> HTTP %{http_code}  (expect 401, the demo is password-gated)\n" "https://$DOMAIN/odoo"
-  echo "   If that was 502, the Odoo stack is not running: ./deploy.sh --install --seed"
+  DEMO_CODE="$(curl -s -o /dev/null --max-time 20 -w '%{http_code}' "https://$DOMAIN/odoo" || echo 000)"
+  echo "   https://$DOMAIN/odoo        -> HTTP $DEMO_CODE  (expect 401, the demo is password-gated)"
+  [ "$DEMO_CODE" = "502" ] && echo "   502 means the Odoo stack is not running: ./deploy.sh --install --seed"
 fi
 
 echo
-echo "Done. The landing page is live at https://$DOMAIN"
-echo "The demo system is at https://$DOMAIN/odoo, behind the allow-list and password."
+if [ "$CODE" = "200" ]; then
+  echo "Done. The landing page is live at https://$DOMAIN"
+  [ "${SKIP_DEMO:-0}" = "1" ] || echo "The demo system is at https://$DOMAIN/odoo, behind the allow-list and password."
+  exit 0
+fi
+
+# Never claim success on a check that did not pass.
+red "NOT VERIFIED: the certificate and the server block are installed, but"
+red "https://$DOMAIN/ answered HTTP $CODE instead of 200."
+echo
+echo "What usually causes each code:"
+echo "  000  curl could not complete the request at all — TLS or connection."
+echo "       Diagnose with:  curl -sSv https://$DOMAIN/ -o /dev/null"
+echo "  404  nginx is serving, but $LANDING_DIR/index.html is missing."
+echo "  403  the landing page location is matching an auth-gated block."
+echo "  502  nginx is proxying to Odoo, which is not running."
+echo
+echo "Useful next:"
+echo "  nginx -T | grep -n 'server_name $DOMAIN' -A5"
+echo "  ls -la $LANDING_DIR"
+echo "  tail -20 /opt/mumtaz/logs/jewel.error.log"
+exit 1
