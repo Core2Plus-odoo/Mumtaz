@@ -153,7 +153,7 @@ decisions D1 to D8.
 | Microservices | In Odoo first; real-time voice may use a hosted voice-agent provider |
 | API | `/ai/tools/*`, `/ai/runs/*`, `/voice/*` |
 | UI | Chat panel, run history, approvals queue |
-| Security | Start at levels A-C (read, recommend, draft); four agents: Memory, Stylist, Relationship, Owner analyst; restricted data never enters a model request; runs as the invoking user; money, price and AML tools never above level D with named approval; restricted clients capped at level C; the spoken or written number always comes from the engine |
+| Security | Start at levels A-C (read, recommend, draft); five agents: Zayan, Amara, Noor, Rayan, Layla (decision D1 — see AI_AGENT_DECISIONS.md); restricted data never enters a model request; runs as the invoking user; money, price and AML tools never above level D with named approval; restricted clients capped at level C; the spoken or written number always comes from the engine |
 | Dependencies | Slices 1 to 3; model and voice provider keys via environment |
 | Tests | Injection suite; leakage tests; cap enforcement; Gulf-Arabic jewellery utterance set validated by native speakers |
 | Acceptance | Same question in Arabic and English returns the same figures, and every call is in the audit log |

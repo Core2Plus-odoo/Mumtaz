@@ -133,6 +133,10 @@ section{padding:46px 0}
 .g3{grid-template-columns:repeat(3,1fr)}
 .g2{grid-template-columns:repeat(2,1fr)}
 .g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+@media (max-width:1080px){.g5{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:760px){.g5{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.g5{grid-template-columns:1fr}}
 @media (max-width:980px){.g4{grid-template-columns:1fr 1fr}}
 @media (max-width:900px){.g3{grid-template-columns:1fr 1fr}}
 @media (max-width:640px){.g3,.g2,.g4{grid-template-columns:1fr}}
@@ -628,54 +632,63 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
     <div class="band">
       <div class="sec-head">
         <div class="eyebrow">AI teammates · in development</div>
-        <h2>Four teammates for the client relationship</h2>
+        <h2>Five specialists, and one who coordinates them</h2>
         <p class="muted">
-          Not a chatbot bolted on the side. Four narrow agents that work the
-          client book, each kept on a short leash and none of them allowed to
-          produce a number. <b style="color:#fff">These are being built now and
-          are not available yet</b> — they are on the roadmap, described here
-          so you can tell us if we are building the wrong ones.
+          Not a chatbot bolted on the side. Five narrow agents, each kept on a
+          short leash, none of them allowed to produce a number, and each one
+          subscribed separately. <b style="color:#fff">These are specified, not
+          shipped</b> — Zayan answers questions about the product today; the
+          other four are the next build.
         </p>
         <p style="margin-top:12px">
           <a class="btn btn-gold" href="intelligence/">See the full agent catalogue</a>
         </p>
       </div>
-      <div class="grid g4">
+      <div class="grid g5">
         <div class="card">
           <div class="agent-top">
-            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 00-4 4 3.5 3.5 0 00-1 6.8V17a3 3 0 006 0V3zM12 3a4 4 0 014 4 3.5 3.5 0 011 6.8V17a3 3 0 01-6 0"/></svg></div>
-            <span class="tag dev">In dev</span>
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <span class="tag dev">Live</span>
           </div>
-          <h3>Memory</h3>
-          <p>Keeps the client file current from what actually happened — what was shown, what was bought, what was returned — so nothing lives only in someone's head.</p>
+          <h3>Zayan</h3>
+          <p><b style="color:var(--ink)">Orchestrator.</b> Takes the question, picks the specialists, delegates, consolidates what comes back and writes the summary. Escalates what needs a decision. Answers the owner out loud, in Arabic or English.</p>
           <span class="level">Autonomy A–B · reads and recommends</span>
-        </div>
-        <div class="card">
-          <div class="agent-top">
-            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
-            <span class="tag dev">In dev</span>
-          </div>
-          <h3>Stylist</h3>
-          <p>Builds the tray: which pieces suit this client, this occasion and this budget, ranked with the reasons written out for the associate to accept or drop.</p>
-          <span class="level">Autonomy A–C · drafts a tray</span>
-        </div>
-        <div class="card">
-          <div class="agent-top">
-            <div class="ico"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h5"/></svg></div>
-            <span class="tag dev">In dev</span>
-          </div>
-          <h3>Relationship</h3>
-          <p>Watches the calendar and the pieces out on approval, and drafts the note or the follow-up in Arabic or English. A person always sends it.</p>
-          <span class="level">Autonomy A–C · drafts, never sends</span>
         </div>
         <div class="card">
           <div class="agent-top">
             <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 16v-5M12 16V8M16 16v-7"/></svg></div>
             <span class="tag dev">In dev</span>
           </div>
-          <h3>Owner analyst</h3>
-          <p>Answers the owner's questions out loud, in Arabic or English: what sold, what metal is held per store, what is sitting too long, what needs a decision.</p>
-          <span class="level">Autonomy A–B · reads and explains</span>
+          <h3>Amara</h3>
+          <p><b style="color:var(--ink)">Finance.</b> Profit and loss, cash flow, margin, receivables and payables. Finds the discrepancy and drafts the management report. Cannot post, approve or alter a transaction.</p>
+          <span class="level">Autonomy A–C · prepares, never posts</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Noor</h3>
+          <p><b style="color:var(--ink)">Jewellery domain.</b> Metals, stones and purity grades. Reads certificates, validates product master data and names what is missing from a specification. Image analysis is never presented as certification.</p>
+          <span class="level">Autonomy A–C · prepares and validates</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1-5 3 2 2.7 5 3.3 5 1.6 5 3.5-2.2 3.2-5 3.2-5-1.2-5-3.2"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Rayan</h3>
+          <p><b style="color:var(--ink)">Gold pricing.</b> Watches the approved rate, analyses a move, simulates margin and flags inconsistencies before they reach a shelf. Calls the pricing engine — it never does the arithmetic itself.</p>
+          <span class="level">Autonomy A–C · proposes, never publishes</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Layla</h3>
+          <p><b style="color:var(--ink)">Retail &amp; customer experience.</b> Builds the tray: which pieces suit this client, this occasion, this budget, with the reasons written out. Watches occasions and pieces out on approval, drafts the follow-up in Arabic or English. A person always sends it.</p>
+          <span class="level">Autonomy A–C · drafts, never sends</span>
         </div>
       </div>
 
@@ -830,7 +843,7 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
           <tr><td><b>Explainable next-piece ranking</b><br><span class="muted">Deterministic, with the reasons shown. Not a model.</span></td><td><span class="tag built">Built &amp; tested</span></td></tr>
           <tr><td><b>Gold rate with maker-checker, pricing engine, piece-level stock, old-gold exchange</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
           <tr><td><b>Owner decision cards</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
-          <tr><td><b>The four AI teammates and the voice layer</b><br><span class="muted">Memory, Stylist, Relationship, Owner analyst, in Arabic and English.</span></td><td><span class="tag dev">In development</span></td></tr>
+          <tr><td><b>The five AI agents and the voice layer</b><br><span class="muted">Zayan, Amara, Noor, Rayan and Layla, in Arabic and English. Zayan answers questions about the product today; the other four are specified, not built.</span></td><td><span class="tag dev">In development</span></td></tr>
           <tr><td><b>Shareable private tray for the client</b><br><span class="muted">An expiring, revocable link; the client can ask to view, not reserve.</span></td><td><span class="tag dev">In development</span></td></tr>
           <tr><td><b>Price carried into quote, order and invoice</b><br><span class="muted">With the rate used saved on the document.</span></td><td><span class="tag dev">In development</span></td></tr>
           <tr><td><b>Counter and offline point of sale</b><br><span class="muted">Feasibility is being proven in a spike first.</span></td><td><span class="tag dev">In development</span></td></tr>

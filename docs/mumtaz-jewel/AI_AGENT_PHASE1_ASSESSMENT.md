@@ -148,7 +148,7 @@ These need a decision; I have not resolved any of them.
 | 2 | Database: PostgreSQL | Odoo is PostgreSQL; the c2p AI stack is **SQLite** | New AI services should be PostgreSQL. Do not migrate c2p as part of this |
 | 3 | Additional languages: **Arabic and Urdu** | All jewel work to date assumes Arabic and English | Urdu is new. It changes voice, fonts and RTL testing. Confirm it is wanted for Jewel |
 | 4 | Theme: emerald, charcoal, **champagne gold** | The site is indigo, after an explicit instruction to remove the gold | Two palettes now live side by side. One must give way |
-| 5 | Five agents: Zayan, Amara, Noor, Rayan, Layla | `IMPLEMENTATION_ROADMAP.md` Slice 5 names Memory, Stylist, Relationship, Owner analyst | **Two rosters doing overlapping work.** Layla ≈ Stylist + Relationship; Rayan ≈ the pricing engine, which is deterministic code and should stay so |
+| 5 | Five agents: Zayan, Amara, Noor, Rayan, Layla | ~~Two rosters~~ | **RESOLVED 2026-11-10 — decision D1.** The five stand; Memory becomes a platform service, Stylist and Relationship fold into Layla, Owner analyst into Zayan with Amara. See `AI_AGENT_DECISIONS.md` |
 | 6 | "Never allow AI agents to write directly to Odoo's PostgreSQL" | Agreed, and already true — `odoo.py` uses XML-RPC | No change needed; worth keeping as a review gate |
 | 7 | Autonomy A–E | `policy.py` has two levels | Extend, do not replace. `docs/mumtaz-jewel/CLAUDE.md` already mandates A–E |
 
@@ -304,7 +304,7 @@ phase; the two that most need writing early are **tenant isolation** and
    and both are unconfigured. Which provider, whose account, and is there a
    budget per tenant?
 2. **Urdu.** Confirm it is in scope for Jewel, or only for the wider platform.
-3. **Agent roster.** Which of the two casts survives (2.1 #5).
+3. ~~**Agent roster.**~~ **Answered 2026-11-10:** Zayan, Amara, Noor, Rayan, Layla (D1).
 4. **Palette.** Emerald/charcoal/champagne gold, or the current indigo (2.1 #4).
 5. **Frontend.** OWL inside Odoo, or a separate application (2.1 #1).
 6. **Character artwork.** Five portraits were generated in this session and
@@ -321,8 +321,8 @@ phase; the two that most need writing early are **tenant isolation** and
 
 ## Recommendation
 
-Settle the eight questions above and the five conflicts in 2.1, then start at
-backlog item 1. Do not start at Part 7 — writing 37 migrations before the agent
+The agent roster is settled (D1). Settle the remaining questions and conflicts
+in 2.1, then start at backlog item 1. Do not start at Part 7 — writing 37 migrations before the agent
 roster is settled would be the single most expensive mistake available here.
 
 Per Part 14, this stops for review. No implementation has begun.
