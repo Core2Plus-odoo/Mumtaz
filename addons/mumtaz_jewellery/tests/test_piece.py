@@ -1,7 +1,7 @@
 """Pieces (serial-tracked stock lots): weights, tag uniqueness, and the rule
 that a displayed price always comes from the approved rate.
 """
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import ValidationError
 from odoo.tests import tagged
 
 from .common import JewelCommon

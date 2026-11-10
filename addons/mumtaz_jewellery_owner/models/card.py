@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
 
 KINDS = [('rate', 'Gold rate'), ('exposure', 'Metal and stock value'), ('vip', 'VIP clients'),
          ('memo', 'Pieces on approval'), ('exchange', 'Old-gold exchanges'), ('slow', 'Slow stock')]
@@ -41,7 +40,10 @@ class OwnerCard(models.Model):
         env = self.env
         out = []
         cur = env.company.currency_id
-        fmt = lambda v: '%s %s' % (cur.name, format(v, ',.0f'))
+
+        def fmt(value):
+            return '%s %s' % (cur.name, format(value, ',.0f'))
+
         today = fields.Date.context_today(self)
         Rate = env['jewellery.gold.rate'].sudo()
 
@@ -116,7 +118,10 @@ class OwnerCard(models.Model):
     @api.model
     def refresh(self):
         cards = self.sudo().search([])
-        key = lambda c: (c['kind'], c['res_model'] or '', c['res_id'] or 0)
+
+        def key(card):
+            return (card['kind'], card['res_model'] or '', card['res_id'] or 0)
+
         existing = {key(c): c for c in cards}
         desired = {key(d): d for d in self._desired()}
         for k, d in desired.items():

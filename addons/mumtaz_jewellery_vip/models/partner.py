@@ -1,5 +1,5 @@
 from odoo import api, fields, models, _
-from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.exceptions import AccessError, ValidationError
 
 TIERS = [('standard', 'Standard'), ('preferred', 'Preferred'),
          ('private', 'Private'), ('royal', 'Royal / Protocol')]

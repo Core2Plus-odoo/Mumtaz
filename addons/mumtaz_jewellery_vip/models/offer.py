@@ -1,7 +1,7 @@
 import importlib.util
 import os
 
-from odoo import api, fields, models, _
+from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 _spec = importlib.util.spec_from_file_location(
