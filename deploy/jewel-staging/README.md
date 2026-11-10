@@ -34,7 +34,7 @@ for you:
 | `docker-compose.yml` | The stack: `postgres:16-alpine` + `odoo:19`, own network and volumes, ports bound to `127.0.0.1` only |
 | `odoo.conf.tmpl` | Odoo config template. `deploy.sh` renders it to `odoo.rendered.conf` (gitignored) with values from `.env` |
 | `.env.example` | Every knob, documented. Copy to `.env` and set the two passwords. **Never commit `.env`** |
-| `deploy.sh` | Pull the staging branch, render the config, restart, health-check. Refuses `main` and refuses any branch but `JEWEL_BRANCH` |
+| `deploy.sh` | Pull the staging branch, **re-publish the static site**, render the config, restart, health-check. Refuses `main` and refuses any branch but `JEWEL_BRANCH` |
 | `backup.sh` | Nightly dump, retention, and the restore drill |
 | `finish.sh` | Once the DNS record exists: certificate, nginx block, landing page, checks. Mirrors the script that made `delivery.mumtaz.digital` work |
 | `nginx/jewel.mumtaz.digital.conf` | The server block: landing page public at `/`, demo system restricted on Odoo's own prefixes |
@@ -65,6 +65,22 @@ curl -fsS http://127.0.0.1:8072/web/health
 
 Then, separately and only with approval, the DNS record, the certificate and
 the nginx block. Later deploys are just `./deploy.sh`.
+
+### Updating only the landing page and prototype
+
+```bash
+./deploy.sh --site-only
+```
+
+Publishes `website/jewel/` to the web root and stops. It needs no `.env` and
+no database password, because it touches no database — a page update should
+never wait on credentials. It deletes as well as copies, so files removed from
+the repo disappear from the web root too.
+
+A plain `./deploy.sh` also re-publishes the site, every run. This matters:
+`finish.sh` copies the site once at first bring-up, and without that step a
+pull would update the checkout while nginx kept serving the old copy. That is
+the same trap the repo-root `CLAUDE.md` records for the C2P console.
 
 ### The landing page
 

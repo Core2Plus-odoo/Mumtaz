@@ -38,24 +38,40 @@ ok()   { printf '\033[32m%s\033[0m\n' "$*"; }
 DO_PULL=1
 DO_INSTALL=0
 DO_SEED=0
+SITE_ONLY=0
 for arg in "$@"; do
   case "$arg" in
-    --no-pull) DO_PULL=0 ;;
-    --install) DO_INSTALL=1 ;;
-    --seed)    DO_SEED=1 ;;
+    --no-pull)   DO_PULL=0 ;;
+    --install)   DO_INSTALL=1 ;;
+    --seed)      DO_SEED=1 ;;
+    --site-only) SITE_ONLY=1 ;;
     *) red "Unknown option: $arg"; exit 2 ;;
   esac
 done
 
 # -- guard rails -------------------------------------------------------------
+# Publishing the static site touches no database and needs no password, so
+# --site-only skips the .env requirement entirely. Only the Odoo stack needs
+# credentials; making a page update wait on them was the wrong coupling.
 if [ ! -f "$HERE/.env" ]; then
-  red "No $HERE/.env. Copy .env.example to .env and set the passwords."
-  exit 2
+  if [ "$SITE_ONLY" = "1" ]; then
+    info "No .env — fine for --site-only; the Odoo stack is not touched."
+    JEWEL_BRANCH="${JEWEL_BRANCH:-$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)}"
+  else
+    red "No $HERE/.env. Copy .env.example to .env and set the passwords."
+    red "To publish only the landing page and prototype, which need no"
+    red "database at all, re-run with --site-only."
+    exit 2
+  fi
 fi
+if [ -f "$HERE/.env" ]; then
 # shellcheck disable=SC1091
-set -a; . "$HERE/.env"; set +a
+  set -a; . "$HERE/.env"; set +a
+fi
 
-for required in POSTGRES_USER POSTGRES_PASSWORD ADMIN_PASSWORD JEWEL_BRANCH; do
+REQUIRED_VARS="POSTGRES_USER POSTGRES_PASSWORD ADMIN_PASSWORD JEWEL_BRANCH"
+[ "$SITE_ONLY" = "1" ] && REQUIRED_VARS="JEWEL_BRANCH"
+for required in $REQUIRED_VARS; do
   if [ -z "${!required:-}" ]; then
     red "$required is not set in .env"; exit 2
   fi
@@ -124,11 +140,21 @@ if [ -d "$LANDING_SRC" ]; then
       rm -rf "$old"
     fi
     ok "Site published at $(date -u +%H:%M:%SZ) — hard-refresh the browser"
+    published=1
   else
     red "Cannot write $LANDING_DIR, so the site was NOT updated."
     red "nginx is still serving the previous copy. As root, run:"
     red "  rsync -a --delete $LANDING_SRC/. $LANDING_DIR/"
   fi
+fi
+
+if [ "$SITE_ONLY" = "1" ]; then
+  if [ "${published:-0}" = "1" ]; then
+    ok "--site-only: landing page and prototype published. Odoo untouched."
+    exit 0
+  fi
+  red "--site-only: nothing was published. See the error above."
+  exit 1
 fi
 
 # -- 2. render odoo.conf from the template ----------------------------------
