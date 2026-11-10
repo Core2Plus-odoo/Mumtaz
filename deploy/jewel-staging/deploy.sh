@@ -28,6 +28,8 @@ PROJECT="mumtaz-jewel-staging"
 MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner"
 SEED_MODULE="mumtaz_jewellery_demo"
 DEMO_DB="${DEMO_DB:-jewel_demo}"
+LANDING_SRC="$REPO_ROOT/website/jewel"
+LANDING_DIR="${JEWEL_LANDING_DIR:-/opt/mumtaz/jewel-landing}"
 
 red()  { printf '\033[31m%s\033[0m\n' "$*" >&2; }
 info() { printf '\033[36m==> %s\033[0m\n' "$*"; }
@@ -98,6 +100,35 @@ if [ "$DO_PULL" = "1" ]; then
   done
   git -C "$REPO_ROOT" merge --ff-only "origin/$JEWEL_BRANCH"
   ok "Checkout is at $(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+fi
+
+# -- 1b. re-publish the static site -----------------------------------------
+# finish.sh copies website/jewel once, at first bring-up. Without this step a
+# pull updates the checkout and nginx keeps serving the old copy, which is the
+# "a plain copy goes stale silently" trap the repo CLAUDE.md warns about: the
+# landing page and the prototype would never change. --delete matters too,
+# because files removed from the repo must disappear from the web root.
+if [ -d "$LANDING_SRC" ]; then
+  if [ -w "$(dirname "$LANDING_DIR")" ] || [ -w "$LANDING_DIR" ]; then
+    info "Publishing website/jewel to $LANDING_DIR"
+    mkdir -p "$LANDING_DIR"
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --delete "$LANDING_SRC/." "$LANDING_DIR/"
+    else
+      # No rsync: rebuild the directory so removed files do not linger.
+      tmp="$(mktemp -d "${LANDING_DIR%/}.new.XXXXXX")"
+      cp -r "$LANDING_SRC/." "$tmp/"
+      old="$(mktemp -d "${LANDING_DIR%/}.old.XXXXXX")"
+      mv "$LANDING_DIR" "$old/prev" 2>/dev/null || true
+      mv "$tmp" "$LANDING_DIR"
+      rm -rf "$old"
+    fi
+    ok "Site published at $(date -u +%H:%M:%SZ) — hard-refresh the browser"
+  else
+    red "Cannot write $LANDING_DIR, so the site was NOT updated."
+    red "nginx is still serving the previous copy. As root, run:"
+    red "  rsync -a --delete $LANDING_SRC/. $LANDING_DIR/"
+  fi
 fi
 
 # -- 2. render odoo.conf from the template ----------------------------------

@@ -65,6 +65,55 @@ bind whichever agents exist.
 
 ---
 
+## D2 — Anthropic is the default model provider, on the owner's account
+
+**Decided:** 2026-11-10, by the owner.
+**Answers:** Q4.
+
+Default provider for Mumtaz Intelligence is Anthropic, billed to the owner's
+own account.
+
+### What this does not mean
+
+The spec's Part 4 says "do not make the entire product dependent on one AI
+provider", and that still holds. Anthropic is the **default**, not the only
+path. `mumtaz_ai` already has `openai_provider` and `anthropic_provider` behind
+a `base_provider` abstraction, and the c2p stack already routes to
+OpenAI-compatible endpoints including Ollama. Choosing a default is a
+configuration decision; removing the abstraction would be an architectural one,
+and is not authorised by this.
+
+### What it unblocks and what it still needs
+
+Backlog item 2 (model routing and provider abstraction) is unblocked except for
+the key itself. **The key never travels through chat.** It belongs in the
+environment's secret store, and on the Odoo side in the existing settings
+field, which is already write-only in the form.
+
+### Two things found while checking the existing provider
+
+1. **`addons/mumtaz_ai/providers/anthropic_provider.py` pins
+   `_DEFAULT_MODEL = "claude-haiku-4-5-20251001"`.** That is a dated snapshot of
+   an older generation. Current models are the Claude 5 family. Worth updating
+   deliberately, with a note that pinning a dated snapshot is the right habit —
+   the problem is the age, not the pinning.
+2. **`max_tokens` defaults to 600.** Fine for a chat reply, too small for an
+   agent returning a structured analysis. Per-task limits belong with per-task
+   model routing.
+
+### Per-task routing
+
+Follow the pattern already proven in `llm.model_for(task)`: a cheaper, faster
+model for classification, routing and short drafts; a stronger one for
+analysis, consolidation and anything a person will act on. Set per task, not
+globally, and per tenant where the control plane meters it.
+
+Cost tracking already has somewhere to live: `token_usage` and `model_used` are
+on `mumtaz.ai.message`, and `usage_metric` is on the control plane. Part 12's
+model usage budgets attach there rather than needing new machinery.
+
+---
+
 ## Open questions
 
 Carried from `AI_AGENT_PHASE1_ASSESSMENT.md`. Backlog item 1 needs Q4 at
@@ -75,7 +124,7 @@ minimum; the rest can follow.
 | Q1 | **Urdu** — in scope for Jewel, or only the wider platform? It changes voice, fonts and RTL testing | Prompts, voice, Command Centre |
 | Q2 | **Palette** — emerald/charcoal/champagne gold as the spec says, or the current indigo? Two live side by side today | Command Centre screens |
 | Q3 | **Frontend** — OWL inside Odoo, or a separate application? The spec prefers Next.js "if not established", but it *is* established and is not Next.js | Backlog item 12 |
-| Q4 | **AI provider and account** — both `mumtaz_ai` providers are unconfigured. Which provider, whose account, what budget per tenant? | Backlog item 2 |
+| ~~Q4~~ | ~~AI provider and account~~ **Answered 2026-11-10: Anthropic, owner's account (D2).** The per-tenant budget is still unset | — |
 | Q5 | **Deployment target** for the first agent service — development, staging, or the jewel staging host | Backlog item 2 |
 | Q6 | **Autonomy thresholds** — the financial limits above which approval is required. A finance decision, not a development one, and the same rule applies as to VAT and AML values: configuration for a named person to confirm, never invented here | Backlog item 3 |
 | Q7 | **Character artwork** — five portraits were generated and committed to `website/jewel/site/img/agents/`. Confirm these, or supply the intended ones | Command Centre |
