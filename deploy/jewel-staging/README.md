@@ -15,7 +15,11 @@ From the handoff's gate list (section 3), none of which this directory does
 for you:
 
 1. **The DNS record** — an A record for `jewel` pointing at the VPS
-   (`187.77.128.199`). Made by whoever holds DNS for `mumtaz.digital`.
+   (`187.77.128.199`). DNS for this domain is in **Hostinger**: hPanel →
+   Domains → mumtaz.digital → DNS / Name Servers → Manage DNS → add
+   `Type A · Name jewel · Points to 187.77.128.199`. This is the same way the
+   `delivery` record was added. Nothing in this repo can do it for you, and
+   until it exists the name does not resolve at all.
 2. **The nginx block and certificate** — `nginx/jewel.mumtaz.digital.conf`
    installed on the VPS, after `certbot` issues the certificate. This is
    production infrastructure.
@@ -32,6 +36,7 @@ for you:
 | `.env.example` | Every knob, documented. Copy to `.env` and set the two passwords. **Never commit `.env`** |
 | `deploy.sh` | Pull the staging branch, render the config, restart, health-check. Refuses `main` and refuses any branch but `JEWEL_BRANCH` |
 | `backup.sh` | Nightly dump, retention, and the restore drill |
+| `finish.sh` | Once the DNS record exists: certificate, nginx block, landing page, checks. Mirrors the script that made `delivery.mumtaz.digital` work |
 | `nginx/jewel.mumtaz.digital.conf` | The server block: landing page public at `/`, demo system restricted on Odoo's own prefixes |
 | `../../website/jewel/index.html` | The landing page itself (static, self-contained) |
 
