@@ -13,16 +13,16 @@ database name it did not generate, and never calls `deploy/update.sh`.
 | 0 | Pure-Python engine tests (no database) | **19 passed, 0 failed** |
 | 1 | Fresh database `jewel_ci_accept` created | OK |
 | 2 | Install `mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner` | OK, no ERROR or CRITICAL in the log |
-| 3 | `TransactionCase` suite | **32 passed, 0 failed, 0 errors** |
+| 3 | `TransactionCase` suite | **41 passed, 0 failed, 0 errors** |
 | 4 | Seed `mumtaz_jewellery_demo` (synthetic DEMO data) | OK |
 
 Odoo's own summary line, verbatim:
 
 ```
-odoo.tests.result: 0 failed, 0 error(s) of 32 tests when loading database 'jewel_ci_accept'
+odoo.tests.result: 0 failed, 0 error(s) of 41 tests when loading database 'jewel_ci_guard'
 ```
 
-Total: **51 tests, 0 failures, 0 errors.**
+Total: **60 tests, 0 failures, 0 errors.**
 
 ## Environment the numbers come from
 
@@ -37,12 +37,12 @@ Total: **51 tests, 0 failures, 0 errors.**
 Not yet verified anywhere: Postgres 15 (production compose pins
 `postgres:15-alpine`), and any browser or tour test.
 
-## The 32 TransactionCase tests
+## The 41 TransactionCase tests
 
 | Class | Tests | Covers |
 | --- | --- | --- |
 | `TestGoldRateApproval` | 15 | same-user refusal, non-manager refusal, approved-rate-only, two managers succeed, terminal states, the `allow_self_approval` escape hatch |
-| `TestRateStateOrmGap` | 2 | the ORM bypass described below |
+| `TestRateStateGuard` | 11 | the state guard described below: the ORM bypass is refused, for staff, managers and sudo alike, while draft rates stay editable and the buttons still work |
 | `TestOldGoldExchange` | 5 | valuation from the approved rate, rate snapshot, threshold maker-checker, issued records cannot be cancelled, sequence |
 | `TestPiece` | 7 | net weight, stone-weight and RFID constraints, breakdown equals the engine, dealer discount never touches metal, no price without an approved rate |
 | `TestVipManagerCannotApproveRates` | 3 | the fifth user type: a VIP manager is not a jewellery manager |
@@ -69,27 +69,44 @@ User, two distinct Jewellery Managers (maker and checker), and a VIP Manager.
    `approved`, `approved_by_id` is B, `approved_at` set, `create_uid` differs
    from `approved_by_id`, and `get_current` then returns that rate. Confirmed.
 
-## Open finding: `state` can be set straight to `approved` through the ORM
+## Fixed during Slice 0: the maker-checker bypass
 
-This is the gap flagged in the handoff, now **verified**, by
-`TestRateStateOrmGap`:
+The gap flagged in the handoff was **verified real** by this suite and then,
+on the owner's instruction, **fixed**:
 
-- a Jewellery User (not a manager) can `write({'state': 'approved'})` on a
-  draft rate, and `get_current` then returns it for pricing;
-- a Jewellery User can `create` a rate that is already `approved`.
+- a Jewellery User could `write({'state': 'approved'})` on a draft rate, and
+  `get_current` then returned it for pricing;
+- a Jewellery User could `create` a rate that was already `approved`.
 
-Neither path runs `action_approve`, so maker-checker is bypassed and
-`approved_by_id` and `approved_at` stay empty — which is also how the bypass is
-detectable after the fact. `state`, `approved_by_id` and `approved_at` are
-read-only in the views only; the ACL grants the user group write and create,
-and there is no record rule or `create`/`write` guard on the model.
+Neither path ran `action_approve`, so maker-checker was advisory: `state` is
+read-only in the views only, and the ACL grants the user group write and
+create.
 
-The two tests assert today's behaviour, so the suite stays an honest
-description of the code. **No fix was applied:** per
-`docs/mumtaz-jewel/CLAUDE.md` the approval flow does not change without a named
-approval. The options are a `state` guard in `create`/`write`, or removing
-write from the user ACL and routing all transitions through the buttons. Both
-change who can do what, so they are your call.
+The fix is a guard on `jewellery.gold.rate`:
+
+- `create` refuses any `state` but `draft`, and refuses `approved_by_id` or
+  `approved_at` set up front;
+- `write` refuses `state`, `approved_by_id` and `approved_at` unless the write
+  comes from `action_approve` or `action_reject`, which run the maker-checker
+  checks first and set a context flag the guard looks for;
+- the three fields are `copy=False`, so duplicating an approved rate gives a
+  draft that needs its own approval;
+- the guard holds for `sudo` as well. System code has no business approving a
+  rate, so the Slice 1 rate feed enters a draft and a person decides on it.
+
+The ACL was left alone deliberately: staff still need write on a draft rate to
+correct a mistyped figure, which `test_the_other_fields_of_a_draft_are_still_editable`
+covers. `TestRateStateGuard` has the 11 tests, including that managers and
+`sudo` are refused too, and that the buttons still work through the guard.
+
+### Still open: the same shape of hole on old gold
+
+`jewellery.old.gold.state` is writable the same way — the ACL grants the user
+group write, and `action_approve` is the only thing enforcing maker-checker, so
+a user could in principle write `state` to `confirmed` and skip the second
+person above the threshold. That was outside the change the owner approved, so
+nothing was altered and no test asserts a refusal there yet. The remedy is the
+same guard; it needs the same go-ahead.
 
 ## Deviations and things to know
 

@@ -9,9 +9,9 @@ Slice 0:
 3. pricing uses an approved rate only;
 4. two different managers succeed.
 
-``TestRateStateOrmGap`` additionally probes an unverified gap flagged in the
-handoff. It asserts what the code does TODAY, not what it should do; see its
-docstring.
+``TestRateStateGuard`` covers the guard that makes the decision fields
+writable only through the two buttons, closing the ORM bypass that the
+handoff flagged and that this suite originally proved was real.
 """
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
@@ -162,45 +162,108 @@ class TestGoldRateApproval(JewelCommon):
 
 
 @tagged('post_install', '-at_install', 'mumtaz_jewel')
-class TestRateStateOrmGap(JewelCommon):
-    """Probe for the gap named in the Slice 0 handoff, not a fix for it.
+class TestRateStateGuard(JewelCommon):
+    """The decision fields are writable only through the two buttons.
 
-    ``state``, ``approved_by_id`` and ``approved_at`` are read-only in the
-    views only. The ACL grants a Jewellery User write and create on
-    ``jewellery.gold.rate``, and there is no record rule and no guard in
-    ``create``/``write``. So a rate can in principle reach ``approved``
-    through the ORM or RPC without ``action_approve`` ever running, which
-    would sidestep maker-checker entirely.
-
-    These tests assert the CURRENT behaviour so the suite stays an honest
-    description of the code. They are the evidence for a decision the owner
-    has to take (guard ``state`` in ``write``/``create``, or drop write from
-    the user ACL); per docs/mumtaz-jewel/CLAUDE.md the approval flow is not
-    changed without a named approval. When the guard lands, these two tests
-    are the ones to invert.
+    Before the guard, maker-checker was advisory: ``state`` is read-only in
+    the views only and the ACL grants the Jewellery User group write and
+    create, so a rate could reach ``approved`` through the ORM or RPC without
+    ``action_approve`` ever running. These tests were the evidence for that;
+    they now assert the refusal, which is what closes the hole.
     """
 
-    def test_staff_can_write_state_approved_directly(self):
+    def test_staff_cannot_write_state_approved(self):
         rate = self._draft_rate(self.user_staff)
-        rate.with_user(self.user_staff).write({'state': 'approved'})
-        self.assertEqual(
-            rate.state, 'approved',
-            'GAP: a non-manager moved a rate to approved without '
-            'action_approve(); no guard exists yet.')
-        # And the bypass is not cosmetic: pricing now trusts this rate.
-        self.assertEqual(
-            self.env['jewellery.gold.rate'].get_current(self.company), rate)
-        # The audit trail stays empty, which is how the bypass is detectable.
+        with self.assertRaises(UserError) as caught:
+            rate.with_user(self.user_staff).write({'state': 'approved'})
+        self.assertIn('cannot be written directly', str(caught.exception))
+        rate.invalidate_recordset()
+        self.assertEqual(rate.state, 'draft')
+        # And pricing is still refused, which is the consequence that matters.
+        with self.assertRaises(UserError):
+            self.env['jewellery.gold.rate'].get_current(self.company)
+
+    def test_a_manager_cannot_write_state_directly_either(self):
+        """Holding the manager role is not a way round the buttons."""
+        rate = self._draft_rate(self.user_manager_a)
+        with self.assertRaises(UserError):
+            rate.with_user(self.user_manager_b).write({'state': 'approved'})
+        rate.invalidate_recordset()
+        self.assertEqual(rate.state, 'draft')
+
+    def test_sudo_cannot_write_state_directly(self):
+        """The guard holds for system code too: a feed drafts, a person decides."""
+        rate = self._draft_rate(self.user_manager_a)
+        with self.assertRaises(UserError):
+            rate.sudo().write({'state': 'approved'})
+        rate.invalidate_recordset()
+        self.assertEqual(rate.state, 'draft')
+
+    def test_the_approval_fields_cannot_be_written_directly(self):
+        rate = self._draft_rate(self.user_manager_a)
+        for values in ({'approved_by_id': self.user_staff.id},
+                       {'approved_at': '2026-01-01 00:00:00'}):
+            with self.assertRaises(UserError):
+                rate.with_user(self.user_manager_b).write(values)
+        rate.invalidate_recordset()
         self.assertFalse(rate.approved_by_id)
         self.assertFalse(rate.approved_at)
 
-    def test_staff_can_create_an_already_approved_rate(self):
+    def test_staff_cannot_create_an_already_approved_rate(self):
+        with self.assertRaises(UserError) as caught:
+            self.env['jewellery.gold.rate'].with_user(self.user_staff).create({
+                'rate_per_gram': 123.0,
+                'state': 'approved',
+                'company_id': self.company.id,
+            })
+        self.assertIn('created as a draft', str(caught.exception))
+
+    def test_nobody_can_create_an_already_approved_rate(self):
+        """Including through sudo, and including 'rejected'."""
+        for state in ('approved', 'rejected'):
+            with self.assertRaises(UserError):
+                self.env['jewellery.gold.rate'].sudo().create({
+                    'rate_per_gram': 123.0,
+                    'state': state,
+                    'company_id': self.company.id,
+                })
+
+    def test_a_rate_cannot_be_created_with_the_approval_fields_set(self):
+        with self.assertRaises(UserError) as caught:
+            self.env['jewellery.gold.rate'].create({
+                'rate_per_gram': 123.0,
+                'approved_by_id': self.user_manager_b.id,
+                'company_id': self.company.id,
+            })
+        self.assertIn('set by approving the rate', str(caught.exception))
+
+    def test_an_explicit_draft_is_still_allowed(self):
+        """The guard must not block the ordinary way of entering a rate."""
         rate = self.env['jewellery.gold.rate'].with_user(self.user_staff).create({
-            'rate_per_gram': 123.0,
-            'state': 'approved',
+            'rate_per_gram': 101.0,
+            'state': 'draft',
             'company_id': self.company.id,
         })
-        self.assertEqual(
-            rate.state, 'approved',
-            'GAP: a rate was created already approved, skipping maker-checker.')
-        self.assertFalse(rate.approved_by_id)
+        self.assertEqual(rate.state, 'draft')
+
+    def test_the_other_fields_of_a_draft_are_still_editable(self):
+        """Staff must still be able to correct a rate they mistyped."""
+        rate = self._draft_rate(self.user_staff)
+        rate.with_user(self.user_staff).write({'rate_per_gram': 142.5})
+        self.assertEqual(rate.rate_per_gram, 142.5)
+
+    def test_the_buttons_still_work_through_the_guard(self):
+        """The sanctioned path: the guard lets the decision write through."""
+        rate = self._draft_rate(self.user_manager_a)
+        rate.with_user(self.user_manager_b).action_approve()
+        self.assertEqual(rate.state, 'approved')
+        self.assertEqual(rate.approved_by_id, self.user_manager_b)
+        self.assertTrue(rate.approved_at)
+
+    def test_duplicating_an_approved_rate_yields_a_draft(self):
+        """copy=False on the decision fields, so a copy needs its own approval."""
+        approved = self._approved_rate()
+        duplicate = approved.with_user(self.user_manager_a).copy()
+        self.assertEqual(duplicate.state, 'draft')
+        self.assertFalse(duplicate.approved_by_id)
+        self.assertFalse(duplicate.approved_at)

@@ -57,9 +57,10 @@ Every slice ends with a written test report of actual results.
 ### Slice 0: Foundation and decisions
 
 Status 10 Nov 2026: **test suite, CI script and seed module done and run**;
-actual results in `SLICE0_TEST_REPORT.md` (51 tests, 0 failures: 19
-pure-Python plus 32 Odoo `TransactionCase`). Still open in this slice: closing
-decisions D1 to D8, and the finding recorded as unresolved issue 10 below.
+actual results in `SLICE0_TEST_REPORT.md` (60 tests, 0 failures: 19
+pure-Python plus 41 Odoo `TransactionCase`). The maker-checker bypass found
+while testing is fixed (issue 10 below). Still open in this slice: closing
+decisions D1 to D8.
 
 | Item | Detail |
 | --- | --- |
@@ -225,10 +226,13 @@ Deleting functionality, destructive migrations, replacing the pricing engine, ch
 7. Compliance values awaiting a named confirmer.
 8. Blueprint not reconciled against your original source catalogue.
 9. Rate provider, WhatsApp account, staging host and voice provider not chosen.
-10. **New, needs your decision.** `jewellery.gold.rate.state` can be set to
-    `approved` straight through the ORM, bypassing maker-checker: a Jewellery
-    User can write the state on a draft, or create a rate already approved,
-    and pricing then trusts it. Verified by `TestRateStateOrmGap`; the tests
-    assert today's behaviour and no fix was applied, because the remedy (a
-    `state` guard in `create`/`write`, or removing write from the user ACL)
-    changes who can do what. See `SLICE0_TEST_REPORT.md`.
+10. ~~`jewellery.gold.rate.state` can be set to `approved` straight through
+    the ORM, bypassing maker-checker.~~ **Closed 10 Nov 2026**, on the owner's
+    instruction, with a `state` guard: `create` refuses any state but `draft`
+    and refuses preset approval fields; `write` refuses `state`,
+    `approved_by_id` and `approved_at` unless the write comes from
+    `action_approve` or `action_reject`, which run the maker-checker checks
+    first. The guard holds for `sudo` too, so a future rate feed enters a
+    draft and a person decides on it. Covered by `TestRateStateGuard`.
+    The same shape of hole remains open on `jewellery.old.gold.state`, which
+    was outside the approved change; see `SLICE0_TEST_REPORT.md`.
