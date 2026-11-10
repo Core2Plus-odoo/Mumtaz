@@ -32,7 +32,8 @@ for you:
 | `.env.example` | Every knob, documented. Copy to `.env` and set the two passwords. **Never commit `.env`** |
 | `deploy.sh` | Pull the staging branch, render the config, restart, health-check. Refuses `main` and refuses any branch but `JEWEL_BRANCH` |
 | `backup.sh` | Nightly dump, retention, and the restore drill |
-| `nginx/jewel.mumtaz.digital.conf` | The server block, for review and manual install |
+| `nginx/jewel.mumtaz.digital.conf` | The server block: landing page public at `/`, demo system restricted on Odoo's own prefixes |
+| `../../website/jewel/index.html` | The landing page itself (static, self-contained) |
 
 ## Order of operations, once approved
 
@@ -59,6 +60,28 @@ curl -fsS http://127.0.0.1:8072/web/health
 
 Then, separately and only with approval, the DNS record, the certificate and
 the nginx block. Later deploys are just `./deploy.sh`.
+
+### The landing page
+
+`jewel.mumtaz.digital/` serves a static landing page, publicly; the Odoo demo
+sits behind the allow-list and password on Odoo's own URL prefixes
+(`/odoo`, `/web`, `/websocket` and the rest). Odoo cannot be mounted under a
+sub-path, which is why the split is by prefix rather than by folder. Keep any
+new landing-page asset under `/site/` so it can never collide with an Odoo
+route.
+
+```bash
+mkdir -p /opt/mumtaz/jewel-landing
+cp -r website/jewel/. /opt/mumtaz/jewel-landing/
+```
+
+**Before it goes live:** the page has three `REPLACE-WITH-YOUR-EMAIL`
+placeholders for the demo-request address, and carries `noindex` plus a
+`Disallow: /` robots.txt on purpose, because this is a demo host. Both are
+flagged in an HTML comment at the top of the file.
+
+Updating the page later is a copy, not a deploy: it is static and needs no
+restart.
 
 ## Guard rails built in
 
@@ -88,6 +111,11 @@ demo password, and sends `X-Robots-Tag: noindex` plus a `Disallow: /`
 - **Monitoring.** The handoff asks for an uptime alert on the staging URL.
   Both services have Docker health checks, but no external alerting is wired
   up: that depends on which monitor the VPS already uses.
+- **The landing page's claims.** Every capability is marked built, in
+  development, or planned, and the page says plainly that the product is in
+  pilot development and that no integration is connected. Please keep it that
+  way when editing: it is the difference between a demo and a promise.
 - **Nothing untested.** None of these scripts has been executed anywhere. The
-  compose file and shell syntax were checked statically; the first real run
-  will be the first time they execute.
+  compose file and shell syntax were checked statically, and the landing page
+  was rendered headless at desktop, mobile and dark-mode widths; the first
+  real run will be the first time any of it executes on a server.
