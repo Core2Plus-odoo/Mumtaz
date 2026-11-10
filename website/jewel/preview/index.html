@@ -91,7 +91,7 @@ button{font-family:inherit;cursor:pointer}
 .hd{padding:14px 18px;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:10px}
 .hd h3{font-size:.95rem}
 .hd .sub{font-size:.78rem;color:var(--ink3)}
-.g{display:grid;gap:16px}
+.g{display:grid;gap:11px}
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:repeat(3,1fr)}
 .g4{grid-template-columns:repeat(4,1fr)}
@@ -140,7 +140,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .tli span{font-size:.79rem;color:var(--ink3)}
 
 /* pos */
-.pos{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+.pos{display:grid;grid-template-columns:1.25fr .75fr;gap:11px}
 @media (max-width:1180px){.pos{grid-template-columns:1fr}}
 .scan{display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:var(--r);padding:15px 18px}
 .scan input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:10px 13px;font-size:.92rem;font-family:inherit}
@@ -261,7 +261,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .toolbar{display:flex;align-items:center;gap:8px;padding:11px 18px;border-bottom:1px solid var(--paper3);background:var(--paper2);border-radius:var(--r) var(--r) 0 0}
 .filt{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--paper3);border-radius:8px;padding:5px 10px;font-size:.78rem;font-weight:600;color:var(--ink2)}
 .filt.on{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold-dark)}
-.statusbar{display:flex;align-items:center;gap:16px;padding:8px 24px;background:var(--surface);border-top:1px solid var(--paper3);font-size:.73rem;color:var(--ink3)}
+.statusbar{display:flex;align-items:center;gap:11px;padding:8px 24px;background:var(--surface);border-top:1px solid var(--paper3);font-size:.73rem;color:var(--ink3)}
 .statusbar .dotg{width:7px;height:7px;border-radius:50%;background:var(--teal2);display:inline-block;margin-right:6px}
 .chart{display:flex;align-items:flex-end;gap:6px;height:118px;padding-top:8px}
 .chart i{flex:1;background:var(--gold2);border-radius:3px 3px 0 0;display:block;position:relative}
@@ -278,7 +278,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 @media (max-width:900px){.util{display:none}.pagebar{padding:12px 16px 0}}
 
 /* counter: client context */
-.cstrip{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:14px 18px;background:
+.cstrip{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;padding:14px 18px;background:
   linear-gradient(100deg,var(--ink) 0%,var(--rail2) 58%,#1E2A3A 100%);color:#fff;border-radius:var(--r);box-shadow:var(--shadow)}
 .cstrip .ava{width:52px;height:52px;border-radius:14px;font-size:1.2rem}
 .cstrip h3{font-family:var(--display);font-size:1.2rem;font-weight:600;color:#fff}
@@ -299,7 +299,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .ok svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2;flex:none;margin-top:2px}
 .lastv{padding:11px 13px;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;font-size:.83rem}
 .lastv b{display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
-.counter3{display:grid;grid-template-columns:1.35fr .65fr;gap:16px;margin-top:16px}
+.counter3{display:grid;grid-template-columns:1.35fr .65fr;gap:11px;margin-top:11px}
 @media (max-width:1180px){.counter3{grid-template-columns:1fr}.cstrip{grid-template-columns:1fr;text-align:left}}
 
 /* agents */
@@ -332,6 +332,155 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
   .gal{grid-template-columns:1fr 1fr}
   .top{flex-wrap:wrap}
 }
+
+/* ===== v6: compact + vibrant (last layer wins) =====
+   Goal: every screen fits one 1440x900 viewport. Density is bought with
+   padding and type scale, never by deleting the thing that explains a figure. */
+:root{
+  --a1:#5B5BF0; --a2:#0EA5BE; --a3:#E8911B; --a4:#E1486B; --a5:#0FA37F;
+  --r:9px;
+}
+body{font-size:14px;line-height:1.48}
+
+/* shell density */
+.ribbon{padding:5px 14px;font-size:.72rem}
+.util{height:32px;font-size:.72rem}
+.top{padding:9px 20px;gap:11px}
+.pagebar{padding:11px 20px 0;gap:10px}
+.pagebar h2{font-size:1.15rem}
+.canvas{padding:14px 20px 24px}
+.rail{padding:12px 10px}
+.brandrow{padding:4px 8px 12px}
+.railsec{padding:11px 12px 4px;font-size:.62rem}
+.navb{padding:7px 11px;font-size:.86rem}
+.navb.on{position:relative}
+.navb.on::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:0 3px 3px 0;background:var(--a1)}
+
+/* cards and grids */
+.g{gap:11px}
+.pad{padding:13px}
+.hd{padding:10px 13px;gap:8px}
+.hd h3{font-size:.9rem}
+.hd h3::before{content:"";display:inline-block;width:3px;height:13px;border-radius:2px;background:var(--a1);margin-right:8px;vertical-align:-2px}
+.hd .sub{font-size:.74rem}
+.toolbar{padding:8px 13px}
+
+/* numbers */
+.kpi{padding:11px 13px}
+.kpi small{font-size:.64rem}
+.kpi b{font-size:1.3rem;margin-top:2px;font-weight:700}
+.kpi .d{font-size:.73rem;margin-top:1px}
+.g4>.kpi,.g3>.kpi{box-shadow:inset 0 3px 0 var(--a1),var(--shadow)}
+.g4>.kpi:nth-child(2),.g3>.kpi:nth-child(2){box-shadow:inset 0 3px 0 var(--a2),var(--shadow)}
+.g4>.kpi:nth-child(3),.g3>.kpi:nth-child(3){box-shadow:inset 0 3px 0 var(--a3),var(--shadow)}
+.g4>.kpi:nth-child(4){box-shadow:inset 0 3px 0 var(--a5),var(--shadow)}
+
+/* tables */
+th{padding:6px 13px;font-size:.64rem}
+td{padding:7px 13px}
+table{font-size:.83rem}
+
+/* lists and rows */
+.amlrow{padding:5px 0;font-size:.81rem}
+.brk .r{padding:4px 0}
+.tli{padding-bottom:9px}
+.tli b{font-size:.83rem} .tli span{font-size:.75rem}
+.tp{padding:7px 0}
+.tp b{font-size:.81rem} .tp span{font-size:.74rem}
+.intg{padding:9px 13px;gap:11px}
+.ilogo{width:30px;height:30px}
+.intg b{font-size:.87rem} .intg span{font-size:.75rem}
+.agent{padding:11px 13px;gap:11px}
+.ai{width:32px;height:32px;border-radius:9px}
+.ai svg{width:16px;height:16px}
+.lad{margin-top:6px}
+.rung{font-size:.66rem;padding:2px 7px}
+.store{padding:9px 13px;gap:10px}
+.stg{padding:10px 12px}
+.stg b{font-size:1.1rem;margin-top:2px}
+.stg .bar{margin-top:6px}
+
+/* client 360 */
+.hero360{padding:13px;gap:13px}
+.ava{width:54px;height:54px;border-radius:14px;font-size:1.25rem}
+.hero360 h2{font-size:1.25rem}
+.meta{margin-top:5px;gap:5px}
+.facts{gap:18px}
+.facts div b{font-size:.95rem}
+.facts div small{font-size:.63rem}
+.gal{gap:7px}
+.pc .im{height:58px}
+.pc .im svg{width:24px;height:24px}
+.pc .lb{padding:5px 7px}
+.pc .lb b{font-size:.72rem} .pc .lb span{font-size:.68rem}
+
+/* counter */
+.cstrip{padding:11px 14px;gap:13px}
+.cstrip .ava{width:44px;height:44px;border-radius:12px;font-size:1.05rem}
+.cstrip h3{font-size:1.08rem}
+.counter3{gap:11px;margin-top:11px;grid-template-columns:1.05fr .95fr .78fr;align-items:start}
+@media (max-width:1320px){.counter3{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.counter3{grid-template-columns:1fr}}
+.pay{grid-template-columns:repeat(4,1fr)}
+.scan{padding:11px 14px;gap:10px}
+.scan input{padding:8px 11px;font-size:.87rem}
+.tot{margin-top:8px;padding:10px 13px}
+.tot b{font-size:1.3rem}
+.pay{margin-top:9px;gap:7px}
+.paybtn{padding:9px;font-size:.8rem}
+.owns .pc .im{height:44px}
+.warn,.ok,.guard,.inline-ai,.lastv{padding:9px 11px;margin-top:9px;font-size:.79rem}
+.consent{margin-top:8px}
+
+/* chat */
+.msg{padding:8px 11px;font-size:.85rem;border-radius:11px}
+.thread{gap:8px}
+.pcards{gap:7px;margin-top:7px}
+.pcard .im{height:48px}
+.quick{margin-top:8px;gap:6px}
+.quick span{font-size:.74rem;padding:4px 9px}
+
+/* chrome bits */
+.awork{padding:9px 12px;font-size:.78rem;gap:7px}
+.voice{padding:12px 14px;gap:11px}
+.voice .orb{width:40px;height:40px}
+.chart{height:92px}
+.don{width:96px;height:96px}
+.don .hole{width:64px;height:64px}
+.statusbar{padding:6px 20px;font-size:.7rem}
+.note{margin-top:7px;font-size:.75rem}
+.tiny{font-size:.75rem}
+.chip{font-size:.68rem;padding:2px 8px}
+.btn{padding:7px 12px;font-size:.81rem}
+
+.agents3{grid-template-columns:1.15fr 1fr .8fr}
+@media (max-width:1320px){.agents3{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.agents3{grid-template-columns:1fr}}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:.79rem}
+.rules b{display:block}
+@media (max-width:900px){.rules{grid-template-columns:1fr;gap:6px}}
+
+/* cards keep their natural height; a column never stretches one to fill */
+.split>.g,.agents3>.g,.counter3>.g{align-content:start}
+.split>.card,.agents3>.card,.counter3>.card{align-self:start}
+.rung{font-size:.63rem;padding:2px 6px}
+
+/* vibrance: saturated primaries, no flat fills on the things you look at */
+.b-gold{background:linear-gradient(135deg,#6366F1,#3D56C4);border-color:transparent}
+.b-dark{background:linear-gradient(135deg,#1E2638,#10151C)}
+.mk{background:linear-gradient(140deg,var(--a1),var(--gold-dark))}
+.ava{background:linear-gradient(140deg,var(--a1),var(--gold-dark))}
+.who{background:linear-gradient(140deg,var(--a2),var(--teal))}
+.chart i{background:linear-gradient(180deg,#7C8BF0,var(--gold));border-radius:4px 4px 0 0}
+.chart i.alt{background:linear-gradient(180deg,#45C8DC,var(--a2))}
+.spark i{background:linear-gradient(180deg,#7C8BF0,var(--gold))}
+.stg .bar i{background:linear-gradient(90deg,var(--a1),var(--gold2))}
+.prog i{background:linear-gradient(90deg,var(--a1),var(--gold2))}
+.prog i.ok{background:linear-gradient(90deg,var(--a5),var(--teal2))}
+.bar i{background:linear-gradient(90deg,var(--a2),var(--teal2))}
+.pct{font-size:.74rem}
+
+@media (max-width:900px){.canvas{padding:12px 14px 22px}.pagebar{padding:10px 14px 0}}
 </style>
 </head>
 <body>
@@ -461,7 +610,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
 <!-- ============ TODAY / OWNER ============ -->
       <section class="screen on" id="s-dash">
-        <div class="g g4" style="margin-bottom:16px">
+        <div class="g g4" style="margin-bottom:11px">
           <div class="card kpi"><small>Sold today</small><b class="num">148,920</b><div class="d up">+18% on last Tuesday</div></div>
           <div class="card kpi"><small>Metal moved</small><b class="num">612 g</b><div class="d muted">out 684 g · in 72 g</div></div>
           <div class="card kpi"><small>Stock value</small><b class="num">2.91 M</b><div class="d up">+1.2% on the rate</div></div>
@@ -496,7 +645,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
           </div>
         </div>
 
-        <div class="card" style="margin-top:16px">
+        <div class="card" style="margin-top:11px">
           <div class="hd"><h3>Decisions waiting</h3><span class="sp"></span><span class="chip c-coral">1 overdue</span></div>
           <table>
             <thead><tr><th>What</th><th>Why it matters</th><th>Worth</th><th>Action</th></tr></thead>
@@ -548,7 +697,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ CLIENT 360 ============ -->
       <section class="screen" id="s-clients">
-        <div class="card" style="margin-bottom:16px">
+        <div class="card" style="margin-bottom:11px">
           <div class="hero360">
             <img class="ph ph-lg" src="../site/img/people/aisha.png" alt="Portrait of the client A. K.">
             <div>
@@ -570,7 +719,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
           </div>
         </div>
 
-        <div class="awork" style="margin-bottom:16px">
+        <div class="awork" style="margin-bottom:11px">
           <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents on this client</span>
           <span class="arun"><b>Memory</b> updated the file from the 2 Nov visit <span class="st st-done">done 09:04</span></span>
           <span class="arun"><b>Stylist</b> built a 4-piece tray <span class="st st-wait">waiting for Nadia</span></span>
@@ -579,10 +728,10 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
         </div>
 
         <div class="g split">
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
 
             <div class="card">
-              <div class="hd"><h3>Pieces owned and shown</h3><span class="sp"></span><span class="tiny muted">photographed at handover</span></div>
+              <div class="hd"><h3>Pieces owned and shown</h3><span class="sub">photographed at handover, so nobody sells it twice</span></div>
               <div class="pad">
                 <div class="gal">
                   <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg></div><div class="lb"><b>Bangle 22K</b><span>Bought · Mar 2026</span></div></div>
@@ -590,12 +739,11 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1014 0"/><path d="M5 12V9a7 7 0 0114 0v3"/></svg></div><div class="lb"><b>Necklace 22K</b><span>Shown · last visit</span></div></div>
                   <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="3"/><circle cx="12" cy="12" r="2"/></svg></div><div class="lb"><b>Ring 18K</b><span>On approval</span></div></div>
                 </div>
-                <p class="note">Photographs are taken when a piece is handed over or returned, so the file shows what she already owns before anyone suggests something similar.</p>
               </div>
             </div>
 
             <div class="card">
-              <div class="hd"><h3>Touchpoints</h3><span class="sp"></span><span class="chip c-grey">every channel, one thread</span></div>
+              <div class="hd"><h3>Touchpoints</h3><span class="sub">consent per channel; agents draft, people send</span><span class="sp"></span><span class="chip c-grey">17 visits</span></div>
               <div class="pad">
                 <div class="tp"><span class="tpi tp-store"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>
                   <div><b>Private viewing &middot; Deira</b><span class="byline"><img class="ph ph-xs" src="../site/img/people/nadia.png" alt="">2 Nov &middot; Nadia M. &middot; 45 min &middot; 4 pieces shown</span></div></div>
@@ -603,32 +751,18 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <div><b>Tray link opened &middot; twice</b><span>1 Nov &middot; expires in 5 days &middot; revocable &middot; liked 2, asked about 1</span></div></div>
                 <div class="tp"><span class="tpi tp-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1121 11.5z"/></svg></span>
                   <div><b>WhatsApp &middot; repair ready</b><span>18 Oct &middot; sent by Nadia M. &middot; read &middot; consent on file</span></div></div>
-                <div class="tp"><span class="tpi tp-call"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></span>
-                  <div><b>Call &middot; 6 min</b><span>14 Mar &middot; after the bangle purchase &middot; noted: wants matching pendant</span></div></div>
                 <div class="consent">
                   <span class="chip c-teal">WhatsApp &middot; consented</span>
                   <span class="chip c-teal">Calls &middot; consented</span>
                   <span class="chip c-coral">Marketing &middot; refused</span>
                   <span class="chip c-coral">Automated outbound &middot; blocked, Private tier</span>
                 </div>
-                <p class="note">Consent is held per channel and per purpose. An agent may draft on any of them; none may send to this client, because she is Private tier and has refused marketing.</p>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="hd"><h3>Visits</h3><span class="sp"></span><span class="chip c-grey">17 recorded</span></div>
-              <div class="pad">
-                <div class="tl">
-                  <div class="tli"><b>Private viewing · Deira · 2 Nov</b><span>Nadia M. · 45 min · shown 4 pieces from the tray, liked the 22K necklace, asked to see it beside the bangle she owns</span></div>
-                  <div class="tli"><b>Collected repair · Deira · 18 Oct</b><span>Counter · clasp replaced, no charge</span></div>
-                  <div class="tli"><b>Purchase · Deira · 14 Mar</b><span>Nadia M. · 22K bangle · old gold taken in exchange, 18.4 g</span></div>
-                </div>
               </div>
             </div>
 
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
 
             <div class="card">
               <div class="hd"><h3>Compliance</h3><span class="sp"></span><span class="chip c-teal">Verified</span></div>
@@ -643,7 +777,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <div class="bar"><i style="width:38%"></i></div>
                   <div class="tiny muted" style="margin-top:5px">38% of the configured limit</div>
                 </div>
-                <p class="note">Thresholds, screening frequency and retention are configuration, confirmed by the named finance manager per country. The software never invents a rule.</p>
+                <p class="note">Thresholds and retention are configuration, confirmed per country by the finance manager. Never invented here.</p>
               </div>
             </div>
 
@@ -666,15 +800,15 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ PIPELINE / CRM ============ -->
       <section class="screen" id="s-crm">
-        <div class="g g4" style="margin-bottom:16px">
+        <div class="g g4" style="margin-bottom:11px">
           <div class="card kpi"><small>Target, this quarter</small><b class="num">1.80 M</b><div class="d muted">set by the owner</div></div>
           <div class="card kpi"><small>Won to date</small><b class="num">1.21 M</b><div class="d up">67% of target &middot; 31 days left</div></div>
           <div class="card kpi"><small>Weighted forecast</small><b class="num">1.74 M</b><div class="d down">60k short at today's odds</div></div>
           <div class="card kpi"><small>Open opportunities</small><b class="num">38</b><div class="d muted">842k unweighted</div></div>
         </div>
 
-        <div class="card" style="margin-bottom:16px">
-          <div class="hd"><h3>Pipeline by stage</h3><span class="sp"></span>
+        <div class="card" style="margin-bottom:11px">
+          <div class="hd"><h3>Pipeline by stage</h3><span class="sub">odds learned, not typed</span><span class="sp"></span>
             <span class="filt on">This quarter</span><span class="filt">All stores</span><span class="filt">Nadia M.</span></div>
           <div class="pad">
             <div class="stages">
@@ -684,7 +818,6 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               <div class="stg"><small>Reserved</small><b class="num">147k</b><span class="c">4 open &middot; avg 81%</span><div class="bar"><i style="width:82%"></i></div></div>
               <div class="stg"><small>Won, 90 days</small><b class="num">1.21 M</b><span class="c">52 closed</span><div class="bar"><i class="ok" style="width:100%;background:var(--teal)"></i></div></div>
             </div>
-            <p class="note">A stage is a real step in how a piece gets sold: an enquiry, a viewing in the diary, a tray shared with the client, a piece reserved. The percentages are not typed in &mdash; they are the odds the system has learned from what actually closed.</p>
           </div>
         </div>
 
@@ -725,11 +858,11 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               </tbody>
             </table>
             <div class="pad" style="border-top:1px solid var(--paper3)">
-              <p class="note" style="margin:0">The odds come from the pattern in your own closed business &mdash; stage, tier, value band, source, how long since the last contact. They move on their own as things change, and a person can always override one and say why.</p>
+              <p class="note" style="margin:0">Odds come from your own closed business — stage, tier, value band, days since contact. A person can override one and say why.</p>
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
             <div class="card">
               <div class="hd"><h3>Against target</h3></div>
               <div class="pad">
@@ -738,12 +871,12 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                 <div class="amlrow"><span class="muted">Weighted pipeline</span><b class="num">528,000</b></div>
                 <div class="amlrow"><span class="muted">Forecast</span><b class="num">1,738,000</b></div>
                 <div class="prog"><i style="width:67%"></i></div>
-                <p class="note" style="margin-top:8px">67% won with 31 days to run. On today's odds you land about 62,000 short &mdash; roughly one Private-tier viewing that converts.</p>
+                <p class="note" style="margin-top:8px">67% won, 31 days left. Today’s odds land 62,000 short — one Private viewing that converts.</p>
               </div>
             </div>
 
             <div class="card">
-              <div class="hd"><h3>Why we lose</h3><span class="sp"></span><span class="tiny muted">23 lost, 90 days</span></div>
+              <div class="hd"><h3>Why we lose</h3><span class="sub">6 were stock, not price — a buying decision</span><span class="sp"></span><span class="tiny muted">23 lost</span></div>
               <table>
                 <tbody>
                   <tr><td>Price against another jeweller</td><td class="num">9</td></tr>
@@ -752,9 +885,6 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <tr><td>Postponed the occasion</td><td class="num">3</td></tr>
                 </tbody>
               </table>
-              <div class="pad" style="border-top:1px solid var(--paper3)">
-                <p class="note" style="margin:0">Six of these were stock, not price. That is a buying decision, and it is the kind of thing the pipeline can tell you and a sales report cannot.</p>
-              </div>
             </div>
           </div>
         </div>
@@ -762,7 +892,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ OUTREACH & UPSELL ============ -->
       <section class="screen" id="s-out">
-        <div class="awork" style="margin-bottom:16px">
+        <div class="awork" style="margin-bottom:11px">
           <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents here</span>
           <span class="arun"><b>Stylist</b> 6 upsells ranked <span class="st st-done">done 08:12</span></span>
           <span class="arun"><b>Relationship</b> 4 notes drafted <span class="st st-wait">waiting for a person</span></span>
@@ -795,7 +925,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
             <div class="card">
               <div class="hd"><h3>Outreach queue</h3><span class="sp"></span><span class="chip c-gold">4 to send</span></div>
               <div class="pad">
@@ -870,7 +1000,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
             <div class="card">
               <div class="hd"><h3>What the stylist may and may not do</h3></div>
               <div class="pad">
@@ -903,7 +1033,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ CHANNELS ============ -->
       <section class="screen" id="s-chan">
-        <div class="g g4" style="margin-bottom:16px">
+        <div class="g g4" style="margin-bottom:11px">
           <div class="card kpi"><small>Listed online</small><b class="num">312</b><div class="d muted">of 1,284 pieces</div></div>
           <div class="card kpi"><small>On marketplaces</small><b class="num">86</b><div class="d muted">one channel live</div></div>
           <div class="card kpi"><small>Tagged with RFID</small><b class="num">1,284</b><div class="d up">100% &middot; last count 2 days ago</div></div>
@@ -942,7 +1072,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
             <div class="card">
               <div class="hd"><h3>Where one piece is</h3><span class="sp"></span><span class="tiny muted">NCK-0114</span></div>
               <div class="pad">
@@ -984,8 +1114,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               <span class="chip c-teal">AML verified</span>
               <span class="chip c-coral">No marketing</span>
               <span class="chip c-dark">Discreet billing</span>
-              <span class="chip c-dark">Prefers 22K, 21K · yellow</span>
-              <span class="chip c-dark">Avoids white gold</span>
+              <span class="chip c-dark">22K/21K yellow · avoids white gold</span>
             </div>
           </div>
           <div class="facts">
@@ -996,7 +1125,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
           </div>
         </div>
 
-        <div class="scan" style="margin-top:16px">
+        <div class="scan" style="margin-top:11px">
           <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--gold3);fill:none;stroke-width:2"><path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M7 12h10"/></svg>
           <input placeholder="Scan a tag, or type a piece number…" value="DEMO-BNG-0001">
           <span class="chip c-teal">Online</span>
@@ -1004,12 +1133,12 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
         </div>
 
         <div class="counter3">
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
 
             <div class="card">
               <div class="hd"><h3>22K bangle · DEMO-BNG-0001</h3><span class="sp"></span><span class="chip c-gold">Priced at the approved rate</span></div>
               <div class="pad">
-                <div class="g g4" style="gap:12px;margin-bottom:14px">
+                <div class="g g4" style="gap:12px;margin-bottom:10px">
                   <div><small class="tiny muted">Gross</small><div><b class="num">24.500 g</b></div></div>
                   <div><small class="tiny muted">Net metal</small><div><b class="num">24.500 g</b></div></div>
                   <div><small class="tiny muted">Karat</small><div><b>22K</b></div></div>
@@ -1027,10 +1156,13 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
                   <div><b>22K, and she prefers 22K.</b> Within her usual spend at 14% above — an upgrade, not a stretch.</div>
                 </div>
-                <p class="note">Every line comes from the pricing engine at the rate approved this morning. Staff cannot type over a figure; a discount applies to making only, never to metal, and Nadia's role caps hers at 15%.</p>
+                <p class="note">Every line comes from the engine at this morning’s approved rate. No figure can be typed over; a discount touches making only, capped at 15% for Nadia’s role.</p>
               </div>
             </div>
 
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
             <div class="card">
               <div class="hd"><h3>Old gold taken in exchange</h3><span class="sp"></span><span class="chip c-gold">Second approval over 5,000</span></div>
               <div class="pad">
@@ -1040,13 +1172,10 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   <div><small class="tiny muted">Melt loss</small><div><b class="num">2%</b></div></div>
                   <div><small class="tiny muted">Credit</small><div><b class="num">3,829.11</b></div></div>
                 </div>
-                <p class="note">Computed, never typed. Her gold held drops to 266 g once this is taken in, and the client file records which piece it came from.</p>
+                <p class="note">Computed, never typed. Gold held drops to 266 g, and the file records which piece it came from.</p>
               </div>
             </div>
 
-          </div>
-
-          <div class="g" style="gap:16px;align-content:start">
 
             <div class="card">
               <div class="hd"><h3>She already owns</h3><span class="sp"></span><span class="tiny muted">don't sell twice</span></div>
@@ -1059,16 +1188,19 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                 </div>
                 <div class="lastv" style="margin-top:11px">
                   <b>Last visit · 2 Nov</b>
-                  Shown 4 pieces. Liked the 22K necklace and asked to see it beside the bangle she owns. Nadia M., 45 min.
+                  Shown 4 pieces. Liked the 22K necklace, asked to see it beside her bangle. Nadia M., 45 min.
                 </div>
                 <div class="inline-ai">
                   <span class="av"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg></span>
                   <div><span class="by">Stylist &middot; level C &middot; drafts only</span>
-                  <b>The necklace she asked about on 2 Nov is in stock here at Deira.</b>
-                  Suggest it beside this bangle. It cannot add anything to the sale itself.</div>
+                  <b>The necklace she asked about on 2 Nov is in stock at Deira.</b> Suggest it beside this bangle — it cannot add anything to the sale.</div>
                 </div>
               </div>
             </div>
+
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
 
             <div class="card">
               <div class="hd"><h3>Payment</h3></div>
@@ -1087,10 +1219,10 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                 <div class="warn">
                   <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
                   <div><b>Taking this in cash crosses the reporting threshold.</b>
-                  Her year-to-date cash goes from 38% to 104% of the configured limit. Card or split keeps it under. The threshold is set by the finance manager, per country.</div>
+                  Year to date goes 38% → 104% of the configured limit. Card or split keeps it under.</div>
                 </div>
                 <button class="btn b-dark" style="width:100%;margin-top:12px">Take payment</button>
-                <p class="note">Discreet billing is on, so the invoice goes to her billing contact, not to her. If the connection drops the counter keeps selling against the locked rate and reconciles after.</p>
+                <p class="note">Discreet billing on: the invoice goes to her billing contact. Offline, the counter sells against the locked rate and reconciles after.</p>
               </div>
             </div>
 
@@ -1100,7 +1232,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ OPERATIONS ============ -->
       <section class="screen" id="s-ops">
-        <div class="g g4" style="margin-bottom:16px">
+        <div class="g g4" style="margin-bottom:11px">
           <div class="card kpi"><small>Metal held</small><b class="num">11.84 kg</b><div class="d up">+180 g today</div></div>
           <div class="card kpi"><small>Stock value</small><b class="num">2.91 M</b><div class="d up">+1.2% on the rate</div></div>
           <div class="card kpi"><small>Pieces</small><b class="num">1,284</b><div class="d muted">46 on approval</div></div>
@@ -1123,7 +1255,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
             <div class="card">
               <div class="hd"><h3>Stores</h3></div>
               <div class="store"><span class="sq">DE</span><div style="flex:1"><b>Deira</b><div class="tiny muted">512 pieces · 4.14 kg</div></div><div class="spark"><i style="height:40%"></i><i style="height:62%"></i><i style="height:48%"></i><i style="height:80%"></i><i style="height:67%"></i><i style="height:95%"></i></div></div>
@@ -1142,14 +1274,14 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
 <!-- ============ FINANCE HUB ============ -->
       <section class="screen" id="s-fin">
-        <div class="g g4" style="margin-bottom:16px">
+        <div class="g g4" style="margin-bottom:11px">
           <div class="card kpi"><small>Rate in force</small><b class="num">245.80</b><div class="d muted">approved 09:12 &middot; N. Mansour</div></div>
           <div class="card kpi"><small>Awaiting a second person</small><b class="num">2</b><div class="d down">1 rate &middot; 1 exchange</div></div>
           <div class="card kpi"><small>Metal exposure</small><b class="num">2.91 M</b><div class="d up">11.84 kg fine</div></div>
           <div class="card kpi"><small>VAT this period</small><b class="num">41,208</b><div class="d muted">5% &middot; UAE &middot; confirmed</div></div>
         </div>
 
-        <div class="awork" style="margin-bottom:16px">
+        <div class="awork" style="margin-bottom:11px">
           <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents in the Finance Hub</span>
           <span class="arun"><b>Owner analyst</b> reconciled 3 stores <span class="st st-done">done 06:00</span></span>
           <span class="arun"><b>Owner analyst</b> flagged Marina &minus;2.4 g <span class="st st-wait">waiting for a person</span></span>
@@ -1177,11 +1309,11 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               </tbody>
             </table>
             <div class="pad" style="border-top:1px solid var(--paper3)">
-              <p class="note" style="margin:0">Nobody approves what they entered, and the state cannot be written around these buttons &mdash; not by a manager, not by system code, not by an agent. The rate in force stays in force until a second person signs the next one.</p>
+              <p class="note" style="margin:0">Nobody approves what they entered, and the state cannot be written around these buttons — not by a manager, not by system code, not by an agent.</p>
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px">
             <div class="card">
               <div class="hd"><h3>Compliance</h3><span class="sp"></span><span class="chip c-gold">configuration</span></div>
               <div class="pad">
@@ -1192,9 +1324,9 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                 <div class="amlrow"><span class="muted">Record retention</span><b>5 years</b></div>
                 <div class="warn">
                   <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
-                  <div><b>2 clients are within 20% of the cash threshold this year.</b> Both are flagged at the till before payment, not in a report next month.</div>
+                  <div><b>2 clients are within 20% of the cash threshold.</b> Flagged at the till before payment, not in next month’s report.</div>
                 </div>
-                <p class="note">Every value here is set by the named finance manager, per country, and dated. The software applies them and never invents one.</p>
+                <p class="note">Set by the named finance manager, per country, and dated. Applied here, never invented.</p>
               </div>
             </div>
 
@@ -1205,7 +1337,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                 <div class="amlrow"><span class="muted">Out on approval</span><b class="num">0.21 kg</b></div>
                 <div class="amlrow"><span class="muted">In transit</span><b class="num">0.13 kg</b></div>
                 <div class="amlrow"><span class="muted">Taken in today</span><b class="num">+0.07 kg</b></div>
-                <p class="note" style="margin-top:10px">Pieces out on approval are listed apart: they are on your book but not on your shelf.</p>
+                <p class="note" style="margin-top:10px">Out on approval is listed apart — on your book, not on your shelf.</p>
               </div>
             </div>
           </div>
@@ -1214,24 +1346,24 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 
       <!-- ============ AI LAYER ============ -->
       <section class="screen" id="s-agents">
-        <div class="guard" style="margin-bottom:16px">
+        <div class="guard" style="margin-bottom:11px">
           <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
-          <div>
-            <b>Three rules hold for every agent.</b> A number is always read from the pricing engine at the approved rate, never produced by a model.
-            An agent runs as the person who invoked it, so it can never see a client that person cannot.
-            Private and Royal clients are capped lower still: their data never enters a model request, and no automated message is ever sent to them.
+          <div class="rules">
+            <div><b>Numbers are read, never produced.</b> Always the engine, at the approved rate.</div>
+            <div><b>An agent runs as you.</b> It cannot see a client you cannot.</div>
+            <div><b>Private and Royal are capped.</b> No model request, no automated send.</div>
           </div>
         </div>
 
-        <div class="g split">
-          <div class="card">
+        <div class="g agents3">
+          <div class="card" style="align-self:start">
             <div class="hd"><h3>Agents</h3><span class="sp"></span><span class="chip c-gold">In development</span></div>
 
             <div class="agent">
               <div class="ai"><svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 00-4 4 3.5 3.5 0 00-1 6.8V17a3 3 0 006 0V3zM12 3a4 4 0 014 4 3.5 3.5 0 011 6.8V17a3 3 0 01-6 0"/></svg></div>
               <div>
                 <b>Memory</b>
-                <div class="tiny muted">Keeps the client file current from what happened — shown, bought, returned, repaired — so nothing lives only in someone's head.</div>
+                <div class="tiny muted">Keeps the file current from what happened, so nothing lives only in someone’s head.</div>
                 <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
               </div>
               <span class="chip c-teal">12 today</span>
@@ -1241,7 +1373,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               <div class="ai"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
               <div>
                 <b>Stylist</b>
-                <div class="tiny muted">Builds the tray: which pieces suit this client, this occasion and this budget, ranked with the reasons written out.</div>
+                <div class="tiny muted">Builds the tray: pieces that suit this client, occasion and budget, with the reasons written out.</div>
                 <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung act">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
               </div>
               <span class="chip c-teal">4 trays</span>
@@ -1251,7 +1383,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               <div class="ai"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h5"/></svg></div>
               <div>
                 <b>Relationship</b>
-                <div class="tiny muted">Watches the calendar and the pieces out on approval, drafts the note in Arabic or English. A person always sends it.</div>
+                <div class="tiny muted">Watches occasions and pieces out on approval, drafts in Arabic or English. A person sends.</div>
                 <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung act">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
               </div>
               <span class="chip c-gold">2 waiting</span>
@@ -1261,14 +1393,14 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               <div class="ai"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 16v-5M12 16V8M16 16v-7"/></svg></div>
               <div>
                 <b>Owner analyst</b>
-                <div class="tiny muted">Answers the owner out loud, in Arabic or English: what sold, what metal is held per store, what needs a decision.</div>
+                <div class="tiny muted">Answers the owner out loud: what sold, metal per store, what needs a decision.</div>
                 <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
               </div>
               <span class="chip c-teal">6 asked</span>
             </div>
           </div>
 
-          <div class="g" style="gap:16px">
+          <div class="g" style="gap:11px;align-content:start">
             <div class="card">
               <div class="hd"><h3>Owner analyst &middot; this morning</h3><span class="sp"></span><span class="chip c-teal">Level A &middot; read only</span></div>
               <div class="pad">
@@ -1281,7 +1413,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                   </div>
                   <audio controls preload="none" style="grid-column:1/-1" src="../site/audio/owner-brief.mp3"></audio>
                 </div>
-                <p class="note">Every figure the analyst speaks is read from the engine at the approved rate &mdash; it reports numbers, it never produces them. It is at level A here: it can read and explain, and it cannot approve the rate it just told you about.</p>
+                <p class="note">Every figure spoken is read from the engine. Level A: it can explain the rate, not approve it.</p>
               </div>
             </div>
 
@@ -1289,7 +1421,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               <div class="hd"><h3>Waiting for a person</h3><span class="sp"></span><span class="chip c-gold">2</span></div>
               <div class="pad">
                 <div class="tl">
-                  <div class="tli"><b>Draft note to A. K.</b><span>Relationship · wedding in 21 days · Private tier, so it is never sent automatically. Nadia M. to review.</span>
+                  <div class="tli"><b>Draft note to A. K.</b><span>Relationship · wedding in 21 days · Private tier, never auto-sent · Nadia M.</span>
                     <div style="margin-top:7px;display:flex;gap:7px"><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Open draft</button><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Dismiss</button></div>
                   </div>
                   <div class="tli"><b>Tray of 4 pieces</b><span>Stylist · all in stock at Deira · reasons attached to each piece</span>
@@ -1299,6 +1431,9 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
               </div>
             </div>
 
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
             <div class="card">
               <div class="hd"><h3>Audit</h3><span class="sp"></span><span class="tiny muted">every call, kept</span></div>
               <table>
@@ -1309,7 +1444,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
                 </tbody>
               </table>
               <div class="pad" style="border-top:1px solid var(--paper3)">
-                <p class="note" style="margin:0">The blocked row is the control working: an automated message to a Royal-tier client was refused, and a draft was left for a person instead.</p>
+                <p class="note" style="margin:0">The blocked row is the control working — a message to a Royal client refused, a draft left instead.</p>
               </div>
             </div>
           </div>
