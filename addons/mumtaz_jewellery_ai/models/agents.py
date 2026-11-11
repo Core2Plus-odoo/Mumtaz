@@ -592,6 +592,8 @@ class AgentsChat(models.AbstractModel):
                      'user': self.env.user.name, 'agent_can': policy.AGENTS[agent]['purpose']}
             hint = policy.client_hint(last)
             partner = self._find_client(hint) if hint else None
+            if not (partner and partner.jewellery_tier in policy.RESTRICTED):
+                partner = self._mentioned_restricted(last) or partner
             if partner and partner.jewellery_tier not in policy.RESTRICTED:
                 facts['client'] = self._client_facts(partner)['client']
             elif partner:
@@ -623,6 +625,22 @@ class AgentsChat(models.AbstractModel):
         if not out['reply']:
             out['reply'] = self._chat_help(agent, ar)
         return out
+
+    def _mentioned_restricted(self, text):
+        """A Private or Royal client named anywhere in what was typed: the
+        conversation must not go to a model with her in it, whoever typed
+        her name. Checked against the names the person may see."""
+        low = (text or '').lower()
+        if not low:
+            return None
+        for p in self.env['res.partner'].search([('jewellery_tier', 'in', list(policy.RESTRICTED))], limit=500):
+            name = (p.name or '').strip().lower()
+            if len(name) >= 4 and name in low:
+                return p
+            first = name.split(' ')[0]
+            if len(first) >= 5 and first in low.split():
+                return p
+        return None
 
     def _chat_help(self, agent, ar):
         if agent == 'layla':
