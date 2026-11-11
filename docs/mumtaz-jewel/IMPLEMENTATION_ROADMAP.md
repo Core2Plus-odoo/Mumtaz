@@ -65,6 +65,16 @@ pure-Python plus 54 Odoo `TransactionCase`). The maker-checker bypasses found
 while testing are fixed on both approval models (issue 10 below). Still open in this slice: closing
 decisions D1 to D8.
 
+Update 11 Nov 2026: the CI script now runs **on GitHub**, not only on a
+developer's machine. `.github/workflows/jewel-odoo-tests.yml` builds an Odoo
+19 Community checkout against PostgreSQL 16, installs the addons into a
+throwaway database, runs the suite and seeds the demo data, by calling the
+same `scripts/jewel_ci.sh`. This closes a real hole rather than adding
+decoration: everything in `ci.yml` lints, audits and parses, so no job had
+ever installed an addon, and GitHub reported green on a commit in this
+repository whose Odoo install was in fact broken. A green tick now means the
+addons install and the tests pass.
+
 | Item | Detail |
 | --- | --- |
 | Features | Close open decisions (blueprint section 16 list, D1 to D8). Commit the three Jewel addons to the branch. `TransactionCase` test suite for everything built. CI script (fresh database, install, run tests). Seed module with DEMO data. Fix wording defects |

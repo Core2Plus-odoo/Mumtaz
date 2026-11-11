@@ -15,6 +15,12 @@
 #   KEEP_DB=1 scripts/jewel_ci.sh       # keep the database for inspection
 #   SKIP_SEED=1 scripts/jewel_ci.sh     # install and test only
 #
+# The branch guard below refuses to run on `main`, so that nobody points this
+# at the production checkout at /opt/mumtaz. A disposable CI runner has no
+# production checkout, and gating `main` is exactly what CI is for, so it may
+# opt out with JEWEL_CI_ALLOW_MAIN=1. Nothing else about the guard changes:
+# the database name check and the refusal to touch update.sh still hold.
+#
 # Configuration (environment):
 #   ODOO_PATH   checkout of Odoo 19 Community (must contain odoo-bin)
 #   PYTHON      interpreter with Odoo's dependencies  (default: python3)
@@ -38,9 +44,10 @@ info() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 
 # -- guard rails -------------------------------------------------------------
 BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
-if [ "$BRANCH" = "main" ]; then
-  red "Refusing to run on 'main': that branch auto-deploys to production."
-  red "Check out the Mumtaz Jewel feature branch first."
+if [ "$BRANCH" = "main" ] && [ "${JEWEL_CI_ALLOW_MAIN:-0}" != "1" ]; then
+  red "Refusing to run on 'main': the production VPS pulls that branch."
+  red "Check out the Mumtaz Jewel feature branch first, or set"
+  red "JEWEL_CI_ALLOW_MAIN=1 if this checkout is a disposable CI runner."
   exit 2
 fi
 case "$DB_NAME" in
