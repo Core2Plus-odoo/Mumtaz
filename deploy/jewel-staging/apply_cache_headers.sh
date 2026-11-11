@@ -99,8 +99,17 @@ else
     info "DRY_RUN: would insert after the server_name line:"
     printf '%s\n' "$ADD_LINE"
   else
-    BACKUP="$SITE_CONF.bak.$(date +%Y%m%d%H%M%S)"
-    cp -p "$SITE_CONF" "$BACKUP"
+    # NOT beside the config. Ubuntu's nginx.conf does
+    #   include /etc/nginx/sites-enabled/*;
+    # with no extension filter, so a backup written next to an enabled site
+    # is LOADED BY NGINX as a second copy of the same server block. At best
+    # that is a "conflicting server name" warning and a duplicate nobody
+    # knows about; at worst the config stops being valid. Every later run
+    # would add another one.
+    BACKUP_DIR="${BACKUP_DIR:-/var/backups/jewel-nginx}"
+    mkdir -p "$BACKUP_DIR"
+    BACKUP="$BACKUP_DIR/$(basename "$SITE_CONF").bak.$(date +%Y%m%d%H%M%S)"
+    cp -pL "$SITE_CONF" "$BACKUP"
     info "Backed up to $BACKUP"
     # Insert after server_name, but ONLY in the block that actually serves
     # the site. A naive "first server_name wins" lands in the port-80
@@ -156,7 +165,10 @@ if nginx -t 2>&1; then
 else
   red "nginx -t FAILED. Rolling back."
   rm -f "$MAP_DEST"
-  [ "${ALREADY:-0}" = "0" ] && [ -n "${BACKUP:-}" ] && cp -p "$BACKUP" "$SITE_CONF"
+  # cat, not cp: $SITE_CONF may be a symlink into sites-available and the
+  # target is what nginx reads. cp would be fine here too, but cat makes it
+  # explicit that we are restoring contents, never replacing the link.
+  [ "${ALREADY:-0}" = "0" ] && [ -n "${BACKUP:-}" ] && cat "$BACKUP" > "$SITE_CONF"
   if nginx -t >/dev/null 2>&1; then
     red "Rolled back; the previous configuration is valid and still live."
   else
