@@ -20,12 +20,19 @@
 #   deploy/jewel-staging/deploy.sh --no-pull       # restart only
 #   deploy/jewel-staging/deploy.sh --install       # first run: install addons
 #   deploy/jewel-staging/deploy.sh --seed          # add the DEMO data
+#   deploy/jewel-staging/deploy.sh --modules       # install modules newly
+#                                                  # listed in MODULES into
+#                                                  # the existing database
+#   deploy/jewel-staging/deploy.sh --site-only     # landing page + interface
+#
+# Every run also builds the Jawhar interface (apps/jawhar-web) in a Node
+# container and publishes it to /opt/mumtaz/jewel-app; SKIP_WEB=1 skips it.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 PROJECT="mumtaz-jewel-staging"
-MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale"
+MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale,mumtaz_jewellery_api"
 SEED_MODULE="mumtaz_jewellery_demo"
 DEMO_DB="${DEMO_DB:-jewel_demo}"
 LANDING_SRC="$REPO_ROOT/website/jewel"
@@ -38,6 +45,7 @@ ok()   { printf '\033[32m%s\033[0m\n' "$*"; }
 DO_PULL=1
 DO_INSTALL=0
 DO_SEED=0
+DO_MODULES=0
 SITE_ONLY=0
 for arg in "$@"; do
   case "$arg" in
@@ -45,6 +53,7 @@ for arg in "$@"; do
     --install)   DO_INSTALL=1 ;;
     --seed)      DO_SEED=1 ;;
     --site-only) SITE_ONLY=1 ;;
+    --modules)   DO_MODULES=1 ;;
     *) red "Unknown option: $arg"; exit 2 ;;
   esac
 done
@@ -182,6 +191,60 @@ if [ -d "$LANDING_SRC" ]; then
   fi
 fi
 
+# -- 1b. the Jawhar interface --------------------------------------------------
+# Built here, not committed: a built bundle in git goes stale the moment the
+# source changes. The host has no Node, so the build runs in a container
+# against the checkout; only dist/ is published. Same rebuild-the-directory
+# publish as the landing page, so removed files do not linger.
+WEB_SRC="$REPO_ROOT/apps/jawhar-web"
+WEB_DIR="${JEWEL_APP_DIR:-/opt/mumtaz/jewel-app}"
+if [ "${SKIP_WEB:-0}" = "1" ]; then
+  info "SKIP_WEB=1, not building the interface."
+elif [ -f "$WEB_SRC/package.json" ]; then
+  info "Building the Jawhar interface (apps/jawhar-web) in a Node container"
+  if ! docker run --rm -v "$WEB_SRC:/w" -w /w node:22-alpine \
+        sh -c 'npm ci --no-audit --no-fund --loglevel=error && npx vite build' ; then
+    red "The interface build failed; nothing was published to $WEB_DIR."
+    exit 1
+  fi
+  [ -s "$WEB_SRC/dist/index.html" ] || { red "Build produced no dist/index.html"; exit 1; }
+  if mkdir -p "$(dirname "$WEB_DIR")" 2>/dev/null && [ -w "$(dirname "$WEB_DIR")" ]; then
+    tmp="$(mktemp -d "${WEB_DIR%/}.new.XXXXXX")"
+    cp -r "$WEB_SRC/dist/." "$tmp/"
+    chmod -R a+rX "$tmp"
+    old="$(mktemp -d "${WEB_DIR%/}.old.XXXXXX")"
+    mv "$WEB_DIR" "$old/prev" 2>/dev/null || true
+    mv "$tmp" "$WEB_DIR"
+    rm -rf "$old"
+    ok "Interface published to $WEB_DIR at $(date -u +%H:%M:%SZ)"
+    # Served, not just copied: compare bytes, because the catch-all answers
+    # 200 with the landing page for any unknown path.
+    site="${JEWEL_SITE_URL:-https://jewel.mumtaz.digital}"
+    if command -v curl >/dev/null 2>&1; then
+      served="$(mktemp)"
+      if [ -n "${JEWEL_SITE_AUTH:-}" ]; then
+        code="$(curl -sS --max-time 20 -o "$served" -w '%{http_code}' -u "$JEWEL_SITE_AUTH" "${site%/}/app/" 2>/dev/null || echo 000)"
+      else
+        code="$(curl -sS --max-time 20 -o "$served" -w '%{http_code}' "${site%/}/app/" 2>/dev/null || echo 000)"
+      fi
+      if cmp -s "$served" "$WEB_SRC/dist/index.html"; then
+        ok "Verified: ${site%/}/app/ serves the build just published."
+      elif [ "$code" = "401" ]; then
+        info "${site%/}/app/ is password-protected (401); cannot compare bytes without"
+        info "JEWEL_SITE_AUTH=demo:<password> in .env. The files are in place."
+      else
+        red "${site%/}/app/ answered $code but NOT with the build just published."
+        red "Is the /app/ location in nginx? See deploy/jewel-staging/install_nginx_conf.sh."
+      fi
+      rm -f "$served"
+    fi
+  else
+    red "Cannot write $WEB_DIR; the interface was built but NOT published."
+  fi
+else
+  info "No apps/jawhar-web in this checkout; interface not built."
+fi
+
 if [ "$SITE_ONLY" = "1" ]; then
   if [ "${published:-0}" = "1" ]; then
     ok "--site-only: landing page and prototype published. Odoo untouched."
@@ -283,6 +346,16 @@ if [ "$DO_INSTALL" = "1" ]; then
     red "  >>> u.write({'password': '<your password>'}); env.cr.commit()"
     exit 1
   fi
+fi
+
+if [ "$DO_MODULES" = "1" ] && [ "$DO_INSTALL" != "1" ]; then
+  # `-i` on a module that is already installed does nothing, so this is safe
+  # to run on every deploy that adds a module to MODULES.
+  info "Installing modules missing from '$DEMO_DB': $MODULES"
+  compose up -d db
+  compose run --rm --no-deps odoo odoo \
+    -c /etc/odoo/odoo.conf -d "$DEMO_DB" -i "$MODULES" \
+    --without-demo=True --no-http --stop-after-init
 fi
 
 if [ "$DO_SEED" = "1" ]; then
