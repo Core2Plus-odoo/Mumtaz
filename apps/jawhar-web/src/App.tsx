@@ -14,6 +14,9 @@ import Documents from './pages/Documents';
 import OrderDetail from './pages/OrderDetail';
 import NewQuote from './pages/NewQuote';
 import Counter from './pages/Counter';
+import Pipeline from './pages/Pipeline';
+import TrayBuilder from './pages/TrayBuilder';
+import PublicTray from './pages/PublicTray';
 import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import Memos from './pages/Memos';
@@ -45,9 +48,14 @@ export default function App() {
 
   const signOut = async () => { try { await api.logout(); } finally { setUser(null); } };
 
+  // The client's tray link needs no sign-in: the token is the scope.
+  const isPublic = window.location.pathname.startsWith('/app/t/');
+
   return (
     <I18nContext.Provider value={{ lang, setLang }}>
-      {user === undefined ? null : user === null ? (
+      {isPublic ? (
+        <Routes><Route path="t/:token" element={<PublicTray />} /></Routes>
+      ) : user === undefined ? null : user === null ? (
         <Login onSignedIn={(u) => { setUser(u); loadRate(); }} />
       ) : (
         <Routes>
@@ -60,6 +68,8 @@ export default function App() {
             <Route path="clients/:id" element={<ClientDetail />} />
             <Route path="documents" element={<Documents />} />
             <Route path="counter" element={<Counter />} />
+            <Route path="pipeline" element={<Pipeline />} />
+            <Route path="trays/:id" element={<TrayBuilder />} />
             <Route path="documents/new" element={<NewQuote />} />
             <Route path="documents/:id" element={<OrderDetail />} />
             <Route path="invoices" element={<Invoices />} />

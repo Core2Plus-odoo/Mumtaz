@@ -156,6 +156,14 @@ serial), printable receipt. Offline selling is deliberately not offered
 | Acceptance | Demo: cut the network, sell a piece with an old-gold exchange, reconnect, books and stock reconcile |
 
 ### Slice 2B: Private Tray and client follow-through (new in revision 3)
+
+Status 11 Nov 2026: **built** — `mumtaz_jewellery_crm`: jewellery stages on
+standard crm, the ranked (or hand-chosen) tray with stored reasons, the
+tokenised client link with like/ask/viewing request, staff reservation as a
+priced quotation, the sale winning the opportunity. See
+`PLAN_V3_RECONCILIATION.md`. Open: preference/intent records with confidence
+and expiry; consent per channel (with Outreach).
+
 | Item | Detail |
 | --- | --- |
 | Features | Preference/intent records with source, confidence and expiry; consent per channel and purpose; eligibility-then-ranking (starting weights 30/25/20/15/10, normalised when signals are missing, confidence shown); 3-5 piece tray; staff review and reorder; branded expiring revocable tokenised link in Arabic and English; client like/dislike/question/viewing request (not a reservation); stored candidate set, reasons, policy version, stock timestamp |

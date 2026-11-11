@@ -349,8 +349,13 @@ class TestJawharApiSale(HttpCase):
         self.api('/sales/orders/%d/invoice' % q['id'], 'POST', status=201)
         self.api('/auth/logout', 'POST')
 
-        # A jewellery user with no sales rights cannot even open a quote.
-        self.sign_in('api_s_maker')
+        # An internal user with no jewellery role cannot even open a quote.
+        # (A jewellery user is a salesperson by design since the Sales Hub.)
+        Users = self.env['res.users'].with_context(no_reset_password=True)
+        field = 'group_ids' if 'group_ids' in Users._fields else 'groups_id'
+        Users.create({'name': 'TEST Outsider', 'login': 'api_outsider', 'password': PASSWORD,
+                      field: [(6, 0, [self.env.ref('base.group_user').id])]})
+        self.sign_in('api_outsider')
         out = self.api('/sales/quotes', 'POST',
                        {'client_id': self.client.id, 'lines': [{'piece_id': self.lot_b.id}]}, status=403)
         self.assertEqual(out['error']['code'], 'forbidden')
@@ -466,3 +471,63 @@ class TestJawharApiCounter(TestJawharApiSale):
             'client_id': self.client.id, 'piece_id': self.lot_a.id, 'discount': 20,
             'journal_id': self.journal.id}, status=400)
         self.assertIn('manager', out['error']['message'].lower())
+
+
+@tagged('post_install', '-at_install')
+class TestJawharApiSalesHub(TestJawharApiSale):
+    """Pipeline and Private Trays through the door."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.env['ir.config_parameter'].sudo().set_param('mumtaz_jewellery.tray_link_days', '7')
+        cls.client.write({'preferred_karats': '22', 'typical_budget': 6000.0})
+        cls.royal = cls.env['res.partner'].create({
+            'name': 'TEST Royal Hub', 'jewellery_tier': 'royal', 'relationship_manager_id': cls.cashier.id})
+
+    def test_tray_from_ranking_to_shared_link_to_reservation(self):
+        self.sign_in('api_cashier')
+        tray = self.api('/trays', 'POST', {'client_id': self.client.id, 'intent': 'wedding', 'limit': 2}, status=201)['data']
+        self.assertEqual(tray['state'], 'draft')
+        self.assertEqual(len(tray['lines']), 2)
+        self.assertTrue(all(l['reasons'] for l in tray['lines']))
+        self.assertTrue(tray['lead'])
+
+        shared = self.api('/trays/%d/share' % tray['id'], 'POST')['data']
+        self.assertTrue(shared['token'])
+        self.assertIn('/app/t/' + shared['token'], shared['url'])
+        self.assertTrue(shared['tray']['link_live'])
+
+        # the client's phone, no session
+        pub = self.url_open('/jawhar/public/tray/' + shared['token'])
+        self.assertEqual(pub.status_code, 200)
+        self.assertNotIn(self.client.name, pub.text)
+        piece = pub.json()['data']['pieces'][0]
+        self.assertNotIn('id', piece)
+
+        pipe = self.api('/pipeline')['data']
+        mine = [l for l in pipe['items'] if l['tray'] and l['tray']['id'] == tray['id']]
+        self.assertEqual(len(mine), 1)
+        self.assertEqual(mine[0]['stage']['name'], 'Tray shared')
+
+        res = self.api('/trays/%d/reserve' % tray['id'], 'POST',
+                       {'piece_id': tray['lines'][0]['piece']['id']}, status=201)['data']
+        self.assertEqual(res['order']['kind'], 'quote')
+        self.assertTrue(res['order']['lines'][0]['priced'])
+        self.assertEqual(res['tray']['state'], 'reserved')
+        self.assertFalse(res['tray']['link_live'])                 # the link dies on reservation
+        self.assertEqual(self.url_open('/jawhar/public/tray/' + shared['token']).status_code, 404)
+
+    def test_royal_tray_by_hand_only_and_no_link(self):
+        self.sign_in('api_cashier')                                # cashier is a VIP manager
+        tray = self.api('/trays', 'POST', {'client_id': self.royal.id}, status=201)['data']
+        self.assertEqual(tray['lines'], [])
+        self.api('/trays/%d/build' % tray['id'], 'POST', status=400)
+        tray = self.api('/trays/%d/pieces' % tray['id'], 'POST', {'piece_id': self.lot_b.id})['data']
+        self.assertEqual(len(tray['lines']), 1)
+        out = self.api('/trays/%d/share' % tray['id'], 'POST', status=400)
+        self.assertIn('Royal', out['error']['message'])
+        self.api('/auth/logout', 'POST')
+        self.sign_in('api_seller')                                 # not allowed to see this client
+        self.api('/trays/%d' % tray['id'], status=404)
+        self.assertNotIn(tray['id'], [t['id'] for t in self.api('/trays')['data']['items']])

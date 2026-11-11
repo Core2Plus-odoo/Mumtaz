@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- A tray is as visible as its client: the same rule as on res.partner,
+         expressed through partner_id, so a Private or Royal client's tray is
+         invisible to everyone but the named manager, the deputy and VIP
+         managers — not a list entry, not a count. -->
+    <record id="rule_tray_restricted_tier" model="ir.rule">
+        <field name="name">Jewellery: trays of Private and Royal clients restricted</field>
+        <field name="model_id" ref="model_jewellery_tray"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('mumtaz_jewellery_vip.group_vip_manager') else ['|', '|', ('partner_id.jewellery_tier', 'not in', ['private', 'royal']), ('partner_id.relationship_manager_id', '=', user.id), ('partner_id.deputy_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_tray_line_restricted_tier" model="ir.rule">
+        <field name="name">Jewellery: tray lines of Private and Royal clients restricted</field>
+        <field name="model_id" ref="model_jewellery_tray_line"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('mumtaz_jewellery_vip.group_vip_manager') else ['|', '|', ('tray_id.partner_id.jewellery_tier', 'not in', ['private', 'royal']), ('tray_id.partner_id.relationship_manager_id', '=', user.id), ('tray_id.partner_id.deputy_id', '=', user.id)]</field>
+    </record>
+    <!-- Jewellery users work the pipeline: they are salespeople. On a shop
+         floor any colleague may pick up a quote another drafted, so they see
+         every sale document of the company (Odoo's "All Documents" level),
+         not only their own. Who may see a Private or Royal client is decided
+         by the tier rules on the client and the tray, never by this. -->
+    <record id="mumtaz_jewellery.group_jewellery_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+    </record>
+</odoo>

@@ -431,6 +431,71 @@ def _old_gold_dict(x):
     }
 
 
+def _lead_dict(lead):
+    nxt = lead.activity_ids.sorted('date_deadline')[:1]
+    return {
+        'id': lead.id,
+        'name': lead.name,
+        'client': _m2o(lead.partner_id),
+        'stage': {'id': lead.stage_id.id, 'name': lead.stage_id.name,
+                  'sequence': lead.stage_id.sequence, 'won': lead.stage_id.is_won},
+        'probability': lead.probability,
+        'automated': lead.is_automated_probability,
+        'expected_revenue': lead.expected_revenue,
+        'currency': lead.company_currency.name,
+        'salesperson': _m2o(lead.user_id),
+        'deadline': lead.date_deadline,
+        'next_activity': {'summary': nxt.summary, 'date': nxt.date_deadline,
+                          'user': _m2o(nxt.user_id)} if nxt else None,
+        'tray': _m2o(lead.jewellery_tray_ids[:1]) if lead.jewellery_tray_ids else None,
+        'created': lead.create_date,
+    }
+
+
+def _tray_line_dict(line):
+    lot = line.lot_id
+    return {
+        'id': line.id,
+        'piece': {'id': lot.id, 'serial': lot.name, 'product': _m2o(lot.product_id),
+                  'karat': lot.karat, 'net_weight_g': lot.net_weight_g},
+        'sequence': line.sequence,
+        'score': line.score,
+        'reasons': [r for r in (line.reasons or '').split('\n') if r],
+        'price': line.price,
+        'feedback': line.feedback,
+        'question': line.question or None,
+        'available': request.env['jewellery.tray']._lot_available(lot),
+    }
+
+
+def _tray_dict(tray, detail=False):
+    data = {
+        'id': tray.id,
+        'name': tray.name,
+        'client': _m2o(tray.partner_id),
+        'associate': _m2o(tray.user_id),
+        'state': tray.state,
+        'intent': tray.intent or None,
+        'budget': tray.budget,
+        'piece_count': len(tray.line_ids),
+        'total': sum(tray.line_ids.mapped('price')),
+        'link_live': tray.link_live,
+        'link_expires': tray.token_expires,
+        'link_opened_at': tray.link_opened_at,
+        'viewing_requested_at': tray.viewing_requested_at,
+        'viewing_preferred': tray.viewing_preferred or None,
+        'viewing_note': tray.viewing_note or None,
+        'reservation': _m2o(tray.reservation_order_id),
+        'lead': _m2o(tray.lead_id),
+        'restricted': tray.partner_id.jewellery_restricted,
+        'policy_version': tray.policy_version,
+        'stock_checked_at': tray.stock_checked_at,
+    }
+    if detail:
+        data['lines'] = [_tray_line_dict(l) for l in tray.line_ids.sorted('sequence')]
+    return data
+
+
 # --------------------------------------------------------------------------
 # the routes
 # --------------------------------------------------------------------------
@@ -568,6 +633,8 @@ class JawharApi(Controller):
         Sale = request.env['sale.order']
         data['orders'] = [_order_dict(o) for o in Sale.search(
             [('partner_id', '=', partner.id)], order='date_order desc', limit=20)]
+        data['trays'] = [_tray_dict(t) for t in request.env['jewellery.tray'].search(
+            [('partner_id', '=', partner.id)], order='id desc', limit=10)]
         return data
 
     # ---- sales documents ------------------------------------------------
@@ -888,6 +955,125 @@ class JawharApi(Controller):
         intake = _get('jewellery.old.gold', intake_id)
         intake.action_approve()
         return _old_gold_dict(intake)
+
+    # ---- Sales Hub: pipeline and Private Trays --------------------------------
+    @_r('/pipeline')
+    @endpoint()
+    def pipeline(self, limit=200, **kw):
+        Lead = request.env['crm.lead']
+        Stage = request.env['crm.stage']
+        stages = Stage.browse([request.env.ref('mumtaz_jewellery_crm.' + x).id for x in
+                               ('stage_enquiry', 'stage_tray', 'stage_viewing', 'stage_reserved', 'stage_won')])
+        leads = Lead.search([('type', '=', 'opportunity'), ('stage_id', 'in', stages.ids)],
+                            limit=_int(limit, 200, 1, 1000), order='probability desc, expected_revenue desc')
+        by_stage = []
+        for st in stages:
+            mine = leads.filtered(lambda l, st=st: l.stage_id == st)
+            by_stage.append({
+                'id': st.id, 'name': st.name, 'won': st.is_won,
+                'count': len(mine), 'value': sum(mine.mapped('expected_revenue')),
+                'weighted': sum(l.expected_revenue * l.probability / 100.0 for l in mine),
+            })
+        open_leads = leads.filtered(lambda l: not l.stage_id.is_won)
+        return {
+            'stages': by_stage,
+            'items': [_lead_dict(l) for l in leads],
+            'summary': {
+                'open': len(open_leads),
+                'open_value': sum(open_leads.mapped('expected_revenue')),
+                'weighted': sum(l.expected_revenue * l.probability / 100.0 for l in open_leads),
+                'won_value': sum(leads.filtered(lambda l: l.stage_id.is_won).mapped('expected_revenue')),
+                'currency': request.env.company.currency_id.name,
+            },
+        }
+
+    @_r('/trays')
+    @endpoint()
+    def trays(self, client_id=None, state=None, limit=50, **kw):
+        Tray = request.env['jewellery.tray']
+        domain = []
+        if client_id:
+            domain.append(('partner_id', '=', int(client_id)))
+        if state:
+            domain.append(('state', '=', state))
+        recs = Tray.search(domain, limit=_int(limit, 50, 1), order='id desc')
+        return {'items': [_tray_dict(t) for t in recs], 'total': Tray.search_count(domain)}
+
+    @_r('/trays/<int:tray_id>')
+    @endpoint()
+    def tray(self, tray_id, **kw):
+        return _tray_dict(_get('jewellery.tray', tray_id), detail=True)
+
+    @_r('/trays', methods=['POST'])
+    @endpoint()
+    def tray_create(self):
+        body = _body()
+        partner = _get('res.partner', body.get('client_id') or 0)
+        tray = request.env['jewellery.tray'].create({
+            'partner_id': partner.id,
+            'intent': (body.get('intent') or '').strip() or False,
+            'budget': float(body.get('budget') or 0) or 0.0,
+        })
+        if body.get('build', True) and not partner.jewellery_restricted:
+            tray.action_build(limit=int(body.get('limit') or 3))
+        else:
+            tray._ensure_lead()
+        return _tray_dict(tray, detail=True), 201
+
+    @_r('/trays/<int:tray_id>/build', methods=['POST'])
+    @endpoint()
+    def tray_build(self, tray_id):
+        tray = _get('jewellery.tray', tray_id)
+        body = _body()
+        if body.get('intent') is not None:
+            tray.intent = (body.get('intent') or '').strip() or False
+        if body.get('budget') is not None:
+            tray.budget = float(body.get('budget') or 0)
+        tray.action_build(limit=int(body.get('limit') or 3))
+        return _tray_dict(tray, detail=True)
+
+    @_r('/trays/<int:tray_id>/pieces', methods=['POST'])
+    @endpoint()
+    def tray_pieces(self, tray_id):
+        tray = _get('jewellery.tray', tray_id)
+        body = _body()
+        lot = _get('stock.lot', body.get('piece_id') or 0)
+        if body.get('remove'):
+            tray.action_remove_piece(lot)
+        else:
+            tray.action_add_piece(lot, reasons=(body.get('reasons') or '').strip() or None)
+        return _tray_dict(tray, detail=True)
+
+    @_r('/trays/<int:tray_id>/share', methods=['POST'])
+    @endpoint()
+    def tray_share(self, tray_id):
+        tray = _get('jewellery.tray', tray_id)
+        token = tray.action_share()
+        base = request.httprequest.url_root.rstrip('/')
+        return {'tray': _tray_dict(tray, detail=True), 'token': token,
+                'url': f'{base}/app/t/{token}'}
+
+    @_r('/trays/<int:tray_id>/revoke', methods=['POST'])
+    @endpoint()
+    def tray_revoke(self, tray_id):
+        tray = _get('jewellery.tray', tray_id)
+        tray.action_revoke()
+        return _tray_dict(tray, detail=True)
+
+    @_r('/trays/<int:tray_id>/reserve', methods=['POST'])
+    @endpoint()
+    def tray_reserve(self, tray_id):
+        tray = _get('jewellery.tray', tray_id)
+        lot = _get('stock.lot', _body().get('piece_id') or 0)
+        order = tray.action_reserve(lot)
+        return {'tray': _tray_dict(tray, detail=True), 'order': _order_dict(order, detail=True)}, 201
+
+    @_r('/trays/<int:tray_id>/close', methods=['POST'])
+    @endpoint()
+    def tray_close(self, tray_id):
+        tray = _get('jewellery.tray', tray_id)
+        tray.action_close()
+        return _tray_dict(tray, detail=True)
 
     # ---- memos, old gold, owner -----------------------------------------
     @_r('/memos')
