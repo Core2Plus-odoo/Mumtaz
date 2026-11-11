@@ -8,9 +8,15 @@ order leaves draft — not merely made readonly in a view, which a server action
 or an RPC call would walk straight past.
 
 VAT deliberately does NOT come from the pricing engine here. Odoo's own tax
-engine owns tax on a sale line, so the engine is called with ``vat_rate=0``
-and ``price_unit`` carries the pre-tax subtotal. Taking VAT from both would
-charge it twice.
+engine owns tax on a sale line, so ``price_unit`` carries the engine's
+pre-tax ``subtotal`` and its ``total`` is discarded. Taking VAT from both
+would charge it twice.
+
+(The engine is still *called* with the configured VAT rate, because
+``get_price_breakdown`` reads it from ``ir.config_parameter``. That is
+harmless: ``subtotal`` is the sum of metal, wastage, making and stones and
+does not depend on ``vat_rate`` at all. Only ``vat`` and ``total`` do, and
+neither is used here.)
 """
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -98,7 +104,8 @@ class SaleOrderLine(models.Model):
                     'client agreed to and cannot be recalculated.')
                     % line.order_id.name)
 
-            # vat_rate=0: Odoo's tax engine owns tax on a sale line.
+            # price_unit takes breakdown['subtotal'], which is pre-tax and
+            # independent of vat_rate. Odoo's tax engine owns the tax.
             breakdown = line.jewellery_lot_id.get_price_breakdown(
                 making_discount_pct=line.jewellery_making_discount_pct)
 
@@ -136,6 +143,33 @@ class SaleOrderLine(models.Model):
                             order=line.order_id.name,
                             fields=', '.join(sorted(touched))))
         return super().write(values)
+
+    # --- onward to the invoice -------------------------------------------
+    def _prepare_invoice_line(self, **optional_values):
+        """Carry the rate snapshot onto the invoice line.
+
+        Standard Odoo already brings `price_unit` across, so the money is
+        right without this. What it does not bring is the derivation of that
+        money — the approved rate, the fine weight, the split between metal,
+        wastage, making and stones. An invoice that cannot show where its
+        figure came from is no use in a client query or a margin review.
+        """
+        values = super()._prepare_invoice_line(**optional_values)
+        if self.jewellery_lot_id:
+            values.update({
+                'jewellery_lot_id': self.jewellery_lot_id.id,
+                'jewellery_making_discount_pct':
+                    self.jewellery_making_discount_pct,
+                'jewellery_rate_id': self.jewellery_rate_id.id,
+                'jewellery_rate_per_gram': self.jewellery_rate_per_gram,
+                'jewellery_fine_weight_g': self.jewellery_fine_weight_g,
+                'jewellery_metal_value': self.jewellery_metal_value,
+                'jewellery_wastage_value': self.jewellery_wastage_value,
+                'jewellery_making_charge': self.jewellery_making_charge,
+                'jewellery_stones_value': self.jewellery_stones_value,
+                'jewellery_priced_on': self.jewellery_priced_on,
+            })
+        return values
 
 
 class SaleOrder(models.Model):

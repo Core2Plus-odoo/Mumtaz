@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- The snapshot on the invoice line. Hidden by default: on a routine
+       invoice it is noise, and on a client query it is the whole answer. -->
+  <record id="view_move_form_jewellery" model="ir.ui.view">
+    <field name="name">account.move.form.jewellery</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_move_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='invoice_line_ids']/list//field[@name='product_id']"
+             position="after">
+        <field name="jewellery_lot_id" optional="hide" readonly="1"/>
+        <field name="jewellery_rate_per_gram" optional="hide" readonly="1"/>
+        <field name="jewellery_fine_weight_g" optional="hide" readonly="1"/>
+        <field name="jewellery_metal_value" optional="hide" readonly="1"/>
+        <field name="jewellery_making_charge" optional="hide" readonly="1"/>
+        <field name="jewellery_is_priced" column_invisible="1"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
