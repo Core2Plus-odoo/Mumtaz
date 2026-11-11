@@ -434,10 +434,10 @@ class SaleOrder(models.Model):
                 lot = move.sale_line_id.jewellery_lot_id
                 if not lot:
                     continue
-                wrong = move.move_line_ids.filtered(lambda l: l.lot_id != lot)
+                wrong = move.move_line_ids.filtered(lambda l, lot=lot: l.lot_id != lot)
                 if wrong:
                     wrong.unlink()          # releases the reservation on the other serial
-                line = move.move_line_ids.filtered(lambda l: l.lot_id == lot)[:1]
+                line = move.move_line_ids.filtered(lambda l, lot=lot: l.lot_id == lot)[:1]
                 if not line:
                     line = MoveLine.create({
                         'move_id': move.id,
