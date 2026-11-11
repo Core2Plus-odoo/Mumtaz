@@ -65,6 +65,20 @@ pure-Python plus 54 Odoo `TransactionCase`). The maker-checker bypasses found
 while testing are fixed on both approval models (issue 10 below). Still open in this slice: closing
 decisions D1 to D8.
 
+Deploy note, 11 Nov 2026: publishing the site and *serving* it turned out to
+be different things. nginx answers 200 with the landing page for any path it
+does not recognise, so `/apps/` and `/pricing/` sat unpublished for days while
+six URLs, a bogus one included, all returned a healthy-looking 200. Only a
+byte comparison revealed it. `deploy/jewel-staging/verify_site.sh` now
+fingerprints that fallback and fails any expected page identical to it;
+`deploy.sh` runs it after every publish and exits non-zero rather than
+reporting success. Separately, the site was being served with no
+`Cache-Control` at all, so a correct deploy still showed the previous page in
+a fresh incognito window — caches are allowed to invent a freshness lifetime
+of roughly 10% of a document's age when none is given.
+`deploy/jewel-staging/nginx-cache-headers.conf` has the policy and the apply
+steps; it needs a root `nginx -t` and reload on the VPS.
+
 | Item | Detail |
 | --- | --- |
 | Features | Close open decisions (blueprint section 16 list, D1 to D8). Commit the three Jewel addons to the branch. `TransactionCase` test suite for everything built. CI script (fresh database, install, run tests). Seed module with DEMO data. Fix wording defects |

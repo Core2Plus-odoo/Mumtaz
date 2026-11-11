@@ -145,6 +145,24 @@ if [ -d "$LANDING_SRC" ]; then
     fi
     ok "Site published at $(date -u +%H:%M:%SZ) — hard-refresh the browser"
     published=1
+
+    # Publishing is not the same as serving. nginx answers 200 with the
+    # landing page for any path it does not know, so a page that was never
+    # published is indistinguishable from one that was until you compare
+    # bytes. Verify, and say plainly if it could not be done.
+    verify="$(dirname "${BASH_SOURCE[0]}")/verify_site.sh"
+    if [ "${SKIP_VERIFY:-0}" = "1" ]; then
+      info "SKIP_VERIFY=1, not checking what is actually served."
+    elif [ -x "$verify" ] || [ -f "$verify" ]; then
+      info "Verifying what is actually served"
+      if SITE_ROOT="$LANDING_DIR" SITE_SRC="$LANDING_SRC" bash "$verify"; then
+        ok "Verified: every expected page is really published."
+      else
+        red "The files were copied, but the site does NOT serve them all."
+        red "See the failures above. Nothing was rolled back."
+        exit 1
+      fi
+    fi
   else
     red "Cannot write $LANDING_DIR, so the site was NOT updated."
     red "nginx is still serving the previous copy. As root, run:"
