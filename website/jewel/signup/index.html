@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewel360 Setup</title>
+<meta name="description" content="The seven steps from signing up to a working jewellery workspace: stores, apps, the two people who approve the gold rate, compliance values, agents and data.">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  PROTOTYPE. This wizard does not create anything: there is no account, no
+  database, no payment. It is the proposed signup flow, clickable so the shape
+  can be argued with.
+
+  HONESTY RULES, please keep them:
+  * Step 3 refuses the same person as maker and checker. That is not a UI nicety
+    -- it is the product's central control, and setting it up at signup is the
+    point. Do not make it skippable.
+  * Step 4 values are CONFIGURATION the customer's finance manager confirms.
+    The defaults shown are the common UAE ones and are labelled as needing
+    confirmation. Never present them as researched or authoritative.
+  * The review step lists the automation that actually exists in the addons
+    today (three scheduled actions), not automation we wish existed.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  --pri:#3D56C4; --pri2:#5570DF; --pri-bg:#EEF1FD; --pri-border:#C8D2F7; --pri-dark:#2B3E96;
+  --teal:#0E7490; --teal2:#0EA5BE; --teal-bg:#E7F6FA; --teal-border:#B3E2EE;
+  --amber:#B4791A; --amber-bg:#FDF3E2; --amber-border:#F0DCB4;
+  --rose:#B42318; --rose-bg:#FDECEA; --rose-border:#F6CFC9;
+  --a1:#5B5BF0; --a5:#0FA37F;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --r:12px; --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
+  --rose-bg:#2E1512; --rose-border:#4C241D; --rose:#E8917E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
+  --rose-bg:#2E1512; --rose-border:#4C241D; --rose:#E8917E;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.2;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink3)}
+.tiny{font-size:.79rem}
+.sp{flex:1}
+button,input,select{font-family:inherit}
+
+.ribbon{background:var(--ink);color:#A9B8F5;text-align:center;padding:6px 14px;font-size:.74rem;font-weight:600}
+.ribbon a{color:#fff}
+
+.shell{display:grid;grid-template-columns:268px 1fr;min-height:calc(100vh - 28px)}
+.shell>*{min-width:0}
+@media (max-width:900px){.shell{grid-template-columns:1fr}}
+
+/* left rail */
+.rail{background:linear-gradient(170deg,#111826,#1B2638);color:#C9D2DC;padding:22px 20px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:26px}
+.mk{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(140deg,var(--a1),var(--pri-dark));color:#fff;font-weight:800}
+.brand b{color:#fff;display:block;line-height:1.15}
+.brand small{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#7D8B9C;font-weight:700}
+.steps{display:flex;flex-direction:column;gap:2px}
+.st{display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:start;padding:8px 9px;border-radius:9px;font-size:.87rem;color:#8E9CAC}
+.st .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:800;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#8E9CAC}
+.st.on{background:rgba(91,91,240,.17);color:#fff}
+.st.on .n{background:linear-gradient(135deg,var(--a1),var(--pri-dark));border-color:transparent;color:#fff}
+.st.done{color:#C9D2DC}
+.st.done .n{background:rgba(15,163,127,.2);border-color:rgba(15,163,127,.4);color:#6FE3BF}
+.st b{display:block;font-weight:600}
+.st span{font-size:.74rem;color:#64748B;display:block}
+.st.on span{color:#A9B8F5}
+.railfoot{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:.74rem;color:#64748B}
+@media (max-width:900px){.rail{padding:14px;min-width:0}.steps{flex-direction:row;overflow-x:auto;gap:6px;min-width:0;-webkit-overflow-scrolling:touch}.st span{display:none}.st{white-space:nowrap;flex:none}.railfoot{display:none}.main{min-width:0}}
+
+/* main */
+.main{padding:30px 34px 40px;max-width:860px}
+@media (max-width:900px){.main{padding:20px 16px 32px}}
+.head{margin-bottom:20px}
+.kicker{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--pri);margin-bottom:.4rem}
+.head h1{font-size:clamp(1.4rem,3vw,1.9rem)}
+.head p{color:var(--ink3);margin-top:8px;max-width:46em;font-size:.95rem}
+
+.card{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.card h3{font-size:.95rem;margin-bottom:4px}
+.card h3::before{content:"";display:inline-block;width:3px;height:13px;border-radius:2px;background:var(--pri);margin-right:8px;vertical-align:-2px}
+.card .sub{font-size:.84rem;color:var(--ink3);margin-bottom:12px}
+
+.field{margin-bottom:13px}
+.field label{display:block;font-size:.8rem;font-weight:700;margin-bottom:5px}
+.field .hint{font-size:.77rem;color:var(--ink3);margin-top:4px}
+input[type=text],input[type=email],input[type=number],select{width:100%;padding:9px 12px;border:1px solid var(--paper3);border-radius:9px;
+  background:var(--surface);color:var(--ink);font-size:.9rem}
+input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border-color:transparent}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:620px){.two,.three{grid-template-columns:1fr}}
+
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--paper3);border-radius:10px;overflow:hidden;background:var(--paper2)}
+.stepper button{width:38px;height:38px;border:0;background:none;font-size:1.2rem;font-weight:700;color:var(--ink2);cursor:pointer}
+.stepper button:hover{background:var(--paper3)}
+.stepper span{min-width:46px;text-align:center;font-size:1.05rem;font-weight:700}
+
+/* pick rows */
+.pick{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px dashed var(--paper3)}
+.pick:first-of-type{border-top:0}
+.pick b{display:block;font-size:.89rem}
+.pick .d{font-size:.79rem;color:var(--ink3)}
+.sw{position:relative;display:inline-flex;align-items:center;cursor:pointer}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .tr{width:40px;height:23px;border-radius:999px;background:var(--paper3);position:relative;transition:background .15s;flex:none}
+.sw .tr::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw input:checked + .tr{background:linear-gradient(135deg,var(--pri2),var(--pri))}
+.sw input:checked + .tr::after{transform:translateX(17px)}
+.sw input:focus-visible + .tr{outline:2px solid var(--pri);outline-offset:2px}
+.sw input:disabled + .tr{opacity:.5;cursor:not-allowed}
+
+.lvl{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.lvl button{font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:7px;border:1px solid var(--paper3);background:var(--paper2);color:var(--ink3);cursor:pointer}
+.lvl button.on{background:var(--teal-bg);border-color:var(--teal-border);color:var(--teal)}
+.lvl button:disabled{opacity:.4;cursor:not-allowed;text-decoration:line-through}
+
+/* notices */
+.note{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:10px;font-size:.84rem;margin-top:10px;border:1px solid}
+.n-info{background:var(--pri-bg);border-color:var(--pri-border);color:var(--ink2)}
+.n-warn{background:var(--amber-bg);border-color:var(--amber-border);color:var(--ink2)}
+.n-ok{background:var(--teal-bg);border-color:var(--teal-border);color:var(--ink2)}
+.n-bad{background:var(--rose-bg);border-color:var(--rose-border);color:var(--ink2)}
+.note svg{width:16px;height:16px;fill:none;stroke-width:2;flex:none;margin-top:2px}
+.n-info svg{stroke:var(--pri)} .n-warn svg{stroke:var(--amber)}
+.n-ok svg{stroke:var(--teal)} .n-bad svg{stroke:var(--rose)}
+.note b{color:var(--ink)}
+
+/* radio cards */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.opts{grid-template-columns:1fr}}
+.opt{border:1px solid var(--paper3);border-radius:11px;padding:13px;cursor:pointer;background:var(--surface);display:block}
+.opt input{position:absolute;opacity:0}
+.opt b{display:block;font-size:.89rem;margin-bottom:3px}
+.opt .d{font-size:.79rem;color:var(--ink3)}
+.opt:has(input:checked){border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-bg)}
+
+/* review */
+.rev{display:grid;grid-template-columns:150px 1fr;gap:8px 14px;font-size:.87rem}
+.rev dt{color:var(--ink3)}
+.rev dd{margin:0;font-weight:600}
+.auto{font-size:.85rem}
+.auto li{margin-bottom:5px}
+.auto code{font-size:.8rem;background:var(--paper2);border:1px solid var(--paper3);padding:1px 6px;border-radius:5px}
+
+/* footer bar */
+.bar{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--paper3)}
+.btn{display:inline-block;white-space:nowrap;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:.89rem;border:1px solid transparent;cursor:pointer}
+.b-pri{background:linear-gradient(135deg,var(--pri2),var(--pri));color:#fff}
+.b-pri:disabled{opacity:.45;cursor:not-allowed}
+.b-ghost{border-color:var(--paper3);color:var(--ink2);background:var(--surface)}
+.pane{display:none}
+.pane.on{display:block}
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  Prototype — this wizard creates nothing. No account, no database, no payment.
+  <a href="../index.html">Back to Jewel360</a>
+</div>
+
+<div class="shell">
+  <nav class="rail">
+    <a class="brand" href="../index.html">
+      <span class="mk">J</span>
+      <span><b>Jewel360</b><small>Setup</small></span>
+    </a>
+    <div class="steps" id="steps"></div>
+    <div class="railfoot">
+      Engine: Odoo 19 Community<br>
+      Nothing is charged until you confirm.
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- 1 -->
+    <section class="pane on" data-step="0">
+      <div class="head">
+        <div class="kicker">Step 1 of 7</div>
+        <h1>Your business</h1>
+        <p>This sets up the company record, the currency every price is computed in, and one Odoo warehouse per store.</p>
+      </div>
+      <div class="card">
+        <div class="two">
+          <div class="field"><label for="co">Company name</label><input type="text" id="co" value="Al Noor Jewellery"></div>
+          <div class="field"><label for="em">Owner email</label><input type="email" id="em" value="owner@example.com"></div>
+        </div>
+        <div class="two">
+          <div class="field"><label for="ctry">Country</label>
+            <select id="ctry"><option>United Arab Emirates</option><option>Saudi Arabia</option><option>Kuwait</option><option>Qatar</option><option>Bahrain</option><option>Oman</option><option>Pakistan</option></select>
+            <div class="hint">Sets the chart of accounts, the tax rules and whether e-invoicing applies.</div>
+          </div>
+          <div class="field"><label for="cur">Currency</label>
+            <select id="cur"><option>AED</option><option>SAR</option><option>KWD</option><option>QAR</option><option>BHD</option><option>OMR</option><option>PKR</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Stores</label>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div class="stepper"><button type="button" id="less">−</button><span class="num" id="nst">3</span><button type="button" id="more">+</button></div>
+            <p class="tiny muted" style="max-width:24em">A store is a till and a safe. Head office, the workshop and the online channel are not stores.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="pane" data-step="1">
+      <div class="head">
+        <div class="kicker">Step 2 of 7</div>
+        <h1>Apps</h1>
+        <p>The core is not optional — the gold rate, the pricing engine, pieces and the client book are what everything else reads. The rest you can add later.</p>
+      </div>
+      <div class="card" id="apps"></div>
+      <div class="note n-info">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <div><b>Odoo Community comes with it, free.</b> Inventory, Accounting, CRM, Repairs, Workshop, Loyalty, Barcode, Arabic invoices and ZATCA e-invoicing are standard and get configured for you. They are not on this list because there is nothing to buy.</div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="pane" data-step="2">
+      <div class="head">
+        <div class="kicker">Step 3 of 7</div>
+        <h1>Who approves the gold rate</h1>
+        <p>A rate is entered by one manager and approved by a different one. Until a second person approves it, nothing can be priced from it. This is enforced in the database, not in the screen, so it cannot be worked around later.</p>
+      </div>
+      <div class="card">
+        <div class="two">
+          <div class="field"><label for="maker">Enters the rate</label><input type="text" id="maker" value="R. Haddad"><div class="hint">Usually the person who watches the market each morning.</div></div>
+          <div class="field"><label for="checker">Approves the rate</label><input type="text" id="checker" value="N. Mansour"><div class="hint">A different person. Often the owner or the finance manager.</div></div>
+        </div>
+        <div id="mc-note"></div>
+      </div>
+      <div class="card">
+        <h3>Who may override</h3>
+        <div class="sub">There is an escape hatch for a one-person shop, off by default. Switching it on is recorded.</div>
+        <div class="pick">
+          <div><b>Allow self-approval</b><div class="d">The same person may enter and approve a rate. Every use is logged against their name.</div></div>
+          <label class="sw"><input type="checkbox" id="selfapp"><span class="tr"></span></label>
+        </div>
+        <div id="self-note"></div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="pane" data-step="3">
+      <div class="head">
+        <div class="kicker">Step 4 of 7</div>
+        <h1>Compliance values</h1>
+        <p>These are settings, not rules we know. Your finance manager confirms every one of them for your country, and each is stored with the date it was set.</p>
+      </div>
+      <div class="note n-warn" style="margin-bottom:12px">
+        <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <div><b>The values below are common defaults, not advice.</b> Jewel360 applies whatever is configured here and never invents a threshold. Have the named finance manager confirm them before you trade on them.</div>
+      </div>
+      <div class="card">
+        <div class="three">
+          <div class="field"><label for="vat">VAT rate</label><input type="number" id="vat" value="5" step="0.5" min="0"><div class="hint">Per cent</div></div>
+          <div class="field"><label for="cash">Cash reporting threshold</label><input type="number" id="cash" value="55000" step="1000" min="0"><div class="hint">Per client, per year</div></div>
+          <div class="field"><label for="ogx">Old gold second approval</label><input type="number" id="ogx" value="5000" step="500" min="0"><div class="hint">Above this, another person signs</div></div>
+        </div>
+        <div class="three">
+          <div class="field"><label for="screen">Screening cadence</label><select id="screen"><option>6 months</option><option selected>12 months</option><option>24 months</option></select></div>
+          <div class="field"><label for="ret">Record retention</label><select id="ret"><option>5 years</option><option>7 years</option><option>10 years</option></select></div>
+          <div class="field"><label for="fin">Finance manager</label><input type="text" id="fin" value="N. Mansour"><div class="hint">Confirms these values</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="pane" data-step="4">
+      <div class="head">
+        <div class="kicker">Step 5 of 7</div>
+        <h1>AI agents</h1>
+        <p>Optional, and separable. Each runs as the person who invoked it, so it can never see a client that person cannot — and none of them can produce a price.</p>
+      </div>
+      <div class="card" id="agents"></div>
+      <div class="note n-ok">
+        <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div><b>Level D and E are not offered here.</b> Executing with approval is configured per tool and per threshold once you are live, by someone who has seen the agent work. Nothing is set to execute on day one.</div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="pane" data-step="5">
+      <div class="head">
+        <div class="kicker">Step 6 of 7</div>
+        <h1>Your data</h1>
+        <p>How the workspace starts. You can change your mind later, but demo data and real data should never share a database.</p>
+      </div>
+      <div class="card">
+        <div class="opts">
+          <label class="opt"><input type="radio" name="data" value="demo" checked>
+            <b>Start with synthetic demo data</b>
+            <div class="d">Invented clients, pieces and a gold rate seeded through the real two-person approval. Every record prefixed <code>DEMO</code>. Good for training and for seeing it work.</div></label>
+          <label class="opt"><input type="radio" name="data" value="empty">
+            <b>Start empty</b>
+            <div class="d">Nothing but your company, stores and settings. You import pieces and clients yourself.</div></label>
+          <label class="opt"><input type="radio" name="data" value="import">
+            <b>Import from a spreadsheet</b>
+            <div class="d">Pieces with weights, karat and tag; clients with tier and preferences. We map the columns with you on a call.</div></label>
+          <label class="opt"><input type="radio" name="data" value="migrate">
+            <b>Migrate an existing system</b>
+            <div class="d">From another Odoo, or from whatever you run now. Scoped separately — this is project work, not a setup step.</div></label>
+        </div>
+        <div id="data-note"></div>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="pane" data-step="6">
+      <div class="head">
+        <div class="kicker">Step 7 of 7</div>
+        <h1>Review</h1>
+        <p>What gets created. Nothing here is charged until you confirm, and nothing is irreversible.</p>
+      </div>
+      <div class="card">
+        <h3>Workspace</h3>
+        <dl class="rev" id="rev"></dl>
+      </div>
+      <div class="card">
+        <h3>Automation switched on</h3>
+        <div class="sub">These run from day one. They are the scheduled actions that exist in the modules today — not a roadmap.</div>
+        <ul class="auto">
+          <li><b>Occasion drafts</b> — daily. Finds a client whose occasion falls inside its lead time, drafts the note and puts it on the relationship manager's list three days before. <code>Nothing is sent automatically.</code></li>
+          <li><b>Pieces-on-approval reminders</b> — daily. Any memo due back within two days raises an activity for the relationship manager, with the piece count and the insured value. <code>Contact the client personally.</code></li>
+          <li><b>Owner decision cards</b> — hourly. Rebuilds the cockpit: a rate waiting for a second person, an old-gold exchange over the threshold, metal exposure, an occasion coming, a memo overdue, stock sitting too long.</li>
+        </ul>
+        <div class="note n-info">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <div>Beyond these three, automation is Odoo's own: server actions and <b>no-code automation rules</b> you write yourself under Settings → Technical. We configure them with you rather than hard-coding your process into the product.</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>What does not happen</h3>
+        <div class="sub">Worth reading before you confirm.</div>
+        <ul class="auto">
+          <li>No message goes to any client. Agents draft; a person sends.</li>
+          <li>No price exists until a second person approves a rate.</li>
+          <li>Private and Royal clients are invisible to anyone not named on their file, and are never messaged automatically.</li>
+          <li>Demo data, if you chose it, is synthetic. Do not add real clients to a demo workspace.</li>
+        </ul>
+      </div>
+      <div class="note n-warn" id="final-note"></div>
+    </section>
+
+    <div class="bar">
+      <button class="btn b-ghost" id="back">Back</button>
+      <div class="sp"></div>
+      <span class="tiny muted" id="prog"></span>
+      <button class="btn b-pri" id="next">Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STEPS = [
+    ['Your business','Company, country, stores'],
+    ['Apps','What to turn on'],
+    ['Gold rate','Who enters, who approves'],
+    ['Compliance','Thresholds and retention'],
+    ['AI agents','Optional, and capped'],
+    ['Your data','How it starts'],
+    ['Review','Confirm and create']
+  ];
+  var APPS = [
+    ['core','Core — rate, pricing, pieces, client book','Everything else reads these. Not optional.',true,true],
+    ['counter','Counter','The till, with the client file on it and pricing from the approved rate.',true,false],
+    ['sales','Sales Hub','Pipeline, odds, targets, tray to reservation.',true,false],
+    ['stores','Stores & transfers','Metal per store, transfers, daily reconciliation in grams.',true,false],
+    ['fin','Finance & compliance','Maker-checker queue, VAT, e-invoicing, AML and KYC.',true,false],
+    ['chan','Channels','E-commerce, marketplaces, tax-free refunds, terminals, rate feed.',false,false],
+    ['app','Client app','Her own thread: what she owns, what is on approval.',false,false]
+  ];
+  var AGENTS = [
+    ['zayan','Zayan','Orchestrator. Comes with any specialist; nothing on his own.',true,'B'],
+    ['rayan','Rayan','Pricing. Calls the engine; never does the arithmetic.',true,'C'],
+    ['layla','Layla','Retail. Builds the tray, drafts the follow-up. Never sends.',true,'C'],
+    ['amara','Amara','Finance. Prepares the entry; cannot post or approve one.',false,'C'],
+    ['noor','Noor','Jewellery domain. Validates a spec; cannot certify a stone.',false,'C']
+  ];
+  var LEVELS = [['A','Observe'],['B','Recommend'],['C','Prepare']];
+
+  var step = 0, stores = 3;
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---- build the rail
+  $('steps').innerHTML = STEPS.map(function(s,i){
+    return '<div class="st" data-i="'+i+'"><span class="n">'+(i+1)+'</span><span><b>'+s[0]+'</b><span>'+s[1]+'</span></span></div>';
+  }).join('');
+
+  // ---- build the app list
+  $('apps').innerHTML = APPS.map(function(a){
+    return '<div class="pick"><div><b>'+a[1]+'</b><div class="d">'+a[2]+'</div></div>'+
+      '<label class="sw"><input type="checkbox" class="app" data-k="'+a[0]+'" data-n="'+a[1]+'"'+
+      (a[3]?' checked':'')+(a[4]?' disabled':'')+'><span class="tr"></span></label></div>';
+  }).join('');
+
+  // ---- build the agent list
+  $('agents').innerHTML = AGENTS.map(function(g){
+    var lv = LEVELS.map(function(l){
+      return '<button type="button" data-k="'+g[0]+'" data-l="'+l[0]+'"'+(l[0]===g[4]?' class="on"':'')+'>'+l[0]+' '+l[1]+'</button>';
+    }).join('');
+    return '<div class="pick"><div><b>'+g[1]+'</b><div class="d">'+g[2]+'</div>'+
+      '<div class="lvl" data-for="'+g[0]+'">'+lv+'</div></div>'+
+      '<label class="sw"><input type="checkbox" class="agent" data-k="'+g[0]+'" data-n="'+g[1]+'"'+
+      (g[3]?' checked':'')+(g[0]==='zayan'?' disabled':'')+'><span class="tr"></span></label></div>';
+  }).join('');
+
+  // autonomy pickers
+  Array.prototype.forEach.call(document.querySelectorAll('.lvl button'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(b.parentNode.children, function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+    });
+  });
+
+  // Zayan rides along with any specialist, same rule as the catalogue and pricing.
+  function syncZayan(){
+    var spec = Array.prototype.filter.call(document.querySelectorAll('.agent'), function(a){
+      return a.dataset.k !== 'zayan' && a.checked;
+    }).length;
+    document.querySelector('.agent[data-k="zayan"]').checked = spec > 0;
+    return spec;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.agent'), function(a){
+    a.addEventListener('change', syncZayan);
+  });
+
+  // stores
+  $('more').addEventListener('click', function(){ if (stores < 20){ stores++; $('nst').textContent = stores; } });
+  $('less').addEventListener('click', function(){ if (stores > 1){ stores--; $('nst').textContent = stores; } });
+
+  // ---- step 3 validation: maker and checker must differ
+  function norm(v){ return (v||'').trim().toLowerCase().replace(/\s+/g,' '); }
+  function checkMC(){
+    var m = norm($('maker').value), c = norm($('checker').value);
+    var self = $('selfapp').checked, box = $('mc-note'), ok = true, msg = '';
+    if (!m || !c){
+      ok = false; msg = ['n-bad','Both names are needed.','A rate has to be entered by someone and approved by someone.'];
+    } else if (m === c && !self){
+      ok = false; msg = ['n-bad','The same person cannot do both.','That is the whole control. Name a second person, or switch on self-approval below and accept what it means.'];
+    } else if (m === c && self){
+      msg = ['n-warn','One person will enter and approve.','Allowed because you switched on self-approval. Every rate will carry their name twice, and an auditor will see that.'];
+    } else {
+      msg = ['n-ok','Good.','A rate entered by ' + $('maker').value.trim() + ' will wait for ' + $('checker').value.trim() + ' before anything can be priced from it.'];
+    }
+    box.innerHTML = '<div class="note '+msg[0]+'"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>'+msg[1]+'</b> '+msg[2]+'</div></div>';
+    $('self-note').innerHTML = self
+      ? '<div class="note n-warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><div><b>You are turning off the second pair of eyes.</b> Sensible for a single shop where one person is the business. Switch it back off the day you hire a second manager.</div></div>'
+      : '';
+    return ok;
+  }
+  ['maker','checker'].forEach(function(id){ $(id).addEventListener('input', checkMC); });
+  $('selfapp').addEventListener('change', checkMC);
+
+  // ---- step 6 note
+  function dataNote(){
+    var v = document.querySelector('input[name=data]:checked').value;
+    var t = {
+      demo:   ['n-ok','Synthetic throughout.','Nothing in it is a real person. Do not add a real client to this workspace — start a clean one when you go live.'],
+      empty:  ['n-info','Nothing to unlearn.','You will need an approved gold rate before the first piece can be priced. That is step one on day one.'],
+      'import':['n-info','Bring the columns you have.','Weights, karat and tag matter most. Anything missing becomes an incomplete specification that Noor can flag later.'],
+      migrate:['n-warn','Scoped separately.','Migration is project work with its own plan and its own price. This step just records that you want it.']
+    }[v];
+    $('data-note').innerHTML = '<div class="note '+t[0]+'"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>'+t[1]+'</b> '+t[2]+'</div></div>';
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=data]'), function(r){
+    r.addEventListener('change', dataNote);
+  });
+
+  // ---- review
+  function picked(sel){
+    return Array.prototype.filter.call(document.querySelectorAll(sel), function(x){ return x.checked; })
+      .map(function(x){ return x.dataset.n; });
+  }
+  function buildReview(){
+    var apps = picked('.app'), spec = syncZayan(), agents = spec ? picked('.agent') : [];
+    var lvls = agents.filter(function(n){ return n !== 'Zayan'; }).map(function(n){
+      var k = AGENTS.filter(function(g){ return g[1] === n; })[0][0];
+      var on = document.querySelector('.lvl[data-for="'+k+'"] button.on');
+      return n + ' ' + (on ? on.dataset.l : 'C');
+    });
+    var dv = document.querySelector('input[name=data]:checked').value;
+    var dataLabel = {demo:'Synthetic demo data',empty:'Empty',"import":'Import from a spreadsheet',migrate:'Migrate an existing system'}[dv];
+    var self = $('selfapp').checked;
+    var rows = [
+      ['Company', $('co').value + ' — ' + $('ctry').value],
+      ['Stores', stores + (stores === 1 ? ' store' : ' stores') + ', one Odoo warehouse each'],
+      ['Currency', $('cur').value],
+      ['Apps', apps.length + ': ' + apps.join(', ')],
+      ['Gold rate', self && norm($('maker').value) === norm($('checker').value)
+        ? $('maker').value + ' enters and approves — self-approval ON'
+        : $('maker').value + ' enters, ' + $('checker').value + ' approves'],
+      ['VAT', $('vat').value + '%'],
+      ['Cash threshold', Number($('cash').value).toLocaleString('en-US') + ' ' + $('cur').value + ' per client per year'],
+      ['Old gold', 'second approval above ' + Number($('ogx').value).toLocaleString('en-US') + ' ' + $('cur').value],
+      ['Confirmed by', $('fin').value],
+      ['Agents', agents.length ? lvls.join(' · ') + ' · coordinated by Zayan' : 'None'],
+      ['Data', dataLabel]
+    ];
+    $('rev').innerHTML = rows.map(function(r){ return '<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>'; }).join('');
+    $('final-note').innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>' +
+      '<div><b>This prototype stops here.</b> In the real flow this button creates the database, installs the apps, applies the settings and emails the owner a link. Pricing is confirmed before anything is charged.</div>';
+  }
+
+  // ---- navigation
+  function render(){
+    Array.prototype.forEach.call(document.querySelectorAll('.pane'), function(p){
+      p.classList.toggle('on', +p.dataset.step === step);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.st'), function(s){
+      var i = +s.dataset.i;
+      s.classList.toggle('on', i === step);
+      s.classList.toggle('done', i < step);
+    });
+    $('back').style.visibility = step === 0 ? 'hidden' : 'visible';
+    $('next').textContent = step === STEPS.length - 1 ? 'Create workspace' : 'Continue';
+    $('prog').textContent = 'Step ' + (step + 1) + ' of ' + STEPS.length;
+    if (step === 2) checkMC();
+    if (step === 5) dataNote();
+    if (step === 6) buildReview();
+    $('next').disabled = (step === 2 && !checkMC());
+    window.scrollTo(0, 0);
+  }
+  $('next').addEventListener('click', function(){
+    if (step === 2 && !checkMC()) return;
+    if (step < STEPS.length - 1){ step++; render(); }
+  });
+  $('back').addEventListener('click', function(){ if (step > 0){ step--; render(); } });
+  Array.prototype.forEach.call(document.querySelectorAll('.st'), function(s){
+    s.addEventListener('click', function(){
+      var i = +s.dataset.i;
+      if (i > 2 && !checkMC()) { step = 2; render(); return; }
+      step = i; render();
+    });
+  });
+  ['maker','checker'].forEach(function(id){
+    $(id).addEventListener('input', function(){ if (step === 2) $('next').disabled = !checkMC(); });
+  });
+  $('selfapp').addEventListener('change', function(){ if (step === 2) $('next').disabled = !checkMC(); });
+
+  syncZayan();
+  render();
+})();
+</script>
+
+</body>
+</html>
