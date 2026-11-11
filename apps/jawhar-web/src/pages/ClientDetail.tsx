@@ -1,6 +1,7 @@
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
-import { api, type Consent, type Rate, type User } from '../lib/api';
+import { api, type Consent, type Kyc, type Rate, type User } from '../lib/api';
 import { ConsentTag } from './Outreach';
+import { KycTag } from './Compliance';
 import { stateLabel, tierLabel, useT } from '../lib/i18n';
 import { money, when } from '../lib/format';
 import { TopBar } from '../components/Shell';
@@ -27,6 +28,25 @@ export default function ClientDetail() {
   const [source, setSource] = useState('in_store');
   const [consentNote, setConsentNote] = useState('');
   useEffect(() => { if (id) api.consent(Number(id)).then(setConsent).catch(() => setConsent(null)); }, [id]);
+  const [kyc, setKyc] = useState<Kyc | null>(null);
+  const [doc, setDoc] = useState({ id_type: 'emirates_id', last4: '', expiry: '', note: '' });
+  const [scr, setScr] = useState({ status: 'clear', risk_band: 'low', note: '' });
+  useEffect(() => { if (id) api.kyc(Number(id)).then(setKyc).catch(() => setKyc(null)); }, [id]);
+  const verify = async () => {
+    if (!c) return;
+    setPreparing(true);
+    try { setKyc(await api.kycVerify(c.id, { ...doc, note: doc.note || undefined })); setDoc({ ...doc, last4: '', expiry: '', note: '' }); }
+    catch (e) { setLaylaMsg((e as Error).message); }
+    finally { setPreparing(false); }
+  };
+  const screen = async () => {
+    if (!c) return;
+    setPreparing(true);
+    try { setKyc(await api.kycScreening(c.id, { status: scr.status, risk_band: scr.risk_band, note: scr.note || undefined })); }
+    catch (e) { setLaylaMsg((e as Error).message); }
+    finally { setPreparing(false); }
+  };
+  const isManager = user.roles.includes('jewellery_manager');
   const record = async (status: 'given' | 'withdrawn') => {
     if (!c) return;
     setPreparing(true);
@@ -117,6 +137,36 @@ export default function ClientDetail() {
                   ) : '—'}
                 </dd>
                 <dt>{t('no_marketing')}</dt><dd>{c.no_marketing ? '✓' : '—'}</dd>
+                <dt>{t('identity')}</dt><dd>
+                  {kyc ? (
+                    <div className="kyc">
+                      <div><KycTag status={kyc.status} t={t} />{kyc.id_type && <span className="small muted"> · {t(`doc_${kyc.id_type}`)} · {kyc.id_last4} · {t('doc_expiry')} {when(kyc.id_expiry, lang, false)} · {t('verified_by')} {kyc.verified_by?.name ?? '—'}</span>}</div>
+                      <div className="actions small">
+                        <select value={doc.id_type} onChange={(e) => setDoc({ ...doc, id_type: e.target.value })} aria-label={t('doc_type')}>
+                          {['emirates_id', 'national_id', 'passport', 'iqama', 'other'].map((k) => <option key={k} value={k}>{t(`doc_${k}`)}</option>)}
+                        </select>
+                        <input placeholder={t('doc_last4')} maxLength={4} value={doc.last4} onChange={(e) => setDoc({ ...doc, last4: e.target.value })} style={{ width: 72 }} aria-label={t('doc_last4')} />
+                        <input type="date" value={doc.expiry} onChange={(e) => setDoc({ ...doc, expiry: e.target.value })} aria-label={t('doc_expiry')} />
+                        <button className="btn small" disabled={preparing || doc.last4.length !== 4 || !doc.expiry} onClick={verify}>{t('verify_identity')}</button>
+                      </div>
+                      <div className="small muted">{t('doc_last4_hint')}</div>
+                      <div><span className="muted small">{t('screening')}: </span><span className={`tag ${kyc.screening === 'clear' ? 'ok' : kyc.screening === 'match' ? 'bad' : ''}`}>{t(`scr_${kyc.screening}`)}</span>{kyc.risk_band && <span className="small muted"> · {t('risk_band')} {t(`risk_${kyc.risk_band}`)}</span>}{kyc.screened_by && <span className="small muted"> · {kyc.screened_by.name}</span>}</div>
+                      {isManager && (
+                        <div className="actions small">
+                          <select value={scr.status} onChange={(e) => setScr({ ...scr, status: e.target.value })} aria-label={t('screening')}>
+                            {['clear', 'match', 'not_screened'].map((k) => <option key={k} value={k}>{t(`scr_${k}`)}</option>)}
+                          </select>
+                          <select value={scr.risk_band} onChange={(e) => setScr({ ...scr, risk_band: e.target.value })} aria-label={t('risk_band')}>
+                            {['low', 'medium', 'high'].map((k) => <option key={k} value={k}>{t(`risk_${k}`)}</option>)}
+                          </select>
+                          <input placeholder={t('send_note_ph')} value={scr.note} onChange={(e) => setScr({ ...scr, note: e.target.value })} style={{ flex: 1 }} />
+                          <button className="btn small ghost" disabled={preparing} onClick={screen}>{t('record_screening')}</button>
+                        </div>
+                      )}
+                      <div className="small muted">{t('cash_in_window')}: <span className="num">{money(kyc.cash_in_window, cur, lang)}</span> · {t('kyc_rule')}</div>
+                    </div>
+                  ) : '—'}
+                </dd>
                 <dt>{t('discreet')}</dt><dd>{c.discreet_billing ? '✓' : '—'}</dd>
                 <dt>{t('login')}</dt><dd>{c.email ?? '—'}{c.phone ? ` · ${c.phone}` : ''}</dd>
               </dl>

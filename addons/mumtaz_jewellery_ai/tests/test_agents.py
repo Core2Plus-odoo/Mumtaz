@@ -183,11 +183,13 @@ class TestZayan(AgentCase):
 
     def test_brief_numbers_from_the_model_must_be_sourced(self):
         def fake(system, user_text, max_tokens=1024):
-            return {'text': 'Two things first. Sales are up 37% this week.', 'model': 'test-model',
+            # A decimal the facts cannot carry by chance: the facts hold the
+            # clock, so a bare "37" would collide with 17:37 once a day.
+            return {'text': 'Two things first. Sales are up 37.5% this week.', 'model': 'test-model',
                     'input_tokens': 1, 'output_tokens': 1, 'refused': False, 'duration_ms': 1}
         with patch.object(provider, 'configured', return_value=True), patch.object(provider, 'complete', fake):
             out = self.Agent.brief()
-        self.assertFalse(any('37' in s for s in out['sentences']))
+        self.assertFalse(any('37.5' in s for s in out['sentences']))
         self.assertEqual(self.runs('brief.prepare')[:1].reason, 'unsourced_number')
 
     def test_queue_lists_cards_and_drafts_for_a_manager_and_drafts_only_for_staff(self):

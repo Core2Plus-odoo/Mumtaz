@@ -509,6 +509,42 @@ def _seed_consent(env):
     return done
 
 
+def _seed_kyc(env):
+    """Identity and screening on a few demo clients (fictional): verified
+    documents, one expiring soon, one screening match left open so the
+    counter's refusal can be shown. The cash threshold is NOT seeded: it is
+    a compliance value the named finance manager confirms on the
+    Compliance screen, never a demo default."""
+    Partner = env['res.partner']
+    if 'kyc_status' not in Partner._fields:
+        return 0
+    # A cash register, so the counter can take cash and the threshold has
+    # something to compare with. The demo database has no chart of accounts
+    # and therefore no cash journal of its own.
+    Journal = env['account.journal']
+    if not Journal.search([('type', '=', 'cash'), ('company_id', '=', env.company.id)], limit=1):
+        Journal.create({'name': 'Cash register', 'type': 'cash', 'code': 'CSH1', 'company_id': env.company.id})
+    today = fields.Date.context_today(Partner)
+    presenter = env.ref('base.user_admin', raise_if_not_found=False)
+    plan = [('DEMO Client Alpha', 'emirates_id', 'A1B2', 900, None),
+            ('DEMO Client Bravo', 'passport', 'Z9Y8', 20, None),
+            ('Mariam Al Sayegh', 'emirates_id', '4K7Q', 400, None),
+            ('Noura Bin Haider', 'emirates_id', '7M2P', 1200, None),
+            ('Huda Mahmoud', 'passport', 'H3LD', 600, 'match'),
+            ('Chen Wei', 'passport', 'CW01', 300, 'clear')]
+    done = 0
+    for name, doc, last4, days, screening in plan:
+        p = Partner.search([('name', '=', name), ('kyc_status', '=', 'none')], limit=1)
+        if not p:
+            continue
+        p.with_user(presenter).action_verify_identity(doc, last4, today + timedelta(days=days), note='DEMO document check (synthetic).')
+        if screening:
+            p.with_user(presenter).action_record_screening(screening, risk_band='high' if screening == 'match' else 'low',
+                                                           note='DEMO screening (synthetic, not a real list).')
+        done += 1
+    return done
+
+
 def _seed_outreach(env, presenter):
     """Layla drafts the occasion messages due, for a person to review: the
     Outreach screen opens with work on it. One per occasion per year."""
@@ -553,6 +589,7 @@ def top_up(env):
     presenter = env.ref('base.user_admin', raise_if_not_found=False)
     consent = _seed_consent(env)
     outreach = _seed_outreach(env, presenter)
+    _seed_kyc(env)
     _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s, consent %s, outreach drafts %s',
                  len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-', consent, outreach)
     return {'products': len(products), 'pieces': len(lots), 'clients': len(clients), 'consent': consent, 'outreach': outreach}
@@ -603,6 +640,7 @@ def post_init_hook(env):
     kiosk = _seed_kiosk(env)
     consent = _seed_consent(env)
     outreach = _seed_outreach(env, presenter)
+    kyc = _seed_kyc(env)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -616,10 +654,10 @@ def post_init_hook(env):
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
         'sample piece total %.2f, %s owner cards, '
         'quotation %s, order %s, invoice %s (%.2f), trays %s, '
-        'AI drafts %s (refused: %s), kiosk requests %s, consent on %s clients, outreach drafts %s',
+        'AI drafts %s (refused: %s), kiosk requests %s, consent on %s clients, outreach drafts %s, identity verified on %s',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
         len(clients), intake.name, intake.value, priced.get('total', 0.0),
         cards, docs.get('quotation', '-'), docs.get('order', '-'),
         docs.get('invoice', '-'), docs.get('invoice_total', 0.0),
         '/'.join(pipeline.values()) or '-',
-        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-', consent, outreach)
+        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-', consent, outreach, kyc)

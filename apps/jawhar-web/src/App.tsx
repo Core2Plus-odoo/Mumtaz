@@ -17,6 +17,7 @@ import NewQuote from './pages/NewQuote';
 import Counter from './pages/Counter';
 import Pipeline from './pages/Pipeline';
 import Outreach from './pages/Outreach';
+import Compliance from './pages/Compliance';
 import TrayBuilder from './pages/TrayBuilder';
 import PublicTray from './pages/PublicTray';
 import Kiosk from './pages/Kiosk';
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="memos" element={<Memos />} />
             <Route path="rates" element={<Rates />} />
             <Route path="old-gold" element={<OldGold />} />
+            <Route path="compliance" element={<Compliance />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

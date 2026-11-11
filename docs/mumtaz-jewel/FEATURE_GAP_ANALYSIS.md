@@ -34,7 +34,7 @@ owner.
 | Old gold at the till, credited once from a confirmed intake | No | **Built** | Second approval above the owner's threshold |
 | Staff discount ceiling (owner-set) | No | **Built** | `mumtaz_jewellery.staff_discount_limit_pct` |
 | Offline counter | Partly (`point_of_sale`) | **Decision** | Online-only commitment per plan §11; revisit with a tested allocation model |
-| AML cash threshold at payment | No | **Decision** | Awaits the named finance manager's values (plan §17) |
+| AML cash threshold at payment | No | **Built** | The gate runs at the counter once the named finance manager confirms the amount and the window on the Compliance screen; empty until then, no default (plan §17) |
 | Pipeline with jewellery stages, odds from Odoo's scoring | Standard (`crm`) | **Built** | Slice 2; configured, not written |
 | Private Tray: eligible stock, ranked with reasons, by hand for restricted tiers | No | **Built** | 11 CRM tests + 2 API tests + walk |
 | Client tray link: expiring, revocable, no client data, like/ask/viewing | No | **Built** | A request is not a reservation |
@@ -120,7 +120,7 @@ owner.
 | Arabic on invoices and credit notes | **`l10n_gcc_invoice`** | **Standard** | **Do not build a bilingual layout** |
 | ZATCA e-invoicing (Saudi) | **`l10n_sa_edi`** | **Standard** | UBL 2.1, certificates, clearance — in Community |
 | Old-gold exchange with threshold approval | No | **Built** | Guard covers state, approver and valuation |
-| AML / KYC status, screening, risk band | No | **Gap** | Slice 11. No standard equivalent |
+| AML / KYC status, screening, risk band | No | **Built** | Identity (type, last 4, expiry), screening and risk band on the client; events log; 11 tests + walk |
 | Cash threshold per client per year | No | **Gap** | Shown in the prototype at the till |
 | Metal journals | Partly (`account`) | **Planned** | Slice 11 |
 

@@ -137,6 +137,19 @@ Not built, on purpose: any sending from the server, any message without recorded
 
 Measured: 14 outreach tests (consent recorded with who/how/when; withdrawn sets do-not-contact; one draft per occasion per year inside the lead time; no consent → call note; Private client local path and her manager as owner; the paused tenant prepares nothing; command bar and chat route to outreach; hand-over builds the wa.me/mailto link and sends nothing; no consent → no message but a call can be noted; withdrawn blocks approval; only an approved unchanged text; restricted client only by her manager; the pause does not stop a person) incl. 2 through the door; headless walk: 30 occasions with consent tags, prepare, review in the inbox, approve, hand over (the WhatsApp link opens in a new tab), sent log, consent recorded on a client, Arabic RTL, 0 page errors.
 
+## Slice 7 (AML and KYC) — built 11 Nov 2026
+
+| Plan (§17, review R14) | Built |
+|---|---|
+| Identity on the client | `kyc_status`, document type, **the last four characters only** (a full number is refused), expiry, who verified and when, note; expiry computed; written to the chatter and to the compliance record. Any jewellery user records a document she has seen. |
+| Screening and risk | Screening result (not screened / clear / match) and risk band, recorded by a jewellery manager only; a match is a compliance decision and refuses cash at the threshold until a manager clears it. |
+| The threshold is configuration | `aml_cash_threshold` and `aml_cash_window_days` are **empty until a jewellery manager with the accounting role confirms them** on the Compliance screen; dated, signed and logged. No default anywhere; a decision card asks finance for the values while they are missing. Nothing here is validated law. |
+| The gate at the counter | Readiness carries the payment method and the amount: cash now plus the client's cash in the window (inbound payments on cash journals) against the threshold. At or above it the sale needs a verified, unexpired document and no screening match; else the readiness names why and the commit refuses **in the same transaction, so nothing happened**. A bank or card payment is not cash. A deposit counts only the cash taken now. |
+| The record | `jewellery.aml.event`: threshold confirmed, identity verified, screening recorded, cash threshold reached (with the cash now, the cash before, the threshold and the identity snapshot), sale refused. Readable on the Compliance screen and in Odoo; as visible as the client it is about. |
+| Agents | Nothing. Identity, screening and AML figures never enter a model request; the agents' client facts do not carry them. |
+
+Measured: 11 AML tests (no threshold until finance confirms and the card asks for it; only a finance manager sets it, dated and signed; identity keeps type, last 4 and expiry only; screening is a manager decision; expiring documents make a card; cash below the threshold passes and the window accumulates; a crossing without identity refuses and nothing happened, the same sale by card goes through; a crossing with identity is allowed and written down; a deposit counts the cash now; an expired document and a screening match refuse, a cleared screening sells; the door: config, identity, readiness and commit) incl. 1 through the door; headless walk: the decision card, the Compliance screen before and after the finance manager confirms a value, the counter refusing cash for a client without identity and saying why, the document recorded on her record (number never stored), the same sale going through, the crossing in the compliance record, Arabic.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

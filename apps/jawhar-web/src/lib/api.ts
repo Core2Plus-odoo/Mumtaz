@@ -62,6 +62,25 @@ export type Brief = {
   sentences: string[]; figures: Record<string, unknown> & { rate: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string } | null; as_of: string };
   queue: QueueItem[]; sources: string[]; narrated_by: string; run_id: number; as_of: string; level: string;
 } & Partial<Refusal>;
+export type Kyc = {
+  status: 'none' | 'verified' | 'expired' | 'refused'; id_type: string | null; id_last4: string | null; id_expiry: string | null; expired: boolean;
+  verified_by: Ref; verified_at: string | null; note: string | null;
+  screening: 'not_screened' | 'clear' | 'match'; risk_band: 'low' | 'medium' | 'high' | null; screened_by: Ref; screened_at: string | null; aml_note: string | null;
+  cash_in_window: number;
+};
+export type AmlConfig = {
+  configured: boolean; threshold: number; window_days: number; currency: string; confirmed_by: Ref; confirmed_at: string | null; note: string | null; can_configure: boolean;
+};
+export type AmlEvent = {
+  id: number; at: string; kind: string; client: Ref; restricted: boolean; order: Ref; invoice: Ref; by: Ref;
+  amount_cash: number; cash_window_before: number; threshold: number; window_days: number; currency: string;
+  kyc: { status: string | null; id_type: string | null; id_last4: string | null; id_expiry: string | null; screening: string | null; risk_band: string | null };
+  note: string | null;
+};
+export type AmlCheck = {
+  configured: boolean; threshold: number; window_days: number; currency: string; cash_now: number; cash_window: number; crosses: boolean;
+  ok: boolean; reason: string | null; kyc: Kyc | null; message?: string;
+};
 export type Consent = {
   status: 'unknown' | 'given' | 'withdrawn'; date: string | null; source: string | null; note: string | null;
   recorded_by: Ref; no_marketing: boolean; may_message: boolean;
@@ -306,7 +325,7 @@ export const api = {
     callPublic<PublicTray>(`/jawhar/public/tray/${encodeURIComponent(token)}/viewing`, { method: 'POST', body: JSON.stringify({ preferred, note }) }),
   // --- the counter ---
   counterPiece: (query: string, discount?: number) => call<CounterPiece>(`/counter/piece${q({ q: query, discount })}`),
-  counterReadiness: (p: { piece_id?: number; client_id?: number; discount?: number; old_gold_id?: number }) =>
+  counterReadiness: (p: { piece_id?: number; client_id?: number; discount?: number; old_gold_id?: number; journal_id?: number; amount?: number }) =>
     call<Readiness>(`/counter/readiness${q(p)}`),
   counterCommit: (p: { client_id: number; piece_id: number; discount?: number; journal_id?: number; amount?: number; old_gold_id?: number }) =>
     call<CounterResult>('/counter/commit', { method: 'POST', body: JSON.stringify(p) }),
@@ -349,6 +368,16 @@ export const api = {
     call<({ prepared: OutreachDraft[]; count: number; skipped: { occasion_id: number; why: string }[]; run: AiRun } & Partial<Refusal>)>('/outreach/prepare', { method: 'POST', body: JSON.stringify(p) }),
   outreachDrafts: (state = 'approved') => call<{ items: OutreachDraft[]; count: number }>(`/outreach/drafts${q({ state })}`),
   outreachDraft: (id: number) => call<OutreachDraftDetail>(`/outreach/drafts/${id}`),
+  // AML and KYC: the threshold finance confirms, identity and screening on the client, the event log
+  amlConfig: () => call<AmlConfig>('/aml/config'),
+  amlSetConfig: (p: { threshold: number; window_days?: number; note?: string }) => call<AmlConfig>('/aml/config', { method: 'POST', body: JSON.stringify(p) }),
+  amlEvents: (p: { kind?: string; client_id?: number; limit?: number } = {}) => call<{ items: AmlEvent[]; count: number }>(`/aml/events${q(p)}`),
+  amlExpiring: (days = 30) => call<{ items: (Kyc & { client: Ref; restricted: boolean })[] }>(`/aml/expiring${q({ days })}`),
+  kyc: (clientId: number) => call<Kyc>(`/clients/${clientId}/kyc`),
+  kycVerify: (clientId: number, p: { id_type: string; last4: string; expiry: string; note?: string }) =>
+    call<Kyc>(`/clients/${clientId}/kyc/verify`, { method: 'POST', body: JSON.stringify(p) }),
+  kycScreening: (clientId: number, p: { status: string; risk_band?: string; note?: string }) =>
+    call<Kyc>(`/clients/${clientId}/kyc/screening`, { method: 'POST', body: JSON.stringify(p) }),
   outreachSend: (id: number, p: { channel: string; note?: string }) =>
     call<{ draft: OutreachDraftDetail; handoff: Handoff; run: AiRun }>(`/outreach/drafts/${id}/send`, { method: 'POST', body: JSON.stringify(p) }),
 };

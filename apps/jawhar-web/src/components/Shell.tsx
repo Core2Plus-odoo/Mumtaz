@@ -20,6 +20,7 @@ const ICONS = {
   pipeline: 'M4 19V5M4 19h16M8 15V9M12 15v-3M16 15V7',
   agents: 'M4 8h16v11H4zM12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6M2.5 12.5v2M21.5 12.5v2',
   outreach: 'M4 6h16v12H4zM4 7l8 6 8-6M12 3v1',
+  compliance: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4',
 };
 
 function readCollapsed() { try { return localStorage.getItem('jawhar_nav') === 'collapsed'; } catch { return false; } }
@@ -67,6 +68,7 @@ export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rat
         <div className="railsec navl">{t('nav_finance')}</div>
         {nav('/rates', 'rates', t('nav_rates'))}
         {nav('/old-gold', 'oldgold', t('nav_old_gold'))}
+        {nav('/compliance', 'compliance', t('nav_compliance'))}
         <div className="railfoot">
           <div className="navl">{user.name}<br /><span style={{ color: '#4B5A6C' }}>{user.roles.join(' · ') || '—'}</span></div>
           <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}>{collapsed ? (lang === 'en' ? 'ع' : 'EN') : t('language')}</button>
