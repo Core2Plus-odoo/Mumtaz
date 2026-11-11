@@ -35,32 +35,48 @@ command -v nginx >/dev/null 2>&1 || { red "nginx not found."; exit 2; }
 [ -f "$MAP_SRC" ] || { red "Missing $MAP_SRC (is the repo checked out?)"; exit 2; }
 
 # -- find the server block ---------------------------------------------------
-# Three ways, cheapest first. The first version of this looked only in
-# sites-enabled and conf.d and failed on a real host whose config lives
-# elsewhere -- a server block can be included from any path.
+# Finding the right file is the whole problem, and two things make it hard.
+#
+# `grep -r` does NOT follow symlinks during recursion -- only `-R` does. A
+# Debian-style nginx enables a site by symlinking sites-enabled/x to
+# sites-available/x, so searching sites-enabled with -r walks a directory of
+# symlinks and finds nothing. That is why the first version of this script
+# failed on a perfectly ordinary host.
+#
+# And a file under sites-available may not be enabled at all. Editing a
+# disabled config changes nothing, so a plain filename search can quietly
+# pick the wrong one. `nginx -T` avoids both traps: it dumps the
+# configuration nginx has ACTUALLY LOADED, includes resolved, and prints
+# "# configuration file <path>:" ahead of each file. So it goes first.
 if [ -z "$SITE_CONF" ]; then
-  # 1. the conventional locations
-  SITE_CONF="$(grep -rlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
-      /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | head -1)"
-fi
-if [ -z "$SITE_CONF" ]; then
-  # 2. anywhere under /etc/nginx
-  SITE_CONF="$(grep -rlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
-      /etc/nginx 2>/dev/null | grep -v '\.bak\.' | head -1)"
-fi
-if [ -z "$SITE_CONF" ]; then
-  # 3. ask nginx itself. `nginx -T` resolves every include and prints
-  #    "# configuration file <path>:" before each file's contents, so it
-  #    finds the block wherever it actually lives.
   SITE_CONF="$(nginx -T 2>/dev/null | awk -v name="$SERVER_NAME" '
       /^# configuration file / { f = $4; sub(/:$/, "", f) }
       $0 ~ /server_name/ && index($0, name) { print f; exit }')"
+  [ -n "$SITE_CONF" ] && info "Found via nginx -T (the loaded configuration)"
+fi
+if [ -z "$SITE_CONF" ]; then
+  # Fall back to the filesystem. -R, not -r, so sites-enabled symlinks are
+  # followed; sites-available last, because a file there may be disabled.
+  for dir in /etc/nginx/sites-enabled /etc/nginx/conf.d /etc/nginx; do
+    SITE_CONF="$(grep -RlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
+        "$dir" 2>/dev/null | grep -v '\.bak\.' | head -1)"
+    [ -n "$SITE_CONF" ] && { info "Found by searching $dir"; break; }
+  done
 fi
 if [ -z "$SITE_CONF" ] || [ ! -f "$SITE_CONF" ]; then
   red "Could not find the server block for $SERVER_NAME."
-  red "Find it with:"
-  red "  grep -rl '$SERVER_NAME' /etc/nginx/"
+  red "Find the file nginx actually loaded with:"
+  red "  nginx -T 2>/dev/null | grep -B40 'server_name.*$SERVER_NAME' | grep 'configuration file'"
   red "then pass it:  SITE_CONF=<that file> $0"
+  exit 2
+fi
+# If the file is not one nginx has loaded, editing it changes nothing.
+if nginx -T 2>/dev/null | grep -q "^# configuration file $SITE_CONF:"; then
+  :
+else
+  red "WARNING: nginx has not loaded $SITE_CONF."
+  red "Editing it would change nothing served. Check it is enabled:"
+  red "  ls -l /etc/nginx/sites-enabled/"
   exit 2
 fi
 info "Site config: $SITE_CONF"
