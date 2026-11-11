@@ -301,6 +301,17 @@ def _card_dict(card):
     }
 
 
+def _margin(line):
+    """Price minus recorded cost, for managers; None for everyone else and
+    when no cost is recorded (unknown is not zero)."""
+    try:
+        if line.jewellery_has_cost:
+            return line.jewellery_margin
+    except AccessError:
+        pass
+    return None
+
+
 def _order_line_dict(line):
     return {
         'id': line.id,
@@ -315,6 +326,7 @@ def _order_line_dict(line):
         'total': line.price_total,
         'making_discount_pct': line.jewellery_making_discount_pct,
         'priced': line.jewellery_is_priced,
+        'margin': _margin(line),
         'snapshot': {
             'rate_id': line.jewellery_rate_id.id,
             'rate_per_gram': line.jewellery_rate_per_gram,
@@ -343,6 +355,8 @@ def _order_dict(order, detail=False):
         'currency': order.currency_id.name,
         'line_count': len(order.order_line),
         'invoice_status': order.invoice_status,
+        'validity_date': order.validity_date,
+        'expired': order.jewellery_quote_expired,
     }
     if detail:
         data['lines'] = [_order_line_dict(l) for l in order.order_line]
@@ -578,6 +592,121 @@ class JawharApi(Controller):
     @endpoint()
     def invoice(self, move_id, **kw):
         return _invoice_dict(_get('account.move', move_id), detail=True)
+
+    # ---- the sale: writes ------------------------------------------------
+    #
+    # Level D in the autonomy ladder: a person executes, with their name on
+    # it. Each call runs as that person, so Odoo's access rights decide who
+    # may quote, confirm, invoice or take payment; the audit row records who
+    # did. Nothing here types a price: lines are priced by the engine at the
+    # approved rate, and confirming refuses an expired quote, a piece that is
+    # not on the shelf, out on approval, or already sold.
+    @_r('/sales/quotes', methods=['POST'])
+    @endpoint()
+    def quote_create(self):
+        body = _body()
+        client_id = body.get('client_id')
+        lines = body.get('lines') or []
+        if not client_id or not lines:
+            raise ApiError(400, 'invalid', 'Send client_id and at least one line with piece_id.')
+        partner = _get('res.partner', client_id)
+        Lot = request.env['stock.lot']
+        order_lines = []
+        for item in lines:
+            lot = Lot.browse(int(item.get('piece_id') or 0)).exists()
+            if not lot or not lot.product_id.is_jewellery:
+                raise ApiError(400, 'invalid', 'piece_id %s is not a jewellery piece.' % item.get('piece_id'))
+            try:
+                discount = float(item.get('discount') or 0.0)
+            except (TypeError, ValueError):
+                raise ApiError(400, 'invalid', 'discount must be a number (percent of making).')
+            order_lines.append((0, 0, {
+                'product_id': lot.product_id.id,
+                'product_uom_qty': 1,
+                'jewellery_lot_id': lot.id,
+                'jewellery_making_discount_pct': discount,
+            }))
+        order = request.env['sale.order'].create({
+            'partner_id': partner.id,
+            'user_id': request.env.user.id,
+            'order_line': order_lines,
+        })
+        order.order_line.action_price_from_rate()
+        return _order_dict(order, detail=True), 201
+
+    @_r('/sales/quotes/<int:order_id>/renew', methods=['POST'])
+    @endpoint()
+    def quote_renew(self, order_id):
+        order = _get('sale.order', order_id)
+        order.action_renew_quote()
+        return _order_dict(order, detail=True)
+
+    @_r('/sales/quotes/<int:order_id>/confirm', methods=['POST'])
+    @endpoint()
+    def quote_confirm(self, order_id):
+        order = _get('sale.order', order_id)
+        if order.state not in QUOTE_STATES:
+            raise ApiError(409, 'not_a_quote', 'Order %s is already %s.' % (order.name, order.state))
+        order.action_confirm()
+        return _order_dict(order, detail=True)
+
+    @_r('/sales/orders/<int:order_id>/invoice', methods=['POST'])
+    @endpoint()
+    def order_invoice(self, order_id):
+        order = _get('sale.order', order_id)
+        if order.state not in ORDER_STATES:
+            raise ApiError(409, 'not_confirmed', 'Order %s is not confirmed.' % order.name)
+        if order.invoice_status != 'to invoice':
+            raise ApiError(409, 'nothing_to_invoice',
+                           'Order %s has nothing left to invoice (%s).' % (order.name, order.invoice_status))
+        invoice = order._create_invoices()
+        invoice.action_post()
+        return _invoice_dict(invoice, detail=True), 201
+
+    @_r('/sales/payment-methods')
+    @endpoint()
+    def payment_methods(self, **kw):
+        Journal = request.env['account.journal']
+        journals = Journal.search([
+            *Journal._check_company_domain(request.env.company),
+            ('type', 'in', ('bank', 'cash')),
+        ]).filtered('inbound_payment_method_line_ids')
+        return {'items': [{'id': j.id, 'name': j.name, 'type': j.type} for j in journals]}
+
+    @_r('/sales/invoices/<int:move_id>/payments', methods=['POST'])
+    @endpoint()
+    def invoice_pay(self, move_id):
+        move = _get('account.move', move_id)
+        if move.state != 'posted' or move.move_type != 'out_invoice':
+            raise ApiError(409, 'not_payable', '%s is not a posted customer invoice.' % move.name)
+        if move.payment_state in ('paid', 'in_payment', 'reversed'):
+            raise ApiError(409, 'already_paid', '%s is already %s.' % (move.name, move.payment_state))
+        body = _body()
+        values = {}
+        if body.get('journal_id'):
+            journal = _get('account.journal', body['journal_id'])
+            values['journal_id'] = journal.id
+        if body.get('amount') not in (None, ''):
+            try:
+                amount = float(body['amount'])
+            except (TypeError, ValueError):
+                raise ApiError(400, 'invalid', 'amount must be a number.')
+            if amount <= 0 or amount > move.amount_residual + 0.005:
+                raise ApiError(400, 'invalid',
+                               'amount must be between 0 and the outstanding %s.' % move.amount_residual)
+            values['amount'] = amount
+            if amount < move.amount_residual:
+                values['payment_difference_handling'] = 'open'
+        wizard = request.env['account.payment.register'].with_context(
+            active_model='account.move', active_ids=move.ids).create(values)
+        payments = wizard._create_payments()
+        move.invalidate_recordset()
+        return {
+            'invoice': _invoice_dict(move, detail=True),
+            'payments': [{'id': p.id, 'name': p.name, 'amount': p.amount,
+                          'journal': _m2o(p.journal_id), 'date': p.date,
+                          'state': p.state} for p in payments],
+        }, 201
 
     # ---- memos, old gold, owner -----------------------------------------
     @_r('/memos')
