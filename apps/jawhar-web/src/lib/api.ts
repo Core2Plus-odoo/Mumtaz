@@ -84,7 +84,7 @@ export type ChatMessage = { role: 'user' | 'agent'; text: string; links?: { labe
 export type ChatReply = { agent: string; intent: string; reply: string; links: { label: string; to: string }[]; model_used: string; refused?: string };
 export type KioskPiece = {
   serial: string; design: string; category: string | null; karat: string | false; net_weight_g: number;
-  price_incl_vat: number; currency: string; stones: boolean; certificate: boolean; image_url: string | null;
+  price_incl_vat: number; currency: string; stones: boolean; certificate: boolean; image_url: string | null; tryon_url: string | null;
   gross_weight_g?: number; stone_weight_g?: number; making_type?: string | false; rate_per_gram?: number;
 };
 export type KioskRequestOut = { reference: string; kind: string; state: string; serial: string; delivery_date: string | null; slot: string | null; message: string };

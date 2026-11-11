@@ -43,6 +43,7 @@ owner.
 | Voice and text conversation with Zayan and Layla (ElevenLabs agents, client tools run as the signed-in user), EN/AR, portraits, on every screen | No | **Built** | Model-safe tool results; falls back to server chat |
 | Clients and Pieces lists: search, filters, sort, paging, new-client form; demo data at shop scale | Partly | **Built** | 38 clients / 60 pieces in the demo |
 | Virtual Sales Officer: public conversational kiosk (Noor, EN/AR), shelf at the approved rate, viewing and next-day delivery requests a person confirms | No | **Built** | 7 + 1 tests + walk; a request is not a reservation |
+| Virtual try-on on the kiosk: the camera shows the piece on the client, tracking on the device, nothing recorded | No | **Built** | 5 placement tests + fake-camera walk |
 
 ## Pricing and the rate
 

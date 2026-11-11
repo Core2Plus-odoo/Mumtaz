@@ -10,6 +10,8 @@ import type { Conversation as Convo, Mode, Status } from '@elevenlabs/client';
 import { api, type KioskPiece, type KioskRequestOut } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { money, num, when } from '../lib/format';
+import TryOn from '../components/TryOn';
+import { usesFace, usesHand, type Category } from '../lib/tryon';
 
 const AVATAR = '/app/agents/noor-avatar.webp';
 const CATS = ['bangle', 'chain', 'necklace', 'ring', 'earrings', 'bracelet', 'pendant', 'set', 'coin'];
@@ -31,6 +33,7 @@ export default function Kiosk() {
   const [form, setForm] = useState<Form | null>(null);
   const [done, setDone] = useState<KioskRequestOut | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tryon, setTryon] = useState<KioskPiece | null>(null);
   const convo = useRef<Convo | null>(null);
   const cur = rate?.currency ?? 'AED';
 
@@ -181,6 +184,9 @@ export default function Kiosk() {
               <div className="k2-price">{money(focus.price_incl_vat, cur, lang)}</div>
               <div className="small muted">{focus.serial} · {focus.karat}K · {num(focus.net_weight_g, lang, 3)} g{focus.rate_per_gram ? ` · ${t('kiosk_rate')} ${num(focus.rate_per_gram, lang)} ${cur}/g` : ''}</div>
               <div className="actions">
+                {focus.tryon_url && (usesFace(focus.category) || usesHand(focus.category)) && (
+                  <button className="k2-btn tryon-btn" onClick={() => setTryon(focus)}>📷 {t('tryon_button')}</button>
+                )}
                 <button className="k2-btn" onClick={() => openForm('viewing', focus.serial)}>{t('kiosk_ask_viewing')}</button>
                 <button className="k2-btn gold" onClick={() => openForm('delivery', focus.serial)}>{t('kiosk_ask_delivery')}</button>
                 <button className="k2-btn ghost" onClick={() => setFocus(null)}>{t('kiosk_browse')}</button>
@@ -208,6 +214,10 @@ export default function Kiosk() {
         )}
         <p className="k2-privacy">{t('kiosk_privacy')}</p>
       </section>
+      {tryon && tryon.tryon_url && (
+        <TryOn category={tryon.category as Category} cutoutUrl={tryon.tryon_url} label={tryon.design}
+          onClose={() => setTryon(null)} onAskViewing={() => { setTryon(null); openForm('viewing', tryon.serial); }} />
+      )}
     </div>
   );
 }

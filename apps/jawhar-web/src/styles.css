@@ -300,3 +300,13 @@ tr.refused td{background:var(--coral-bg)}
 .k2-privacy{text-align:center;color:#6B7280;font-size:.85rem}
 .withthumb{display:flex;align-items:center;gap:10px}
 .thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--paper2);display:grid;place-items:center;flex:none}
+
+/* --- virtual try-on --- */
+.tryon{position:fixed;inset:0;z-index:60;background:var(--k-cream);display:grid;grid-template-rows:auto 1fr auto}
+.tryon-head{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--k-teal);color:#fff;font-size:1.1rem}
+.tryon-stage{position:relative;display:grid;place-items:center;overflow:hidden;background:#0B2A29}
+.tryon-canvas{max-width:100%;max-height:100%;object-fit:contain}
+.tryon-state{position:absolute;bottom:18px;inset-inline:18px;text-align:center;background:rgba(15,110,107,.85);color:#fff;border-radius:999px;padding:10px 16px;font-weight:600}
+.tryon-state.error{background:#B3261E}
+.tryon-foot{display:grid;justify-items:center;gap:8px;padding:14px 20px}
+.tryon-foot .k2-btn{min-width:260px}

@@ -20,6 +20,9 @@ class ProductTemplate(models.Model):
          ('earrings', 'Earrings'), ('bracelet', 'Bracelet'), ('pendant', 'Pendant'),
          ('set', 'Set'), ('coin', 'Coin / bar')],
         string='Jewellery category', help='What kind of piece this design is; drives the icon and the filters.')
+    jewellery_tryon_image = fields.Image(
+        string='Try-on cutout', max_width=1024, max_height=1024,
+        help='The design on a transparent background, for the kiosk to place on the client in the camera view.')
     jewellery_karat = fields.Selection(KARATS, string='Default karat')
     jewellery_wastage_pct = fields.Float(string='Default wastage %')
     jewellery_making_type = fields.Selection(

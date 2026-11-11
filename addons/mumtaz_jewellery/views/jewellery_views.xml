@@ -138,6 +138,7 @@
                             <field name="is_jewellery"/>
                             <field name="tracking"/>
                             <field name="categ_id"/>
+                            <field name="jewellery_category"/>
                         </group>
                         <group string="Pricing defaults">
                             <field name="jewellery_karat"/>
@@ -145,6 +146,10 @@
                             <field name="jewellery_making_type"/>
                             <field name="jewellery_making_value"/>
                         </group>
+                    </group>
+                    <group string="Photos">
+                        <field name="image_1920" widget="image" options="{'size': [160, 160]}"/>
+                        <field name="jewellery_tryon_image" widget="image" options="{'size': [160, 160]}"/>
                     </group>
                 </sheet>
             </form>

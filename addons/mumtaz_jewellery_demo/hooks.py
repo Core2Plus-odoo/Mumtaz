@@ -169,9 +169,11 @@ def _seed_rate(env):
     return rate, maker, checker
 
 
-def _design_image(category):
-    """The demo photo for a design, shipped with the module; None if absent."""
-    path = os.path.join(os.path.dirname(__file__), 'static', 'img', '%s.jpg' % category)
+def _design_image(category, kind='jpg'):
+    """The demo photo (or the try-on cutout) for a design, shipped with the
+    module; None if absent."""
+    name = '%s.jpg' % category if kind == 'jpg' else '%s-cutout.png' % category
+    path = os.path.join(os.path.dirname(__file__), 'static', 'img', name)
     if not os.path.exists(path):
         return None
     with open(path, 'rb') as fh:
@@ -189,6 +191,8 @@ def _seed_products(env):
                 existing.jewellery_category = category
             if not existing.image_1920 and _design_image(category):
                 existing.image_1920 = _design_image(category)
+            if not existing.jewellery_tryon_image and _design_image(category, 'cutout'):
+                existing.jewellery_tryon_image = _design_image(category, 'cutout')
             products.append(existing)
             continue
         values = {
@@ -204,6 +208,9 @@ def _seed_products(env):
         image = _design_image(category)
         if image:
             values['image_1920'] = image
+        cutout = _design_image(category, 'cutout')
+        if cutout:
+            values['jewellery_tryon_image'] = cutout
         if storable:
             values['is_storable'] = True
         else:
