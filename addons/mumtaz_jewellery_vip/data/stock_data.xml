@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+  <!--
+    A piece out on approval is still yours: not sold, not delivered, and it
+    must stay in your valuation. But it is not on your shelf, and a shop
+    count that expects to find it will not balance. So it moves to an
+    INTERNAL location, never to a customer location. Ownership and valuation
+    are unchanged; the shop's on-hand drops; and the approval location can be
+    reported on separately, which is what "on your book, not on your shelf"
+    means on the owner view.
+  -->
+  <record id="location_on_approval" model="stock.location">
+    <field name="name">On approval</field>
+    <field name="usage">internal</field>
+    <!-- No parent, deliberately: Odoo 19 has no "Physical Locations" view
+         root, and a piece with a client is not in any warehouse. It is a
+         root internal location, so it stays owned and valued while being
+         absent from every shop's on-hand. -->
+  </record>
+</odoo>
