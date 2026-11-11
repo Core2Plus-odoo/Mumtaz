@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import type { Rate, User } from '../lib/api';
+import { api, type Rate, type User } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { num, when } from '../lib/format';
+import AgentChat, { Portrait, type AgentKey } from './AgentChat';
 
 const Icon = ({ d }: { d: string }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>;
 const ICONS = {
@@ -19,42 +21,62 @@ const ICONS = {
   agents: 'M4 8h16v11H4zM12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6M2.5 12.5v2M21.5 12.5v2',
 };
 
+function readCollapsed() { try { return localStorage.getItem('jawhar_nav') === 'collapsed'; } catch { return false; } }
+
 export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rate | null; onSignOut: () => void }) {
   const { t, lang, setLang } = useT();
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [agent, setAgent] = useState<AgentKey>('zayan');
+  const [voiceIds, setVoiceIds] = useState<Record<string, string>>({});
+  useEffect(() => { api.aiStatus().then((s) => setVoiceIds(s.voice ?? {})).catch(() => setVoiceIds({})); }, []);
+  useEffect(() => {
+    const on = (e: Event) => { const a = (e as CustomEvent<{ agent: AgentKey }>).detail?.agent; if (a) setAgent(a); setChatOpen(true); };
+    window.addEventListener('jawhar:talk', on);
+    return () => window.removeEventListener('jawhar:talk', on);
+  }, []);
+  const toggleNav = () => { const c = !collapsed; setCollapsed(c); try { localStorage.setItem('jawhar_nav', c ? 'collapsed' : 'open'); } catch { /* fine */ } };
   const nav = (to: string, icon: keyof typeof ICONS, label: string, end = false) => (
-    <NavLink to={to} end={end} className={({ isActive }) => `navb ${isActive ? 'on' : ''}`}>
-      <Icon d={ICONS[icon]} />{label}
+    <NavLink to={to} end={end} className={({ isActive }) => `navb ${isActive ? 'on' : ''}`} title={label}>
+      <Icon d={ICONS[icon]} /><span className="navl">{label}</span>
     </NavLink>
   );
   return (
-    <div className="shell">
+    <div className={`shell ${collapsed ? 'collapsed' : ''}`}>
       <nav className="rail">
         <div className="brandrow">
           <span className="mk">J</span>
-          <span><b>{t('app')}</b><small>{user.company.name}</small></span>
+          <span className="navl"><b>{t('app')}</b><small>{user.company.name}</small></span>
+          <button className="navtoggle" onClick={toggleNav} aria-label={collapsed ? t('expand_nav') : t('collapse_nav')} title={collapsed ? t('expand_nav') : t('collapse_nav')}>{collapsed ? '»' : '«'}</button>
         </div>
-        <div className="railsec">{t('nav_today')}</div>
+        <div className="railsec navl">{t('nav_today')}</div>
         {nav('/', 'today', t('nav_today'), true)}
         {nav('/cards', 'cards', t('nav_cards'))}
         {nav('/agents', 'agents', t('nav_agents'))}
-        <div className="railsec">{t('nav_sales')}</div>
+        <div className="railsec navl">{t('nav_sales')}</div>
         {nav('/counter', 'counter', t('nav_counter'))}
         {nav('/clients', 'clients', t('nav_clients'))}
         {nav('/pipeline', 'pipeline', t('nav_pipeline'))}
         {nav('/documents', 'docs', t('nav_documents'))}
         {nav('/invoices', 'invoices', t('nav_invoices'))}
-        <div className="railsec">{t('nav_inventory')}</div>
+        <div className="railsec navl">{t('nav_inventory')}</div>
         {nav('/pieces', 'pieces', t('nav_pieces'))}
         {nav('/memos', 'memos', t('nav_memos'))}
-        <div className="railsec">{t('nav_finance')}</div>
+        <div className="railsec navl">{t('nav_finance')}</div>
         {nav('/rates', 'rates', t('nav_rates'))}
         {nav('/old-gold', 'oldgold', t('nav_old_gold'))}
         <div className="railfoot">
-          <div>{user.name}<br /><span style={{ color: '#4B5A6C' }}>{user.roles.join(' · ') || '—'}</span></div>
-          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}>{t('language')}</button>
-          <button onClick={onSignOut}>{t('sign_out')}</button>
+          <div className="navl">{user.name}<br /><span style={{ color: '#4B5A6C' }}>{user.roles.join(' · ') || '—'}</span></div>
+          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}>{collapsed ? (lang === 'en' ? 'ع' : 'EN') : t('language')}</button>
+          <button onClick={onSignOut} className="navl">{t('sign_out')}</button>
         </div>
       </nav>
+      {!chatOpen && (
+        <button className="talkfab" onClick={() => setChatOpen(true)} aria-label={t('chat_open')} title={t('chat_open')}>
+          <Portrait agent="zayan" size={44} /><Portrait agent="layla" size={44} /><span>{t('chat_open')}</span>
+        </button>
+      )}
+      <AgentChat open={chatOpen} agent={agent} voiceIds={voiceIds} onClose={() => setChatOpen(false)} onAgent={setAgent} />
       <div className="main">
         <div className="util">
           <span className="env">{t('prototype')}</span>

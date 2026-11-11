@@ -97,6 +97,19 @@ Measured: 18 agent tests + 4 API tests, headless walk (brief, rate, tray by requ
 
 Not built, on purpose: outbound sending (Outreach slice; still a person), voice, Rayan/Amara/Noor, level D anywhere.
 
+## Slice 4b (interactive agents, voice) — built 11 Nov 2026, owner feedback of the same day
+
+| Owner ask | Delivered |
+| --- | --- |
+| "Agents should be interactive, proper agent photo, a conversational block where we can speak to him, with ElevenLabs capabilities, Arabic and English both" | A conversation drawer on every screen (floating button, portraits of Zayan and Layla). **Voice**: the microphone starts a live ElevenLabs conversational session with the chosen agent; **text** uses the same agent and tools without a microphone; when the voice service is out of reach the drawer falls back to the server's text chat with the same tools. Both agents answer in English or Arabic and switch when the person switches (Arabic language presets with their own first lines). |
+| ElevenLabs agents | Two in-app agents, separate from the website guide: *Zayan — Jawhar in-app* (`agent_4201…`, the website Zayan's voice) and *Layla — Jawhar in-app* (`agent_6201…`, a voice designed for her). Eight **client tools** (rate, brief, queue, find client, prepare tray, draft follow-up, search pieces, open screen) that the **browser runs against the Jawhar API as the signed-in user**: the ElevenLabs side holds no key to the shop and no business data of its own. Agent ids are public and configured per tenant (`mumtaz_jewellery.voice_agent_*`). |
+| What may leave the building | Tool results are the only business facts the voice model ever sees, and they are the **model-safe** form: the brief and queue exclude Private/Royal cards and drafts (`safe=1`), client search drops restricted clients before answering, trays and follow-ups for them are refused server-side as before. The agent prompts repeat the rules: numbers only from tool results, nothing sent or approved, restricted clients never discussed. |
+| "Look and feel too congested, only one client, where is the list, search options, too basic" | Collapsible sidebar; Clients list with search (name/phone/email), tier, **sort** (name, lifetime value, newest), pages of 25, next occasion and phone in the row, and a **New client** form (Private/Royal only for a VIP manager); Pieces list with **category**, sort (serial, price, weight, newest) and paging; demo data at shop scale: 8 designs with categories, 60 pieces, 38 clients across Gulf cities, Arabic-speaking ones marked. A seeded database is **topped up** idempotently (`top_up`), so the staging demo gains the data on upgrade. |
+
+Measured: 29 agent tests (incl. 5 chat tests) + 42 API tests (incl. chat, client create, sort/paging, category); headless walks: drawer opens with portraits and tabs, chat falls back to the server when ElevenLabs is unreachable from the sandbox and still prepares a tray with links, sidebar collapses to 72 px, 38 clients paged and sorted by value, a client created from the form, rings sorted by price. The live voice path is verified on staging after deploy (the sandbox browser has no outbound network).
+
+Next (owner idea, same day): the **Virtual Sales Officer**, a conversational kiosk for clients in store and on the web, with a viewing/hold request and a next-day delivery request that a person confirms.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

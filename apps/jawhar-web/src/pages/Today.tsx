@@ -9,6 +9,7 @@ import { money, num, when } from '../lib/format';
 import { TopBar } from '../components/Shell';
 import { Card, ErrorBox, Kpi, Loading, useLoad } from '../components/ui';
 import { CardGrid } from './Cards';
+import { Portrait, talkTo } from '../components/AgentChat';
 
 export default function Today() {
   const { t, lang } = useT();
@@ -63,9 +64,12 @@ export default function Today() {
           </div>
         )}
         <div className="two">
-          <Card title={t('brief_title')} sub={t('brief_level')} right={<button className="btn ghost small" disabled={asking} onClick={prepareBrief}>{t('brief_prepare')}</button>}>
+          <Card title={t('brief_title')} sub={t('brief_level')} right={<>
+            <button className="btn ghost small" disabled={asking} onClick={prepareBrief}>{t('brief_prepare')}</button>
+            <button className="btn small" onClick={() => talkTo('zayan')}><Portrait agent="zayan" size={20} /> {t('talk_to')} Zayan</button>
+          </>}>
             {briefErr && <div className="notice warn">{briefErr}</div>}
-            {!brief && !briefErr && <p className="muted small">{t('today_sub')}</p>}
+            {!brief && !briefErr && <p className="muted small">{t('brief_read_from')} … — {t('brief_prepare')}.</p>}
             {brief && (
               <div className="brief">
                 {brief.sentences.map((s, i) => <p key={i} dir="auto">{s}</p>)}

@@ -8,6 +8,7 @@ import { useT } from '../lib/i18n';
 import { when } from '../lib/format';
 import { TopBar } from '../components/Shell';
 import { Card, Empty, ErrorBox, Loading, useLoad } from '../components/ui';
+import { Portrait, talkTo, type AgentKey } from '../components/AgentChat';
 
 export default function Agents() {
   const { t, lang } = useT();
@@ -61,7 +62,12 @@ export default function Agents() {
             <div className="agents">
               {st.agents.map((a) => (
                 <div key={a.key} className="agent">
-                  <div className="agent-head"><b>{a.name}</b><span className="muted"> · {a.role}</span></div>
+                  <div className="agent-head">
+                    <Portrait agent={a.key as AgentKey} size={56} />
+                    <div><b>{a.name}</b><span className="muted"> · {a.role}</span>
+                      <div><button className="btn small" onClick={() => talkTo(a.key as AgentKey)}>{t('talk_to')} {a.name}{st.voice?.[a.key] ? ' 🎤' : ''}</button></div>
+                    </div>
+                  </div>
                   <p className="muted small">{a.purpose}</p>
                   <div className="levels">
                     {['A', 'B', 'C', 'D', 'E'].map((l) => (

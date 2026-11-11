@@ -20,10 +20,15 @@ MARKER = 'mumtaz_jewellery_demo.seeded'
 DEMO_RATE_PER_GRAM = 245.80
 
 PRODUCTS = [
-    # name, karat, wastage %, making type, making value
-    ('DEMO Bangle 22K', '22', 2.0, 'percent', 10.0),
-    ('DEMO Chain 21K', '21', 1.5, 'per_gram', 12.5),
-    ('DEMO Ring 18K with stones', '18', 1.0, 'fixed', 250.0),
+    # name, karat, wastage %, making type, making value, category
+    ('DEMO Bangle 22K', '22', 2.0, 'percent', 10.0, 'bangle'),
+    ('DEMO Chain 21K', '21', 1.5, 'per_gram', 12.5, 'chain'),
+    ('DEMO Ring 18K with stones', '18', 1.0, 'fixed', 250.0, 'ring'),
+    ('DEMO Necklace set 21K', '21', 2.5, 'percent', 14.0, 'set'),
+    ('DEMO Earrings 18K', '18', 1.0, 'fixed', 180.0, 'earrings'),
+    ('DEMO Bracelet 22K', '22', 1.8, 'per_gram', 11.0, 'bracelet'),
+    ('DEMO Pendant 18K with stone', '18', 1.0, 'fixed', 220.0, 'pendant'),
+    ('DEMO Coin 24K', '24', 0.0, 'fixed', 40.0, 'coin'),
 ]
 
 PIECES = [
@@ -46,12 +51,78 @@ PIECES = [
     (2, 'DEMO-RNG-0006', 11.300, 3.2, 6400.0, 'DEMO-RFID-0016', 'DEMO-CERT-55126'),
 ]
 
+
+def _more_pieces():
+    """Forty-odd more pieces across the newer designs, deterministic, so the
+    lists look like a shop rather than a test fixture."""
+    out = []
+    n = 17
+    specs = [  # product index, prefix, count, base gross, step, stone g, stones value
+        (0, 'BNG', 7, 20.0, 1.7, 0.0, 0.0),
+        (1, 'CHN', 7, 14.0, 3.1, 0.0, 0.0),
+        (3, 'SET', 6, 48.0, 6.5, 0.0, 0.0),
+        (4, 'EAR', 7, 4.2, 0.6, 0.4, 700.0),
+        (5, 'BRC', 6, 16.5, 2.2, 0.0, 0.0),
+        (6, 'PND', 6, 3.8, 0.5, 0.3, 550.0),
+        (7, 'CON', 5, 8.0, 8.0, 0.0, 0.0),
+    ]
+    for idx, prefix, count, base, step, stone, stones_value in specs:
+        for i in range(count):
+            gross = round(base + step * i, 3)
+            cert = 'DEMO-CERT-%d' % (56000 + n) if stone else ''
+            out.append((idx, 'DEMO-%s-%04d' % (prefix, i + 1 + (5 if prefix in ('BNG', 'CHN') else 0)),
+                        gross, stone, stones_value * (1 + i * 0.15) if stone else 0.0, 'DEMO-RFID-%04d' % n, cert))
+            n += 1
+    return out
+
+
+PIECES = PIECES + _more_pieces()
+
 CLIENTS = [
     # name, tier, preferred karats, typical budget, occasion kind, days ahead
     ('DEMO Client Alpha', 'standard', '22', 4000.0, 'birthday', 30),
     ('DEMO Client Bravo', 'preferred', '22,21', 12000.0, 'anniversary', 14),
     ('DEMO Client Charlie', 'private', '21', 45000.0, 'wedding', 21),
     ('DEMO Client Delta', 'royal', '22', 150000.0, 'eid', 40),
+]
+
+# Fictional people for the demo shop. The names are invented; every record
+# carries a DEMO reference and a comment saying so.
+MORE_CLIENTS = [
+    ('Mariam Al Sayegh', 'preferred', '22', 9500.0, 'birthday', 9, 'Dubai', 'ar_001', False),
+    ('Hessa Al Mansoori', 'standard', '21', 3200.0, 'eid', 35, 'Abu Dhabi', 'ar_001', False),
+    ('Noura Bin Haider', 'preferred', '22,24', 18000.0, 'anniversary', 5, 'Sharjah', 'ar_001', False),
+    ('Reem Al Qasimi', 'private', '21,22', 60000.0, 'wedding', 48, 'Sharjah', 'ar_001', False),
+    ('Latifa Al Falasi', 'standard', '18', 2600.0, 'birthday', 62, 'Dubai', 'en_US', True),
+    ('Aisha Al Ketbi', 'standard', '22', 4100.0, 'national_day', 20, 'Al Ain', 'ar_001', False),
+    ('Fatima Al Shamsi', 'preferred', '21', 11000.0, 'eid', 33, 'Abu Dhabi', 'ar_001', False),
+    ('Shamsa Al Suwaidi', 'standard', '22', 3800.0, 'anniversary', 71, 'Dubai', 'en_US', False),
+    ('Maha Al Zaabi', 'standard', '18,21', 5200.0, 'birthday', 12, 'Ajman', 'ar_001', False),
+    ('Alya Al Marri', 'preferred', '22', 14500.0, 'wedding', 27, 'Dubai', 'ar_001', False),
+    ('Salama Al Nuaimi', 'standard', '21', 2900.0, 'eid', 36, 'Ras Al Khaimah', 'ar_001', True),
+    ('Dana Al Hashimi', 'standard', '18', 3300.0, 'birthday', 44, 'Dubai', 'en_US', False),
+    ('Sara Khalil', 'standard', '21', 2400.0, 'anniversary', 17, 'Dubai', 'en_US', False),
+    ('Lina Haddad', 'preferred', '18,21', 8700.0, 'birthday', 23, 'Abu Dhabi', 'en_US', False),
+    ('Yasmin Nasser', 'standard', '22', 4600.0, 'eid', 38, 'Dubai', 'en_US', False),
+    ('Hanan Saleh', 'standard', '21', 3100.0, 'birthday', 55, 'Sharjah', 'ar_001', False),
+    ('Rania Khoury', 'preferred', '18', 7600.0, 'anniversary', 8, 'Dubai', 'en_US', False),
+    ('Nadia Farouk', 'standard', '21,22', 3900.0, 'wedding', 90, 'Abu Dhabi', 'ar_001', False),
+    ('Zainab Hussain', 'standard', '22', 2800.0, 'eid', 34, 'Dubai', 'en_US', False),
+    ('Amal Rahman', 'standard', '21', 2200.0, 'birthday', 26, 'Ajman', 'en_US', True),
+    ('Huda Mahmoud', 'preferred', '22', 10500.0, 'diwali', 19, 'Dubai', 'en_US', False),
+    ('Priya Menon', 'standard', '22', 3600.0, 'diwali', 19, 'Dubai', 'en_US', False),
+    ('Anjali Nair', 'preferred', '22,24', 12800.0, 'wedding', 41, 'Abu Dhabi', 'en_US', False),
+    ('Meera Pillai', 'standard', '22', 2700.0, 'birthday', 66, 'Sharjah', 'en_US', False),
+    ('Kavya Reddy', 'standard', '18,22', 4300.0, 'diwali', 19, 'Dubai', 'en_US', False),
+    ('Farah Al Thani', 'private', '22', 85000.0, 'eid', 37, 'Doha', 'ar_001', False),
+    ('Mozah Al Kuwari', 'preferred', '21,22', 16000.0, 'national_day', 29, 'Doha', 'ar_001', False),
+    ('Ghada Al Harthi', 'standard', '21', 3500.0, 'birthday', 15, 'Muscat', 'ar_001', False),
+    ('Lamia Al Saud', 'royal', '22,24', 220000.0, 'wedding', 52, 'Riyadh', 'ar_001', False),
+    ('Jawaher Al Otaibi', 'preferred', '21', 13200.0, 'eid', 35, 'Riyadh', 'ar_001', False),
+    ('Wafa Al Dossari', 'standard', '22', 4800.0, 'anniversary', 11, 'Dammam', 'ar_001', False),
+    ('Elena Petrova', 'standard', '18', 3000.0, 'birthday', 24, 'Dubai', 'en_US', False),
+    ('Sophie Laurent', 'preferred', '18', 9100.0, 'anniversary', 31, 'Dubai', 'en_US', False),
+    ('Chen Wei', 'standard', '24', 5600.0, 'other', 58, 'Dubai', 'en_US', False),
 ]
 
 
@@ -100,10 +171,17 @@ def _seed_products(env):
     template = env['product.template']
     storable = 'is_storable' in template._fields
     products = []
-    for name, karat, wastage, making_type, making_value in PRODUCTS:
+    for name, karat, wastage, making_type, making_value, category in PRODUCTS:
+        existing = template.search([('name', '=', name)], limit=1)
+        if existing:
+            if not existing.jewellery_category:
+                existing.jewellery_category = category
+            products.append(existing)
+            continue
         values = {
             'name': name,
             'is_jewellery': True,
+            'jewellery_category': category,
             'tracking': 'serial',
             'jewellery_karat': karat,
             'jewellery_wastage_pct': wastage,
@@ -123,6 +201,10 @@ def _seed_pieces(env, products):
     created = lots
     for index, serial, gross, stone, stones_value, rfid, certificate in PIECES:
         product = products[index]
+        existing = lots.search([('name', '=', serial)], limit=1)
+        if existing:
+            created |= existing
+            continue
         created |= lots.create({
             'name': serial,
             'product_id': product.product_variant_id.id,
@@ -197,6 +279,10 @@ def _seed_clients(env, manager, lots):
     today = fields.Date.context_today(env['res.partner'])
     created = partners
     for name, tier, karats, budget, occasion_kind, days in CLIENTS:
+        existing = partners.search([('name', '=', name)], limit=1)
+        if existing:
+            created |= existing
+            continue
         values = {
             'name': name,
             'jewellery_tier': tier,
@@ -219,9 +305,29 @@ def _seed_clients(env, manager, lots):
         })
         created |= partner
 
+    for i, (name, tier, karats, budget, occasion_kind, days, city, lang, no_marketing) in enumerate(MORE_CLIENTS):
+        if partners.search_count([('name', '=', name)]):
+            continue
+        values = {
+            'name': name, 'jewellery_tier': tier, 'preferred_karats': karats, 'typical_budget': budget,
+            'city': city, 'lang': lang if lang in env['res.lang'].mapped('code') else False,
+            'phone': '+971 50 000 %04d' % (1000 + i), 'no_marketing': no_marketing,
+            'ref': 'DEMO-C-%03d' % (i + 5),
+            'taste_notes': 'DEMO record. Synthetic preferences for the demo only.',
+            'comment': 'DEMO data: a fictional client, not a real person.',
+        }
+        if tier in ('private', 'royal'):
+            values['relationship_manager_id'] = manager.id
+        partner = partners.create(values)
+        env['jewellery.occasion'].create({
+            'partner_id': partner.id, 'kind': occasion_kind, 'date': today + timedelta(days=days),
+            'recurring': True, 'lead_days': 21, 'note': 'DEMO occasion.',
+        })
+        created |= partner
+
     # One piece out on approval, due back shortly, so the owner screen and the
     # memo reminder have something to show.
-    if created and lots:
+    if created and lots and not env['jewellery.approval.memo'].search_count([('partner_id', '=', created[1].id)]):
         env['jewellery.approval.memo'].create({
             'partner_id': created[1].id,
             'lot_ids': [(6, 0, [lots[0].id])],
@@ -375,11 +481,27 @@ def _seed_agents(env, clients, presenter):
     return out
 
 
+def top_up(env):
+    """A database seeded by an earlier version gets the designs, pieces
+    and clients added since, by name, nothing twice. Safe to run again."""
+    products = _seed_products(env)
+    lots = _seed_pieces(env, products)
+    # Only pieces that are new to this database go on the shelf: a piece the
+    # demo sold must stay sold.
+    fresh = lots.filtered(lambda l: not l.product_qty and not l.jewellery_cost_value)
+    on_hand = _put_pieces_in_stock(env, fresh) if fresh else 0
+    _seed_cost_basis(fresh)
+    manager = env['res.users'].search([('login', '=', 'demo_rate_checker')], limit=1) or env.ref('base.user_admin')
+    clients = _seed_clients(env, manager, lots)
+    _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients', len(products), len(lots), on_hand, len(clients))
+    return {'products': len(products), 'pieces': len(lots), 'clients': len(clients)}
+
+
 def post_init_hook(env):
     """Create the DEMO dataset once."""
     parameters = env['ir.config_parameter'].sudo()
     if parameters.get_param(MARKER) == '1':
-        _logger.info('DEMO seed: already present, nothing to do')
+        top_up(env)
         return
 
     _grant_presenter(env)

@@ -220,3 +220,56 @@ class TestZayan(AgentCase):
             out = self.Agent.ask('what should I look at')
         self.assertEqual(out['intent'], 'brief')
         self.assertEqual(self.runs('intent.route')[:1].model_used, 'test-model')
+
+
+@tagged('post_install', '-at_install')
+class TestChat(AgentCase):
+
+    def chat(self, agent, *texts):
+        msgs = [{'role': 'user', 'text': t} for t in texts]
+        return self.Agent.chat(agent, msgs)
+
+    def test_zayan_answers_a_tool_request_with_links(self):
+        out = self.chat('zayan', 'what is the gold rate?')
+        self.assertEqual(out['intent'], 'rate')
+        self.assertIn('245.8', out['reply'])
+        self.assertEqual(out['links'][0]['to'], '/rates')
+        self.assertEqual(out['model_used'], 'local')
+
+    def test_layla_prepares_a_tray_from_the_conversation(self):
+        out = self.chat('layla', 'hello', 'prepare a tray for %s' % self.client.name)
+        self.assertEqual(out['intent'], 'tray')
+        self.assertTrue(any(l['to'].startswith('/trays/') for l in out['links']))
+        self.assertIn(self.client.name, out['reply'])
+
+    def test_small_talk_without_a_model_gets_the_local_help(self):
+        out = self.chat('layla', 'how are you today')
+        self.assertEqual(out['intent'], 'unknown')
+        self.assertIn('never send', out['reply'])
+
+    def test_model_chat_uses_facts_and_refuses_restricted_clients(self):
+        private = self.env['res.partner'].create({
+            'name': 'TEST Private Chat', 'jewellery_tier': 'private', 'relationship_manager_id': self.staff.id})
+        seen = {}
+
+        def fake(system, user_text, max_tokens=1024):
+            seen['prompt'] = user_text
+            return {'text': 'Good morning. The rate is 245.8 today.', 'model': 'test-model',
+                    'input_tokens': 1, 'output_tokens': 1, 'refused': False, 'duration_ms': 1}
+        with patch.object(provider, 'configured', return_value=True), patch.object(provider, 'complete', fake):
+            out = self.chat('zayan', 'how are you feeling')
+            self.assertEqual(out['model_used'], 'test-model')
+            self.assertIn('245.8', out['reply'])
+            self.assertIn('FACTS', seen['prompt'])
+            out2 = self.chat('zayan', 'tell me about %s' % private.name)
+        self.assertEqual(out2.get('refused'), 'restricted_client')
+        self.assertNotIn(private.name, seen['prompt'])
+
+    def test_a_model_reply_with_an_invented_number_falls_back(self):
+        def fake(system, user_text, max_tokens=1024):
+            return {'text': 'Sales will grow 40% if you discount 12%.', 'model': 'test-model',
+                    'input_tokens': 1, 'output_tokens': 1, 'refused': False, 'duration_ms': 1}
+        with patch.object(provider, 'configured', return_value=True), patch.object(provider, 'complete', fake):
+            out = self.chat('zayan', 'any forecast?')
+        self.assertNotIn('40%', out['reply'])
+        self.assertEqual(out['model_used'], 'local')

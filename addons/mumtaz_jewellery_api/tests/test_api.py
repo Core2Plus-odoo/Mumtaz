@@ -590,3 +590,41 @@ class TestJawharApiAgents(TestJawharApiSalesHub):
         self.assertTrue(self.api('/ai/status')['data']['paused'])
         self.assertEqual(self.api('/ai/brief', 'POST')['data']['refused'], 'paused')
         self.assertFalse(self.api('/ai/pause', 'POST', {'paused': False})['data']['paused'])
+
+    def test_chat_through_the_door(self):
+        self.sign_in('api_seller')
+        out = self.api('/ai/chat', 'POST', {'agent': 'zayan', 'messages': [{'role': 'user', 'text': 'gold rate'}]})['data']
+        self.assertEqual(out['intent'], 'rate')
+        self.assertIn('245.8', out['reply'])
+        self.assertEqual(self.api('/ai/chat', 'POST', {'messages': 'nope'}, status=400)['error']['code'], 'validation')
+
+
+@tagged('post_install', '-at_install')
+class TestJawharApiLists(TestJawharApiSale):
+    """The lists management looks at first: search, sort, paging, a new client."""
+
+    def test_clients_sort_page_and_create(self):
+        self.sign_in('api_cashier')
+        created = self.api('/clients', 'POST', {'name': 'TEST New Walk-in', 'phone': '+971500000001', 'city': 'Dubai',
+                                                 'tier': 'preferred', 'preferred_karats': '21'}, status=201)['data']
+        self.assertEqual(created['tier'], 'preferred')
+        self.assertEqual(created['city'], 'Dubai')
+        found = self.api('/clients?q=0000001')['data']
+        self.assertEqual([c['id'] for c in found['items']], [created['id']])
+        by_value = self.api('/clients?sort=value&limit=1')['data']
+        self.assertEqual(by_value['total'], self.api('/clients')['data']['total'])
+        self.assertEqual(len(by_value['items']), 1)
+        page2 = self.api('/clients?limit=1&offset=1')['data']
+        self.assertNotEqual(page2['items'][0]['id'], self.api('/clients?limit=1')['data']['items'][0]['id'])
+        self.assertEqual(self.api('/clients', 'POST', {'name': ''}, status=400)['error']['code'], 'validation')
+
+    def test_pieces_category_and_sort(self):
+        self.sign_in('api_cashier')
+        self.product.product_tmpl_id.write({'jewellery_category': 'bangle'})
+        self.env['stock.lot'].create({'name': 'TEST-LIST-0001', 'product_id': self.product.id, 'gross_weight_g': 20.0})
+        out = self.api('/pieces?category=bangle&sort=price')['data']
+        self.assertTrue(out['total'] >= 1)
+        self.assertTrue(all(p['category'] == 'bangle' for p in out['items']))
+        prices = [p['price_incl_vat'] for p in out['items']]
+        self.assertEqual(prices, sorted(prices, reverse=True))
+        self.assertEqual(self.api('/pieces?category=coin')['data']['total'], 0)

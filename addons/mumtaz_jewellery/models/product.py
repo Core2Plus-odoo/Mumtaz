@@ -15,6 +15,11 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     is_jewellery = fields.Boolean(string='Jewellery item')
+    jewellery_category = fields.Selection(
+        [('bangle', 'Bangle'), ('chain', 'Chain'), ('necklace', 'Necklace'), ('ring', 'Ring'),
+         ('earrings', 'Earrings'), ('bracelet', 'Bracelet'), ('pendant', 'Pendant'),
+         ('set', 'Set'), ('coin', 'Coin / bar')],
+        string='Jewellery category', help='What kind of piece this design is; drives the icon and the filters.')
     jewellery_karat = fields.Selection(KARATS, string='Default karat')
     jewellery_wastage_pct = fields.Float(string='Default wastage %')
     jewellery_making_type = fields.Selection(
