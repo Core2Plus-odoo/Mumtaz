@@ -18,6 +18,10 @@ harmless: ``subtotal`` is the sum of metal, wastage, making and stones and
 does not depend on ``vat_rate`` at all. Only ``vat`` and ``total`` do, and
 neither is used here.)
 """
+from datetime import timedelta
+
+import psycopg2
+
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
@@ -76,6 +80,14 @@ class SaleOrderLine(models.Model):
     jewellery_priced_on = fields.Datetime(
         string='Priced on', readonly=True, copy=False)
 
+    jewellery_margin = fields.Float(
+        string='Margin', digits=(16, 2), compute='_compute_jewellery_margin',
+        groups='mumtaz_jewellery.group_jewellery_manager',
+        help='Pre-tax price minus the piece\'s recorded cost basis. '
+             'Empty when no cost basis is recorded: an unknown cost is not '
+             'a zero cost.')
+    jewellery_has_cost = fields.Boolean(compute='_compute_jewellery_margin',
+                                        groups='mumtaz_jewellery.group_jewellery_manager')
     jewellery_is_priced = fields.Boolean(
         compute='_compute_jewellery_is_priced', store=True,
         help='True once the line carries a rate snapshot.')
@@ -85,6 +97,13 @@ class SaleOrderLine(models.Model):
         for line in self:
             line.jewellery_is_priced = bool(
                 line.jewellery_rate_id and line.jewellery_priced_on)
+
+    @api.depends('price_subtotal', 'jewellery_lot_id.jewellery_cost_value')
+    def _compute_jewellery_margin(self):
+        for line in self:
+            cost = line.jewellery_lot_id.sudo().jewellery_cost_value if line.jewellery_lot_id else 0.0
+            line.jewellery_has_cost = bool(line.jewellery_lot_id and cost)
+            line.jewellery_margin = (line.price_subtotal - cost) if line.jewellery_has_cost else 0.0
 
     # --- pricing ----------------------------------------------------------
     def action_price_from_rate(self):
@@ -182,12 +201,113 @@ class SaleOrder(models.Model):
             raise UserError(_('No line on this order carries a piece.'))
         return lines.action_price_from_rate()
 
-    def action_confirm(self):
-        """A jewellery line must carry a rate snapshot before it is agreed.
+    jewellery_quote_expired = fields.Boolean(
+        compute='_compute_jewellery_quote_expired',
+        help='The validity date has passed: renew (reprice) before confirming.')
 
-        Without this a piece could be confirmed at whatever price someone
-        typed, which is the thing the whole rate discipline exists to stop.
+    @api.depends('validity_date', 'state')
+    def _compute_jewellery_quote_expired(self):
+        today = fields.Date.context_today(self)
+        for order in self:
+            order.jewellery_quote_expired = bool(
+                order.state in ('draft', 'sent')
+                and order.validity_date and order.validity_date < today)
+
+    def _jewellery_lines(self):
+        return self.order_line.filtered('jewellery_lot_id')
+
+    # --- quote validity and the rate lock ---------------------------------
+    #
+    # A quotation holds the rate it was priced at until its validity date:
+    # that is the rate lock the client is given. After the date the quote is
+    # stale, and gold has moved; it must be repriced at today's approved rate
+    # (renewed) before it can become an order. The number of days is the
+    # company's quotation_validity_days -- standard Odoo, set by the owner.
+    def action_renew_quote(self):
+        """Reprice every jewellery line at today's approved rate and start a
+        fresh validity period. Draft quotations only."""
+        for order in self:
+            if order.state not in ('draft', 'sent'):
+                raise UserError(_(
+                    'Order %s is confirmed; its prices are agreed and cannot '
+                    'be renewed.') % order.name)
+            lines = order._jewellery_lines()
+            if not lines:
+                raise UserError(_('No line on this quotation carries a piece.'))
+            lines.action_price_from_rate()
+            days = order.company_id.quotation_validity_days
+            order.validity_date = (
+                fields.Date.context_today(order) + timedelta(days=days)
+                if days > 0 else False)
+        return True
+
+    # --- the unique piece ----------------------------------------------
+    #
+    # A serial-tracked piece exists once. Two quotations may legitimately
+    # carry it (two clients considering the same bangle), but only one may
+    # become an order. The check is made under a row lock on the piece, so
+    # two sessions confirming at the same moment cannot both pass it: the
+    # second waits for the first to commit (or, with NOWAIT, is told to try
+    # again) and then sees the first order.
+    def _jewellery_lock_pieces(self, lots):
+        if not lots:
+            return
+        try:
+            self.env.cr.execute(
+                'SELECT id FROM stock_lot WHERE id IN %s FOR UPDATE NOWAIT',
+                (tuple(lots.ids),))
+        except psycopg2.errors.LockNotAvailable:
+            raise UserError(_(
+                'Another session is confirming a sale of %s right now. '
+                'Wait a moment and try again.')
+                % ', '.join(lots.mapped('name')))
+
+    def _jewellery_check_pieces_available(self):
+        Line = self.env['sale.order.line']
+        Memo = self.env['jewellery.approval.memo']
+        for order in self:
+            lines = order._jewellery_lines()
+            lots = lines.mapped('jewellery_lot_id')
+            order._jewellery_lock_pieces(lots)
+            for line in lines:
+                lot = line.jewellery_lot_id
+                if line.product_uom_qty != 1:
+                    raise ValidationError(_(
+                        'Piece %s is one physical item; the line quantity '
+                        'must be 1.') % lot.name)
+                other = Line.search([
+                    ('jewellery_lot_id', '=', lot.id),
+                    ('order_id.state', 'in', LIVE_STATES),
+                    ('order_id', '!=', order.id),
+                ], limit=1)
+                if other:
+                    raise ValidationError(_(
+                        'Piece %(piece)s is already sold on order %(order)s. '
+                        'A piece can be sold once.',
+                        piece=lot.name, order=other.order_id.name))
+                if lot.product_qty <= 0:
+                    raise ValidationError(_(
+                        'Piece %s is not in stock, so it cannot be sold.')
+                        % lot.name)
+                memo = Memo.search([
+                    ('lot_ids', 'in', lot.id), ('state', '=', 'out')], limit=1)
+                if memo:
+                    raise ValidationError(_(
+                        'Piece %(piece)s is out on approval with %(client)s '
+                        '(%(memo)s). Record its return or its sale from the '
+                        'memo first.',
+                        piece=lot.name, client=memo.partner_id.display_name,
+                        memo=memo.name))
+
+    def action_confirm(self):
+        """Before a piece is agreed: priced from the rate, within validity,
+        in stock, not out on approval, and sold nowhere else.
+
+        Without the first a piece could be confirmed at whatever price
+        someone typed, which is the thing the whole rate discipline exists
+        to stop. Without the rest a unique item could be sold twice.
         """
+        today = fields.Date.context_today(self)
         for order in self:
             unpriced = order.order_line.filtered(
                 lambda line: line.jewellery_lot_id
@@ -198,4 +318,12 @@ class SaleOrder(models.Model):
                     'Price them from the gold rate before confirming.')
                     % ', '.join(
                         line.jewellery_lot_id.name for line in unpriced))
+            if (order._jewellery_lines() and order.validity_date
+                    and order.validity_date < today):
+                raise ValidationError(_(
+                    'Quotation %(order)s expired on %(date)s. Gold has moved '
+                    'since it was priced: renew it at today\'s approved rate '
+                    'before confirming.',
+                    order=order.name, date=order.validity_date))
+        self._jewellery_check_pieces_available()
         return super().action_confirm()

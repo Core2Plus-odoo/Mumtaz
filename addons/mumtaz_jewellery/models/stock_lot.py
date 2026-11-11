@@ -31,6 +31,16 @@ class StockLot(models.Model):
     jewellery_price = fields.Float(
         string='Price incl. VAT (live rate)', digits=(16, 2),
         compute='_compute_jewellery_price')
+    # What the piece actually cost the business: metal bought, making paid,
+    # stones bought. Recorded, never derived from the pricing engine, which
+    # values at market and says nothing about what was paid (plan §3: "do
+    # not derive accounting or inventory figures from the pricing engine").
+    # Managers only: a counter screen must not show cost next to price.
+    jewellery_cost_value = fields.Float(
+        string='Cost basis', digits=(16, 2),
+        groups='mumtaz_jewellery.group_jewellery_manager',
+        help='Actual cost of this piece (metal, making, stones), recorded '
+             'at intake. Margin on a sale is price minus this figure.')
 
     @api.depends('gross_weight_g', 'stone_weight_g')
     def _compute_net_weight(self):

@@ -136,6 +136,17 @@ def _seed_pieces(env, products):
     return created
 
 
+def _seed_cost_basis(lots):
+    """A recorded cost per piece, so margin has something to be measured
+    against. Synthetic: metal at the approved rate plus a fraction of the
+    making charge. A real tenant records what it actually paid at intake."""
+    for lot in lots:
+        breakdown = lot.get_price_breakdown()
+        lot.jewellery_cost_value = round(
+            breakdown['metal_value'] + 0.6 * breakdown['making_charge']
+            + breakdown['stones_value'] * 0.8, 2)
+
+
 def _put_pieces_in_stock(env, lots):
     """One of each piece on hand, so stock-value and offer views have data."""
     warehouse = env['stock.warehouse'].search(
@@ -292,10 +303,15 @@ def post_init_hook(env):
         return
 
     _grant_presenter(env)
+    # Quotations hold their rate for this many days, then must be renewed at
+    # the current approved rate. The owner's demo value; a tenant sets its own
+    # in Sales settings (standard Odoo field on the company).
+    env.company.quotation_validity_days = 7
     rate, maker, checker = _seed_rate(env)
     products = _seed_products(env)
     lots = _seed_pieces(env, products)
     on_hand = _put_pieces_in_stock(env, lots)
+    _seed_cost_basis(lots)
     clients = _seed_clients(env, checker, lots)
     intake = _seed_old_gold(env, clients[0] if clients else None)
     docs = _seed_sales(env, clients, lots)

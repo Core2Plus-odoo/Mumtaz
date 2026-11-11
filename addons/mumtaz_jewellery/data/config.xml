@@ -13,9 +13,4 @@
         <field name="key">mumtaz_jewellery.exchange_approval_threshold</field>
         <field name="value">0</field>
     </record>
-    <!-- 1 lets one person enter and approve a rate. Keep 0 in production. -->
-    <record id="param_allow_self_approval" model="ir.config_parameter">
-        <field name="key">mumtaz_jewellery.allow_self_approval</field>
-        <field name="value">0</field>
-    </record>
 </odoo>

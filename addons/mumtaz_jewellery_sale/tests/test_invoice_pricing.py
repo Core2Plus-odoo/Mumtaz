@@ -10,6 +10,20 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 
+
+
+def _put_in_stock(env, lot):
+    """One unit of the piece on the shelf. Since Slice 1 a piece that is not
+    in stock cannot be confirmed, so every fixture that will be sold needs it."""
+    stock = env['stock.warehouse'].search(
+        [('company_id', '=', env.company.id)], limit=1).lot_stock_id
+    env['stock.quant'].with_context(inventory_mode=True).create({
+        'product_id': lot.product_id.id, 'lot_id': lot.id,
+        'location_id': stock.id, 'inventory_quantity': 1.0,
+    }).action_apply_inventory()
+    return lot
+
+
 @tagged('post_install', '-at_install')
 class TestInvoicePricing(TransactionCase):
 
@@ -49,7 +63,7 @@ class TestInvoicePricing(TransactionCase):
         return rate
 
     def _piece(self, seq):
-        return self.env['stock.lot'].create({
+        return _put_in_stock(self.env, self.env['stock.lot'].create({
             'name': 'TEST-INV-%s' % seq,
             'product_id': self.product.id,
             'gross_weight_g': 24.5,
@@ -59,7 +73,7 @@ class TestInvoicePricing(TransactionCase):
             'making_type': 'percent',
             'making_value': 10.0,
             'stones_value': 0.0,
-        })
+        }))
 
     def _confirmed_order(self, seq, discount=0.0):
         """An order priced from the approved rate and confirmed."""

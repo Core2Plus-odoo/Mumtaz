@@ -37,7 +37,6 @@ class JewelCommon(TransactionCase):
         cls.user_manager_a = cls._make_user('demo_manager_a', cls.base_user, cls.group_manager)
         cls.user_manager_b = cls._make_user('demo_manager_b', cls.base_user, cls.group_manager)
 
-        cls._set_param('mumtaz_jewellery.allow_self_approval', '0')
         cls._set_param('mumtaz_jewellery.vat_rate', VAT_RATE)
         cls._set_param('mumtaz_jewellery.exchange_approval_threshold', '0')
 

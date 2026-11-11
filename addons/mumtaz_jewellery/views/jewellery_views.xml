@@ -79,6 +79,8 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="rfid_tag"/>
                             <field name="certificate_ref"/>
+                            <field name="jewellery_cost_value"
+                                   groups="mumtaz_jewellery.group_jewellery_manager"/>
                         </group>
                         <group string="Weights and metal">
                             <field name="gross_weight_g"/>

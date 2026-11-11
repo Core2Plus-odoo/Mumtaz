@@ -11,6 +11,20 @@ from odoo.tests import TransactionCase, tagged
 from odoo.addons.mumtaz_jewellery.services import pricing
 
 
+
+
+def _put_in_stock(env, lot):
+    """One unit of the piece on the shelf. Since Slice 1 a piece that is not
+    in stock cannot be confirmed, so every fixture that will be sold needs it."""
+    stock = env['stock.warehouse'].search(
+        [('company_id', '=', env.company.id)], limit=1).lot_stock_id
+    env['stock.quant'].with_context(inventory_mode=True).create({
+        'product_id': lot.product_id.id, 'lot_id': lot.id,
+        'location_id': stock.id, 'inventory_quantity': 1.0,
+    }).action_apply_inventory()
+    return lot
+
+
 @tagged('post_install', '-at_install')
 class TestSalePricing(TransactionCase):
 
@@ -62,7 +76,7 @@ class TestSalePricing(TransactionCase):
             'stones_value': 0.0,
         }
         values.update(overrides)
-        return self.env['stock.lot'].create(values)
+        return _put_in_stock(self.env, self.env['stock.lot'].create(values))
 
     def _order(self, lot, discount=0.0):
         order = self.env['sale.order'].create({
