@@ -66,9 +66,9 @@ owner.
 | RFID tag, certificate reference | No | **Built** | Tag uniqueness enforced per company |
 | Live price on a piece | No | **Built** | |
 | Multi-warehouse / per-store stock | **`stock`** | **Standard** | Configure, do not build |
-| Inter-store transfers | **`stock`** | **Standard** | Two-sided receipt is configuration |
+| Inter-store transfers | **`stock`** | **Built** | Two-sided: dispatch to the transit location, receive by the other store; overdue and lost are cards; 9 tests + walk |
 | Stock count by barcode | **`stock`**, `barcodes` | **Standard** | |
-| Daily reconciliation in fine grams | No | **Gap** | Slice 3. Odoo reconciles value and quantity, not grams |
+| Daily reconciliation in fine grams | No | **Built** | Snapshot per store per day, scanned by serial, variance in fine grams with missing serials, manager closes with a note |
 
 ## Counter
 
@@ -109,7 +109,7 @@ owner.
 | --- | --- | --- | --- |
 | Decision cards | No | **Built** | |
 | Cards scoped per company | No | **Gap** | No `company_id`; cards cross companies. See finding 3 |
-| Consolidated multi-store view | Partly | **Planned** | Slice 3 |
+| Consolidated multi-store view | Partly | **Built** | Stores screen: pieces, fine grams, value, limit, on the road, today's count per store; staff see their store |
 | Owner summary by WhatsApp | **Enterprise** | **Decision** | `whatsapp` is not in Community — Meta Cloud API integration, custom |
 
 ## Finance and compliance

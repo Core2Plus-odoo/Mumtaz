@@ -150,6 +150,19 @@ Measured: 14 outreach tests (consent recorded with who/how/when; withdrawn sets 
 
 Measured: 11 AML tests (no threshold until finance confirms and the card asks for it; only a finance manager sets it, dated and signed; identity keeps type, last 4 and expiry only; screening is a manager decision; expiring documents make a card; cash below the threshold passes and the window accumulates; a crossing without identity refuses and nothing happened, the same sale by card goes through; a crossing with identity is allowed and written down; a deposit counts the cash now; an expired document and a screening match refuse, a cleared screening sells; the door: config, identity, readiness and commit) incl. 1 through the door; headless walk: the decision card, the Compliance screen before and after the finance manager confirms a value, the counter refusing cash for a client without identity and saying why, the document recorded on her record (number never stored), the same sale going through, the crossing in the compliance record, Arabic.
 
+## Slice 8 (Stores and transfers) — built 11 Nov 2026
+
+| Plan (roadmap slice 3, review R7/R8) | Built |
+|---|---|
+| Stores | **A store is a standard warehouse.** Per store: pieces on the shelf, fine grams (net × karat/24), value at the approved rate, an optional fine-gram limit the owner sets, what is on the road in and out, today's count. Staff may be tied to one store (`res.users.jewellery_store_id`); they see their store's transfers and runs, a manager sees all. |
+| Transfers | `jewellery.transfer`, **two-sided**: the sending store dispatches (every piece must be on its shelf and on no live order or approval) and the pieces move by standard stock moves to a root internal "Between stores" location: owned and valued, on no shelf, so a count does not expect them. The receiving store receives, and only it. Past the configured days in transit the transfer is overdue; a manager may report it lost, which keeps the metal on the book and raises a card. |
+| Reconciliation in fine grams | `jewellery.gold.reconciliation`, one per store per day: a snapshot of the pieces the store should hold with their fine grams; a person scans serials (known ones found, unknown ones listed as extras); the variance is stated in pieces and fine grams with the missing serials named; a manager closes it, with a note when there is a variance. An open variance is a card. |
+| Screens | **Stores**: a card per store, transfers with dispatch / receive / report lost, a new transfer by serials, and the day's count per store. Pieces carry their store and the list filters by store. EN/AR. |
+
+Not built, on purpose: barcode counting hardware (serials are typed or scanned into the same box), the owner's WhatsApp summary (no outbound sending anywhere), per-store pricing.
+
+Measured: 9 stores tests (a store is a warehouse with pieces, fine grams and value; dispatch puts pieces in transit and receive lands them, the other store cannot receive for it; only shelf pieces travel and not twice; overdue and lost make cards and lost keeps the metal on the book; staff see their own store only; snapshot, count, variance, close with a note; a piece in transit is not expected on the shelf; store-2 staff cannot see store-1 runs; the door) incl. 1 through the door; headless walk on the demo's two boutiques: the transfer on the road three days, dispatch and receive, the open count with one piece missing, a manager closing with a note, Arabic.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

@@ -18,6 +18,7 @@ import Counter from './pages/Counter';
 import Pipeline from './pages/Pipeline';
 import Outreach from './pages/Outreach';
 import Compliance from './pages/Compliance';
+import Stores from './pages/Stores';
 import TrayBuilder from './pages/TrayBuilder';
 import PublicTray from './pages/PublicTray';
 import Kiosk from './pages/Kiosk';
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="invoices" element={<Invoices />} />
             <Route path="invoices/:id" element={<InvoiceDetail />} />
             <Route path="memos" element={<Memos />} />
+            <Route path="stores" element={<Stores />} />
             <Route path="rates" element={<Rates />} />
             <Route path="old-gold" element={<OldGold />} />
             <Route path="compliance" element={<Compliance />} />
