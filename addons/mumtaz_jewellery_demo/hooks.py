@@ -323,6 +323,41 @@ def _grant_presenter(env):
     admin.write({_user_groups_field(env): [(4, g.id) for g in groups]})
 
 
+def _seed_pipeline(env, clients, lots, presenter):
+    """Something on the Pipeline screen: an enquiry, a shared tray, a tray
+    with a viewing requested. Synthetic, and the link tokens are not kept."""
+    if len(clients) < 3 or len(lots) < 6:
+        return {}
+    Tray = env['jewellery.tray'].with_user(presenter) if presenter else env['jewellery.tray']
+    # Only pieces that are actually offerable: not the ones the sales seed sold
+    # or put on approval, and not whatever a demo walk sold since. Chosen by
+    # eligibility, not by index, so the seed never trips over its own data.
+    eligible = Tray._eligible_lots().sorted('name')
+    rings = eligible.filtered(lambda l: l.karat == '18')[:1] or eligible[:1]
+    chains = (eligible - rings)[:2]
+    if not rings or len(chains) < 2:
+        return {}
+    out = {}
+    # Alpha: an enquiry only, chosen by hand
+    alpha = Tray.create({'partner_id': clients[0].id, 'intent': 'birthday'})
+    alpha.action_add_piece(rings[0], reasons='Asked about an 18K ring on her last visit')
+    out['enquiry'] = alpha.name
+    # Bravo: ranked and shared
+    bravo = Tray.create({'partner_id': clients[1].id, 'intent': 'anniversary'})
+    bravo.action_build(limit=3)
+    bravo.action_share()
+    out['shared'] = bravo.name
+    # Charlie (Private): chosen by hand, shared, a viewing requested
+    charlie = Tray.create({'partner_id': clients[2].id, 'intent': 'wedding'})
+    for lot in chains:
+        charlie.action_add_piece(lot, reasons='Chosen by the relationship manager')
+    charlie.action_share()
+    charlie._public_feedback(charlie.line_ids[0].public_ref, 'like')
+    charlie._public_request_viewing('Thursday afternoon', 'with my mother')
+    out['viewing'] = charlie.name
+    return out
+
+
 def post_init_hook(env):
     """Create the DEMO dataset once."""
     parameters = env['ir.config_parameter'].sudo()
@@ -344,6 +379,8 @@ def post_init_hook(env):
     clients = _seed_clients(env, checker, lots)
     intake = _seed_old_gold(env, clients[0] if clients else None)
     docs = _seed_sales(env, clients, lots)
+    presenter = env.ref('base.user_admin', raise_if_not_found=False)
+    pipeline = _seed_pipeline(env, clients, lots, presenter)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -356,8 +393,9 @@ def post_init_hook(env):
         'DEMO seed complete: rate %.2f/g (approved by %s), %s products, '
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
         'sample piece total %.2f, %s owner cards, '
-        'quotation %s, order %s, invoice %s (%.2f)',
+        'quotation %s, order %s, invoice %s (%.2f), trays %s',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
         len(clients), intake.name, intake.value, priced.get('total', 0.0),
         cards, docs.get('quotation', '-'), docs.get('order', '-'),
-        docs.get('invoice', '-'), docs.get('invoice_total', 0.0))
+        docs.get('invoice', '-'), docs.get('invoice_total', 0.0),
+        '/'.join(pipeline.values()) or '-')

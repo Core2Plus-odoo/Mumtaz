@@ -30,6 +30,7 @@ until somebody sets one deliberately.
         # Invoicing are empty, which is the first thing anyone opens in a
         # demonstration.
         'mumtaz_jewellery_sale',
+        'mumtaz_jewellery_crm',
     ],
     'data': [],
     'post_init_hook': 'post_init_hook',
