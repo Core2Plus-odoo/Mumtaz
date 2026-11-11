@@ -163,6 +163,19 @@ Not built, on purpose: barcode counting hardware (serials are typed or scanned i
 
 Measured: 9 stores tests (a store is a warehouse with pieces, fine grams and value; dispatch puts pieces in transit and receive lands them, the other store cannot receive for it; only shelf pieces travel and not twice; overdue and lost make cards and lost keeps the metal on the book; staff see their own store only; snapshot, count, variance, close with a note; a piece in transit is not expected on the shelf; store-2 staff cannot see store-1 runs; the door) incl. 1 through the door; headless walk on the demo's two boutiques: the transfer on the road three days, dispatch and receive, the open count with one piece missing, a manager closing with a note, Arabic.
 
+## Slice 9 (Channels) — built 11 Nov 2026
+
+| Plan | Built |
+|---|---|
+| Rate feed adapter | `jewellery.rate.feed`: a provider (a fixture value for tests and demos, or JSON over HTTPS with a dotted value path), a unit (per gram or per troy ounce, 24K), an optional minimum move. Read hourly by cron and on demand. **It only ever enters a draft gold rate with source "feed"**: the maker-checker rule is the rate model's own and untouched, a different person approves, prices stay on the previous approved rate until then. Unchanged values, moves below the minimum and a draft already waiting are skipped and said so; errors are logged on the feed, never raised out of the cron; HTTP (not HTTPS) is refused. |
+| Storefront | **Decision: the kiosk is the storefront**, in the store and on the web, with a publication switch per design (`product.template.jewellery_published`) honoured by every public endpoint through `jewellery.tray._lot_public`; staff screens and the counter ignore it. `website_sale` is deliberately not used: it would price a serial-tracked piece from a list price, not from the live approved rate per serial, so the engine would have to be rebuilt in a second place; the public shelf already prices every piece from the engine and takes a request a person confirms. |
+| Requests by channel | The kiosk requests carry their channel (in-store kiosk or web); the Channels screen shows the last 30 days per channel with the latest requests. |
+| Screen | **Channels**: the feed (configure, read now, the last draft with its state and a link to Gold rates, the read log), requests by channel, the web shelf with a switch per design. EN/AR. |
+
+Not built, on purpose: marketplaces, tax-free refund schemes, payment terminals, RFID readers (hardware and partner contracts, not code decisions here).
+
+Measured: 7 channels tests (the fixture feed drafts and never approves, the maker cannot approve his own draft, a checker can; a JSON provider read by path with ounces to grams and a 10 s timeout; errors logged not raised and plain HTTP refused; minimum move and a draft already waiting; only a manager configures; an unpublished design leaves the public shelf but not the staff screens and the public door refuses a request for it; the door) incl. 1 through the door; headless walk: the feed saved and read, the draft on Gold rates with prices unchanged, a design switched off the web shelf and gone from the kiosk, Arabic.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

@@ -35,7 +35,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 PROJECT="mumtaz-jewel-staging"
-MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale,mumtaz_jewellery_crm,mumtaz_jewellery_ai,mumtaz_jewellery_kiosk,mumtaz_jewellery_api,mumtaz_jewellery_outreach,mumtaz_jewellery_aml,mumtaz_jewellery_stores"
+MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale,mumtaz_jewellery_crm,mumtaz_jewellery_ai,mumtaz_jewellery_kiosk,mumtaz_jewellery_api,mumtaz_jewellery_outreach,mumtaz_jewellery_aml,mumtaz_jewellery_stores,mumtaz_jewellery_channels"
 SEED_MODULE="mumtaz_jewellery_demo"
 DEMO_DB="${DEMO_DB:-jewel_demo}"
 LANDING_SRC="$REPO_ROOT/website/jewel"

@@ -55,7 +55,7 @@ owner.
 | Dealer discount on making only | No | **Built** | |
 | No price without an approved rate | No | **Built** | |
 | Price carried into quote, order, invoice | Partly (`sale`) | **Built** | Slices 1 (sale) and 1b (invoice snapshot) |
-| Rate feed adapter | No | **Planned** | Slice 1, provider not chosen |
+| Rate feed adapter | No | **Built** | Fixture or JSON-over-HTTPS provider, value path, gram or ounce; enters a draft, a person approves; every read logged; 5 tests |
 | Piece cost basis, real margin | Partly (`stock`) | **Planned** | Slice 1 |
 
 ## Pieces and inventory
@@ -101,7 +101,7 @@ owner.
 | Explainable next-piece ranking | No | **Built** | Deterministic, reasons stored |
 | Tray: share, viewing request, reserve | **`crm` + `sale`** | **Planned** | Slice 2B. **Mostly standard** — build the token link and the ranking only |
 | Loyalty, wishlist, campaigns | **`loyalty`** | **Standard** | Slice 8 |
-| Touchpoints across channels | `mail`, `sms` | **Partial** | Email and SMS standard; WhatsApp is not |
+| Touchpoints across channels | `mail`, `sms` | **Partial** | Email and SMS standard; WhatsApp is a hand-over link (Outreach); requests by channel on the Channels screen |
 
 ## Owner and operations
 

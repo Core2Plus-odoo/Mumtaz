@@ -585,6 +585,27 @@ def _seed_stores(env):
     return out
 
 
+def _seed_channels(env):
+    """A rate feed on the fixture provider, read once: it leaves a DRAFT
+    gold rate for a person to approve, which is the point. One design taken
+    off the web shelf. Nothing twice."""
+    Feed = env['jewellery.rate.feed'] if 'jewellery.rate.feed' in env else None
+    if Feed is None:
+        return {}
+    out = {}
+    feed = Feed.search([('company_id', '=', env.company.id)], limit=1)
+    if not feed:
+        feed = Feed.create({'name': 'DEMO gold feed (fixture)', 'provider': 'fixture', 'fixture_value': 247.15,
+                            'unit': 'gram_24k', 'company_id': env.company.id})
+        res = feed.action_fetch()
+        out['feed_draft'] = res['rate'].rate_per_gram if res.get('rate') else '-'
+    coin = env['product.template'].search([('is_jewellery', '=', True), ('jewellery_category', '=', 'coin')], limit=1)
+    if coin and coin.jewellery_published:
+        coin.jewellery_published = False
+        out['unpublished'] = coin.name
+    return out
+
+
 def _seed_outreach(env, presenter):
     """Layla drafts the occasion messages due, for a person to review: the
     Outreach screen opens with work on it. One per occasion per year."""
@@ -631,6 +652,7 @@ def top_up(env):
     outreach = _seed_outreach(env, presenter)
     _seed_kyc(env)
     _seed_stores(env)
+    _seed_channels(env)
     _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s, consent %s, outreach drafts %s',
                  len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-', consent, outreach)
     return {'products': len(products), 'pieces': len(lots), 'clients': len(clients), 'consent': consent, 'outreach': outreach}
@@ -683,6 +705,7 @@ def post_init_hook(env):
     outreach = _seed_outreach(env, presenter)
     kyc = _seed_kyc(env)
     stores = _seed_stores(env)
+    _seed_channels(env)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}

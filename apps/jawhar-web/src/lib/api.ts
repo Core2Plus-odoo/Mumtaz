@@ -62,6 +62,17 @@ export type Brief = {
   sentences: string[]; figures: Record<string, unknown> & { rate: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string } | null; as_of: string };
   queue: QueueItem[]; sources: string[]; narrated_by: string; run_id: number; as_of: string; level: string;
 } & Partial<Refusal>;
+export type RateFeed = {
+  id: number; name: string; active: boolean; provider: 'fixture' | 'json_url'; url: string | null; json_path: string | null;
+  fixture_value: number; unit: 'gram_24k' | 'ounce_24k'; min_change_pct: number; last_fetched_at: string | null; last_value: number;
+  last_error: string | null; last_rate: { id: number; rate_per_gram: number; state: string } | null;
+};
+export type FeedLog = { id: number; at: string; raw_value: number; rate_per_gram: number; rate: Rate | null; note: string | null; error: string | null };
+export type ShelfDesign = { id: number; name: string; category: string | null; published: boolean; on_shelf: number; has_photo: boolean };
+export type ChannelStats = {
+  requests: number; viewing: number; delivery: number; confirmed: number;
+  latest: { id: number; name: string; kind: string; state: string; serial: string; client: Ref; at: string }[];
+};
 export type StoreSummary = {
   id: number; name: string; code: string; pieces: number; fine_g: number; value: number | null; currency: string;
   limit_fine_g: number | null; over_limit: boolean;
@@ -386,6 +397,13 @@ export const api = {
     call<({ prepared: OutreachDraft[]; count: number; skipped: { occasion_id: number; why: string }[]; run: AiRun } & Partial<Refusal>)>('/outreach/prepare', { method: 'POST', body: JSON.stringify(p) }),
   outreachDrafts: (state = 'approved') => call<{ items: OutreachDraft[]; count: number }>(`/outreach/drafts${q({ state })}`),
   outreachDraft: (id: number) => call<OutreachDraftDetail>(`/outreach/drafts/${id}`),
+  // channels: the rate feed (drafts only), the web shelf, requests by channel
+  channelFeed: () => call<{ feed: RateFeed | null; logs: FeedLog[]; can_configure: boolean }>('/channels/feed'),
+  channelFeedSet: (p: Partial<RateFeed>) => call<RateFeed>('/channels/feed', { method: 'POST', body: JSON.stringify(p) }),
+  channelFeedFetch: () => call<{ ok: boolean; error: string | null; raw: number | null; rate_per_gram: number | null; skipped: string | null; rate: Rate | null; feed: RateFeed }>('/channels/feed/fetch', { method: 'POST', body: '{}' }),
+  channelShelf: () => call<{ items: ShelfDesign[]; public_count: number }>('/channels/shelf'),
+  channelPublish: (id: number, published: boolean) => call<{ id: number; published: boolean }>(`/channels/shelf/${id}`, { method: 'POST', body: JSON.stringify({ published }) }),
+  channelRequests: (days = 30) => call<{ days: number; channels: Record<'store' | 'web', ChannelStats> }>(`/channels/requests${q({ days })}`),
   // stores, transfers and the daily gold reconciliation
   stores: () => call<{ items: StoreSummary[]; my_store: Ref }>('/stores'),
   storePieces: (id: number) => call<{ items: Piece[]; total: number }>(`/stores/${id}/pieces`),
