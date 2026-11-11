@@ -23,9 +23,9 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner"
+MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale"
 SEED_MODULE="mumtaz_jewellery_demo"
-TEST_TAGS="${TEST_TAGS:-/mumtaz_jewellery,/mumtaz_jewellery_vip,/mumtaz_jewellery_owner,/mumtaz_jewellery_demo}"
+TEST_TAGS="${TEST_TAGS:-/mumtaz_jewellery,/mumtaz_jewellery_vip,/mumtaz_jewellery_owner,/mumtaz_jewellery_sale,/mumtaz_jewellery_demo}"
 
 PYTHON="${PYTHON:-python3}"
 ODOO_PATH="${ODOO_PATH:-}"

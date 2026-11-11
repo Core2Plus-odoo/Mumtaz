@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_order_form_jewellery" model="ir.ui.view">
+    <field name="name">sale.order.form.jewellery</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='order_line']/list//field[@name='product_id']" position="after">
+        <field name="jewellery_lot_id" optional="show"
+               domain="[('karat','!=',False)]"/>
+        <field name="jewellery_making_discount_pct" optional="hide"/>
+        <field name="jewellery_rate_per_gram" optional="hide" readonly="1"/>
+        <field name="jewellery_is_priced" column_invisible="1"/>
+      </xpath>
+      <xpath expr="//button[@name='action_confirm'][1]" position="before">
+        <button name="action_price_lines_from_rate" type="object"
+                string="Price from gold rate" class="btn-secondary"
+                invisible="state not in ['draft','sent']"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
