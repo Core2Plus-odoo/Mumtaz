@@ -1,5 +1,9 @@
-import { Link, useOutletContext } from 'react-router-dom';
-import { api, type Rate, type User } from '../lib/api';
+// Today (plan v3 wireframe 20): the command bar, Zayan's brief, what waits
+// for a person, then the figures and the owner's cards. Every figure is
+// displayed as the engine returned it.
+import { useState } from 'react';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import { api, type AskResult, type Brief, type Rate, type User } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { money, num, when } from '../lib/format';
 import { TopBar } from '../components/Shell';
@@ -8,17 +12,89 @@ import { CardGrid } from './Cards';
 
 export default function Today() {
   const { t, lang } = useT();
+  const nav = useNavigate();
   const { user, rate } = useOutletContext<{ user: User; rate: Rate | null }>();
   const today = useLoad(() => api.today());
   const cards = useLoad(() => api.cards('open'));
+  const queue = useLoad(() => api.aiQueue());
   const cur = user.company.currency;
   const d = today.data;
   const na = (v: unknown) => v === null || v === undefined;
+
+  const [ask, setAsk] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [answer, setAnswer] = useState<AskResult | null>(null);
+  const [brief, setBrief] = useState<Brief | null>(null);
+  const [briefErr, setBriefErr] = useState<string | null>(null);
+
+  const prepareBrief = async () => {
+    setAsking(true); setBriefErr(null);
+    try { const b = await api.aiBrief(); if (b.refused) setBriefErr(b.message ?? b.refused); else setBrief(b); }
+    catch (e) { setBriefErr((e as Error).message); }
+    finally { setAsking(false); }
+  };
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ask.trim()) return;
+    setAsking(true); setAnswer(null);
+    try {
+      const out = await api.aiAsk(ask.trim());
+      setAnswer(out);
+      if (out.brief && !out.refused) setBrief(out.brief);
+      if (out.intent === 'tray' && out.tray_id) nav(`/trays/${out.tray_id}`);
+      else if (out.intent === 'followup' && out.draft_id) nav(`/agents?draft=${out.draft_id}`);
+    } catch (err) { setAnswer({ intent: 'error', agent: 'zayan', client: null, message: (err as Error).message }); }
+    finally { setAsking(false); }
+  };
 
   return (
     <>
       <TopBar title={t('today_title')} sub={t('today_sub')} rate={rate} />
       <div className="content">
+        <form className="askbar" onSubmit={submit}>
+          <input value={ask} onChange={(e) => setAsk(e.target.value)} placeholder={t('ask_placeholder')} dir="auto" aria-label={t('ask')} />
+          <button className="btn" disabled={asking}>{asking ? t('ask_working') : t('ask')}</button>
+        </form>
+        {answer && (answer.message || answer.rate || answer.queue) && (
+          <div className={`notice askresult ${answer.refused || answer.intent === 'error' ? 'warn' : ''}`}>
+            {answer.message && <div>{answer.message}</div>}
+            {answer.rate && <div>{num(answer.rate.rate_per_gram, lang)} {answer.rate.currency} · {answer.rate.approved_by} · {when(answer.rate.approved_at, lang)}</div>}
+            {answer.queue && <ul className="queue">{answer.queue.map((q) => <li key={`${q.kind}${q.id}`}><span>{q.title}</span><span className="muted small">{q.next}</span></li>)}</ul>}
+          </div>
+        )}
+        <div className="two">
+          <Card title={t('brief_title')} sub={t('brief_level')} right={<button className="btn ghost small" disabled={asking} onClick={prepareBrief}>{t('brief_prepare')}</button>}>
+            {briefErr && <div className="notice warn">{briefErr}</div>}
+            {!brief && !briefErr && <p className="muted small">{t('today_sub')}</p>}
+            {brief && (
+              <div className="brief">
+                {brief.sentences.map((s, i) => <p key={i} dir="auto">{s}</p>)}
+                <div className="muted small">
+                  {t('brief_read_from')} {when(brief.as_of, lang)} · {brief.narrated_by === 'local' ? t('brief_narrated_local') : `${t('brief_narrated_model')} ${brief.narrated_by}`} · {t('level_b')}
+                </div>
+              </div>
+            )}
+          </Card>
+          <Card title={t('waiting_title')} sub={t('waiting_sub')} right={<Link to="/agents" className="small">{t('open_inbox')} →</Link>}>
+            {queue.error && <ErrorBox error={queue.error} retry={queue.reload} />}
+            {queue.loading && !queue.data ? <Loading /> : queue.data && (
+              queue.data.refused ? <div className="notice warn">{queue.data.message}</div> :
+              queue.data.items.length === 0 ? <p className="muted small">{t('empty')}</p> : (
+                <ul className="queue">
+                  {queue.data.items.map((q) => (
+                    <li key={`${q.kind}${q.id}`}>
+                      <span>
+                        {q.kind === 'draft' ? <Link to={`/agents?draft=${q.id}`}>{q.title}</Link> : q.title}
+                        {q.detail && <div className="muted small">{q.detail}</div>}
+                      </span>
+                      <span className="small muted" style={{ textAlign: 'end' }}>{q.next}<br />{q.owner}</span>
+                    </li>
+                  ))}
+                </ul>
+              )
+            )}
+          </Card>
+        </div>
         {today.error && <ErrorBox error={today.error} retry={today.reload} />}
         {today.loading && <Loading />}
         {d && (

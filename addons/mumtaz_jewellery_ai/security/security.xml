@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- A draft is as visible as its client, and a run is as visible as the
+         client it was about: the same rule as on res.partner. -->
+    <record id="rule_ai_draft_restricted_tier" model="ir.rule">
+        <field name="name">Jewellery: AI drafts for Private and Royal clients restricted</field>
+        <field name="model_id" ref="model_jewellery_ai_draft"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('mumtaz_jewellery_vip.group_vip_manager') else ['|', '|', '|', ('partner_id', '=', False), ('partner_id.jewellery_tier', 'not in', ['private', 'royal']), ('partner_id.relationship_manager_id', '=', user.id), ('partner_id.deputy_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_ai_run_restricted_tier" model="ir.rule">
+        <field name="name">Jewellery: AI runs about Private and Royal clients restricted</field>
+        <field name="model_id" ref="model_jewellery_ai_run"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('mumtaz_jewellery_vip.group_vip_manager') else ['|', '|', '|', ('partner_id', '=', False), ('partner_id.jewellery_tier', 'not in', ['private', 'royal']), ('partner_id.relationship_manager_id', '=', user.id), ('partner_id.deputy_id', '=', user.id)]</field>
+    </record>
+</odoo>

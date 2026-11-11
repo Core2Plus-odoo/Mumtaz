@@ -77,6 +77,26 @@ Not built, on purpose: offline selling (online-only commitment, plan §11/§17) 
 
 Not built, on purpose: outbound messaging (the link is copied and sent by a person — Outreach is the next slice); the client app beyond the tray page (slice 6).
 
+## Slice 4 (AI agents) — built 11 Nov 2026, plan §12–13, wireframes 20 and 29
+
+| Plan element | Delivered |
+| --- | --- |
+| Roster (§12) | **Zayan** (coordinator, ceiling B) and **Layla** (client & retail, ceiling C) as working agents in `mumtaz_jewellery_ai`; Rayan, Amara and Noor stay specified, not built (plan's own build order) |
+| Execution contract (§13) | Every action is a registered tool run **as the signed-in user** (row/field access as on every screen); each run logged with agent, tool, level, user, model-or-local, tokens, outcome; **refusals are logged results, not errors** (a rolled-back refusal would be no record) |
+| Numbers are read, never produced | Prices and figures come from the engine; the model only phrases. A model sentence carrying a number the tools did not supply is **discarded** and the local wording used (test) |
+| Restricted clients | A Private or Royal client **never enters a model request** (policy check before any payload; test with a provider that fails the test if called); Layla refuses to rank them and says so |
+| Zayan: brief (wireframe 20/28) | Figures with source and time, the decision queue (owner cards + drafts waiting), 3–4 sentences; local wording when no model is configured |
+| Zayan: command bar | Intent decided locally first (EN/AR words); the model is asked only to classify, never to act; routes to brief / rate / queue / Layla |
+| Layla: tray | Through the same ranking staff use, reasons attached, a draft in the inbox |
+| Layla: follow-up | Level C draft for a person to review **and send herself**; a client who asked for no marketing gets a **call note**, never a message; nothing here sends |
+| Approvals inbox (wireframe 29) | Team status with ceilings, pending work, the exact text, why-now, sources, owner; **approval binds to the sha256 of the text** — any edit needs review again; return / dismiss; lapse after the owner's days; audit table with refused rows |
+| Pause | A jewellery manager pauses the tenant's agents; ordinary screens keep working (test, walk) |
+| Provider | Claude Messages API over plain HTTP (the Odoo image is stock `odoo:19`, no SDK); key from the environment only (`JAWHAR_ANTHROPIC_API_KEY`), never stored, never echoed; refusal fallbacks on; **with no key every capability runs on its local path** |
+
+Measured: 18 agent tests + 4 API tests, headless walk (brief, rate, tray by request, follow-up from Client 360, edit → save → approve, Private client refused and audited, pause/resume, Arabic RTL), 0 page errors.
+
+Not built, on purpose: outbound sending (Outreach slice; still a person), voice, Rayan/Amara/Noor, level D anywhere.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

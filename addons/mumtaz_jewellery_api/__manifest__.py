@@ -29,6 +29,7 @@ in later phases; nothing here writes business data.
         'mumtaz_jewellery_owner',
         'mumtaz_jewellery_sale',
         'mumtaz_jewellery_crm',
+        'mumtaz_jewellery_ai',
     ],
     'data': [
         'security/security.xml',

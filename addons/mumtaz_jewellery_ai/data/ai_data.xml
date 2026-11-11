@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_ai_draft" model="ir.sequence">
+        <field name="name">AI draft</field>
+        <field name="code">jewellery.ai.draft</field>
+        <field name="prefix">AID/</field>
+        <field name="padding">5</field>
+    </record>
+    <!-- How long a prepared draft waits for review before it lapses. -->
+    <record id="param_ai_draft_days" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.ai_draft_days</field>
+        <field name="value">7</field>
+    </record>
+</odoo>

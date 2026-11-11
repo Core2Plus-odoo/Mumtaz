@@ -21,12 +21,24 @@ export default function ClientDetail() {
     try { const tray = await api.createTray({ client_id: c.id, build: !c.restricted, limit: 3 }); nav(`/trays/${tray.id}`); }
     finally { setPreparing(false); }
   };
+  const [laylaMsg, setLaylaMsg] = useState<string | null>(null);
+  const followup = async () => {
+    if (!c) return;
+    setPreparing(true);
+    try {
+      const out = await api.aiLaylaFollowup({ client_id: c.id, channel: c.no_marketing ? 'note' : 'whatsapp' });
+      if (out.refused) { setLaylaMsg(`${t('layla_refused')}: ${out.message}`); return; }
+      nav(`/agents?draft=${out.draft.id}`);
+    } finally { setPreparing(false); }
+  };
   return (
     <>
       <TopBar title={c?.name ?? t('loading')} sub={<Link to="/clients">← {t('clients_title')}</Link> } rate={rate}>
         {c && <TierTag tier={c.tier} label={tierLabel(lang, c.tier)} />}
         {c && <button className="btn" disabled={preparing} onClick={prepare}>{preparing ? t('working') : t('prepare_tray')}</button>}
+        {c && <button className="btn ghost" disabled={preparing} onClick={followup}>{t('ask_layla_followup')}</button>}
       </TopBar>
+      {laylaMsg && <div className="content" style={{ paddingBottom: 0 }}><div className="notice warn">{laylaMsg}</div></div>}
       <div className="content">
         {client.error && <ErrorBox error={client.error} retry={client.reload} />}
         {client.loading && !c && <Loading />}

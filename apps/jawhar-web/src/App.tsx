@@ -6,6 +6,7 @@ import Shell from './components/Shell';
 import Login from './pages/Login';
 import Today from './pages/Today';
 import Cards from './pages/Cards';
+import Agents from './pages/Agents';
 import Pieces from './pages/Pieces';
 import PieceDetail from './pages/PieceDetail';
 import Clients from './pages/Clients';
@@ -62,6 +63,7 @@ export default function App() {
           <Route element={<Shell user={user} rate={rate} onSignOut={signOut} />}>
             <Route index element={<Today />} />
             <Route path="cards" element={<Cards />} />
+            <Route path="agents" element={<Agents />} />
             <Route path="pieces" element={<Pieces />} />
             <Route path="pieces/:id" element={<PieceDetail />} />
             <Route path="clients" element={<Clients />} />

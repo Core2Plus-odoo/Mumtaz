@@ -616,7 +616,7 @@ class JawharApi(Controller):
     def clients(self, q=None, tier=None, limit=50, offset=0, **kw):
         Partner = request.env['res.partner']
         if q:
-            domain = WALKIN_DOMAIN + ['|', ('name', 'ilike', q), ('email', 'ilike', q)]
+            domain = WALKIN_DOMAIN + ['|', '|', ('name', 'ilike', q), ('email', 'ilike', q), ('phone', 'ilike', q)]
         else:
             domain = list(CLIENT_DOMAIN)
         if tier:

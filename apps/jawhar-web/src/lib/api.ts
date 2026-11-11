@@ -42,6 +42,44 @@ export type ClientDetail = Client & {
   occasions: { id: number; kind: string; date: string; recurring: boolean; note: string | null }[];
   memos: Memo[]; orders: Order[];
 };
+// --- the agents (plan v3 §12-13, wireframe 29) ---
+export type AgentInfo = {
+  key: 'zayan' | 'layla'; name: string; role: string; ceiling: string; purpose: string;
+  tools: string[]; runs_today: number; waiting: number;
+};
+export type AiStatus = {
+  agents: AgentInfo[]; tools: { name: string; agent: string; level: string; purpose: string }[];
+  model: { configured: boolean; name: string | null }; paused: boolean; policy_version: string; can_pause: boolean;
+};
+export type Refusal = { refused: string; message: string; agent?: string; tool?: string };
+export type QueueItem = {
+  kind: 'card' | 'draft'; id: number; title: string; detail: string | null; next: string | null;
+  priority: number; owner: string; link: { model: string; id: number } | null;
+};
+export type Brief = {
+  sentences: string[]; figures: Record<string, unknown> & { rate: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string } | null; as_of: string };
+  queue: QueueItem[]; sources: string[]; narrated_by: string; run_id: number; as_of: string; level: string;
+} & Partial<Refusal>;
+export type Draft = {
+  id: number; name: string; kind: 'tray' | 'followup'; agent: 'zayan' | 'layla'; state: string;
+  client: Ref; restricted: boolean; tray: Ref; channel: string; subject: string | null; owner: Ref;
+  model_used: string; consent_ok: boolean; expired: boolean; expires_at: string | null; created_at: string;
+  approved_by: Ref; approved_at: string | null; reasons: string[]; policy_version: string;
+};
+export type DraftDetail = Draft & {
+  body: string; body_digest: string; review_note: string | null; sources: string[]; tray_detail: Tray | null;
+};
+export type AiRun = {
+  id: number; at: string; agent: string; tool: string; level: string; user: Ref; client: Ref; draft: Ref;
+  status: string; reason: string | null; model_used: string; input_tokens: number; output_tokens: number;
+  duration_ms: number; sources: string[]; policy_version: string;
+};
+export type AskResult = {
+  intent: string; agent: string; client: Ref; message?: string; brief?: Brief;
+  rate?: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string };
+  queue?: QueueItem[]; tray_id?: number; draft_id?: number;
+} & Partial<Refusal>;
+
 export type Snapshot = {
   rate_id?: number; rate_per_gram: number; fine_weight_g: number; metal_value: number;
   wastage_value: number; making_charge: number; stones_value: number; priced_on: string;
@@ -234,4 +272,21 @@ export const api = {
   counterCommit: (p: { client_id: number; piece_id: number; discount?: number; journal_id?: number; amount?: number; old_gold_id?: number }) =>
     call<CounterResult>('/counter/commit', { method: 'POST', body: JSON.stringify(p) }),
   cards: (state = 'open') => call<Page<Card>>(`/owner/cards${q({ state })}`),
+  // --- the agents ---
+  aiStatus: () => call<AiStatus>('/ai/status'),
+  aiPause: (paused: boolean) => call<{ paused: boolean }>('/ai/pause', { method: 'POST', body: JSON.stringify({ paused }) }),
+  aiAsk: (text: string) => call<AskResult>('/ai/ask', { method: 'POST', body: JSON.stringify({ text }) }),
+  aiBrief: () => call<Brief>('/ai/brief', { method: 'POST', body: '{}' }),
+  aiQueue: () => call<{ items: QueueItem[] } & Partial<Refusal>>('/ai/queue'),
+  aiLaylaTray: (p: { client_id: number; intent?: string; budget?: number; limit?: number }) =>
+    call<({ tray: Tray; draft: DraftDetail; run: AiRun }) & Partial<Refusal>>('/ai/layla/tray', { method: 'POST', body: JSON.stringify(p) }),
+  aiLaylaFollowup: (p: { client_id: number; channel?: string; context?: string }) =>
+    call<({ draft: DraftDetail; run: AiRun }) & Partial<Refusal>>('/ai/layla/followup', { method: 'POST', body: JSON.stringify(p) }),
+  aiDrafts: (state = 'pending') => call<{ items: Draft[]; count: number }>(`/ai/drafts${q({ state })}`),
+  aiDraft: (id: number) => call<DraftDetail>(`/ai/drafts/${id}`),
+  aiDraftApprove: (id: number, digest: string) => call<DraftDetail>(`/ai/drafts/${id}/approve`, { method: 'POST', body: JSON.stringify({ digest }) }),
+  aiDraftReturn: (id: number, note?: string) => call<DraftDetail>(`/ai/drafts/${id}/return`, { method: 'POST', body: JSON.stringify({ note }) }),
+  aiDraftDismiss: (id: number) => call<DraftDetail>(`/ai/drafts/${id}/dismiss`, { method: 'POST', body: '{}' }),
+  aiDraftEdit: (id: number, body: string) => call<DraftDetail>(`/ai/drafts/${id}/edit`, { method: 'POST', body: JSON.stringify({ body }) }),
+  aiRuns: () => call<{ items: AiRun[] }>('/ai/runs'),
 };

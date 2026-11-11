@@ -151,3 +151,33 @@ tr[aria-selected="true"] td{background:var(--gold-bg)}
 .pubhead .btn.small{padding:6px 10px;font-size:.78rem;background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}
 .pubbody{padding:12px 16px 32px;display:grid;gap:12px}
 .pubpiece h3{font-size:1.05rem}
+
+/* --- agents (wireframe 29) and the command bar --- */
+.askbar{display:flex;gap:8px;margin-bottom:14px}
+.askbar input{flex:1;padding:11px 14px;border:1px solid var(--paper3);border-radius:10px;background:var(--surface);font-size:.95rem}
+.askresult{margin-bottom:14px}
+.agents{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.agent{border:1px solid var(--paper3);border-radius:10px;padding:12px;display:grid;gap:6px;background:var(--surface)}
+.levels{display:flex;gap:4px;flex-wrap:wrap}
+.lvl{font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--paper2);color:var(--ink2);opacity:.5}
+.lvl.on{background:var(--teal-bg);color:var(--teal);opacity:1}
+.lvl.off{background:var(--coral-bg);color:var(--coral);opacity:1}
+.worklist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.worklist li{border:1px solid var(--paper3);border-radius:8px;padding:9px 11px;cursor:pointer;background:var(--surface)}
+.worklist li.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-bg)}
+.draft{display:grid;gap:12px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv>div{display:grid;gap:2px}.kv .muted{font-size:.72rem}
+.payload{width:100%;padding:10px 12px;border:1px solid var(--paper3);border-radius:8px;font:inherit;background:var(--surface);resize:vertical}
+.plain{margin:0;padding-inline-start:18px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.notice{padding:9px 12px;border-radius:8px;font-size:.88rem;background:var(--paper2)}
+.notice.ok{background:var(--green-bg);color:var(--green)}
+.notice.warn{background:var(--amber-bg);color:#9A5B08}
+.warn-text{color:#9A5B08}
+.btn.small{padding:5px 10px;font-size:.78rem}
+tr.refused td{background:var(--coral-bg)}
+.brief{display:grid;gap:10px}
+.brief p{margin:0;font-size:1.02rem;line-height:1.5}
+.queue{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.queue li{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--paper3);border-radius:8px;padding:8px 11px;background:var(--surface)}
