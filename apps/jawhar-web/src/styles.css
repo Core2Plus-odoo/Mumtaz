@@ -310,3 +310,11 @@ tr.refused td{background:var(--coral-bg)}
 .tryon-state.error{background:#B3261E}
 .tryon-foot{display:grid;justify-items:center;gap:8px;padding:14px 20px}
 .tryon-foot .k2-btn{min-width:260px}
+
+/* outreach */
+.tbl.outreach tr.muted td{opacity:.65}
+.tbl.outreach td a.on{font-weight:700}
+.consent{display:grid;gap:6px}
+.consent .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.consent select{padding:5px 8px;border:1px solid var(--paper3);border-radius:8px;background:var(--surface)}
+.tag.ok{background:var(--green-bg);color:var(--green)}

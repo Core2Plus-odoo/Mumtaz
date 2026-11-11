@@ -124,6 +124,19 @@ Next (owner idea, same day): the **Virtual Sales Officer**, a conversational kio
 
 Measured: 7 kiosk tests (request is not a reservation; validation and the daily cap; confirm creates client, opportunity and a priced draft without moving stock; decline; the queue; the public door carries no ids; the request through the door) + 1 API test; headless walk: kiosk without login, rate and cards, rings filter, piece with the engine rate, viewing request placed with the "nothing reserved" wording, Arabic RTL, the request in the staff inbox, confirmed into a quotation listed under the client's name. Try-on: 5 placement unit tests, headless walk with a fake camera clip (face found, piece drawn on the canvas, hold, Arabic), the public cutout endpoint only for shelf pieces.
 
+## Slice 6 (Outreach) — built 11 Nov 2026
+
+| Plan | Built |
+|---|---|
+| Consent per client (plan §12, §13) | `marketing_consent` on the client record: not recorded, given, withdrawn; with the date, how it was recorded (in store, phone, signed form, the client wrote) and by whom; a note; written to the chatter. Withdrawn sets the do-not-contact flag; given clears it. Recorded by a person on the client screen or the Odoo form, never by an agent. |
+| Occasion-driven drafts (level C) | Each morning Layla drafts the messages for the occasions inside their lead time: **one per occasion per year**, owned by the relationship manager or deputy, channel WhatsApp or email only with recorded consent, otherwise a **call note** that says why. A Private or Royal client's draft takes the local path. On demand from the Outreach screen, the command bar and the chat ("upcoming occasions"). |
+| A person sends (level D) | An approved draft is **handed to the named person** as a link that opens the exact approved text in her own WhatsApp or mail client; she presses send there. The server never sends. The hand-over needs the approval to still bind to the text, recorded consent for a message channel, and for a restricted client the relationship manager, deputy or a VIP manager. Who, when, which channel and a note go on the draft, on the client's record and in the audit (`outreach.send`, model "human"). The pause stops preparing, not a person sending what was approved. |
+| The screen | **Outreach**: the occasions coming up with consent, the channel a person could use and the draft; approved drafts ready to send; the sent log; the selected draft with its exact text and the hand-over buttons. Consent block on the client record. EN/AR. |
+
+Not built, on purpose: any sending from the server, any message without recorded consent, win-back and upsell campaigns (the ranking exists; a campaign is a later slice).
+
+Measured: 14 outreach tests (consent recorded with who/how/when; withdrawn sets do-not-contact; one draft per occasion per year inside the lead time; no consent → call note; Private client local path and her manager as owner; the paused tenant prepares nothing; command bar and chat route to outreach; hand-over builds the wa.me/mailto link and sends nothing; no consent → no message but a call can be noted; withdrawn blocks approval; only an approved unchanged text; restricted client only by her manager; the pause does not stop a person) incl. 2 through the door; headless walk: 30 occasions with consent tags, prepare, review in the inbox, approve, hand over (the WhatsApp link opens in a new tab), sent log, consent recorded on a client, Arabic RTL, 0 page errors.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

@@ -37,6 +37,8 @@ TOOLS = {
     'intent.route': dict(agent='zayan', level='A', purpose='Classify a request and route it to a tool.'),
     'tray.prepare': dict(agent='layla', level='C', purpose='Build a Private Tray from eligible stock, reasons attached.'),
     'followup.draft': dict(agent='layla', level='C', purpose='Draft a follow-up for a person to review and send.'),
+    'outreach.prepare': dict(agent='layla', level='C', purpose='Draft the occasion messages due in the coming weeks, one per client, for a person to review.'),
+    'outreach.send': dict(agent='layla', level='D', purpose='Hand an approved message to the named person who sends it from her own phone; recorded consent only.'),
 }
 
 # What a request is about, decided locally first. Each intent lists the
@@ -48,6 +50,7 @@ INTENTS = {
     'followup': ('follow', 'message', 'note to', 'draft', 'write to', 'رسالة', 'متابعة'),
     'rate': ('rate', 'gold price', 'سعر', 'الذهب'),
     'queue': ('decision', 'waiting', 'approve', 'queue', 'pending', 'قرار', 'موافقة', 'انتظار'),
+    'outreach': ('outreach', 'occasion', 'occasions', 'birthday', 'anniversar', 'eid message', 'upcoming', 'مناسبة', 'مناسبات', 'ذكرى', 'تهنئة'),
 }
 
 _NUMBER = re.compile(r'\d[\d,.٫٬٠-٩]*')

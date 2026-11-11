@@ -1,10 +1,11 @@
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
-import { api, type Rate, type User } from '../lib/api';
+import { api, type Consent, type Rate, type User } from '../lib/api';
+import { ConsentTag } from './Outreach';
 import { stateLabel, tierLabel, useT } from '../lib/i18n';
 import { money, when } from '../lib/format';
 import { TopBar } from '../components/Shell';
 import { Card, Empty, ErrorBox, Loading, StateTag, TierTag, useLoad } from '../components/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function ClientDetail() {
   const { id } = useParams();
@@ -22,6 +23,17 @@ export default function ClientDetail() {
     finally { setPreparing(false); }
   };
   const [laylaMsg, setLaylaMsg] = useState<string | null>(null);
+  const [consent, setConsent] = useState<Consent | null>(null);
+  const [source, setSource] = useState('in_store');
+  const [consentNote, setConsentNote] = useState('');
+  useEffect(() => { if (id) api.consent(Number(id)).then(setConsent).catch(() => setConsent(null)); }, [id]);
+  const record = async (status: 'given' | 'withdrawn') => {
+    if (!c) return;
+    setPreparing(true);
+    try { setConsent(await api.recordConsent(c.id, { status, source, note: consentNote || undefined })); setConsentNote(''); client.reload(); }
+    catch (e) { setLaylaMsg((e as Error).message); }
+    finally { setPreparing(false); }
+  };
   const followup = async () => {
     if (!c) return;
     setPreparing(true);
@@ -87,6 +99,23 @@ export default function ClientDetail() {
                 <dt>{t('typical_budget')}</dt><dd className="num">{money(c.typical_budget, cur, lang)}</dd>
                 <dt>{t('taste')}</dt><dd>{c.taste_notes ?? '—'}</dd>
                 <dt>{t('occasions')}</dt><dd>{c.occasions.length ? c.occasions.map((o) => <div key={o.id}>{o.kind} · {when(o.date, lang, false)}</div>) : '—'}</dd>
+                <dt>{t('consent')}</dt><dd>
+                  {consent ? (
+                    <div className="consent">
+                      <ConsentTag consent={consent} t={t} />
+                      {consent.status !== 'unknown' && <div className="small muted">{consent.source ? t(`source_${consent.source}`) : ''} · {when(consent.date, lang, false)} · {t('consent_recorded_by')} {consent.recorded_by?.name ?? '—'}{consent.note && <> · {consent.note}</>}</div>}
+                      <div className="actions small">
+                        <select value={source} onChange={(e) => setSource(e.target.value)} aria-label={t('consent_source')}>
+                          {['in_store', 'phone', 'form', 'client_message'].map((s) => <option key={s} value={s}>{t(`source_${s}`)}</option>)}
+                        </select>
+                        <input className="payload" style={{ width: 'auto', flex: 1 }} placeholder={t('send_note_ph')} value={consentNote} onChange={(e) => setConsentNote(e.target.value)} />
+                        {consent.status !== 'given' && <button className="btn small" disabled={preparing} onClick={() => record('given')}>{t('consent_record')}</button>}
+                        {consent.status !== 'withdrawn' && <button className="btn small ghost" disabled={preparing} onClick={() => record('withdrawn')}>{t('consent_withdraw')}</button>}
+                      </div>
+                      <div className="small muted">{t('consent_rule')}</div>
+                    </div>
+                  ) : '—'}
+                </dd>
                 <dt>{t('no_marketing')}</dt><dd>{c.no_marketing ? '✓' : '—'}</dd>
                 <dt>{t('discreet')}</dt><dd>{c.discreet_billing ? '✓' : '—'}</dd>
                 <dt>{t('login')}</dt><dd>{c.email ?? '—'}{c.phone ? ` · ${c.phone}` : ''}</dd>

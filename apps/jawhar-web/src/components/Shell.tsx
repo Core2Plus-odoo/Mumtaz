@@ -19,6 +19,7 @@ const ICONS = {
   counter: 'M3 6h18v12H3zM3 10h18M7 14h4',
   pipeline: 'M4 19V5M4 19h16M8 15V9M12 15v-3M16 15V7',
   agents: 'M4 8h16v11H4zM12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6M2.5 12.5v2M21.5 12.5v2',
+  outreach: 'M4 6h16v12H4zM4 7l8 6 8-6M12 3v1',
 };
 
 function readCollapsed() { try { return localStorage.getItem('jawhar_nav') === 'collapsed'; } catch { return false; } }
@@ -57,6 +58,7 @@ export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rat
         {nav('/counter', 'counter', t('nav_counter'))}
         {nav('/clients', 'clients', t('nav_clients'))}
         {nav('/pipeline', 'pipeline', t('nav_pipeline'))}
+        {nav('/outreach', 'outreach', t('nav_outreach'))}
         {nav('/documents', 'docs', t('nav_documents'))}
         {nav('/invoices', 'invoices', t('nav_invoices'))}
         <div className="railsec navl">{t('nav_inventory')}</div>

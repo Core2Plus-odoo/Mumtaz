@@ -16,6 +16,7 @@ import OrderDetail from './pages/OrderDetail';
 import NewQuote from './pages/NewQuote';
 import Counter from './pages/Counter';
 import Pipeline from './pages/Pipeline';
+import Outreach from './pages/Outreach';
 import TrayBuilder from './pages/TrayBuilder';
 import PublicTray from './pages/PublicTray';
 import Kiosk from './pages/Kiosk';
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="documents" element={<Documents />} />
             <Route path="counter" element={<Counter />} />
             <Route path="pipeline" element={<Pipeline />} />
+            <Route path="outreach" element={<Outreach />} />
             <Route path="trays/:id" element={<TrayBuilder />} />
             <Route path="documents/new" element={<NewQuote />} />
             <Route path="documents/:id" element={<OrderDetail />} />
