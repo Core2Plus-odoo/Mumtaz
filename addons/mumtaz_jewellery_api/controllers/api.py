@@ -968,7 +968,7 @@ class JawharApi(Controller):
                             limit=_int(limit, 200, 1, 1000), order='probability desc, expected_revenue desc')
         by_stage = []
         for st in stages:
-            mine = leads.filtered(lambda l: l.stage_id == st)
+            mine = leads.filtered(lambda l, st=st: l.stage_id == st)
             by_stage.append({
                 'id': st.id, 'name': st.name, 'won': st.is_won,
                 'count': len(mine), 'value': sum(mine.mapped('expected_revenue')),

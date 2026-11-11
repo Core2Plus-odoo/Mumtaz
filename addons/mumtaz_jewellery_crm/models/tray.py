@@ -237,7 +237,7 @@ class JewelleryTray(models.Model):
         days = int(days) if days else 7
         token = secrets.token_urlsafe(24)
         digest = _digest(token)
-        for i, line in enumerate(self.line_ids.sorted('sequence')):
+        for line in self.line_ids.sorted('sequence'):
             line.public_ref = hashlib.sha256(f'{digest}:{line.lot_id.id}'.encode()).hexdigest()[:10]
         self.write({
             'token_digest': digest,
