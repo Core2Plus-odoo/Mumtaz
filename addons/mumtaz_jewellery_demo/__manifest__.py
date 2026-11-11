@@ -25,6 +25,11 @@ until somebody sets one deliberately.
         'mumtaz_jewellery',
         'mumtaz_jewellery_vip',
         'mumtaz_jewellery_owner',
+        # So the demo leaves real priced documents behind: a quotation, a
+        # confirmed order and a posted invoice. Without them Sales and
+        # Invoicing are empty, which is the first thing anyone opens in a
+        # demonstration.
+        'mumtaz_jewellery_sale',
     ],
     'data': [],
     'post_init_hook': 'post_init_hook',

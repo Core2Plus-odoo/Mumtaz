@@ -14,7 +14,10 @@ _logger = logging.getLogger(__name__)
 MARKER = 'mumtaz_jewellery_demo.seeded'
 
 # 24K per gram, in the company currency. A round, obviously-synthetic figure.
-DEMO_RATE_PER_GRAM = 100.0
+# A believable 24K rate, not a round 100. A demonstration where every
+# figure is a suspiciously neat multiple teaches the viewer nothing
+# about whether the arithmetic is real.
+DEMO_RATE_PER_GRAM = 245.80
 
 PRODUCTS = [
     # name, karat, wastage %, making type, making value
@@ -27,10 +30,20 @@ PIECES = [
     # product index, serial, gross g, stone g, stones value, rfid, certificate
     (0, 'DEMO-BNG-0001', 24.500, 0.0, 0.0, 'DEMO-RFID-0001', ''),
     (0, 'DEMO-BNG-0002', 31.200, 0.0, 0.0, 'DEMO-RFID-0002', ''),
+    (0, 'DEMO-BNG-0003', 18.900, 0.0, 0.0, 'DEMO-RFID-0007', ''),
+    (0, 'DEMO-BNG-0004', 27.650, 0.0, 0.0, 'DEMO-RFID-0008', ''),
+    (0, 'DEMO-BNG-0005', 35.400, 0.0, 0.0, 'DEMO-RFID-0009', ''),
     (1, 'DEMO-CHN-0001', 18.750, 0.0, 0.0, 'DEMO-RFID-0003', ''),
     (1, 'DEMO-CHN-0002', 42.100, 0.0, 0.0, 'DEMO-RFID-0004', ''),
+    (1, 'DEMO-CHN-0003', 26.300, 0.0, 0.0, 'DEMO-RFID-0010', ''),
+    (1, 'DEMO-CHN-0004', 11.450, 0.0, 0.0, 'DEMO-RFID-0011', ''),
+    (1, 'DEMO-CHN-0005', 33.800, 0.0, 0.0, 'DEMO-RFID-0012', ''),
     (2, 'DEMO-RNG-0001', 6.400, 1.1, 1800.0, 'DEMO-RFID-0005', 'DEMO-CERT-55121'),
     (2, 'DEMO-RNG-0002', 7.900, 1.6, 2600.0, 'DEMO-RFID-0006', 'DEMO-CERT-55122'),
+    (2, 'DEMO-RNG-0003', 5.200, 0.8, 1450.0, 'DEMO-RFID-0013', 'DEMO-CERT-55123'),
+    (2, 'DEMO-RNG-0004', 9.100, 2.4, 4100.0, 'DEMO-RFID-0014', 'DEMO-CERT-55124'),
+    (2, 'DEMO-RNG-0005', 4.750, 0.6, 980.0, 'DEMO-RFID-0015', 'DEMO-CERT-55125'),
+    (2, 'DEMO-RNG-0006', 11.300, 3.2, 6400.0, 'DEMO-RFID-0016', 'DEMO-CERT-55126'),
 ]
 
 CLIENTS = [
@@ -195,6 +208,64 @@ def _seed_old_gold(env, partner):
     return intake
 
 
+def _seed_sales(env, clients, lots):
+    """Leave real documents behind: a quotation, a confirmed order and a
+    posted invoice.
+
+    Every figure is produced by the pricing engine from the approved rate --
+    the same path a shop uses -- so a demonstration can open any line and
+    show where the number came from. Nothing here types a price.
+    """
+    if not clients or len(lots) < 4:
+        return {}
+
+    Sale = env['sale.order']
+    product_of = {lot.id: lot.product_id.id for lot in lots}
+    # The hook runs as the system user, so the orders' salesperson would be
+    # OdooBot. The Quotations menu opens on "My Quotations" by default, and
+    # a presenter logged in as admin would see an empty screen. Make admin
+    # the salesperson so the documents appear where the demo looks for them.
+    presenter = env.ref('base.user_admin', raise_if_not_found=False)
+
+    def order_for(partner, lot, discount=0.0):
+        order = Sale.create({
+            'partner_id': partner.id,
+            'user_id': presenter.id if presenter else False,
+            'order_line': [(0, 0, {
+                'product_id': product_of[lot.id],
+                'product_uom_qty': 1,
+                'jewellery_lot_id': lot.id,
+                'jewellery_making_discount_pct': discount,
+            })],
+        })
+        order.order_line[0].action_price_from_rate()
+        return order
+
+    out = {}
+
+    # 1. A quotation still open, so the "Price from gold rate" button and a
+    #    live breakdown are there to show.
+    quote = order_for(clients[0], lots[2])
+    out['quotation'] = quote.name
+
+    # 2. A confirmed order: the price is now frozen. This is the one to open
+    #    when explaining why a rate change tomorrow cannot move it.
+    confirmed = order_for(clients[1], lots[6])
+    confirmed.action_confirm()
+    out['order'] = confirmed.name
+
+    # 3. A posted invoice carrying the full breakdown, with a dealer discount
+    #    on the making charge only -- the metal is never discounted.
+    billed = order_for(clients[2], lots[10], discount=15.0)
+    billed.action_confirm()
+    invoice = billed._create_invoices()
+    invoice.action_post()
+    out['invoice'] = invoice.name
+    out['invoice_total'] = invoice.amount_total
+
+    return out
+
+
 def post_init_hook(env):
     """Create the DEMO dataset once."""
     parameters = env['ir.config_parameter'].sudo()
@@ -208,6 +279,7 @@ def post_init_hook(env):
     on_hand = _put_pieces_in_stock(env, lots)
     clients = _seed_clients(env, checker, lots)
     intake = _seed_old_gold(env, clients[0] if clients else None)
+    docs = _seed_sales(env, clients, lots)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -219,6 +291,9 @@ def post_init_hook(env):
     _logger.info(
         'DEMO seed complete: rate %.2f/g (approved by %s), %s products, '
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
-        'sample piece total %.2f, %s owner cards',
+        'sample piece total %.2f, %s owner cards, '
+        'quotation %s, order %s, invoice %s (%.2f)',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
-        len(clients), intake.name, intake.value, priced.get('total', 0.0), cards)
+        len(clients), intake.name, intake.value, priced.get('total', 0.0),
+        cards, docs.get('quotation', '-'), docs.get('order', '-'),
+        docs.get('invoice', '-'), docs.get('invoice_total', 0.0))
