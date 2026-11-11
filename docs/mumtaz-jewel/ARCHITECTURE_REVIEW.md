@@ -1,4 +1,4 @@
-# Mumtaz Jewel: architecture review against standard Odoo 19 Community
+# Jawhar: architecture review against standard Odoo 19 Community
 
 Date: 2026-11-10. Reviewed as a solution architecture, standard-first: nothing
 gets built that Odoo already does. Module availability was checked against the

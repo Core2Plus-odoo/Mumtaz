@@ -1,4 +1,4 @@
-# Mumtaz Jewel: Implementation Roadmap (revision 3)
+# Jawhar: Implementation Roadmap (revision 3)
 
 Date: 2026-11-10. Replaces revision 2. Revision 3 reconciles the v2 Refined Blueprint: see `BLUEPRINT_V2_RECONCILIATION.md` (adds Slice 2B Private Tray; Slice 5 starts read/draft; Slice 6 builds on the tray; Slice 1 adds quote validity and cost basis). Baseline: `docs/MUMTAZ_JEWEL_MASTER_BLUEPRINT.md` (18-section edition). Nothing past Slice 0 starts until you approve this plan.
 

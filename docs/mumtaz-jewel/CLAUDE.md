@@ -1,6 +1,6 @@
-# Mumtaz Jewel: working rules (read before any change)
+# Jawhar: working rules (read before any change)
 
-These rules apply to everything under `addons/mumtaz_jewellery*`, `docs/mumtaz-jewel/` and any Mumtaz Jewel deploy files. Where they conflict with the repo-root `CLAUDE.md` ("commit to `main`", "deploys go to `main`"), **these win for Mumtaz Jewel work.**
+These rules apply to everything under `addons/mumtaz_jewellery*`, `docs/mumtaz-jewel/` and any Jawhar deploy files. Where they conflict with the repo-root `CLAUDE.md` ("commit to `main`", "deploys go to `main`"), **these win for Jawhar work.**
 
 ## Branching and deploys
 - Work only on `claude/mumtaz-jewellery-phase2` (or a branch cut from it). Never commit or push to `main`: `main` auto-deploys to the production VPS.

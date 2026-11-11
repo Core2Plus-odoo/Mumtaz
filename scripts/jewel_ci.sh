@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Mumtaz Jewel CI: fresh database -> install the addons -> run the tests.
+# Jawhar CI: fresh database -> install the addons -> run the tests.
 #
 # Slice 0 acceptance: "one command installs, tests and seeds a clean database;
 # report lists real counts".
@@ -46,7 +46,7 @@ info() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
 if [ "$BRANCH" = "main" ] && [ "${JEWEL_CI_ALLOW_MAIN:-0}" != "1" ]; then
   red "Refusing to run on 'main': the production VPS pulls that branch."
-  red "Check out the Mumtaz Jewel feature branch first, or set"
+  red "Check out the Jawhar feature branch first, or set"
   red "JEWEL_CI_ALLOW_MAIN=1 if this checkout is a disposable CI runner."
   exit 2
 fi

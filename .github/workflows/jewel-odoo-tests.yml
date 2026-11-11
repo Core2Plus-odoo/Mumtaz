@@ -6,7 +6,7 @@ name: Jewel Odoo Tests
 # an addon or ran a TransactionCase, so GitHub reported green on commits whose
 # Odoo install was broken — including one in this repo's own history. This
 # workflow builds a real Odoo 19 Community checkout against a real PostgreSQL,
-# installs the Mumtaz Jewel addons into a throwaway database, runs the suite
+# installs the Jawhar addons into a throwaway database, runs the suite
 # and seeds the synthetic demo data. It is the same `scripts/jewel_ci.sh` used
 # locally, so there is one definition of "the tests pass" and not two.
 #

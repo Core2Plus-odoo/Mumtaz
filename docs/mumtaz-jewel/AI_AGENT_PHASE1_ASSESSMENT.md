@@ -24,7 +24,7 @@ Three products share one repository.
 | `addons/` | 42 Odoo 19 modules — the Mumtaz platform and the jewellery product | 4.9 MB, 608 files |
 | `c2p-delivery-system/` | A separate FastAPI product (C2P Agency OS) with its own AI stack | 1.5 MB, 76 files |
 | `apps/`, `platform/` | Node services, including `zaki-ai` (Express + Anthropic SDK) | 2.0 MB |
-| `website/jewel/` | The Mumtaz Jewel marketing site and the interface prototype | 2.6 MB |
+| `website/jewel/` | The Jawhar marketing site and the interface prototype | 2.6 MB |
 
 Languages: **421 Python, 212 XML, 22 JavaScript, 41 HTML, 0 TypeScript.**
 

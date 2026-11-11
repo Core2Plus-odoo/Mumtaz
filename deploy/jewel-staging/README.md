@@ -1,4 +1,4 @@
-# Mumtaz Jewel staging — `jewel.mumtaz.digital`
+# Jawhar staging — `jewel.mumtaz.digital`
 
 **Status: proposal. Nothing in this directory has been run on any server, and
 `jewel.mumtaz.digital` does not exist yet.** These are reviewable files that

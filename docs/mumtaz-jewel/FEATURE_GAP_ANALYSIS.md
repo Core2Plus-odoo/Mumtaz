@@ -1,4 +1,4 @@
-# Mumtaz Jewel: feature gap analysis
+# Jawhar: feature gap analysis
 
 The register `docs/mumtaz-jewel/CLAUDE.md` requires every change to update.
 One row per capability: what it is, whether standard Odoo covers it, what
