@@ -35,13 +35,32 @@ command -v nginx >/dev/null 2>&1 || { red "nginx not found."; exit 2; }
 [ -f "$MAP_SRC" ] || { red "Missing $MAP_SRC (is the repo checked out?)"; exit 2; }
 
 # -- find the server block ---------------------------------------------------
+# Three ways, cheapest first. The first version of this looked only in
+# sites-enabled and conf.d and failed on a real host whose config lives
+# elsewhere -- a server block can be included from any path.
 if [ -z "$SITE_CONF" ]; then
+  # 1. the conventional locations
   SITE_CONF="$(grep -rlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
       /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | head -1)"
 fi
+if [ -z "$SITE_CONF" ]; then
+  # 2. anywhere under /etc/nginx
+  SITE_CONF="$(grep -rlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
+      /etc/nginx 2>/dev/null | grep -v '\.bak\.' | head -1)"
+fi
+if [ -z "$SITE_CONF" ]; then
+  # 3. ask nginx itself. `nginx -T` resolves every include and prints
+  #    "# configuration file <path>:" before each file's contents, so it
+  #    finds the block wherever it actually lives.
+  SITE_CONF="$(nginx -T 2>/dev/null | awk -v name="$SERVER_NAME" '
+      /^# configuration file / { f = $4; sub(/:$/, "", f) }
+      $0 ~ /server_name/ && index($0, name) { print f; exit }')"
+fi
 if [ -z "$SITE_CONF" ] || [ ! -f "$SITE_CONF" ]; then
   red "Could not find the server block for $SERVER_NAME."
-  red "Pass it explicitly:  SITE_CONF=/etc/nginx/sites-enabled/<file> $0"
+  red "Find it with:"
+  red "  grep -rl '$SERVER_NAME' /etc/nginx/"
+  red "then pass it:  SITE_CONF=<that file> $0"
   exit 2
 fi
 info "Site config: $SITE_CONF"
