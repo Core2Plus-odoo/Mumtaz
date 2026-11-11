@@ -70,7 +70,12 @@ ODOO=( "$PYTHON" "$ODOO_PATH/odoo-bin"
        --db_host="${PGHOST:-localhost}" --db_port="${PGPORT:-5432}"
        --db_user="${PGUSER:-odoo}"
        --data-dir="$LOG_DIR/$DB_NAME-filestore"
-       --without-demo=True --no-http --stop-after-init --log-level=info )
+       --without-demo=True --no-http --stop-after-init --log-level=info
+       # --test-enable starts an HTTP server regardless of --no-http
+       # (odoo/service/server.py), so bind it to a port nothing else uses.
+       # On the default 8069 a developer's running Odoo aborts the entire
+       # test run with "Address already in use".
+       --http-port="${JEWEL_TEST_HTTP_PORT:-8099}" )
 if [ -n "${PGPASSWORD:-}" ]; then ODOO+=( --db_password="$PGPASSWORD" ); fi
 
 cleanup() {
@@ -131,7 +136,10 @@ TEST_RC=$?
 set -e
 
 # Odoo prints: "N failed, M error(s) of X tests" or "X tests ... 0 failed, 0 error(s)"
-ODOO_COUNT="$(grep -oE 'Starting [A-Za-z]+\.[a-z0-9_]+ \.\.\.' "$TEST_LOG" \
+# `|| true`: a run that aborts before any test starts has no "Starting"
+# lines; without it grep exits 1, pipefail propagates, and the script dies
+# here -- before the TESTS FAILED report below that would show the cause.
+ODOO_COUNT="$( (grep -oE 'Starting [A-Za-z]+\.[a-z0-9_]+ \.\.\.' "$TEST_LOG" || true) \
   | sort -u | wc -l | tr -d ' ')"
 echo
 info "Odoo test summary (verbatim):"

@@ -25,7 +25,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 PROJECT="mumtaz-jewel-staging"
-MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner"
+MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale"
 SEED_MODULE="mumtaz_jewellery_demo"
 DEMO_DB="${DEMO_DB:-jewel_demo}"
 LANDING_SRC="$REPO_ROOT/website/jewel"
@@ -198,10 +198,27 @@ sed -e "s|__ADMIN_PASSWORD__|${ADMIN_PASSWORD}|" \
     -e "s|__POSTGRES_USER__|${POSTGRES_USER}|" \
     -e "s|__POSTGRES_PASSWORD__|${POSTGRES_PASSWORD}|" \
     "$HERE/odoo.conf.tmpl" > "$HERE/odoo.rendered.conf"
-chmod 600 "$HERE/odoo.rendered.conf"
-
 cd "$HERE"
 compose() { docker compose -p "$PROJECT" "$@"; }
+
+# The rendered file holds the admin and database passwords, so it must not
+# be world-readable -- but a root-owned mode-600 file is unreadable INSIDE
+# the container, where Odoo runs as its own unprivileged user. The first
+# bring-up on the VPS died exactly there: the image's wait-for-psql.py got
+# "Permission denied" on /etc/odoo/odoo.conf and then "No section: options".
+#
+# So ask the image which uid it runs as, and give that uid -- and only that
+# uid -- read access. Root on the host can chown to any uid, and the bind
+# mount carries the numeric owner through unchanged.
+ODOO_UID="$(compose run --rm --no-deps --entrypoint id odoo -u 2>/dev/null | tr -d '[:space:]')"
+if [ -z "$ODOO_UID" ] || ! [ "$ODOO_UID" -eq "$ODOO_UID" ] 2>/dev/null; then
+  red "Could not learn the uid Odoo runs as inside the image (got '$ODOO_UID')."
+  red "Without it the rendered config is unreadable in the container."
+  exit 1
+fi
+chown "$ODOO_UID" "$HERE/odoo.rendered.conf"
+chmod 400 "$HERE/odoo.rendered.conf"
+ok "odoo.rendered.conf readable only by the container's user (uid $ODOO_UID)"
 
 # -- 3. bring the stack up --------------------------------------------------
 if [ "$DO_INSTALL" = "1" ]; then
