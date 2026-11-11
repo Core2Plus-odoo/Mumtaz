@@ -12,7 +12,9 @@
   <record id="location_on_approval" model="stock.location">
     <field name="name">On approval</field>
     <field name="usage">internal</field>
-    <field name="location_id" ref="stock.stock_location_locations"/>
-    <field name="comment">Pieces with a client on approval. Still owned and still valued; simply not on the shelf.</field>
+    <!-- No parent, deliberately: Odoo 19 has no "Physical Locations" view
+         root, and a piece with a client is not in any warehouse. It is a
+         root internal location, so it stays owned and valued while being
+         absent from every shop's on-hand. -->
   </record>
 </odoo>
