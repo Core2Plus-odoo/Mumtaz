@@ -297,3 +297,10 @@ jobs:
             fi
           done
           if [ "$errors" -gt 0 ]; then exit 1; fi
+
+      # A broken link on this host does not 404: nginx answers any unknown
+      # path with the landing page, so a dead link silently shows the
+      # homepage and nobody notices. On-disk only here — the live pass needs
+      # the deployed host and runs from deploy/jewel-staging/.
+      - name: Check Jewel site links
+        run: python3 scripts/check_links.py --root website/jewel
