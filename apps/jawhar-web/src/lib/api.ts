@@ -54,7 +54,7 @@ export type Order = {
   id: number; name: string; client: Ref; salesperson: Ref; date: string; state: string;
   kind: 'quote' | 'order'; amount_untaxed: number; amount_tax: number; amount_total: number;
   currency: string; line_count: number; invoice_status: string;
-  validity_date: string | null; expired: boolean;
+  validity_date: string | null; expired: boolean; old_gold: Ref;
   lines?: OrderLine[]; invoices?: Ref[];
 };
 export type PaymentMethod = { id: number; name: string; type: string };
@@ -71,7 +71,15 @@ export type Invoice = {
 };
 export type OldGold = {
   id: number; name: string; client: Ref; date: string; gross_weight_g: number; karat: string;
-  fine_weight_g: number; applied_rate_per_g: number; value: number; state: string;
+  fine_weight_g: number; applied_rate_per_g: number; melt_loss_pct: number; buyback_discount_pct: number;
+  value: number; state: string; approved_by: Ref; credited_on: Ref;
+};
+export type Availability = { status: 'on_shelf' | 'on_approval' | 'sold' | 'not_in_stock'; detail: unknown; client: Ref };
+export type CounterPiece = PieceDetail & { availability: Availability };
+export type Readiness = { ready: boolean; checks: { key: string; ok: boolean; detail: unknown }[] };
+export type CounterResult = {
+  order: Order; invoice: Invoice; payments: Payment[];
+  deliveries: { id: number; name: string; state: string }[];
 };
 export type Card = {
   id: number; kind: string; title: string; detail: string | null; recommendation: string | null;
@@ -152,6 +160,16 @@ export const api = {
   payInvoice: (id: number, p: { journal_id?: number; amount?: number }) =>
     call<{ invoice: Invoice; payments: Payment[] }>(`/sales/invoices/${id}/payments`, { method: 'POST', body: JSON.stringify(p) }),
   memos: (state?: string) => call<Page<Memo>>(`/memos${q({ state })}`),
-  oldGold: () => call<Page<OldGold>>('/old-gold'),
+  oldGold: (p: { client_id?: number; state?: string; unused?: boolean; limit?: number } = {}) =>
+    call<Page<OldGold>>(`/old-gold${q(p)}`),
+  createOldGold: (p: { client_id?: number; gross_weight_g: number; karat: string; melt_loss_pct?: number; buyback_discount_pct?: number }) =>
+    call<OldGold>('/old-gold', { method: 'POST', body: JSON.stringify(p) }),
+  approveOldGold: (id: number) => call<OldGold>(`/old-gold/${id}/approve`, { method: 'POST', body: '{}' }),
+  // --- the counter ---
+  counterPiece: (query: string, discount?: number) => call<CounterPiece>(`/counter/piece${q({ q: query, discount })}`),
+  counterReadiness: (p: { piece_id?: number; client_id?: number; discount?: number; old_gold_id?: number }) =>
+    call<Readiness>(`/counter/readiness${q(p)}`),
+  counterCommit: (p: { client_id: number; piece_id: number; discount?: number; journal_id?: number; amount?: number; old_gold_id?: number }) =>
+    call<CounterResult>('/counter/commit', { method: 'POST', body: JSON.stringify(p) }),
   cards: (state = 'open') => call<Page<Card>>(`/owner/cards${q({ state })}`),
 };

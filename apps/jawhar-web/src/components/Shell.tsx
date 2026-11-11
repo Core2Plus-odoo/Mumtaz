@@ -14,6 +14,7 @@ const ICONS = {
   rates: 'M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6',
   oldgold: 'M12 3v18M7 8h7a3 3 0 010 6H8a3 3 0 000 6h9',
   cards: 'M4 8h16v11H4zM4 8l2-4h12l2 4M9 13h6',
+  counter: 'M3 6h18v12H3zM3 10h18M7 14h4',
 };
 
 export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rate | null; onSignOut: () => void }) {
@@ -34,6 +35,7 @@ export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rat
         {nav('/', 'today', t('nav_today'), true)}
         {nav('/cards', 'cards', t('nav_cards'))}
         <div className="railsec">{t('nav_sales')}</div>
+        {nav('/counter', 'counter', t('nav_counter'))}
         {nav('/clients', 'clients', t('nav_clients'))}
         {nav('/documents', 'docs', t('nav_documents'))}
         {nav('/invoices', 'invoices', t('nav_invoices'))}

@@ -54,3 +54,18 @@ describe('sale writes', () => {
     expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ journal_id: 7 });
   });
 });
+
+describe('counter', () => {
+  it('encodes the lookup query and optional discount', async () => {
+    const f = reply(200, { ok: true, data: { id: 1, availability: { status: 'on_shelf' } } });
+    vi.stubGlobal('fetch', f);
+    await api.counterPiece('DEMO-RFID 0007', 10);
+    expect(f.mock.calls[0][0]).toBe('/jawhar/v1/counter/piece?q=DEMO-RFID+0007&discount=10');
+  });
+  it('sends the commit with only the fields that were chosen', async () => {
+    const f = reply(201, { ok: true, data: { order: {}, invoice: {}, payments: [], deliveries: [] } });
+    vi.stubGlobal('fetch', f);
+    await api.counterCommit({ client_id: 3, piece_id: 7, journal_id: 2, old_gold_id: 9 });
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ client_id: 3, piece_id: 7, journal_id: 2, old_gold_id: 9 });
+  });
+});
