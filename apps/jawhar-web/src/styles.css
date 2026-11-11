@@ -348,3 +348,10 @@ tr.refused td{background:var(--coral-bg)}
 .switch::after{content:'';position:absolute;top:2px;inset-inline-start:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
 .switch:checked::after{transform:translateX(16px)}
 [dir=rtl] .switch:checked::after{transform:translateX(-16px)}
+
+/* client app */
+.me-piece{display:flex;gap:12px;align-items:center}
+.me-piece img{width:72px;height:72px;object-fit:cover;border-radius:10px;background:var(--paper2)}
+.me-big{font-size:1.6rem;font-weight:700}
+.me-form{display:grid;gap:10px}
+.me-form input{font-size:1.1rem;padding:12px;border:1px solid var(--paper3);border-radius:10px}

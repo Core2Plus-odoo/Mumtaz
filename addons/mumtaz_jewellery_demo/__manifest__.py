@@ -37,6 +37,7 @@ until somebody sets one deliberately.
         'mumtaz_jewellery_aml',
         'mumtaz_jewellery_stores',
         'mumtaz_jewellery_channels',
+        'mumtaz_jewellery_client',
     ],
     'data': [],
     'post_init_hook': 'post_init_hook',

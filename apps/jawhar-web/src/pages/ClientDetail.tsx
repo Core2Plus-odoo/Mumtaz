@@ -28,6 +28,8 @@ export default function ClientDetail() {
   const [source, setSource] = useState('in_store');
   const [consentNote, setConsentNote] = useState('');
   useEffect(() => { if (id) api.consent(Number(id)).then(setConsent).catch(() => setConsent(null)); }, [id]);
+  const [appCodes, setAppCodes] = useState<{ codes: { code: string; expires: string }[]; open_sessions: number } | null>(null);
+  useEffect(() => { if (id) api.clientCodes(Number(id)).then(setAppCodes).catch(() => setAppCodes(null)); }, [id]);
   const [kyc, setKyc] = useState<Kyc | null>(null);
   const [doc, setDoc] = useState({ id_type: 'emirates_id', last4: '', expiry: '', note: '' });
   const [scr, setScr] = useState({ status: 'clear', risk_band: 'low', note: '' });
@@ -137,6 +139,10 @@ export default function ClientDetail() {
                   ) : '—'}
                 </dd>
                 <dt>{t('no_marketing')}</dt><dd>{c.no_marketing ? '✓' : '—'}</dd>
+                <dt>{t('app_codes')}</dt><dd>
+                  {appCodes ? (appCodes.codes.length ? appCodes.codes.map((c, i) => <div key={i}><b className="num" style={{ fontSize: '1.2rem', letterSpacing: 2 }}>{c.code}</b> <span className="small muted">· {t('app_code_live')} · {when(c.expires, lang)}</span></div>) : <span className="muted small">{t('app_no_code')}</span>) : '—'}
+                  {appCodes && appCodes.open_sessions > 0 && <div className="small muted">{appCodes.open_sessions} {t('app_sessions')}</div>}
+                </dd>
                 <dt>{t('identity')}</dt><dd>
                   {kyc ? (
                     <div className="kyc">

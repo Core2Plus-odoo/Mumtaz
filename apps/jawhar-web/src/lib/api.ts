@@ -62,6 +62,14 @@ export type Brief = {
   sentences: string[]; figures: Record<string, unknown> & { rate: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string } | null; as_of: string };
   queue: QueueItem[]; sources: string[]; narrated_by: string; run_id: number; as_of: string; level: string;
 } & Partial<Refusal>;
+export type ClientMe = { first_name: string; name: string; lang: string | null; consent: { status: string; may_message: boolean }; advisor: string | null; signed_in_at: string | null };
+export type ClientHome = {
+  me: ClientMe; rate: { rate_per_gram: number; currency: string; approved_at: string } | null;
+  owned: { serial: string; design: string; category: string | null; karat: string; net_weight_g: number; fine_g: number; bought_on: string | null; order: string; invoice: string | null; paid: number; metal_value_today: number | null; image_url: string | null }[];
+  metal_value_today: number | null; fine_g: number;
+  trays: { id: number; name: string; state: string; pieces: number; link_live: boolean }[];
+  requests: { id: number; name: string; kind: string; state: string; serial: string; design: string; at: string; price_quoted: number }[];
+};
 export type RateFeed = {
   id: number; name: string; active: boolean; provider: 'fixture' | 'json_url'; url: string | null; json_path: string | null;
   fixture_value: number; unit: 'gram_24k' | 'ounce_24k'; min_change_pct: number; last_fetched_at: string | null; last_value: number;
@@ -397,6 +405,14 @@ export const api = {
     call<({ prepared: OutreachDraft[]; count: number; skipped: { occasion_id: number; why: string }[]; run: AiRun } & Partial<Refusal>)>('/outreach/prepare', { method: 'POST', body: JSON.stringify(p) }),
   outreachDrafts: (state = 'approved') => call<{ items: OutreachDraft[]; count: number }>(`/outreach/drafts${q({ state })}`),
   outreachDraft: (id: number) => call<OutreachDraftDetail>(`/outreach/drafts/${id}`),
+  // the client app: public, scoped by her token
+  clientCode: (phone: string, lang: string) => callPublic<{ ok: boolean; message: string; minutes: number; code?: string }>('/jawhar/client/code', { method: 'POST', body: JSON.stringify({ phone, lang }) }),
+  clientVerify: (phone: string, code: string) => callPublic<{ token: string; me: ClientMe }>('/jawhar/client/verify', { method: 'POST', body: JSON.stringify({ phone, code }) }),
+  clientHome: (token: string) => callPublic<ClientHome>('/jawhar/client/home', { headers: { 'X-Client-Token': token, Accept: 'application/json' } }),
+  clientTray: (token: string, id: number) => callPublic<PublicTray>(`/jawhar/client/trays/${id}`, { headers: { 'X-Client-Token': token, Accept: 'application/json' } }),
+  clientConsent: (token: string, status: 'given' | 'withdrawn') => callPublic<ClientMe>('/jawhar/client/consent', { method: 'POST', headers: { 'X-Client-Token': token, Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) }),
+  clientSignout: (token: string) => callPublic<{ ok: boolean }>('/jawhar/client/signout', { method: 'POST', headers: { 'X-Client-Token': token, Accept: 'application/json', 'Content-Type': 'application/json' }, body: '{}' }),
+  clientCodes: (clientId: number) => call<{ codes: { code: string; expires: string; requested_at: string }[]; open_sessions: number; phone: string | null }>(`/clients/${clientId}/app`),
   // channels: the rate feed (drafts only), the web shelf, requests by channel
   channelFeed: () => call<{ feed: RateFeed | null; logs: FeedLog[]; can_configure: boolean }>('/channels/feed'),
   channelFeedSet: (p: Partial<RateFeed>) => call<RateFeed>('/channels/feed', { method: 'POST', body: JSON.stringify(p) }),

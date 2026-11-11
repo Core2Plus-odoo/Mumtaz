@@ -20,6 +20,7 @@ import Outreach from './pages/Outreach';
 import Compliance from './pages/Compliance';
 import Stores from './pages/Stores';
 import Channels from './pages/Channels';
+import ClientApp from './pages/ClientApp';
 import TrayBuilder from './pages/TrayBuilder';
 import PublicTray from './pages/PublicTray';
 import Kiosk from './pages/Kiosk';
@@ -55,12 +56,12 @@ export default function App() {
   const signOut = async () => { try { await api.logout(); } finally { setUser(null); } };
 
   // The client's tray link needs no sign-in: the token is the scope.
-  const isPublic = window.location.pathname.startsWith('/app/t/') || window.location.pathname.startsWith('/app/kiosk');
+  const isPublic = window.location.pathname.startsWith('/app/t/') || window.location.pathname.startsWith('/app/kiosk') || window.location.pathname.startsWith('/app/me');
 
   return (
     <I18nContext.Provider value={{ lang, setLang }}>
       {isPublic ? (
-        <Routes><Route path="t/:token" element={<PublicTray />} /><Route path="kiosk" element={<Kiosk />} /></Routes>
+        <Routes><Route path="t/:token" element={<PublicTray />} /><Route path="kiosk" element={<Kiosk />} /><Route path="me" element={<ClientApp />} /></Routes>
       ) : user === undefined ? null : user === null ? (
         <Login onSignedIn={(u) => { setUser(u); loadRate(); }} />
       ) : (

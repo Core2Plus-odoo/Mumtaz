@@ -606,6 +606,21 @@ def _seed_channels(env):
     return out
 
 
+def _seed_client_app(env):
+    """DEMO ONLY: the client app echoes the sign-in code in its answer, so a
+    demo can sign in without a person in the loop. A real tenant keeps the
+    parameter at 0 and a person gives the client her code."""
+    if 'jewellery.client.session' not in env:
+        return False
+    env['ir.config_parameter'].sudo().set_param('mumtaz_jewellery.client_code_echo', '1')
+    # The first demo clients predate phones on the record; the app signs in
+    # by phone, so give the one with purchases a synthetic number.
+    alpha = env['res.partner'].search([('name', '=', 'DEMO Client Alpha'), ('phone', '=', False)], limit=1)
+    if alpha:
+        alpha.phone = '+971 50 000 0001'
+    return True
+
+
 def _seed_outreach(env, presenter):
     """Layla drafts the occasion messages due, for a person to review: the
     Outreach screen opens with work on it. One per occasion per year."""
@@ -653,6 +668,7 @@ def top_up(env):
     _seed_kyc(env)
     _seed_stores(env)
     _seed_channels(env)
+    _seed_client_app(env)
     _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s, consent %s, outreach drafts %s',
                  len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-', consent, outreach)
     return {'products': len(products), 'pieces': len(lots), 'clients': len(clients), 'consent': consent, 'outreach': outreach}
@@ -706,6 +722,7 @@ def post_init_hook(env):
     kyc = _seed_kyc(env)
     stores = _seed_stores(env)
     _seed_channels(env)
+    _seed_client_app(env)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
