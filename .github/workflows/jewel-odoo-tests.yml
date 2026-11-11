@@ -1,0 +1,146 @@
+name: Jewel Odoo Tests
+
+# The gate that was missing.
+#
+# Everything in ci.yml lints, audits and parses. Nothing in it ever installed
+# an addon or ran a TransactionCase, so GitHub reported green on commits whose
+# Odoo install was broken — including one in this repo's own history. This
+# workflow builds a real Odoo 19 Community checkout against a real PostgreSQL,
+# installs the Mumtaz Jewel addons into a throwaway database, runs the suite
+# and seeds the synthetic demo data. It is the same `scripts/jewel_ci.sh` used
+# locally, so there is one definition of "the tests pass" and not two.
+#
+# It is deliberately a separate workflow: it takes minutes rather than
+# seconds, and it can be made a required check on its own.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "addons/mumtaz_jewellery*/**"
+      - "scripts/jewel_ci.sh"
+      - ".github/workflows/jewel-odoo-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "addons/mumtaz_jewellery*/**"
+      - "scripts/jewel_ci.sh"
+      - ".github/workflows/jewel-odoo-tests.yml"
+  workflow_dispatch:
+
+# A later push supersedes an in-flight run on the same ref.
+concurrency:
+  group: jewel-odoo-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  ODOO_BRANCH: "19.0"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  odoo-tests:
+    name: Install addons and run the suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U odoo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: odoo
+      PGPASSWORD: odoo
+      # jewel_ci.sh refuses to run on `main` so that nobody points it at the
+      # production checkout. A GitHub runner has no production checkout, no
+      # VPS and no deploy path, and the script only ever creates a database
+      # named jewel_ci_*. Gating `main` is the entire point of this workflow,
+      # so the refusal is opted out of explicitly rather than weakened in the
+      # script. (A `main` push checks out the branch by name; a pull request
+      # checks out a detached HEAD, where the guard does not trigger.)
+      JEWEL_CI_ALLOW_MAIN: "1"
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # Odoo's wheels need these headers. postgresql-client supplies the
+      # createdb/dropdb that jewel_ci.sh calls directly.
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            postgresql-client \
+            libldap2-dev libsasl2-dev \
+            libxml2-dev libxslt1-dev \
+            libjpeg-dev zlib1g-dev \
+            libpq-dev
+
+      # Shallow clone: the full Odoo history is ~5 GB and no test needs it.
+      - name: Check out Odoo ${{ env.ODOO_BRANCH }} Community
+        run: |
+          git clone --depth 1 --branch "$ODOO_BRANCH" \
+            https://github.com/odoo/odoo.git "$RUNNER_TEMP/odoo"
+          echo "Odoo at $(git -C "$RUNNER_TEMP/odoo" rev-parse --short HEAD)"
+
+      - name: Cache pip downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: jewel-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('.github/workflows/jewel-odoo-tests.yml') }}
+          restore-keys: jewel-pip-${{ env.PYTHON_VERSION }}-
+
+      # psycopg2 builds from source and needs a compiler pass on every run;
+      # psycopg2-binary is the same driver shipped as a wheel.
+      - name: Install Odoo's Python dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          sed -i 's/^psycopg2\b/psycopg2-binary/' "$RUNNER_TEMP/odoo/requirements.txt"
+          pip install -r "$RUNNER_TEMP/odoo/requirements.txt"
+
+      - name: Wait for PostgreSQL
+        run: |
+          for _ in $(seq 1 30); do
+            pg_isready -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" && exit 0
+            sleep 2
+          done
+          echo "PostgreSQL did not become ready" >&2
+          exit 1
+
+      # The same script a developer runs locally: pure-Python engine tests,
+      # fresh database, install, suite, then the synthetic demo seed.
+      - name: Install the addons, run the suite and seed demo data
+        env:
+          ODOO_PATH: ${{ runner.temp }}/odoo
+          LOG_DIR: ${{ runner.temp }}/jewel-ci-logs
+        run: bash scripts/jewel_ci.sh
+
+      # Uploaded on failure only: a green run's logs are tens of MB of noise,
+      # but a red one is unreadable without them.
+      - name: Upload the Odoo logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jewel-odoo-logs
+          path: ${{ runner.temp }}/jewel-ci-logs/
+          retention-days: 7
+          if-no-files-found: warn
