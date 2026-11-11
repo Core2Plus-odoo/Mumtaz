@@ -174,6 +174,20 @@ footer a{color:var(--pri)}
   .nav .sp,.nav .spacer{display:none}
 }
 @media (min-width:1001px){ .m-cta{display:none} }
+
+/* ── v9: keep anchor targets out from under the sticky header ───────────
+   Every in-page anchor scrolled its own heading to y=0, directly beneath a
+   ~66px sticky header, so tapping "Interface" or "Where it is today" landed
+   on a section whose title was hidden. The link works and the destination is
+   invisible, which to a visitor is the same as a broken link.
+
+   scroll-padding-top on the scroll container is the one-line fix and needs no
+   per-section scroll-margin. 84px = header plus breathing room.
+
+   A fixed-delay test reports this as passing, because scroll-behavior is
+   smooth and the measurement lands mid-flight. It has to wait for scrollY to
+   settle. Mine did not, at first. */
+html{scroll-padding-top:84px}
 </style>
 </head>
 <body>
