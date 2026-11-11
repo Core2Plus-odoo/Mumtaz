@@ -241,6 +241,97 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
   th,td{padding:11px 13px}
   .card{padding:19px}
 }
+
+/* ── v7: mobile navigation ───────────────────────────────────────────────
+   Every page in this site hid .links below 1000px and put nothing in their
+   place, so on a phone there was NO navigation at all: /apps/, /pricing/ and
+   /intelligence/ were unreachable from the homepage. The owner reported the
+   site "still showing the old page" and was half right — the page had
+   changed, but the only part that changed visibly on mobile was hidden.
+
+   CSS-only on purpose. A checkbox drives it, so it works with scripts
+   blocked and needs no JS to be correct. Later in the file than the rules it
+   overrides, and :checked ~ .links outranks them on specificity anyway. */
+.navtog{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.burger{display:none}
+.nav{position:relative}
+@media (max-width:1000px){
+  .burger{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:42px;height:42px;margin-left:auto;cursor:pointer;
+    border:1px solid var(--paper3);border-radius:var(--r);
+    background:var(--surface);color:var(--ink);flex:0 0 auto;
+  }
+  .burger span{position:relative;display:block;width:18px;height:2px;
+    background:currentColor;border-radius:2px}
+  .burger span::before,.burger span::after{
+    content:"";position:absolute;left:0;width:18px;height:2px;
+    background:currentColor;border-radius:2px}
+  .burger span::before{top:-6px}
+  .burger span::after{top:6px}
+  /* the panel */
+  .navtog:checked ~ .links{
+    display:flex;flex-direction:column;align-items:stretch;gap:0;
+    position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;
+    background:var(--surface);border:1px solid var(--paper3);
+    border-radius:var(--r);box-shadow:0 10px 30px rgba(16,21,28,.12);
+    padding:6px;margin:0;
+  }
+  .navtog:checked ~ .links a{
+    padding:13px 14px;border-radius:8px;font-size:1rem;
+    /* 44px minimum target: a nav you cannot hit is a nav you do not have. */
+    min-height:44px;display:flex;align-items:center;
+  }
+  .navtog:checked ~ .links a:hover{background:var(--gold-bg)}
+  .navtog:checked ~ .links .m-cta{
+    margin-top:4px;background:var(--gold);color:#fff;justify-content:center;
+    font-weight:600;
+  }
+  .nav .spacer{display:none}
+  /* The desktop demo button would crowd the burger; the panel carries it. */
+  .nav > .btn-gold{display:none}
+}
+@media (min-width:1001px){ .m-cta{display:none} }
+
+/* ── v8: the app grid, the thing a SaaS homepage leads with ─────────────
+   Status chips are not decoration. This page's own honesty rules (see the
+   comment at the top) require every capability to carry one: built, in
+   development, or planned. The statuses and links here are taken from
+   apps/index.html so the two cannot drift apart. */
+.appsec{background:var(--paper2);border-top:1px solid var(--paper3);
+  border-bottom:1px solid var(--paper3)}
+.appgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+@media (max-width:1000px){.appgrid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:760px){.appgrid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:420px){.appgrid{grid-template-columns:1fr}}
+.tile{display:flex;flex-direction:column;gap:6px;padding:14px 14px 12px;
+  background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);
+  text-decoration:none;color:inherit;min-height:92px;
+  transition:border-color .12s ease, transform .12s ease}
+.tile:hover{border-color:var(--gold3);transform:translateY(-1px)}
+.tile b{font-size:.95rem;font-weight:650;color:var(--ink);line-height:1.25}
+.tile .st{font-size:.72rem;font-weight:600;letter-spacing:.01em;
+  color:var(--ink3);margin-top:auto}
+.tile .st.ok{color:var(--teal)}
+.tile .st.dev{color:var(--gold-dark)}
+.std{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.std span{font-size:.78rem;padding:5px 10px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--paper3);color:var(--ink2)}
+.appcta{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+/* ── v9: keep anchor targets out from under the sticky header ───────────
+   Every in-page anchor scrolled its own heading to y=0, directly beneath a
+   ~66px sticky header, so tapping "Interface" or "Where it is today" landed
+   on a section whose title was hidden. The link works and the destination is
+   invisible, which to a visitor is the same as a broken link.
+
+   scroll-padding-top on the scroll container is the one-line fix and needs no
+   per-section scroll-margin. 84px = header plus breathing room.
+
+   A fixed-delay test reports this as passing, because scroll-behavior is
+   smooth and the measurement lands mid-flight. It has to wait for scrollY to
+   settle. Mine did not, at first. */
+html{scroll-padding-top:84px}
 </style>
 </head>
 <body>
@@ -252,6 +343,8 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
         <span class="mk">M</span>
         <span>Jewel360<small>Clients · pieces · gold</small></span>
       </a>
+      <input class="navtog" type="checkbox" id="navtog" aria-hidden="true" tabindex="-1">
+      <label class="burger" for="navtog" aria-label="Menu" role="button" tabindex="0"><span></span></label>
       <div class="links">
         <a href="apps/">Apps</a>
         <a href="intelligence/">AI agents</a>
@@ -260,6 +353,7 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
         <a href="#interface">Interface</a>
         <a href="#screens">Engine</a>
         <a href="#status">Where it is today</a>
+        <a class="m-cta" href="#contact">Request a demo</a>
       </div>
       <div class="spacer"></div>
       <a class="btn btn-gold" href="#contact">Request a demo</a>
@@ -324,6 +418,57 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
           </p>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="appsec" id="apps">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The apps</div>
+      <h2>One system, not a stack of tools</h2>
+      <p class="muted">
+        Every app reads the same client book and the same approved gold rate.
+        Turn on what you need. Each one carries its real status — what is
+        built and tested, what is being built, and what is only planned.
+      </p>
+    </div>
+
+    <div class="appgrid">
+      <a class="tile" href="preview/#clients"><b>Client 360</b><span class="st ok">Built &amp; tested</span></a>
+      <a class="tile" href="preview/#fin"><b>Gold rate &amp; pricing</b><span class="st ok">Built &amp; tested</span></a>
+      <a class="tile" href="preview/#inv"><b>Pieces</b><span class="st ok">Built &amp; tested</span></a>
+      <a class="tile" href="preview/#pos"><b>Old gold</b><span class="st ok">Built &amp; tested</span></a>
+      <a class="tile" href="preview/#dash"><b>Owner cockpit</b><span class="st ok">Built &amp; tested</span></a>
+      <a class="tile" href="preview/#pos"><b>Counter</b><span class="st dev">In development</span></a>
+      <a class="tile" href="modules/sales-hub/"><b>Sales Hub</b><span class="st dev">In development</span></a>
+      <a class="tile" href="preview/#out"><b>Outreach</b><span class="st dev">In development</span></a>
+      <a class="tile" href="intelligence/"><b>Mumtaz Intelligence</b><span class="st dev">In development</span></a>
+      <a class="tile" href="preview/#ops"><b>Stores &amp; transfers</b><span class="st ">Planned</span></a>
+      <a class="tile" href="preview/#chan"><b>Channels</b><span class="st ">Planned</span></a>
+      <a class="tile" href="preview/#fin"><b>AML &amp; KYC</b><span class="st ">Planned</span></a>
+    </div>
+
+    <p class="muted" style="margin-top:26px">
+      <b style="color:var(--ink)">And ten standard Odoo apps</b>, configured
+      rather than written — which is why they work on day one:
+    </p>
+    <div class="std">
+        <span>Inventory</span>
+        <span>Accounting</span>
+        <span>Point of Sale</span>
+        <span>CRM &amp; Sales</span>
+        <span>Repairs</span>
+        <span>Workshop</span>
+        <span>Loyalty &amp; gift cards</span>
+        <span>E-invoicing &amp; Arabic</span>
+        <span>Barcode &amp; RFID</span>
+        <span>Employees</span>
+    </div>
+
+    <div class="appcta">
+      <a class="btn btn-gold" href="apps/">See all 23 apps</a>
+      <a class="btn btn-ghost" href="pricing/">What it costs</a>
     </div>
   </div>
 </section>

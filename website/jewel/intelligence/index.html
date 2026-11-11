@@ -200,6 +200,51 @@ td{padding:9px 15px;border-top:1px solid var(--paper3)}
 
 footer{border-top:1px solid var(--paper3);padding:22px 0 34px;font-size:.84rem;color:var(--ink3)}
 footer a{color:var(--em)}
+
+/* ── v7: mobile navigation ───────────────────────────────────────────────
+   This page hid .links below 1000px with nothing in their place, so on a
+   phone it had no navigation at all. CSS-only (a checkbox drives it) so it
+   works with scripts blocked. Appended last, and :checked ~ .links outranks
+   the earlier rules on specificity. */
+.navtog{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.burger{display:none}
+.nav{position:relative}
+@media (max-width:1000px){
+  .burger{display:inline-flex;align-items:center;justify-content:center;
+    width:42px;height:42px;margin-left:auto;cursor:pointer;flex:0 0 auto;
+    border:1px solid var(--paper3);border-radius:8px;
+    background:var(--surface);color:var(--ink)}
+  .burger span{position:relative;display:block;width:18px;height:2px;
+    background:currentColor;border-radius:2px}
+  .burger span::before,.burger span::after{content:"";position:absolute;left:0;
+    width:18px;height:2px;background:currentColor;border-radius:2px}
+  .burger span::before{top:-6px}
+  .burger span::after{top:6px}
+  .navtog:checked ~ .links{display:flex;flex-direction:column;align-items:stretch;
+    gap:0;position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;
+    background:var(--surface);border:1px solid var(--paper3);border-radius:10px;
+    box-shadow:0 10px 30px rgba(16,21,28,.12);padding:6px;margin:0}
+  .navtog:checked ~ .links a{padding:13px 14px;border-radius:8px;font-size:1rem;
+    min-height:44px;display:flex;align-items:center}
+  .navtog:checked ~ .links .m-cta{margin-top:4px;background:var(--gold,#3D56C4);
+    color:#fff;justify-content:center;font-weight:600}
+  .nav .sp,.nav .spacer{display:none}
+}
+@media (min-width:1001px){ .m-cta{display:none} }
+
+/* ── v9: keep anchor targets out from under the sticky header ───────────
+   Every in-page anchor scrolled its own heading to y=0, directly beneath a
+   ~66px sticky header, so tapping "Interface" or "Where it is today" landed
+   on a section whose title was hidden. The link works and the destination is
+   invisible, which to a visitor is the same as a broken link.
+
+   scroll-padding-top on the scroll container is the one-line fix and needs no
+   per-section scroll-margin. 84px = header plus breathing room.
+
+   A fixed-delay test reports this as passing, because scroll-behavior is
+   smooth and the measurement lands mid-flight. It has to wait for scrollY to
+   settle. Mine did not, at first. */
+html{scroll-padding-top:84px}
 </style>
 </head>
 <body>
@@ -215,6 +260,8 @@ footer a{color:var(--em)}
       <span class="mk">M</span>
       <span>Mumtaz Intelligence<small>AI workforce</small></span>
     </a>
+    <input class="navtog" type="checkbox" id="navtog" aria-hidden="true" tabindex="-1">
+    <label class="burger" for="navtog" aria-label="Menu" role="button" tabindex="0"><span></span></label>
     <div class="links">
       <a href="../apps/">Apps</a>
       <a href="#team">The agents</a>
@@ -224,6 +271,7 @@ footer a{color:var(--em)}
       <a href="../pricing/">Pricing</a>
       <a href="../signup/">Setup</a>
       <a href="#status">Where it is</a>
+      <a class="m-cta" href="../preview/">See the interface</a>
     </div>
     <div class="sp"></div>
     <a class="btn btn-ghost" href="../preview/">See the interface</a>
