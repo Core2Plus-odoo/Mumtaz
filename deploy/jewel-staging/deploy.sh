@@ -220,6 +220,30 @@ chown "$ODOO_UID" "$HERE/odoo.rendered.conf"
 chmod 400 "$HERE/odoo.rendered.conf"
 ok "odoo.rendered.conf readable only by the container's user (uid $ODOO_UID)"
 
+# The addons are bind-mounted read-only, but read-only is not the same as
+# readable: a directory created under a restrictive umask (a root shell with
+# umask 077, as happened on the VPS) is mode 700, and Odoo -- uid $ODOO_UID in
+# the container -- silently skips any module it cannot read. The only trace is
+# a WARNING "invalid module names, ignored: ..." buried in Odoo's own log, and
+# the seed step then "succeeds" having seeded nothing. So check, as that uid,
+# that every module we are about to name can actually be read, and refuse
+# loudly if not.
+unreadable=""
+for mod in $(printf '%s' "$MODULES,$SEED_MODULE" | tr ',' ' '); do
+  if ! compose run --rm --no-deps --user "$ODOO_UID" --entrypoint sh odoo \
+        -c "test -r /mnt/extra-addons/$mod/__manifest__.py" >/dev/null 2>&1; then
+    unreadable="$unreadable $mod"
+  fi
+done
+if [ -n "$unreadable" ]; then
+  red "These modules are NOT readable by uid $ODOO_UID inside the container:$unreadable"
+  red "Odoo would skip them silently. Fix the permissions on the host, e.g.:"
+  red "  chmod -R a+rX $(cd "$HERE/../.." && pwd)/addons"
+  red "and check your shell's umask (a root shell with umask 077 creates 700 dirs)."
+  exit 1
+fi
+ok "all $(printf '%s\n' "$MODULES,$SEED_MODULE" | tr ',' '\n' | wc -l | tr -d ' ') modules readable by uid $ODOO_UID"
+
 # -- 3. bring the stack up --------------------------------------------------
 if [ "$DO_INSTALL" = "1" ]; then
   info "First run: installing $MODULES into a fresh database '$DEMO_DB'"
