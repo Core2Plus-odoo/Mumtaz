@@ -241,6 +241,57 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
   th,td{padding:11px 13px}
   .card{padding:19px}
 }
+
+/* ── v7: mobile navigation ───────────────────────────────────────────────
+   Every page in this site hid .links below 1000px and put nothing in their
+   place, so on a phone there was NO navigation at all: /apps/, /pricing/ and
+   /intelligence/ were unreachable from the homepage. The owner reported the
+   site "still showing the old page" and was half right — the page had
+   changed, but the only part that changed visibly on mobile was hidden.
+
+   CSS-only on purpose. A checkbox drives it, so it works with scripts
+   blocked and needs no JS to be correct. Later in the file than the rules it
+   overrides, and :checked ~ .links outranks them on specificity anyway. */
+.navtog{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.burger{display:none}
+.nav{position:relative}
+@media (max-width:1000px){
+  .burger{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:42px;height:42px;margin-left:auto;cursor:pointer;
+    border:1px solid var(--paper3);border-radius:var(--r);
+    background:var(--surface);color:var(--ink);flex:0 0 auto;
+  }
+  .burger span{position:relative;display:block;width:18px;height:2px;
+    background:currentColor;border-radius:2px}
+  .burger span::before,.burger span::after{
+    content:"";position:absolute;left:0;width:18px;height:2px;
+    background:currentColor;border-radius:2px}
+  .burger span::before{top:-6px}
+  .burger span::after{top:6px}
+  /* the panel */
+  .navtog:checked ~ .links{
+    display:flex;flex-direction:column;align-items:stretch;gap:0;
+    position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;
+    background:var(--surface);border:1px solid var(--paper3);
+    border-radius:var(--r);box-shadow:0 10px 30px rgba(16,21,28,.12);
+    padding:6px;margin:0;
+  }
+  .navtog:checked ~ .links a{
+    padding:13px 14px;border-radius:8px;font-size:1rem;
+    /* 44px minimum target: a nav you cannot hit is a nav you do not have. */
+    min-height:44px;display:flex;align-items:center;
+  }
+  .navtog:checked ~ .links a:hover{background:var(--gold-bg)}
+  .navtog:checked ~ .links .m-cta{
+    margin-top:4px;background:var(--gold);color:#fff;justify-content:center;
+    font-weight:600;
+  }
+  .nav .spacer{display:none}
+  /* The desktop demo button would crowd the burger; the panel carries it. */
+  .nav > .btn-gold{display:none}
+}
+@media (min-width:1001px){ .m-cta{display:none} }
 </style>
 </head>
 <body>
@@ -252,6 +303,8 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
         <span class="mk">M</span>
         <span>Jewel360<small>Clients · pieces · gold</small></span>
       </a>
+      <input class="navtog" type="checkbox" id="navtog" aria-hidden="true" tabindex="-1">
+      <label class="burger" for="navtog" aria-label="Menu" role="button" tabindex="0"><span></span></label>
       <div class="links">
         <a href="apps/">Apps</a>
         <a href="intelligence/">AI agents</a>
@@ -259,6 +312,7 @@ footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);
         <a href="#interface">Interface</a>
         <a href="#screens">Engine</a>
         <a href="#status">Where it is today</a>
+        <a class="m-cta" href="#contact">Request a demo</a>
       </div>
       <div class="spacer"></div>
       <a class="btn btn-gold" href="#contact">Request a demo</a>
