@@ -1,152 +1,186 @@
 #!/usr/bin/env bash
 #
-# Install the Jewel cache policy into nginx, safely.
+# Make nginx actually send the Jawhar response headers.
 #
-# Editing a live web server's config by hand is how sites go down, so this
-# script refuses to leave a broken config behind:
+# This script exists because of a trap that `nginx -t` cannot catch, and that
+# three earlier attempts at this walked straight into.
 #
-#   * it backs up the server block before touching it
-#   * it runs `nginx -t` BEFORE reloading
-#   * if the test fails it restores the backup, re-tests, and exits non-zero
-#   * it is idempotent: run it twice and the second run changes nothing
+# nginx does NOT merge `add_header` across configuration levels. A level
+# inherits the parent's add_header directives ONLY IF it defines none of its
+# own. So a single `add_header` inside a `location` silently discards every
+# `add_header` from the enclosing `server` block, for every request that
+# location handles. The configuration stays valid, the reload succeeds, and
+# the headers are simply absent.
 #
-# It never runs `systemctl reload` unless `nginx -t` passed.
+# On jewel.mumtaz.digital that was dropping four headers from every HTML page
+# -- a Cache-Control, and three security headers that had never once been
+# sent:
+#
+#     X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+#
+# because `location = /` and `location /` each carried one
+# `add_header X-Robots-Tag`.
+#
+# The fix is to give each level its own copy: the server-level headers go
+# into a snippet, and the snippet is included in the locations that need it.
+#
+# Safety: backs up outside nginx's include path, runs `nginx -t` BEFORE
+# reloading, restores and re-tests if the test fails, and finishes by
+# FETCHING THE SITE to confirm each header is really being sent. A reload
+# that succeeds while the headers stay missing is a failure and is reported
+# as one -- that is how the original bug was caught.
 #
 # Usage (as root, on the VPS):
-#   deploy/jewel-staging/apply_cache_headers.sh                # find the site automatically
-#   SITE_CONF=/etc/nginx/sites-enabled/jewel apply_cache_headers.sh
-#   DRY_RUN=1 deploy/jewel-staging/apply_cache_headers.sh      # show the change, apply nothing
+#   deploy/jewel-staging/apply_cache_headers.sh
+#   DRY_RUN=1 deploy/jewel-staging/apply_cache_headers.sh    # show the plan
+#   SITE_CONF=/etc/nginx/sites-enabled/x.conf  ...           # skip discovery
 set -uo pipefail
 
 SERVER_NAME="${SERVER_NAME:-jewel.mumtaz.digital}"
 SITE_CONF="${SITE_CONF:-}"
 MAP_DEST="${MAP_DEST:-/etc/nginx/conf.d/jewel-cache-map.conf}"
+SNIPPET_DIR="${SNIPPET_DIR:-/etc/nginx/snippets}"
+SNIPPET_NAME="jewel-headers.conf"
+INCLUDE_PATH="snippets/$SNIPPET_NAME"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/jewel-nginx}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MAP_SRC="$HERE/nginx-cache-headers.conf"
-ADD_LINE='    add_header Cache-Control $jewel_cache always;'
-MARKER='$jewel_cache'
+FIXER="$HERE/nginx_header_fix.py"
 
 red()  { printf '\033[31m%s\033[0m\n' "$*"; }
 green(){ printf '\033[32m%s\033[0m\n' "$*"; }
 info() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 
-[ "$(id -u)" = "0" ] || { red "Run this as root: it edits /etc/nginx."; exit 2; }
-command -v nginx >/dev/null 2>&1 || { red "nginx not found."; exit 2; }
-[ -f "$MAP_SRC" ] || { red "Missing $MAP_SRC (is the repo checked out?)"; exit 2; }
+[ "$(id -u)" = "0" ] || { red "Run as root: this edits /etc/nginx."; exit 2; }
+command -v nginx   >/dev/null || { red "nginx not found.";   exit 2; }
+command -v python3 >/dev/null || { red "python3 not found."; exit 2; }
+[ -f "$FIXER" ]   || { red "Missing $FIXER";   exit 2; }
 
-# -- find the server block ---------------------------------------------------
+# -- 1. which file does nginx actually serve this host from? -----------------
+# `nginx -T` first: it dumps the loaded configuration with includes resolved
+# and names each directive's source file. A filename search can find a config
+# nginx never loaded -- this host has two candidates and only one is enabled.
+# The filesystem fallback uses -R, not -r: -r does NOT follow symlinks, and a
+# Debian nginx fills sites-enabled with symlinks.
 if [ -z "$SITE_CONF" ]; then
-  SITE_CONF="$(grep -rlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
-      /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | head -1)"
+  SITE_CONF="$(nginx -T 2>/dev/null | awk -v n="$SERVER_NAME" '
+      /^# configuration file / { f = $4; sub(/:$/, "", f) }
+      $0 ~ /server_name/ && index($0, n) { print f; exit }')"
+  [ -n "$SITE_CONF" ] && info "Found via nginx -T (the loaded configuration)"
 fi
-if [ -z "$SITE_CONF" ] || [ ! -f "$SITE_CONF" ]; then
+if [ -z "$SITE_CONF" ]; then
+  for dir in /etc/nginx/sites-enabled /etc/nginx/conf.d /etc/nginx; do
+    SITE_CONF="$(grep -RlE "server_name[[:space:]]+[^;]*${SERVER_NAME//./\\.}" \
+        "$dir" 2>/dev/null | grep -v '\.bak\.' | head -1)"
+    [ -n "$SITE_CONF" ] && { info "Found by searching $dir"; break; }
+  done
+fi
+[ -n "$SITE_CONF" ] && [ -f "$SITE_CONF" ] || {
   red "Could not find the server block for $SERVER_NAME."
-  red "Pass it explicitly:  SITE_CONF=/etc/nginx/sites-enabled/<file> $0"
-  exit 2
-fi
+  red "Find the file nginx loaded with:"
+  red "  nginx -T 2>/dev/null | grep -B40 'server_name.*$SERVER_NAME' | grep 'configuration file'"
+  exit 2; }
+
+nginx -T 2>/dev/null | grep -q "^# configuration file $SITE_CONF:" || {
+  red "nginx has not loaded $SITE_CONF -- editing it would change nothing."
+  red "Check which site is enabled:  ls -l /etc/nginx/sites-enabled/"
+  exit 2; }
 info "Site config: $SITE_CONF"
 
-# -- 1. the map (http context, no locations, cannot collide) -----------------
+# -- 2. the plan -------------------------------------------------------------
+if ! PLAN="$(python3 "$FIXER" "$SITE_CONF" "$INCLUDE_PATH" --check 2>&1)"; then
+  red "Could not read the configuration:"; printf '%s\n' "$PLAN"; exit 1
+fi
+printf '%s\n' "$PLAN"
+TARGETS="$(printf '%s' "$PLAN" | sed -n 's/.*TARGETS=\([0-9]*\).*/\1/p')"
+
 if [ "${DRY_RUN:-0}" = "1" ]; then
-  info "DRY_RUN: would install $MAP_SRC -> $MAP_DEST"
-else
-  install -m 0644 "$MAP_SRC" "$MAP_DEST"
-  green "Installed $MAP_DEST"
+  info "DRY_RUN=1: nothing applied."
+  exit 0
 fi
 
-# -- 2. one add_header line in the server block ------------------------------
-if grep -qF "$MARKER" "$SITE_CONF"; then
-  green "add_header already present in $SITE_CONF — nothing to change."
-  ALREADY=1
-else
-  ALREADY=0
-  if [ "${DRY_RUN:-0}" = "1" ]; then
-    info "DRY_RUN: would insert after the server_name line:"
-    printf '%s\n' "$ADD_LINE"
-  else
-    BACKUP="$SITE_CONF.bak.$(date +%Y%m%d%H%M%S)"
-    cp -p "$SITE_CONF" "$BACKUP"
-    info "Backed up to $BACKUP"
-    # Insert after server_name, but ONLY in the block that actually serves
-    # the site. A naive "first server_name wins" lands in the port-80
-    # redirect block, where the header is never sent on a real page — tested,
-    # and that is exactly what the first version of this script did.
-    #
-    # So buffer each server block, then require: it names this host, it is
-    # not a pure redirect, and it either listens on 443 or has a root.
-    awk -v name="$SERVER_NAME" -v line="$ADD_LINE" '
-      function flush_block(   i, ok, out) {
-        ok = (has_name && !is_redirect && (has_443 || has_root) && !done)
-        for (i = 1; i <= n; i++) {
-          print buf[i]
-          if (ok && buf[i] ~ /server_name/ && index(buf[i], name)) {
-            print line
-            done = 1
-          }
-        }
-        n = 0; has_name = 0; has_443 = 0; has_root = 0; is_redirect = 0
-      }
-      /^[[:space:]]*server[[:space:]]*\{/ && depth == 0 { in_block = 1 }
-      {
-        if (in_block) {
-          buf[++n] = $0
-          if ($0 ~ /server_name/ && index($0, name)) has_name = 1
-          if ($0 ~ /listen[^;]*443/)                 has_443  = 1
-          if ($0 ~ /^[[:space:]]*root[[:space:]]/)   has_root = 1
-          if ($0 ~ /return[[:space:]]+30[12]/)       is_redirect = 1
-        } else {
-          print
-        }
-        depth += gsub(/\{/, "{")
-        depth -= gsub(/\}/, "}")
-        if (in_block && depth == 0) { flush_block(); in_block = 0 }
-      }
-      END { if (n) flush_block() }
-    ' "$BACKUP" > "$SITE_CONF"
-    if ! grep -qF "$MARKER" "$SITE_CONF"; then
-      red "Could not place the add_header line; restoring and leaving config untouched."
-      cp -p "$BACKUP" "$SITE_CONF"
-      exit 1
-    fi
-    green "Inserted the add_header line."
-  fi
+# -- 3. remove the global map, if an earlier run installed one ---------------
+# /etc/nginx/conf.d is the http context and is SHARED WITH EVERY SITE ON THIS
+# HOST, including the live C2P console. The map is no longer needed -- the
+# headers carry literal values into the HTML locations -- so an earlier copy
+# is taken away rather than left lying in global scope.
+if [ -f "$MAP_DEST" ]; then
+  rm -f "$MAP_DEST"
+  green "Removed $MAP_DEST (no longer needed; it was in global scope)"
 fi
 
-[ "${DRY_RUN:-0}" = "1" ] && { info "DRY_RUN: nothing applied."; exit 0; }
+# -- 4. edit, with a backup nginx will not load ------------------------------
+mkdir -p "$BACKUP_DIR" "$SNIPPET_DIR"
+BACKUP="$BACKUP_DIR/$(basename "$SITE_CONF").bak.$(date +%Y%m%d%H%M%S)"
+cp -pL "$SITE_CONF" "$BACKUP"
+info "Backed up to $BACKUP"
 
-# -- 3. test, and roll back if the test fails --------------------------------
+SNIPPET_TMP="$(mktemp)"
+CONF_TMP="$(mktemp)"
+trap 'rm -f "$SNIPPET_TMP" "$CONF_TMP"' EXIT
+
+if [ "${TARGETS:-0}" = "0" ]; then
+  info "Every location already includes the snippet; refreshing it only."
+  python3 "$FIXER" "$SITE_CONF" "$INCLUDE_PATH" > "$CONF_TMP" 2>"$SNIPPET_TMP"
+else
+  python3 "$FIXER" "$SITE_CONF" "$INCLUDE_PATH" > "$CONF_TMP" 2>"$SNIPPET_TMP" || {
+    red "The rewrite failed; nothing was changed."; exit 1; }
+fi
+[ -s "$CONF_TMP" ]    || { red "Rewrite produced an empty file; aborting."; exit 1; }
+[ -s "$SNIPPET_TMP" ] || { red "No headers to put in the snippet; aborting."; exit 1; }
+
+{ echo "# Written by deploy/jewel-staging/apply_cache_headers.sh."
+  echo "# nginx does not merge add_header across levels: a location with any"
+  echo "# add_header of its own discards every one from the server block. So"
+  echo "# these are included INTO the locations that need them."
+  cat "$SNIPPET_TMP"
+} > "$SNIPPET_DIR/$SNIPPET_NAME"
+chmod 0644 "$SNIPPET_DIR/$SNIPPET_NAME"
+green "Wrote $SNIPPET_DIR/$SNIPPET_NAME"
+sed 's/^/    /' "$SNIPPET_TMP"
+
+# cat, not mv: $SITE_CONF may be a symlink into sites-available and the
+# target is what nginx reads. This writes through the link.
+cat "$CONF_TMP" > "$SITE_CONF"
+green "Updated $SITE_CONF"
+
+# -- 5. test, and roll back if the test fails --------------------------------
 info "Testing the configuration"
 if nginx -t 2>&1; then
   green "nginx -t passed."
 else
   red "nginx -t FAILED. Rolling back."
-  rm -f "$MAP_DEST"
-  [ "${ALREADY:-0}" = "0" ] && [ -n "${BACKUP:-}" ] && cp -p "$BACKUP" "$SITE_CONF"
+  cat "$BACKUP" > "$SITE_CONF"
+  rm -f "$SNIPPET_DIR/$SNIPPET_NAME"
   if nginx -t >/dev/null 2>&1; then
     red "Rolled back; the previous configuration is valid and still live."
   else
     red "ROLLBACK DID NOT RESTORE A VALID CONFIG. Do not reload."
-    red "Restore by hand from: ${BACKUP:-<no backup taken>}"
+    red "Restore by hand from: $BACKUP"
   fi
   exit 1
 fi
 
 info "Reloading nginx"
-if systemctl reload nginx; then
-  green "Reloaded."
-else
-  red "Reload failed; the old configuration is still serving."
-  exit 1
-fi
+systemctl reload nginx || { red "Reload failed; the old config is still serving."; exit 1; }
+green "Reloaded."
 
-# -- 4. prove it --------------------------------------------------------------
+# -- 6. prove it, header by header -------------------------------------------
+# The whole point. A reload that succeeds while the headers stay missing is
+# exactly the bug this script was written to fix, so it is checked, not
+# assumed.
 sleep 1
-cc="$(curl -sSI --max-time 20 "https://$SERVER_NAME/" 2>/dev/null \
-      | grep -i '^cache-control:' | tr -d '\r')"
-if [ -n "$cc" ]; then
-  green "Verified: $cc"
-else
-  red "No Cache-Control came back. The reload succeeded but the header is not"
-  red "being sent — check that the add_header landed inside the right server block."
+HDRS="$(curl -sSI --max-time 20 "https://$SERVER_NAME/" 2>/dev/null)"
+missing=0
+for h in Cache-Control X-Content-Type-Options X-Frame-Options Referrer-Policy; do
+  v="$(printf '%s' "$HDRS" | grep -i "^$h:" | tr -d '\r')"
+  if [ -n "$v" ]; then green "  $v"
+  else red "  $h MISSING"; missing=$((missing + 1)); fi
+done
+if [ "$missing" -gt 0 ]; then
+  red "$missing header(s) are still not being sent."
+  red "The configuration is valid and the site is serving; nothing is broken,"
+  red "but the headers did not take. Backup: $BACKUP"
   exit 1
 fi
+green "Every header is being sent."
