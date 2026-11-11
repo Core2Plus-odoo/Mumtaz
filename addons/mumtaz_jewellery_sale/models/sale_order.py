@@ -116,7 +116,11 @@ class SaleOrderLine(models.Model):
         pct = self.jewellery_making_discount_pct or 0.0
         if pct <= 0:
             return
-        if self.env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
+        # A permission check on a person. System code (install hooks, scheduled
+        # actions) is not a person and holds no group; an agent is never run
+        # as superuser (it runs as the invoking user), so this exempts nothing
+        # that matters. The price itself stays the engine's either way.
+        if self.env.su or self.env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
             return
         param = self.env['ir.config_parameter'].sudo().get_param(
             'mumtaz_jewellery.staff_discount_limit_pct')

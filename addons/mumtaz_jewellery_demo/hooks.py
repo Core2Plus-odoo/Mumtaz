@@ -274,7 +274,10 @@ def _seed_sales(env, clients, lots):
                 'jewellery_making_discount_pct': discount,
             })],
         })
-        order.order_line[0].action_price_from_rate()
+        # Priced as the presenter -- a jewellery manager -- because the demo's
+        # 15% dealer discount is above the staff ceiling, as it would be in a shop.
+        pricer = order.order_line[0].with_user(presenter) if presenter else order.order_line[0]
+        pricer.action_price_from_rate()
         return order
 
     out = {}
