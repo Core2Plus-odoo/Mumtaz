@@ -325,3 +325,16 @@ tr.refused td{background:var(--coral-bg)}
 .kyc .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .kyc select,.kyc input{padding:5px 8px;border:1px solid var(--paper3);border-radius:8px;background:var(--surface)}
 .tag.warn{background:var(--amber-bg);color:#9A5B08}
+
+/* stores */
+.dcard.store{border-inline-start-color:var(--amber)}
+.storegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.storecard{border:1px solid var(--paper3);border-radius:10px;padding:12px 14px;background:var(--surface)}
+.storecard.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-bg)}
+.storecard h4{margin:0 0 6px}
+.bar{height:6px;background:var(--paper3);border-radius:3px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--teal)}
+.bar i.over{background:var(--coral)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips span{font-family:ui-monospace,monospace;font-size:.75rem;padding:2px 6px;border-radius:6px;background:var(--paper2)}
+.chips span.miss{background:var(--coral-bg);color:var(--coral)}

@@ -226,7 +226,11 @@ def _rate_dict(rate):
 def _piece_location(lot):
     quant = lot.quant_ids.filtered(
         lambda q: q.quantity > 0 and q.location_id.usage == 'internal')[:1]
-    return _m2o(quant.location_id) if quant else None
+    if not quant:
+        return None
+    data = _m2o(quant.location_id)
+    data['store'] = _m2o(quant.location_id.warehouse_id)
+    return data
 
 
 def _piece_dict(lot):
@@ -584,9 +588,13 @@ class JawharApi(Controller):
     # ---- pieces ---------------------------------------------------------
     @_r('/pieces')
     @endpoint()
-    def pieces(self, q=None, karat=None, on_hand=None, category=None, sort=None, limit=50, offset=0, **kw):
+    def pieces(self, q=None, karat=None, on_hand=None, category=None, sort=None, limit=50, offset=0, store_id=None, **kw):
         Lot = request.env['stock.lot']
         domain = [('product_id.is_jewellery', '=', True)]
+        if store_id:
+            wh = request.env['stock.warehouse'].browse(int(store_id)).exists()
+            if wh:
+                domain += [('quant_ids.location_id', 'child_of', wh.view_location_id.id), ('quant_ids.quantity', '>', 0)]
         if q:
             domain += ['|', '|', '|', ('name', 'ilike', q), ('rfid_tag', 'ilike', q),
                        ('product_id.name', 'ilike', q), ('certificate_ref', 'ilike', q)]

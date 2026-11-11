@@ -62,6 +62,24 @@ export type Brief = {
   sentences: string[]; figures: Record<string, unknown> & { rate: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string } | null; as_of: string };
   queue: QueueItem[]; sources: string[]; narrated_by: string; run_id: number; as_of: string; level: string;
 } & Partial<Refusal>;
+export type StoreSummary = {
+  id: number; name: string; code: string; pieces: number; fine_g: number; value: number | null; currency: string;
+  limit_fine_g: number | null; over_limit: boolean;
+  in_transit_out: { transfers: number; pieces: number; fine_g: number }; in_transit_in: { transfers: number; pieces: number; fine_g: number };
+  today: { id: number; name: string; state: string; variance_fine_g: number; missing_count: number } | null;
+};
+export type Transfer = {
+  id: number; name: string; state: 'draft' | 'in_transit' | 'received' | 'lost'; overdue: boolean; note: string | null;
+  from: { id: number; name: string }; to: { id: number; name: string };
+  pieces: { id: number; serial: string; design: string; karat: string; net_weight_g: number; fine_g: number }[];
+  piece_count: number; fine_g: number; dispatched_by: Ref; dispatched_at: string | null; received_by: Ref; received_at: string | null; lost_note: string | null;
+};
+export type Reconciliation = {
+  id: number; name: string; state: 'open' | 'closed'; date: string; store: { id: number; name: string };
+  expected_count: number; expected_fine_g: number; counted_count: number; counted_fine_g: number; variance_fine_g: number; missing_count: number;
+  extra_serials: string[]; note: string | null; opened_by: string | null; closed_by: string | null; closed_at: string | null;
+  lines?: { id: number; serial: string; design: string; karat: string; fine_g: number; found: boolean }[]; missing?: string[];
+};
 export type Kyc = {
   status: 'none' | 'verified' | 'expired' | 'refused'; id_type: string | null; id_last4: string | null; id_expiry: string | null; expired: boolean;
   verified_by: Ref; verified_at: string | null; note: string | null;
@@ -368,6 +386,19 @@ export const api = {
     call<({ prepared: OutreachDraft[]; count: number; skipped: { occasion_id: number; why: string }[]; run: AiRun } & Partial<Refusal>)>('/outreach/prepare', { method: 'POST', body: JSON.stringify(p) }),
   outreachDrafts: (state = 'approved') => call<{ items: OutreachDraft[]; count: number }>(`/outreach/drafts${q({ state })}`),
   outreachDraft: (id: number) => call<OutreachDraftDetail>(`/outreach/drafts/${id}`),
+  // stores, transfers and the daily gold reconciliation
+  stores: () => call<{ items: StoreSummary[]; my_store: Ref }>('/stores'),
+  storePieces: (id: number) => call<{ items: Piece[]; total: number }>(`/stores/${id}/pieces`),
+  transfers: (state = 'all') => call<{ items: Transfer[]; count: number }>(`/transfers${q({ state })}`),
+  createTransfer: (p: { from_id: number; to_id: number; serials: string[]; note?: string; dispatch?: boolean }) =>
+    call<Transfer>('/transfers', { method: 'POST', body: JSON.stringify(p) }),
+  transferAct: (id: number, action: 'dispatch' | 'receive' | 'lost', note?: string) =>
+    call<Transfer>(`/transfers/${id}/${action}`, { method: 'POST', body: JSON.stringify({ note }) }),
+  reconciliations: (p: { store_id?: number; state?: string } = {}) => call<{ items: Reconciliation[]; count: number }>(`/reconciliations${q(p)}`),
+  openReconciliation: (store_id: number) => call<Reconciliation>('/reconciliations', { method: 'POST', body: JSON.stringify({ store_id }) }),
+  reconciliation: (id: number) => call<Reconciliation>(`/reconciliations/${id}`),
+  reconciliationCount: (id: number, serials: string[]) => call<Reconciliation>(`/reconciliations/${id}/count`, { method: 'POST', body: JSON.stringify({ serials }) }),
+  reconciliationClose: (id: number, note?: string) => call<Reconciliation>(`/reconciliations/${id}/close`, { method: 'POST', body: JSON.stringify({ note }) }),
   // AML and KYC: the threshold finance confirms, identity and screening on the client, the event log
   amlConfig: () => call<AmlConfig>('/aml/config'),
   amlSetConfig: (p: { threshold: number; window_days?: number; note?: string }) => call<AmlConfig>('/aml/config', { method: 'POST', body: JSON.stringify(p) }),

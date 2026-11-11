@@ -545,6 +545,46 @@ def _seed_kyc(env):
     return done
 
 
+def _seed_stores(env):
+    """A second boutique with eight pieces received by transfer, one transfer
+    still on the road for three days (an exception), and today's
+    reconciliation at the first store with one piece not found. Nothing
+    twice."""
+    W = env['stock.warehouse']
+    if 'jewellery_store_limit_fine_g' not in W._fields:
+        return {}
+    first = W.search([('company_id', '=', env.company.id)], order='id', limit=1)
+    second = W.search([('code', '=', 'BTQ2')], limit=1)
+    if not second:
+        second = W.create({'name': 'Boutique 2 (Abu Dhabi)', 'code': 'BTQ2', 'company_id': env.company.id})
+        second.jewellery_store_limit_fine_g = 400.0
+    out = {}
+    Transfer = env['jewellery.transfer'].sudo()
+    presenter = env.ref('base.user_admin', raise_if_not_found=False)
+    Transfer = Transfer.with_user(presenter) if presenter else Transfer
+    if not Transfer.search_count([]):
+        shelf = env['jewellery.tray']._eligible_lots().filtered(lambda l: l.jewellery_store() == first).sorted('name')
+        if len(shelf) >= 12:
+            t1 = Transfer.create({'from_warehouse_id': first.id, 'to_warehouse_id': second.id,
+                                  'lot_ids': [(6, 0, shelf[:8].ids)], 'note': 'DEMO: opening stock for Boutique 2.'})
+            t1.action_dispatch()
+            t1.action_receive()
+            t2 = Transfer.create({'from_warehouse_id': first.id, 'to_warehouse_id': second.id,
+                                  'lot_ids': [(6, 0, shelf[8:10].ids)], 'note': 'DEMO: on the road.'})
+            t2.action_dispatch()
+            t2.sudo().write({'dispatched_at': fields.Datetime.now() - timedelta(days=3)})
+            out['received'] = t1.name
+            out['in_transit'] = t2.name
+    Recon = env['jewellery.gold.reconciliation'].sudo()
+    today = fields.Date.context_today(env['res.partner'])
+    if not Recon.search_count([('warehouse_id', '=', first.id), ('date', '=', today)]):
+        rec = Recon.open_for(first)
+        serials = rec.line_ids.mapped('lot_id.name')
+        rec.action_count(serials[1:])          # one piece not found: a variance to show
+        out['reconciliation'] = rec.name
+    return out
+
+
 def _seed_outreach(env, presenter):
     """Layla drafts the occasion messages due, for a person to review: the
     Outreach screen opens with work on it. One per occasion per year."""
@@ -590,6 +630,7 @@ def top_up(env):
     consent = _seed_consent(env)
     outreach = _seed_outreach(env, presenter)
     _seed_kyc(env)
+    _seed_stores(env)
     _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s, consent %s, outreach drafts %s',
                  len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-', consent, outreach)
     return {'products': len(products), 'pieces': len(lots), 'clients': len(clients), 'consent': consent, 'outreach': outreach}
@@ -641,6 +682,7 @@ def post_init_hook(env):
     consent = _seed_consent(env)
     outreach = _seed_outreach(env, presenter)
     kyc = _seed_kyc(env)
+    stores = _seed_stores(env)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -654,10 +696,10 @@ def post_init_hook(env):
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
         'sample piece total %.2f, %s owner cards, '
         'quotation %s, order %s, invoice %s (%.2f), trays %s, '
-        'AI drafts %s (refused: %s), kiosk requests %s, consent on %s clients, outreach drafts %s, identity verified on %s',
+        'AI drafts %s (refused: %s), kiosk requests %s, consent on %s clients, outreach drafts %s, identity verified on %s, stores %s',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
         len(clients), intake.name, intake.value, priced.get('total', 0.0),
         cards, docs.get('quotation', '-'), docs.get('order', '-'),
         docs.get('invoice', '-'), docs.get('invoice_total', 0.0),
         '/'.join(pipeline.values()) or '-',
-        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-', consent, outreach, kyc)
+        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-', consent, outreach, kyc, '/'.join(stores.values()) or '-')
