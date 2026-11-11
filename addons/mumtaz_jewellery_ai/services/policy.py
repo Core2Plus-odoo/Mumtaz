@@ -71,7 +71,7 @@ def client_hint(text):
     for sep in (' for ', ' to ', ' لـ', ' ل '):
         if sep in t:
             hint = t.split(sep, 1)[1]
-            hint = re.split(r'[,.?!]|\b(?:about|with|on|regarding)\b', hint, 1)[0]
+            hint = re.split(r'[,.?!]|\b(?:about|with|on|regarding)\b', hint, maxsplit=1)[0]
             return hint.strip(' "\'') or None
     return None
 
