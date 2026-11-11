@@ -93,6 +93,11 @@ class JewelleryTray(models.Model):
             return False
         return True
 
+    def _lot_public(self, lot):
+        """What the public shelf may show: available, and whatever other
+        modules add (publication, for one)."""
+        return self._lot_available(lot)
+
     @api.model
     def _eligible_lots(self):
         lots = self.env['stock.quant'].sudo().search([

@@ -22,6 +22,7 @@ const ICONS = {
   outreach: 'M4 6h16v12H4zM4 7l8 6 8-6M12 3v1',
   compliance: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4',
   stores: 'M3 9h18M4 9l1-4h14l1 4M5 9v11h14V9M10 20v-6h4v6',
+  channels: 'M4 12a8 8 0 0116 0M8 12a4 4 0 018 0M12 12v8M9 20h6',
 };
 
 function readCollapsed() { try { return localStorage.getItem('jawhar_nav') === 'collapsed'; } catch { return false; } }
@@ -61,6 +62,7 @@ export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rat
         {nav('/clients', 'clients', t('nav_clients'))}
         {nav('/pipeline', 'pipeline', t('nav_pipeline'))}
         {nav('/outreach', 'outreach', t('nav_outreach'))}
+        {nav('/channels', 'channels', t('nav_channels'))}
         {nav('/documents', 'docs', t('nav_documents'))}
         {nav('/invoices', 'invoices', t('nav_invoices'))}
         <div className="railsec navl">{t('nav_inventory')}</div>

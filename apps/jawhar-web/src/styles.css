@@ -338,3 +338,13 @@ tr.refused td{background:var(--coral-bg)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 .chips span{font-family:ui-monospace,monospace;font-size:.75rem;padding:2px 6px;border-radius:6px;background:var(--paper2)}
 .chips span.miss{background:var(--coral-bg);color:var(--coral)}
+
+/* channels */
+.shelfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.shelfcard{border:1px solid var(--paper3);border-radius:10px;padding:10px 12px;background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.shelfcard.off{opacity:.6}
+.switch{appearance:none;width:36px;height:20px;border-radius:10px;background:var(--paper3);position:relative;cursor:pointer}
+.switch:checked{background:var(--teal)}
+.switch::after{content:'';position:absolute;top:2px;inset-inline-start:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch:checked::after{transform:translateX(16px)}
+[dir=rtl] .switch:checked::after{transform:translateX(-16px)}

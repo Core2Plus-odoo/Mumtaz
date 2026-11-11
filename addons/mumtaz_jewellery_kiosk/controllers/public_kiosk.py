@@ -94,7 +94,7 @@ class PublicKiosk(Controller):
             else:
                 domain += ['|', ('name', 'ilike', q), ('product_id.name', 'ilike', q)]
         Tray = env['jewellery.tray']
-        lots = [l for l in env['stock.lot'].search(domain, order='name', limit=200) if Tray._lot_available(l)]
+        lots = [l for l in env['stock.lot'].search(domain, order='name', limit=200) if Tray._lot_public(l)]
         out = [p for p in (_piece(l) for l in lots) if p]
         try:
             cap = float(max_price) if max_price not in (None, '') else None
@@ -113,7 +113,7 @@ class PublicKiosk(Controller):
     def piece(self, serial, **kw):
         env = request.env(su=True)
         lot = env['stock.lot'].search([('name', '=', serial[:40]), ('product_id.is_jewellery', '=', True)], limit=1)
-        if not lot or not env['jewellery.tray']._lot_available(lot):
+        if not lot or not env['jewellery.tray']._lot_public(lot):
             return _fail(404, 'not_found', 'Not on the shelf.')
         data = _piece(lot, detail=True)
         return _json(data) if data else _fail(404, 'not_found', 'Not on the shelf.')
@@ -124,7 +124,7 @@ class PublicKiosk(Controller):
         the piece travels with it."""
         env = request.env(su=True)
         lot = env['stock.lot'].search([('name', '=', serial[:40]), ('product_id.is_jewellery', '=', True)], limit=1)
-        if not lot or not lot.product_id.image_1024 or not env['jewellery.tray']._lot_available(lot):
+        if not lot or not lot.product_id.image_1024 or not env['jewellery.tray']._lot_public(lot):
             return request.not_found()
         data = base64.b64decode(lot.product_id.image_1024)
         return request.make_response(data, headers=[('Content-Type', 'image/png' if data[:4] == b'\x89PNG' else 'image/jpeg'),
@@ -135,7 +135,7 @@ class PublicKiosk(Controller):
         """The design's cutout on a transparent background, for the try-on."""
         env = request.env(su=True)
         lot = env['stock.lot'].search([('name', '=', serial[:40]), ('product_id.is_jewellery', '=', True)], limit=1)
-        if not lot or not lot.product_id.jewellery_tryon_image or not env['jewellery.tray']._lot_available(lot):
+        if not lot or not lot.product_id.jewellery_tryon_image or not env['jewellery.tray']._lot_public(lot):
             return request.not_found()
         data = base64.b64decode(lot.product_id.jewellery_tryon_image)
         return request.make_response(data, headers=[('Content-Type', 'image/png'), ('Cache-Control', 'public, max-age=3600')])

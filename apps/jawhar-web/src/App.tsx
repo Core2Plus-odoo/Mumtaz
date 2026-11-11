@@ -19,6 +19,7 @@ import Pipeline from './pages/Pipeline';
 import Outreach from './pages/Outreach';
 import Compliance from './pages/Compliance';
 import Stores from './pages/Stores';
+import Channels from './pages/Channels';
 import TrayBuilder from './pages/TrayBuilder';
 import PublicTray from './pages/PublicTray';
 import Kiosk from './pages/Kiosk';
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="counter" element={<Counter />} />
             <Route path="pipeline" element={<Pipeline />} />
             <Route path="outreach" element={<Outreach />} />
+            <Route path="channels" element={<Channels />} />
             <Route path="trays/:id" element={<TrayBuilder />} />
             <Route path="documents/new" element={<NewQuote />} />
             <Route path="documents/:id" element={<OrderDetail />} />

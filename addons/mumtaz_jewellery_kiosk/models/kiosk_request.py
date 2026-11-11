@@ -79,7 +79,7 @@ class KioskRequest(models.Model):
         if len(client_name) < 2 or len(phone) < 7:
             raise UserError(_('A name and a phone number are needed so a colleague can call you back.'))
         lot = self.env['stock.lot'].sudo().search([('name', '=', (serial or '').strip()), ('product_id.is_jewellery', '=', True)], limit=1)
-        if not lot or not self.env['jewellery.tray'].sudo()._lot_available(lot):
+        if not lot or not self.env['jewellery.tray'].sudo()._lot_public(lot):
             raise UserError(_('That piece is not on the shelf any more. Ask about another.'))
         if kind == 'delivery' and (not address or len(address.strip()) < 8 or slot not in dict(SLOTS)):
             raise UserError(_('Delivery needs an address and a morning or afternoon slot.'))
