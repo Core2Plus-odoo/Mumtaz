@@ -16,11 +16,11 @@ Client layer for Mumtaz Jewellery.
     'author': 'Mumtaz Digital',
     'license': 'LGPL-3',
     'category': 'Industries',
-    'depends': ['mumtaz_jewellery', 'mail'],
+    'depends': ['mumtaz_jewellery', 'mail', 'stock'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
-        'data/cron.xml',
+        'data/stock_data.xml', 'data/cron.xml',
         'views/vip_views.xml',
     ],
     'installable': True,
