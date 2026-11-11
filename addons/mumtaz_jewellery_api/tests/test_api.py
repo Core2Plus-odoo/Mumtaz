@@ -167,6 +167,19 @@ class TestJawharApi(HttpCase):
         self.assertEqual(royal['ai_autonomy_cap'], 2)
         self.assertEqual(royal['relationship_manager']['id'], self.checker.id)
 
+    def test_search_finds_a_walk_in_who_has_not_bought_yet(self):
+        """Found at the counter: a standard-tier client with no purchase was
+        invisible to the client search, so a first sale could not be rung up."""
+        self.env['res.partner'].create({'name': 'TEST Walk-in Nobody'})
+        self.sign_in('api_staff')
+        names = [c['name'] for c in self.api('/clients')['data']['items']]
+        self.assertNotIn('TEST Walk-in Nobody', names)          # not yet a client of record
+        names = [c['name'] for c in self.api('/clients?q=Walk-in')['data']['items']]
+        self.assertIn('TEST Walk-in Nobody', names)             # but findable by name
+        # a system user's own contact is never offered as a client
+        names = [c['name'] for c in self.api('/clients?q=Counter%20Staff')['data']['items']]
+        self.assertNotIn('TEST Counter Staff', names)
+
     def test_audit_hidden_from_staff(self):
         self.sign_in('api_staff')
         with self.assertRaises(AccessError):
@@ -356,3 +369,100 @@ class TestJawharApiSale(HttpCase):
                                            'lines': [{'piece_id': 999999}]}, status=400)
         self.api('/sales/quotes', 'POST', {'client_id': self.client.id,
                                            'lines': [{'piece_id': self.lot_a.id, 'discount': 'x'}]}, status=400)
+
+
+@tagged('post_install', '-at_install')
+class TestJawharApiCounter(TestJawharApiSale):
+    """The counter through the door: look the piece up, check readiness,
+    take old gold, commit in one call -- or nothing at all."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        env = cls.env
+        env['ir.config_parameter'].sudo().set_param('mumtaz_jewellery.staff_discount_limit_pct', '10')
+        env['ir.config_parameter'].sudo().set_param('mumtaz_jewellery.exchange_approval_threshold', '0')
+        cls.lot_a.rfid_tag = 'TEST-RFID-COUNTER-A'
+        cls.journal = env['account.journal'].search(
+            [('type', 'in', ('cash', 'bank')), ('company_id', '=', env.company.id)], limit=1)
+        cls.lot_c = env['stock.lot'].create({
+            'name': 'TEST-API-SALE-4', 'product_id': cls.product.id,
+            'gross_weight_g': 24.5, 'stone_weight_g': 0.0})
+        stock = env['stock.warehouse'].search([('company_id', '=', env.company.id)], limit=1).lot_stock_id
+        env['stock.quant'].with_context(inventory_mode=True).create({
+            'product_id': cls.product.id, 'lot_id': cls.lot_c.id,
+            'location_id': stock.id, 'inventory_quantity': 1.0}).action_apply_inventory()
+
+    def test_lookup_by_rfid_then_serial_with_availability(self):
+        self.sign_in('api_cashier')
+        out = self.api('/counter/piece?q=TEST-RFID-COUNTER-A')['data']
+        self.assertEqual(out['serial'], 'TEST-API-SALE-1')
+        self.assertEqual(out['availability']['status'], 'on_shelf')
+        self.assertIsNotNone(out['breakdown'])
+        out = self.api('/counter/piece?q=TEST-API-SALE-3')['data']          # never put in stock
+        self.assertEqual(out['availability']['status'], 'not_in_stock')
+        self.api('/counter/piece?q=NOPE-0000', status=404)
+
+    def test_readiness_names_what_would_stop_the_sale(self):
+        self.sign_in('api_seller')                                           # not a manager
+        out = self.api('/counter/readiness?piece_id=%d&client_id=%d&discount=15'
+                       % (self.lot_a.id, self.client.id))['data']
+        checks = {c['key']: c for c in out['checks']}
+        self.assertTrue(checks['rate']['ok'])
+        self.assertTrue(checks['piece']['ok'])
+        self.assertTrue(checks['client']['ok'])
+        self.assertFalse(checks['discount']['ok'])
+        self.assertEqual(checks['discount']['detail']['limit'], 10.0)
+        self.assertFalse(out['ready'])
+        out = self.api('/counter/readiness?piece_id=%d&client_id=%d&discount=10'
+                       % (self.lot_a.id, self.client.id))['data']
+        self.assertTrue(out['ready'])
+
+    def test_commit_with_old_gold_in_one_call(self):
+        self.sign_in('api_cashier')
+        intake = self.api('/old-gold', 'POST', {'client_id': self.client.id, 'gross_weight_g': 18.4,
+                                                'karat': '21', 'melt_loss_pct': 2}, status=201)['data']
+        self.assertEqual(intake['state'], 'confirmed')
+        self.assertGreater(intake['value'], 0)
+        unused = self.api('/old-gold?client_id=%d&unused=1' % self.client.id)['data']['items']
+        self.assertIn(intake['id'], [x['id'] for x in unused])
+
+        out = self.api('/counter/commit', 'POST', {
+            'client_id': self.client.id, 'piece_id': self.lot_c.id, 'discount': 5,
+            'journal_id': self.journal.id, 'old_gold_id': intake['id']}, status=201)['data']
+        self.assertEqual(out['order']['state'], 'sale')
+        self.assertEqual(out['order']['old_gold']['id'], intake['id'])
+        self.assertEqual(out['invoice']['state'], 'posted')
+        self.assertIn(out['invoice']['payment_state'], ('paid', 'in_payment'))
+        self.assertEqual(len(out['payments']), 1)
+        self.assertTrue(out['deliveries'] and all(d['state'] == 'done' for d in out['deliveries']))
+        self.assertAlmostEqual(out['payments'][0]['amount'], out['invoice']['amount_total'], 2)
+        credit = [l for l in out['invoice']['lines'] if l['price_unit'] < 0]
+        self.assertEqual(len(credit), 1)
+        self.assertAlmostEqual(credit[0]['price_unit'], -intake['value'], 2)
+
+        piece = self.api('/counter/piece?q=%s' % self.lot_c.name)['data']
+        self.assertEqual(piece['availability']['status'], 'sold')
+        self.assertEqual(piece['on_hand'], 0)
+        # the intake cannot be credited twice
+        self.api('/counter/commit', 'POST', {
+            'client_id': self.client.id, 'piece_id': self.lot_b.id,
+            'journal_id': self.journal.id, 'old_gold_id': intake['id']}, status=400)
+
+    def test_refused_commit_creates_nothing(self):
+        self.sign_in('api_cashier')
+        quotes_before = self.api('/sales/quotes')['data']['total']
+        invoices_before = self.api('/sales/invoices')['data']['total']
+        out = self.api('/counter/commit', 'POST', {
+            'client_id': self.client.id, 'piece_id': self.lot_off_shelf.id,
+            'journal_id': self.journal.id}, status=400)
+        self.assertIn('not in stock', out['error']['message'])
+        self.assertEqual(self.api('/sales/quotes')['data']['total'], quotes_before)
+        self.assertEqual(self.api('/sales/invoices')['data']['total'], invoices_before)
+
+    def test_staff_discount_above_limit_is_refused_at_commit(self):
+        self.sign_in('api_seller')
+        out = self.api('/counter/commit', 'POST', {
+            'client_id': self.client.id, 'piece_id': self.lot_a.id, 'discount': 20,
+            'journal_id': self.journal.id}, status=400)
+        self.assertIn('manager', out['error']['message'].lower())
