@@ -35,7 +35,10 @@ owner.
 | Staff discount ceiling (owner-set) | No | **Built** | `mumtaz_jewellery.staff_discount_limit_pct` |
 | Offline counter | Partly (`point_of_sale`) | **Decision** | Online-only commitment per plan §11; revisit with a tested allocation model |
 | AML cash threshold at payment | No | **Decision** | Awaits the named finance manager's values (plan §17) |
-| CRM pipeline + outreach drafts | Partly (`crm`) | **Planned** | Phase 3, level C |
+| Pipeline with jewellery stages, odds from Odoo's scoring | Standard (`crm`) | **Built** | Slice 2; configured, not written |
+| Private Tray: eligible stock, ranked with reasons, by hand for restricted tiers | No | **Built** | 11 CRM tests + 2 API tests + walk |
+| Client tray link: expiring, revocable, no client data, like/ask/viewing | No | **Built** | A request is not a reservation |
+| Outreach drafts (level C) | No | **Planned** | Next slice |
 | Agents through the API door | No | **Planned** | Phase 5 |
 
 ## Pricing and the rate

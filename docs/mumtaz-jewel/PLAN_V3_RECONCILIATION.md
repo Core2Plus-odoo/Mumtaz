@@ -64,6 +64,19 @@ Found while building it, all fixed with tests: standard reservation hands over *
 
 Not built, on purpose: offline selling (online-only commitment, plan §11/§17) and the AML cash-threshold check (compliance values await the named finance manager, §17).
 
+## Slice 2 (Sales Hub) — built 11 Nov 2026, plan §7 module 2/3, wireframes 24–26
+
+| Plan element | Delivered |
+| --- | --- |
+| Pipeline (§7 module 3) | Standard `crm.lead` per client moment with jewellery stages Enquiry → Tray shared → Viewing booked → Reserved → Won; odds are Odoo's own scoring, never typed; the Pipeline screen shows stages, weighted forecast and the next action |
+| Private Tray (§7 module 2, wireframe 25) | 3–5 pieces from **eligible stock only** (on the shelf, not on another live order, not out on approval), ranked by the deterministic policy that stores its reasons per line (`nbo-1`); staff keep/remove/add by hand; **Private and Royal clients are never scored** — their trays are chosen by hand |
+| Client link (wireframe 26) | Tokenised, expiring (owner-set days), revocable; only the digest is stored; the page carries **no client data and no internal ids**; availability re-checked on every open and a piece that went elsewhere is dropped; like / not for me / ask; **a viewing request is not a reservation** — it opens an activity for staff and moves the stage |
+| Royal protocol | No link is ever made for a Royal client (test); a restricted client's tray is invisible to everyone the client record is invisible to (record rule + test) |
+| Reservation | Staff reserve → a draft quotation priced from the approved rate; the link dies; the sale's confirmation wins the opportunity |
+| Client 360 (wireframe 24) | Trays listed on the client; *Prepare a tray* starts one |
+
+Not built, on purpose: outbound messaging (the link is copied and sent by a person — Outreach is the next slice); the client app beyond the tray page (slice 6).
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

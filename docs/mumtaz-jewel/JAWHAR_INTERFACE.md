@@ -53,6 +53,12 @@ Counter (Slice 3): `GET /counter/piece?q=` (serial or RFID, with availability) �
 journal_id?, amount?, old_gold_id?} — one transaction · `POST /old-gold` (intake,
 valued and confirmed) · `POST /old-gold/<id>/approve` · `GET /old-gold?client_id=&unused=1`
 
+Sales Hub (Slice 2): `GET /pipeline` · `GET /trays` · `POST /trays` {client_id, intent?, budget?, build?, limit?} ·
+`GET /trays/<id>` · `POST /trays/<id>/build` · `POST /trays/<id>/pieces` {piece_id, remove?} ·
+`POST /trays/<id>/share` → the token once, plus the URL · `/revoke` · `/reserve` {piece_id} → a priced quote · `/close`.
+Public, no session, the token is the scope: `GET /jawhar/public/tray/<token>` ·
+`POST …/feedback` {ref, kind: like|dislike|question|clear, question?} · `POST …/viewing` {preferred, note}.
+
 Envelope: `{"ok": true, "data": …}` or `{"ok": false, "error": {"code", "message"}}`.
 Refusals come back as 400 (invalid / business rule), 403 (rights), 404
 (not found or not readable), 409 (wrong state).
@@ -82,6 +88,11 @@ Slice 3 adds the **Counter** (plan §27): scan/serial lookup with availability,
 the engine's breakdown, client context strip, old-gold intake and credit,
 live readiness checks, payment (full or deposit), a review dialog, and a
 printable receipt.
+
+Slice 2 adds **Pipeline**, the **Private Tray builder** (rank from stock or
+choose by hand, reasons per piece, share / revoke the link, reserve) and the
+**client's tray page** at `/app/t/<token>` — no sign-in, phone-sized,
+Arabic/English — with like, ask and request a viewing.
 
 ## Running it
 
