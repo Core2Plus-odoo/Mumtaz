@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewel360 Apps</title>
+<meta name="description" content="Every app in Jewel360, and every standard Odoo app underneath it. Install what you need; the gold rate and the client book are shared by all of them.">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  HONESTY RULES, please keep them:
+  * Every app carries a real status: Built & tested / Standard in Odoo /
+    In development / Planned. Nothing is dressed up as shipped.
+  * "Standard in Odoo" means exactly that: it is configuration, not something
+    we built. Saying so is the point of the page.
+  * No invented customers, logos or figures.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  --pri:#3D56C4; --pri2:#5570DF; --pri-bg:#EEF1FD; --pri-border:#C8D2F7; --pri-dark:#2B3E96;
+  --teal:#0E7490; --teal2:#0EA5BE; --teal-bg:#E7F6FA; --teal-border:#B3E2EE;
+  --amber:#B4791A; --amber-bg:#FDF3E2; --amber-border:#F0DCB4;
+  --rose:#B42318; --rose-bg:#FDECEA; --rose-border:#F6CFC9;
+  --a1:#5B5BF0; --a2:#0EA5BE; --a3:#E8911B; --a4:#E1486B; --a5:#0FA37F; --a6:#8B5CF6;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --wrap:1180px; --r:12px;
+  --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
+  --rose-bg:#2E1512; --rose-border:#4C241D; --rose:#E8917E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
+  --rose-bg:#2E1512; --rose-border:#4C241D; --rose:#E8917E;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.18;letter-spacing:-.01em}
+h2{font-size:clamp(1.4rem,2.7vw,1.9rem)}
+p{margin:0}
+a{color:inherit}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 18px}
+section{padding:38px 0}
+.muted{color:var(--ink3)}
+.tiny{font-size:.79rem}
+.sp{flex:1}
+
+/* chrome */
+.ribbon{background:var(--ink);color:#A9B8F5;text-align:center;padding:6px 14px;font-size:.74rem;font-weight:600}
+.ribbon a{color:#fff}
+header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--paper3)}
+.nav{display:flex;align-items:center;gap:16px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800}
+.mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(140deg,var(--a1),var(--pri-dark));color:#fff;font-size:.95rem}
+.brand small{display:block;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.links{display:flex;gap:16px;margin-left:10px}
+.links a{color:var(--ink2);text-decoration:none;font-size:.88rem;font-weight:500;white-space:nowrap}
+.links a:hover,.links a.on{color:var(--pri)}
+.btn{display:inline-block;white-space:nowrap;padding:8px 15px;border-radius:9px;text-decoration:none;font-weight:600;font-size:.86rem;border:1px solid transparent;cursor:pointer;font-family:inherit}
+.b-pri{background:linear-gradient(135deg,var(--pri2),var(--pri));color:#fff}
+.b-ghost{border-color:var(--paper3);color:var(--ink2);background:var(--surface)}
+@media (max-width:1000px){.links{display:none}}
+@media (max-width:700px){.nav .b-ghost{display:none}}
+
+/* hero */
+.hero{padding:40px 0 22px;text-align:center}
+.hero h1{font-size:clamp(1.8rem,4vw,2.7rem);max-width:17em;margin:0 auto}
+.hero p{color:var(--ink2);max-width:46em;margin:12px auto 0;font-size:1.02rem}
+.keys{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+
+/* filter bar */
+.filters{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:18px}
+.filters button{font-size:.82rem;font-weight:700;padding:6px 14px;border-radius:999px;border:1px solid var(--paper3);background:var(--surface);color:var(--ink3)}
+.filters button:hover{color:var(--ink);border-color:var(--ink4)}
+.filters button.on{background:linear-gradient(135deg,var(--pri2),var(--pri));border-color:transparent;color:#fff}
+
+/* app grid */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:1080px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:760px){.grid{grid-template-columns:1fr 1fr}}
+@media (max-width:460px){.grid{grid-template-columns:1fr}}
+.app{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:8px;text-decoration:none;transition:transform .12s,box-shadow .12s,border-color .12s}
+a.app:hover{transform:translateY(-2px);border-color:var(--pri-border);box-shadow:0 6px 18px rgba(16,21,28,.09)}
+.app .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none}
+.app .ic svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.app h3{font-size:.95rem}
+.app p{font-size:.83rem;color:var(--ink3)}
+.app .foot{margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.i1{background:linear-gradient(140deg,var(--a1),#3D56C4)}
+.i2{background:linear-gradient(140deg,var(--a2),#0E7490)}
+.i3{background:linear-gradient(140deg,var(--a3),#A5660F)}
+.i4{background:linear-gradient(140deg,var(--a4),#A32349)}
+.i5{background:linear-gradient(140deg,var(--a5),#07684F)}
+.i6{background:linear-gradient(140deg,var(--a6),#5B2BB5)}
+.i0{background:linear-gradient(140deg,#94A3B8,#5A6B7F)}
+
+.tag{font-size:.69rem;font-weight:800;padding:2px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
+.t-built{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-border)}
+.t-std{background:var(--pri-bg);color:var(--pri-dark);border-color:var(--pri-border)}
+.t-dev{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.t-plan{background:var(--paper2);color:var(--ink3);border-color:var(--paper3)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .t-std{color:var(--pri)}}
+
+.hint{font-size:.78rem;color:var(--ink4)}
+.sec-head{text-align:center;max-width:44em;margin:0 auto 18px}
+.sec-head p{color:var(--ink3);margin-top:7px;font-size:.93rem}
+.eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--pri);margin-bottom:.4rem}
+
+/* shared spine */
+.spine{background:linear-gradient(100deg,#111826 0%,#1B2638 100%);color:#C9D2DC;border-radius:var(--r);padding:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.spine b{color:#fff;display:block;margin-bottom:3px}
+.spine div p{font-size:.85rem}
+@media (max-width:860px){.spine{grid-template-columns:1fr;gap:12px}}
+
+.cta{text-align:center;background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:26px 20px;box-shadow:var(--shadow)}
+.cta h2{margin-bottom:8px}
+.cta p{color:var(--ink3);max-width:38em;margin:0 auto 14px}
+footer{border-top:1px solid var(--paper3);padding:20px 0 32px;font-size:.83rem;color:var(--ink3)}
+footer a{color:var(--pri)}
+.none{display:none}
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  Prototype — statuses on this page are real. Nothing is shown as shipped that is not.
+  <a href="../index.html">Back to Jewel360</a>
+</div>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="../index.html"><span class="mk">J</span><span>Jewel360<small>for jewellery chains</small></span></a>
+    <div class="links">
+      <a href="../index.html">Overview</a>
+      <a href="./" class="on">Apps</a>
+      <a href="../intelligence/">AI agents</a>
+      <a href="../pricing/">Pricing</a>
+      <a href="../preview/">Live demo</a>
+    </div>
+    <div class="sp"></div>
+    <a class="btn b-ghost" href="../preview/">See the interface</a>
+    <a class="btn b-pri" href="../index.html#contact">Request a demo</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Apps</div>
+    <h1>Install what a jewellery business actually needs.</h1>
+    <p>
+      Jewel360 is a set of apps on one engine. They share a client book, one
+      approved gold rate and one set of permissions — so the counter, the
+      stock book and the accounts are never telling you different things.
+      Most of what you need is <b>standard Odoo you configure</b>, not
+      software anyone has to write.
+    </p>
+    <div class="keys">
+      <span class="tag t-built">Built &amp; tested</span>
+      <span class="tag t-std">Standard in Odoo</span>
+      <span class="tag t-dev">In development</span>
+      <span class="tag t-plan">Planned</span>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:8px">
+  <div class="wrap">
+    <div class="filters" id="filters">
+      <button data-f="all" class="on">All apps</button>
+      <button data-f="jewel">Jewel360</button>
+      <button data-f="odoo">Standard Odoo</button>
+      <button data-f="ai">AI agents</button>
+      <button data-f="ready">Ready today</button>
+    </div>
+
+    <div class="grid" id="grid">
+
+      <!-- ===== Jewel360 apps ===== -->
+      <a class="app" data-f="jewel ready" href="../preview/#clients">
+        <span class="ic i1"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0"/><path d="M16 11a3 3 0 100-6M18 20a6 6 0 00-3-5.2"/></svg></span>
+        <h3>Client 360</h3>
+        <p>Tiers, relationship manager and deputy, taste, usual spend, occasions, the pieces she owns, every touchpoint and the consent behind it.</p>
+        <div class="foot"><span class="tag t-built">Built &amp; tested</span></div>
+      </a>
+
+      <a class="app" data-f="jewel ready" href="../preview/#fin">
+        <span class="ic i3"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6.5c0-1.9-2.2-3-5-3s-5 1-5 3 2 2.7 5 3.3 5 1.6 5 3.5-2.2 3.2-5 3.2-5-1.2-5-3.2"/></svg></span>
+        <h3>Gold rate &amp; pricing</h3>
+        <p>One approved rate governs every price. Entered by one manager, approved by a different one, enforced in the data model — not in the screen.</p>
+        <div class="foot"><span class="tag t-built">Built &amp; tested</span></div>
+      </a>
+
+      <a class="app" data-f="jewel ready" href="../preview/#inv">
+        <span class="ic i5"><svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg></span>
+        <h3>Pieces</h3>
+        <p>Serial-tracked, with gross and net weight, karat, stones, RFID tag and certificate. Change the rate and the whole book reprices.</p>
+        <div class="foot"><span class="tag t-built">Built &amp; tested</span></div>
+      </a>
+
+      <a class="app" data-f="jewel ready" href="../preview/#pos">
+        <span class="ic i4"><svg viewBox="0 0 24 24"><path d="M3 7h18l-1.5 12a2 2 0 01-2 1.8H6.5a2 2 0 01-2-1.8z"/><path d="M8.5 7V5.5a3.5 3.5 0 017 0V7"/></svg></span>
+        <h3>Old gold</h3>
+        <p>Take metal in against a sale. Melt loss, purity and buy-back margin applied from the approved rate; over a threshold a second person signs.</p>
+        <div class="foot"><span class="tag t-built">Built &amp; tested</span></div>
+      </a>
+
+      <a class="app" data-f="jewel ready" href="../preview/#dash">
+        <span class="ic i6"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+        <h3>Owner cockpit</h3>
+        <p>Four minutes' worth: what sold, what metal moved, what the stock is worth at today's rate, and the decisions actually waiting on you.</p>
+        <div class="foot"><span class="tag t-built">Built &amp; tested</span></div>
+      </a>
+
+      <a class="app" data-f="jewel" href="../preview/#pos">
+        <span class="ic i1"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg></span>
+        <h3>Counter</h3>
+        <p>The client file at the top of the till. Offline-capable, serial per line, shift close with cash variance — all standard; pricing from the approved rate is ours.</p>
+        <div class="foot"><span class="tag t-dev">In development</span><span class="hint">on standard POS</span></div>
+      </a>
+
+      <a class="app" data-f="jewel" href="../modules/sales-hub/">
+        <span class="ic i2"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15V9M12 15v-3M16 15V7"/></svg></span>
+        <h3>Sales Hub</h3>
+        <p>Pipeline, odds learned from your own closed business, targets and forecast, why you lose. Tray → viewing → reservation → sale.</p>
+        <div class="foot"><span class="tag t-dev">In development</span><span class="hint">on standard CRM</span></div>
+      </a>
+
+      <a class="app" data-f="jewel" href="../preview/#out">
+        <span class="ic i4"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 10h8M8 13h5"/></svg></span>
+        <h3>Outreach</h3>
+        <p>Occasions, upsell, win-back — drafted per client with the reason attached. Consent per channel, and never automated for Private or Royal.</p>
+        <div class="foot"><span class="tag t-dev">In development</span></div>
+      </a>
+
+      <a class="app" data-f="jewel" href="../preview/#ops">
+        <span class="ic i5"><svg viewBox="0 0 24 24"><path d="M3 9h4l2-4h6l2 4h4"/><path d="M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9"/><path d="M9 14h6"/></svg></span>
+        <h3>Stores &amp; transfers</h3>
+        <p>Metal held per store, transfers in flight, and the daily reconciliation in fine grams — the one thing Odoo does not do, because it reconciles value and quantity.</p>
+        <div class="foot"><span class="tag t-plan">Planned</span></div>
+      </a>
+
+      <a class="app" data-f="jewel" href="../preview/#chan">
+        <span class="ic i6"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg></span>
+        <h3>Channels</h3>
+        <p>E-commerce, marketplaces, tax-free refunds, RFID readers, payment terminals, the rate feed. One serial, so a piece cannot sell twice.</p>
+        <div class="foot"><span class="tag t-plan">Planned</span></div>
+      </a>
+
+      <a class="app" data-f="jewel" href="../preview/#fin">
+        <span class="ic i3"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span>
+        <h3>AML &amp; KYC</h3>
+        <p>Identity and expiry, screening date and risk band, cash against the reporting threshold per client per year — flagged at the till, not in next month's report.</p>
+        <div class="foot"><span class="tag t-plan">Planned</span></div>
+      </a>
+
+      <a class="app" data-f="jewel ai" href="../preview/#styl">
+        <span class="ic i4"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></span>
+        <h3>Client app</h3>
+        <p>Her own thread: what she owns, what is on approval, and a stylist who advises on wear and look. Prices read from the engine, never produced.</p>
+        <div class="foot"><span class="tag t-plan">Planned</span></div>
+      </a>
+
+      <!-- ===== AI agents ===== -->
+      <a class="app" data-f="ai" href="../intelligence/">
+        <span class="ic i1"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/><path d="M2.5 12.5v2M21.5 12.5v2"/></svg></span>
+        <h3>Mumtaz Intelligence</h3>
+        <p>Zayan, Amara, Noor, Rayan and Layla. Subscribed one at a time, each capped at an autonomy level you set. None of them can produce a price.</p>
+        <div class="foot"><span class="tag t-dev">In development</span><span class="hint">Zayan live</span></div>
+      </a>
+
+      <!-- ===== Standard Odoo ===== -->
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5v10l-9 5-9-5z"/><path d="M3 9l9 5 9-5M12 14v10"/></svg></span>
+        <h3>Inventory</h3>
+        <p>Multi-warehouse, per-store stock, inter-store transfers, valuation, counts by barcode. Serial identity for every piece.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">stock</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
+        <h3>Accounting</h3>
+        <p>Full double entry, VAT, bank reconciliation, reporting. The UAE chart ships; install it early, because tax is painful to retrofit.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">account · l10n_ae</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg></span>
+        <h3>Point of Sale</h3>
+        <p>Keeps selling when the line drops — service worker and local database, syncing when it returns. Serial per line, shift close, manager-only price control.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">point_of_sale</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h5"/></svg></span>
+        <h3>CRM &amp; Sales</h3>
+        <p>Leads, opportunities, stages, activities, quotations and orders. The tray is a lead; the reservation is a draft order.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">crm · sale</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 01-5.6 5.6L4 17v3h3l5.1-5.1a4 4 0 015.6-5.6l-2.5 2.5-2-2z"/></svg></span>
+        <h3>Repairs</h3>
+        <p>Repair orders, parts, warranty, customer collection. A clasp replaced at no charge still belongs on the client file.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">repair</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M12 3l7 4v10l-7 4-7-4V7z"/><circle cx="12" cy="12" r="2.6"/></svg></span>
+        <h3>Workshop</h3>
+        <p>Bills of material and work orders for a bespoke commission — the karigar's side of a custom piece, tracked like any other build.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">mrp</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></span>
+        <h3>Loyalty &amp; gift cards</h3>
+        <p>Programmes, coupons, gift cards, eWallet, and the same rules at the till. Nothing here needs building.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">loyalty</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
+        <h3>E-invoicing &amp; Arabic</h3>
+        <p>ZATCA UBL 2.1 for Saudi — certificates, clearance, the real thing. Arabic as a second language on invoices and credit notes across the GCC.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">l10n_sa_edi · l10n_gcc_invoice</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><path d="M4 7v10M7 7v10M10 7v10M14 7v10M17 7v10M20 7v10"/></svg></span>
+        <h3>Barcode &amp; RFID</h3>
+        <p>Scan to find, scan to count, scan to sell. An RFID reader that speaks barcode needs no new software — the tag is already a field on the piece.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">barcodes</span></div>
+      </div>
+
+      <div class="app" data-f="odoo ready">
+        <span class="ic i0"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0114 0"/></svg></span>
+        <h3>Employees</h3>
+        <p>Who served, who approved, who holds which key. The cashier on the receipt is an employee record, not a free-text name.</p>
+        <div class="foot"><span class="tag t-std">Standard in Odoo</span><span class="hint">hr · pos_hr</span></div>
+      </div>
+
+    </div>
+
+    <p class="hint" style="text-align:center;margin-top:16px" id="count"></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Why they fit together</div>
+      <h2>Three things every app shares</h2>
+    </div>
+    <div class="spine">
+      <div><b>One approved rate</b><p>No app prices anything from anywhere else. Change the rate and the counter, the stock book and the quotation all move together — or none of them do.</p></div>
+      <div><b>One client book</b><p>The till, the pipeline and the client app read the same record, under the same permissions. A Private client is invisible in all of them to anyone not named on her file.</p></div>
+      <div><b>One audit trail</b><p>Who entered, who approved, what it was worth, which rule applied. Including the refusals — an approval that was blocked is the control working.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="cta">
+      <h2>Not sure which you need?</h2>
+      <p>
+        Most chains start with the gold rate, the client book and the pieces,
+        and add the counter once the rate discipline is holding. We will tell
+        you which of these is standard configuration and which is real build
+        work, before you buy anything.
+      </p>
+      <a class="btn b-pri" href="../pricing/">See pricing</a>
+      <a class="btn b-ghost" href="../preview/">Open the live demo</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Jewel360 — a jewellery operating system on Odoo 19 Community.
+    <a href="../index.html">Overview</a> ·
+    <a href="../intelligence/">AI agents</a> ·
+    <a href="../pricing/">Pricing</a> ·
+    <a href="../preview/">Live demo</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btns  = Array.prototype.slice.call(document.querySelectorAll('#filters button'));
+  var cards = Array.prototype.slice.call(document.querySelectorAll('#grid .app'));
+  var count = document.getElementById('count');
+
+  function apply(f){
+    var shown = 0;
+    cards.forEach(function(c){
+      var hit = f === 'all' || (' ' + c.dataset.f + ' ').indexOf(' ' + f + ' ') > -1;
+      c.classList.toggle('none', !hit);
+      if (hit) shown++;
+    });
+    btns.forEach(function(b){ b.classList.toggle('on', b.dataset.f === f); });
+    count.textContent = shown + ' of ' + cards.length + ' apps' +
+      (f === 'ready' ? ' — built and tested, or standard Odoo you configure' : '');
+  }
+
+  btns.forEach(function(b){ b.addEventListener('click', function(){ apply(b.dataset.f); }); });
+  apply('all');
+})();
+</script>
+
+</body>
+</html>

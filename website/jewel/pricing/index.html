@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewel360 Pricing</title>
+<meta name="description" content="Pay for the stores you run and the apps you install. The Odoo engine underneath is Community — free, open source, and yours.">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  EVERY FIGURE ON THIS PAGE IS A PLACEHOLDER. Nobody has set these prices.
+  They are here so the shape of the commercial model can be argued with.
+  The page says so in three places; please do not quietly remove those.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  --pri:#3D56C4; --pri2:#5570DF; --pri-bg:#EEF1FD; --pri-border:#C8D2F7; --pri-dark:#2B3E96;
+  --teal:#0E7490; --teal2:#0EA5BE; --teal-bg:#E7F6FA; --teal-border:#B3E2EE;
+  --amber:#B4791A; --amber-bg:#FDF3E2; --amber-border:#F0DCB4;
+  --a1:#5B5BF0; --a5:#0FA37F;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --wrap:1180px; --r:12px;
+  --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.18;letter-spacing:-.01em}
+h2{font-size:clamp(1.4rem,2.7vw,1.9rem)}
+p{margin:0}
+a{color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 18px}
+section{padding:36px 0}
+.muted{color:var(--ink3)}
+.tiny{font-size:.79rem}
+.sp{flex:1}
+
+.ribbon{background:var(--ink);color:#A9B8F5;text-align:center;padding:6px 14px;font-size:.74rem;font-weight:600}
+.ribbon a{color:#fff}
+header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--paper3)}
+.nav{display:flex;align-items:center;gap:16px;height:58px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800}
+.mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(140deg,var(--a1),var(--pri-dark));color:#fff;font-size:.95rem}
+.brand small{display:block;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.links{display:flex;gap:16px;margin-left:10px}
+.links a{color:var(--ink2);text-decoration:none;font-size:.88rem;font-weight:500;white-space:nowrap}
+.links a:hover,.links a.on{color:var(--pri)}
+.btn{display:inline-block;white-space:nowrap;padding:8px 15px;border-radius:9px;text-decoration:none;font-weight:600;font-size:.86rem;border:1px solid transparent;cursor:pointer;font-family:inherit}
+.b-pri{background:linear-gradient(135deg,var(--pri2),var(--pri));color:#fff}
+.b-ghost{border-color:var(--paper3);color:var(--ink2);background:var(--surface)}
+@media (max-width:1000px){.links{display:none}}
+@media (max-width:700px){.nav .b-ghost{display:none}}
+
+.hero{padding:38px 0 18px;text-align:center}
+.hero h1{font-size:clamp(1.8rem,4vw,2.6rem);max-width:16em;margin:0 auto}
+.hero p{color:var(--ink2);max-width:44em;margin:11px auto 0;font-size:1.01rem}
+.eyebrow{font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--pri);margin-bottom:.4rem}
+
+/* the honest banner */
+.warn{display:flex;gap:11px;align-items:flex-start;max-width:52em;margin:16px auto 0;padding:12px 15px;
+  background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r);text-align:left;font-size:.87rem;color:var(--ink2)}
+.warn svg{width:18px;height:18px;stroke:var(--amber);fill:none;stroke-width:2;flex:none;margin-top:2px}
+.warn b{color:var(--ink)}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:1fr 330px;gap:16px;align-items:start}
+@media (max-width:980px){.calc{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);box-shadow:var(--shadow)}
+.hd{padding:13px 16px;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:9px;background:var(--paper2);border-radius:var(--r) var(--r) 0 0}
+.hd h3{font-size:.95rem}
+.hd h3::before{content:"";display:inline-block;width:3px;height:13px;border-radius:2px;background:var(--pri);margin-right:8px;vertical-align:-2px}
+.pad{padding:15px 16px}
+
+.stores{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--paper3);border-radius:10px;overflow:hidden;background:var(--paper2)}
+.stepper button{width:38px;height:38px;border:0;background:none;font-size:1.2rem;font-weight:700;color:var(--ink2);line-height:1}
+.stepper button:hover{background:var(--paper3)}
+.stepper span{min-width:48px;text-align:center;font-size:1.1rem;font-weight:700}
+
+.row{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 0;border-top:1px dashed var(--paper3)}
+.row:first-of-type{border-top:0}
+.row b{display:block;font-size:.9rem}
+.row .d{font-size:.79rem;color:var(--ink3)}
+.row .amt{font-size:.88rem;font-weight:700;white-space:nowrap}
+.row .amt small{display:block;font-weight:600;font-size:.68rem;color:var(--ink4);text-align:right}
+.sw{position:relative;display:inline-flex;align-items:center;cursor:pointer}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .tr{width:40px;height:23px;border-radius:999px;background:var(--paper3);position:relative;transition:background .15s;flex:none}
+.sw .tr::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw input:checked + .tr{background:linear-gradient(135deg,var(--pri2),var(--pri))}
+.sw input:checked + .tr::after{transform:translateX(17px)}
+.sw input:focus-visible + .tr{outline:2px solid var(--pri);outline-offset:2px}
+.sw input:disabled + .tr{opacity:.5}
+
+.free{background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:10px;padding:11px 13px;font-size:.85rem;color:var(--ink2);margin-top:12px}
+.free b{color:var(--ink)}
+
+.total{position:sticky;top:72px}
+.trow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:.87rem;border-bottom:1px dashed var(--paper3)}
+.trow:last-of-type{border:0}
+.tbig{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding:12px 14px;background:var(--pri-bg);border:1px solid var(--pri-border);border-radius:10px}
+.tbig b{font-size:1.5rem;font-weight:700}
+.note{font-size:.78rem;color:var(--ink3);margin-top:10px}
+
+/* included */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:860px){.g3{grid-template-columns:1fr}}
+.inc{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:15px;box-shadow:var(--shadow)}
+.inc h3{font-size:.95rem;margin-bottom:6px}
+.inc p{font-size:.86rem;color:var(--ink3)}
+.inc ul{margin:8px 0 0;padding-left:18px;font-size:.85rem;color:var(--ink2)}
+.inc li{margin-bottom:3px}
+
+.sec-head{text-align:center;max-width:42em;margin:0 auto 18px}
+.sec-head p{color:var(--ink3);margin-top:7px;font-size:.93rem}
+
+.faq{max-width:50em;margin:0 auto}
+.q{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);margin-bottom:9px;box-shadow:var(--shadow)}
+.q summary{padding:13px 16px;font-weight:700;font-size:.92rem;cursor:pointer;list-style:none}
+.q summary::-webkit-details-marker{display:none}
+.q summary::after{content:"+";float:right;color:var(--ink4);font-weight:700}
+.q[open] summary::after{content:"−"}
+.q .a{padding:0 16px 14px;font-size:.88rem;color:var(--ink3)}
+
+footer{border-top:1px solid var(--paper3);padding:20px 0 32px;font-size:.83rem;color:var(--ink3)}
+footer a{color:var(--pri)}
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  Prototype — every figure below is a placeholder. No price has been set.
+  <a href="../index.html">Back to Jewel360</a>
+</div>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="../index.html"><span class="mk">J</span><span>Jewel360<small>for jewellery chains</small></span></a>
+    <div class="links">
+      <a href="../index.html">Overview</a>
+      <a href="../apps/">Apps</a>
+      <a href="../intelligence/">AI agents</a>
+      <a href="./" class="on">Pricing</a>
+      <a href="../preview/">Live demo</a>
+    </div>
+    <div class="sp"></div>
+    <a class="btn b-ghost" href="../preview/">See the interface</a>
+    <a class="btn b-pri" href="../index.html#contact">Request a demo</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Pricing</div>
+    <h1>Pay for the stores you run and the apps you turn on.</h1>
+    <p>
+      No per-user charge — in a jewellery shop everyone touches the system, and
+      charging per head just teaches people to share a login. The engine
+      underneath is Odoo Community: free, open source, and yours.
+    </p>
+    <div class="warn">
+      <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+      <div><b>These numbers are placeholders.</b> Nobody has set them. They are here so the
+      <i>shape</i> of the model — per store, per app, agents separately — can be argued with
+      before anyone attaches money to it.</div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:8px">
+  <div class="wrap">
+    <div class="calc">
+      <div>
+        <div class="card" style="margin-bottom:12px">
+          <div class="hd"><h3>How many stores?</h3><span class="sp"></span><span class="tiny muted">counters, not people</span></div>
+          <div class="pad">
+            <div class="stores">
+              <div class="stepper">
+                <button type="button" id="less" aria-label="Fewer stores">−</button>
+                <span class="num" id="nstores">3</span>
+                <button type="button" id="more" aria-label="More stores">+</button>
+              </div>
+              <p class="tiny muted" style="max-width:26em">
+                A store is a till and a safe. Head office, the workshop and the
+                online channel are not stores and are not charged as one.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px">
+          <div class="hd"><h3>Apps</h3><span class="sp"></span><span class="tiny muted">turn off what you do not need</span></div>
+          <div class="pad" id="apps">
+            <div class="row">
+              <div><b>Core — rate, pricing, pieces, client book</b><div class="d">The gold rate with two-person approval, the pricing engine, serial-tracked pieces, Client 360. Everything else assumes these.</div></div>
+              <div class="amt">420<small>per store</small></div>
+              <label class="sw"><input type="checkbox" data-p="420" data-per="store" data-n="Core" checked disabled><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Counter</b><div class="d">The till, with the client file on it and pricing from the approved rate. Offline-capable.</div></div>
+              <div class="amt">260<small>per store</small></div>
+              <label class="sw"><input type="checkbox" data-p="260" data-per="store" data-n="Counter" checked><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Sales Hub</b><div class="d">Pipeline, odds, targets and forecast, tray to reservation.</div></div>
+              <div class="amt">180<small>per store</small></div>
+              <label class="sw"><input type="checkbox" data-p="180" data-per="store" data-n="Sales Hub" checked><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Stores &amp; transfers</b><div class="d">Metal per store, transfers, daily reconciliation in fine grams.</div></div>
+              <div class="amt">140<small>per store</small></div>
+              <label class="sw"><input type="checkbox" data-p="140" data-per="store" data-n="Stores &amp; transfers" checked><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Finance &amp; compliance</b><div class="d">Maker-checker queue, VAT, e-invoicing, AML and KYC, cash thresholds.</div></div>
+              <div class="amt">600<small>per company</small></div>
+              <label class="sw"><input type="checkbox" data-p="600" data-per="company" data-n="Finance &amp; compliance" checked><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Channels</b><div class="d">E-commerce, marketplaces, tax-free refunds, terminals, the rate feed.</div></div>
+              <div class="amt">480<small>per company</small></div>
+              <label class="sw"><input type="checkbox" data-p="480" data-per="company" data-n="Channels"><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Client app</b><div class="d">Her own thread: what she owns, what is on approval, what to wear.</div></div>
+              <div class="amt">360<small>per company</small></div>
+              <label class="sw"><input type="checkbox" data-p="360" data-per="company" data-n="Client app"><span class="tr"></span></label>
+            </div>
+
+            <div class="free">
+              <b>Free with every plan:</b> the Odoo 19 Community engine, Inventory,
+              Accounting, CRM, Repairs, Workshop, Loyalty, Barcode, Arabic invoices
+              and ZATCA e-invoicing. Those are standard Odoo. We configure them;
+              we do not charge for them.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="hd"><h3>AI agents</h3><span class="sp"></span><a class="tiny" href="../intelligence/">what each one does &rarr;</a></div>
+          <div class="pad" id="agents">
+            <div class="row">
+              <div><b>Zayan</b><div class="d">Orchestrator. Included with any specialist; nothing on his own.</div></div>
+              <div class="amt">included<small>&nbsp;</small></div>
+              <label class="sw"><input type="checkbox" data-p="0" data-per="company" data-n="Zayan" data-core="1" checked disabled><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Rayan</b><div class="d">Pricing analysis. Calls the engine; never does the arithmetic.</div></div>
+              <div class="amt">280<small>per store</small></div>
+              <label class="sw"><input type="checkbox" data-p="280" data-per="store" data-n="Rayan" data-agent="1" checked><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Layla</b><div class="d">Retail. Builds the tray, drafts the follow-up. Never sends.</div></div>
+              <div class="amt">360<small>per store</small></div>
+              <label class="sw"><input type="checkbox" data-p="360" data-per="store" data-n="Layla" data-agent="1" checked><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Amara</b><div class="d">Finance. Prepares the entry; cannot post or approve one.</div></div>
+              <div class="amt">320<small>per company</small></div>
+              <label class="sw"><input type="checkbox" data-p="320" data-per="company" data-n="Amara" data-agent="1"><span class="tr"></span></label>
+            </div>
+            <div class="row">
+              <div><b>Noor</b><div class="d">Jewellery domain. Validates a specification; cannot certify a stone.</div></div>
+              <div class="amt">240<small>per company</small></div>
+              <label class="sw"><input type="checkbox" data-p="240" data-per="company" data-n="Noor" data-agent="1"><span class="tr"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="total">
+        <div class="card">
+          <div class="hd"><h3>Your plan</h3></div>
+          <div class="pad">
+            <div class="trow"><span>Stores</span><b class="num" id="s-stores">3</b></div>
+            <div class="trow"><span>Apps, per store</span><span class="num" id="s-appstore">—</span></div>
+            <div class="trow"><span>Apps, per company</span><span class="num" id="s-appco">—</span></div>
+            <div class="trow"><span>Agents</span><span class="num" id="s-agents">—</span></div>
+            <div class="tbig"><span>Monthly</span><b><span class="tiny muted" style="font-weight:600">AED</span> <span class="num" id="s-total">0</span></b></div>
+            <p class="note" id="s-year"></p>
+            <p class="note">
+              <b>Placeholder figures.</b> Indicative only, and not an offer.
+              What is real on this page is the <i>shape</i>: per store for what
+              a counter uses, per company for what head office uses, agents
+              separately so you can stop paying for one that is not earning.
+            </p>
+            <p style="margin-top:12px"><a class="btn b-pri" style="width:100%;text-align:center" href="../index.html#contact">Talk about a pilot</a></p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>What every plan includes</h2>
+      <p>Not upsells. These are either standard Odoo or the parts of Jewel360 that make the rest safe to use.</p>
+    </div>
+    <div class="g3">
+      <div class="inc">
+        <h3>The engine, free</h3>
+        <p>Odoo 19 Community, open source, no licence fee, no per-user charge, no vendor lock on your data.</p>
+        <ul><li>Inventory and multi-warehouse</li><li>Accounting and VAT</li><li>CRM, Sales, Repairs, Workshop</li><li>Loyalty, gift cards, barcode</li><li>Arabic invoices, ZATCA e-invoicing</li></ul>
+      </div>
+      <div class="inc">
+        <h3>The controls, always on</h3>
+        <p>You cannot switch these off, because they are what make the rest trustworthy.</p>
+        <ul><li>Two-person approval on the gold rate</li><li>Private and Royal record restriction</li><li>Consent per channel, per purpose</li><li>Audit of every consequential action</li><li>Agents capped, and never able to price</li></ul>
+      </div>
+      <div class="inc">
+        <h3>Getting there</h3>
+        <p>Configuration before code, every time. We will tell you when you are asking for something standard.</p>
+        <ul><li>Install and configure on your data</li><li>Your chart of accounts and tax</li><li>Opening stock and piece import</li><li>Training in English and Arabic</li><li>Updates and security patches</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>Questions you should ask</h2></div>
+    <div class="faq">
+      <details class="q"><summary>Why is there no per-user price?</summary><div class="a">Because in a shop everyone touches the system — the associate, the cashier, the manager, the workshop. Charging per head teaches staff to share a login, which destroys the audit trail. The audit trail is the product.</div></details>
+      <details class="q"><summary>Do I pay for the Odoo apps as well?</summary><div class="a">No. Odoo Community is free and open source, and most of what a jewellery business needs is in it. You pay for the jewellery-specific parts: the rate discipline, the pricing engine, the piece model, the client book, the counter. If you ask us for something that is already standard, we will tell you, and we will configure it rather than sell it to you.</div></details>
+      <details class="q"><summary>What if I only want one store?</summary><div class="a">Then the per-store lines are charged once, and the per-company lines are the bulk of it. The model is honest about that: a single shop pays proportionally more, because head-office capability costs the same whether it serves one counter or twenty.</div></details>
+      <details class="q"><summary>Can I stop paying for an agent?</summary><div class="a">Yes, and that is deliberate. Each agent is subscribed separately so you can switch one off when it is not earning. Zayan is the exception — he coordinates the others, so he comes with any of them and is nothing on his own.</div></details>
+      <details class="q"><summary>Where does my data live?</summary><div class="a">In your own Odoo database. The agents run beside it and reach it through authorised APIs, never by writing to the database directly — so if you remove them, the business keeps running exactly as before.</div></details>
+      <details class="q"><summary>Is any of this actually finished?</summary><div class="a">Some of it. The gold rate with two-person approval, the pricing engine, the piece model, old gold and the client book are built and covered by 73 automated tests. The counter, Sales Hub and the agents are not. <a href="../apps/">The apps page</a> gives every app a real status, and we would rather you saw that before you saw a price.</div></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Jewel360 — a jewellery operating system on Odoo 19 Community.
+    <a href="../index.html">Overview</a> ·
+    <a href="../apps/">Apps</a> ·
+    <a href="../intelligence/">AI agents</a> ·
+    <a href="../preview/">Live demo</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var stores = 3;
+  var nStores = document.getElementById('nstores');
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#apps input, #agents input'));
+  var zayan = document.querySelector('[data-core="1"]');
+  var out = {
+    stores:   document.getElementById('s-stores'),
+    appstore: document.getElementById('s-appstore'),
+    appco:    document.getElementById('s-appco'),
+    agents:   document.getElementById('s-agents'),
+    total:    document.getElementById('s-total'),
+    year:     document.getElementById('s-year')
+  };
+
+  function money(n){ return Math.round(n).toLocaleString('en-US'); }
+
+  function render(){
+    // Zayan rides along with any specialist, and bills nothing on his own.
+    var specialists = boxes.filter(function(b){
+      return b.dataset.agent === '1' && b.checked;
+    }).length;
+    if (zayan) zayan.checked = specialists > 0;
+
+    var appStore = 0, appCo = 0, agents = 0;
+    boxes.forEach(function(b){
+      if (!b.checked) return;
+      var p = parseInt(b.dataset.p, 10) || 0;
+      var amount = b.dataset.per === 'store' ? p * stores : p;
+      if (b.dataset.agent === '1' || b.dataset.core === '1') agents += amount;
+      else if (b.dataset.per === 'store') appStore += amount;
+      else appCo += amount;
+    });
+
+    var total = appStore + appCo + agents;
+    nStores.textContent = stores;
+    out.stores.textContent   = stores;
+    out.appstore.textContent = money(appStore);
+    out.appco.textContent    = money(appCo);
+    out.agents.textContent   = specialists ? money(agents) : 'none';
+    out.total.textContent    = money(total);
+    out.year.textContent     = total
+      ? 'About ' + money(total * 12) + ' a year, across ' + stores + (stores === 1 ? ' store.' : ' stores.')
+      : 'Nothing selected.';
+  }
+
+  document.getElementById('more').addEventListener('click', function(){
+    if (stores < 20) { stores++; render(); }
+  });
+  document.getElementById('less').addEventListener('click', function(){
+    if (stores > 1) { stores--; render(); }
+  });
+  boxes.forEach(function(b){ b.addEventListener('change', render); });
+  render();
+})();
+</script>
+
+</body>
+</html>
