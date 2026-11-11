@@ -50,6 +50,9 @@ for arg in "$@"; do
 done
 
 # -- guard rails -------------------------------------------------------------
+# Whether JEWEL_BRANCH was set on purpose (environment or .env), as opposed to
+# falling back to whatever is checked out. The main guard below turns on this.
+JEWEL_BRANCH_EXPLICIT="${JEWEL_BRANCH:-}"
 # Publishing the static site touches no database and needs no password, so
 # --site-only skips the .env requirement entirely. Only the Odoo stack needs
 # credentials; making a page update wait on them was the wrong coupling.
@@ -67,6 +70,7 @@ fi
 if [ -f "$HERE/.env" ]; then
 # shellcheck disable=SC1091
   set -a; . "$HERE/.env"; set +a
+  JEWEL_BRANCH_EXPLICIT="${JEWEL_BRANCH:-}"
 fi
 
 REQUIRED_VARS="POSTGRES_USER POSTGRES_PASSWORD ADMIN_PASSWORD JEWEL_BRANCH"
@@ -87,9 +91,17 @@ done
 : "${JEWEL_POLL_PORT:=8073}"
 
 BRANCH="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)"
-if [ "$BRANCH" = "main" ]; then
-  red "Refusing to run on 'main': that branch auto-deploys to production."
-  red "This script deploys the Jewel staging host only."
+# Earlier versions refused 'main' outright, on the stated belief that main
+# auto-deploys to production. It does not: .github/workflows/deploy-production
+# is workflow_dispatch (manual) and deploy-staging triggers on 'develop'. The
+# guard that actually matters is the one below, on the production checkout.
+# Running main here is allowed, but only when .env says so deliberately, so it
+# can never happen by leaving a checkout on main by accident.
+if [ "$BRANCH" = "main" ] && [ "$JEWEL_BRANCH_EXPLICIT" != "main" ]; then
+  red "This checkout is on 'main' but .env does not name 'main' as the"
+  red "branch this host serves, so refusing rather than guessing."
+  red "Either set JEWEL_BRANCH=main deliberately, or track a staging branch:"
+  red "  git checkout -B jewel-staging origin/main"
   exit 2
 fi
 if [ "$BRANCH" != "$JEWEL_BRANCH" ]; then
