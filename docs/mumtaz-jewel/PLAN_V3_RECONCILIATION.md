@@ -110,6 +110,18 @@ Measured: 29 agent tests (incl. 5 chat tests) + 42 API tests (incl. chat, client
 
 Next (owner idea, same day): the **Virtual Sales Officer**, a conversational kiosk for clients in store and on the web, with a viewing/hold request and a next-day delivery request that a person confirms.
 
+## Slice 5 (Virtual Sales Officer) — built 11 Nov 2026, owner idea of the same day
+
+| Element | Delivered |
+| --- | --- |
+| The kiosk | `/app/kiosk`: a public screen for a tablet in the store or the website, no sign-in. **Noor**, an ElevenLabs conversational agent with a designed voice, English and Arabic; tap the portrait to talk, or type. The shelf at the approved rate as cards by category; a piece opens large with the engine's price and the rate it was priced at. |
+| What the kiosk may read | Public endpoints under `/jawhar/public/kiosk/*`: the approved rate, the shelf (on-hand, eligible pieces with engine prices, no internal ids, no client data), one piece by serial, the agent id. Five client tools run in the browser against them: rate, search (renders cards), show piece, request viewing, request delivery. |
+| What the kiosk may write | **One thing: a request** (`jewellery.kiosk.request`): a viewing / set-aside, or **next-day delivery** (address, morning or afternoon, the date computed). Name and phone only; capped per phone per day; the engine price shown is recorded. The page and the agent both say: *a request is not a reservation; a colleague calls to confirm; nothing is charged here.* |
+| What a person does | The request joins the decision queue (Today, the inbox) and the **Client requests** card on the Agents page. **Confirm** matches or creates the client by phone, opens an opportunity, prices a **draft quotation at the approved rate**, and for a delivery schedules the to-do "confirm payment, then dispatch". **Stock does not move** on confirmation; it moves when the order is confirmed and paid, as at the counter (test). **Decline** needs a reason the client is called back with. |
+| Rules kept | Online-only commitment: the kiosk never promises availability, never takes payment or card details (the agent refuses them). No client records on the kiosk. Compliance values untouched. |
+
+Measured: 7 kiosk tests (request is not a reservation; validation and the daily cap; confirm creates client, opportunity and a priced draft without moving stock; decline; the queue; the public door carries no ids; the request through the door) + 1 API test; headless walk: kiosk without login, rate and cards, rings filter, piece with the engine rate, viewing request placed with the "nothing reserved" wording, Arabic RTL, the request in the staff inbox, confirmed into a quotation listed under the client's name.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

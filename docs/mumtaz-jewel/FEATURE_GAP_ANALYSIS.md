@@ -42,6 +42,7 @@ owner.
 | Agents through the API door: Zayan brief/command bar, Layla tray + follow-up drafts, approvals inbox, audit, pause | No | **Built** | 18 + 4 tests + walk; restricted clients never reach a model; numbers read, never produced |
 | Voice and text conversation with Zayan and Layla (ElevenLabs agents, client tools run as the signed-in user), EN/AR, portraits, on every screen | No | **Built** | Model-safe tool results; falls back to server chat |
 | Clients and Pieces lists: search, filters, sort, paging, new-client form; demo data at shop scale | Partly | **Built** | 38 clients / 60 pieces in the demo |
+| Virtual Sales Officer: public conversational kiosk (Noor, EN/AR), shelf at the approved rate, viewing and next-day delivery requests a person confirms | No | **Built** | 7 + 1 tests + walk; a request is not a reservation |
 
 ## Pricing and the rate
 

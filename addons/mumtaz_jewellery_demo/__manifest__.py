@@ -32,6 +32,7 @@ until somebody sets one deliberately.
         'mumtaz_jewellery_sale',
         'mumtaz_jewellery_crm',
         'mumtaz_jewellery_ai',
+        'mumtaz_jewellery_kiosk',
     ],
     'data': [],
     'post_init_hook': 'post_init_hook',

@@ -225,3 +225,30 @@ tr.refused td{background:var(--coral-bg)}
 .fld input,.fld select,.fld textarea{padding:8px 10px;border:1px solid var(--paper3);border-radius:8px;background:var(--surface);font:inherit}
 .fld.chk{display:flex;align-items:center;gap:8px;align-self:end;padding-bottom:8px}
 .glyph{display:inline-block;width:22px;text-align:center;color:var(--gold-dark)}
+
+/* --- the kiosk (Virtual Sales Officer) --- */
+.kiosk{min-height:100vh;background:var(--paper);display:grid;grid-template-rows:auto 1fr}
+.kiosk-head{display:flex;align-items:center;gap:16px;padding:14px 24px;background:var(--rail);color:#fff}
+.kiosk-head b{font-size:1.4rem;display:block}.kiosk-head small{color:#9FB0C3}
+.kiosk-rate{text-align:end;display:grid;line-height:1.15}.kiosk-rate b{font-size:1.1rem}.kiosk-rate small{color:#9FB0C3;font-size:.72rem}
+.kiosk-head .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+.kiosk-main{display:grid;grid-template-columns:380px 1fr;gap:24px;padding:24px;align-items:start}
+@media (max-width:900px){.kiosk-main{grid-template-columns:1fr}}
+.kiosk-noor{display:grid;gap:10px;justify-items:center;text-align:center}
+.noor{border:0;background:none;padding:0;cursor:pointer;border-radius:50%}
+.noor img{border-radius:50%;box-shadow:0 0 0 4px var(--surface),0 0 0 6px var(--paper3);transition:box-shadow .2s}
+.noor.live img{box-shadow:0 0 0 4px var(--surface),0 0 0 7px var(--gold)}
+.noor.talking img{animation:pulse 1.2s ease-in-out infinite}
+.noor-state{font-weight:600}
+.kiosk-transcript{width:100%;display:grid;gap:6px;min-height:120px}
+.kiosk-noor .chat-input{width:100%;border:0;background:none;padding:0}
+.kiosk-shelf{display:grid;gap:14px}
+.kiosk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.kiosk-card{text-align:start;background:var(--surface);border:1px solid var(--paper3);border-radius:14px;padding:14px;display:grid;gap:4px;cursor:pointer}
+.kiosk-card .glyph{font-size:2.2rem;width:auto}
+.kiosk-price{font-weight:700;font-size:1.05rem;color:var(--gold-dark)}
+.kiosk-focus{background:var(--surface);border:1px solid var(--paper3);border-radius:16px;padding:24px;display:grid;gap:10px}
+.kiosk-focus .glyph.big{font-size:4rem;width:auto}
+.kiosk-focus .kiosk-price{font-size:1.8rem}
+.kiosk-form,.kiosk-done{background:var(--surface);border:1px solid var(--paper3);border-radius:16px;padding:24px;display:grid;gap:12px;max-width:560px}
+.chip.on{border-color:var(--gold);background:var(--gold-bg)}

@@ -82,6 +82,19 @@ export type NewClient = {
 };
 export type ChatMessage = { role: 'user' | 'agent'; text: string; links?: { label: string; to: string }[]; refused?: string; tool?: string };
 export type ChatReply = { agent: string; intent: string; reply: string; links: { label: string; to: string }[]; model_used: string; refused?: string };
+export type KioskPiece = {
+  serial: string; design: string; category: string | null; karat: string | false; net_weight_g: number;
+  price_incl_vat: number; currency: string; stones: boolean; certificate: boolean;
+  gross_weight_g?: number; stone_weight_g?: number; making_type?: string | false; rate_per_gram?: number;
+};
+export type KioskRequestOut = { reference: string; kind: string; state: string; serial: string; delivery_date: string | null; slot: string | null; message: string };
+export type KioskRequest = {
+  id: number; name: string; kind: 'viewing' | 'delivery'; state: string; channel: string; lang: string;
+  piece: { id: number; serial: string; product: Ref; karat: string | false }; price_quoted: number;
+  client_name: string; phone: string; preferred_time: string | null; address: string | null; slot: string | null;
+  delivery_date: string | null; note: string | null; created_at: string; client: Ref; lead: Ref; order: Ref;
+  decided_by: Ref; decided_at: string | null; decline_reason: string | null; available: boolean;
+};
 export type AskResult = {
   intent: string; agent: string; client: Ref; message?: string; brief?: Brief;
   rate?: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string };
@@ -300,4 +313,14 @@ export const api = {
   aiDraftDismiss: (id: number) => call<DraftDetail>(`/ai/drafts/${id}/dismiss`, { method: 'POST', body: '{}' }),
   aiDraftEdit: (id: number, body: string) => call<DraftDetail>(`/ai/drafts/${id}/edit`, { method: 'POST', body: JSON.stringify({ body }) }),
   aiRuns: () => call<{ items: AiRun[] }>('/ai/runs'),
+  // --- the kiosk (Virtual Sales Officer) ---
+  kioskRate: () => callPublic<{ rate: { rate_per_gram: number; currency: string; approved_at: string } | null }>('/jawhar/public/kiosk/rate'),
+  kioskPieces: (p: { q?: string; category?: string; karat?: string; max_price?: number; limit?: number } = {}) =>
+    callPublic<{ items: KioskPiece[]; total: number }>(`/jawhar/public/kiosk/pieces${q(p)}`),
+  kioskPiece: (serial: string) => callPublic<KioskPiece>(`/jawhar/public/kiosk/pieces/${encodeURIComponent(serial)}`),
+  kioskRequest: (p: { kind: string; serial: string; name: string; phone: string; preferred_time?: string; address?: string; slot?: string; note?: string; lang?: string; channel?: string }) =>
+    callPublic<KioskRequestOut>('/jawhar/public/kiosk/request', { method: 'POST', body: JSON.stringify(p) }),
+  kioskRequests: (state = 'requested') => call<{ items: KioskRequest[]; count: number }>(`/kiosk/requests${q({ state })}`),
+  kioskConfirm: (id: number) => call<KioskRequest>(`/kiosk/requests/${id}/confirm`, { method: 'POST', body: '{}' }),
+  kioskDecline: (id: number, reason: string) => call<KioskRequest>(`/kiosk/requests/${id}/decline`, { method: 'POST', body: JSON.stringify({ reason }) }),
 };
