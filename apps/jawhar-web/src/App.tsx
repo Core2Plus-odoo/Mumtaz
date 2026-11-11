@@ -18,6 +18,7 @@ import Counter from './pages/Counter';
 import Pipeline from './pages/Pipeline';
 import TrayBuilder from './pages/TrayBuilder';
 import PublicTray from './pages/PublicTray';
+import Kiosk from './pages/Kiosk';
 import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import Memos from './pages/Memos';
@@ -50,12 +51,12 @@ export default function App() {
   const signOut = async () => { try { await api.logout(); } finally { setUser(null); } };
 
   // The client's tray link needs no sign-in: the token is the scope.
-  const isPublic = window.location.pathname.startsWith('/app/t/');
+  const isPublic = window.location.pathname.startsWith('/app/t/') || window.location.pathname.startsWith('/app/kiosk');
 
   return (
     <I18nContext.Provider value={{ lang, setLang }}>
       {isPublic ? (
-        <Routes><Route path="t/:token" element={<PublicTray />} /></Routes>
+        <Routes><Route path="t/:token" element={<PublicTray />} /><Route path="kiosk" element={<Kiosk />} /></Routes>
       ) : user === undefined ? null : user === null ? (
         <Login onSignedIn={(u) => { setUser(u); loadRate(); }} />
       ) : (

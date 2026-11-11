@@ -628,3 +628,26 @@ class TestJawharApiLists(TestJawharApiSale):
         prices = [p['price_incl_vat'] for p in out['items']]
         self.assertEqual(prices, sorted(prices, reverse=True))
         self.assertEqual(self.api('/pieces?category=coin')['data']['total'], 0)
+
+    def test_kiosk_requests_confirm_and_decline_through_the_door(self):
+        self.sign_in('api_cashier')
+        self.env['stock.lot'].create({'name': 'TEST-KSK-0001', 'product_id': self.product.id, 'gross_weight_g': 21.0})
+        lot = self.env['stock.lot'].search([('name', '=', 'TEST-KSK-0001')])
+        from odoo.addons.mumtaz_jewellery_sale.tests.test_sale_pricing import _put_in_stock  # noqa: PLC0415
+        _put_in_stock(self.env, lot)
+        Req = self.env['jewellery.kiosk.request']
+        a = Req.create_public('viewing', 'TEST-KSK-0001', 'Hind Walk-in', '+971500009011', preferred_time='Thursday')
+        b = Req.create_public('delivery', 'TEST-KSK-0001', 'Sumaya Online', '+971500009012',
+                              address='Villa 12, Street 4, Jumeirah 1, Dubai', slot='morning')
+        items = self.api('/kiosk/requests')['data']['items']
+        self.assertEqual({i['name'] for i in items} & {a['reference'], b['reference']}, {a['reference'], b['reference']})
+        ida = next(i['id'] for i in items if i['name'] == a['reference'])
+        idb = next(i['id'] for i in items if i['name'] == b['reference'])
+        self.assertEqual(self.api('/kiosk/requests/%d/decline' % ida, 'POST', {}, status=400)['error']['code'], 'validation')
+        out = self.api('/kiosk/requests/%d/decline' % ida, 'POST', {'reason': 'Sold this morning'})['data']
+        self.assertEqual(out['state'], 'declined')
+        out = self.api('/kiosk/requests/%d/confirm' % idb, 'POST')['data']
+        self.assertEqual(out['state'], 'confirmed')
+        self.assertTrue(out['order'])
+        self.assertTrue(out['client'])
+        self.assertEqual(self.api('/kiosk/requests')['data']['count'], 0)

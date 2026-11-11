@@ -30,6 +30,7 @@ in later phases; nothing here writes business data.
         'mumtaz_jewellery_sale',
         'mumtaz_jewellery_crm',
         'mumtaz_jewellery_ai',
+        'mumtaz_jewellery_kiosk',
     ],
     'data': [
         'security/security.xml',

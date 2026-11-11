@@ -17,6 +17,16 @@ export default function Agents() {
   const [showAll, setShowAll] = useState(false);
   const drafts = useLoad(() => api.aiDrafts(showAll ? 'all' : 'pending'), [showAll]);
   const runs = useLoad(() => api.aiRuns());
+  const reqs = useLoad(() => api.kioskRequests('requested'));
+  const [declining, setDeclining] = useState<number | null>(null);
+  const [reason, setReason] = useState('');
+  const [reqNote, setReqNote] = useState<string | null>(null);
+  const decide = async (fn: () => Promise<unknown>, ok?: string) => {
+    setBusy(true); setReqNote(null);
+    try { await fn(); reqs.reload(); runs.reload(); if (ok) setReqNote(ok); setDeclining(null); setReason(''); }
+    catch (e) { setReqNote((e as Error).message); }
+    finally { setBusy(false); }
+  };
   const selectedId = Number(params.get('draft') || 0) || null;
   const [draft, setDraft] = useState<DraftDetail | null>(null);
   const [text, setText] = useState('');
@@ -138,6 +148,36 @@ export default function Agents() {
             )}
           </Card>
         </div>
+        <Card title={t('kiosk_requests')} sub={t('kiosk_requests_sub')}>
+          {reqs.error && <ErrorBox error={reqs.error} retry={reqs.reload} />}
+          {reqNote && <div className="notice ok">{reqNote}</div>}
+          {reqs.loading && !reqs.data ? <Loading /> : reqs.data && (reqs.data.items.length === 0 ? <Empty /> : (
+            <ul className="worklist">
+              {reqs.data.items.map((r) => (
+                <li key={r.id}>
+                  <div><b>{r.kind === 'delivery' ? t('kiosk_delivery') : t('kiosk_viewing')}</b> · {r.piece.serial} · {r.piece.product?.name} ({r.piece.karat}K)
+                    {!r.available && <span className="tag bad" style={{ marginInlineStart: 6 }}>{t('kiosk_not_available')}</span>}</div>
+                  <div className="small">{r.client_name} · {r.phone}{r.preferred_time ? ` · ${r.preferred_time}` : ''}{r.address ? ` · ${r.address}` : ''}{r.slot ? ` · ${r.delivery_date} ${t(`kiosk_${r.slot}`)}` : ''}</div>
+                  <div className="small muted">{r.name} · {r.channel} · {r.lang} · {when(r.created_at, lang)}{r.note ? ` · ${r.note}` : ''}</div>
+                  <div className="actions" style={{ marginTop: 6 }}>
+                    {declining === r.id ? (
+                      <>
+                        <input className="payload" style={{ width: 'auto', flex: 1 }} placeholder={t('kiosk_decline_reason')} value={reason} onChange={(e) => setReason(e.target.value)} />
+                        <button className="btn ghost small" disabled={busy || !reason.trim()} onClick={() => decide(() => api.kioskDecline(r.id, reason.trim()))}>{t('kiosk_decline')}</button>
+                        <button className="btn ghost small" onClick={() => setDeclining(null)}>{t('cancel')}</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn small" disabled={busy || !r.available} onClick={() => decide(() => api.kioskConfirm(r.id), t('kiosk_confirmed_note'))}>{t('kiosk_confirm')}</button>
+                        <button className="btn ghost small" disabled={busy} onClick={() => setDeclining(r.id)}>{t('kiosk_decline')}</button>
+                      </>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ))}
+        </Card>
         <Card title={t('recent_runs')}>
           {runs.loading && !runs.data ? <Loading /> : runs.data && (
             runs.data.items.length === 0 ? <Empty /> : (

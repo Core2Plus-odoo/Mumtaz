@@ -4,7 +4,9 @@ Synthetic data only. Everything is prefixed "DEMO" so it is obvious in the
 UI that nothing here is real. Idempotent: a marker parameter stops a second
 install from duplicating the records.
 """
+import base64
 import logging
+import os
 from datetime import timedelta
 
 from odoo import fields
@@ -167,6 +169,17 @@ def _seed_rate(env):
     return rate, maker, checker
 
 
+def _design_image(category, kind='jpg'):
+    """The demo photo (or the try-on cutout) for a design, shipped with the
+    module; None if absent."""
+    name = '%s.jpg' % category if kind == 'jpg' else '%s-cutout.png' % category
+    path = os.path.join(os.path.dirname(__file__), 'static', 'img', name)
+    if not os.path.exists(path):
+        return None
+    with open(path, 'rb') as fh:
+        return base64.b64encode(fh.read())
+
+
 def _seed_products(env):
     template = env['product.template']
     storable = 'is_storable' in template._fields
@@ -176,6 +189,10 @@ def _seed_products(env):
         if existing:
             if not existing.jewellery_category:
                 existing.jewellery_category = category
+            if not existing.image_1920 and _design_image(category):
+                existing.image_1920 = _design_image(category)
+            if not existing.jewellery_tryon_image and _design_image(category, 'cutout'):
+                existing.jewellery_tryon_image = _design_image(category, 'cutout')
             products.append(existing)
             continue
         values = {
@@ -188,6 +205,12 @@ def _seed_products(env):
             'jewellery_making_type': making_type,
             'jewellery_making_value': making_value,
         }
+        image = _design_image(category)
+        if image:
+            values['image_1920'] = image
+        cutout = _design_image(category, 'cutout')
+        if cutout:
+            values['jewellery_tryon_image'] = cutout
         if storable:
             values['is_storable'] = True
         else:
@@ -493,8 +516,28 @@ def top_up(env):
     _seed_cost_basis(fresh)
     manager = env['res.users'].search([('login', '=', 'demo_rate_checker')], limit=1) or env.ref('base.user_admin')
     clients = _seed_clients(env, manager, lots)
-    _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients', len(products), len(lots), on_hand, len(clients))
+    kiosk = _seed_kiosk(env)
+    _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s',
+                 len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-')
     return {'products': len(products), 'pieces': len(lots), 'clients': len(clients)}
+
+
+def _seed_kiosk(env):
+    """Two requests from the kiosk waiting for a person: a viewing and a
+    next-day delivery. Fictional callers; nothing is reserved."""
+    Req = env['jewellery.kiosk.request']
+    if Req.search_count([]):
+        return {}
+    eligible = env['jewellery.tray']._eligible_lots().sorted('name')
+    if len(eligible) < 2:
+        return {}
+    out = {}
+    out['viewing'] = Req.create_public('viewing', eligible[-1].name, 'Walk-in Hind', '+971500009001',
+                                       preferred_time='Thursday after 6', note='Saw it in the window.', lang='en')['reference']
+    out['delivery'] = Req.create_public('delivery', eligible[-2].name, 'Online Sumaya', '+971500009002',
+                                        address='Villa 12, Street 4, Jumeirah 1, Dubai', slot='afternoon',
+                                        note='Gift, please wrap.', lang='ar', channel='web')['reference']
+    return out
 
 
 def post_init_hook(env):
@@ -521,6 +564,7 @@ def post_init_hook(env):
     presenter = env.ref('base.user_admin', raise_if_not_found=False)
     pipeline = _seed_pipeline(env, clients, lots, presenter)
     agents = _seed_agents(env, clients, presenter)
+    kiosk = _seed_kiosk(env)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -534,10 +578,10 @@ def post_init_hook(env):
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
         'sample piece total %.2f, %s owner cards, '
         'quotation %s, order %s, invoice %s (%.2f), trays %s, '
-        'AI drafts %s (refused: %s)',
+        'AI drafts %s (refused: %s), kiosk requests %s',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
         len(clients), intake.name, intake.value, priced.get('total', 0.0),
         cards, docs.get('quotation', '-'), docs.get('order', '-'),
         docs.get('invoice', '-'), docs.get('invoice_total', 0.0),
         '/'.join(pipeline.values()) or '-',
-        agents.get('followup', '-'), agents.get('refused', '-'))
+        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-')
