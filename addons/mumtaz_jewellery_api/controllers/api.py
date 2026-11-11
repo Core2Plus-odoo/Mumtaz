@@ -604,38 +604,67 @@ class JawharApi(Controller):
     @_r('/today')
     @endpoint()
     def today(self, **kw):
+        """The owner's first screen: one number per thing worth knowing.
+
+        A person with partial rights gets a partial dashboard, not an error:
+        each figure is read on its own, and a model this user may not read
+        comes back as null. That keeps a counter-staff login useful without
+        widening what it can see.
+        """
         env = request.env
         company = env.company
-        try:
-            rate = _rate_dict(env['jewellery.gold.rate'].get_current(company))
-        except UserError:
-            rate = None
-        Lot = env['stock.lot']
-        on_hand = Lot.search([('product_id.is_jewellery', '=', True), ('product_qty', '>', 0)])
-        Sale = env['sale.order']
-        Move = env['account.move']
-        month_start = fields.Date.context_today(Sale).replace(day=1)
-        orders_month = Sale.search([('state', 'in', ORDER_STATES),
-                                    ('date_order', '>=', fields.Datetime.to_string(month_start))])
-        unpaid = Move.search([('move_type', '=', 'out_invoice'), ('state', '=', 'posted'),
-                              ('payment_state', 'in', ('not_paid', 'partial'))])
+
+        def allowed(fn):
+            try:
+                with env.cr.savepoint():
+                    return fn()
+            except AccessError:
+                return None
+
+        def rate():
+            try:
+                return _rate_dict(env['jewellery.gold.rate'].get_current(company))
+            except UserError:
+                return None
+
+        def on_hand():
+            lots = env['stock.lot'].search(
+                [('product_id.is_jewellery', '=', True), ('product_qty', '>', 0)])
+            return {'count': len(lots), 'value': sum(lots.mapped('jewellery_price'))}
+
+        def orders_month():
+            Sale = env['sale.order']
+            start = fields.Date.context_today(Sale).replace(day=1)
+            recs = Sale.search([('state', 'in', ORDER_STATES),
+                                ('date_order', '>=', fields.Datetime.to_string(start))])
+            return {'count': len(recs), 'amount': sum(recs.mapped('amount_total'))}
+
+        def unpaid():
+            recs = env['account.move'].search([
+                ('move_type', '=', 'out_invoice'), ('state', '=', 'posted'),
+                ('payment_state', 'in', ('not_paid', 'partial'))])
+            return {'count': len(recs), 'amount': sum(recs.mapped('amount_residual'))}
+
+        def clients():
+            P = env['res.partner']
+            return {'total': P.search_count(CLIENT_DOMAIN),
+                    'restricted': P.search_count([('jewellery_tier', 'in', ('private', 'royal'))])}
+
+        stock = allowed(on_hand)
         return {
-            'rate': rate,
+            'rate': allowed(rate),
             'currency': _money(company),
-            'pieces_on_hand': len(on_hand),
-            'stock_value_incl_vat': sum(on_hand.mapped('jewellery_price')),
-            'open_quotes': Sale.search_count([('state', 'in', QUOTE_STATES)]),
-            'orders_this_month': {'count': len(orders_month),
-                                  'amount': sum(orders_month.mapped('amount_total'))},
-            'invoices_unpaid': {'count': len(unpaid),
-                                'amount': sum(unpaid.mapped('amount_residual'))},
-            'memos_out': env['jewellery.approval.memo'].search_count([('state', '=', 'out')]),
-            'old_gold_pending': env['jewellery.old.gold'].search_count(
-                [('state', 'in', ('draft', 'to_approve'))]),
-            'cards_open': env['jewellery.owner.card'].search_count([('state', '=', 'open')]),
-            'clients': {
-                'total': env['res.partner'].search_count(CLIENT_DOMAIN),
-                'restricted': env['res.partner'].search_count(
-                    [('jewellery_tier', 'in', ('private', 'royal'))]),
-            },
+            'pieces_on_hand': stock['count'] if stock else None,
+            'stock_value_incl_vat': stock['value'] if stock else None,
+            'open_quotes': allowed(lambda: env['sale.order'].search_count(
+                [('state', 'in', QUOTE_STATES)])),
+            'orders_this_month': allowed(orders_month),
+            'invoices_unpaid': allowed(unpaid),
+            'memos_out': allowed(lambda: env['jewellery.approval.memo'].search_count(
+                [('state', '=', 'out')])),
+            'old_gold_pending': allowed(lambda: env['jewellery.old.gold'].search_count(
+                [('state', 'in', ('draft', 'to_approve'))])),
+            'cards_open': allowed(lambda: env['jewellery.owner.card'].search_count(
+                [('state', '=', 'open')])),
+            'clients': allowed(clients),
         }
