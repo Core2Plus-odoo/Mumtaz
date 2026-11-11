@@ -48,14 +48,17 @@ export type Snapshot = {
 export type OrderLine = {
   id: number; description: string; product: Ref; piece: { id: number; serial: string } | null;
   qty: number; price_unit: number; subtotal: number; tax: number; total: number;
-  making_discount_pct: number; priced: boolean; snapshot: Snapshot | null;
+  making_discount_pct: number; priced: boolean; margin: number | null; snapshot: Snapshot | null;
 };
 export type Order = {
   id: number; name: string; client: Ref; salesperson: Ref; date: string; state: string;
   kind: 'quote' | 'order'; amount_untaxed: number; amount_tax: number; amount_total: number;
   currency: string; line_count: number; invoice_status: string;
+  validity_date: string | null; expired: boolean;
   lines?: OrderLine[]; invoices?: Ref[];
 };
+export type PaymentMethod = { id: number; name: string; type: string };
+export type Payment = { id: number; name: string; amount: number; journal: Ref; date: string; state: string };
 export type InvoiceLine = {
   id: number; description: string; product: Ref; piece: { id: number; serial: string } | null;
   qty: number; price_unit: number; subtotal: number; total: number; snapshot: Snapshot | null;
@@ -139,6 +142,15 @@ export const api = {
   order: (id: number) => call<Order>(`/sales/orders/${id}`),
   invoices: (p: { limit?: number; offset?: number } = {}) => call<Page<Invoice>>(`/sales/invoices${q(p)}`),
   invoice: (id: number) => call<Invoice>(`/sales/invoices/${id}`),
+  // --- the sale: writes. Level D: a person executes, under their name. ---
+  createQuote: (client_id: number, lines: { piece_id: number; discount?: number }[]) =>
+    call<Order>('/sales/quotes', { method: 'POST', body: JSON.stringify({ client_id, lines }) }),
+  renewQuote: (id: number) => call<Order>(`/sales/quotes/${id}/renew`, { method: 'POST', body: '{}' }),
+  confirmQuote: (id: number) => call<Order>(`/sales/quotes/${id}/confirm`, { method: 'POST', body: '{}' }),
+  invoiceOrder: (id: number) => call<Invoice>(`/sales/orders/${id}/invoice`, { method: 'POST', body: '{}' }),
+  paymentMethods: () => call<Page<PaymentMethod>>('/sales/payment-methods'),
+  payInvoice: (id: number, p: { journal_id?: number; amount?: number }) =>
+    call<{ invoice: Invoice; payments: Payment[] }>(`/sales/invoices/${id}/payments`, { method: 'POST', body: JSON.stringify(p) }),
   memos: (state?: string) => call<Page<Memo>>(`/memos${q({ state })}`),
   oldGold: () => call<Page<OldGold>>('/old-gold'),
   cards: (state = 'open') => call<Page<Card>>(`/owner/cards${q({ state })}`),

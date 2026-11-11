@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { api, type Rate } from '../lib/api';
 import { stateLabel, useT } from '../lib/i18n';
 import { money, when } from '../lib/format';
@@ -14,7 +14,9 @@ export default function Documents() {
   const docs = useLoad(() => (tab === 'quotes' ? api.quotes({ limit: 100 }) : api.orders({ limit: 100 })), [tab]);
   return (
     <>
-      <TopBar title={t('documents_title')} sub={t('documents_sub')} rate={rate} />
+      <TopBar title={t('documents_title')} sub={t('documents_sub')} rate={rate}>
+        <Link to="/documents/new" className="btn">{t('new_quote')}</Link>
+      </TopBar>
       <div className="content">
         <div className="tabs">
           <button className={tab === 'quotes' ? 'on' : ''} onClick={() => setTab('quotes')}>{t('quotes')}</button>

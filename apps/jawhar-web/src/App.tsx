@@ -12,6 +12,7 @@ import Clients from './pages/Clients';
 import ClientDetail from './pages/ClientDetail';
 import Documents from './pages/Documents';
 import OrderDetail from './pages/OrderDetail';
+import NewQuote from './pages/NewQuote';
 import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import Memos from './pages/Memos';
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="clients" element={<Clients />} />
             <Route path="clients/:id" element={<ClientDetail />} />
             <Route path="documents" element={<Documents />} />
+            <Route path="documents/new" element={<NewQuote />} />
             <Route path="documents/:id" element={<OrderDetail />} />
             <Route path="invoices" element={<Invoices />} />
             <Route path="invoices/:id" element={<InvoiceDetail />} />

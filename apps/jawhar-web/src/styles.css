@@ -129,3 +129,10 @@ input,select{font-family:inherit;font-size:inherit}
   .two{grid-template-columns:1fr}
   .content,.topbar{padding-inline:14px}
 }
+
+/* ---- modal ---- */
+.modal{position:fixed;inset:0;background:rgba(16,21,28,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.modal .box{width:min(520px,100%)}
+.modal h3{margin-bottom:8px}
+a.btn{display:inline-block;text-decoration:none}
+tr[aria-selected="true"] td{background:var(--gold-bg)}
