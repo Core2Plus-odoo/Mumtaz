@@ -135,6 +135,13 @@ layout (`l10n_gcc_invoice`), payment-timeout reconciliation state.
 | Acceptance | A 22K quote and invoice match the engine, show the rate used, in Arabic and English |
 
 ### Slice 2: Counter, offline and old gold
+
+Status 11 Nov 2026: **the counter is built in the product interface** —
+piece lookup with availability, readiness checks, old-gold intake and credit,
+one-transaction commit (confirm → invoice → payment → delivery of the exact
+serial), printable receipt. Offline selling is deliberately not offered
+(online-only commitment, plan v3 §11/§17). See `PLAN_V3_RECONCILIATION.md`.
+
 | Item | Detail |
 | --- | --- |
 | Features | **Week-one offline spike** on Odoo 19 POS — narrowed by `POS_NATIVE_AUDIT.md`, which found the offline mechanism (service worker, IndexedDB, connectivity detection, sync) already standard in Community, along with serial-per-line, shift close with cash variance, and manager-only price changes. The spike now asks the three questions that are actually ours: which rate an offline sale prices against and when that snapshot expires; what happens when the same serial sells on two offline terminals; and whether the engine's price pushes onto a POS line and survives a sync. Tag scan, price from locked rate snapshot with expiry, offline sale queue with idempotent sync and a conflict queue, old-gold intake and credit at the counter, split payment and deposit, discount limits by role, shift close, bilingual receipts and tags |
