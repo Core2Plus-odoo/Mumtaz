@@ -72,16 +72,27 @@ class JawharAiApi(Controller):
             out['brief'] = _brief_dict(out['brief'])
         return out
 
+    @_r('/ai/chat', methods=['POST'])
+    @endpoint()
+    def ai_chat(self, **kw):
+        body = _body()
+        messages = body.get('messages') or []
+        if not isinstance(messages, list) or len(messages) > 40:
+            raise ApiError(400, 'validation', 'messages must be a short list.')
+        clean = [{'role': 'user' if m.get('role') == 'user' else 'agent', 'text': str(m.get('text') or '')[:600]}
+                 for m in messages if isinstance(m, dict)]
+        return _agent().chat(body.get('agent') or 'zayan', clean)
+
     @_r('/ai/brief', methods=['POST'])
     @endpoint()
     def ai_brief(self, **kw):
-        out = _agent().brief()
+        out = _agent().brief(safe=bool(_body().get('safe')))
         return out if out.get('refused') else _brief_dict(out)
 
     @_r('/ai/queue')
     @endpoint()
     def ai_queue(self, **kw):
-        out = _agent().decisions_queue()
+        out = _agent().decisions_queue(safe=kw.get('safe') in ('1', 'true'))
         return out if isinstance(out, dict) else {'items': out}
 
     @_r('/ai/layla/tray', methods=['POST'])

@@ -233,6 +233,7 @@ def _piece_dict(lot):
         'id': lot.id,
         'serial': lot.name,
         'product': _m2o(lot.product_id),
+        'category': lot.product_id.jewellery_category or None,
         'karat': lot.karat,
         'gross_weight_g': lot.gross_weight_g,
         'stone_weight_g': lot.stone_weight_g,
@@ -249,6 +250,16 @@ def _piece_dict(lot):
     }
 
 
+def _next_occasion(partner):
+    today = fields.Date.context_today(partner)
+    best = None
+    for occ in partner.occasion_ids:
+        nxt = occ._next_date(today)
+        if nxt >= today and (best is None or nxt < best[0]):
+            best = (nxt, occ.kind)
+    return {'kind': best[1], 'date': best[0], 'in_days': (best[0] - today).days} if best else None
+
+
 def _client_dict(partner, detail=False):
     data = {
         'id': partner.id,
@@ -263,6 +274,8 @@ def _client_dict(partner, detail=False):
         'city': partner.city or None,
         'no_marketing': partner.no_marketing,
         'lifetime_value': partner.lifetime_value,
+        'lang': partner.lang or None,
+        'next_occasion': _next_occasion(partner),
     }
     if detail:
         data.update({
@@ -569,18 +582,26 @@ class JawharApi(Controller):
     # ---- pieces ---------------------------------------------------------
     @_r('/pieces')
     @endpoint()
-    def pieces(self, q=None, karat=None, on_hand=None, limit=50, offset=0, **kw):
+    def pieces(self, q=None, karat=None, on_hand=None, category=None, sort=None, limit=50, offset=0, **kw):
         Lot = request.env['stock.lot']
         domain = [('product_id.is_jewellery', '=', True)]
         if q:
-            domain += ['|', '|', ('name', 'ilike', q), ('rfid_tag', 'ilike', q),
-                       ('product_id.name', 'ilike', q)]
+            domain += ['|', '|', '|', ('name', 'ilike', q), ('rfid_tag', 'ilike', q),
+                       ('product_id.name', 'ilike', q), ('certificate_ref', 'ilike', q)]
         if karat:
             domain.append(('karat', '=', str(karat)))
+        if category:
+            domain.append(('product_id.jewellery_category', '=', category))
         if on_hand in ('1', 'true', True):
             domain.append(('product_qty', '>', 0))
-        recs = Lot.search(domain, limit=_int(limit, 50, 1), offset=_int(offset, 0, 0, 10**9),
-                          order='name')
+        lim, off = _int(limit, 50, 1), _int(offset, 0, 0, 10**9)
+        if sort in ('price', 'price_asc'):
+            # The price is computed from the approved rate, not stored: sort in Python.
+            recs = Lot.search(domain, order='name', limit=2000)
+            recs = recs.sorted(key=lambda l: (l.jewellery_price if sort == 'price_asc' else -l.jewellery_price, l.name))[off:off + lim]
+        else:
+            order = {'serial': 'name', 'weight': 'gross_weight_g desc, name', 'recent': 'id desc'}.get(sort or 'serial', 'name')
+            recs = Lot.search(domain, limit=lim, offset=off, order=order)
         return {'items': [_piece_dict(l) for l in recs], 'total': Lot.search_count(domain)}
 
     @_r('/pieces/<int:piece_id>')
@@ -621,9 +642,42 @@ class JawharApi(Controller):
             domain = list(CLIENT_DOMAIN)
         if tier:
             domain = [('jewellery_tier', '=', tier)] + domain
-        recs = Partner.search(domain, limit=_int(limit, 50, 1), offset=_int(offset, 0, 0, 10**9),
-                              order='name')
+        if kw.get('city'):
+            domain = [('city', 'ilike', kw['city'])] + domain
+        sort = kw.get('sort') or 'name'
+        lim, off = _int(limit, 50, 1), _int(offset, 0, 0, 10**9)
+        if sort == 'value':
+            # lifetime_value is computed from the ledger, not stored: sort in Python.
+            recs = Partner.search(domain, order='name', limit=2000)
+            recs = recs.sorted(key=lambda p: (-p.lifetime_value, p.name or ''))[off:off + lim]
+        else:
+            recs = Partner.search(domain, limit=lim, offset=off, order='id desc' if sort == 'recent' else 'name')
         return {'items': [_client_dict(p) for p in recs], 'total': Partner.search_count(domain)}
+
+    @_r('/clients', methods=['POST'])
+    @endpoint()
+    def client_create(self, **kw):
+        """A new client from the product (plan wireframe 24). Private and
+        Royal tiers are set only by a VIP manager, as on the record itself."""
+        body = _body()
+        name = (body.get('name') or '').strip()
+        if not name:
+            raise ApiError(400, 'validation', 'A name is needed.')
+        tier = body.get('tier') or 'standard'
+        if tier not in ('standard', 'preferred', 'private', 'royal'):
+            raise ApiError(400, 'validation', 'Unknown tier.')
+        vals = {
+            'name': name[:120], 'jewellery_tier': tier, 'is_company': False,
+            'phone': (body.get('phone') or '')[:40] or False, 'email': (body.get('email') or '')[:120] or False,
+            'city': (body.get('city') or '')[:60] or False, 'lang': body.get('lang') if body.get('lang') in ('en_US', 'ar_001') else False,
+            'preferred_karats': (body.get('preferred_karats') or '')[:40] or False,
+            'typical_budget': float(body.get('typical_budget') or 0), 'no_marketing': bool(body.get('no_marketing')),
+            'taste_notes': (body.get('taste_notes') or '')[:1000] or False,
+        }
+        if tier in ('private', 'royal'):
+            vals['relationship_manager_id'] = int(body.get('relationship_manager_id') or request.env.user.id)
+        partner = request.env['res.partner'].create({k: v for k, v in vals.items() if v is not False or k in ('phone', 'email', 'city')})
+        return _client_dict(partner, detail=True), 201
 
     @_r('/clients/<int:partner_id>')
     @endpoint()

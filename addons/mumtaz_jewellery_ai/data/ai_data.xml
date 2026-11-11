@@ -11,4 +11,14 @@
         <field name="key">mumtaz_jewellery.ai_draft_days</field>
         <field name="value">7</field>
     </record>
+    <!-- The ElevenLabs conversational agents behind the drawer. Public ids,
+         not secrets; a tenant sets its own. -->
+    <record id="param_voice_agent_zayan" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.voice_agent_zayan</field>
+        <field name="value">agent_4201m759r3exewer1d4mvytj54ef</field>
+    </record>
+    <record id="param_voice_agent_layla" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.voice_agent_layla</field>
+        <field name="value">agent_6201m75a15d7edca5p6t7hz0pk07</field>
+    </record>
 </odoo>

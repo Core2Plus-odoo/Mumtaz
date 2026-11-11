@@ -181,3 +181,47 @@ tr.refused td{background:var(--coral-bg)}
 .brief p{margin:0;font-size:1.02rem;line-height:1.5}
 .queue{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .queue li{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--paper3);border-radius:8px;padding:8px 11px;background:var(--surface)}
+
+/* --- collapsible rail, the conversation drawer, portraits --- */
+.shell.collapsed{grid-template-columns:72px 1fr}
+.shell.collapsed .navl{display:none}
+.shell.collapsed .navb{justify-content:center;padding:11px 0}
+.shell.collapsed .brandrow{justify-content:center;flex-wrap:wrap;gap:6px}
+.brandrow{display:flex;align-items:center;gap:10px;position:relative}
+.navtoggle{margin-inline-start:auto;background:none;border:1px solid rgba(255,255,255,.15);color:#C9D2DC;border-radius:6px;width:26px;height:26px;font-size:.8rem;cursor:pointer}
+.shell.collapsed .navtoggle{margin:0}
+.portrait{border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--paper3)}
+.portrait.talking{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--gold);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--gold)}50%{box-shadow:0 0 0 2px var(--surface),0 0 0 8px var(--gold-bg)}}
+.talkfab{position:fixed;inset-inline-end:22px;bottom:22px;z-index:40;display:flex;align-items:center;gap:6px;padding:8px 14px 8px 8px;border:0;border-radius:999px;background:var(--rail);color:#fff;font-weight:600;box-shadow:0 10px 30px rgba(16,21,28,.35);cursor:pointer}
+.talkfab .portrait:nth-child(2){margin-inline-start:-14px}
+.talkfab .portrait{box-shadow:0 0 0 2px var(--rail)}
+.chat{position:fixed;inset-inline-end:16px;bottom:16px;top:16px;width:min(440px,calc(100vw - 32px));z-index:45;display:grid;grid-template-rows:auto 1fr auto;background:var(--surface);border:1px solid var(--paper3);border-radius:16px;box-shadow:0 24px 60px rgba(16,21,28,.3);overflow:hidden}
+.chat-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--paper2);background:var(--paper)}
+.chat-tabs{display:flex;gap:6px}
+.chat-tab{display:flex;align-items:center;gap:6px;border:1px solid var(--paper3);background:var(--surface);border-radius:999px;padding:3px 10px 3px 3px;font-weight:600;cursor:pointer}
+.chat-tab.on{border-color:var(--gold);background:var(--gold-bg)}
+.chat-body{overflow:auto;padding:14px;display:grid;gap:10px;align-content:start}
+.chat-intro{display:flex;gap:12px;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--paper3);background:var(--paper);border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer}
+.msg{display:flex;gap:8px;align-items:flex-end}
+.msg.user{justify-content:flex-end}
+.msg .bubble{max-width:85%;padding:9px 12px;border-radius:14px;background:var(--paper2);font-size:.92rem;line-height:1.45}
+.msg.user .bubble{background:var(--gold);color:#fff;border-end-end-radius:4px}
+.msg.agent .bubble{border-end-start-radius:4px}
+.msg.tool .bubble{background:var(--teal-bg);font-size:.82rem;max-width:100%}
+.msg.refused .bubble{background:var(--coral-bg)}
+.msg .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-weight:600}
+.chat-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--paper2);background:var(--paper)}
+.chat-input input{flex:1;padding:10px 12px;border:1px solid var(--paper3);border-radius:10px;background:var(--surface)}
+.btn.mic{padding:8px 10px;font-size:1rem}
+.btn.mic.on{background:var(--coral-bg);color:var(--coral);border-color:var(--coral)}
+.agent-head{display:flex;gap:12px;align-items:center}
+
+.pager{display:flex;align-items:center;gap:8px}
+.fld{display:grid;gap:4px;font-size:.85rem}
+.fld>span{color:var(--ink3);font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.fld input,.fld select,.fld textarea{padding:8px 10px;border:1px solid var(--paper3);border-radius:8px;background:var(--surface);font:inherit}
+.fld.chk{display:flex;align-items:center;gap:8px;align-self:end;padding-bottom:8px}
+.glyph{display:inline-block;width:22px;text-align:center;color:var(--gold-dark)}

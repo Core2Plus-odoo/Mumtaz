@@ -16,7 +16,7 @@ export type Rate = {
   source: string; state: string; created_by: Ref; approved_by: Ref; approved_at: string | null;
 };
 export type Piece = {
-  id: number; serial: string; product: Ref; karat: string | false;
+  id: number; serial: string; product: Ref; category: string | null; karat: string | false;
   gross_weight_g: number; stone_weight_g: number; net_weight_g: number; wastage_pct: number;
   making_type: string | false; making_value: number; stones_value: number;
   rfid_tag: string | null; certificate_ref: string | null; price_incl_vat: number;
@@ -34,6 +34,7 @@ export type Client = {
   id: number; name: string; tier: string | false; restricted: boolean; ai_autonomy_cap: number;
   relationship_manager: Ref; deputy: Ref; phone: string | null; email: string | null;
   city: string | null; no_marketing: boolean; lifetime_value: number;
+  lang: string | null; next_occasion: { kind: string; date: string; in_days: number } | null;
 };
 export type ClientDetail = Client & {
   trays: Tray[];
@@ -50,6 +51,7 @@ export type AgentInfo = {
 export type AiStatus = {
   agents: AgentInfo[]; tools: { name: string; agent: string; level: string; purpose: string }[];
   model: { configured: boolean; name: string | null }; paused: boolean; policy_version: string; can_pause: boolean;
+  voice: Record<string, string>;
 };
 export type Refusal = { refused: string; message: string; agent?: string; tool?: string };
 export type QueueItem = {
@@ -74,6 +76,12 @@ export type AiRun = {
   status: string; reason: string | null; model_used: string; input_tokens: number; output_tokens: number;
   duration_ms: number; sources: string[]; policy_version: string;
 };
+export type NewClient = {
+  name: string; phone?: string; email?: string; city?: string; tier?: string; lang?: string;
+  preferred_karats?: string; typical_budget?: number; no_marketing?: boolean; taste_notes?: string;
+};
+export type ChatMessage = { role: 'user' | 'agent'; text: string; links?: { label: string; to: string }[]; refused?: string; tool?: string };
+export type ChatReply = { agent: string; intent: string; reply: string; links: { label: string; to: string }[]; model_used: string; refused?: string };
 export type AskResult = {
   intent: string; agent: string; client: Ref; message?: string; brief?: Brief;
   rate?: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string };
@@ -218,10 +226,11 @@ export const api = {
   today: () => call<Today>('/today'),
   rateCurrent: () => call<{ rate: Rate | null; reason?: string }>('/rates/current'),
   rates: (limit = 30) => call<Page<Rate>>(`/rates${q({ limit })}`),
-  pieces: (p: { q?: string; karat?: string; on_hand?: boolean; limit?: number; offset?: number } = {}) =>
+  pieces: (p: { q?: string; karat?: string; on_hand?: boolean; category?: string; sort?: string; limit?: number; offset?: number } = {}) =>
     call<Page<Piece>>(`/pieces${q(p)}`),
   piece: (id: number, discount?: number) => call<PieceDetail>(`/pieces/${id}${q({ discount })}`),
-  clients: (p: { q?: string; tier?: string; limit?: number; offset?: number } = {}) =>
+  createClient: (p: NewClient) => call<ClientDetail>('/clients', { method: 'POST', body: JSON.stringify(p) }),
+  clients: (p: { q?: string; tier?: string; sort?: string; city?: string; limit?: number; offset?: number } = {}) =>
     call<Page<Client>>(`/clients${q(p)}`),
   client: (id: number) => call<ClientDetail>(`/clients/${id}`),
   quotes: (p: { limit?: number; offset?: number } = {}) => call<Page<Order>>(`/sales/quotes${q(p)}`),
@@ -276,8 +285,10 @@ export const api = {
   aiStatus: () => call<AiStatus>('/ai/status'),
   aiPause: (paused: boolean) => call<{ paused: boolean }>('/ai/pause', { method: 'POST', body: JSON.stringify({ paused }) }),
   aiAsk: (text: string) => call<AskResult>('/ai/ask', { method: 'POST', body: JSON.stringify({ text }) }),
-  aiBrief: () => call<Brief>('/ai/brief', { method: 'POST', body: '{}' }),
-  aiQueue: () => call<{ items: QueueItem[] } & Partial<Refusal>>('/ai/queue'),
+  aiBrief: (safe = false) => call<Brief>('/ai/brief', { method: 'POST', body: JSON.stringify({ safe }) }),
+  aiQueue: (safe = false) => call<{ items: QueueItem[] } & Partial<Refusal>>(`/ai/queue${q({ safe: safe ? 1 : undefined })}`),
+  aiChat: (agent: string, messages: { role: string; text: string }[]) =>
+    call<ChatReply>('/ai/chat', { method: 'POST', body: JSON.stringify({ agent, messages }) }),
   aiLaylaTray: (p: { client_id: number; intent?: string; budget?: number; limit?: number }) =>
     call<({ tray: Tray; draft: DraftDetail; run: AiRun }) & Partial<Refusal>>('/ai/layla/tray', { method: 'POST', body: JSON.stringify(p) }),
   aiLaylaFollowup: (p: { client_id: number; channel?: string; context?: string }) =>
