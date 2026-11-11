@@ -39,7 +39,7 @@ owner.
 | Private Tray: eligible stock, ranked with reasons, by hand for restricted tiers | No | **Built** | 11 CRM tests + 2 API tests + walk |
 | Client tray link: expiring, revocable, no client data, like/ask/viewing | No | **Built** | A request is not a reservation |
 | Outreach drafts (level C) | No | **Planned** | Next slice |
-| Agents through the API door | No | **Planned** | Phase 5 |
+| Agents through the API door: Zayan brief/command bar, Layla tray + follow-up drafts, approvals inbox, audit, pause | No | **Built** | 18 + 4 tests + walk; restricted clients never reach a model; numbers read, never produced |
 
 ## Pricing and the rate
 

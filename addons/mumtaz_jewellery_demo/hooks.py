@@ -358,6 +358,23 @@ def _seed_pipeline(env, clients, lots, presenter):
     return out
 
 
+def _seed_agents(env, clients, presenter):
+    """Something in the approvals inbox and the audit: Layla's follow-up for
+    the standard client, a refused request for the Private one (the control
+    working), and Zayan's brief. All local paths; no model is called."""
+    if len(clients) < 3:
+        return {}
+    Agent = env['jewellery.ai.agent'].with_user(presenter) if presenter else env['jewellery.ai.agent']
+    out = {}
+    fu = Agent.draft_followup(clients[1], note='She liked the bangle on Saturday.')
+    if not fu.get('refused'):
+        out['followup'] = fu['draft'].name
+    refused = Agent.prepare_tray(clients[2])
+    out['refused'] = refused.get('refused') or '-'
+    Agent.brief()
+    return out
+
+
 def post_init_hook(env):
     """Create the DEMO dataset once."""
     parameters = env['ir.config_parameter'].sudo()
@@ -381,6 +398,7 @@ def post_init_hook(env):
     docs = _seed_sales(env, clients, lots)
     presenter = env.ref('base.user_admin', raise_if_not_found=False)
     pipeline = _seed_pipeline(env, clients, lots, presenter)
+    agents = _seed_agents(env, clients, presenter)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -393,9 +411,11 @@ def post_init_hook(env):
         'DEMO seed complete: rate %.2f/g (approved by %s), %s products, '
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
         'sample piece total %.2f, %s owner cards, '
-        'quotation %s, order %s, invoice %s (%.2f), trays %s',
+        'quotation %s, order %s, invoice %s (%.2f), trays %s, '
+        'AI drafts %s (refused: %s)',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
         len(clients), intake.name, intake.value, priced.get('total', 0.0),
         cards, docs.get('quotation', '-'), docs.get('order', '-'),
         docs.get('invoice', '-'), docs.get('invoice_total', 0.0),
-        '/'.join(pipeline.values()) or '-')
+        '/'.join(pipeline.values()) or '-',
+        agents.get('followup', '-'), agents.get('refused', '-'))

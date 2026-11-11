@@ -31,6 +31,7 @@ until somebody sets one deliberately.
         # demonstration.
         'mumtaz_jewellery_sale',
         'mumtaz_jewellery_crm',
+        'mumtaz_jewellery_ai',
     ],
     'data': [],
     'post_init_hook': 'post_init_hook',

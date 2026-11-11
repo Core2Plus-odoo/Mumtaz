@@ -531,3 +531,62 @@ class TestJawharApiSalesHub(TestJawharApiSale):
         self.sign_in('api_seller')                                 # not allowed to see this client
         self.api('/trays/%d' % tray['id'], status=404)
         self.assertNotIn(tray['id'], [t['id'] for t in self.api('/trays')['data']['items']])
+
+
+@tagged('post_install', '-at_install')
+class TestJawharApiAgents(TestJawharApiSalesHub):
+    """Layla and Zayan through the door, and the approvals inbox."""
+
+    def test_status_and_command_bar(self):
+        self.sign_in('api_seller')
+        st = self.api('/ai/status')['data']
+        self.assertEqual({a['key'] for a in st['agents']}, {'zayan', 'layla'})
+        self.assertFalse(st['can_pause'])
+        self.assertIn('configured', st['model'])
+        out = self.api('/ai/ask', 'POST', {'text': 'prepare my day'})['data']
+        self.assertEqual(out['intent'], 'brief')
+        self.assertTrue(out['brief']['sentences'])
+        self.assertEqual(out['brief']['narrated_by'], 'local')
+        self.assertEqual(self.api('/ai/ask', 'POST', {'text': ''}, status=400)['error']['code'], 'validation')
+
+    def test_layla_tray_then_followup_then_review(self):
+        self.sign_in('api_cashier')
+        out = self.api('/ai/layla/tray', 'POST', {'client_id': self.client.id, 'intent': 'wedding', 'limit': 2})['data']
+        self.assertEqual(len(out['tray']['lines']), 2)
+        self.assertEqual(out['draft']['kind'], 'tray')
+        self.assertEqual(out['run']['level'], 'C')
+        fu = self.api('/ai/layla/followup', 'POST', {'client_id': self.client.id, 'channel': 'whatsapp',
+                                                      'context': 'She asked about the bangle.'})['data']
+        draft = fu['draft']
+        self.assertEqual(draft['state'], 'pending')
+        self.assertTrue(draft['body'])
+        inbox = self.api('/ai/drafts')['data']
+        self.assertIn(draft['id'], [d['id'] for d in inbox['items']])
+        # stale digest does not bind
+        self.api('/ai/drafts/%d/edit' % draft['id'], 'POST', {'body': draft['body'] + ' Thursday suits us.'})
+        err = self.api('/ai/drafts/%d/approve' % draft['id'], 'POST', {'digest': draft['body_digest']}, status=400)
+        self.assertEqual(err['error']['code'], 'invalid')
+        fresh = self.api('/ai/drafts/%d' % draft['id'])['data']
+        ok = self.api('/ai/drafts/%d/approve' % draft['id'], 'POST', {'digest': fresh['body_digest']})['data']
+        self.assertEqual(ok['state'], 'approved')
+        self.assertEqual(ok['approved_by']['name'], 'TEST Cashier')
+        runs = self.api('/ai/runs')['data']['items']
+        self.assertTrue(any(r['tool'] == 'followup.draft' for r in runs))
+
+    def test_royal_tray_is_refused_through_the_door_and_logged(self):
+        self.sign_in('api_cashier')
+        out = self.api('/ai/layla/tray', 'POST', {'client_id': self.royal.id})['data']
+        self.assertEqual(out['refused'], 'restricted_client')
+        self.assertIn('by hand', out['message'])
+        row = self.env['jewellery.ai.run'].sudo().search([('tool', '=', 'tray.prepare'), ('status', '=', 'refused')], limit=1)
+        self.assertEqual(row.reason, 'restricted_client')
+
+    def test_only_a_manager_pauses(self):
+        self.sign_in('api_seller')
+        self.assertEqual(self.api('/ai/pause', 'POST', {'paused': True}, status=403)['error']['code'], 'forbidden')
+        self.api('/auth/logout', 'POST')
+        self.sign_in('api_cashier')
+        self.assertTrue(self.api('/ai/pause', 'POST', {'paused': True})['data']['paused'])
+        self.assertTrue(self.api('/ai/status')['data']['paused'])
+        self.assertEqual(self.api('/ai/brief', 'POST')['data']['refused'], 'paused')
+        self.assertFalse(self.api('/ai/pause', 'POST', {'paused': False})['data']['paused'])

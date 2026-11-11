@@ -19,7 +19,7 @@ export default function Clients() {
       <TopBar title={t('clients_title')} sub={t('clients_sub')} rate={rate} />
       <div className="content">
         <div className="toolbar">
-          <input placeholder={t('search')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('search')} />
+          <input placeholder={t('search_clients')} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t('search_clients')} />
           <select value={tier} onChange={(e) => setTier(e.target.value)} aria-label={t('tier')}>
             <option value="">{t('tier')}: {t('all')}</option>
             {['standard', 'preferred', 'private', 'royal'].map((k) => <option key={k} value={k}>{tierLabel(lang, k)}</option>)}
