@@ -176,6 +176,17 @@ Not built, on purpose: marketplaces, tax-free refund schemes, payment terminals,
 
 Measured: 7 channels tests (the fixture feed drafts and never approves, the maker cannot approve his own draft, a checker can; a JSON provider read by path with ounces to grams and a 10 s timeout; errors logged not raised and plain HTTP refused; minimum move and a draft already waiting; only a manager configures; an unpublished design leaves the public shelf but not the staff screens and the public door refuses a request for it; the door) incl. 1 through the door; headless walk: the feed saved and read, the draft on Gold rates with prices unchanged, a design switched off the web shelf and gone from the kiosk, Arabic.
 
+## Slice 10 (Client app) — built 11 Nov 2026
+
+| Plan (roadmap slice 6, review R15) | Built |
+|---|---|
+| Sign-in by one-time code | `jewellery.client.session`: she gives her phone; a six-digit code lives ten minutes; **a person gives it to her** (it shows on her record for staff), the server sends no message. Five wrong tries end the code, three codes an hour per phone, and an unknown phone gets the same answer as a known one. A wrong code is a result, not an error, so the count of misses survives the request. Success gives a thirty-day token stored as a digest. A demo-only parameter echoes the code in the answer so a demo signs in without a person; it is 0 on a real tenant. |
+| Her page (`/app/me`) | Today's approved rate; **what she owns**: the pieces on her confirmed orders with the invoice, and the metal value at today's rate, read from the engine and labelled "for your information, not an offer"; the selections prepared for her (opened in the app, by her token, without the link); her kiosk requests and their state; her consent, which she may withdraw or give herself (recorded as "the client wrote to us"); sign out. English and Arabic, phone width. |
+| What is not there | No payments, no prices made, no agent: the page reads the engine and her own records, scoped by the token alone; nothing about her enters a model request. The stylist and WhatsApp stay planned. |
+| Staff | The live code on the client record ("live code to give her") and the count of open sessions. |
+
+Measured: 8 client tests (a code for a known phone and the same answer for an unknown one; three codes an hour then silence; verify gives a token and five misses close the code; expired codes and tokens are cleared; she reads only her own things: her sale not another client's, her tray, her request; the door: code, verify, home, consent given and withdrawn, sign-out; the echo is off by default; staff see the live code) incl. 2 through the door; headless walk on a phone viewport: the sign-in screen, the code (demo echo) and the same code on her record for staff, a wrong code refused, her page with the rate, her pieces with metal value, her choices changed, Arabic RTL, sign out; 0 page errors.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

@@ -131,7 +131,7 @@ owner.
 | Agent gateway, autonomy levels, audit | No | **Planned** | Slice 5 |
 | Voice (speech in, speech out) | No | **Planned** | Slice 5/7. A demo clip exists; no live stack |
 | WhatsApp | **Enterprise** | **Decision** | Custom against Meta Cloud API |
-| Client app | No | **Planned** | Slice 6 |
+| Client app | No | **Built** | Sign-in by one-time code a person gives her (server sends nothing); today's rate, what she owns with metal value, selections, requests, consent; 8 tests + phone walk |
 
 ## Platform
 
