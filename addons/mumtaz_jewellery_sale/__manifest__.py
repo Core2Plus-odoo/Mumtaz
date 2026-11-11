@@ -22,6 +22,7 @@ configured.
     'depends': ['mumtaz_jewellery', 'sale_management', 'account'],
     'data': [
         'security/ir.model.access.csv',
+        'data/counter_data.xml',
         'views/sale_views.xml',
         'views/account_move_views.xml',
     ],

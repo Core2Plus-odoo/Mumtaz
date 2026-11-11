@@ -136,6 +136,31 @@ def _seed_pieces(env, products):
     return created
 
 
+def _align_demo_vat(env, products):
+    """One VAT figure for the whole demo.
+
+    The pricing engine reads mumtaz_jewellery.vat_rate (5) for the breakdown
+    a client sees at the counter; Odoo's tax engine owns the tax on the
+    invoice and uses the company's default sale tax, which on a fresh
+    database is whatever the localisation shipped (15% on the first VPS
+    demo). Two VAT figures on one receipt is the first thing a finance
+    manager would catch. The demo sets both to 5%; a real tenant's finance
+    manager confirms the rate and the tax (docs/mumtaz-jewel/CLAUDE.md).
+    """
+    params = env['ir.config_parameter'].sudo()
+    params.set_param('mumtaz_jewellery.vat_rate', '5')
+    Tax = env['account.tax']
+    tax = Tax.search([('company_id', '=', env.company.id), ('type_tax_use', '=', 'sale'),
+                      ('amount_type', '=', 'percent'), ('amount', '=', 5.0)], limit=1)
+    if not tax:
+        tax = Tax.create({'name': 'VAT 5%', 'type_tax_use': 'sale', 'amount_type': 'percent',
+                          'amount': 5.0, 'company_id': env.company.id})
+    env.company.account_sale_tax_id = tax
+    for product in products:
+        product.taxes_id = [(6, 0, [tax.id])]
+    return tax
+
+
 def _seed_cost_basis(lots):
     """A recorded cost per piece, so margin has something to be measured
     against. Synthetic: metal at the approved rate plus a fraction of the
@@ -309,6 +334,7 @@ def post_init_hook(env):
     env.company.quotation_validity_days = 7
     rate, maker, checker = _seed_rate(env)
     products = _seed_products(env)
+    _align_demo_vat(env, products)
     lots = _seed_pieces(env, products)
     on_hand = _put_pieces_in_stock(env, lots)
     _seed_cost_basis(lots)

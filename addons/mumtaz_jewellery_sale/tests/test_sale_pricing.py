@@ -203,7 +203,8 @@ class TestSalePricing(TransactionCase):
         _o1, full = self._order(lot_full)
         _o2, discounted = self._order(lot_disc, discount=50.0)
         full.action_price_from_rate()
-        discounted.action_price_from_rate()
+        # 50% is far above the staff ceiling (Slice 3); a manager prices it.
+        discounted.with_user(self.maker).action_price_from_rate()
 
         self.assertAlmostEqual(
             discounted.jewellery_metal_value, full.jewellery_metal_value, 2,
