@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deploy the Mumtaz Jewel staging/demo stack for jewel.mumtaz.digital.
+# Deploy the Jawhar staging/demo stack for jewel.mumtaz.digital.
 #
 # This script deploys STAGING ONLY. By design it:
 #   * refuses to run from `main`, which auto-deploys to the production VPS;

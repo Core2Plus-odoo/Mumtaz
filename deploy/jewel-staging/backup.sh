@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Nightly dump of the Mumtaz Jewel staging database, and the restore drill.
+# Nightly dump of the Jawhar staging database, and the restore drill.
 #
 # Acts only on the `mumtaz-jewel-staging` compose project's own Postgres
 # container. It never reaches the CRM database or the shared Postgres.

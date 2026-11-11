@@ -1,4 +1,4 @@
-"""Shared fixtures for the Mumtaz Jewel Odoo integration tests.
+"""Shared fixtures for the Jawhar Odoo integration tests.
 
 Synthetic users and data only (docs/mumtaz-jewel/CLAUDE.md). Nothing here
 touches a real client, a real rate feed or an outbound channel.

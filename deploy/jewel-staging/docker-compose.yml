@@ -1,4 +1,4 @@
-# Mumtaz Jewel staging/demo stack for jewel.mumtaz.digital.
+# Jawhar staging/demo stack for jewel.mumtaz.digital.
 #
 # A SEPARATE compose project from the C2P CRM and from the repo-root
 # docker-compose.staging.yml: its own project name, its own network, its own
