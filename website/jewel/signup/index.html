@@ -192,7 +192,7 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
     <div class="steps" id="steps"></div>
     <div class="railfoot">
       Engine: Odoo 19 Community<br>
-      Nothing is charged until you confirm.
+      This is a sample setup. It creates nothing and charges nothing.
     </div>
   </nav>
 
@@ -258,13 +258,8 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
         <div id="mc-note"></div>
       </div>
       <div class="card">
-        <h3>Who may override</h3>
-        <div class="sub">There is an escape hatch for a one-person shop, off by default. Switching it on is recorded.</div>
-        <div class="pick">
-          <div><b>Allow self-approval</b><div class="d">The same person may enter and approve a rate. Every use is logged against their name.</div></div>
-          <label class="sw"><input type="checkbox" id="selfapp"><span class="tr"></span></label>
-        </div>
-        <div id="self-note"></div>
+        <h3>No override</h3>
+        <div class="sub">There is no setting that lets one person enter and approve a rate. A one-person shop names a deputy — the accountant, a partner, a family member — as the second approver.</div>
       </div>
     </section>
 
@@ -277,12 +272,12 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
       </div>
       <div class="note n-warn" style="margin-bottom:12px">
         <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
-        <div><b>The values below are common defaults, not advice.</b> Jawhar applies whatever is configured here and never invents a threshold. Have the named finance manager confirm them before you trade on them.</div>
+        <div><b>Nothing below is validated law.</b> VAT and thresholds are configuration a named finance manager confirms for your country before you trade; this screen records the decision, it does not make it.</div>
       </div>
       <div class="card">
         <div class="three">
           <div class="field"><label for="vat">VAT rate</label><input type="number" id="vat" value="5" step="0.5" min="0"><div class="hint">Per cent</div></div>
-          <div class="field"><label for="cash">Cash reporting threshold</label><input type="number" id="cash" value="55000" step="1000" min="0"><div class="hint">Per client, per year</div></div>
+          <div class="field"><label for="cash">Cash reporting threshold</label><input type="number" id="cash" value="" placeholder="Set by your finance manager" step="1000" min="0"><div class="hint">No default. Basis and period are set with the named finance manager, not here.</div></div>
           <div class="field"><label for="ogx">Old gold second approval</label><input type="number" id="ogx" value="5000" step="500" min="0"><div class="hint">Above this, another person signs</div></div>
         </div>
         <div class="three">
@@ -338,7 +333,7 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
       <div class="head">
         <div class="kicker">Step 7 of 7</div>
         <h1>Review</h1>
-        <p>What gets created. Nothing here is charged until you confirm, and nothing is irreversible.</p>
+        <p>What a real setup would create. This sample creates nothing, charges nothing and asks for no account or payment.</p>
       </div>
       <div class="card">
         <h3>Workspace</h3>
@@ -462,24 +457,18 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
   function norm(v){ return (v||'').trim().toLowerCase().replace(/\s+/g,' '); }
   function checkMC(){
     var m = norm($('maker').value), c = norm($('checker').value);
-    var self = $('selfapp').checked, box = $('mc-note'), ok = true, msg = '';
+    var box = $('mc-note'), ok = true, msg = '';
     if (!m || !c){
       ok = false; msg = ['n-bad','Both names are needed.','A rate has to be entered by someone and approved by someone.'];
-    } else if (m === c && !self){
-      ok = false; msg = ['n-bad','The same person cannot do both.','That is the whole control. Name a second person, or switch on self-approval below and accept what it means.'];
-    } else if (m === c && self){
-      msg = ['n-warn','One person will enter and approve.','Allowed because you switched on self-approval. Every rate will carry their name twice, and an auditor will see that.'];
+    } else if (m === c){
+      ok = false; msg = ['n-bad','The same person cannot do both.','That is the whole control, and there is no switch that waives it. Name a second person.'];
     } else {
       msg = ['n-ok','Good.','A rate entered by ' + $('maker').value.trim() + ' will wait for ' + $('checker').value.trim() + ' before anything can be priced from it.'];
     }
     box.innerHTML = '<div class="note '+msg[0]+'"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>'+msg[1]+'</b> '+msg[2]+'</div></div>';
-    $('self-note').innerHTML = self
-      ? '<div class="note n-warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><div><b>You are turning off the second pair of eyes.</b> Sensible for a single shop where one person is the business. Switch it back off the day you hire a second manager.</div></div>'
-      : '';
     return ok;
   }
   ['maker','checker'].forEach(function(id){ $(id).addEventListener('input', checkMC); });
-  $('selfapp').addEventListener('change', checkMC);
 
   // ---- step 6 note
   function dataNote(){
@@ -510,17 +499,14 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
     });
     var dv = document.querySelector('input[name=data]:checked').value;
     var dataLabel = {demo:'Synthetic demo data',empty:'Empty',"import":'Import from a spreadsheet',migrate:'Migrate an existing system'}[dv];
-    var self = $('selfapp').checked;
     var rows = [
       ['Company', $('co').value + ' — ' + $('ctry').value],
       ['Stores', stores + (stores === 1 ? ' store' : ' stores') + ', one Odoo warehouse each'],
       ['Currency', $('cur').value],
       ['Apps', apps.length + ': ' + apps.join(', ')],
-      ['Gold rate', self && norm($('maker').value) === norm($('checker').value)
-        ? $('maker').value + ' enters and approves — self-approval ON'
-        : $('maker').value + ' enters, ' + $('checker').value + ' approves'],
+      ['Gold rate', $('maker').value + ' enters, ' + $('checker').value + ' approves'],
       ['VAT', $('vat').value + '%'],
-      ['Cash threshold', Number($('cash').value).toLocaleString('en-US') + ' ' + $('cur').value + ' per client per year'],
+      ['Cash threshold', $('cash').value ? Number($('cash').value).toLocaleString('en-US') + ' ' + $('cur').value + ' (basis and period to be confirmed)' : 'not set — finance manager to confirm'],
       ['Old gold', 'second approval above ' + Number($('ogx').value).toLocaleString('en-US') + ' ' + $('cur').value],
       ['Confirmed by', $('fin').value],
       ['Agents', agents.length ? lvls.join(' · ') + ' · coordinated by Zayan' : 'None'],
@@ -528,7 +514,7 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
     ];
     $('rev').innerHTML = rows.map(function(r){ return '<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>'; }).join('');
     $('final-note').innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>' +
-      '<div><b>This prototype stops here.</b> In the real flow this button creates the database, installs the apps, applies the settings and emails the owner a link. Pricing is confirmed before anything is charged.</div>';
+      '<div><b>This prototype stops here.</b> In the real flow this button creates the database, installs the apps, applies the settings and emails the owner a link. No account exists and nothing is charged until that flow is built and you agree to a package.</div>';
   }
 
   // ---- navigation
@@ -565,7 +551,6 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
   ['maker','checker'].forEach(function(id){
     $(id).addEventListener('input', function(){ if (step === 2) $('next').disabled = !checkMC(); });
   });
-  $('selfapp').addEventListener('change', function(){ if (step === 2) $('next').disabled = !checkMC(); });
 
   syncZayan();
   render();

@@ -49,12 +49,16 @@ class JewelleryGoldRate(models.Model):
         if not self.env.user.has_group(
                 'mumtaz_jewellery.group_jewellery_manager'):
             raise UserError(_('Only a jewellery manager can approve rates.'))
-        allow_self = self.env['ir.config_parameter'].sudo().get_param(
-            'mumtaz_jewellery.allow_self_approval') == '1'
+        # There is no escape hatch. An earlier version read
+        # mumtaz_jewellery.allow_self_approval here so a one-person shop could
+        # approve its own rate; the product plan (W02, 11 Nov 2026) removed
+        # it: a second approver is the promise the product makes, and a
+        # setting that quietly waives it is a contradiction a buyer would
+        # find. A one-person shop names a deputy.
         for rec in self:
             if rec.state != 'draft':
                 raise UserError(_('Only draft rates can be approved or rejected.'))
-            if not allow_self and rec.create_uid == self.env.user:
+            if rec.create_uid == self.env.user:
                 raise UserError(_(
                     'Maker-checker: a different user must approve a rate '
                     'you entered.'))

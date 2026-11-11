@@ -23,6 +23,9 @@
 #   deploy/jewel-staging/deploy.sh --modules       # install modules newly
 #                                                  # listed in MODULES into
 #                                                  # the existing database
+#   deploy/jewel-staging/deploy.sh --upgrade       # apply code changes to the
+#                                                  # installed Jawhar modules
+#                                                  # (new fields, views, data)
 #   deploy/jewel-staging/deploy.sh --site-only     # landing page + interface
 #
 # Every run also builds the Jawhar interface (apps/jawhar-web) in a Node
@@ -46,6 +49,7 @@ DO_PULL=1
 DO_INSTALL=0
 DO_SEED=0
 DO_MODULES=0
+DO_UPGRADE=0
 SITE_ONLY=0
 for arg in "$@"; do
   case "$arg" in
@@ -54,6 +58,7 @@ for arg in "$@"; do
     --seed)      DO_SEED=1 ;;
     --site-only) SITE_ONLY=1 ;;
     --modules)   DO_MODULES=1 ;;
+    --upgrade)   DO_UPGRADE=1 ;;
     *) red "Unknown option: $arg"; exit 2 ;;
   esac
 done
@@ -355,6 +360,18 @@ if [ "$DO_MODULES" = "1" ] && [ "$DO_INSTALL" != "1" ]; then
   compose up -d db
   compose run --rm --no-deps odoo odoo \
     -c /etc/odoo/odoo.conf -d "$DEMO_DB" -i "$MODULES" \
+    --without-demo=True --no-http --stop-after-init
+fi
+
+if [ "$DO_UPGRADE" = "1" ] && [ "$DO_INSTALL" != "1" ]; then
+  # A pull that changes a module's fields, views or data needs `-u`; a
+  # restart alone leaves the database on the old schema. Idempotent: an
+  # upgrade of an unchanged module rewrites nothing. The seed module is not
+  # upgraded -- its hook runs once by design and an upgrade must not re-seed.
+  info "Upgrading the installed Jawhar modules in '$DEMO_DB': $MODULES"
+  compose up -d db
+  compose run --rm --no-deps odoo odoo \
+    -c /etc/odoo/odoo.conf -d "$DEMO_DB" -u "$MODULES" \
     --without-demo=True --no-http --stop-after-init
 fi
 

@@ -10,12 +10,20 @@
                domain="[('karat','!=',False)]"/>
         <field name="jewellery_making_discount_pct" optional="hide"/>
         <field name="jewellery_rate_per_gram" optional="hide" readonly="1"/>
+        <field name="jewellery_margin" optional="hide" readonly="1"
+               groups="mumtaz_jewellery.group_jewellery_manager"/>
         <field name="jewellery_is_priced" column_invisible="1"/>
       </xpath>
       <xpath expr="//button[@name='action_confirm'][1]" position="before">
         <button name="action_price_lines_from_rate" type="object"
                 string="Price from gold rate" class="btn-secondary"
                 invisible="state not in ['draft','sent']"/>
+        <button name="action_renew_quote" type="object"
+                string="Renew at today's rate" class="btn-secondary"
+                invisible="not jewellery_quote_expired"/>
+      </xpath>
+      <xpath expr="//field[@name='validity_date']" position="before">
+        <field name="jewellery_quote_expired" invisible="1"/>
       </xpath>
     </field>
   </record>

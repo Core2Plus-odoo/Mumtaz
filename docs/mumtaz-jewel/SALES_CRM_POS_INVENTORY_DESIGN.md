@@ -73,8 +73,9 @@ The posting guard also catches a hand-made invoice line that carries a piece
 but no rate — the same hole the order-confirmation guard closes, one document
 further on.
 
-**Still open in Sales:** quote validity with a rate-lock and expiry policy,
-and atomic reservation.
+**Done 11 Nov 2026 (Slice 1):** quote validity with the rate lock and
+renewal, and the unique-piece guard under a row lock on confirm; both from
+the product interface through the API door. See `PLAN_V3_RECONCILIATION.md`.
 
 ## 3. CRM
 

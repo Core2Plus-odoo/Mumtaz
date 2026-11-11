@@ -41,15 +41,19 @@ class TestGoldRateApproval(JewelCommon):
             rate.with_user(self.user_manager_a).action_reject()
         self.assertEqual(rate.state, 'draft')
 
-    def test_self_approval_only_when_the_parameter_allows_it(self):
-        """The documented escape hatch, which ships disabled."""
+    def test_no_setting_waives_the_second_approver(self):
+        """The old allow_self_approval escape hatch is gone (plan W02).
+
+        A database that still carries the parameter from an earlier install
+        must get the same refusal as one that never had it.
+        """
         self._set_param('mumtaz_jewellery.allow_self_approval', '1')
         self.addCleanup(
             self._set_param, 'mumtaz_jewellery.allow_self_approval', '0')
         rate = self._draft_rate(self.user_manager_a)
-        rate.with_user(self.user_manager_a).action_approve()
-        self.assertEqual(rate.state, 'approved')
-        self.assertEqual(rate.approved_by_id, self.user_manager_a)
+        with self.assertRaises(UserError):
+            rate.with_user(self.user_manager_a).action_approve()
+        self.assertEqual(rate.state, 'draft')
 
     # -- 2. a non-manager is refused -----------------------------------
     def test_jewellery_user_cannot_approve(self):
