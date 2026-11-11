@@ -210,7 +210,9 @@ class TestSalePricing(TransactionCase):
         self.assertEqual(draft.state, 'draft')
         lot = self._piece(seq=10)
         order, line = self._order(lot)
-        with self.assertRaises(Exception):
+        # Assert the specific exception, not bare Exception: a broad catch
+        # would pass even when the code failed for an unrelated reason.
+        with self.assertRaisesRegex(UserError, 'No approved gold rate'):
             line.action_price_from_rate()
         self.assertFalse(line.jewellery_is_priced)
 
