@@ -62,11 +62,28 @@ export type Brief = {
   sentences: string[]; figures: Record<string, unknown> & { rate: { rate_per_gram: number; currency: string; approved_by: string; approved_at: string } | null; as_of: string };
   queue: QueueItem[]; sources: string[]; narrated_by: string; run_id: number; as_of: string; level: string;
 } & Partial<Refusal>;
+export type Consent = {
+  status: 'unknown' | 'given' | 'withdrawn'; date: string | null; source: string | null; note: string | null;
+  recorded_by: Ref; no_marketing: boolean; may_message: boolean;
+};
+export type Upcoming = {
+  occasion_id: number; kind: string; date: string; in_days: number; lead_days: number; due: boolean; note: string | null;
+  client: { id: number; name: string; tier: string; restricted: boolean; phone: string | null; email: string | null; lang: string | null };
+  consent: Consent; channel: 'whatsapp' | 'email' | 'note'; owner: Ref;
+  draft: { id: number; name: string; state: string; channel: string; sent_at: string | null; sent_by: string | null } | null;
+};
+export type Handoff = { channel: string; to: string | null; url: string | null };
+export type OutreachDraft = Draft & {
+  occasion: { id: number; kind: string; year: number } | null; consent: Consent | null;
+  sent_by: Ref; sent_at: string | null; sent_channel: string | null; send_note: string | null;
+};
+export type OutreachDraftDetail = OutreachDraft & DraftDetail & { handoff: Handoff | null };
 export type Draft = {
-  id: number; name: string; kind: 'tray' | 'followup'; agent: 'zayan' | 'layla'; state: string;
+  id: number; name: string; kind: 'tray' | 'followup' | 'outreach'; agent: 'zayan' | 'layla'; state: string;
   client: Ref; restricted: boolean; tray: Ref; channel: string; subject: string | null; owner: Ref;
   model_used: string; consent_ok: boolean; expired: boolean; expires_at: string | null; created_at: string;
   approved_by: Ref; approved_at: string | null; reasons: string[]; policy_version: string;
+  sent_by?: Ref; sent_at?: string | null;
 };
 export type DraftDetail = Draft & {
   body: string; body_digest: string; review_note: string | null; sources: string[]; tray_detail: Tray | null;
@@ -323,4 +340,15 @@ export const api = {
   kioskRequests: (state = 'requested') => call<{ items: KioskRequest[]; count: number }>(`/kiosk/requests${q({ state })}`),
   kioskConfirm: (id: number) => call<KioskRequest>(`/kiosk/requests/${id}/confirm`, { method: 'POST', body: '{}' }),
   kioskDecline: (id: number, reason: string) => call<KioskRequest>(`/kiosk/requests/${id}/decline`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  // outreach: consent on the client, occasion drafts, a person sends
+  consent: (clientId: number) => call<Consent>(`/clients/${clientId}/consent`),
+  recordConsent: (clientId: number, p: { status: string; source?: string; note?: string }) =>
+    call<Consent>(`/clients/${clientId}/consent`, { method: 'POST', body: JSON.stringify(p) }),
+  outreachUpcoming: (days?: number) => call<{ items: Upcoming[]; count: number; due: number }>(`/outreach/upcoming${q({ days })}`),
+  outreachPrepare: (p: { occasion_id?: number; days?: number } = {}) =>
+    call<({ prepared: OutreachDraft[]; count: number; skipped: { occasion_id: number; why: string }[]; run: AiRun } & Partial<Refusal>)>('/outreach/prepare', { method: 'POST', body: JSON.stringify(p) }),
+  outreachDrafts: (state = 'approved') => call<{ items: OutreachDraft[]; count: number }>(`/outreach/drafts${q({ state })}`),
+  outreachDraft: (id: number) => call<OutreachDraftDetail>(`/outreach/drafts/${id}`),
+  outreachSend: (id: number, p: { channel: string; note?: string }) =>
+    call<{ draft: OutreachDraftDetail; handoff: Handoff; run: AiRun }>(`/outreach/drafts/${id}/send`, { method: 'POST', body: JSON.stringify(p) }),
 };

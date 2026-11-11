@@ -38,7 +38,7 @@ owner.
 | Pipeline with jewellery stages, odds from Odoo's scoring | Standard (`crm`) | **Built** | Slice 2; configured, not written |
 | Private Tray: eligible stock, ranked with reasons, by hand for restricted tiers | No | **Built** | 11 CRM tests + 2 API tests + walk |
 | Client tray link: expiring, revocable, no client data, like/ask/viewing | No | **Built** | A request is not a reservation |
-| Outreach drafts (level C) | No | **Planned** | Next slice |
+| Outreach: consent on the client (given/withdrawn, how, by whom), occasion drafts one per client per year (level C), a person sends from her own phone (level D, logged); the server never sends | No | **Built** | 14 tests + walk; no consent, no message |
 | Agents through the API door: Zayan brief/command bar, Layla tray + follow-up drafts, approvals inbox, audit, pause | No | **Built** | 18 + 4 tests + walk; restricted clients never reach a model; numbers read, never produced |
 | Voice and text conversation with Zayan and Layla (ElevenLabs agents, client tools run as the signed-in user), EN/AR, portraits, on every screen | No | **Built** | Model-safe tool results; falls back to server chat |
 | Clients and Pieces lists: search, filters, sort, paging, new-client form; demo data at shop scale | Partly | **Built** | 38 clients / 60 pieces in the demo |

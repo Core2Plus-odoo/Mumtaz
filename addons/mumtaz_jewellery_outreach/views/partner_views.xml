@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_consent" model="ir.ui.view">
+        <field name="name">res.partner.form.jewellery.consent</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="mumtaz_jewellery_vip.view_partner_form_jewellery"/>
+        <field name="arch" type="xml">
+            <field name="no_marketing" position="after">
+                <field name="marketing_consent"/>
+                <field name="consent_date" readonly="1"/>
+                <field name="consent_source"/>
+                <field name="consent_by_id" readonly="1"/>
+                <field name="consent_note"/>
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -487,6 +487,39 @@ def _seed_pipeline(env, clients, lots, presenter):
     return out
 
 
+def _seed_consent(env):
+    """Consent recorded on most demo clients (they are fictional); a few
+    left unrecorded and the do-not-contact ones withdrawn, so the Outreach
+    screen shows every case. Nothing twice."""
+    Partner = env['res.partner']
+    if 'marketing_consent' not in Partner._fields:
+        return 0
+    done = 0
+    clients = Partner.search([('comment', 'ilike', 'DEMO data'), ('marketing_consent', '=', 'unknown')], order='id')
+    presenter = env.ref('base.user_admin', raise_if_not_found=False)
+    for i, p in enumerate(clients):
+        if p.no_marketing:
+            status, source = 'withdrawn', 'phone'
+        elif i % 5 == 4:
+            continue  # left unrecorded on purpose
+        else:
+            status, source = 'given', ('in_store', 'form', 'phone')[i % 3]
+        p.with_user(presenter).action_record_consent(status, source=source, note='DEMO consent record.')
+        done += 1
+    return done
+
+
+def _seed_outreach(env, presenter):
+    """Layla drafts the occasion messages due, for a person to review: the
+    Outreach screen opens with work on it. One per occasion per year."""
+    Agent = env['jewellery.ai.agent']
+    if not hasattr(Agent, 'outreach_prepare'):
+        return 0
+    Agent = Agent.with_user(presenter) if presenter else Agent
+    out = Agent.outreach_prepare()
+    return 0 if out.get('refused') else out['count']
+
+
 def _seed_agents(env, clients, presenter):
     """Something in the approvals inbox and the audit: Layla's follow-up for
     the standard client, a refused request for the Private one (the control
@@ -517,9 +550,12 @@ def top_up(env):
     manager = env['res.users'].search([('login', '=', 'demo_rate_checker')], limit=1) or env.ref('base.user_admin')
     clients = _seed_clients(env, manager, lots)
     kiosk = _seed_kiosk(env)
-    _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s',
-                 len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-')
-    return {'products': len(products), 'pieces': len(lots), 'clients': len(clients)}
+    presenter = env.ref('base.user_admin', raise_if_not_found=False)
+    consent = _seed_consent(env)
+    outreach = _seed_outreach(env, presenter)
+    _logger.info('DEMO top-up: %s products, %s pieces (%s on hand), %s clients, kiosk %s, consent %s, outreach drafts %s',
+                 len(products), len(lots), on_hand, len(clients), '/'.join(kiosk.values()) or '-', consent, outreach)
+    return {'products': len(products), 'pieces': len(lots), 'clients': len(clients), 'consent': consent, 'outreach': outreach}
 
 
 def _seed_kiosk(env):
@@ -565,6 +601,8 @@ def post_init_hook(env):
     pipeline = _seed_pipeline(env, clients, lots, presenter)
     agents = _seed_agents(env, clients, presenter)
     kiosk = _seed_kiosk(env)
+    consent = _seed_consent(env)
+    outreach = _seed_outreach(env, presenter)
 
     # Price one piece so the log proves the engine ran off the approved rate.
     priced = lots[0].get_price_breakdown() if lots else {}
@@ -578,10 +616,10 @@ def post_init_hook(env):
         '%s pieces (%s on hand), %s clients, old-gold %s valued %.2f, '
         'sample piece total %.2f, %s owner cards, '
         'quotation %s, order %s, invoice %s (%.2f), trays %s, '
-        'AI drafts %s (refused: %s), kiosk requests %s',
+        'AI drafts %s (refused: %s), kiosk requests %s, consent on %s clients, outreach drafts %s',
         rate.rate_per_gram, checker.login, len(products), len(lots), on_hand,
         len(clients), intake.name, intake.value, priced.get('total', 0.0),
         cards, docs.get('quotation', '-'), docs.get('order', '-'),
         docs.get('invoice', '-'), docs.get('invoice_total', 0.0),
         '/'.join(pipeline.values()) or '-',
-        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-')
+        agents.get('followup', '-'), agents.get('refused', '-'), '/'.join(kiosk.values()) or '-', consent, outreach)

@@ -53,7 +53,7 @@ export default function Agents() {
   };
   const levelLabel = (l: string) => t(`level_${l.toLowerCase()}`);
   const stateLabel = (s: string) => t(`dstate_${s}`);
-  const kindLabel = (k: string) => (k === 'tray' ? t('draft_tray') : t('draft_followup'));
+  const kindLabel = (k: string) => (k === 'tray' ? t('draft_tray') : k === 'outreach' ? t('draft_outreach') : t('draft_followup'));
   const st = status.data;
   const changed = draft ? text !== draft.body : false;
 
@@ -129,7 +129,8 @@ export default function Agents() {
                   <div className="small"><Link to={`/trays/${draft.tray_detail.id}`}>{t('open_tray')} → {draft.tray_detail.name}</Link></div>
                 )}
                 {!draft.consent_ok && <div className="notice warn">{t('no_consent')}</div>}
-                {draft.state === 'approved' && <div className="notice ok">{t('approved_ready')} {draft.approved_by?.name} · {when(draft.approved_at, lang)}</div>}
+                {draft.state === 'approved' && <div className="notice ok">{t('approved_ready')} {draft.approved_by?.name} · {when(draft.approved_at, lang)}{draft.kind !== 'tray' && <> · <Link to={`/outreach?draft=${draft.id}`}>{t('send_it')} →</Link></>}</div>}
+                {draft.state === 'sent' && <div className="notice ok">{t('sent_by')} {draft.sent_by?.name ?? '—'} · {when(draft.sent_at, lang)}</div>}
                 {notice && <div className={`notice ${notice.kind}`}>{notice.text}</div>}
                 <div className="actions">
                   {changed && <button className="btn ghost" disabled={busy} onClick={() => act(() => api.aiDraftEdit(draft.id, text))}>{t('save_text')}</button>}
