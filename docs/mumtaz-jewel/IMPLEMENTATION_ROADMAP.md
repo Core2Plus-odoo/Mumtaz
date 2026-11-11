@@ -114,6 +114,13 @@ steps; it needs a root `nginx -t` and reload on the VPS.
 | Acceptance | One command installs, tests and seeds a clean database; report lists real counts |
 
 ### Slice 1: Price to sale
+
+Status 11 Nov 2026: **quote → confirm → invoice → payment from the product
+interface, quote validity with rate lock and renewal, unique-piece guard
+under a row lock, cost basis and margin — built and tested** (see
+`PLAN_V3_RECONCILIATION.md`). Open: rate-feed adapter, bilingual invoice
+layout (`l10n_gcc_invoice`), payment-timeout reconciliation state.
+
 | Item | Detail |
 | --- | --- |
 | Features | Rate source adapter (fake feed first), piece cost and real margin, price carried into quote, order and invoice with rate snapshot, dealer-tier discount never on metal, Arabic and English translation files and right-to-left checks started (**the bilingual invoice is standard: install `l10n_gcc_invoice`, do not build a layout** — see `ARCHITECTURE_REVIEW.md`); quote validity with expiry and rate-lock policy (reprice or renew after expiry); price snapshot incl. rule version and rounding; actual cost basis recorded separately from market-value margin; atomic reservation; payment-timeout reconciliation state |

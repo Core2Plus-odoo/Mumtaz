@@ -41,9 +41,16 @@ Rules the tests hold (`addons/mumtaz_jewellery_api/tests/test_api.py`):
 `GET /sales/invoices` · `GET /sales/invoices/<id>` · `GET /memos` ·
 `GET /old-gold` · `GET /owner/cards`
 
+Writes (Slice 1, level D — a person executes under their own name; Odoo's
+access rights decide who may):
+`POST /sales/quotes` {client_id, lines:[{piece_id, discount}]} ·
+`POST /sales/quotes/<id>/renew` · `POST /sales/quotes/<id>/confirm` ·
+`POST /sales/orders/<id>/invoice` · `GET /sales/payment-methods` ·
+`POST /sales/invoices/<id>/payments` {journal_id?, amount?}
+
 Envelope: `{"ok": true, "data": …}` or `{"ok": false, "error": {"code", "message"}}`.
-Writes arrive in later phases, each with its autonomy level (A read,
-B recommend, C draft, D execute with named approval, E prohibited).
+Refusals come back as 400 (invalid / business rule), 403 (rights), 404
+(not found or not readable), 409 (wrong state).
 
 ## Screens (phase 0)
 
@@ -57,6 +64,14 @@ Pieces on approval · Gold rate register · Old gold.
 English and Arabic from one dictionary (`src/lib/i18n.ts`); the toggle flips
 `dir` to `rtl`. Formatting is display-only (`src/lib/format.ts`): nothing in
 the app computes a figure.
+
+Slice 1 adds: **New quotation** (client, pieces on the shelf, dealer discount
+per line; the engine prices every line), quote detail with *Valid until*,
+*Renew at today's rate* when expired, *Confirm order* behind a dialog, order
+detail with *Create & post invoice* and margin for managers, invoice detail
+with *Register payment* (full or partial). A refused confirm (piece out on
+approval, not on the shelf, sold elsewhere, expired quote) shows the server's
+reason in place.
 
 ## Running it
 
@@ -85,6 +100,18 @@ backup, test and rollback.
   JS / 8.9 kB CSS; headless walk of 18 screens (both languages) against a
   seeded Odoo — every screen with content, no error box, discount reprices
   making/subtotal/VAT/total and nothing else.
+
+## Verified, Slice 1 (11 Nov 2026)
+
+- Backend: 9 commitment tests (validity, rate lock, renewal, second order
+  refused, off-shelf refused, on-approval refused, quantity, margin and its
+  visibility) + the existing 24 sale/invoice tests, 0 failures.
+- API: 5 sale tests through HTTP (quote→confirm→invoice→full payment, partial
+  payment, rights, off-shelf refusal, bad input), 0 failures; 16 in the module.
+- Interface: 13 unit tests; headless walk of the whole flow — quote created
+  with validity, confirm dialog, "Order confirmed — prices frozen", invoice
+  posted, paid in full, outstanding 0 — and the refusal path (piece out on
+  approval) rendered with the server's message.
 
 ## Next (in the order the owner approved)
 

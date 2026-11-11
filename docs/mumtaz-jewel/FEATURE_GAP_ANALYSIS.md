@@ -25,7 +25,11 @@ owner.
 | Pieces with the engine's breakdown and dealer discount | No | **Built** | Reprices server-side |
 | Clients, Client 360, restricted tiers | No | **Built** | Unreadable client is a 404, not a 403 |
 | Quotes, orders, invoices with frozen snapshots | No | **Built** | Read-only in phase 0 |
-| Writes from the interface (quote → confirm → invoice) | No | **Planned** | Phase 1, level D |
+| Writes from the interface (quote → confirm → invoice → payment) | Partly (`sale`, `account`) | **Built** | Slice 1, level D; 5 API tests + walk |
+| Quote validity and rate lock, renewal at today's rate | Partly (`sale.validity_date`) | **Built** | Company days (demo 7); expired quote refuses to confirm |
+| Unique piece: sold once, on shelf, not on approval | No | **Built** | Row lock + 4 tests; stock leaves on delivery (counter slice) |
+| Cost basis and margin (managers only) | No | **Built** | Recorded, never derived from the engine |
+| Self-approval escape hatch | — | **Removed** | Plan W02; a deputy is the second approver |
 | POS counter from the interface | Partly (`point_of_sale`) | **Planned** | Phase 2 |
 | CRM pipeline + outreach drafts | Partly (`crm`) | **Planned** | Phase 3, level C |
 | Agents through the API door | No | **Planned** | Phase 5 |
@@ -39,7 +43,7 @@ owner.
 | Price per gram / tola / ounce | No | **Built** | |
 | Dealer discount on making only | No | **Built** | |
 | No price without an approved rate | No | **Built** | |
-| Price carried into quote, order, invoice | Partly (`sale`) | **Planned** | Slice 1 |
+| Price carried into quote, order, invoice | Partly (`sale`) | **Built** | Slices 1 (sale) and 1b (invoice snapshot) |
 | Rate feed adapter | No | **Planned** | Slice 1, provider not chosen |
 | Piece cost basis, real margin | Partly (`stock`) | **Planned** | Slice 1 |
 
