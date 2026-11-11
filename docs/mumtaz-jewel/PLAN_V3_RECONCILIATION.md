@@ -48,12 +48,28 @@ implementation override proposals.
 | W15 trust | Open | No endorsements or certifications are claimed; readiness section to be written with pilot evidence |
 | W16 naming | **Done** | Jawhar + five names, consistent across site and docs |
 
+## Slice 3 (counter) — built 11 Nov 2026, plan §27
+
+| Plan §27 element | Delivered |
+| --- | --- |
+| Selected piece / approved snapshot | Scan or type a serial/RFID; the engine's breakdown at the approved rate; dealer discount per line |
+| Readiness checks | Live: approved rate, piece available (on shelf / on approval / sold / not in stock), client chosen, discount within the signed-in person's permission, old-gold intake confirmed and unused |
+| Client / discretion | Tier, discreet billing, no-marketing, usual spend, relationship manager; a restricted client is visible only to those the record rule allows |
+| Old gold | Separate intake panel: weight, karat, melt loss, buy-back → valued by the engine and confirmed; above the owner's threshold a second person approves; credited once, for exactly its value, as its own line |
+| Commit action | **One call, one transaction**: confirm (every Slice 1 guard) → post the invoice → register the payment (full or deposit) → validate the delivery of *that* serial. Any refusal leaves nothing behind (test) |
+| Failure state | The server's own sentence in place; nothing created |
+| Receipt | Printable, with weights and the making breakdown per line |
+
+Found while building it, all fixed with tests: standard reservation hands over *a* serial of the design, not the ordered one (two bangles on the shelf, the other one left); a standard-tier client with no purchase was invisible to the search, so a first sale could not be rung up; a staff discount had no ceiling.
+
+Not built, on purpose: offline selling (online-only commitment, plan §11/§17) and the AML cash-threshold check (compliance values await the named finance manager, §17).
+
 ## Known limits after Slice 1
 
-- A sold piece leaves stock when its delivery is validated (standard Odoo);
-  the interface does not validate deliveries yet, so a sold piece still counts
-  as on hand until the counter slice adds that step. Double-selling is already
-  prevented by the live-order check.
+- A piece sold through *Quotes & orders* leaves stock when its delivery is
+  validated (standard Odoo); the counter does that in its commit, the
+  quotation path does not yet. Double-selling is prevented by the live-order
+  check on both paths.
 - The row lock is exercised logically by the tests (second order refused);
   a true two-connection race is not reproducible inside Odoo's test
   transaction and is left to a staging concurrency run.

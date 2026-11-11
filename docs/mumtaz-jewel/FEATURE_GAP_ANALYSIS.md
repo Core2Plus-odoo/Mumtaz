@@ -30,7 +30,11 @@ owner.
 | Unique piece: sold once, on shelf, not on approval | No | **Built** | Row lock + 4 tests; stock leaves on delivery (counter slice) |
 | Cost basis and margin (managers only) | No | **Built** | Recorded, never derived from the engine |
 | Self-approval escape hatch | — | **Removed** | Plan W02; a deputy is the second approver |
-| POS counter from the interface | Partly (`point_of_sale`) | **Planned** | Phase 2 |
+| Counter from the interface: lookup, readiness, one-call commit, receipt | Partly (`sale`, `stock`, `account`) | **Built** | Slice 3; delivers the ordered serial; 8 + 5 tests + walk |
+| Old gold at the till, credited once from a confirmed intake | No | **Built** | Second approval above the owner's threshold |
+| Staff discount ceiling (owner-set) | No | **Built** | `mumtaz_jewellery.staff_discount_limit_pct` |
+| Offline counter | Partly (`point_of_sale`) | **Decision** | Online-only commitment per plan §11; revisit with a tested allocation model |
+| AML cash threshold at payment | No | **Decision** | Awaits the named finance manager's values (plan §17) |
 | CRM pipeline + outreach drafts | Partly (`crm`) | **Planned** | Phase 3, level C |
 | Agents through the API door | No | **Planned** | Phase 5 |
 

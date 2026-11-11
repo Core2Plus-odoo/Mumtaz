@@ -48,6 +48,11 @@ access rights decide who may):
 `POST /sales/orders/<id>/invoice` · `GET /sales/payment-methods` ·
 `POST /sales/invoices/<id>/payments` {journal_id?, amount?}
 
+Counter (Slice 3): `GET /counter/piece?q=` (serial or RFID, with availability) ·
+`GET /counter/readiness` · `POST /counter/commit` {client_id, piece_id, discount?,
+journal_id?, amount?, old_gold_id?} — one transaction · `POST /old-gold` (intake,
+valued and confirmed) · `POST /old-gold/<id>/approve` · `GET /old-gold?client_id=&unused=1`
+
 Envelope: `{"ok": true, "data": …}` or `{"ok": false, "error": {"code", "message"}}`.
 Refusals come back as 400 (invalid / business rule), 403 (rights), 404
 (not found or not readable), 409 (wrong state).
@@ -72,6 +77,11 @@ detail with *Create & post invoice* and margin for managers, invoice detail
 with *Register payment* (full or partial). A refused confirm (piece out on
 approval, not on the shelf, sold elsewhere, expired quote) shows the server's
 reason in place.
+
+Slice 3 adds the **Counter** (plan §27): scan/serial lookup with availability,
+the engine's breakdown, client context strip, old-gold intake and credit,
+live readiness checks, payment (full or deposit), a review dialog, and a
+printable receipt.
 
 ## Running it
 

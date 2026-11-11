@@ -50,8 +50,15 @@ ORDER_STATES = ('sale',)
 # A client is a partner placed in a tier above standard, or one who has bought.
 # `!= 'standard'` would also match partners with no tier at all (every user's
 # own partner, the company), which is why the tiers are listed.
-CLIENT_DOMAIN = ['|', ('jewellery_tier', 'in', ('preferred', 'private', 'royal')),
-                 ('customer_rank', '>', 0)]
+CLIENT_DOMAIN = ['|', '|', ('jewellery_tier', 'in', ('preferred', 'private', 'royal')),
+                 ('customer_rank', '>', 0), ('occasion_ids', '!=', False)]
+
+# When the counter searches by name it must find a walk-in whose record
+# exists but who has not bought yet; so a search runs over every person who
+# is not a system user or a company, not only over CLIENT_DOMAIN. Found by
+# the counter walk: "DEMO Client Alpha" (standard tier, no purchase) was
+# invisible, so a first sale could not be rung up.
+WALKIN_DOMAIN = [('user_ids', '=', False), ('is_company', '=', False)]
 
 
 # --------------------------------------------------------------------------
@@ -357,6 +364,7 @@ def _order_dict(order, detail=False):
         'invoice_status': order.invoice_status,
         'validity_date': order.validity_date,
         'expired': order.jewellery_quote_expired,
+        'old_gold': _m2o(order.jewellery_old_gold_id),
     }
     if detail:
         data['lines'] = [_order_line_dict(l) for l in order.order_line]
@@ -414,8 +422,12 @@ def _old_gold_dict(x):
         'karat': x.karat,
         'fine_weight_g': x.fine_weight_g,
         'applied_rate_per_g': x.applied_rate_per_g,
+        'melt_loss_pct': x.melt_loss_pct,
+        'buyback_discount_pct': x.buyback_discount_pct,
         'value': x.value,
         'state': x.state,
+        'approved_by': _m2o(x.approved_by_id),
+        'credited_on': _m2o(x.sale_order_id),
     }
 
 
@@ -509,7 +521,9 @@ class JawharApi(Controller):
     @_r('/pieces/<int:piece_id>')
     @endpoint()
     def piece(self, piece_id, discount=None, **kw):
-        lot = _get('stock.lot', piece_id)
+        return self._piece_detail(_get('stock.lot', piece_id), discount)
+
+    def _piece_detail(self, lot, discount=None):
         data = _piece_dict(lot)
         pct = 0.0
         if discount not in (None, ''):
@@ -536,12 +550,12 @@ class JawharApi(Controller):
     @endpoint()
     def clients(self, q=None, tier=None, limit=50, offset=0, **kw):
         Partner = request.env['res.partner']
-        # A client is a partner who has been placed in a tier or has bought.
-        domain = list(CLIENT_DOMAIN)
         if q:
-            domain = ['&'] + domain + ['|', ('name', 'ilike', q), ('email', 'ilike', q)]
+            domain = WALKIN_DOMAIN + ['|', ('name', 'ilike', q), ('email', 'ilike', q)]
+        else:
+            domain = list(CLIENT_DOMAIN)
         if tier:
-            domain = ['&', ('jewellery_tier', '=', tier)] + domain
+            domain = [('jewellery_tier', '=', tier)] + domain
         recs = Partner.search(domain, limit=_int(limit, 50, 1), offset=_int(offset, 0, 0, 10**9),
                               order='name')
         return {'items': [_client_dict(p) for p in recs], 'total': Partner.search_count(domain)}
@@ -708,6 +722,173 @@ class JawharApi(Controller):
                           'state': p.state} for p in payments],
         }, 201
 
+    # ---- the counter -------------------------------------------------------
+    #
+    # Plan v3 §27: AI explains and prepares; pricing, stock, payment and
+    # accounting rules decide whether the sale can proceed. The readiness
+    # check says what would stop the commit; the commit is one call and one
+    # transaction (sale.order.action_counter_commit): if any rule refuses,
+    # nothing happened.
+    def _piece_availability(self, lot):
+        Line = request.env['sale.order.line']
+        Memo = request.env['jewellery.approval.memo']
+        sold = Line.search([('jewellery_lot_id', '=', lot.id),
+                            ('order_id.state', 'in', ORDER_STATES)], limit=1)
+        if sold:
+            return {'status': 'sold', 'detail': sold.order_id.name,
+                    'client': _m2o(sold.order_id.partner_id)}
+        memo = Memo.search([('lot_ids', 'in', lot.id), ('state', '=', 'out')], limit=1)
+        if memo:
+            return {'status': 'on_approval', 'detail': memo.name, 'client': _m2o(memo.partner_id)}
+        if lot.product_qty <= 0:
+            return {'status': 'not_in_stock', 'detail': None, 'client': None}
+        return {'status': 'on_shelf', 'detail': _piece_location(lot), 'client': None}
+
+    @_r('/counter/piece')
+    @endpoint()
+    def counter_piece(self, q=None, discount=None, **kw):
+        q = (q or '').strip()
+        if not q:
+            raise ApiError(400, 'invalid', 'Send q: a serial or an RFID tag.')
+        Lot = request.env['stock.lot']
+        base = [('product_id.is_jewellery', '=', True)]
+        lot = (Lot.search(base + [('rfid_tag', '=', q)], limit=1)
+               or Lot.search(base + [('name', '=', q)], limit=1)
+               or Lot.search(base + ['|', ('name', 'ilike', q), ('rfid_tag', 'ilike', q)], limit=1))
+        if not lot:
+            raise ApiError(404, 'not_found', 'No piece matches %s.' % q)
+        data = self._piece_detail(lot, discount)
+        data['availability'] = self._piece_availability(lot)
+        return data
+
+    @_r('/counter/readiness')
+    @endpoint()
+    def counter_readiness(self, piece_id=None, client_id=None, discount=None, old_gold_id=None, **kw):
+        env = request.env
+        checks = []
+
+        def check(key, ok, detail=None):
+            checks.append({'key': key, 'ok': bool(ok), 'detail': detail})
+
+        try:
+            rate = env['jewellery.gold.rate'].get_current(env.company)
+            check('rate', True, _rate_dict(rate))
+        except UserError:
+            rate = None
+            check('rate', False, 'no approved rate in force')
+
+        lot = None
+        if piece_id:
+            lot = env['stock.lot'].browse(int(piece_id)).exists()
+            if lot:
+                av = self._piece_availability(lot)
+                check('piece', av['status'] == 'on_shelf', av)
+            else:
+                check('piece', False, 'no such piece')
+        else:
+            check('piece', False, 'no piece chosen')
+
+        partner = env['res.partner'].browse(int(client_id)).exists() if client_id else None
+        check('client', bool(partner), {'restricted': partner.jewellery_restricted,
+                                        'discreet_billing': partner.discreet_billing}
+              if partner else 'no client chosen')
+
+        pct = 0.0
+        if discount not in (None, ''):
+            try:
+                pct = float(discount)
+            except ValueError:
+                raise ApiError(400, 'invalid', 'discount must be a number.')
+        if pct <= 0 or env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
+            check('discount', True, {'pct': pct, 'limit': None})
+        else:
+            param = env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.staff_discount_limit_pct')
+            limit = float(param) if param else 0.0
+            check('discount', pct <= limit, {'pct': pct, 'limit': limit})
+
+        if old_gold_id:
+            intake = env['jewellery.old.gold'].browse(int(old_gold_id)).exists()
+            if not intake:
+                check('old_gold', False, 'no such intake')
+            else:
+                ok = (intake.state == 'confirmed' and not intake.sale_order_id
+                      and (not intake.partner_id or not partner or intake.partner_id == partner))
+                check('old_gold', ok, _old_gold_dict(intake))
+
+        return {'ready': all(c['ok'] for c in checks), 'checks': checks}
+
+    @_r('/counter/commit', methods=['POST'])
+    @endpoint()
+    def counter_commit(self):
+        body = _body()
+        partner = _get('res.partner', body.get('client_id') or 0)
+        lot = _get('stock.lot', body.get('piece_id') or 0)
+        try:
+            discount = float(body.get('discount') or 0.0)
+        except (TypeError, ValueError):
+            raise ApiError(400, 'invalid', 'discount must be a number.')
+        journal = _get('account.journal', body['journal_id']) if body.get('journal_id') else None
+        amount = body.get('amount')
+        if amount not in (None, ''):
+            try:
+                amount = float(amount)
+            except (TypeError, ValueError):
+                raise ApiError(400, 'invalid', 'amount must be a number.')
+        else:
+            amount = None
+
+        order = request.env['sale.order'].create({
+            'partner_id': partner.id,
+            'user_id': request.env.user.id,
+            'order_line': [(0, 0, {
+                'product_id': lot.product_id.id, 'product_uom_qty': 1,
+                'jewellery_lot_id': lot.id, 'jewellery_making_discount_pct': discount,
+            })],
+        })
+        order.order_line.action_price_from_rate()
+        if body.get('old_gold_id'):
+            order.action_apply_old_gold(_get('jewellery.old.gold', body['old_gold_id']))
+        out = order.action_counter_commit(journal=journal, amount=amount)
+        return {
+            'order': _order_dict(out['order'], detail=True),
+            'invoice': _invoice_dict(out['invoice'], detail=True),
+            'payments': [{'id': p.id, 'name': p.name, 'amount': p.amount,
+                          'journal': _m2o(p.journal_id), 'date': p.date, 'state': p.state}
+                         for p in out['payments']],
+            'deliveries': [{'id': p.id, 'name': p.name, 'state': p.state} for p in out['pickings']],
+        }, 201
+
+    # ---- old gold: intake at the till -------------------------------------
+    @_r('/old-gold', methods=['POST'])
+    @endpoint()
+    def old_gold_create(self):
+        body = _body()
+        values = {}
+        if body.get('client_id'):
+            values['partner_id'] = _get('res.partner', body['client_id']).id
+        try:
+            values['gross_weight_g'] = float(body.get('gross_weight_g') or 0)
+            values['melt_loss_pct'] = float(body.get('melt_loss_pct') or 0)
+            values['buyback_discount_pct'] = float(body.get('buyback_discount_pct') or 0)
+        except (TypeError, ValueError):
+            raise ApiError(400, 'invalid', 'weights and percentages must be numbers.')
+        if values['gross_weight_g'] <= 0:
+            raise ApiError(400, 'invalid', 'gross_weight_g must be greater than zero.')
+        karat = str(body.get('karat') or '')
+        if not karat:
+            raise ApiError(400, 'invalid', 'karat is required.')
+        values['karat'] = karat
+        intake = request.env['jewellery.old.gold'].create(values)
+        intake.action_confirm()          # values at the approved rate; may need a second approver
+        return _old_gold_dict(intake), 201
+
+    @_r('/old-gold/<int:intake_id>/approve', methods=['POST'])
+    @endpoint()
+    def old_gold_approve(self, intake_id):
+        intake = _get('jewellery.old.gold', intake_id)
+        intake.action_approve()
+        return _old_gold_dict(intake)
+
     # ---- memos, old gold, owner -----------------------------------------
     @_r('/memos')
     @endpoint()
@@ -718,11 +899,18 @@ class JawharApi(Controller):
 
     @_r('/old-gold')
     @endpoint()
-    def old_gold(self, limit=50, offset=0, **kw):
+    def old_gold(self, limit=50, offset=0, client_id=None, state=None, unused=None, **kw):
         Og = request.env['jewellery.old.gold']
-        recs = Og.search([], limit=_int(limit, 50, 1), offset=_int(offset, 0, 0, 10**9),
+        domain = []
+        if client_id:
+            domain.append(('partner_id', '=', int(client_id)))
+        if state:
+            domain.append(('state', '=', state))
+        if unused in ('1', 'true', True):
+            domain.append(('sale_order_id', '=', False))
+        recs = Og.search(domain, limit=_int(limit, 50, 1), offset=_int(offset, 0, 0, 10**9),
                          order='date desc, id desc')
-        return {'items': [_old_gold_dict(x) for x in recs], 'total': Og.search_count([])}
+        return {'items': [_old_gold_dict(x) for x in recs], 'total': Og.search_count(domain)}
 
     @_r('/owner/cards')
     @endpoint()

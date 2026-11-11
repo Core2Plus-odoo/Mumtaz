@@ -87,7 +87,8 @@ class TestInvoicePricing(TransactionCase):
                 'jewellery_making_discount_pct': discount,
             })],
         })
-        order.order_line[0].action_price_from_rate()
+        # A dealer discount above the staff ceiling needs a manager (Slice 3).
+        order.order_line[0].with_user(self.maker).action_price_from_rate()
         order.action_confirm()
         return order, order.order_line[0], lot
 
