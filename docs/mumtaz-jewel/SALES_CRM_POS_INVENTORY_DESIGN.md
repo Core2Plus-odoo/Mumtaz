@@ -43,9 +43,38 @@ Two rules that are easy to get wrong and are settled:
   twice.
 - **A dealer discount touches making only.** Never metal, never wastage.
 
-**Still open in Sales:** the price reaching the *invoice* with the snapshot
-intact, quote validity with a rate-lock and expiry policy, and atomic
-reservation.
+### The price on the invoice
+
+**Done too.** The snapshot travels onto `account.move.line` through
+`_prepare_invoice_line` and freezes again once the move is posted.
+
+Standard Odoo already carries the *money*, so the figure on the invoice was
+always right. What it did not carry was the **derivation** of that figure, and
+an invoice that cannot show where its number came from is no use in a client
+query, a margin review or an audit.
+
+Two findings from reading the Odoo 19 source, both of which changed the
+design:
+
+- **Odoo does not protect a posted line's price by default.**
+  `account.move.line.write` blocks a posted line only through the fiscal lock
+  date, the tax lock date, or an inalterable hash. A fresh database has none
+  of the three, so the price on a posted jewellery invoice could simply be
+  overwritten. For a line that carries a piece, that price is what a client
+  agreed to pay for a specific object, so it is refused outright.
+- **The invoice-line snapshot is `copy=True`, the sale-line snapshot is not.**
+  On a quotation a copy is a new negotiation and must be priced afresh. An
+  invoice is the opposite: a credit note is produced by *reversing* the move,
+  and had the fields been `copy=False` the reversal would arrive with no rate,
+  the posting guard would refuse it, and crediting a jewellery invoice would
+  be impossible. The asymmetry is deliberate and has a test of its own.
+
+The posting guard also catches a hand-made invoice line that carries a piece
+but no rate — the same hole the order-confirmation guard closes, one document
+further on.
+
+**Still open in Sales:** quote validity with a rate-lock and expiry policy,
+and atomic reservation.
 
 ## 3. CRM
 
@@ -168,8 +197,8 @@ never change a permission. That needs a test, not a sentence.
 ## 7. Build order, and why
 
 1. **Pieces on approval move stock** — closes a live defect in valuation
-2. **Price onto the invoice** — a quote that does not become a correct
-   invoice is not worth much
+2. ~~**Price onto the invoice**~~ — done; the snapshot reaches
+   `account.move.line` and freezes on posting
 3. **POS: server-side pricing + rate snapshot with expiry** — the commercial
    unlock, and the offline risk that actually matters
 4. **CRM: configure the stages, build only the link and the ranking**
