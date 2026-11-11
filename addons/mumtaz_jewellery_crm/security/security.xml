@@ -16,8 +16,12 @@
         <field name="global" eval="True"/>
         <field name="domain_force">[(1, '=', 1)] if user.has_group('mumtaz_jewellery_vip.group_vip_manager') else ['|', '|', ('tray_id.partner_id.jewellery_tier', 'not in', ['private', 'royal']), ('tray_id.partner_id.relationship_manager_id', '=', user.id), ('tray_id.partner_id.deputy_id', '=', user.id)]</field>
     </record>
-    <!-- Jewellery users work the pipeline: they are salespeople. -->
+    <!-- Jewellery users work the pipeline: they are salespeople. On a shop
+         floor any colleague may pick up a quote another drafted, so they see
+         every sale document of the company (Odoo's "All Documents" level),
+         not only their own. Who may see a Private or Royal client is decided
+         by the tier rules on the client and the tray, never by this. -->
     <record id="mumtaz_jewellery.group_jewellery_user" model="res.groups">
-        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
     </record>
 </odoo>
