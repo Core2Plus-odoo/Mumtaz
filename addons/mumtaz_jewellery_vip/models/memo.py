@@ -74,9 +74,12 @@ class ApprovalMemo(models.Model):
                 source = memo._lot_current_location(lot)
                 if not source or source == destination:
                     continue
+                # stock.move in Odoo 19 has no 'name' field; the human
+                # label is description_picking.
                 move = self.env['stock.move'].sudo().create({
-                    'name': '%s: %s' % (reference, lot.name),
+                    'description_picking': '%s: %s' % (reference, lot.name),
                     'product_id': lot.product_id.id,
+                    'product_uom': lot.product_id.uom_id.id,
                     'product_uom_qty': 1.0,
                     'location_id': source.id,
                     'location_dest_id': destination.id,
