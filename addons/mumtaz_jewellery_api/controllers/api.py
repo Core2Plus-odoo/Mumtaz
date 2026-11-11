@@ -59,7 +59,9 @@ CLIENT_DOMAIN = ['|', ('jewellery_tier', 'in', ('preferred', 'private', 'royal')
 # --------------------------------------------------------------------------
 class ApiError(Exception):
     def __init__(self, status, code, message):
-        super().__init__(message)
+        # All three go to the base class so the exception survives pickling
+        # and copy.copy() (flake8-bugbear B042).
+        super().__init__(status, code, message)
         self.status = status
         self.code = code
         self.message = message

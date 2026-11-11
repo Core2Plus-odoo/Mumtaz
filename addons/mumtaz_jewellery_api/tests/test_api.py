@@ -5,6 +5,7 @@ the point of the API is its behaviour at the boundary.
 """
 import json
 
+from odoo.exceptions import AccessError
 from odoo.tests import HttpCase, tagged
 
 from odoo.addons.mumtaz_jewellery.tests.common import GROSS_G, STONE_G
@@ -169,7 +170,7 @@ class TestJawharApi(HttpCase):
 
     def test_audit_hidden_from_staff(self):
         self.sign_in('api_staff')
-        with self.assertRaises(Exception):
+        with self.assertRaises(AccessError):
             self.env['jewellery.api.audit'].with_user(self.staff).search([])
 
     # ---- today ------------------------------------------------------------
