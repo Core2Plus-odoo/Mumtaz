@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Hub</title>
+<meta name="description" content="Sales Hub for Jewel360: the client book, the pipeline, the tray, outreach and the counter — one module over an Odoo 19 Community engine.">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  Module page. Same honesty rules as the rest of the site: every capability
+  carries a status, nothing marked "in development" or "planned" is available,
+  and the screens are the design prototype, not the shipped product.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  --pri:#3D56C4; --pri2:#5570DF; --pri3:#A9B8F5; --pri-bg:#EEF1FD;
+  --pri-border:#C8D2F7; --pri-dark:#2B3E96;
+  --teal:#0E7490; --teal-bg:#E7F6FA; --teal-border:#B3E2EE;
+  --coral:#B42318; --coral-bg:#FDECEA; --coral-border:#F6CFC9;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --wrap:1120px; --r:12px;
+  --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1117; --paper2:#151C26; --paper3:#242E3C; --surface:#151C26;
+    --ink:#F2F4F7; --ink2:#D6DCE5; --ink3:#94A3B8; --ink4:#64748B;
+    --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0; --pri-dark:#A9B8F5;
+    --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+    --coral-bg:#2A1412; --coral-border:#5A2A24;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1117; --paper2:#151C26; --paper3:#242E3C; --surface:#151C26;
+  --ink:#F2F4F7; --ink2:#D6DCE5; --ink3:#94A3B8; --ink4:#64748B;
+  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --coral-bg:#2A1412; --coral-border:#5A2A24;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 16px}
+h1,h2,h3{margin:0;font-weight:700;line-height:1.18;letter-spacing:-.015em}
+h1{font-size:clamp(2rem,4.6vw,3.1rem)}
+h2{font-size:clamp(1.5rem,3.2vw,2.1rem)}
+h3{font-size:1.06rem}
+p{margin:.7em 0}
+a{color:var(--pri)}
+.muted{color:var(--ink3)}
+.tiny{font-size:.84rem}
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--pri-dark);margin-bottom:.6rem}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .eyebrow{color:var(--pri3)}}
+
+header.head{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--paper3)}
+.nav{display:flex;align-items:center;gap:16px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800}
+.mk{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--pri);color:#fff;font-size:.92rem;font-weight:800}
+.links{display:flex;gap:18px;margin-left:10px}
+.links a{color:var(--ink2);text-decoration:none;font-size:.9rem;font-weight:500}
+.links a:hover{color:var(--pri)}
+.sp{flex:1}
+.btn{display:inline-block;padding:9px 16px;border-radius:9px;text-decoration:none;font-weight:600;font-size:.9rem;border:1px solid transparent}
+.b-pri{background:var(--pri);color:#fff}
+.b-pri:hover{background:var(--pri-dark)}
+.b-ghost{border-color:var(--paper3);color:var(--ink2);background:var(--surface)}
+@media (max-width:860px){.links{display:none}}
+
+section{padding:56px 0}
+.hero{padding:62px 0 44px}
+.hero .lead{font-size:1.1rem;color:var(--ink2);max-width:40em}
+.cta{display:flex;gap:11px;flex-wrap:wrap;margin-top:22px}
+.crumb{font-size:.84rem;color:var(--ink3);margin-bottom:10px}
+.crumb a{color:var(--ink3)}
+
+.sec-head{max-width:40em;margin-bottom:28px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.g3{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.card h3{margin-bottom:5px}
+.card p{margin:0;font-size:.93rem;color:var(--ink3)}
+.ico{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;background:var(--pri-bg);border:1px solid var(--pri-border);margin-bottom:12px}
+.ico svg{width:18px;height:18px;stroke:var(--pri-dark);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ico svg{stroke:var(--pri3)}}
+
+.tag{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;margin-left:6px;vertical-align:middle}
+.t-built{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.t-dev{background:var(--pri-bg);color:var(--pri-dark);border:1px solid var(--pri-border)}
+.t-plan{background:var(--paper2);color:var(--ink3);border:1px solid var(--paper3)}
+.t-std{background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral-border)}
+
+.shot{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.shot img{display:block;width:100%;height:auto;border-bottom:1px solid var(--paper3);background:var(--paper2)}
+.shot .cap{padding:14px 17px}
+.shot .cap b{display:block;font-size:.96rem;margin-bottom:3px}
+.shot .cap span{font-size:.88rem;color:var(--ink3)}
+
+.flow{display:grid;gap:12px;counter-reset:s}
+.step{display:grid;grid-template-columns:34px 1fr;gap:14px;background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:16px 18px}
+.step::before{counter-increment:s;content:counter(s);width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--pri);color:#fff;font-weight:700;font-size:.92rem}
+.step b{display:block;font-size:.98rem}
+.step span{font-size:.92rem;color:var(--ink3)}
+
+table{width:100%;border-collapse:collapse;font-size:.93rem;background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden}
+th{text-align:left;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);background:var(--paper2);padding:10px 16px;font-weight:700}
+td{padding:12px 16px;border-top:1px solid var(--paper3);vertical-align:top}
+
+.band{background:var(--ink);color:#D6DCE5;border-radius:16px;padding:34px}
+.band h2{color:#fff}
+.band .muted{color:#94A3B8}
+.band code{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:2px 7px;border-radius:6px;font-size:.85rem;color:#fff}
+footer{border-top:1px solid var(--paper3);padding:30px 0 44px;color:var(--ink3);font-size:.88rem}
+.disclaimer{background:var(--coral-bg);border:1px solid var(--coral-border);border-radius:10px;padding:13px 15px;font-size:.86rem;color:var(--ink2);margin-top:16px}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="../../index.html"><span class="mk">M</span>Jewel360</a>
+      <div class="links">
+        <a href="#inside">What's inside</a>
+        <a href="#screens">Screens</a>
+        <a href="#flow">How it works</a>
+        <a href="#engine">Under it</a>
+        <a href="#status">Status</a>
+      </div>
+      <div class="sp"></div>
+      <a class="btn b-pri" href="mailto:umer@mumtaz.digital?subject=Mumtaz%20Jewel%20—%20Sales%20Hub">Request a demo</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="crumb"><a href="../../index.html">Jewel360</a> · Modules · Sales Hub</div>
+    <div class="eyebrow">Module 01 · Sales Hub</div>
+    <h1>The client book, and everything that turns it into a sale.</h1>
+    <p class="lead">
+      Who your clients are, what they own, what they are likely to buy next,
+      what is in the pipeline and what it is worth — and the counter where it
+      all ends up. One module, built on Odoo 19 Community, designed for an
+      associate with a client in front of them rather than for an ERP operator.
+    </p>
+    <div class="cta">
+      <a class="btn b-pri" href="../../preview/#clients">Open the interface</a>
+      <a class="btn b-ghost" href="#status">What's built today</a>
+    </div>
+  </div>
+</section>
+
+<section id="inside">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">What's inside</div>
+      <h2>Five parts, one module</h2>
+      <p class="muted">Each tag says where it stands. Nothing marked in development or planned is available yet.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0"/><path d="M16 11a3 3 0 100-6M18 20a6 6 0 00-3-5.2"/></svg></div>
+        <h3>Client 360 <span class="tag t-built">Built</span></h3>
+        <p>Tier, relationship manager and deputy, lifetime value, gold held. Pieces owned as photographs taken at handover. Taste, usual spend, and the occasions that matter. Compliance status beside it all.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15V9M12 15v-3M16 15V7"/></svg></div>
+        <h3>Pipeline <span class="tag t-std">Standard Odoo</span></h3>
+        <p>Enquiry, viewing booked, tray shared, reserved, won. Value and odds per stage, target against forecast, and why deals are lost — stock or price, not a guess.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h9"/><circle cx="18" cy="18" r="3"/></svg></div>
+        <h3>The tray <span class="tag t-dev">In development</span></h3>
+        <p>Three to five pieces chosen for one client, each with its reasons and its live price. Shared as a branded link that expires and can be revoked. The client can ask to view; only staff reserve.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 10h8M8 13h5"/></svg></div>
+        <h3>Outreach &amp; upsell <span class="tag t-dev">In development</span></h3>
+        <p>Ranked next-piece suggestions with reasons. An outreach queue by channel, each resting on the consent that allows it, and a measure of what outreach is actually worth.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg></div>
+        <h3>The counter <span class="tag t-dev">In development</span></h3>
+        <p>The client file sits on the till: tier, compliance, what she already owns. The piece prices from this morning's approved rate, old gold comes in at a computed credit, and the payment panel warns before a cash threshold is crossed.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M3 21L21 3"/></svg></div>
+        <h3>Discretion <span class="tag t-built">Built</span></h3>
+        <p>Private and Royal records reach only the named manager, the deputy and VIP managers. Opening one writes a line to an access log. Automated outbound never goes to them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Screens</div>
+      <h2>What it looks like</h2>
+      <p class="muted">From the clickable prototype. Every client and figure is synthetic.</p>
+    </div>
+    <div class="grid g2">
+      <div class="shot">
+        <a href="../../preview/#clients"><img src="../../site/img/ui-clients.webp" width="1600" height="1000" alt="Client 360 screen with tier, compliance panel, pieces owned, touchpoints and the agent strip."></a>
+        <div class="cap"><b>Client 360</b><span>One client on one screen, with what each agent did and where it stopped.</span></div>
+      </div>
+      <div class="shot">
+        <a href="../../preview/#crm"><img src="../../site/img/ui-crm.webp" width="1600" height="1000" alt="Pipeline screen with target, forecast, stages and a most-likely-to-close table."></a>
+        <div class="cap"><b>Pipeline</b><span>Target against forecast, stages with their odds, and why deals are lost.</span></div>
+      </div>
+      <div class="shot">
+        <a href="../../preview/#out"><img src="../../site/img/ui-out.webp" width="1600" height="1000" alt="Outreach and upsell screen with ranked suggestions, the outreach queue and campaign value."></a>
+        <div class="cap"><b>Outreach &amp; upsell</b><span>Suggestions with reasons, a queue gated by consent, and what it returns.</span></div>
+      </div>
+      <div class="shot">
+        <a href="../../preview/#pos"><img src="../../site/img/ui-pos.webp" width="1600" height="1000" alt="Counter screen with the client strip, price breakdown, what she owns and the payment panel."></a>
+        <div class="cap"><b>The counter</b><span>The client file on the till, and a threshold warning before the money is counted.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">How it works</div>
+      <h2>From a moment on the calendar to a piece in a box</h2>
+    </div>
+    <div class="flow">
+      <div class="step"><div><b>The occasion comes up</b><span>A wedding is three weeks out. A draft is prepared for the relationship manager — never sent automatically, and never to a Private or Royal client.</span></div></div>
+      <div class="step"><div><b>A tray is built</b><span>Three to five pieces for that client, in stock now, ranked with reasons and priced from the approved rate.</span></div></div>
+      <div class="step"><div><b>The client sees it</b><span>Shared as an expiring, revocable link. She likes two and asks about one. That lands back on her file, and the opportunity moves a stage.</span></div></div>
+      <div class="step"><div><b>A viewing is booked</b><span>The piece goes out on approval with a return date and an insured value, or she comes in.</span></div></div>
+      <div class="step"><div><b>It closes at the counter</b><span>Her file is on the till. The piece prices from this morning's rate, old gold comes in at a computed credit, and the sale checks itself against her compliance position.</span></div></div>
+      <div class="step"><div><b>The file updates itself</b><span>What she bought, what she was shown, who served her and how long it took — so the next conversation starts where this one ended.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="engine">
+  <div class="wrap">
+    <div class="band">
+      <div class="sec-head">
+        <div class="eyebrow" style="color:var(--pri3)">Under it</div>
+        <h2>Odoo 19 Community is the engine</h2>
+        <p class="muted">
+          No fork, no Enterprise licence. Stock, accounting, permissions and
+          record rules stay where Odoo keeps them, which is why confidentiality
+          and approvals are enforced in the database rather than in a screen.
+          Being straight about what is standard is also how you can tell what
+          you are actually paying us to build.
+        </p>
+      </div>
+      <div class="grid g2">
+        <div>
+          <h3 style="color:#fff;margin-bottom:8px">Standard Odoo, configured</h3>
+          <p class="muted" style="font-size:.93rem">
+            <code>crm</code> for leads, stages, activities and forecasting —
+            including predictive scoring, which Odoo computes from your own
+            won and lost history. <code>sale_management</code> for quotations
+            and orders. <code>mail</code> for the chatter, activities and
+            followers on every record. <code>point_of_sale</code> for the
+            till, offline working and a serial number on every line.
+            <code>loyalty</code> when programmes are needed.
+          </p>
+        </div>
+        <div>
+          <h3 style="color:#fff;margin-bottom:8px">What we build on top</h3>
+          <p class="muted" style="font-size:.93rem">
+            Client tiers and the confidentiality rules. The occasion calendar
+            and pieces on approval. The deterministic ranking behind the tray.
+            Consent per channel and per purpose. Gold-rate pricing carried onto
+            an opportunity and a till line. And the agents, with the autonomy
+            each one is allowed.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="status">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Straight answer</div>
+      <h2>Where this module is today</h2>
+      <p class="muted">The full register is in the repository as <code>FEATURE_GAP_ANALYSIS.md</code>.</p>
+    </div>
+    <table>
+      <thead><tr><th>Capability</th><th style="width:170px">Status</th></tr></thead>
+      <tbody>
+        <tr><td><b>Client tiers, relationship manager, deputy</b></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Private and Royal restriction, access log</b><br><span class="muted tiny">Opening a record is logged; list views and exports are not yet</span></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Preferences, usual spend, taste notes</b></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Occasion calendar with prepared drafts</b></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Pieces on approval, with reminders</b></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Explainable next-piece ranking</b></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Pipeline, stages, forecasting, predictive scoring</b></td><td><span class="tag t-std">Standard Odoo</span></td></tr>
+        <tr><td><b>Shareable tray with an expiring link</b></td><td><span class="tag t-dev">In development</span></td></tr>
+        <tr><td><b>Outreach queue with consent per channel</b></td><td><span class="tag t-dev">In development</span></td></tr>
+        <tr><td><b>Counter, with the client file on the till</b></td><td><span class="tag t-dev">In development</span></td></tr>
+        <tr><td><b>Price carried into quote, order and invoice</b></td><td><span class="tag t-dev">In development</span></td></tr>
+        <tr><td><b>WhatsApp</b><br><span class="muted tiny">Not a module in Odoo Community; needs an integration and a Meta account</span></td><td><span class="tag t-plan">Planned</span></td></tr>
+        <tr><td><b>Client app</b></td><td><span class="tag t-plan">Planned</span></td></tr>
+      </tbody>
+    </table>
+    <p class="muted tiny" style="margin-top:14px">
+      The capabilities marked built are covered by automated tests that run on
+      a clean database on every change — 73 of them at the last run, including
+      the client-visibility rules as five different kinds of user.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="text-align:center">
+    <div class="card" style="padding:36px">
+      <div class="eyebrow">Next step</div>
+      <h2>Bring one client file and one tray</h2>
+      <p class="muted" style="max-width:34em;margin:10px auto 0">
+        A demo runs on synthetic data. Bring how you keep a client today — a
+        notebook, a spreadsheet, a WhatsApp thread — and we will build one real
+        client file with you and price a real piece against it.
+      </p>
+      <div class="cta" style="justify-content:center">
+        <a class="btn b-pri" href="mailto:umer@mumtaz.digital?subject=Mumtaz%20Jewel%20—%20Sales%20Hub">Request a demo</a>
+        <a class="btn b-ghost" href="../../preview/#clients">Open the interface</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <span class="mk">M</span><b style="color:var(--ink)">Jewel360</b>
+      <span class="sp"></span>
+      <a href="../../index.html">All modules</a>
+    </div>
+    <div class="disclaimer">
+      <b>Pilot development.</b> Jewel360 is being built and piloted.
+      Anything marked “in development” or “planned” is not available yet, and
+      no integration on this page is connected. The screens are a design
+      prototype. This host serves synthetic demonstration data only.
+    </div>
+    <p style="margin-top:14px">© Mumtaz · Built on Odoo 19 Community</p>
+  </div>
+</footer>
+
+</body>
+</html>

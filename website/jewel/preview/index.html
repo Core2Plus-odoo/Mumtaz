@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewel360 Interface</title>
+<meta name="description" content="Design prototype of the Jewel360 front end: Client 360, counter, operations and the AI layer, over an Odoo 19 Community engine.">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  DESIGN PROTOTYPE. This is the proposed front end, not the shipped product.
+  Nothing here is wired to a database: every figure is synthetic and every
+  client is invented. The engine underneath (Odoo 19 Community) is real and
+  working today; see /#screens for screenshots of it.
+
+  Keep the "Design prototype" ribbon and the per-screen status chips. They are
+  what stop this being mistaken for a working system.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* surfaces */
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  /* ink */
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  /* primary: indigo */
+  --gold:#3D56C4; --gold2:#5570DF; --gold3:#A9B8F5; --gold-bg:#EEF1FD;
+  --gold-border:#C8D2F7; --gold-dark:#2B3E96;
+  /* secondary: slate-teal for positive/verified */
+  --teal:#0E7490; --teal2:#0EA5BE; --teal3:#67D3E8; --teal-bg:#E7F6FA;
+  --teal-border:#B3E2EE;
+  /* semantic */
+  --coral:#B42318; --coral2:#D64A3C; --coral-bg:#FDECEA; --coral-border:#F6CFC9;
+  /* chrome */
+  --rail:#111826; --rail2:#1B2638;
+  --display:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --r:10px; --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;font-weight:700;line-height:1.2}
+.num{font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer}
+
+/* ribbon */
+.ribbon{background:var(--ink);color:var(--gold3);text-align:center;padding:7px 14px;font-size:.78rem;font-weight:600;letter-spacing:.03em}
+.ribbon a{color:#fff}
+
+/* shell */
+.shell{display:grid;grid-template-columns:238px 1fr;min-height:calc(100vh - 34px)}
+.rail{background:var(--rail);color:#C9D2DC;padding:16px 12px;display:flex;flex-direction:column;gap:3px}
+.brandrow{display:flex;align-items:center;gap:10px;padding:6px 10px 18px}
+.mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--gold);color:#fff;font-family:var(--display);font-size:1rem}
+.brandrow b{color:#fff;font-size:.98rem;display:block;line-height:1.2}
+.brandrow small{font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:#7D8B9C}
+.railsec{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#64748B;padding:14px 12px 6px}
+.navb{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:#C9D2DC;padding:9px 12px;border-radius:9px;font-size:.9rem;font-weight:500;text-align:left}
+.navb:hover{background:rgba(255,255,255,.06);color:#fff}
+.navb.on{background:rgba(240,204,120,.13);color:#fff;font-weight:600}
+.navb.on svg{stroke:var(--gold3)}
+.navb svg{width:17px;height:17px;fill:none;stroke:#8E9CAC;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.navb .pill{margin-left:auto;background:var(--coral);color:#fff;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px}
+.railfoot{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.08);font-size:.74rem;color:#64748B}
+
+/* top bar */
+.main{display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;gap:14px;padding:13px 24px;background:var(--surface);border-bottom:1px solid var(--paper3)}
+.crumb{font-size:.82rem;color:var(--ink3)}
+.crumb b{color:var(--ink);font-size:.98rem;display:block}
+.sp{flex:1}
+.rate{display:flex;align-items:center;gap:9px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:10px;padding:6px 12px}
+.rate .dot{width:7px;height:7px;border-radius:50%;background:var(--teal2);box-shadow:0 0 0 3px rgba(14,168,130,.18)}
+.rate small{display:block;font-size:.64rem;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-dark);font-weight:700}
+.rate b{font-size:.95rem}
+.who{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:.78rem;font-weight:700}
+
+.canvas{padding:22px 24px 40px;overflow:auto}
+.screen{display:none}
+.screen.on{display:block}
+
+/* bits */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.71rem;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid}
+.c-teal{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-border)}
+.c-gold{background:var(--gold-bg);color:var(--gold-dark);border-color:var(--gold-border)}
+.c-coral{background:var(--coral-bg);color:var(--coral);border-color:var(--coral-border)}
+.c-grey{background:var(--paper2);color:var(--ink3);border-color:var(--paper3)}
+.card{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:18px}
+.hd{padding:14px 18px;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:10px}
+.hd h3{font-size:.95rem}
+.hd .sub{font-size:.78rem;color:var(--ink3)}
+.g{display:grid;gap:11px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.split{grid-template-columns:1.6fr 1fr}
+@media (max-width:1180px){.split,.g2{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}}
+.kpi{padding:15px 17px}
+.kpi small{font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.kpi b{display:block;font-family:var(--display);font-size:1.6rem;margin-top:5px;font-weight:600}
+.kpi .d{font-size:.78rem;margin-top:3px}
+.up{color:var(--teal)} .down{color:var(--coral)}
+.btn{border:1px solid transparent;border-radius:9px;padding:8px 14px;font-size:.85rem;font-weight:600}
+.b-gold{background:var(--gold);color:#fff}
+.b-ghost{background:var(--surface);border-color:var(--paper3);color:var(--ink2)}
+.b-dark{background:var(--ink);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:.87rem}
+th{text-align:left;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:9px 18px;background:var(--paper2);font-weight:700}
+td{padding:11px 18px;border-top:1px solid var(--paper3)}
+.muted{color:var(--ink3)}
+.tiny{font-size:.78rem}
+
+/* client 360 */
+.hero360{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:18px}
+.ava{width:68px;height:68px;border-radius:17px;background:var(--gold);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:1.6rem;font-weight:600}
+.hero360 h2{font-family:var(--display);font-size:1.5rem;font-weight:600}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+.facts{display:flex;gap:26px;flex-wrap:wrap}
+.facts div small{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.facts div b{font-size:1.02rem}
+.aml{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.amlrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--paper3);font-size:.85rem}
+.amlrow:last-child{border:0}
+.bar{height:6px;border-radius:99px;background:var(--paper2);overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--teal2)}
+.gal{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.pc{border:1px solid var(--paper3);border-radius:11px;overflow:hidden;background:var(--paper2)}
+.pc .im{height:74px;display:grid;place-items:center;background:linear-gradient(160deg,#CBD5E1,#94A3B8);}
+.pc .im svg{width:30px;height:30px;stroke:rgba(255,255,255,.92);fill:none;stroke-width:1.5}
+.pc .lb{padding:7px 9px;background:var(--surface)}
+.pc .lb b{display:block;font-size:.76rem}
+.pc .lb span{font-size:.72rem;color:var(--ink3)}
+.tl{position:relative;padding-left:22px}
+.tl::before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--paper3)}
+.tli{position:relative;padding:0 0 15px}
+.tli::before{content:"";position:absolute;left:-20px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--gold);border:2px solid var(--surface);box-shadow:0 0 0 2px var(--gold-border)}
+.tli b{font-size:.87rem;display:block}
+.tli span{font-size:.79rem;color:var(--ink3)}
+
+/* pos */
+.pos{display:grid;grid-template-columns:1.25fr .75fr;gap:11px}
+@media (max-width:1180px){.pos{grid-template-columns:1fr}}
+.scan{display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:var(--r);padding:15px 18px}
+.scan input{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:10px 13px;font-size:.92rem;font-family:inherit}
+.scan input::placeholder{color:#8E9CAC}
+.brk{font-size:.86rem}
+.brk .r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--paper3)}
+.brk .r:last-of-type{border:0}
+.tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:11px;padding:13px 15px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:11px}
+.tot b{font-family:var(--display);font-size:1.5rem;font-weight:600}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.paybtn{border:1px solid var(--paper3);background:var(--surface);border-radius:10px;padding:11px;text-align:center;font-size:.84rem;font-weight:600}
+
+/* chat */
+.thread{display:flex;flex-direction:column;gap:11px;padding:4px 2px}
+.msg{max-width:84%;padding:10px 13px;border-radius:13px;font-size:.89rem;line-height:1.5}
+.m-them{align-self:flex-start;background:var(--paper2);border:1px solid var(--paper3);border-bottom-left-radius:4px}
+.m-ai{align-self:flex-start;background:var(--pri-bg,var(--gold-bg));border:1px solid var(--gold-border);border-bottom-left-radius:4px}
+.m-ai .by{display:flex;align-items:center;gap:6px;font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-dark);font-weight:700;margin-bottom:5px}
+.m-ai .by svg{width:13px;height:13px;stroke:var(--gold-dark);fill:none;stroke-width:2}
+.m-me{align-self:flex-end;background:var(--ink);color:#EDF0F4;border-bottom-right-radius:4px}
+.pcards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.pcard{background:var(--surface);border:1px solid var(--paper3);border-radius:10px;overflow:hidden}
+.pcard .im{height:58px;background:linear-gradient(160deg,#CBD5E1,#94A3B8);display:grid;place-items:center}
+.pcard .im svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.6}
+.pcard .lb{padding:7px 9px}
+.pcard .lb b{display:block;font-size:.76rem}
+.pcard .lb span{font-size:.72rem;color:var(--ink3)}
+.quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.quick span{font-size:.78rem;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--paper3);color:var(--ink2)}
+/* integrations */
+.intg{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:center;padding:13px 16px;border-top:1px solid var(--paper3)}
+.intg:first-of-type{border-top:0}
+.ilogo{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--paper2);border:1px solid var(--paper3);font-size:.72rem;font-weight:800;color:var(--ink2)}
+.intg b{display:block;font-size:.92rem}
+.intg span{font-size:.79rem;color:var(--ink3)}
+
+/* pipeline */
+.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:1180px){.stages{grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:680px){.stages{grid-template-columns:1fr 1fr}}
+.stg{background:var(--surface);border:1px solid var(--paper3);border-radius:10px;padding:13px 14px}
+.stg small{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.stg b{display:block;font-size:1.22rem;margin-top:5px;font-weight:700}
+.stg .c{font-size:.76rem;color:var(--ink3)}
+.stg .bar{height:4px;border-radius:99px;background:var(--paper2);margin-top:9px;overflow:hidden}
+.stg .bar i{display:block;height:100%;background:var(--gold)}
+.prog{height:9px;border-radius:99px;background:var(--paper2);overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;border-radius:99px;background:var(--gold)}
+.prog i.ok{background:var(--teal)}
+.pct{display:inline-flex;align-items:center;justify-content:center;min-width:42px;font-size:.78rem;font-weight:700;padding:2px 7px;border-radius:6px}
+.p-hi{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.p-mid{background:var(--gold-bg);color:var(--gold-dark);border:1px solid var(--gold-border)}
+.p-lo{background:var(--paper2);color:var(--ink3);border:1px solid var(--paper3)}
+.why{font-size:.75rem;color:var(--ink3);margin-top:3px}
+
+/* voice */
+.voice{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:16px 18px;background:linear-gradient(100deg,var(--ink) 0%,var(--rail2) 100%);border-radius:var(--r);color:#C9D2DC}
+.voice .orb{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 32%,var(--gold2),var(--gold) 58%,#1E2A4D);display:grid;place-items:center;flex:none;box-shadow:0 0 0 4px rgba(85,112,223,.16)}
+.voice .orb svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round}
+.voice b{color:#fff;display:block;font-size:.95rem}
+.voice .sub{font-size:.79rem;color:#8E9CAC}
+.voice audio{width:100%;margin-top:10px;height:34px}
+.wave{display:flex;align-items:center;gap:3px;height:20px;margin-top:3px}
+.wave i{width:3px;border-radius:2px;background:var(--gold3);display:block;opacity:.75}
+
+/* people */
+.ph{border-radius:50%;object-fit:cover;display:block;background:var(--paper2)}
+.ph-xs{width:24px;height:24px}
+.ph-sm{width:32px;height:32px}
+.ph-lg{width:68px;height:68px;border-radius:16px}
+.ph-xl{width:52px;height:52px;border-radius:14px}
+.byline{display:inline-flex;align-items:center;gap:7px}
+.byline span{font-size:.78rem;color:var(--ink3)}
+
+/* agents at work */
+.awork{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:11px 14px;background:linear-gradient(100deg,var(--ink) 0%,var(--rail2) 100%);border-radius:11px;color:#C9D2DC;font-size:.81rem}
+.awork .lab{display:inline-flex;align-items:center;gap:7px;color:var(--gold3);font-weight:700;font-size:.69rem;letter-spacing:.09em;text-transform:uppercase}
+.awork .lab svg{width:15px;height:15px;stroke:var(--gold3);fill:none;stroke-width:2}
+.arun{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:5px 10px}
+.arun b{color:#fff;font-weight:600}
+.arun .st{font-size:.67rem;font-weight:700;padding:1px 7px;border-radius:999px}
+.st-done{background:rgba(77,196,168,.16);color:var(--teal3)}
+.st-wait{background:rgba(240,204,120,.16);color:var(--gold3)}
+.st-stop{background:rgba(217,99,74,.2);color:#F0A08C}
+.inline-ai{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:10px;font-size:.83rem;color:var(--ink2);margin-top:11px}
+.inline-ai .av{width:27px;height:27px;border-radius:7px;background:var(--ink);display:grid;place-items:center;flex:none}
+.inline-ai .av svg{width:15px;height:15px;stroke:var(--gold3);fill:none;stroke-width:2}
+.inline-ai .by{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-dark);font-weight:700;margin-bottom:2px}
+/* touchpoints */
+.tp{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--paper3)}
+.tp:last-of-type{border:0}
+.tpi{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none;border:1px solid}
+.tpi svg{width:14px;height:14px;fill:none;stroke-width:2;stroke-linecap:round}
+.tp-wa{background:var(--teal-bg);border-color:var(--teal-border)} .tp-wa svg{stroke:var(--teal)}
+.tp-call{background:var(--gold-bg);border-color:var(--gold-border)} .tp-call svg{stroke:var(--gold-dark)}
+.tp-store{background:var(--paper2);border-color:var(--paper3)} .tp-store svg{stroke:var(--ink2)}
+.tp-link{background:var(--coral-bg);border-color:var(--coral-border)} .tp-link svg{stroke:var(--coral)}
+.tp b{display:block;font-size:.85rem}
+.tp span{font-size:.78rem;color:var(--ink3)}
+.consent{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+
+/* enterprise chrome */
+.util{display:flex;align-items:center;gap:10px;padding:0 24px;height:38px;background:var(--rail);color:#8E9CAC;font-size:.76rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.util .env{display:inline-flex;align-items:center;gap:6px;background:rgba(240,204,120,.12);color:var(--gold3);border:1px solid rgba(240,204,120,.26);padding:2px 9px;border-radius:999px;font-weight:700;font-size:.68rem;letter-spacing:.05em}
+.util a{color:#8E9CAC;text-decoration:none}
+.util a:hover{color:#fff}
+.store{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:3px 10px;color:#C9D2DC;font-weight:600;font-size:.76rem}
+.store svg{width:12px;height:12px;stroke:#8E9CAC;fill:none;stroke-width:2.4}
+.search{flex:1;max-width:430px;display:flex;align-items:center;gap:9px;background:var(--paper2);border:1px solid var(--paper3);border-radius:9px;padding:7px 12px;color:var(--ink3);font-size:.85rem}
+.search svg{width:15px;height:15px;stroke:var(--ink3);fill:none;stroke-width:2}
+.kbd{margin-left:auto;font-size:.68rem;font-weight:700;color:var(--ink4);background:var(--surface);border:1px solid var(--paper3);border-radius:5px;padding:1px 6px}
+.iconbtn{position:relative;width:34px;height:34px;border-radius:9px;border:1px solid var(--paper3);background:var(--surface);display:grid;place-items:center}
+.iconbtn svg{width:16px;height:16px;stroke:var(--ink2);fill:none;stroke-width:1.9;stroke-linecap:round}
+.iconbtn .bdg{position:absolute;top:-5px;right:-5px;background:var(--coral);color:#fff;font-size:.62rem;font-weight:700;border-radius:999px;padding:1px 5px;border:2px solid var(--surface)}
+.pagebar{display:flex;align-items:center;gap:12px;padding:14px 24px 0}
+.pagebar h2{font-family:var(--display);font-size:1.3rem;font-weight:600}
+.pagebar .bc{font-size:.76rem;color:var(--ink3)}
+.toolbar{display:flex;align-items:center;gap:8px;padding:11px 18px;border-bottom:1px solid var(--paper3);background:var(--paper2);border-radius:var(--r) var(--r) 0 0}
+.filt{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--paper3);border-radius:8px;padding:5px 10px;font-size:.78rem;font-weight:600;color:var(--ink2)}
+.filt.on{background:var(--gold-bg);border-color:var(--gold-border);color:var(--gold-dark)}
+.statusbar{display:flex;align-items:center;gap:11px;padding:8px 24px;background:var(--surface);border-top:1px solid var(--paper3);font-size:.73rem;color:var(--ink3)}
+.statusbar .dotg{width:7px;height:7px;border-radius:50%;background:var(--teal2);display:inline-block;margin-right:6px}
+.chart{display:flex;align-items:flex-end;gap:6px;height:118px;padding-top:8px}
+.chart i{flex:1;background:var(--gold2);border-radius:3px 3px 0 0;display:block;position:relative}
+.chart i.alt{background:var(--teal2)}
+.chartx{display:flex;gap:6px;margin-top:6px}
+.chartx span{flex:1;text-align:center;font-size:.66rem;color:var(--ink4)}
+.don{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--gold) 0 54%,var(--gold2) 54% 78%,var(--teal2) 78% 92%,var(--paper3) 92% 100%);display:grid;place-items:center;margin:0 auto}
+.don .hole{width:74px;height:74px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;line-height:1.15}
+.don .hole b{font-family:var(--display);font-size:1.15rem;font-weight:600}
+.don .hole small{font-size:.63rem;color:var(--ink3)}
+.leg{display:flex;flex-direction:column;gap:7px;font-size:.8rem}
+.leg div{display:flex;align-items:center;gap:8px}
+.leg i{width:9px;height:9px;border-radius:2px;display:block}
+@media (max-width:900px){.util{display:none}.pagebar{padding:12px 16px 0}}
+
+/* counter: client context */
+.cstrip{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;padding:14px 18px;background:
+  linear-gradient(100deg,var(--ink) 0%,var(--rail2) 58%,#1E2A3A 100%);color:#fff;border-radius:var(--r);box-shadow:var(--shadow)}
+.cstrip .ava{width:52px;height:52px;border-radius:14px;font-size:1.2rem}
+.cstrip h3{font-family:var(--display);font-size:1.2rem;font-weight:600;color:#fff}
+.cstrip .meta{margin-top:6px}
+.cstrip .chip{border-color:rgba(255,255,255,.18)}
+.cstrip .c-dark{background:rgba(255,255,255,.08);color:#C9D2DC}
+.cstrip .facts div small{color:#8E9CAC}
+.cstrip .facts div b{color:#fff}
+.owns{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.owns .pc .im{height:52px}
+.owns .pc .im svg{width:22px;height:22px}
+.owns .pc .lb{padding:5px 7px}
+.owns .pc .lb b{font-size:.72rem}
+.owns .pc .lb span{font-size:.67rem}
+.warn{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--coral-bg);border:1px solid var(--coral-border);border-radius:10px;font-size:.82rem;color:var(--ink2);margin-top:11px}
+.warn svg{width:16px;height:16px;stroke:var(--coral);fill:none;stroke-width:2;flex:none;margin-top:2px}
+.ok{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:10px;font-size:.82rem;color:var(--ink2);margin-top:11px}
+.ok svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2;flex:none;margin-top:2px}
+.lastv{padding:11px 13px;background:var(--paper2);border:1px solid var(--paper3);border-radius:10px;font-size:.83rem}
+.lastv b{display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.counter3{display:grid;grid-template-columns:1.35fr .65fr;gap:11px;margin-top:11px}
+@media (max-width:1180px){.counter3{grid-template-columns:1fr}.cstrip{grid-template-columns:1fr;text-align:left}}
+
+/* agents */
+.agent{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:start;padding:16px 18px;border-top:1px solid var(--paper3)}
+.agent:first-of-type{border-top:0}
+.ai{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--gold-bg);border:1px solid var(--gold-border)}
+.ai svg{width:18px;height:18px;stroke:var(--gold-dark);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.lad{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+.rung{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:7px;background:var(--paper2);color:var(--ink3);border:1px solid var(--paper3)}
+.rung.act{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-border)}
+.rung.no{opacity:.5;text-decoration:line-through}
+.guard{display:flex;gap:9px;align-items:flex-start;padding:11px 13px;background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:10px;font-size:.83rem;color:var(--ink2)}
+.guard svg{width:16px;height:16px;stroke:var(--teal);fill:none;stroke-width:2;flex:none;margin-top:2px}
+
+/* ops */
+.store{display:flex;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid var(--paper3)}
+.store:first-of-type{border-top:0}
+.sq{width:34px;height:34px;border-radius:9px;background:var(--paper2);border:1px solid var(--paper3);display:grid;place-items:center;font-size:.76rem;font-weight:700;color:var(--ink2)}
+.spark{display:flex;align-items:flex-end;gap:3px;height:34px}
+.spark i{width:7px;background:var(--gold2);border-radius:2px 2px 0 0;display:block}
+.note{font-size:.78rem;color:var(--ink3);margin-top:10px}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{flex-direction:row;overflow:auto;gap:6px;padding:10px;align-items:center}
+  .brandrow,.railsec,.railfoot{display:none}
+  .navb{width:auto;white-space:nowrap}
+  .navb .pill{display:none}
+  .hero360{grid-template-columns:1fr;gap:12px}
+  .gal{grid-template-columns:1fr 1fr}
+  .top{flex-wrap:wrap}
+}
+
+/* ===== v6: compact + vibrant (last layer wins) =====
+   Goal: every screen fits one 1440x900 viewport. Density is bought with
+   padding and type scale, never by deleting the thing that explains a figure. */
+:root{
+  --a1:#5B5BF0; --a2:#0EA5BE; --a3:#E8911B; --a4:#E1486B; --a5:#0FA37F;
+  --r:9px;
+}
+body{font-size:14px;line-height:1.48}
+
+/* shell density */
+.ribbon{padding:5px 14px;font-size:.72rem}
+.util{height:32px;font-size:.72rem}
+.top{padding:9px 20px;gap:11px}
+.pagebar{padding:11px 20px 0;gap:10px}
+.pagebar h2{font-size:1.15rem}
+.canvas{padding:14px 20px 24px}
+.rail{padding:12px 10px}
+.brandrow{padding:4px 8px 12px}
+.railsec{padding:11px 12px 4px;font-size:.62rem}
+.navb{padding:7px 11px;font-size:.86rem}
+.navb.on{position:relative}
+.navb.on::before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:0 3px 3px 0;background:var(--a1)}
+
+/* cards and grids */
+.g{gap:11px}
+.pad{padding:13px}
+.hd{padding:10px 13px;gap:8px}
+.hd h3{font-size:.9rem}
+.hd h3::before{content:"";display:inline-block;width:3px;height:13px;border-radius:2px;background:var(--a1);margin-right:8px;vertical-align:-2px}
+.hd .sub{font-size:.74rem}
+.toolbar{padding:8px 13px}
+
+/* numbers */
+.kpi{padding:11px 13px}
+.kpi small{font-size:.64rem}
+.kpi b{font-size:1.3rem;margin-top:2px;font-weight:700}
+.kpi .d{font-size:.73rem;margin-top:1px}
+.g4>.kpi,.g3>.kpi{box-shadow:inset 0 3px 0 var(--a1),var(--shadow)}
+.g4>.kpi:nth-child(2),.g3>.kpi:nth-child(2){box-shadow:inset 0 3px 0 var(--a2),var(--shadow)}
+.g4>.kpi:nth-child(3),.g3>.kpi:nth-child(3){box-shadow:inset 0 3px 0 var(--a3),var(--shadow)}
+.g4>.kpi:nth-child(4){box-shadow:inset 0 3px 0 var(--a5),var(--shadow)}
+
+/* tables */
+th{padding:6px 13px;font-size:.64rem}
+td{padding:7px 13px}
+table{font-size:.83rem}
+
+/* lists and rows */
+.amlrow{padding:5px 0;font-size:.81rem}
+.brk .r{padding:4px 0}
+.tli{padding-bottom:9px}
+.tli b{font-size:.83rem} .tli span{font-size:.75rem}
+.tp{padding:7px 0}
+.tp b{font-size:.81rem} .tp span{font-size:.74rem}
+.intg{padding:9px 13px;gap:11px}
+.ilogo{width:30px;height:30px}
+.intg b{font-size:.87rem} .intg span{font-size:.75rem}
+.agent{padding:11px 13px;gap:11px}
+.ai{width:32px;height:32px;border-radius:9px}
+.ai svg{width:16px;height:16px}
+.lad{margin-top:6px}
+.rung{font-size:.66rem;padding:2px 7px}
+.store{padding:9px 13px;gap:10px}
+.stg{padding:10px 12px}
+.stg b{font-size:1.1rem;margin-top:2px}
+.stg .bar{margin-top:6px}
+
+/* client 360 */
+.hero360{padding:13px;gap:13px}
+.ava{width:54px;height:54px;border-radius:14px;font-size:1.25rem}
+.hero360 h2{font-size:1.25rem}
+.meta{margin-top:5px;gap:5px}
+.facts{gap:18px}
+.facts div b{font-size:.95rem}
+.facts div small{font-size:.63rem}
+.gal{gap:7px}
+.pc .im{height:58px}
+.pc .im svg{width:24px;height:24px}
+.pc .lb{padding:5px 7px}
+.pc .lb b{font-size:.72rem} .pc .lb span{font-size:.68rem}
+
+/* counter */
+.cstrip{padding:11px 14px;gap:13px}
+.cstrip .ava{width:44px;height:44px;border-radius:12px;font-size:1.05rem}
+.cstrip h3{font-size:1.08rem}
+.counter3{gap:11px;margin-top:11px;grid-template-columns:1.05fr .95fr .78fr;align-items:start}
+@media (max-width:1320px){.counter3{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.counter3{grid-template-columns:1fr}}
+.pay{grid-template-columns:repeat(4,1fr)}
+.scan{padding:11px 14px;gap:10px}
+.scan input{padding:8px 11px;font-size:.87rem}
+.tot{margin-top:8px;padding:10px 13px}
+.tot b{font-size:1.3rem}
+.pay{margin-top:9px;gap:7px}
+.paybtn{padding:9px;font-size:.8rem}
+.owns .pc .im{height:44px}
+.warn,.ok,.guard,.inline-ai,.lastv{padding:9px 11px;margin-top:9px;font-size:.79rem}
+.consent{margin-top:8px}
+
+/* chat */
+.msg{padding:8px 11px;font-size:.85rem;border-radius:11px}
+.thread{gap:8px}
+.pcards{gap:7px;margin-top:7px}
+.pcard .im{height:48px}
+.quick{margin-top:8px;gap:6px}
+.quick span{font-size:.74rem;padding:4px 9px}
+
+/* chrome bits */
+.awork{padding:9px 12px;font-size:.78rem;gap:7px}
+.voice{padding:12px 14px;gap:11px}
+.voice .orb{width:40px;height:40px}
+.chart{height:92px}
+.don{width:96px;height:96px}
+.don .hole{width:64px;height:64px}
+.statusbar{padding:6px 20px;font-size:.7rem}
+.note{margin-top:7px;font-size:.75rem}
+.tiny{font-size:.75rem}
+.chip{font-size:.68rem;padding:2px 8px}
+.btn{padding:7px 12px;font-size:.81rem}
+
+.agents3{grid-template-columns:1.15fr 1fr .8fr}
+@media (max-width:1320px){.agents3{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.agents3{grid-template-columns:1fr}}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;font-size:.79rem}
+.rules b{display:block}
+@media (max-width:900px){.rules{grid-template-columns:1fr;gap:6px}}
+
+/* cards keep their natural height; a column never stretches one to fill */
+.split>.g,.agents3>.g,.counter3>.g{align-content:start}
+.split>.card,.agents3>.card,.counter3>.card{align-self:start}
+.rung{font-size:.63rem;padding:2px 6px}
+
+/* vibrance: saturated primaries, no flat fills on the things you look at */
+.b-gold{background:linear-gradient(135deg,#6366F1,#3D56C4);border-color:transparent}
+.b-dark{background:linear-gradient(135deg,#1E2638,#10151C)}
+.mk{background:linear-gradient(140deg,var(--a1),var(--gold-dark))}
+.ava{background:linear-gradient(140deg,var(--a1),var(--gold-dark))}
+.who{background:linear-gradient(140deg,var(--a2),var(--teal))}
+.chart i{background:linear-gradient(180deg,#7C8BF0,var(--gold));border-radius:4px 4px 0 0}
+.chart i.alt{background:linear-gradient(180deg,#45C8DC,var(--a2))}
+.spark i{background:linear-gradient(180deg,#7C8BF0,var(--gold))}
+.stg .bar i{background:linear-gradient(90deg,var(--a1),var(--gold2))}
+.prog i{background:linear-gradient(90deg,var(--a1),var(--gold2))}
+.prog i.ok{background:linear-gradient(90deg,var(--a5),var(--teal2))}
+.bar i{background:linear-gradient(90deg,var(--a2),var(--teal2))}
+.pct{font-size:.74rem}
+
+@media (max-width:900px){.canvas{padding:12px 14px 22px}.pagebar{padding:10px 14px 0}}
+</style>
+</head>
+<body>
+
+<div class="ribbon">
+  Design prototype — proposed front end, not the shipped product. Figures and clients are synthetic.
+  <a href="../index.html">Back to Jewel360</a>
+</div>
+
+<div class="util">
+  <span class="env">STAGING</span>
+  <span>Jewel360</span>
+  <span style="color:#3F4D5E">/</span>
+  <span>Al Noor Jewellery</span>
+  <span class="sp" style="flex:1"></span>
+  <span>Engine: Odoo 19 Community</span>
+  <span style="color:#3F4D5E">·</span>
+  <span>Rate approved 09:12 by R. Haddad</span>
+  <span style="color:#3F4D5E">·</span>
+  <a href="../index.html">Exit prototype</a>
+</div>
+
+<div class="shell">
+  <nav class="rail">
+    <div class="brandrow">
+      <span class="mk">M</span>
+      <span><b>Jewel360</b><small>Al Noor · Deira</small></span>
+    </div>
+
+    <div class="railsec">Overview</div>
+    <button class="navb on" data-s="dash">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Today
+    </button>
+
+    <div class="railsec">Sales Hub</div>
+    <button class="navb" data-s="clients">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0"/><path d="M16 11a3 3 0 100-6M18 20a6 6 0 00-3-5.2"/></svg>
+      Clients <span class="pill">3</span>
+    </button>
+    <button class="navb" data-s="crm">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15V9M12 15v-3M16 15V7"/></svg>
+      Pipeline
+    </button>
+    <button class="navb" data-s="out">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 10h8M8 13h5"/></svg>
+      Outreach <span class="pill">6</span>
+    </button>
+    <button class="navb" data-s="styl">
+      <svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+      Client chat
+    </button>
+    <button class="navb" data-s="pos">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>
+      Counter
+    </button>
+
+    <div class="railsec">Inventory Hub</div>
+    <button class="navb" data-s="inv">
+      <svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>
+      Pieces
+    </button>
+    <button class="navb" data-s="ops">
+      <svg viewBox="0 0 24 24"><path d="M3 9h4l2-4h6l2 4h4"/><path d="M3 9v10a1 1 0 001 1h16a1 1 0 001-1V9"/><path d="M9 14h6"/></svg>
+      Stores &amp; transfers
+    </button>
+
+    <button class="navb" data-s="chan">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg>
+      Channels
+    </button>
+
+    <div class="railsec">Finance Hub</div>
+    <button class="navb" data-s="fin">
+      <svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6"/></svg>
+      Rates &amp; compliance <span class="pill">2</span>
+    </button>
+
+    <div class="railsec">Agents</div>
+    <button class="navb" data-s="agents">
+      <svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/><path d="M2.5 12.5v2M21.5 12.5v2"/></svg>
+      AI layer <span class="pill">2</span>
+    </button>
+
+    <div class="railfoot">
+      Engine: Odoo 19 Community<br>
+      <span style="color:var(--teal3)">● </span>Rate approved 09:12
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="top">
+      <div class="store">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Deira
+        <svg viewBox="0 0 24 24" style="width:10px"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        Search clients, pieces, tags, orders…
+        <span class="kbd">⌘K</span>
+      </div>
+      <div class="sp"></div>
+      <div class="rate">
+        <span class="dot"></span>
+        <span><small>24K approved</small><b class="num">245.80 <span class="muted" style="font-weight:400">/g</span></b></span>
+      </div>
+      <button class="iconbtn" title="Notifications">
+        <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span class="bdg">4</span>
+      </button>
+      <button class="iconbtn" title="Help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 113.5 2.3c-.6.3-1 .9-1 1.7M12 17h.01"/></svg></button>
+      <img class="ph ph-sm" src="../site/img/people/nadia.png" alt="Nadia M., relationship manager" title="Nadia M. · Relationship manager">
+    </div>
+
+    <div class="pagebar">
+      <div>
+        <div class="bc" id="t-bc">Front of house · Clients</div>
+        <h2 id="t-title">Client 360</h2>
+      </div>
+      <div class="sp" style="flex:1"></div>
+      <button class="btn b-ghost">Export</button>
+      <button class="btn b-gold" id="t-cta">New client</button>
+    </div>
+
+    <div class="canvas">
+
+<!-- ============ TODAY / OWNER ============ -->
+      <section class="screen on" id="s-dash">
+        <div class="g g4" style="margin-bottom:11px">
+          <div class="card kpi"><small>Sold today</small><b class="num">148,920</b><div class="d up">+18% on last Tuesday</div></div>
+          <div class="card kpi"><small>Metal moved</small><b class="num">612 g</b><div class="d muted">out 684 g · in 72 g</div></div>
+          <div class="card kpi"><small>Stock value</small><b class="num">2.91 M</b><div class="d up">+1.2% on the rate</div></div>
+          <div class="card kpi"><small>Needs you</small><b class="num">4</b><div class="d down">1 overdue</div></div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Sales this week</h3><span class="sp"></span>
+              <span class="filt on">7 days</span><span class="filt">30 days</span><span class="filt">Quarter</span></div>
+            <div class="pad">
+              <div class="chart">
+                <i style="height:48%"></i><i style="height:62%"></i><i style="height:41%"></i>
+                <i style="height:74%"></i><i style="height:56%"></i><i class="alt" style="height:92%"></i><i style="height:38%"></i>
+              </div>
+              <div class="chartx"><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span><span>Mon</span><span>Tue</span></div>
+              <p class="note" style="margin-top:12px">Monday was the wedding season opening. Teal marks the day the 22K necklace line sold out at Deira.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="hd"><h3>Where the metal sits</h3></div>
+            <div class="pad" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center">
+              <div class="don"><div class="hole"><b class="num">11.84</b><small>kg fine</small></div></div>
+              <div class="leg">
+                <div><i style="background:var(--gold)"></i> Deira · 4.14 kg</div>
+                <div><i style="background:var(--gold2)"></i> Marina · 3.93 kg</div>
+                <div><i style="background:var(--teal2)"></i> Sharjah · 3.64 kg</div>
+                <div><i style="background:var(--paper3)"></i> In transit · 0.13 kg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:11px">
+          <div class="hd"><h3>Decisions waiting</h3><span class="sp"></span><span class="chip c-coral">1 overdue</span></div>
+          <table>
+            <thead><tr><th>What</th><th>Why it matters</th><th>Worth</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td><b>Approve gold rate 246.40/g</b><div class="tiny muted">entered 08:51 by R. Haddad</div></td>
+                  <td class="tiny muted">Prices stay on this morning's rate until a different manager approves it</td>
+                  <td class="num">—</td><td><button class="btn b-gold" style="padding:5px 12px;font-size:.78rem">Review</button></td></tr>
+              <tr><td><b>Old-gold exchange OGX/00042</b><div class="tiny muted">taken in at Marina, over the threshold</div></td>
+                  <td class="tiny muted">Needs a second person before the credit is given</td>
+                  <td class="num">8,410</td><td><button class="btn b-gold" style="padding:5px 12px;font-size:.78rem">Approve</button></td></tr>
+              <tr><td><b>MEMO/00017 overdue</b><div class="tiny muted">2 pieces with a Private client since 28 Oct</div></td>
+                  <td class="tiny muted">Insured value is on your book until it comes back</td>
+                  <td class="num">31,200</td><td><button class="btn b-ghost" style="padding:5px 12px;font-size:.78rem">Open</button></td></tr>
+              <tr><td><b>Marina reconciliation open</b><div class="tiny muted">−2.4 g unexplained</div></td>
+                  <td class="tiny muted">Held open until someone accounts for it</td>
+                  <td class="num">590</td><td><button class="btn b-ghost" style="padding:5px 12px;font-size:.78rem">Open</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ PIECES / INVENTORY ============ -->
+      <section class="screen" id="s-inv">
+        <div class="card">
+          <div class="toolbar">
+            <span class="filt on">All stores</span>
+            <span class="filt">22K</span>
+            <span class="filt">On approval</span>
+            <span class="filt">Unsold 90+ days</span>
+            <span class="sp" style="flex:1"></span>
+            <span class="tiny muted">1,284 pieces · 11.84 kg fine · priced at 245.80/g</span>
+          </div>
+          <table>
+            <thead><tr><th>Tag</th><th>Piece</th><th>Karat</th><th>Net</th><th>Store</th><th>Age</th><th>Price</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="num">BNG-0001</td><td><b>Bangle</b><div class="tiny muted">cert 55121</div></td><td>22K</td><td class="num">24.500 g</td><td>Deira</td><td class="tiny muted">12 d</td><td class="num">6,491.74</td><td><span class="chip c-teal">In stock</span></td></tr>
+              <tr><td class="num">NCK-0114</td><td><b>Necklace</b><div class="tiny muted">asked for by A. K.</div></td><td>22K</td><td class="num">41.200 g</td><td>Deira</td><td class="tiny muted">31 d</td><td class="num">10,918.20</td><td><span class="chip c-gold">Reserved</span></td></tr>
+              <tr><td class="num">RNG-0002</td><td><b>Ring with stones</b><div class="tiny muted">cert 55122</div></td><td>18K</td><td class="num">6.300 g</td><td>Marina</td><td class="tiny muted">8 d</td><td class="num">4,102.55</td><td><span class="chip c-gold">On approval</span></td></tr>
+              <tr><td class="num">CHN-0002</td><td><b>Chain</b></td><td>21K</td><td class="num">42.100 g</td><td>Sharjah</td><td class="tiny muted">114 d</td><td class="num">11,236.40</td><td><span class="chip c-coral">Slow</span></td></tr>
+              <tr><td class="num">PND-0031</td><td><b>Pendant</b></td><td>21K</td><td class="num">9.400 g</td><td>Marina</td><td class="tiny muted">46 d</td><td class="num">2,508.90</td><td><span class="chip c-teal">In stock</span></td></tr>
+              <tr><td class="num">BNG-0002</td><td><b>Bangle</b></td><td>22K</td><td class="num">31.200 g</td><td>In transit</td><td class="tiny muted">3 d</td><td class="num">8,266.08</td><td><span class="chip c-grey">Transfer</span></td></tr>
+            </tbody>
+          </table>
+          <div class="pad" style="border-top:1px solid var(--paper3)">
+            <p class="note" style="margin:0">Every price on this list is computed live from the approved rate — change the rate and the whole book reprices. The slow row is 114 days old: the Command Centre raises those for a markdown, a transfer or a remake.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CLIENT 360 ============ -->
+      <section class="screen" id="s-clients">
+        <div class="card" style="margin-bottom:11px">
+          <div class="hero360">
+            <img class="ph ph-lg" src="../site/img/people/aisha.png" alt="Portrait of the client A. K.">
+            <div>
+              <h2>A. K.</h2>
+              <div class="meta">
+                <span class="chip c-gold">Private tier</span>
+                <span class="chip c-teal">AML verified</span>
+                <span class="chip c-grey">Client since 2019</span>
+                <span class="chip c-grey">Nadia M. · relationship manager</span>
+                <span class="chip c-coral">No marketing</span>
+              </div>
+            </div>
+            <div class="facts">
+              <div><small>Lifetime</small><b class="num">612,400</b></div>
+              <div><small>Last 12 m</small><b class="num">148,900</b></div>
+              <div><small>Visits</small><b class="num">17</b></div>
+              <div><small>Gold held</small><b class="num">284 g</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="awork" style="margin-bottom:11px">
+          <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents on this client</span>
+          <span class="arun"><b>Zayan</b> pulled the file for the 2 Nov visit <span class="st st-done">done 09:04</span></span>
+          <span class="arun"><b>Layla</b> built a 4-piece tray <span class="st st-wait">waiting for Nadia</span></span>
+          <span class="arun"><b>Layla</b> drafted the wedding note <span class="st st-wait">waiting for Nadia</span></span>
+          <span class="arun"><b>Layla</b> refused to send — Private tier <span class="st st-stop">blocked</span></span>
+        </div>
+
+        <div class="g split">
+          <div class="g" style="gap:11px">
+
+            <div class="card">
+              <div class="hd"><h3>Pieces owned and shown</h3><span class="sub">photographed at handover, so nobody sells it twice</span></div>
+              <div class="pad">
+                <div class="gal">
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg></div><div class="lb"><b>Bangle 22K</b><span>Bought · Mar 2026</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M12 4l4 5-4 11-4-11z"/><path d="M8 9h8"/></svg></div><div class="lb"><b>Pendant 21K</b><span>Bought · Dec 2025</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1014 0"/><path d="M5 12V9a7 7 0 0114 0v3"/></svg></div><div class="lb"><b>Necklace 22K</b><span>Shown · last visit</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="3"/><circle cx="12" cy="12" r="2"/></svg></div><div class="lb"><b>Ring 18K</b><span>On approval</span></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Touchpoints</h3><span class="sub">consent per channel; agents draft, people send</span><span class="sp"></span><span class="chip c-grey">17 visits</span></div>
+              <div class="pad">
+                <div class="tp"><span class="tpi tp-store"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>
+                  <div><b>Private viewing &middot; Deira</b><span class="byline"><img class="ph ph-xs" src="../site/img/people/nadia.png" alt="">2 Nov &middot; Nadia M. &middot; 45 min &middot; 4 pieces shown</span></div></div>
+                <div class="tp"><span class="tpi tp-link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg></span>
+                  <div><b>Tray link opened &middot; twice</b><span>1 Nov &middot; expires in 5 days &middot; revocable &middot; liked 2, asked about 1</span></div></div>
+                <div class="tp"><span class="tpi tp-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1121 11.5z"/></svg></span>
+                  <div><b>WhatsApp &middot; repair ready</b><span>18 Oct &middot; sent by Nadia M. &middot; read &middot; consent on file</span></div></div>
+                <div class="consent">
+                  <span class="chip c-teal">WhatsApp &middot; consented</span>
+                  <span class="chip c-teal">Calls &middot; consented</span>
+                  <span class="chip c-coral">Marketing &middot; refused</span>
+                  <span class="chip c-coral">Automated outbound &middot; blocked, Private tier</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="g" style="gap:11px">
+
+            <div class="card">
+              <div class="hd"><h3>Compliance</h3><span class="sp"></span><span class="chip c-teal">Verified</span></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">Identity</span><b>Passport · on file</b></div>
+                <div class="amlrow"><span class="muted">Expires</span><b>14 Aug 2029</b></div>
+                <div class="amlrow"><span class="muted">Screening</span><b>Clear · 2 Nov 2026</b></div>
+                <div class="amlrow"><span class="muted">Risk band</span><b>Standard</b></div>
+                <div class="amlrow"><span class="muted">Source of funds</span><b>Declared</b></div>
+                <div style="margin-top:12px">
+                  <div class="tiny muted">Cash year to date against the reporting threshold</div>
+                  <div class="bar"><i style="width:38%"></i></div>
+                  <div class="tiny muted" style="margin-top:5px">38% of the configured limit</div>
+                </div>
+                <p class="note">Thresholds and retention are configuration, confirmed per country by the finance manager. Never invented here.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Taste &amp; occasions</h3></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">Prefers</span><b>22K, 21K · yellow</b></div>
+                <div class="amlrow"><span class="muted">Usual spend</span><b class="num">45,000</b></div>
+                <div class="amlrow"><span class="muted">Avoids</span><b>White gold, heavy stones</b></div>
+                <div class="amlrow"><span class="muted">Next occasion</span><b>Wedding · 21 days</b></div>
+                <div style="margin-top:12px">
+                  <button class="btn b-gold" style="width:100%">Build a tray</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PIPELINE / CRM ============ -->
+      <section class="screen" id="s-crm">
+        <div class="g g4" style="margin-bottom:11px">
+          <div class="card kpi"><small>Target, this quarter</small><b class="num">1.80 M</b><div class="d muted">set by the owner</div></div>
+          <div class="card kpi"><small>Won to date</small><b class="num">1.21 M</b><div class="d up">67% of target &middot; 31 days left</div></div>
+          <div class="card kpi"><small>Weighted forecast</small><b class="num">1.74 M</b><div class="d down">60k short at today's odds</div></div>
+          <div class="card kpi"><small>Open opportunities</small><b class="num">38</b><div class="d muted">842k unweighted</div></div>
+        </div>
+
+        <div class="card" style="margin-bottom:11px">
+          <div class="hd"><h3>Pipeline by stage</h3><span class="sub">odds learned, not typed</span><span class="sp"></span>
+            <span class="filt on">This quarter</span><span class="filt">All stores</span><span class="filt">Nadia M.</span></div>
+          <div class="pad">
+            <div class="stages">
+              <div class="stg"><small>Enquiry</small><b class="num">186k</b><span class="c">14 open &middot; avg 12%</span><div class="bar"><i style="width:18%"></i></div></div>
+              <div class="stg"><small>Viewing booked</small><b class="num">241k</b><span class="c">11 open &middot; avg 34%</span><div class="bar"><i style="width:36%"></i></div></div>
+              <div class="stg"><small>Tray shared</small><b class="num">208k</b><span class="c">8 open &middot; avg 56%</span><div class="bar"><i style="width:58%"></i></div></div>
+              <div class="stg"><small>Reserved</small><b class="num">147k</b><span class="c">4 open &middot; avg 81%</span><div class="bar"><i style="width:82%"></i></div></div>
+              <div class="stg"><small>Won, 90 days</small><b class="num">1.21 M</b><span class="c">52 closed</span><div class="bar"><i class="ok" style="width:100%;background:var(--teal)"></i></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Most likely to close</h3><span class="sp"></span><span class="chip c-teal">scored from 52 won and 23 lost</span></div>
+            <table>
+              <thead><tr><th>Client</th><th>What</th><th>Value</th><th>Odds</th><th>Next</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><b>A. K.</b><div class="tiny muted">Private &middot; Nadia M.</div></td>
+                  <td>22K necklace &amp; bangle<div class="why">Wedding in 21 days &middot; tray opened twice</div></td>
+                  <td class="num">78,400</td>
+                  <td><span class="pct p-hi">84%</span></td>
+                  <td class="tiny muted">Viewing, Thu</td>
+                </tr>
+                <tr>
+                  <td><b>DEMO Client Bravo</b><div class="tiny muted">Preferred</div></td>
+                  <td>21K set<div class="why">Anniversary in 14 days &middot; within usual spend</div></td>
+                  <td class="num">34,900</td>
+                  <td><span class="pct p-hi">71%</span></td>
+                  <td class="tiny muted">Call back</td>
+                </tr>
+                <tr>
+                  <td><b>DEMO Client Delta</b><div class="tiny muted">Royal &middot; R. Haddad</div></td>
+                  <td>Bespoke commission<div class="why">No contact in 40 days &middot; was 62% a month ago</div></td>
+                  <td class="num">210,000</td>
+                  <td><span class="pct p-mid">46%</span></td>
+                  <td class="tiny muted">Owner to call</td>
+                </tr>
+                <tr>
+                  <td><b>DEMO Client Alpha</b><div class="tiny muted">Standard</div></td>
+                  <td>18K ring<div class="why">Enquiry only &middot; no viewing booked</div></td>
+                  <td class="num">9,200</td>
+                  <td><span class="pct p-lo">14%</span></td>
+                  <td class="tiny muted">Book a viewing</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Odds come from your own closed business — stage, tier, value band, days since contact. A person can override one and say why.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px">
+            <div class="card">
+              <div class="hd"><h3>Against target</h3></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">Target</span><b class="num">1,800,000</b></div>
+                <div class="amlrow"><span class="muted">Won</span><b class="num">1,210,000</b></div>
+                <div class="amlrow"><span class="muted">Weighted pipeline</span><b class="num">528,000</b></div>
+                <div class="amlrow"><span class="muted">Forecast</span><b class="num">1,738,000</b></div>
+                <div class="prog"><i style="width:67%"></i></div>
+                <p class="note" style="margin-top:8px">67% won, 31 days left. Today’s odds land 62,000 short — one Private viewing that converts.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Why we lose</h3><span class="sub">6 were stock, not price — a buying decision</span><span class="sp"></span><span class="tiny muted">23 lost</span></div>
+              <table>
+                <tbody>
+                  <tr><td>Price against another jeweller</td><td class="num">9</td></tr>
+                  <tr><td>Piece not in stock in time</td><td class="num">6</td></tr>
+                  <tr><td>Went quiet after the viewing</td><td class="num">5</td></tr>
+                  <tr><td>Postponed the occasion</td><td class="num">3</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ OUTREACH & UPSELL ============ -->
+      <section class="screen" id="s-out">
+        <div class="awork" style="margin-bottom:11px">
+          <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents here</span>
+          <span class="arun"><b>Layla</b> 6 upsells ranked <span class="st st-done">done 08:12</span></span>
+          <span class="arun"><b>Layla</b> 4 notes drafted <span class="st st-wait">waiting for a person</span></span>
+          <span class="arun"><b>Layla</b> 2 held back <span class="st st-stop">consent refused</span></span>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Upsell &amp; next piece</h3><span class="sp"></span>
+              <span class="filt on">Ranked</span><span class="filt">By value</span><span class="filt">By occasion</span></div>
+            <table>
+              <thead><tr><th>Client</th><th>Suggested</th><th>Why</th><th>Value</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><b>A. K.</b><div class="tiny muted">Private</div></td><td>22K necklace</td>
+                    <td class="tiny muted">Matches preferred karat &middot; completes the bangle she owns &middot; asked to see it</td>
+                    <td class="num">42,100</td><td><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Build tray</button></td></tr>
+                <tr><td><b>DEMO Client Bravo</b><div class="tiny muted">Preferred</div></td><td>21K earrings</td>
+                    <td class="tiny muted">Anniversary in 14 days &middot; 78% of usual spend</td>
+                    <td class="num">18,600</td><td><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Build tray</button></td></tr>
+                <tr><td><b>DEMO Client Charlie</b><div class="tiny muted">Private</div></td><td>Bespoke commission</td>
+                    <td class="tiny muted">Bought three times in 18 months &middot; no open enquiry</td>
+                    <td class="num">96,000</td><td><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Assign</button></td></tr>
+                <tr><td><b>DEMO Client Alpha</b><div class="tiny muted">Standard</div></td><td>18K pendant</td>
+                    <td class="tiny muted">Birthday in 30 days &middot; first purchase was a ring</td>
+                    <td class="num">6,400</td><td><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Assign</button></td></tr>
+              </tbody>
+            </table>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Every suggestion carries its reasons, and the price beside it is the live one from the approved rate. The ranking is deterministic: the same client and the same stock give the same list, and you can read why.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px">
+            <div class="card">
+              <div class="hd"><h3>Outreach queue</h3><span class="sp"></span><span class="chip c-gold">4 to send</span></div>
+              <div class="pad">
+                <div class="tp"><span class="tpi tp-wa"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 21l2.2-5.2A8.5 8.5 0 1121 11.5z"/></svg></span>
+                  <div><b>Anniversary note &middot; Bravo</b><span>WhatsApp &middot; consented &middot; drafted, Nadia sends</span></div></div>
+                <div class="tp"><span class="tpi tp-call"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg></span>
+                  <div><b>Call back &middot; Delta</b><span>Royal &middot; owner to call personally, not staff</span></div></div>
+                <div class="tp"><span class="tpi tp-link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007 0l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-2 2a5 5 0 007 7l1-1"/></svg></span>
+                  <div><b>Tray link &middot; A. K.</b><span>Copy the link, hand it over &mdash; no automated send</span></div></div>
+                <div class="tp"><span class="tpi tp-store"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>
+                  <div><b>Repair ready &middot; Alpha</b><span>SMS &middot; transactional &middot; allowed without marketing consent</span></div></div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>2 held back.</b> One client refused marketing; one is Royal tier, where automated outbound is never sent. Both are drafted for a person instead.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>What outreach is worth</h3><span class="sp"></span><span class="tiny muted">last 90 days</span></div>
+              <table>
+                <tbody>
+                  <tr><td><b>Occasion notes</b><div class="tiny muted">41 sent</div></td><td class="num">11 viewings</td><td class="num">214k</td></tr>
+                  <tr><td><b>Tray links</b><div class="tiny muted">18 shared</div></td><td class="num">7 viewings</td><td class="num">186k</td></tr>
+                  <tr><td><b>Repair follow-up</b><div class="tiny muted">63 sent</div></td><td class="num">4 viewings</td><td class="num">31k</td></tr>
+                </tbody>
+              </table>
+              <div class="pad" style="border-top:1px solid var(--paper3)">
+                <p class="note" style="margin:0">Trays convert nearly twice as well as notes on a quarter of the volume. Worth knowing before anyone buys a bulk-messaging tool.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STYLIST ============ -->
+      <section class="screen" id="s-styl">
+        <div class="g split">
+          <div class="card">
+            <div class="hd">
+              <img class="ph ph-sm" src="../site/img/people/sameer.png" alt="">
+              <div><h3 style="font-size:.95rem">DEMO Client Alpha</h3><span class="sub tiny muted">Standard tier &middot; signed in by one-time code &middot; consented to chat</span></div>
+              <span class="sp"></span><span class="chip c-teal">Client app</span>
+            </div>
+            <div class="pad">
+              <div class="thread">
+                <div class="msg m-me">I bought the 22K bangle in March. I have a wedding next month — what would go with it without being too much?</div>
+
+                <div class="msg m-ai">
+                  <span class="by"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Layla</span>
+                  You wear 22K yellow and you tend to keep stones out of it, so I would stay in that family and let the bangle lead.
+                  Two directions. A fine 22K chain sits above the wrist and reads quieter beside a wide bangle — good if you want the bangle to be the piece people notice.
+                  Or drop earrings in the same karat, which balance the weight on the wrist without competing with it.
+                  <div class="pcards">
+                    <div class="pcard"><div class="im"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1014 0"/><path d="M5 12V9a7 7 0 0114 0v3"/></svg></div>
+                      <div class="lb"><b>22K fine chain</b><span>18.7 g &middot; 4,980</span></div></div>
+                    <div class="pcard"><div class="im"><svg viewBox="0 0 24 24"><path d="M12 4l3 5-3 11-3-11z"/><path d="M9 9h6"/></svg></div>
+                      <div class="lb"><b>22K drop earrings</b><span>9.4 g &middot; 2,640</span></div></div>
+                  </div>
+                </div>
+
+                <div class="msg m-me">The earrings. Would they work with a high neckline?</div>
+
+                <div class="msg m-ai">
+                  <span class="by"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Layla</span>
+                  Yes — drops do more work with a high neckline than a chain does, because there is nothing at the collar competing with them.
+                  If you are wearing your hair up, they will read as the main piece and the bangle becomes the supporting one.
+                  Both are at Deira. Shall I ask Nadia to put them aside so you can see them beside the bangle you already own?
+                  <div class="quick"><span>Yes, ask her</span><span>Show me more like this</span><span>What would these cost together?</span><span>Talk to a person</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px">
+            <div class="card">
+              <div class="hd"><h3>What the stylist may and may not do</h3></div>
+              <div class="pad">
+                <div class="ok"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  <div><b>Every price is read from the engine</b> at the approved rate. It quotes; it never calculates.</div></div>
+                <div class="ok"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  <div><b>It speaks only to a verified client</b> about her own file — signed in by one-time code, and it sees only what she may see.</div></div>
+                <div class="warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>It cannot reserve, discount or take payment.</b> "Ask Nadia to put them aside" creates a request for a person, not a hold on stock.</div></div>
+                <div class="warn"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>A person is always one tap away</b>, and the whole thread goes with the handover.</div></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>The same question, from a Private client</h3><span class="sp"></span><span class="chip c-coral">not sent</span></div>
+              <div class="pad">
+                <div class="inline-ai">
+                  <span class="av"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg></span>
+                  <div><span class="by">Layla &middot; drafted for Nadia M.</span>
+                  <b>A. K. asked what to wear with the 22K bangle for the wedding on the 29th.</b>
+                  Suggested: the 22K necklace she asked about on 2 Nov, and the drop earrings. Both at Deira. Draft reply prepared in English and Arabic.</div>
+                </div>
+                <p class="note">Private and Royal clients never receive an automated message. The same reasoning runs, the same pieces come up, and the answer is handed to the person who knows her — with the wording ready, so the reply is hers and not a bot's.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CHANNELS ============ -->
+      <section class="screen" id="s-chan">
+        <div class="g g4" style="margin-bottom:11px">
+          <div class="card kpi"><small>Listed online</small><b class="num">312</b><div class="d muted">of 1,284 pieces</div></div>
+          <div class="card kpi"><small>On marketplaces</small><b class="num">86</b><div class="d muted">one channel live</div></div>
+          <div class="card kpi"><small>Tagged with RFID</small><b class="num">1,284</b><div class="d up">100% &middot; last count 2 days ago</div></div>
+          <div class="card kpi"><small>Tax-free claims</small><b class="num">14</b><div class="d muted">this month</div></div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Connections</h3><span class="sp"></span><span class="chip c-coral">none connected yet</span></div>
+            <div class="intg"><span class="ilogo">EC</span>
+              <div><b>Online shop</b><span>Catalogue, live gold price per piece, click and reserve. One piece, one listing &mdash; a serial cannot be in two baskets.</span></div>
+              <span class="chip c-grey">Standard in Odoo</span></div>
+            <div class="intg"><span class="ilogo">MP</span>
+              <div><b>Marketplaces</b><span>Per-channel listing and de-listing the moment a piece sells anywhere. Commission and settlement reconciled back to the piece.</span></div>
+              <span class="chip c-gold">Needs an account</span></div>
+            <div class="intg"><span class="ilogo">TF</span>
+              <div><b>Tax-free refunds</b><span>Tourist refund at the till: passport capture, form issued, refund tracked to settlement. Validated per country and operator.</span></div>
+              <span class="chip c-gold">Needs an account</span></div>
+            <div class="intg"><span class="ilogo">AML</span>
+              <div><b>AML / KYC screening</b><span>Identity, sanctions and PEP screening on a schedule, with the result dated on the client file.</span></div>
+              <span class="chip c-gold">Needs a provider</span></div>
+            <div class="intg"><span class="ilogo">RF</span>
+              <div><b>RFID readers</b><span>Tray and cabinet counts in seconds instead of hours. Tags are already on every piece.</span></div>
+              <span class="chip c-gold">Needs hardware</span></div>
+            <div class="intg"><span class="ilogo">PAY</span>
+              <div><b>Payment terminals</b><span>Card at the counter, reconciled to the sale, split payment supported.</span></div>
+              <span class="chip c-grey">Standard in Odoo</span></div>
+            <div class="intg"><span class="ilogo">RT</span>
+              <div><b>Gold rate feed</b><span>A market rate arrives as a draft. A person still approves it before anything is priced.</span></div>
+              <span class="chip c-gold">Provider not chosen</span></div>
+            <div class="intg"><span class="ilogo">EI</span>
+              <div><b>E-invoicing</b><span>ZATCA for Saudi, with the Gulf bilingual invoice layout.</span></div>
+              <span class="chip c-grey">Standard in Odoo</span></div>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Nothing here is connected. Each one is validated per country and per operator before it is switched on, and the ones marked standard are configuration on the Odoo underneath rather than something to build.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px">
+            <div class="card">
+              <div class="hd"><h3>Where one piece is</h3><span class="sp"></span><span class="tiny muted">NCK-0114</span></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">In stock</span><b>Deira &middot; cabinet 3</b></div>
+                <div class="amlrow"><span class="muted">Online shop</span><b>Listed &middot; 10,918.20</b></div>
+                <div class="amlrow"><span class="muted">Marketplace</span><b>Listed &middot; 11,464.11</b></div>
+                <div class="amlrow"><span class="muted">Reserved for</span><b>A. K. &middot; viewing Thu</b></div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>One serial, three places it can sell.</b> The moment it goes in any basket it comes off the other two. This is the hard part of selling unique pieces online, and it is why listing is per serial rather than per product.</div>
+                </div>
+                <p class="note">Marketplace price differs because the channel's commission is priced in. The metal underneath is the same approved rate.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>RFID count</h3><span class="sp"></span><span class="chip c-teal">2 days ago</span></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">Expected</span><b class="num">512 pieces</b></div>
+                <div class="amlrow"><span class="muted">Read</span><b class="num">511</b></div>
+                <div class="amlrow"><span class="muted">Missing</span><b class="num">1 &middot; RNG-0002</b></div>
+                <div class="amlrow"><span class="muted">Explained</span><b>Out on approval</b></div>
+                <p class="note" style="margin-top:10px">A full cabinet count took four minutes. The one piece not read was with a client, and the system already knew that &mdash; so it closes itself rather than becoming a variance.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ COUNTER / POS ============ -->
+      <section class="screen" id="s-pos">
+
+        <div class="cstrip">
+          <img class="ph ph-xl" src="../site/img/people/aisha.png" alt="Portrait of the client A. K.">
+          <div>
+            <h3>A. K. <span class="tiny" style="font-weight:400;color:#8E9CAC">· at the counter with Nadia M.</span></h3>
+            <div class="meta">
+              <span class="chip c-gold">Private tier</span>
+              <span class="chip c-teal">AML verified</span>
+              <span class="chip c-coral">No marketing</span>
+              <span class="chip c-dark">Discreet billing</span>
+              <span class="chip c-dark">22K/21K yellow · avoids white gold</span>
+            </div>
+          </div>
+          <div class="facts">
+            <div><small>Usual spend</small><b class="num">45,000</b></div>
+            <div><small>Lifetime</small><b class="num">612,400</b></div>
+            <div><small>Gold held</small><b class="num">284 g</b></div>
+            <div><small>Last visit</small><b>2 Nov</b></div>
+          </div>
+        </div>
+
+        <div class="scan" style="margin-top:11px">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--gold3);fill:none;stroke-width:2"><path d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M7 12h10"/></svg>
+          <input placeholder="Scan a tag, or type a piece number…" value="DEMO-BNG-0001">
+          <span class="chip c-teal">Online</span>
+          <button class="btn b-gold">Add</button>
+        </div>
+
+        <div class="counter3">
+          <div class="g" style="gap:11px">
+
+            <div class="card">
+              <div class="hd"><h3>22K bangle · DEMO-BNG-0001</h3><span class="sp"></span><span class="chip c-gold">Priced at the approved rate</span></div>
+              <div class="pad">
+                <div class="g g4" style="gap:12px;margin-bottom:10px">
+                  <div><small class="tiny muted">Gross</small><div><b class="num">24.500 g</b></div></div>
+                  <div><small class="tiny muted">Net metal</small><div><b class="num">24.500 g</b></div></div>
+                  <div><small class="tiny muted">Karat</small><div><b>22K</b></div></div>
+                  <div><small class="tiny muted">Fine weight</small><div><b class="num">22.458 g</b></div></div>
+                </div>
+                <div class="brk">
+                  <div class="r"><span class="muted">Metal at 245.80/g</span><b class="num">5,520.19</b></div>
+                  <div class="r"><span class="muted">Wastage 2%</span><b class="num">110.40</b></div>
+                  <div class="r"><span class="muted">Making 10%</span><b class="num">552.02</b></div>
+                  <div class="r"><span class="muted">Stones</span><b class="num">0.00</b></div>
+                  <div class="r"><span class="muted">VAT 5%</span><b class="num">309.13</b></div>
+                </div>
+                <div class="tot"><span>Total</span><b class="num">6,491.74</b></div>
+                <div class="ok">
+                  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                  <div><b>22K, and she prefers 22K.</b> Within her usual spend at 14% above — an upgrade, not a stretch.</div>
+                </div>
+                <p class="note">Every line comes from the engine at this morning’s approved rate. No figure can be typed over; a discount touches making only, capped at 15% for Nadia’s role.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
+            <div class="card">
+              <div class="hd"><h3>Old gold taken in exchange</h3><span class="sp"></span><span class="chip c-gold">Second approval over 5,000</span></div>
+              <div class="pad">
+                <div class="g g4" style="gap:12px">
+                  <div><small class="tiny muted">Gross in</small><div><b class="num">18.400 g</b></div></div>
+                  <div><small class="tiny muted">Karat</small><div><b>21K</b></div></div>
+                  <div><small class="tiny muted">Melt loss</small><div><b class="num">2%</b></div></div>
+                  <div><small class="tiny muted">Credit</small><div><b class="num">3,829.11</b></div></div>
+                </div>
+                <p class="note">Computed, never typed. Gold held drops to 266 g, and the file records which piece it came from.</p>
+              </div>
+            </div>
+
+
+            <div class="card">
+              <div class="hd"><h3>She already owns</h3><span class="sp"></span><span class="tiny muted">don't sell twice</span></div>
+              <div class="pad">
+                <div class="owns">
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/></svg></div><div class="lb"><b>Bangle 22K</b><span>Mar 2026</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M12 4l4 5-4 11-4-11z"/><path d="M8 9h8"/></svg></div><div class="lb"><b>Pendant 21K</b><span>Dec 2025</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 1014 0"/><path d="M5 12V9a7 7 0 0114 0v3"/></svg></div><div class="lb"><b>Necklace</b><span>Shown 2 Nov</span></div></div>
+                  <div class="pc"><div class="im"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="3"/><circle cx="12" cy="12" r="2"/></svg></div><div class="lb"><b>Ring 18K</b><span>On approval</span></div></div>
+                </div>
+                <div class="lastv" style="margin-top:11px">
+                  <b>Last visit · 2 Nov</b>
+                  Shown 4 pieces. Liked the 22K necklace, asked to see it beside her bangle. Nadia M., 45 min.
+                </div>
+                <div class="inline-ai">
+                  <span class="av"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg></span>
+                  <div><span class="by">Layla &middot; level C &middot; drafts only</span>
+                  <b>The necklace she asked about on 2 Nov is in stock at Deira.</b> Suggest it beside this bangle — it cannot add anything to the sale.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
+
+            <div class="card">
+              <div class="hd"><h3>Payment</h3></div>
+              <div class="pad">
+                <div class="brk">
+                  <div class="r"><span class="muted">Pieces</span><b class="num">6,491.74</b></div>
+                  <div class="r"><span class="muted">Old gold credit</span><b class="num">− 3,829.11</b></div>
+                </div>
+                <div class="tot"><span>Due</span><b class="num">2,662.63</b></div>
+                <div class="pay">
+                  <div class="paybtn">Card</div>
+                  <div class="paybtn">Cash</div>
+                  <div class="paybtn">Split</div>
+                  <div class="paybtn">Deposit</div>
+                </div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>Taking this in cash crosses the reporting threshold.</b>
+                  Year to date goes 38% → 104% of the configured limit. Card or split keeps it under.</div>
+                </div>
+                <button class="btn b-dark" style="width:100%;margin-top:12px">Take payment</button>
+                <p class="note">Discreet billing on: the invoice goes to her billing contact. Offline, the counter sells against the locked rate and reconciles after.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ OPERATIONS ============ -->
+      <section class="screen" id="s-ops">
+        <div class="g g4" style="margin-bottom:11px">
+          <div class="card kpi"><small>Metal held</small><b class="num">11.84 kg</b><div class="d up">+180 g today</div></div>
+          <div class="card kpi"><small>Stock value</small><b class="num">2.91 M</b><div class="d up">+1.2% on the rate</div></div>
+          <div class="card kpi"><small>Pieces</small><b class="num">1,284</b><div class="d muted">46 on approval</div></div>
+          <div class="card kpi"><small>Variance today</small><b class="num">−2.4 g</b><div class="d down">1 store to reconcile</div></div>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Daily gold reconciliation</h3><span class="sp"></span><span class="chip c-gold">1 open</span></div>
+            <table>
+              <thead><tr><th>Store</th><th>Opening</th><th>Sold</th><th>Taken in</th><th>Counted</th><th>Variance</th></tr></thead>
+              <tbody>
+                <tr><td><b>Deira</b></td><td class="num">4,210 g</td><td class="num">−86 g</td><td class="num">+18 g</td><td class="num">4,142 g</td><td><span class="chip c-teal">0.0 g</span></td></tr>
+                <tr><td><b>Marina</b></td><td class="num">3,980 g</td><td class="num">−51 g</td><td class="num">0 g</td><td class="num">3,926.6 g</td><td><span class="chip c-coral">−2.4 g</span></td></tr>
+                <tr><td><b>Sharjah</b></td><td class="num">3,650 g</td><td class="num">−24 g</td><td class="num">+9 g</td><td class="num">3,635 g</td><td><span class="chip c-teal">0.0 g</span></td></tr>
+              </tbody>
+            </table>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Marina is 2.4 g short, which is about 590 at today's rate. It stays open until someone explains it — a piece in the workshop, a transfer not received, or a miscount.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px">
+            <div class="card">
+              <div class="hd"><h3>Stores</h3></div>
+              <div class="store"><span class="sq">DE</span><div style="flex:1"><b>Deira</b><div class="tiny muted">512 pieces · 4.14 kg</div></div><div class="spark"><i style="height:40%"></i><i style="height:62%"></i><i style="height:48%"></i><i style="height:80%"></i><i style="height:67%"></i><i style="height:95%"></i></div></div>
+              <div class="store"><span class="sq">MA</span><div style="flex:1"><b>Marina</b><div class="tiny muted">436 pieces · 3.93 kg</div></div><div class="spark"><i style="height:55%"></i><i style="height:38%"></i><i style="height:72%"></i><i style="height:44%"></i><i style="height:58%"></i><i style="height:49%"></i></div></div>
+              <div class="store"><span class="sq">SH</span><div style="flex:1"><b>Sharjah</b><div class="tiny muted">336 pieces · 3.64 kg</div></div><div class="spark"><i style="height:30%"></i><i style="height:45%"></i><i style="height:35%"></i><i style="height:60%"></i><i style="height:41%"></i><i style="height:52%"></i></div></div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Transfers in flight</h3></div>
+              <div class="store"><span class="chip c-gold">In transit</span><div style="flex:1"><b>Deira → Marina</b><div class="tiny muted">3 pieces · 214 g · sent 09:40</div></div></div>
+              <div class="store"><span class="chip c-coral">Not received</span><div style="flex:1"><b>Sharjah → Deira</b><div class="tiny muted">1 piece · 38 g · sent yesterday</div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+<!-- ============ FINANCE HUB ============ -->
+      <section class="screen" id="s-fin">
+        <div class="g g4" style="margin-bottom:11px">
+          <div class="card kpi"><small>Rate in force</small><b class="num">245.80</b><div class="d muted">approved 09:12 &middot; N. Mansour</div></div>
+          <div class="card kpi"><small>Awaiting a second person</small><b class="num">2</b><div class="d down">1 rate &middot; 1 exchange</div></div>
+          <div class="card kpi"><small>Metal exposure</small><b class="num">2.91 M</b><div class="d up">11.84 kg fine</div></div>
+          <div class="card kpi"><small>VAT this period</small><b class="num">41,208</b><div class="d muted">5% &middot; UAE &middot; confirmed</div></div>
+        </div>
+
+        <div class="awork" style="margin-bottom:11px">
+          <span class="lab"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M8.5 13h.01M15.5 13h.01M9 16.5h6"/></svg> Agents in the Finance Hub</span>
+          <span class="arun"><b>Amara</b> reconciled 3 stores <span class="st st-done">done 06:00</span></span>
+          <span class="arun"><b>Amara</b> flagged Marina &minus;2.4 g <span class="st st-wait">waiting for a person</span></span>
+          <span class="arun"><b>Any agent</b> approving a rate <span class="st st-stop">prohibited &middot; level E</span></span>
+        </div>
+
+        <div class="g split">
+          <div class="card">
+            <div class="hd"><h3>Maker-checker queue</h3><span class="sp"></span><span class="chip c-gold">2 waiting</span></div>
+            <table>
+              <thead><tr><th>Item</th><th>Entered by</th><th>Value</th><th>Rule</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><b>Gold rate 246.40/g</b><div class="tiny muted">24K &middot; effective 18:00</div></td>
+                    <td><span class="byline"><img class="ph ph-xs" src="../site/img/people/rashid.png" alt="">R. Haddad</span><div class="tiny muted">08:51</div></td><td class="num">&mdash;</td>
+                    <td class="tiny muted">A different manager must approve</td>
+                    <td><button class="btn b-gold" style="padding:5px 12px;font-size:.78rem">Review</button></td></tr>
+                <tr><td><b>OGX/00042</b><div class="tiny muted">18.4 g at 21K &middot; Marina</div></td>
+                    <td><span class="byline"><img class="ph ph-xs" src="../site/img/people/sameer.png" alt="">S. Iqbal</span><div class="tiny muted">10:22</div></td><td class="num">8,410</td>
+                    <td class="tiny muted">Over the 5,000 threshold</td>
+                    <td><button class="btn b-gold" style="padding:5px 12px;font-size:.78rem">Approve</button></td></tr>
+                <tr><td><b>Gold rate 245.80/g</b><div class="tiny muted">in force now</div></td>
+                    <td><span class="byline"><img class="ph ph-xs" src="../site/img/people/rashid.png" alt="">R. Haddad</span><div class="tiny muted">08:44</div></td><td class="num">&mdash;</td>
+                    <td class="tiny muted">Approved 09:12 by N. Mansour</td>
+                    <td><span class="chip c-teal">Approved</span></td></tr>
+              </tbody>
+            </table>
+            <div class="pad" style="border-top:1px solid var(--paper3)">
+              <p class="note" style="margin:0">Nobody approves what they entered, and the state cannot be written around these buttons — not by a manager, not by system code, not by an agent.</p>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px">
+            <div class="card">
+              <div class="hd"><h3>Compliance</h3><span class="sp"></span><span class="chip c-gold">configuration</span></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">VAT rate</span><b>5% &middot; UAE</b></div>
+                <div class="amlrow"><span class="muted">Cash reporting threshold</span><b class="num">55,000</b></div>
+                <div class="amlrow"><span class="muted">Exchange second approval</span><b class="num">5,000</b></div>
+                <div class="amlrow"><span class="muted">Screening cadence</span><b>12 months</b></div>
+                <div class="amlrow"><span class="muted">Record retention</span><b>5 years</b></div>
+                <div class="warn">
+                  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+                  <div><b>2 clients are within 20% of the cash threshold.</b> Flagged at the till before payment, not in next month’s report.</div>
+                </div>
+                <p class="note">Set by the named finance manager, per country, and dated. Applied here, never invented.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Metal position</h3></div>
+              <div class="pad">
+                <div class="amlrow"><span class="muted">On the shelf</span><b class="num">11.84 kg</b></div>
+                <div class="amlrow"><span class="muted">Out on approval</span><b class="num">0.21 kg</b></div>
+                <div class="amlrow"><span class="muted">In transit</span><b class="num">0.13 kg</b></div>
+                <div class="amlrow"><span class="muted">Taken in today</span><b class="num">+0.07 kg</b></div>
+                <p class="note" style="margin-top:10px">Out on approval is listed apart — on your book, not on your shelf.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ AI LAYER ============ -->
+      <section class="screen" id="s-agents">
+        <div class="guard" style="margin-bottom:11px">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+          <div class="rules">
+            <div><b>Numbers are read, never produced.</b> Always the engine, at the approved rate.</div>
+            <div><b>An agent runs as you.</b> It cannot see a client you cannot.</div>
+            <div><b>Private and Royal are capped.</b> No model request, no automated send.</div>
+          </div>
+        </div>
+
+        <div class="g agents3">
+          <div class="card" style="align-self:start">
+            <div class="hd"><h3>Agents</h3><span class="sp"></span><span class="chip c-gold">In development</span></div>
+
+            <div class="agent">
+              <div class="ai"><svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 00-4 4 3.5 3.5 0 00-1 6.8V17a3 3 0 006 0V3zM12 3a4 4 0 014 4 3.5 3.5 0 011 6.8V17a3 3 0 01-6 0"/></svg></div>
+              <div>
+                <b>Zayan</b>
+                <div class="tiny muted">Orchestrator. Picks the specialists, delegates, consolidates, and answers the owner out loud.</div>
+                <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
+              </div>
+              <span class="chip c-teal">12 today</span>
+            </div>
+
+            <div class="agent">
+              <div class="ai"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
+              <div>
+                <b>Layla</b>
+                <div class="tiny muted">Retail. Builds the tray, watches occasions and pieces on approval, drafts the follow-up. Never sends.</div>
+                <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung act">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
+              </div>
+              <span class="chip c-teal">4 trays</span>
+            </div>
+
+            <div class="agent">
+              <div class="ai"><svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg></div>
+              <div>
+                <b>Noor</b>
+                <div class="tiny muted">Jewellery domain. Metals, stones, purity, certificates. Validates a specification and names what is missing.</div>
+                <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung act">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
+              </div>
+              <span class="chip c-gold">2 waiting</span>
+            </div>
+
+            <div class="agent">
+              <div class="ai"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6.5c0-1.9-2.2-3-5-3s-5 1-5 3 2 2.7 5 3.3 5 1.6 5 3.5-2.2 3.2-5 3.2-5-1.2-5-3.2"/></svg></div>
+              <div>
+                <b>Rayan</b>
+                <div class="tiny muted">Pricing. Analyses a rate move and simulates margin. Calls the engine — never does the arithmetic.</div>
+                <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
+              </div>
+              <span class="chip c-teal">3 scenarios</span>
+            </div>
+
+            <div class="agent">
+              <div class="ai"><svg viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M6 20v-7M10 20V8M14 20v-5M18 20V11"/></svg></div>
+              <div>
+                <b>Amara</b>
+                <div class="tiny muted">Finance. Margin, cash flow, receivables. Prepares the entry and the report — cannot post or approve one.</div>
+                <div class="lad"><span class="rung act">A read</span><span class="rung act">B recommend</span><span class="rung act">C draft</span><span class="rung">D execute</span><span class="rung no">E</span></div>
+              </div>
+              <span class="chip c-gold">1 waiting</span>
+            </div>
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
+            <div class="card">
+              <div class="hd"><h3>Zayan &middot; this morning</h3><span class="sp"></span><span class="chip c-teal">Level A &middot; read only</span></div>
+              <div class="pad">
+                <div class="voice">
+                  <span class="orb"><svg viewBox="0 0 24 24"><path d="M12 4v16M8 8v8M16 8v8M4 11v2M20 11v2"/></svg></span>
+                  <div>
+                    <b>"Four things need you this morning."</b>
+                    <span class="sub">45 seconds &middot; English &middot; Arabic available</span>
+                    <div class="wave"><i style="height:30%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:45%"></i><i style="height:95%"></i><i style="height:60%"></i><i style="height:35%"></i><i style="height:75%"></i><i style="height:50%"></i><i style="height:85%"></i><i style="height:40%"></i><i style="height:65%"></i></div>
+                  </div>
+                  <audio controls preload="none" style="grid-column:1/-1" src="../site/audio/owner-brief.mp3"></audio>
+                </div>
+                <p class="note">Every figure spoken is read from the engine. Level A: it can explain the rate, not approve it.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="hd"><h3>Waiting for a person</h3><span class="sp"></span><span class="chip c-gold">2</span></div>
+              <div class="pad">
+                <div class="tl">
+                  <div class="tli"><b>Draft note to A. K.</b><span>Layla · wedding in 21 days · Private tier, never auto-sent · Nadia M.</span>
+                    <div style="margin-top:7px;display:flex;gap:7px"><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Open draft</button><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Dismiss</button></div>
+                  </div>
+                  <div class="tli"><b>Tray of 4 pieces</b><span>Layla · all in stock at Deira · reasons attached to each piece</span>
+                    <div style="margin-top:7px;display:flex;gap:7px"><button class="btn b-gold" style="padding:5px 11px;font-size:.78rem">Review tray</button><button class="btn b-ghost" style="padding:5px 11px;font-size:.78rem">Dismiss</button></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="g" style="gap:11px;align-content:start">
+            <div class="card">
+              <div class="hd"><h3>Audit</h3><span class="sp"></span><span class="tiny muted">every call, kept</span></div>
+              <table>
+                <tbody>
+                  <tr><td><b>Layla</b><div class="tiny muted">tray · A. K.</div></td><td class="tiny muted">09:48</td><td><span class="chip c-teal">Level C</span></td></tr>
+                  <tr><td><b>Zayan</b><div class="tiny muted">metal per store</div></td><td class="tiny muted">09:21</td><td><span class="chip c-teal">Level A</span></td></tr>
+                  <tr><td><b>Layla</b><div class="tiny muted">draft · blocked</div></td><td class="tiny muted">08:55</td><td><span class="chip c-coral">Capped</span></td></tr>
+                </tbody>
+              </table>
+              <div class="pad" style="border-top:1px solid var(--paper3)">
+                <p class="note" style="margin:0">The blocked row is the control working — a message to a Royal client refused, a draft left instead.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="statusbar">
+      <span><span class="dotg"></span>Connected · last sync 12 s ago</span>
+      <span>Store: Deira · till 2</span>
+      <span>Shift open 09:00 · Nadia M.</span>
+      <span class="sp" style="flex:1"></span>
+      <span>Rate snapshot locked until 18:00</span>
+      <span>v0.4.0-preview</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var titles = {
+    dash:    ['Today','Owner · Overview','Refresh'],
+    clients: ['Client 360','Sales Hub · Clients','New client'],
+    crm:     ['Pipeline','Sales Hub · Opportunities','New opportunity'],
+    out:     ['Outreach & upsell','Sales Hub · Follow-up','New campaign'],
+    styl:    ['Client chat','Sales Hub · Layla','Open thread'],
+    chan:    ['Channels','Inventory Hub · Where pieces sell','Connect'],
+    pos:     ['Counter','Sales Hub · Till 2','Park sale'],
+    inv:     ['Pieces','Inventory Hub · Stock book','Add piece'],
+    ops:     ['Stores & transfers','Inventory Hub · Operations','New transfer'],
+    fin:     ['Rates & compliance','Finance Hub · Controls','Enter rate'],
+    agents:  ['AI layer','Agents · Runs and approvals','Agent settings']
+  };
+  var btns = document.querySelectorAll('.navb');
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var s = b.dataset.s;
+      btns.forEach(function(x){ x.classList.toggle('on', x === b); });
+      document.querySelectorAll('.screen').forEach(function(sc){
+        sc.classList.toggle('on', sc.id === 's-' + s);
+      });
+      document.getElementById('t-title').textContent = titles[s][0];
+      document.getElementById('t-bc').textContent = titles[s][1];
+      document.getElementById('t-cta').textContent = titles[s][2];
+      document.querySelector('.canvas').scrollTop = 0;
+      try { location.hash = s; } catch(e) {}
+    });
+  });
+  var h = (location.hash || '').replace('#','');
+  if (titles[h]) { var t = document.querySelector('.navb[data-s="'+h+'"]'); if (t) t.click(); }
+})();
+</script>
+</body>
+</html>

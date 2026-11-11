@@ -1,0 +1,19 @@
+[options]
+; Mumtaz Jewel staging template. deploy.sh renders this to
+; odoo.rendered.conf, substituting the three __PLACEHOLDER__ values from .env.
+; This template holds no secret, so it is safe in git; the rendered file is
+; gitignored.
+admin_passwd = __ADMIN_PASSWORD__
+db_host = db
+db_port = 5432
+db_user = __POSTGRES_USER__
+db_password = __POSTGRES_PASSWORD__
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons
+data_dir = /var/lib/odoo
+proxy_mode = True
+workers = 2
+
+; A demo host has no business sending mail or taking public signups. The nginx
+; allow-list is what keeps strangers out; list_db stays on so the demo
+; database can be dropped and re-seeded from the UI during a demo.
+list_db = True

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_memo" model="ir.sequence">
+        <field name="name">Pieces on approval</field>
+        <field name="code">jewellery.approval.memo</field>
+        <field name="prefix">MEMO/</field>
+        <field name="padding">5</field>
+    </record>
+    <record id="cron_occasions" model="ir.cron">
+        <field name="name">Jewellery: prepare occasion drafts</field>
+        <field name="model_id" ref="model_jewellery_occasion"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_prepare()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    </record>
+    <record id="cron_memo" model="ir.cron">
+        <field name="name">Jewellery: pieces-on-approval reminders</field>
+        <field name="model_id" ref="model_jewellery_approval_memo"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_remind()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    </record>
+</odoo>

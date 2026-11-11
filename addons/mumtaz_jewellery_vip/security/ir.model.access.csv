@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_occasion_user,occasion user,model_jewellery_occasion,mumtaz_jewellery.group_jewellery_user,1,1,1,1
+access_memo_user,memo user,model_jewellery_approval_memo,mumtaz_jewellery.group_jewellery_user,1,1,1,0
+access_memo_mgr,memo manager,model_jewellery_approval_memo,mumtaz_jewellery.group_jewellery_manager,1,1,1,1
+access_offer_user,offer user,model_jewellery_offer_suggestion,mumtaz_jewellery.group_jewellery_user,1,1,1,1
+access_vip_log_mgr,vip log,model_jewellery_vip_access_log,group_vip_manager,1,0,0,0

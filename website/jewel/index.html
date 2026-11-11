@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewel360</title>
+<meta name="description" content="A client book for gold and jewellery chains: who your clients are, what they like, when their moments fall, and what to show them next — with every price computed from one approved gold rate.">
+<meta property="og:title" content="Jewel360 — the client book for jewellery chains">
+<meta property="og:description" content="Know every client. Remember every preference. Show the right piece — at a price computed from today's approved rate.">
+<meta property="og:type" content="website">
+<meta name="robots" content="noindex, nofollow">
+<!--
+  BEFORE THIS GOES LIVE:
+  1. Replace umer@mumtaz.digital below (three places) with the real address.
+  2. Decide whether to keep the noindex meta above. It is ON deliberately,
+     because this host is a staging/demo host until the owner says otherwise
+     (docs/mumtaz-jewel/CLAUDE.md). Remove it only when the page is meant to
+     be found by search engines.
+
+  HONESTY RULES FOR THIS PAGE, please keep them:
+  * Every capability carries a status: built and tested, in development, or
+    planned. The AI teammates are NOT built yet and the section says so.
+  * No customers, logos, testimonials, or invented figures.
+  * The agent names and autonomy levels come from
+    docs/mumtaz-jewel/IMPLEMENTATION_ROADMAP.md (Slice 5), not from marketing.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Mumtaz brand tokens (brand/tokens.css) — gold primary, teal secondary,
+   warm ivory ground. Inlined so this page serves from any document root. */
+:root{
+  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
+  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
+  --gold:#3D56C4; --gold2:#5570DF; --gold3:#A9B8F5; --gold-bg:#EEF1FD;
+  --gold-border:#C8D2F7; --gold-dark:#2B3E96;
+  --teal:#0E7490; --teal2:#0EA5BE; --teal3:#67D3E8; --teal-bg:#E7F6FA;
+  --teal-border:#B3E2EE;
+  --coral:#B42318; --coral-bg:#FDECEA;
+  --display:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --wrap:1120px; --r:10px;
+  --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+    --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+    --gold-bg:#1A2140; --gold-border:#33406F; --gold:#8FA3F0; --gold2:#A9B8F5;
+    --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+    --coral-bg:#2E1512;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
+  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
+  --gold-bg:#1A2140; --gold-border:#33406F; --gold:#8FA3F0; --gold2:#A9B8F5;
+  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8; --coral-bg:#2E1512;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.18;letter-spacing:-.015em;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.5rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.4vw,2.35rem);letter-spacing:-.01em}
+h3{font-size:1.1rem;font-family:var(--body);font-weight:700}
+p{margin:.7em 0}
+a{color:var(--teal)}
+.muted{color:var(--ink3)}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-dark);margin-bottom:.6rem}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .eyebrow{color:var(--gold2)}}
+
+.head{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--paper3)}
+.nav{display:flex;align-items:center;gap:18px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800}
+.mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--gold);color:#fff;font-family:var(--display);font-size:1rem;line-height:1}
+.brand small{display:block;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.links{display:flex;gap:17px;margin-left:12px}
+@media (max-width:1120px){.links{gap:13px}.links a{font-size:.85rem}}
+@media (max-width:1000px){.links{display:none}}
+.links a{color:var(--ink2);text-decoration:none;font-size:.9rem;font-weight:500;white-space:nowrap}
+.links a:hover{color:var(--gold-dark)}
+.spacer{flex:1}
+.btn{display:inline-block;white-space:nowrap;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:600;font-size:.93rem;border:1px solid transparent;cursor:pointer}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--gold-dark)}
+.btn-ghost{border-color:var(--paper3);color:var(--ink2);background:var(--surface)}
+.btn-ghost:hover{border-color:var(--gold-border)}
+@media (max-width:900px){.links{display:none}}
+
+.hero{padding:74px 0 54px}
+.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:46px;align-items:center}
+@media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:34px}}
+.hero p.lead{font-size:1.13rem;color:var(--ink2);max-width:36em}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.note{font-size:.84rem;color:var(--ink3);margin-top:14px}
+
+/* client file card */
+.filecard{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.fc-top{padding:15px 18px;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:11px}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold-dark);font-weight:700;font-size:.9rem}
+.fc-top b{font-size:.96rem;display:block;line-height:1.3}
+.fc-top span.sub{font-size:.78rem;color:var(--ink3)}
+.fc-body{padding:16px 18px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--paper3);font-size:.9rem}
+.kv:last-of-type{border-bottom:0}
+.kv span{color:var(--ink3)}
+.kv b{text-align:right;font-weight:600}
+.sugg{margin-top:13px;padding:13px 14px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:11px}
+.sugg .srow{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sugg .srow b{font-family:var(--display);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.why{margin:9px 0 0;padding:0;list-style:none;font-size:.82rem;color:var(--ink2)}
+.why li{display:flex;gap:7px;align-items:flex-start;padding:2px 0}
+.why li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gold);margin-top:8px;flex:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border);white-space:nowrap}
+.chip.royal{background:var(--gold-bg);color:var(--gold-dark);border-color:var(--gold-border)}
+
+section{padding:46px 0}
+.sec-head{max-width:40em;margin-bottom:24px}
+
+/* density: the page says the same thing in less scrolling */
+.sec-head p{margin:0}
+.grid{gap:14px}
+.status table td{padding:9px 16px}
+.status table th{padding:8px 16px}
+.note{margin-top:11px}
+.mod{padding:15px 18px;gap:14px}
+@media (max-width:760px){section{padding:34px 0}}
+.grid{display:grid;gap:18px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+@media (max-width:1080px){.g5{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:760px){.g5{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.g5{grid-template-columns:1fr}}
+@media (max-width:980px){.g4{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.g3{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.g3,.g2,.g4{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+.card h3{margin-bottom:6px}
+.card p{margin:0;font-size:.94rem;color:var(--ink3)}
+.ico{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--gold-bg);border:1px solid var(--gold-border);margin-bottom:13px}
+.ico svg{width:19px;height:19px;stroke:var(--gold-dark);fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ico svg{stroke:var(--gold2)}}
+
+/* status tags */
+.tag{display:inline-block;font-size:.71rem;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.tag.built{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+.tag.dev{background:var(--gold-bg);color:var(--gold-dark);border:1px solid var(--gold-border)}
+.tag.plan{background:var(--paper2);color:var(--ink3);border:1px solid var(--paper3)}
+
+/* agents band */
+.band{background:var(--ink);color:#EDEAE3;border-radius:18px;padding:40px}
+.band h2{color:#fff}
+.band .muted{color:#9BAAB8}
+.band .eyebrow{color:var(--gold3)}
+.band .card{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.10);box-shadow:none}
+.band .card h3{color:#fff}
+.band .card p{color:#B9C2CE}
+.band .ico{background:rgba(240,204,120,.12);border-color:rgba(240,204,120,.28)}
+.band .ico svg{stroke:var(--gold3)}
+.band .tag.dev{background:rgba(240,204,120,.14);color:var(--gold3);border-color:rgba(240,204,120,.32)}
+.agent-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.level{font-size:.72rem;font-weight:700;color:var(--gold3);letter-spacing:.04em;margin-top:9px;display:block}
+.ladder{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.rung{font-size:.78rem;padding:7px 12px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#C9D2DC}
+.rung b{color:#fff}
+.rung.off{opacity:.45;text-decoration:line-through}
+
+.status{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:.94rem}
+th,td{text-align:left;padding:13px 18px;border-bottom:1px solid var(--paper3);vertical-align:top}
+th{background:var(--paper2);font-size:.75rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+tr:last-child td{border-bottom:0}
+
+.cta-box{background:var(--surface);border:1px solid var(--gold-border);border-radius:18px;padding:40px;text-align:center;box-shadow:var(--shadow)}
+.cta-box .hero-cta{justify-content:center}
+footer{border-top:1px solid var(--paper3);padding:34px 0 48px;color:var(--ink3);font-size:.88rem}
+.disclaimer{background:var(--coral-bg);border:1px solid var(--paper3);border-radius:12px;padding:14px 16px;font-size:.86rem;color:var(--ink2);margin-top:18px}
+
+/* screens gallery */
+.shots{display:grid;gap:22px}
+.shot{background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.shot img{display:block;width:100%;height:auto;border-bottom:1px solid var(--paper3);background:var(--paper2)}
+.shot .cap{padding:15px 18px}
+.shot .cap b{display:block;font-size:.98rem;margin-bottom:3px}
+.shot .cap span{font-size:.89rem;color:var(--ink3)}
+.shots-2{grid-template-columns:1fr 1fr}
+/* gallery: tabs over one shot at a time, so a long reel of screenshots
+   becomes a page you can read. CSS only; no script to fail. */
+.gallery{margin-top:18px}
+.gallery>input{position:absolute;opacity:0;width:0;height:0}
+.gtabs{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.gtabs label{font-size:.84rem;font-weight:600;color:var(--ink3);background:var(--surface);
+  border:1px solid var(--paper3);border-radius:999px;padding:6px 14px;cursor:pointer;transition:.12s}
+.gtabs label:hover{color:var(--ink);border-color:var(--ink4)}
+.gpanes>.shot{display:none}
+.gallery>input:nth-of-type(1):checked~.gtabs label:nth-of-type(1),
+.gallery>input:nth-of-type(2):checked~.gtabs label:nth-of-type(2),
+.gallery>input:nth-of-type(3):checked~.gtabs label:nth-of-type(3),
+.gallery>input:nth-of-type(4):checked~.gtabs label:nth-of-type(4),
+.gallery>input:nth-of-type(5):checked~.gtabs label:nth-of-type(5),
+.gallery>input:nth-of-type(6):checked~.gtabs label:nth-of-type(6),
+.gallery>input:nth-of-type(7):checked~.gtabs label:nth-of-type(7){
+  background:linear-gradient(135deg,#6366F1,#3D56C4);border-color:transparent;color:#fff}
+.gallery>input:nth-of-type(1):checked~.gpanes>.shot:nth-of-type(1),
+.gallery>input:nth-of-type(2):checked~.gpanes>.shot:nth-of-type(2),
+.gallery>input:nth-of-type(3):checked~.gpanes>.shot:nth-of-type(3),
+.gallery>input:nth-of-type(4):checked~.gpanes>.shot:nth-of-type(4),
+.gallery>input:nth-of-type(5):checked~.gpanes>.shot:nth-of-type(5),
+.gallery>input:nth-of-type(6):checked~.gpanes>.shot:nth-of-type(6),
+.gallery>input:nth-of-type(7):checked~.gpanes>.shot:nth-of-type(7){display:block}
+.gpanes .shot .cap{padding:13px 16px}
+.gpanes .shot .cap span{font-size:.86rem}
+@media (max-width:860px){.shots-2{grid-template-columns:1fr}}
+
+/* module list */
+.mod{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;background:var(--surface);border:1px solid var(--paper3);border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow)}
+.mod code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84rem;background:var(--paper2);border:1px solid var(--paper3);padding:2px 7px;border-radius:6px;color:var(--ink2);white-space:nowrap}
+.mod h3{margin-bottom:4px}
+.mod p{margin:0 0 8px;font-size:.93rem;color:var(--ink3)}
+.mod ul{margin:0;padding-left:18px;font-size:.9rem;color:var(--ink2)}
+.mod ul li{padding:1px 0}
+.mod .dep{font-size:.8rem;color:var(--ink4);margin-top:9px;display:block}
+@media (max-width:720px){.mod{grid-template-columns:1fr;gap:10px}.mod code{justify-self:start}}
+
+@media (max-width:560px){
+  .nav{height:auto;padding:11px 0;gap:10px}
+  .brand small{display:none}
+  .mk{width:27px;height:27px;border-radius:8px}
+  .nav .btn{padding:8px 13px;font-size:.85rem;white-space:nowrap}
+  .fc-top{flex-wrap:wrap;gap:9px}
+  .hero{padding:44px 0 36px}
+  section{padding:44px 0}
+  .band{padding:26px 20px}
+  .cta-box{padding:28px 20px}
+  th,td{padding:11px 13px}
+  .card{padding:19px}
+}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="wrap">
+    <nav class="nav">
+      <a class="brand" href="#top">
+        <span class="mk">M</span>
+        <span>Jewel360<small>Clients · pieces · gold</small></span>
+      </a>
+      <div class="links">
+        <a href="apps/">Apps</a>
+        <a href="intelligence/">AI agents</a>
+        <a href="pricing/">Pricing</a>
+        <a href="#interface">Interface</a>
+        <a href="#screens">Engine</a>
+        <a href="#status">Where it is today</a>
+      </div>
+      <div class="spacer"></div>
+      <a class="btn btn-gold" href="#contact">Request a demo</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">For chains of 3 to 20 stores</div>
+      <h1>Your client book, not a customer list.</h1>
+      <p class="lead">
+        In jewellery the relationship is the business. Jewel360 remembers
+        who each client is, what they wear, what they usually spend and when
+        their moments fall — then shows your associate the right piece, at a
+        price computed from today's approved gold rate.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-gold" href="#contact">Request a demo</a>
+        <a class="btn btn-ghost" href="preview/">See the interface</a>
+      </div>
+      <p class="note">
+        Every suggestion says why it was suggested, and every figure comes from
+        the pricing engine at the approved rate. Nothing on the counter is a
+        guess, and nothing is invented by a model.
+      </p>
+    </div>
+
+    <div class="filecard" aria-label="Example client file">
+      <div class="fc-top">
+        <span class="avatar">AK</span>
+        <span>
+          <b>A. K.</b>
+          <span class="sub">Client since 2019 · Nadia M. (relationship manager)</span>
+        </span>
+        <span class="spacer"></span>
+        <span class="chip royal">Private</span>
+      </div>
+      <div class="fc-body">
+        <div class="kv"><span>Prefers</span><b>22K, 21K · yellow gold</b></div>
+        <div class="kv"><span>Usual spend</span><b>45,000</b></div>
+        <div class="kv"><span>Next moment</span><b>Wedding · in 21 days</b></div>
+        <div class="kv"><span>Out on approval</span><b>1 piece · due back Thursday</b></div>
+        <div class="kv"><span>Discretion</span><b>Discreet billing · no marketing</b></div>
+
+        <div class="sugg">
+          <div class="srow">
+            <span style="font-weight:700;font-size:.92rem">Suggested next: 22K bangle</span>
+            <b>1,130.50</b>
+          </div>
+          <ul class="why">
+            <li>Matches preferred karat 22K</li>
+            <li>Within usual spend (84% of typical)</li>
+            <li>Suits upcoming wedding</li>
+          </ul>
+          <p class="note" style="margin:10px 0 0">
+            An illustration with a synthetic client and a round rate. The
+            reasons are the ones the ranking actually produces.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="clients">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The client book</div>
+      <h2>What your best associate knows, written down</h2>
+      <p class="muted">
+        The things a great salesperson carries in their head — and that walk
+        out of the door when they leave. Kept on the client, visible to the
+        people who should see it, and to nobody else.
+      </p>
+    </div>
+    <div class="grid g3">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg></div>
+        <h3>Who they are <span class="tag built">Built</span></h3>
+        <p>Tier from Standard to Royal, the named relationship manager and a deputy for cover, lifetime value, and how they want to be billed.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
+        <h3>What they like <span class="tag built">Built</span></h3>
+        <p>Preferred karats, the spend they are comfortable with, and taste notes in plain words — the detail that makes the next conversation easy.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 3.5 3.5L21 6"/><path d="M21 11V6h-5"/></svg></div>
+        <h3>What to show next <span class="tag built">Built</span></h3>
+        <p>Pieces ranked against their taste, their budget and their next occasion — each with the reasons in writing, so your associate decides, not a black box.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></div>
+        <h3>When their moments fall <span class="tag built">Built</span></h3>
+        <p>Birthdays, anniversaries, weddings, Eid, Diwali and national days, with a lead time so the work starts before the date, not after.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M8 7V5a4 4 0 018 0v2M9 13h6"/></svg></div>
+        <h3>What is out with them <span class="tag built">Built</span></h3>
+        <p>Pieces on approval with a return date, the insured value, and a reminder that reaches the relationship manager before it is overdue.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M3 21L21 3"/></svg></div>
+        <h3>Who has looked <span class="tag built">Built</span></h3>
+        <p>Private and Royal records reach only the named manager, the deputy and VIP managers, and opening one writes a line to an access log with who and when.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="interface">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The interface · in design</div>
+      <h2>A front end built for the counter, not for an ERP</h2>
+      <p class="muted">
+        Odoo 19 Community is the engine: stock, accounting, permissions and the
+        approval rules all live there, and they work today. On top of it goes
+        an interface designed for the people who actually use it — an associate
+        with a client in front of them, and an owner with four minutes.
+        <b>These are a clickable prototype of eleven screens</b>, not the shipped
+        product: nothing in them is wired to a database and every client is
+        invented.
+      </p>
+      <p style="margin-top:14px">
+        <a class="btn btn-gold" href="preview/">Open the prototype</a>
+      </p>
+    </div>
+
+    <div class="gallery">
+      <input type="radio" name="gi" id="gi-1" checked>
+      <input type="radio" name="gi" id="gi-2">
+      <input type="radio" name="gi" id="gi-3">
+      <input type="radio" name="gi" id="gi-4">
+      <input type="radio" name="gi" id="gi-5">
+      <input type="radio" name="gi" id="gi-6">
+      <input type="radio" name="gi" id="gi-7">
+      <div class="gtabs">
+        <label for="gi-1">Client 360</label>
+        <label for="gi-2">Counter</label>
+        <label for="gi-3">Today</label>
+        <label for="gi-4">Pieces</label>
+        <label for="gi-5">Operations</label>
+        <label for="gi-6">Finance Hub</label>
+        <label for="gi-7">AI layer</label>
+      </div>
+      <div class="gpanes">
+        <div class="shot">
+            <a href="preview/#clients"><img src="site/img/ui-clients.webp" width="1600" height="1000"
+                 alt="Client 360 screen: client header with tier and AML status, pieces owned as photographs, a visit timeline, a compliance panel and taste and occasions."></a>
+            <div class="cap">
+              <b>Client 360, with the agents visibly at work</b>
+              <span>Everything about one client on one screen: tier and relationship
+              manager, lifetime value and gold held, the pieces she owns as
+              photographs taken at handover, every visit with who served her and
+              what was shown, her taste and her next occasion — and a compliance
+              panel with identity, expiry, screening, risk band and how close the
+              year's cash is to the reporting threshold. A strip across the top
+              shows what each agent did on this client and where it stopped —
+              including Outreach refused, because she is Private tier. Below,
+              every touchpoint in one thread: the viewing, the tray link she
+              opened twice, the WhatsApp, the call — each with the consent that
+              allows it.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <a href="preview/#pos"><img src="site/img/ui-pos.webp" width="1600" height="1000"
+                 alt="Counter screen with the client in context: a dark client strip with tier, AML status and preferences, the piece priced from the approved rate, what the client already owns, the last visit note, and a payment panel warning that cash would cross the reporting threshold."></a>
+            <div class="cap">
+              <b>The counter, with the client on it</b>
+              <span>The client file is not a separate page the associate forgets to
+              open — it is the top of the till. Tier, AML status, discreet billing
+              and "no marketing" sit above the sale; the piece is priced from this
+              morning's approved rate; beside it is what she already owns, so
+              nobody sells her a second version of the same thing, and the note
+              from her last visit. The sale checks itself against her file as it
+              is rung up: the karat matches her preference, the amount sits just
+              above her usual spend — and <b>taking this one in cash would cross
+              the reporting threshold</b>, so the till says so before the money is
+              counted, not after.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <a href="preview/#dash"><img src="site/img/ui-dash.webp" width="1600" height="1000"
+                 alt="Owner overview: four headline figures, a week of sales as a bar chart, a doughnut of where the metal sits by store, and a table of decisions waiting."></a>
+            <div class="cap">
+              <b>Today, for the owner</b>
+              <span>Four minutes' worth: what sold, what metal moved, what the
+              stock is worth at today's rate, and the decisions actually waiting —
+              each with what it is worth and a button.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <a href="preview/#inv"><img src="site/img/ui-inv.webp" width="1600" height="1000"
+                 alt="Pieces list with filters by store, karat, on approval and slow stock, showing tag, weight, store, age, live price and status."></a>
+            <div class="cap">
+              <b>Every piece, priced live</b>
+              <span>Change the approved rate and the whole book reprices. Filters
+              for slow stock, pieces out on approval and metal in transit.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <a href="preview/#ops"><img src="site/img/ui-ops.webp" width="1600" height="1000"
+                 alt="Operations screen: metal held and stock value, a daily gold reconciliation table per store with a variance flagged, store list and transfers in flight."></a>
+            <div class="cap">
+              <b>Operations</b>
+              <span>Metal held, stock value at today's rate, and the daily
+              reconciliation in grams per store — with a 2.4 g shortfall at one
+              store flagged and held open until someone explains it.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <a href="preview/#fin"><img src="site/img/ui-fin.webp" width="1600" height="1000"
+                 alt="Finance Hub: rate in force, items awaiting a second person, metal exposure, VAT, a maker-checker queue and a compliance panel of configured thresholds."></a>
+            <div class="cap">
+              <b>Finance Hub</b>
+              <span>The maker-checker queue in one place — who entered what, what
+              it is worth, which rule applies — beside the compliance values your
+              finance manager sets per country. The agent strip here reads
+              "approving a rate: prohibited".</span>
+            </div>
+          </div>
+        <div class="shot">
+            <a href="preview/#agents"><img src="site/img/ui-agents.webp" width="1600" height="1000"
+                 alt="AI layer screen: four agents with their autonomy levels, a queue of drafts waiting for a person, and an audit table showing a blocked call."></a>
+            <div class="cap">
+              <b>The AI layer</b>
+              <span>Each agent with the autonomy it is allowed, a queue of drafts
+              waiting for a person, and an audit of every call — including one
+              refused, because an automated message to a Royal-tier client is not
+              permitted.</span>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">The engine · working today</div>
+      <h2>Underneath: Odoo 19, already running</h2>
+      <p class="muted">
+        The screens above are design. These are not: they are captured from a
+        running Odoo 19 Community database with the demo module loaded. Every
+        client, piece and figure is synthetic — the behaviour is real, and it
+        is what the interface above will sit on.
+      </p>
+    </div>
+
+    <div class="gallery">
+      <input type="radio" name="gs" id="gs-1" checked>
+      <input type="radio" name="gs" id="gs-2">
+      <input type="radio" name="gs" id="gs-3">
+      <input type="radio" name="gs" id="gs-4">
+      <input type="radio" name="gs" id="gs-5">
+      <input type="radio" name="gs" id="gs-6">
+      <div class="gtabs">
+        <label for="gs-1">Client file</label>
+        <label for="gs-2">Gold rate</label>
+        <label for="gs-3">Owner cards</label>
+        <label for="gs-4">Pieces</label>
+        <label for="gs-5">Old gold</label>
+        <label for="gs-6">Rate history</label>
+      </div>
+      <div class="gpanes">
+        <div class="shot">
+            <img src="site/img/vip-client.webp" width="1600" height="956"
+                 alt="A client record open on the Jewellery client tab, showing tier, discretion settings and taste, with a planned activity to prepare an anniversary.">
+            <div class="cap">
+              <b>The client file</b>
+              <span>Tier, relationship manager, discretion and taste on the client
+              record. On the right, the occasion calendar has prepared an
+              anniversary activity three weeks out — a draft for the relationship
+              manager, with "nothing is sent automatically" written into the note
+              itself.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <img src="site/img/rate-form.webp" width="1600" height="956"
+                 alt="A gold rate record in the Approved state, showing Approved By DEMO Rate Checker while the chatter shows DEMO Rate Maker created it.">
+            <div class="cap">
+              <b>Maker-checker on the gold rate</b>
+              <span>The rate is <b>Approved</b>, approved by <b>DEMO Rate
+              Checker</b> — while the log on the right shows <b>DEMO Rate
+              Maker</b> entered it. Two different people, recorded on the record.
+              The seed data gets there through the real buttons, not by writing
+              the state.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <img src="site/img/owner-cards.webp" width="1600" height="956"
+                 alt="The owner Command Centre, a kanban of decision cards grouped by kind.">
+            <div class="cap">
+              <b>Owner command centre</b>
+              <span>One screen of decisions, each with what happened, the
+              recommendation and the money involved.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <img src="site/img/pieces.webp" width="1600" height="956"
+                 alt="The Pieces list, showing serial-tracked jewellery pieces with karat, net weight, RFID tag and live price.">
+            <div class="cap">
+              <b>Pieces</b>
+              <span>Serial-tracked, with karat, net metal weight, RFID tag and the
+              live price computed from the approved rate.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <img src="site/img/oldgold.webp" width="1600" height="956"
+                 alt="An old-gold exchange record showing gross weight, karat, melt loss, the applied rate and the computed value.">
+            <div class="cap">
+              <b>Old-gold exchange</b>
+              <span>Melt loss and buy-back margin applied, valued at the approved
+              rate, with the rate used saved on the record.</span>
+            </div>
+          </div>
+        <div class="shot">
+            <img src="site/img/rates-list.webp" width="1600" height="956"
+                 alt="The gold rates list showing effective date, rate per gram, currency, source and state.">
+            <div class="cap">
+              <b>Rate history</b>
+              <span>Every rate kept with its state and source, so you can see what
+              a piece was priced at and when.</span>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="moments">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">How a sale actually happens</div>
+      <h2>From a moment on the calendar to a piece in a box</h2>
+    </div>
+    <div class="grid g4">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15h3"/></svg></div>
+        <h3>The moment arrives</h3>
+        <p>An anniversary is three weeks out. A draft is prepared for the relationship manager — never sent automatically, and never to a Private or Royal client.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h9"/><circle cx="18" cy="18" r="3"/></svg></div>
+        <h3>A tray is put together</h3>
+        <p>Three to five pieces chosen for that client, in stock now, with the reasons and the live price beside each one.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M12 12l9-4M12 12v9M12 12L3 8"/></svg></div>
+        <h3>The piece goes out</h3>
+        <p>Each piece is serial-tracked with its own weights, karat, tag and certificate. You know which one left, with whom, and when it is due back.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg></div>
+        <h3>The owner sees it</h3>
+        <p>Rates waiting for approval, exchanges waiting for a second person, pieces overdue back, metal held and what it is worth — one screen of decisions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="wrap">
+    <div class="band">
+      <div class="sec-head">
+        <div class="eyebrow">AI teammates · in development</div>
+        <h2>Five specialists, and one who coordinates them</h2>
+        <p class="muted">
+          Not a chatbot bolted on the side. Five narrow agents, each kept on a
+          short leash, none of them allowed to produce a number, and each one
+          subscribed separately. <b style="color:#fff">These are specified, not
+          shipped</b> — Zayan answers questions about the product today; the
+          other four are the next build.
+        </p>
+        <p style="margin-top:12px">
+          <a class="btn btn-gold" href="intelligence/">See the full agent catalogue</a>
+        </p>
+      </div>
+      <div class="grid g5">
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <span class="tag dev">Live</span>
+          </div>
+          <h3>Zayan</h3>
+          <p><b style="color:var(--ink)">Orchestrator.</b> Takes the question, picks the specialists, delegates, consolidates what comes back and writes the summary. Escalates what needs a decision. Answers the owner out loud, in Arabic or English.</p>
+          <span class="level">Autonomy A–B · reads and recommends</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 16v-5M12 16V8M16 16v-7"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Amara</h3>
+          <p><b style="color:var(--ink)">Finance.</b> Profit and loss, cash flow, margin, receivables and payables. Finds the discrepancy and drafts the management report. Cannot post, approve or alter a transaction.</p>
+          <span class="level">Autonomy A–C · prepares, never posts</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l9 5v8l-9 5-9-5V8z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Noor</h3>
+          <p><b style="color:var(--ink)">Jewellery domain.</b> Metals, stones and purity grades. Reads certificates, validates product master data and names what is missing from a specification. Image analysis is never presented as certification.</p>
+          <span class="level">Autonomy A–C · prepares and validates</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.9-2.2-3-5-3s-5 1-5 3 2 2.7 5 3.3 5 1.6 5 3.5-2.2 3.2-5 3.2-5-1.2-5-3.2"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Rayan</h3>
+          <p><b style="color:var(--ink)">Gold pricing.</b> Watches the approved rate, analyses a move, simulates margin and flags inconsistencies before they reach a shelf. Calls the pricing engine — it never does the arithmetic itself.</p>
+          <span class="level">Autonomy A–C · proposes, never publishes</span>
+        </div>
+        <div class="card">
+          <div class="agent-top">
+            <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9L6.7 19.6l1.1-6L3.4 9.4l6-.8z"/></svg></div>
+            <span class="tag dev">In dev</span>
+          </div>
+          <h3>Layla</h3>
+          <p><b style="color:var(--ink)">Retail &amp; customer experience.</b> Builds the tray: which pieces suit this client, this occasion, this budget, with the reasons written out. Watches occasions and pieces out on approval, drafts the follow-up in Arabic or English. A person always sends it.</p>
+          <span class="level">Autonomy A–C · drafts, never sends</span>
+        </div>
+      </div>
+
+      <div class="ladder" aria-label="Autonomy ladder">
+        <span class="rung"><b>A</b> Read</span>
+        <span class="rung"><b>B</b> Recommend</span>
+        <span class="rung"><b>C</b> Draft</span>
+        <span class="rung"><b>D</b> Execute, with a named approval</span>
+        <span class="rung off"><b>E</b> Prohibited</span>
+      </div>
+      <p class="muted" style="margin-top:16px;font-size:.9rem">
+        Three rules hold whatever an agent is asked to do. The number always
+        comes from the pricing engine at the approved rate, never from a model.
+        An agent runs as the person who invoked it, so it can never see a
+        client that person cannot. And restricted clients are capped lower
+        still: their data never enters a model request, and no automated
+        message is ever sent to them.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="pricing-engine">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Underneath all of it</div>
+      <h2>One approved rate, and every price computed from it</h2>
+      <p class="muted">
+        The client book only works if the number beside the piece is right.
+        That is the part that is finished and tested hardest.
+      </p>
+    </div>
+    <div class="grid g3">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>A rate needs two people <span class="tag built">Built</span></h3>
+        <p>The person who enters the day's rate cannot approve it. Nor can anyone work around the buttons: the state cannot be written directly, by any user or by system code.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>No price without one <span class="tag built">Built</span></h3>
+        <p>With no approved rate in force the system refuses to price, rather than showing a figure someone might trust. Prices hold at the last approved rate.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M8 7V5a4 4 0 018 0v2"/><path d="M9 13h6"/></svg></div>
+        <h3>Old gold is computed <span class="tag built">Built</span></h3>
+        <p>Melt loss and buy-back margin applied at the approved rate, the rate used saved on the record, and a second person above the limit you set. Nobody types the payout.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="modules">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">What gets installed</div>
+      <h2>Four modules, on standard Odoo 19</h2>
+      <p class="muted">
+        No fork and no Enterprise licence. They install on Odoo 19 Community
+        and extend the standard models rather than replacing them, so stock,
+        contacts and accounting stay where Odoo keeps them.
+      </p>
+    </div>
+    <div class="grid" style="gap:16px">
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div>
+          <h3>Jewellery core</h3>
+          <p>The rate, the engine, the pieces and old gold.</p>
+          <ul>
+            <li>Gold rate with maker-checker approval and a guard that cannot be written around</li>
+            <li>Pricing engine: karat or fineness, wastage, making charge, stones, VAT, dealer discount on making only</li>
+            <li>Pieces as serial-tracked stock lots, with weights, RFID tag and certificate</li>
+            <li>Old-gold exchange with melt loss, valuation and an approval threshold</li>
+          </ul>
+          <span class="dep">Extends <code>stock</code>, <code>sale_management</code>, <code>mail</code></span>
+        </div>
+        <code>mumtaz_jewellery</code>
+      </div>
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.4-7 10-7 10z"/></svg></div>
+        <div>
+          <h3>Clients &amp; VIP &mdash; <a href="modules/sales-hub/">see the Sales Hub module &rarr;</a></h3>
+          <p>The client book, and the rules that keep it private.</p>
+          <ul>
+            <li>Tiers from Standard to Royal, relationship manager and deputy</li>
+            <li>Private and Royal records restricted by record rule, every view logged</li>
+            <li>Occasion calendar that prepares drafts, and pieces on approval with reminders</li>
+            <li>Explainable next-piece ranking — deterministic, with the reasons written out</li>
+          </ul>
+          <span class="dep">Extends <code>mumtaz_jewellery</code>, <code>res.partner</code></span>
+        </div>
+        <code>mumtaz_jewellery_vip</code>
+      </div>
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg></div>
+        <div>
+          <h3>Owner command centre</h3>
+          <p>The morning screen of decisions.</p>
+          <ul>
+            <li>Decision cards: rates to approve, exchanges waiting, pieces overdue back, stock value, slow stock</li>
+            <li>Each card opens the real record, under that person's own permissions</li>
+            <li>Cards about Private and Royal clients are visible only to VIP managers</li>
+          </ul>
+          <span class="dep">Extends <code>mumtaz_jewellery_vip</code></span>
+        </div>
+        <code>mumtaz_jewellery_owner</code>
+      </div>
+
+      <div class="mod">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4z"/><path d="M4 11h16M9 7v12"/></svg></div>
+        <div>
+          <h3>Demo data</h3>
+          <p>What the screens above are showing.</p>
+          <ul>
+            <li>Synthetic clients across all four tiers, products, pieces, an exchange and an occasion</li>
+            <li>The gold rate is seeded through the real approval path, by two different demo users</li>
+            <li>Every record is prefixed DEMO, and installing twice changes nothing</li>
+          </ul>
+          <span class="dep">Never installed on a database holding real client data</span>
+        </div>
+        <code>mumtaz_jewellery_demo</code>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="status">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Straight answer</div>
+      <h2>Where the product is today</h2>
+      <p class="muted">
+        Jewel360 is in pilot development. This is what runs and is covered
+        by automated tests, and what is not built yet. Nothing above is dressed
+        up as finished.
+      </p>
+    </div>
+    <div class="status">
+      <table>
+        <thead><tr><th>Capability</th><th style="width:148px">Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Client tiers, relationship manager and deputy</b><br><span class="muted">Standard to Royal, with discreet billing and a no-marketing flag.</span></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Private and Royal records restricted, every opened record logged</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Preferences, usual spend and taste notes</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Occasion calendar with lead time and prepared drafts</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Pieces on approval, with return dates and reminders</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Explainable next-piece ranking</b><br><span class="muted">Deterministic, with the reasons shown. Not a model.</span></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Gold rate with maker-checker, pricing engine, piece-level stock, old-gold exchange</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Owner decision cards</b></td><td><span class="tag built">Built &amp; tested</span></td></tr>
+          <tr><td><b>The five AI agents and the voice layer</b><br><span class="muted">Zayan, Amara, Noor, Rayan and Layla, in Arabic and English. Zayan answers questions about the product today; the other four are specified, not built.</span></td><td><span class="tag dev">In development</span></td></tr>
+          <tr><td><b>Shareable private tray for the client</b><br><span class="muted">An expiring, revocable link; the client can ask to view, not reserve.</span></td><td><span class="tag dev">In development</span></td></tr>
+          <tr><td><b>Price carried into quote, order and invoice</b><br><span class="muted">With the rate used saved on the document.</span></td><td><span class="tag dev">In development</span></td></tr>
+          <tr><td><b>Counter and offline point of sale</b><br><span class="muted">Feasibility is being proven in a spike first.</span></td><td><span class="tag dev">In development</span></td></tr>
+          <tr><td><b>Arabic and English, right to left</b></td><td><span class="tag dev">In development</span></td></tr>
+          <tr><td><b>Client app and WhatsApp</b></td><td><span class="tag plan">Planned</span></td></tr>
+          <tr><td><b>Multi-store transfers and daily gram reconciliation</b></td><td><span class="tag plan">Planned</span></td></tr>
+          <tr><td><b>Integrations</b><br><span class="muted">Tax-free refunds, AML and KYC, payments, marketplaces, rate feeds, e-invoicing. None is connected yet; each is validated per country and provider before it is switched on.</span></td><td><span class="tag plan">Planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      The capabilities marked built are covered by 73 automated tests that run
+      on a clean database on every change: 19 for the pricing engine and 54
+      integration tests on Odoo 19, including the client-visibility rules and
+      the approval rules as five different kinds of user.
+    </p>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="cta-box">
+      <div class="eyebrow">Next step</div>
+      <h2>Bring one client file and one tray</h2>
+      <p class="muted" style="max-width:34em;margin:10px auto 0">
+        A demo runs on synthetic data. Bring the way you keep a client today —
+        a notebook, a spreadsheet, a WhatsApp thread — and we will put one real
+        client file together with you and price a real piece against it.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-gold" href="mailto:umer@mumtaz.digital?subject=Mumtaz%20Jewel%20demo">Request a demo</a>
+        <a class="btn btn-ghost" href="/odoo">Open the demo system <span class="chip" style="margin-left:6px">Restricted</span></a>
+      </div>
+      <p class="note">
+        The demo system is on an allow-list while it is in development: it asks
+        for a password and holds synthetic data only. Pricing is agreed per
+        brand and per store.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <span class="mk">M</span>
+      <b style="color:var(--ink)">Jewel360</b>
+      <span class="spacer"></span>
+      <a href="mailto:umer@mumtaz.digital">Contact</a>
+    </div>
+    <div class="disclaimer">
+      <b>Pilot development.</b> Jewel360 is being built and piloted. The
+      four AI teammates are not available yet, and everything marked “in
+      development” or “planned” above is not available either. No integration
+      listed on this page is connected. This host serves synthetic
+      demonstration data only — it holds no client records.
+    </div>
+    <p style="margin-top:16px">© Mumtaz · Built on Odoo 19 Community</p>
+  </div>
+</footer>
+
+</body>
+</html>

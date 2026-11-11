@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_gold_rate_user,jewellery.gold.rate user,model_jewellery_gold_rate,group_jewellery_user,1,1,1,0
+access_gold_rate_manager,jewellery.gold.rate manager,model_jewellery_gold_rate,group_jewellery_manager,1,1,1,1
+access_old_gold_user,jewellery.old.gold user,model_jewellery_old_gold,group_jewellery_user,1,1,1,0
+access_old_gold_manager,jewellery.old.gold manager,model_jewellery_old_gold,group_jewellery_manager,1,1,1,1

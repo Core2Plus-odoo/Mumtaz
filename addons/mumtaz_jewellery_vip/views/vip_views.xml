@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Partner form: Jewellery client tab -->
+    <record id="view_partner_form_jewellery" model="ir.ui.view">
+        <field name="name">res.partner.form.jewellery</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Jewellery client" name="jewellery_client">
+                    <group>
+                        <group string="Tier and ownership">
+                            <field name="jewellery_tier"/>
+                            <field name="relationship_manager_id"/>
+                            <field name="deputy_id"/>
+                            <field name="jewellery_restricted" invisible="1"/>
+                            <field name="ai_autonomy_cap"/>
+                            <field name="lifetime_value"/>
+                        </group>
+                        <group string="Discretion">
+                            <field name="discreet_billing"/>
+                            <field name="no_marketing"/>
+                        </group>
+                        <group string="Taste">
+                            <field name="preferred_karats" placeholder="22,21"/>
+                            <field name="typical_budget"/>
+                            <field name="taste_notes"/>
+                        </group>
+                    </group>
+                    <separator string="Occasions"/>
+                    <field name="occasion_ids">
+                        <list editable="bottom">
+                            <field name="kind"/>
+                            <field name="date"/>
+                            <field name="recurring"/>
+                            <field name="lead_days"/>
+                            <field name="note"/>
+                        </list>
+                    </field>
+                    <separator string="Pieces on approval"/>
+                    <field name="memo_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="date_out"/>
+                            <field name="return_by"/>
+                            <field name="insured_value"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                    <div class="d-flex align-items-center mt-3">
+                        <button name="action_suggest_pieces" type="object" string="Suggest pieces" class="btn-primary"/>
+                        <span class="text-muted ms-2">Ranked from the client's taste, budget and next occasion. Staff decide.</span>
+                    </div>
+                    <field name="suggestion_ids">
+                        <list create="0" decoration-muted="state == 'dismissed'" decoration-success="state == 'accepted'">
+                            <field name="lot_id"/>
+                            <field name="score"/>
+                            <field name="price"/>
+                            <field name="margin_pct"/>
+                            <field name="reasons"/>
+                            <field name="state"/>
+                            <button name="action_accept" type="object" string="Accept" icon="fa-check"
+                                    invisible="state != 'new'"/>
+                            <button name="action_dismiss" type="object" string="Dismiss" icon="fa-times"
+                                    invisible="state != 'new'"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- VIP clients list -->
+    <record id="view_vip_client_list" model="ir.ui.view">
+        <field name="name">jewellery.vip.client.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="jewellery_tier" widget="badge"/>
+                <field name="relationship_manager_id"/>
+                <field name="deputy_id"/>
+                <field name="lifetime_value"/>
+                <field name="ai_autonomy_cap"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_vip_clients" model="ir.actions.act_window">
+        <field name="name">VIP Clients</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('jewellery_tier', '!=', 'standard')]</field>
+        <field name="context">{'default_jewellery_tier': 'preferred'}</field>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('view_vip_client_list')}), (0, 0, {'view_mode': 'form'})]"/>
+    </record>
+
+    <!-- Pieces on approval -->
+    <record id="view_memo_list" model="ir.ui.view">
+        <field name="name">jewellery.approval.memo.list</field>
+        <field name="model">jewellery.approval.memo</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="state == 'out' and return_by &lt; current_date">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="date_out"/>
+                <field name="return_by"/>
+                <field name="insured_value"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_memo_form" model="ir.ui.view">
+        <field name="name">jewellery.approval.memo.form</field>
+        <field name="model">jewellery.approval.memo</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_return" type="object" string="Mark returned" invisible="state != 'out'"/>
+                    <button name="action_sold" type="object" string="Mark sold" class="btn-primary" invisible="state != 'out'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <h1><field name="name"/></h1>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="date_out"/>
+                            <field name="return_by"/>
+                        </group>
+                        <group>
+                            <field name="insured_value"/>
+                        </group>
+                    </group>
+                    <field name="lot_ids" widget="many2many_tags"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_memo" model="ir.actions.act_window">
+        <field name="name">Pieces on Approval</field>
+        <field name="res_model">jewellery.approval.memo</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Access log -->
+    <record id="view_vip_log_list" model="ir.ui.view">
+        <field name="name">jewellery.vip.access.log.list</field>
+        <field name="model">jewellery.vip.access.log</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="date"/>
+                <field name="user_id"/>
+                <field name="partner_id"/>
+                <field name="action"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_vip_log" model="ir.actions.act_window">
+        <field name="name">VIP Access Log</field>
+        <field name="res_model">jewellery.vip.access.log</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_vip_clients" name="VIP Clients" parent="mumtaz_jewellery.menu_jewellery_root"
+              action="action_vip_clients" sequence="50"/>
+    <menuitem id="menu_memo" name="Pieces on Approval" parent="mumtaz_jewellery.menu_jewellery_root"
+              action="action_memo" sequence="55"/>
+    <menuitem id="menu_vip_log" name="VIP Access Log" parent="mumtaz_jewellery.menu_jewellery_root"
+              action="action_vip_log" sequence="90" groups="group_vip_manager"/>
+</odoo>
