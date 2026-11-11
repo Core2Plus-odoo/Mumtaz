@@ -54,7 +54,6 @@ info() { printf '\033[36m==> %s\033[0m\n' "$*"; }
 [ "$(id -u)" = "0" ] || { red "Run as root: this edits /etc/nginx."; exit 2; }
 command -v nginx   >/dev/null || { red "nginx not found.";   exit 2; }
 command -v python3 >/dev/null || { red "python3 not found."; exit 2; }
-[ -f "$MAP_SRC" ] || { red "Missing $MAP_SRC"; exit 2; }
 [ -f "$FIXER" ]   || { red "Missing $FIXER";   exit 2; }
 
 # -- 1. which file does nginx actually serve this host from? -----------------
@@ -100,9 +99,15 @@ if [ "${DRY_RUN:-0}" = "1" ]; then
   exit 0
 fi
 
-# -- 3. the content-type map (http context, no locations, cannot collide) ----
-install -m 0644 "$MAP_SRC" "$MAP_DEST"
-green "Installed $MAP_DEST"
+# -- 3. remove the global map, if an earlier run installed one ---------------
+# /etc/nginx/conf.d is the http context and is SHARED WITH EVERY SITE ON THIS
+# HOST, including the live C2P console. The map is no longer needed -- the
+# headers carry literal values into the HTML locations -- so an earlier copy
+# is taken away rather than left lying in global scope.
+if [ -f "$MAP_DEST" ]; then
+  rm -f "$MAP_DEST"
+  green "Removed $MAP_DEST (no longer needed; it was in global scope)"
+fi
 
 # -- 4. edit, with a backup nginx will not load ------------------------------
 mkdir -p "$BACKUP_DIR" "$SNIPPET_DIR"
@@ -146,7 +151,7 @@ if nginx -t 2>&1; then
 else
   red "nginx -t FAILED. Rolling back."
   cat "$BACKUP" > "$SITE_CONF"
-  rm -f "$MAP_DEST" "$SNIPPET_DIR/$SNIPPET_NAME"
+  rm -f "$SNIPPET_DIR/$SNIPPET_NAME"
   if nginx -t >/dev/null 2>&1; then
     red "Rolled back; the previous configuration is valid and still live."
   else

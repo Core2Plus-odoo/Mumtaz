@@ -47,7 +47,12 @@ Writes the modified config to stdout. --check only reports what it would do.
 import re
 import sys
 
-CACHE_LINE = 'add_header Cache-Control $jewel_cache always;'
+# A literal, not a $variable from a map. The map had to live in the http
+# context (/etc/nginx/conf.d), which on this host is SHARED WITH THE LIVE
+# C2P CONSOLE -- jewel.mumtaz.digital is a separate site on the production
+# VPS, not a separate server. Nothing global is needed: these headers go
+# into the HTML-serving locations, where the right value is known.
+CACHE_LINE = 'add_header Cache-Control "no-cache, must-revalidate" always;'
 
 
 def split_blocks(lines, start):
@@ -119,6 +124,13 @@ def main():
         lines[i].strip() for i in range(s + 1, e)
         if re.match(r'\s*add_header\s', lines[i]) and not in_location(i)
     ]
+    # An earlier version of this tooling inserted a server-level
+    #   add_header Cache-Control $jewel_cache always;
+    # backed by a map in /etc/nginx/conf.d -- the http context, which on this
+    # host is shared with the live C2P console. The map is being removed, so
+    # that line would reference an undefined variable and nginx -t would
+    # FAIL. Drop it here, and delete it from the config below.
+    server_headers = [h for h in server_headers if '$jewel_cache' not in h]
     if not any('Cache-Control' in h for h in server_headers):
         server_headers.append(CACHE_LINE)
     # X-Robots-Tag stays with the locations that set it; see the docstring.
@@ -150,6 +162,14 @@ def main():
         return
 
     out = list(lines)
+    # Remove the stale $jewel_cache line (server level only; a location that
+    # set its own Cache-Control is left alone).
+    for i in range(e, s, -1):
+        if '$jewel_cache' in out[i] and not in_location(i):
+            del out[i]
+            # indices after this shift, but targets are applied in reverse
+            # order below and all lie after s, so recompute conservatively.
+            targets = [(a - 1 if a > i else a, h) for a, h in targets]
     for a, _ in sorted(targets, reverse=True):
         indent = re.match(r'(\s*)', out[a]).group(1)
         out.insert(a + 1, f'{indent}    include {include_path};')
