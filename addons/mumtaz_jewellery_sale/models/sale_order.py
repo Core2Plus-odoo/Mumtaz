@@ -377,6 +377,13 @@ class SaleOrder(models.Model):
         return True
 
     # --- the counter: one call, one transaction ------------------------------
+    @api.model
+    def _counter_extra_checks(self, partner=None, lot=None, journal=None, amount=None, discount=0.0):
+        """Further readiness checks other modules add (compliance, for one):
+        a list of dicts with key, ok and detail. The commit enforces the same
+        rules itself; this only tells the screen what would stop it."""
+        return []
+
     def action_counter_commit(self, journal=None, amount=None):
         """Agree, invoice, take the money and hand the piece over, atomically.
 

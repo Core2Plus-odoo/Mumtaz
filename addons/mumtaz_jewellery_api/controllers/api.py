@@ -903,7 +903,8 @@ class JawharApi(Controller):
 
     @_r('/counter/readiness')
     @endpoint()
-    def counter_readiness(self, piece_id=None, client_id=None, discount=None, old_gold_id=None, **kw):
+    def counter_readiness(self, piece_id=None, client_id=None, discount=None, old_gold_id=None,
+                          journal_id=None, amount=None, **kw):
         env = request.env
         checks = []
 
@@ -954,6 +955,15 @@ class JawharApi(Controller):
                 ok = (intake.state == 'confirmed' and not intake.sale_order_id
                       and (not intake.partner_id or not partner or intake.partner_id == partner))
                 check('old_gold', ok, _old_gold_dict(intake))
+
+        journal = env['account.journal'].browse(int(journal_id)).exists() if journal_id else None
+        try:
+            pay = float(amount) if amount not in (None, '') else None
+        except ValueError:
+            raise ApiError(400, 'invalid', 'amount must be a number.')
+        for extra in env['sale.order']._counter_extra_checks(partner=partner, lot=lot, journal=journal,
+                                                              amount=pay, discount=pct):
+            check(extra['key'], extra['ok'], extra.get('detail'))
 
         return {'ready': all(c['ok'] for c in checks), 'checks': checks}
 

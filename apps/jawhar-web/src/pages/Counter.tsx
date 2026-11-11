@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import {
-  api, ApiError, type ClientDetail, type CounterPiece, type CounterResult, type OldGold, type PaymentMethod,
+  api, ApiError, type AmlCheck, type ClientDetail, type CounterPiece, type CounterResult, type OldGold, type PaymentMethod,
   type Rate, type Readiness, type User,
 } from '../lib/api';
 import { tierLabel, useT } from '../lib/i18n';
@@ -48,10 +48,11 @@ export default function Counter() {
   useEffect(() => {
     if (!piece && !client) { setReadiness(null); return; }
     let alive = true;
-    api.counterReadiness({ piece_id: piece?.id, client_id: client?.id, discount, old_gold_id: oldGold?.id })
+    api.counterReadiness({ piece_id: piece?.id, client_id: client?.id, discount, old_gold_id: oldGold?.id,
+      journal_id: journal || undefined, amount: amount ? Number(amount) : undefined })
       .then((r) => alive && setReadiness(r), () => alive && setReadiness(null));
     return () => { alive = false; };
-  }, [piece?.id, client?.id, discount, oldGold?.id]);
+  }, [piece?.id, client?.id, discount, oldGold?.id, journal, amount]);
 
   const lookup = async (q = query, d = discount) => {
     if (!q.trim()) return;
@@ -94,6 +95,7 @@ export default function Counter() {
   };
   const reset = () => { setPiece(null); setQuery(''); setDiscount(0); setClient(null); setOldGold(null); setAmount(''); setResult(null); setReadiness(null); };
 
+  const amlTag = (d: AmlCheck) => (!d.configured ? t('aml_not_configured') : d.crosses ? t('aml_crosses_ok') : t('aml_below'));
   const status = piece?.availability.status;
   const statusTone = status === 'on_shelf' ? 'good' : status === 'sold' ? 'bad' : 'warn';
 
@@ -247,9 +249,12 @@ export default function Counter() {
               {!readiness ? <Empty text="—" /> : (
                 <div className="bk">
                   {readiness.checks.map((c) => (
-                    <div className="ln" key={c.key}>
+                    <div className="ln" key={c.key} style={{ flexWrap: 'wrap' }}>
                       <span>{c.ok ? '✓' : '✗'} {t(`chk_${c.key}`)}</span>
-                      <span className={`tag ${c.ok ? 'good' : 'bad'}`}>{c.ok ? 'OK' : (typeof c.detail === 'string' ? c.detail : (c.detail as { status?: string })?.status ? t(`piece_status_${(c.detail as { status: string }).status}`) : '—')}</span>
+                      <span className={`tag ${c.ok ? 'good' : 'bad'}`}>{c.ok ? (c.key === 'aml' ? amlTag(c.detail as AmlCheck) : 'OK') : (typeof c.detail === 'string' ? c.detail : (c.detail as { status?: string })?.status ? t(`piece_status_${(c.detail as { status: string }).status}`) : c.key === 'aml' ? t(`aml_${(c.detail as AmlCheck).reason}`) : '—')}</span>
+                      {c.key === 'aml' && !c.ok && (c.detail as AmlCheck).message && (
+                        <div className="small muted" style={{ flexBasis: '100%' }}>{(c.detail as AmlCheck).message} {client && <Link to={`/clients/${client.id}`}>{t('open_client')} →</Link>}</div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -318,3 +318,10 @@ tr.refused td{background:var(--coral-bg)}
 .consent .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .consent select{padding:5px 8px;border:1px solid var(--paper3);border-radius:8px;background:var(--surface)}
 .tag.ok{background:var(--green-bg);color:var(--green)}
+
+/* compliance */
+.dcard.aml{border-inline-start-color:var(--coral)}
+.kyc{display:grid;gap:6px}
+.kyc .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.kyc select,.kyc input{padding:5px 8px;border:1px solid var(--paper3);border-radius:8px;background:var(--surface)}
+.tag.warn{background:var(--amber-bg);color:#9A5B08}
