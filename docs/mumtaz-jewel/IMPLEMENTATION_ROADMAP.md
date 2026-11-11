@@ -38,6 +38,17 @@ The blueprint's pilot slice is product master, piece inventory, pricing, POS and
 
 The blueprint is hybrid (Odoo plus independent services). For a small team I propose **Odoo-native first with clean service boundaries**: the pricing engine is already a pure-Python library, the AI gateway and voice layer are separate modules behind an API, and any of them is extracted into a service only when a trigger is hit (rate-feed volume, a public pricing API for e-commerce, reconciliation latency, or isolation needs). This deviates from the blueprint's default, so it needs your sign-off.
 
+## 4b. The interface is the product (owner decision, 11 Nov 2026)
+
+Jawhar ships as a **standalone product backed by Odoo Community**: its own
+interface (`apps/jawhar-web`, React + TypeScript) talking to Odoo through one
+API door (`addons/mumtaz_jewellery_api`, `/jawhar/v1/*`) that runs every call
+as the signed-in Odoo user. The Odoo web client remains the back office for
+finance and administration only. Phase 0 (read-only screens on live data, both
+languages) is built and verified: see `JAWHAR_INTERFACE.md`. The slice API rows
+below are now delivered through that door; the Slice 6 "Next.js front end"
+becomes the client-facing build of the same interface stack.
+
 ## 5. Global risks
 
 | Risk | Mitigation |

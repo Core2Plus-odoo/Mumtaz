@@ -15,6 +15,21 @@ limitation · `Standard` ships with Odoo, install and configure · `Planned`
 not started · `Gap` needed and nothing covers it · `Decision` waiting on the
 owner.
 
+## Interface and API (the product door — `JAWHAR_INTERFACE.md`)
+
+| Capability | Standard? | Status | Note |
+| --- | --- | --- | --- |
+| JSON API running as the signed-in user, audited | No | **Built** | `mumtaz_jewellery_api`, 11 HttpCase tests |
+| Standalone interface, English + Arabic (RTL) | No | **Built** | `apps/jawhar-web`; 18 screens walked on live data |
+| Today / owner summary, decision cards | No | **Built** | Partial roles get partial figures, not errors |
+| Pieces with the engine's breakdown and dealer discount | No | **Built** | Reprices server-side |
+| Clients, Client 360, restricted tiers | No | **Built** | Unreadable client is a 404, not a 403 |
+| Quotes, orders, invoices with frozen snapshots | No | **Built** | Read-only in phase 0 |
+| Writes from the interface (quote → confirm → invoice) | No | **Planned** | Phase 1, level D |
+| POS counter from the interface | Partly (`point_of_sale`) | **Planned** | Phase 2 |
+| CRM pipeline + outreach drafts | Partly (`crm`) | **Planned** | Phase 3, level C |
+| Agents through the API door | No | **Planned** | Phase 5 |
+
 ## Pricing and the rate
 
 | Capability | Standard? | Status | Note |

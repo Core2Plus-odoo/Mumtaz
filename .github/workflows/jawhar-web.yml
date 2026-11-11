@@ -1,0 +1,46 @@
+name: Jawhar Web
+
+# The product interface (apps/jawhar-web): typecheck, unit tests, production
+# build. The API it talks to is tested by jewel-odoo-tests.yml; this job
+# proves the interface compiles and its client/formatting/i18n logic holds.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/jawhar-web/**"
+      - ".github/workflows/jawhar-web.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/jawhar-web/**"
+      - ".github/workflows/jawhar-web.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: jawhar-web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/jawhar-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/jawhar-web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx vite build
+      - name: Built output exists
+        run: test -s dist/index.html && ls -la dist/assets

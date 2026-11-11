@@ -266,6 +266,24 @@ def _seed_sales(env, clients, lots):
     return out
 
 
+def _grant_presenter(env):
+    """Let the demo presenter see the whole product.
+
+    The presenter signs in as admin. Being an Odoo administrator grants the
+    Settings app, not the jewellery groups, so without this the owner's
+    screens, memos and the Private/Royal clients are invisible to the very
+    person giving the demonstration -- the Jawhar API returned 403 on the
+    owner summary for admin, which is how this was found. Demo database
+    only; a real tenant assigns these groups to named people.
+    """
+    admin = env.ref('base.user_admin', raise_if_not_found=False)
+    if not admin:
+        return
+    groups = env.ref('mumtaz_jewellery.group_jewellery_manager') | \
+        env.ref('mumtaz_jewellery_vip.group_vip_manager')
+    admin.write({_user_groups_field(env): [(4, g.id) for g in groups]})
+
+
 def post_init_hook(env):
     """Create the DEMO dataset once."""
     parameters = env['ir.config_parameter'].sudo()
@@ -273,6 +291,7 @@ def post_init_hook(env):
         _logger.info('DEMO seed: already present, nothing to do')
         return
 
+    _grant_presenter(env)
     rate, maker, checker = _seed_rate(env)
     products = _seed_products(env)
     lots = _seed_pieces(env, products)
