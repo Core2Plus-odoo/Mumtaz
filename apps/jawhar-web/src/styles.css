@@ -143,3 +143,11 @@ tr[aria-selected="true"] td{background:var(--gold-bg)}
   .content { padding: 0; }
   .card { box-shadow: none; border: 0; }
 }
+
+/* ---- the client's phone ---- */
+.pub{max-width:520px;margin:0 auto;min-height:100vh;background:var(--paper)}
+.pubhead{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--rail);color:#fff}
+.pubhead b{display:block;line-height:1.1}.pubhead small{color:#9FB0C3;font-size:.7rem}
+.pubhead .btn.small{padding:6px 10px;font-size:.78rem;background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}
+.pubbody{padding:12px 16px 32px;display:grid;gap:12px}
+.pubpiece h3{font-size:1.05rem}

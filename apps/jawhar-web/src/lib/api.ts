@@ -36,6 +36,7 @@ export type Client = {
   city: string | null; no_marketing: boolean; lifetime_value: number;
 };
 export type ClientDetail = Client & {
+  trays: Tray[];
   preferred_karats: string | null; typical_budget: number; taste_notes: string | null;
   discreet_billing: boolean;
   occasions: { id: number; kind: string; date: string; recurring: boolean; note: string | null }[];
@@ -94,6 +95,32 @@ export type Today = {
   memos_out: number | null; old_gold_pending: number | null; cards_open: number | null;
   clients: { total: number; restricted: number } | null;
 };
+export type Lead = {
+  id: number; name: string; client: Ref; stage: { id: number; name: string; sequence: number; won: boolean };
+  probability: number; automated: boolean; expected_revenue: number; currency: string; salesperson: Ref;
+  deadline: string | null; next_activity: { summary: string; date: string; user: Ref } | null; tray: Ref; created: string;
+};
+export type Pipeline = {
+  stages: { id: number; name: string; won: boolean; count: number; value: number; weighted: number }[];
+  items: Lead[];
+  summary: { open: number; open_value: number; weighted: number; won_value: number; currency: string };
+};
+export type TrayLine = {
+  id: number; piece: { id: number; serial: string; product: Ref; karat: string | false; net_weight_g: number };
+  sequence: number; score: number; reasons: string[]; price: number; feedback: 'none' | 'like' | 'dislike';
+  question: string | null; available: boolean;
+};
+export type Tray = {
+  id: number; name: string; client: Ref; associate: Ref; state: string; intent: string | null; budget: number;
+  piece_count: number; total: number; link_live: boolean; link_expires: string | null; link_opened_at: string | null;
+  viewing_requested_at: string | null; viewing_preferred: string | null; viewing_note: string | null;
+  reservation: Ref; lead: Ref; restricted: boolean; policy_version: string; stock_checked_at: string | null;
+  lines?: TrayLine[];
+};
+export type PublicTray = {
+  tray: string; expires: string; state: string; currency: string; viewing_requested: boolean;
+  pieces: { ref: string; product: string; karat: string | false; net_weight_g: number; price: number; why: string; feedback: string; question: string | null }[];
+};
 export type Page<T> = { items: T[]; total?: number };
 
 export class ApiError extends Error {
@@ -116,6 +143,20 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   } catch {
     throw new ApiError(res.status, 'bad_response', `The server answered ${res.status} without JSON.`);
   }
+  if (!res.ok || !body.ok) {
+    const e = body.error || { code: 'error', message: `HTTP ${res.status}` };
+    throw new ApiError(res.status, e.code, e.message);
+  }
+  return body.data as T;
+}
+
+async function callPublic<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    headers: { Accept: 'application/json', ...(init?.body ? { 'Content-Type': 'application/json' } : {}) },
+    ...init,
+  });
+  let body: { ok: boolean; data?: T; error?: { code: string; message: string } };
+  try { body = await res.json(); } catch { throw new ApiError(res.status, 'bad_response', `The server answered ${res.status} without JSON.`); }
   if (!res.ok || !body.ok) {
     const e = body.error || { code: 'error', message: `HTTP ${res.status}` };
     throw new ApiError(res.status, e.code, e.message);
@@ -165,6 +206,27 @@ export const api = {
   createOldGold: (p: { client_id?: number; gross_weight_g: number; karat: string; melt_loss_pct?: number; buyback_discount_pct?: number }) =>
     call<OldGold>('/old-gold', { method: 'POST', body: JSON.stringify(p) }),
   approveOldGold: (id: number) => call<OldGold>(`/old-gold/${id}/approve`, { method: 'POST', body: '{}' }),
+  // --- Sales Hub ---
+  pipeline: () => call<Pipeline>('/pipeline'),
+  trays: (p: { client_id?: number; state?: string; limit?: number } = {}) => call<Page<Tray>>(`/trays${q(p)}`),
+  tray: (id: number) => call<Tray>(`/trays/${id}`),
+  createTray: (p: { client_id: number; intent?: string; budget?: number; build?: boolean; limit?: number }) =>
+    call<Tray>('/trays', { method: 'POST', body: JSON.stringify(p) }),
+  buildTray: (id: number, p: { intent?: string; budget?: number; limit?: number } = {}) =>
+    call<Tray>(`/trays/${id}/build`, { method: 'POST', body: JSON.stringify(p) }),
+  trayPiece: (id: number, piece_id: number, remove = false) =>
+    call<Tray>(`/trays/${id}/pieces`, { method: 'POST', body: JSON.stringify({ piece_id, remove }) }),
+  shareTray: (id: number) => call<{ tray: Tray; token: string; url: string }>(`/trays/${id}/share`, { method: 'POST', body: '{}' }),
+  revokeTray: (id: number) => call<Tray>(`/trays/${id}/revoke`, { method: 'POST', body: '{}' }),
+  reserveTray: (id: number, piece_id: number) =>
+    call<{ tray: Tray; order: Order }>(`/trays/${id}/reserve`, { method: 'POST', body: JSON.stringify({ piece_id }) }),
+  closeTray: (id: number) => call<Tray>(`/trays/${id}/close`, { method: 'POST', body: '{}' }),
+  // --- the client's phone: no session, the token is the scope ---
+  publicTray: (token: string) => callPublic<PublicTray>(`/jawhar/public/tray/${encodeURIComponent(token)}`),
+  publicFeedback: (token: string, ref: string, kind: string, question?: string) =>
+    callPublic<PublicTray>(`/jawhar/public/tray/${encodeURIComponent(token)}/feedback`, { method: 'POST', body: JSON.stringify({ ref, kind, question }) }),
+  publicViewing: (token: string, preferred: string, note: string) =>
+    callPublic<PublicTray>(`/jawhar/public/tray/${encodeURIComponent(token)}/viewing`, { method: 'POST', body: JSON.stringify({ preferred, note }) }),
   // --- the counter ---
   counterPiece: (query: string, discount?: number) => call<CounterPiece>(`/counter/piece${q({ q: query, discount })}`),
   counterReadiness: (p: { piece_id?: number; client_id?: number; discount?: number; old_gold_id?: number }) =>

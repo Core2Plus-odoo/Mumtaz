@@ -69,3 +69,20 @@ describe('counter', () => {
     expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ client_id: 3, piece_id: 7, journal_id: 2, old_gold_id: 9 });
   });
 });
+
+describe('sales hub', () => {
+  it('reaches the public tray without the session wrapper and encodes the token', async () => {
+    const f = reply(200, { ok: true, data: { tray: 'TRAY/00001', pieces: [] } });
+    vi.stubGlobal('fetch', f);
+    await api.publicTray('ab/c d');
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe('/jawhar/public/tray/ab%2Fc%20d');
+    expect(init.credentials).toBeUndefined();
+  });
+  it('posts feedback with the public ref, never an id', async () => {
+    const f = reply(200, { ok: true, data: { pieces: [] } });
+    vi.stubGlobal('fetch', f);
+    await api.publicFeedback('tok', 'abcdef0123', 'question', 'Does it come in 21K?');
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ ref: 'abcdef0123', kind: 'question', question: 'Does it come in 21K?' });
+  });
+});

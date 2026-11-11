@@ -4,6 +4,7 @@ import { stateLabel, tierLabel, useT } from '../lib/i18n';
 import { money, when } from '../lib/format';
 import { TopBar } from '../components/Shell';
 import { Card, Empty, ErrorBox, Loading, StateTag, TierTag, useLoad } from '../components/ui';
+import { useState } from 'react';
 
 export default function ClientDetail() {
   const { id } = useParams();
@@ -13,10 +14,18 @@ export default function ClientDetail() {
   const client = useLoad(() => api.client(Number(id)), [id]);
   const cur = user.company.currency;
   const c = client.data;
+  const [preparing, setPreparing] = useState(false);
+  const prepare = async () => {
+    if (!c) return;
+    setPreparing(true);
+    try { const tray = await api.createTray({ client_id: c.id, build: !c.restricted, limit: 3 }); nav(`/trays/${tray.id}`); }
+    finally { setPreparing(false); }
+  };
   return (
     <>
       <TopBar title={c?.name ?? t('loading')} sub={<Link to="/clients">← {t('clients_title')}</Link> } rate={rate}>
         {c && <TierTag tier={c.tier} label={tierLabel(lang, c.tier)} />}
+        {c && <button className="btn" disabled={preparing} onClick={prepare}>{preparing ? t('working') : t('prepare_tray')}</button>}
       </TopBar>
       <div className="content">
         {client.error && <ErrorBox error={client.error} retry={client.reload} />}
@@ -35,6 +44,14 @@ export default function ClientDetail() {
                         <td className="r num">{money(o.amount_total, o.currency, lang)}</td>
                       </tr>))}</tbody>
                   </table>
+                )}
+              </Card>
+              <Card title={t('trays')}>
+                {c.trays.length === 0 ? <Empty /> : (
+                  <table className="tbl"><tbody>{c.trays.map((tr) => (
+                    <tr key={tr.id} className="row" onClick={() => nav(`/trays/${tr.id}`)}>
+                      <td><b>{tr.name}</b></td><td>{t(`tray_state_${tr.state}`)}</td><td className="num">{tr.piece_count}</td>
+                      <td className="r num">{money(tr.total, cur, lang)}</td></tr>))}</tbody></table>
                 )}
               </Card>
               <Card title={t('memos_title')}>

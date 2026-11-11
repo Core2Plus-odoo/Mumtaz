@@ -15,6 +15,7 @@ const ICONS = {
   oldgold: 'M12 3v18M7 8h7a3 3 0 010 6H8a3 3 0 000 6h9',
   cards: 'M4 8h16v11H4zM4 8l2-4h12l2 4M9 13h6',
   counter: 'M3 6h18v12H3zM3 10h18M7 14h4',
+  pipeline: 'M4 19V5M4 19h16M8 15V9M12 15v-3M16 15V7',
 };
 
 export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rate | null; onSignOut: () => void }) {
@@ -37,6 +38,7 @@ export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rat
         <div className="railsec">{t('nav_sales')}</div>
         {nav('/counter', 'counter', t('nav_counter'))}
         {nav('/clients', 'clients', t('nav_clients'))}
+        {nav('/pipeline', 'pipeline', t('nav_pipeline'))}
         {nav('/documents', 'docs', t('nav_documents'))}
         {nav('/invoices', 'invoices', t('nav_invoices'))}
         <div className="railsec">{t('nav_inventory')}</div>
