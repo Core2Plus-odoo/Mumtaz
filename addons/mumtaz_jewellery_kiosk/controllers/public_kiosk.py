@@ -4,6 +4,7 @@ No session, no client data, no internal ids: a piece is addressed by its
 serial, a request by its reference. Everything runs as the public user
 under sudo over a fixed, narrow set of reads.
 """
+import base64
 import json
 import logging
 
@@ -45,6 +46,7 @@ def _piece(lot, detail=False):
         'karat': lot.karat, 'net_weight_g': lot.net_weight_g, 'price_incl_vat': price,
         'currency': lot.company_id.currency_id.name or request.env.company.currency_id.name,
         'stones': bool(lot.stone_weight_g), 'certificate': bool(lot.certificate_ref),
+        'image_url': (PREFIX + '/pieces/%s/image' % lot.name) if lot.product_id.image_1024 else None,
     }
     if detail:
         try:
@@ -114,6 +116,18 @@ class PublicKiosk(Controller):
             return _fail(404, 'not_found', 'Not on the shelf.')
         data = _piece(lot, detail=True)
         return _json(data) if data else _fail(404, 'not_found', 'Not on the shelf.')
+
+    @route(PREFIX + '/pieces/<string:serial>/image', type='http', auth='public', methods=['GET'], csrf=False)
+    def piece_image(self, serial, **kw):
+        """The design's photo, for a piece on the shelf. Nothing else about
+        the piece travels with it."""
+        env = request.env(su=True)
+        lot = env['stock.lot'].search([('name', '=', serial[:40]), ('product_id.is_jewellery', '=', True)], limit=1)
+        if not lot or not lot.product_id.image_1024 or not env['jewellery.tray']._lot_available(lot):
+            return request.not_found()
+        data = base64.b64decode(lot.product_id.image_1024)
+        return request.make_response(data, headers=[('Content-Type', 'image/png' if data[:4] == b'\x89PNG' else 'image/jpeg'),
+                                                    ('Cache-Control', 'public, max-age=3600')])
 
     @route(PREFIX + '/request', type='http', auth='public', methods=['POST'], csrf=False)
     def make_request(self, **kw):

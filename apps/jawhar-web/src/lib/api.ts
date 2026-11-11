@@ -16,7 +16,7 @@ export type Rate = {
   source: string; state: string; created_by: Ref; approved_by: Ref; approved_at: string | null;
 };
 export type Piece = {
-  id: number; serial: string; product: Ref; category: string | null; karat: string | false;
+  id: number; serial: string; product: Ref; category: string | null; image_url: string | null; karat: string | false;
   gross_weight_g: number; stone_weight_g: number; net_weight_g: number; wastage_pct: number;
   making_type: string | false; making_value: number; stones_value: number;
   rfid_tag: string | null; certificate_ref: string | null; price_incl_vat: number;
@@ -84,7 +84,7 @@ export type ChatMessage = { role: 'user' | 'agent'; text: string; links?: { labe
 export type ChatReply = { agent: string; intent: string; reply: string; links: { label: string; to: string }[]; model_used: string; refused?: string };
 export type KioskPiece = {
   serial: string; design: string; category: string | null; karat: string | false; net_weight_g: number;
-  price_incl_vat: number; currency: string; stones: boolean; certificate: boolean;
+  price_incl_vat: number; currency: string; stones: boolean; certificate: boolean; image_url: string | null;
   gross_weight_g?: number; stone_weight_g?: number; making_type?: string | false; rate_per_gram?: number;
 };
 export type KioskRequestOut = { reference: string; kind: string; state: string; serial: string; delivery_date: string | null; slot: string | null; message: string };

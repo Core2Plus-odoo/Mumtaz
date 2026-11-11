@@ -65,7 +65,7 @@ export default function Pieces() {
                 {pieces.data.items.map((p) => (
                   <tr key={p.id} className="row" onClick={() => nav(`/pieces/${p.id}`)}>
                     <td><b>{p.serial}</b></td>
-                    <td><span className="glyph" aria-hidden="true">{GLYPH[p.category ?? ''] ?? '◇'}</span> {p.product?.name}{p.category && <div className="small muted">{t(`cat_${p.category}`)}</div>}</td>
+                    <td className="withthumb">{p.image_url ? <img className="thumb" src={p.image_url} alt="" loading="lazy" /> : <span className="glyph thumb" aria-hidden="true">{GLYPH[p.category ?? ''] ?? '◇'}</span>}<span>{p.product?.name}{p.category && <div className="small muted">{t(`cat_${p.category}`)}</div>}</span></td>
                     <td>{p.karat ? `${p.karat}K` : '—'}</td>
                     <td className="r num">{grams(p.gross_weight_g, lang)}</td>
                     <td className="r num">{grams(p.net_weight_g, lang)}</td>

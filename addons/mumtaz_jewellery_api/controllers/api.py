@@ -20,6 +20,7 @@ because the session cookie is SameSite and every state-changing call must be
 sent with ``Content-Type: application/json``, which a cross-site form cannot
 produce without a CORS preflight that Odoo does not answer.
 """
+import base64
 import functools
 import logging
 import time
@@ -234,6 +235,7 @@ def _piece_dict(lot):
         'serial': lot.name,
         'product': _m2o(lot.product_id),
         'category': lot.product_id.jewellery_category or None,
+        'image_url': (PREFIX + '/pieces/%d/image' % lot.id) if lot.product_id.image_1024 else None,
         'karat': lot.karat,
         'gross_weight_g': lot.gross_weight_g,
         'stone_weight_g': lot.stone_weight_g,
@@ -603,6 +605,23 @@ class JawharApi(Controller):
             order = {'serial': 'name', 'weight': 'gross_weight_g desc, name', 'recent': 'id desc'}.get(sort or 'serial', 'name')
             recs = Lot.search(domain, limit=lim, offset=off, order=order)
         return {'items': [_piece_dict(l) for l in recs], 'total': Lot.search_count(domain)}
+
+    @_r('/pieces/<int:piece_id>/image')
+    def piece_image(self, piece_id, **kw):
+        """The design's photo, as the signed-in user (a 404 for anyone else,
+        like every other read)."""
+        if request.env.user._is_public():
+            return request.not_found()
+        lot = request.env['stock.lot'].browse(int(piece_id)).exists()
+        try:
+            lot.check_access('read')
+        except AccessError:
+            return request.not_found()
+        if not lot or not lot.product_id.image_1024:
+            return request.not_found()
+        data = base64.b64decode(lot.product_id.image_1024)
+        return request.make_response(data, headers=[('Content-Type', 'image/png' if data[:4] == b'\x89PNG' else 'image/jpeg'),
+                                                    ('Cache-Control', 'private, max-age=3600')])
 
     @_r('/pieces/<int:piece_id>')
     @endpoint()

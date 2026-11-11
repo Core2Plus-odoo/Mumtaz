@@ -416,6 +416,8 @@ const dict = {
     kiosk_viewing: 'Viewing',
     kiosk_delivery: 'Next-day delivery',
     kiosk_not_available: 'No longer on the shelf',
+    kiosk_hello: 'Hello!',
+    kiosk_greeting: "I'm Noor, your virtual sales officer. How can I help you find the perfect piece today?",
   },
   ar: {
     app: 'جوهر',
@@ -827,6 +829,8 @@ const dict = {
     kiosk_viewing: 'معاينة',
     kiosk_delivery: 'توصيل في اليوم التالي',
     kiosk_not_available: 'لم تعد على الرف',
+    kiosk_hello: 'أهلًا!',
+    kiosk_greeting: 'أنا نور، مسؤولة المبيعات الافتراضية. كيف أساعدك في إيجاد القطعة المناسبة اليوم؟',
   },
 } as const;
 

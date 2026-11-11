@@ -4,7 +4,9 @@ Synthetic data only. Everything is prefixed "DEMO" so it is obvious in the
 UI that nothing here is real. Idempotent: a marker parameter stops a second
 install from duplicating the records.
 """
+import base64
 import logging
+import os
 from datetime import timedelta
 
 from odoo import fields
@@ -167,6 +169,15 @@ def _seed_rate(env):
     return rate, maker, checker
 
 
+def _design_image(category):
+    """The demo photo for a design, shipped with the module; None if absent."""
+    path = os.path.join(os.path.dirname(__file__), 'static', 'img', '%s.jpg' % category)
+    if not os.path.exists(path):
+        return None
+    with open(path, 'rb') as fh:
+        return base64.b64encode(fh.read())
+
+
 def _seed_products(env):
     template = env['product.template']
     storable = 'is_storable' in template._fields
@@ -176,6 +187,8 @@ def _seed_products(env):
         if existing:
             if not existing.jewellery_category:
                 existing.jewellery_category = category
+            if not existing.image_1920 and _design_image(category):
+                existing.image_1920 = _design_image(category)
             products.append(existing)
             continue
         values = {
@@ -188,6 +201,9 @@ def _seed_products(env):
             'jewellery_making_type': making_type,
             'jewellery_making_value': making_value,
         }
+        image = _design_image(category)
+        if image:
+            values['image_1920'] = image
         if storable:
             values['is_storable'] = True
         else:
