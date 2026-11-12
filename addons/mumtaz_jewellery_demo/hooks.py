@@ -615,9 +615,10 @@ def _seed_client_app(env):
     env['ir.config_parameter'].sudo().set_param('mumtaz_jewellery.client_code_echo', '1')
     # The first demo clients predate phones on the record; the app signs in
     # by phone, so give the one with purchases a synthetic number.
-    alpha = env['res.partner'].search([('name', '=', 'DEMO Client Alpha'), ('phone', '=', False)], limit=1)
-    if alpha:
-        alpha.phone = '+971 50 000 0001'
+    for name, phone in (('DEMO Client Alpha', '+971 50 000 0001'), ('DEMO Client Bravo', '+971 50 000 0002')):
+        p = env['res.partner'].search([('name', '=', name), ('phone', '=', False)], limit=1)
+        if p:
+            p.phone = phone
     return True
 
 
