@@ -55,6 +55,10 @@ class TestPolicy(TransactionCase):
         self.assertTrue(policy.numbers_are_sourced('٣ قطع بسعر ٦٬٤٩١٫٨٤', facts))
         self.assertFalse(policy.numbers_are_sourced('Offer her 10% off, so 5,842.66.', facts))
         self.assertTrue(policy.numbers_are_sourced('No numbers here.', facts))
+        # the clock in the facts is not a figure: "40%" at 04:40 is still invented
+        stamped = '{"as_of": "2026-11-12T04:40:17", "rate": 245.8}'
+        self.assertFalse(policy.numbers_are_sourced('Sales will grow 40%.', stamped))
+        self.assertTrue(policy.numbers_are_sourced('The rate is 245.8 as of 2026.', stamped))
 
     def test_restricted_never_enters_a_model(self):
         self.assertEqual(policy.may_enter_model({'tier': 'royal'}), 'restricted_client')
@@ -269,9 +273,9 @@ class TestChat(AgentCase):
 
     def test_a_model_reply_with_an_invented_number_falls_back(self):
         def fake(system, user_text, max_tokens=1024):
-            return {'text': 'Sales will grow 40% if you discount 12%.', 'model': 'test-model',
+            return {'text': 'Sales will grow 40.5% if you discount 12.5%.', 'model': 'test-model',
                     'input_tokens': 1, 'output_tokens': 1, 'refused': False, 'duration_ms': 1}
         with patch.object(provider, 'configured', return_value=True), patch.object(provider, 'complete', fake):
             out = self.chat('zayan', 'any forecast?')
-        self.assertNotIn('40%', out['reply'])
+        self.assertNotIn('40.5%', out['reply'])
         self.assertEqual(out['model_used'], 'local')

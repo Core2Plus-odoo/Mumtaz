@@ -101,9 +101,14 @@ def numbers_in(text):
     return out
 
 
+_CLOCK = re.compile(r'\b\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?\b')
+
+
 def numbers_are_sourced(text, facts_text):
     """True when every number in the model's text appears in the facts the
     tools supplied. A number the tools did not supply is a number the model
-    produced, and that is the one thing it may not do."""
-    allowed = numbers_in(facts_text)
+    produced, and that is the one thing it may not do. Times of day in the
+    facts (the "as of" stamps) are not figures: a model saying "40%" at
+    04:40 must not pass because of the clock."""
+    allowed = numbers_in(_CLOCK.sub(' ', facts_text or ''))
     return all(any(n == a or (len(n) >= 2 and n in a) for a in allowed) for n in numbers_in(text))
