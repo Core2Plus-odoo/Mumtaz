@@ -56,7 +56,9 @@ export default function App() {
   const signOut = async () => { try { await api.logout(); } finally { setUser(null); } };
 
   // The client's tray link needs no sign-in: the token is the scope.
-  const isPublic = window.location.pathname.startsWith('/app/t/') || window.location.pathname.startsWith('/app/kiosk') || window.location.pathname.startsWith('/app/me');
+  // Exact public paths: a prefix test on '/app/me' would also catch '/app/memos'.
+  const path = window.location.pathname.replace(/\/+$/, '');
+  const isPublic = path.startsWith('/app/t/') || path === '/app/kiosk' || path === '/app/me';
 
   return (
     <I18nContext.Provider value={{ lang, setLang }}>
