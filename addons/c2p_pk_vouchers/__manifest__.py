@@ -1,6 +1,6 @@
 {
     "name": "C2P Pakistan Vouchers",
-    "version": "19.0.7.0.0",
+    "version": "19.0.8.0.0",
     "summary": "PK-format Payment/Receipt/Journal/Payable/Receivable vouchers, "
                "invoice knock-off, JV control, withholding tax + certificate, "
                "intercompany marker and Cost Center / Job Code analytic plans.",
@@ -33,7 +33,7 @@ companies.
     "author": "C2P Consultants",
     "website": "https://core2plus.com",
     "license": "LGPL-3",
-    "depends": ["account"],
+    "depends": ["account", "mail"],
     "data": [
         "security/ir.model.access.csv",
         "data/analytic_plans.xml",
@@ -46,6 +46,7 @@ companies.
         "views/account_move_views.xml",
         "views/res_partner_views.xml",
         "views/payment_voucher_views.xml",
+        "views/tax_challan_views.xml",
         "views/wht_views.xml",
     ],
     "installable": True,

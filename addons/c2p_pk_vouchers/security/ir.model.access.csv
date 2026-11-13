@@ -4,3 +4,5 @@ access_c2p_wht_tax_manager,c2p.wht.tax manager,model_c2p_wht_tax,account.group_a
 access_c2p_wht_wizard_user,c2p.wht.wizard user,model_c2p_wht_wizard,account.group_account_user,1,1,1,1
 access_c2p_payment_voucher_user,c2p.payment.voucher user,model_c2p_payment_voucher,account.group_account_user,1,1,1,1
 access_c2p_payment_voucher_line_user,c2p.payment.voucher.line user,model_c2p_payment_voucher_line,account.group_account_user,1,1,1,1
+access_c2p_tax_challan_user,c2p.tax.challan user,model_c2p_tax_challan,account.group_account_user,1,1,1,0
+access_c2p_tax_challan_manager,c2p.tax.challan manager,model_c2p_tax_challan,account.group_account_manager,1,1,1,1

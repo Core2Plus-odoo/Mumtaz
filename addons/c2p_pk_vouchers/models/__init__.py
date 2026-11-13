@@ -3,3 +3,4 @@ from . import account_journal
 from . import account_payment
 from . import wht_tax
 from . import res_partner
+from . import tax_challan

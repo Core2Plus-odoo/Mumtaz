@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_c2p_tax_challan_list" model="ir.ui.view">
+        <field name="name">c2p.tax.challan.list</field>
+        <field name="model">c2p.tax.challan</field>
+        <field name="arch" type="xml">
+            <list string="Tax Challans Received">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="tax_type"/>
+                <field name="section_code"/>
+                <field name="period"/>
+                <field name="move_id"/>
+                <field name="amount" sum="Total"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'claimed'"
+                       decoration-info="state == 'verified'"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_c2p_tax_challan_form" model="ir.ui.view">
+        <field name="name">c2p.tax.challan.form</field>
+        <field name="model">c2p.tax.challan</field>
+        <field name="arch" type="xml">
+            <form string="Tax Challan Received">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="received,verified,claimed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="date"/>
+                            <field name="partner_id"/>
+                            <field name="move_id"/>
+                        </group>
+                        <group>
+                            <field name="tax_type"/>
+                            <field name="section_code"/>
+                            <field name="period"/>
+                            <field name="amount"/>
+                            <field name="company_id"
+                                   groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_c2p_tax_challan" model="ir.actions.act_window">
+        <field name="name">Tax Challans Received</field>
+        <field name="res_model">c2p.tax.challan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Log a tax challan received</p>
+            <p>Record the CPR / challan a customer gave you for tax they withheld
+               from their payment, so you can claim it as advance tax.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_c2p_tax_challan"
+              name="Tax Challans Received"
+              parent="account.menu_finance"
+              action="action_c2p_tax_challan"
+              sequence="7"/>
+</odoo>
