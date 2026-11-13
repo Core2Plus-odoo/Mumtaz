@@ -41,6 +41,10 @@ class KioskRequest(models.Model):
     slot = fields.Selection(SLOTS)
     delivery_date = fields.Date()
     note = fields.Text()
+    fit_notes = fields.Char(
+        readonly=True,
+        help='What the try-on estimated on the client (height, wrist, ring size, where a chain sits). '
+             'Estimates from the kiosk camera, for the fitter to confirm in person; nothing else from the camera is kept.')
     lang = fields.Char(default='en')
     channel = fields.Selection([('store', 'In-store kiosk'), ('web', 'Website')], default='store')
     partner_id = fields.Many2one('res.partner', string='Client', readonly=True)
@@ -68,7 +72,7 @@ class KioskRequest(models.Model):
 
     @api.model
     def create_public(self, kind, serial, client_name, phone, preferred_time=None, address=None,
-                      slot=None, note=None, lang='en', channel='store'):
+                      slot=None, note=None, lang='en', channel='store', fit=None):
         """What the kiosk may do: one request, validated, capped, logged.
         Runs under sudo for the public user; returns a payload with no
         internal ids."""
@@ -95,10 +99,43 @@ class KioskRequest(models.Model):
             'preferred_time': (preferred_time or '')[:120] or False, 'address': (address or '')[:400] or False,
             'slot': slot if kind == 'delivery' else False,
             'delivery_date': fields.Date.context_today(self) + timedelta(days=1) if kind == 'delivery' else False,
-            'note': (note or '')[:500] or False, 'lang': 'ar' if (lang or '').startswith('ar') else 'en',
+            'note': (note or '')[:500] or False, 'fit_notes': self._fit_notes(fit) or False,
+            'lang': 'ar' if (lang or '').startswith('ar') else 'en',
             'channel': channel if channel in ('store', 'web') else 'store',
         })
         return rec._public_dict()
+
+    # What the try-on may hand over, and the bounds a human body stays within.
+    FIT_KEYS = {
+        'height_cm': (120, 210, 0), 'wrist_girth_mm': (100, 250, 0), 'neck_girth_mm': (250, 500, 0),
+        'ring_eu': (40, 75, 0), 'ring_us': (3, 13, 1),
+    }
+    FIT_WORDS = {'bangle': {'2-2', '2-4', '2-6', '2-8', '2-10', '2-12', '2-14'},
+                 'chain_sits': {'choker', 'collarbone', 'below_collarbone', 'bust', 'long'},
+                 'verdict': {'tight', 'fits', 'loose'}}
+
+    @api.model
+    def _fit_notes(self, fit):
+        """One line for the fitter from the try-on's estimates: whitelisted
+        keys, numbers within human bounds, words from a fixed list. Anything
+        else is dropped; nothing is ever raised over it."""
+        if not isinstance(fit, dict):
+            return ''
+        parts = []
+        for key, (lo, hi, digits) in self.FIT_KEYS.items():
+            try:
+                value = float(fit.get(key))
+            except (TypeError, ValueError):
+                continue
+            if lo <= value <= hi:
+                parts.append('%s %s' % (key.replace('_', ' '), round(value, digits) if digits else int(round(value))))
+        for key, allowed in self.FIT_WORDS.items():
+            value = fit.get(key)
+            if isinstance(value, str) and value in allowed:
+                parts.append('%s %s' % (key.replace('_', ' '), value))
+        if not parts:
+            return ''
+        return (_('Try-on estimates: %s') % '; '.join(parts))[:300]
 
     def _public_dict(self):
         self.ensure_one()

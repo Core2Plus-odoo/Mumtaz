@@ -150,6 +150,9 @@
                     <group string="Photos">
                         <field name="image_1920" widget="image" options="{'size': [160, 160]}"/>
                         <field name="jewellery_tryon_image" widget="image" options="{'size': [160, 160]}"/>
+                        <field name="jewellery_width_mm"/>
+                        <field name="jewellery_length_mm" invisible="jewellery_category not in ('chain', 'necklace', 'bracelet', 'set', 'pendant')"/>
+                        <field name="jewellery_inner_diameter_mm" invisible="jewellery_category not in ('ring', 'bangle')"/>
                     </group>
                 </sheet>
             </form>

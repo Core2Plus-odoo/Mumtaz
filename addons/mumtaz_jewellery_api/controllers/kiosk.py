@@ -10,7 +10,7 @@ def _req_dict(r):
         'piece': {'id': r.lot_id.id, 'serial': r.serial, 'product': _m2o(r.lot_id.product_id), 'karat': r.lot_id.karat},
         'price_quoted': r.price_quoted, 'client_name': r.client_name, 'phone': r.phone,
         'preferred_time': r.preferred_time or None, 'address': r.address or None, 'slot': r.slot or None,
-        'delivery_date': r.delivery_date, 'note': r.note or None, 'created_at': r.create_date,
+        'delivery_date': r.delivery_date, 'note': r.note or None, 'fit_notes': r.fit_notes or None, 'created_at': r.create_date,
         'client': _m2o(r.partner_id), 'lead': _m2o(r.lead_id), 'order': _m2o(r.order_id),
         'decided_by': _m2o(r.decided_by_id), 'decided_at': r.decided_at, 'decline_reason': r.decline_reason or None,
         'available': request.env['jewellery.tray']._lot_available(r.lot_id),

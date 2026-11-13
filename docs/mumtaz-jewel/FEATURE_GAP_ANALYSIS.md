@@ -44,6 +44,7 @@ owner.
 | Clients and Pieces lists: search, filters, sort, paging, new-client form; demo data at shop scale | Partly | **Built** | 38 clients / 60 pieces in the demo |
 | Virtual Sales Officer: public conversational kiosk (Noor, EN/AR), shelf at the approved rate, viewing and next-day delivery requests a person confirms | No | **Built** | 7 + 1 tests + walk; a request is not a reservation |
 | Virtual try-on on the kiosk: the camera shows the piece on the client, tracking on the device, nothing recorded | No | **Built** | 5 placement tests + fake-camera walk |
+| Fit & size on the try-on: iris-scaled true size, chain drape by length, height / neck / wrist / ring / bangle estimates, fit notes on the request | No | **Built** | 12 fit tests + 2 kiosk tests + fake-camera walk |
 
 ## Pricing and the rate
 

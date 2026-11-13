@@ -160,6 +160,7 @@ export default function Agents() {
                     {!r.available && <span className="tag bad" style={{ marginInlineStart: 6 }}>{t('kiosk_not_available')}</span>}</div>
                   <div className="small">{r.client_name} · {r.phone}{r.preferred_time ? ` · ${r.preferred_time}` : ''}{r.address ? ` · ${r.address}` : ''}{r.slot ? ` · ${r.delivery_date} ${t(`kiosk_${r.slot}`)}` : ''}</div>
                   <div className="small muted">{r.name} · {r.channel} · {r.lang} · {when(r.created_at, lang)}{r.note ? ` · ${r.note}` : ''}</div>
+                  {r.fit_notes && <div className="small"><span className="tag">{t('fit_title')}</span> {r.fit_notes}</div>}
                   <div className="actions" style={{ marginTop: 6 }}>
                     {declining === r.id ? (
                       <>

@@ -180,6 +180,19 @@ def _design_image(category, kind='jpg'):
         return base64.b64encode(fh.read())
 
 
+# Physical size per demo design, for the try-on to draw at true scale and
+# judge fit: (width of the cutout mm, length mm, inner diameter mm).
+DIMS = {
+    'bangle': (66, None, 63.0), 'chain': (120, 450, None), 'ring': (20, None, 17.3), 'set': (160, 420, None),
+    'earrings': (12, None, None), 'bracelet': (60, 180, None), 'pendant': (28, 450, None), 'coin': (28, None, None),
+}
+
+
+def _dims(category):
+    width, length, inner = DIMS.get(category, (None, None, None))
+    return {'jewellery_width_mm': width or 0.0, 'jewellery_length_mm': length or 0.0, 'jewellery_inner_diameter_mm': inner or 0.0}
+
+
 def _seed_products(env):
     template = env['product.template']
     storable = 'is_storable' in template._fields
@@ -193,6 +206,8 @@ def _seed_products(env):
                 existing.image_1920 = _design_image(category)
             if not existing.jewellery_tryon_image and _design_image(category, 'cutout'):
                 existing.jewellery_tryon_image = _design_image(category, 'cutout')
+            if not existing.jewellery_width_mm:
+                existing.write(_dims(category))
             products.append(existing)
             continue
         values = {
@@ -211,6 +226,7 @@ def _seed_products(env):
         cutout = _design_image(category, 'cutout')
         if cutout:
             values['jewellery_tryon_image'] = cutout
+        values.update(_dims(category))
         if storable:
             values['is_storable'] = True
         else:

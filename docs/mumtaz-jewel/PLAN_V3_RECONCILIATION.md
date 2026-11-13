@@ -124,6 +124,19 @@ Next (owner idea, same day): the **Virtual Sales Officer**, a conversational kio
 
 Measured: 7 kiosk tests (request is not a reservation; validation and the daily cap; confirm creates client, opportunity and a priced draft without moving stock; decline; the queue; the public door carries no ids; the request through the door) + 1 API test; headless walk: kiosk without login, rate and cards, rings filter, piece with the engine rate, viewing request placed with the "nothing reserved" wording, Arabic RTL, the request in the staff inbox, confirmed into a quotation listed under the client's name. Try-on: 5 placement unit tests, headless walk with a fake camera clip (face found, piece drawn on the canvas, hold, Arabic), the public cutout endpoint only for shelf pieces.
 
+## Slice 5b (Fit & size on the try-on) — built 13 Nov 2026, owner ask of the same day
+
+| Element | Delivered |
+| --- | --- |
+| The ruler | The adult iris is 11.7 mm across in everyone (±3%); the face mesh carries both irises, so every distance in the frame is read in millimetres at the face's depth. Nothing is calibrated, nothing is typed in. `src/lib/fit.ts`, pure functions, 12 unit tests. |
+| What is measured | **Height** (head-to-ankle when the body is in the frame, else from the shoulder width, labelled which), **neck** girth, **wrist** girth, **ring size** (EU = girth, US), **bangle size** in the trade's names (2-2 … 2-14) from the hand's breadth. Body landmarks come from a third on-device model (`pose_landmarker_lite.task`, vendored like the others). Readings are smoothed and rounded; every one is labelled *estimated from the camera; a fitter confirms in person*. |
+| Realism | A design carries its physical size (`jewellery_width_mm`, `jewellery_length_mm`, `jewellery_inner_diameter_mm`, on the product form); the kiosk draws the cutout at **true size**, a chain of a given length **sits where that length puts it** on her neck (choker / collarbone / just below / bust / long) and a pendant hangs at that drop; a soft shadow sits under the piece. The piece card shows length or inner diameter. For the piece being tried the panel says **should fit / a little tight / a little loose** (ring and bangle by inner diameter, bracelet by length). |
+| The flow | Cues guide her: face the camera → show your hand → step back so I can see your shoulders. A gold shoulder line carries the height estimate (toggle). **Save this look** keeps up to three pictures on the screen only, to compare; **Hold** freezes. **Set aside for a viewing** carries the estimates into the request: `fit_notes` on `jewellery.kiosk.request`, one line, **whitelisted keys, numbers within human bounds, words from a fixed list**, anything else dropped (test); the staff card on Agents shows it so the fitter is ready. Nothing else from the camera is kept. |
+| Noor | Two more client tools in the page: `kiosk_try_on(serial)` opens the camera on a piece, `kiosk_tryon_fit()` reads the estimates back as words (never a price). The ElevenLabs agent definition needs the two tools registered (not reachable from the build sandbox; a one-minute change in the agent's tool list). |
+| Demo | Each demo design seeded with its size (and topped up on existing databases). |
+
+Measured: 12 fit unit tests; 9 kiosk tests (2 new: fit notes bounded and whitelisted; dims public and fit accepted at the door, never echoed); fake-camera walk: face + pose + hand models served, pendant and chain draped on the neck, fit panel with height, neck and where the length sits, saved look, request placed with the estimates and shown on the staff card, Arabic RTL with Arabic numerals.
+
 ## Slice 6 (Outreach) — built 11 Nov 2026
 
 | Plan | Built |
