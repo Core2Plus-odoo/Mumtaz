@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Care orders">
+  <rect x="9.5" y="9.5" width="29" height="31" rx="4.5" stroke="#8f4f08" stroke-width="2.5"/>
+  <rect x="18" y="5.5" width="12" height="8" rx="2.5" fill="#f69e22"/>
+  <path d="M17 26.5l4.75 4.75L31 22"
+        stroke="#f69e22" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

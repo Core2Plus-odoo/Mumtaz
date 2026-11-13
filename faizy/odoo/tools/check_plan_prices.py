@@ -46,7 +46,7 @@ DATA = (
 # depends on how the company happened to be set up. This is the value it must
 # be pinned to — an unpinned plan would inherit the company currency, and a
 # fresh Odoo database defaults that to USD.
-BASE_CURRENCY = "AED"
+BASE_CURRENCY = "PKR"
 
 # FAIZY_SPEC.md §6. Every published price should be the PKR figure at these
 # rates. Checked because the SAR prices sat 4.1% low for weeks: they were
