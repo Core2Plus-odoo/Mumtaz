@@ -355,3 +355,21 @@ tr.refused td{background:var(--coral-bg)}
 .me-big{font-size:1.6rem;font-weight:700}
 .me-form{display:grid;gap:10px}
 .me-form input{font-size:1.1rem;padding:12px;border:1px solid var(--paper3);border-radius:10px}
+/* try-on: fit & look */
+.tryon-body{display:grid;grid-template-columns:1fr 300px;min-height:0;overflow:hidden}
+@media (max-width:820px){.tryon-body{grid-template-columns:1fr;grid-template-rows:1fr auto}}
+.tryon-fit{background:#fff;border-inline-start:2px solid var(--k-gold);padding:16px 18px;overflow:auto;display:grid;align-content:start;gap:10px}
+.tryon-fit h3{margin:0;color:var(--k-teal2)}
+.fit-list{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0}
+.fit-list dt{color:var(--muted);font-size:.9rem}
+.fit-list dd{margin:0}
+.fit-piece{color:var(--k-teal2);font-weight:600}
+.tryon-looks{display:grid;gap:6px}
+.tryon-strip{display:flex;gap:8px;flex-wrap:wrap}
+.tryon-strip img{width:84px;height:112px;object-fit:cover;border-radius:10px;border:2px solid transparent;cursor:pointer}
+.tryon-strip img.on{border-color:var(--k-gold)}
+.tryon-look-big{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0B2A29;cursor:pointer}
+.tryon-foot .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tryon-foot .k2-btn{min-width:200px}
+.tryon-head .k2-btn.small{padding:8px 14px;font-size:.9rem;min-width:0}
+.notice.small{font-size:.9rem;padding:8px 12px}

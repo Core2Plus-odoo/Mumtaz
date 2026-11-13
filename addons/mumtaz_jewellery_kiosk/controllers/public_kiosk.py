@@ -48,6 +48,9 @@ def _piece(lot, detail=False):
         'stones': bool(lot.stone_weight_g), 'certificate': bool(lot.certificate_ref),
         'image_url': (PREFIX + '/pieces/%s/image' % lot.name) if lot.product_id.image_1024 else None,
         'tryon_url': (PREFIX + '/pieces/%s/tryon' % lot.name) if lot.product_id.jewellery_tryon_image else None,
+        'dims': {'length_mm': lot.product_id.jewellery_length_mm or None,
+                 'inner_diameter_mm': lot.product_id.jewellery_inner_diameter_mm or None,
+                 'width_mm': lot.product_id.jewellery_width_mm or None},
     }
     if detail:
         try:
@@ -149,7 +152,8 @@ class PublicKiosk(Controller):
             out = request.env(su=True)['jewellery.kiosk.request'].create_public(
                 kind=body.get('kind'), serial=body.get('serial'), client_name=body.get('name'), phone=body.get('phone'),
                 preferred_time=body.get('preferred_time'), address=body.get('address'), slot=body.get('slot'),
-                note=body.get('note'), lang=body.get('lang') or 'en', channel=body.get('channel') or 'store')
+                note=body.get('note'), lang=body.get('lang') or 'en', channel=body.get('channel') or 'store',
+                fit=body.get('fit'))
         except UserError as exc:
             return _fail(400, 'invalid', str(exc))
         return _json(out, status=201)

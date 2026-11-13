@@ -159,13 +159,14 @@ export type KioskPiece = {
   serial: string; design: string; category: string | null; karat: string | false; net_weight_g: number;
   price_incl_vat: number; currency: string; stones: boolean; certificate: boolean; image_url: string | null; tryon_url: string | null;
   gross_weight_g?: number; stone_weight_g?: number; making_type?: string | false; rate_per_gram?: number;
+  dims?: { length_mm: number | null; inner_diameter_mm: number | null; width_mm: number | null };
 };
 export type KioskRequestOut = { reference: string; kind: string; state: string; serial: string; delivery_date: string | null; slot: string | null; message: string };
 export type KioskRequest = {
   id: number; name: string; kind: 'viewing' | 'delivery'; state: string; channel: string; lang: string;
   piece: { id: number; serial: string; product: Ref; karat: string | false }; price_quoted: number;
   client_name: string; phone: string; preferred_time: string | null; address: string | null; slot: string | null;
-  delivery_date: string | null; note: string | null; created_at: string; client: Ref; lead: Ref; order: Ref;
+  delivery_date: string | null; note: string | null; fit_notes: string | null; created_at: string; client: Ref; lead: Ref; order: Ref;
   decided_by: Ref; decided_at: string | null; decline_reason: string | null; available: boolean;
 };
 export type AskResult = {
@@ -391,7 +392,7 @@ export const api = {
   kioskPieces: (p: { q?: string; category?: string; karat?: string; max_price?: number; limit?: number } = {}) =>
     callPublic<{ items: KioskPiece[]; total: number }>(`/jawhar/public/kiosk/pieces${q(p)}`),
   kioskPiece: (serial: string) => callPublic<KioskPiece>(`/jawhar/public/kiosk/pieces/${encodeURIComponent(serial)}`),
-  kioskRequest: (p: { kind: string; serial: string; name: string; phone: string; preferred_time?: string; address?: string; slot?: string; note?: string; lang?: string; channel?: string }) =>
+  kioskRequest: (p: { kind: string; serial: string; name: string; phone: string; preferred_time?: string; address?: string; slot?: string; note?: string; lang?: string; channel?: string; fit?: Record<string, number | string | undefined> | null }) =>
     callPublic<KioskRequestOut>('/jawhar/public/kiosk/request', { method: 'POST', body: JSON.stringify(p) }),
   kioskRequests: (state = 'requested') => call<{ items: KioskRequest[]; count: number }>(`/kiosk/requests${q({ state })}`),
   kioskConfirm: (id: number) => call<KioskRequest>(`/kiosk/requests/${id}/confirm`, { method: 'POST', body: '{}' }),

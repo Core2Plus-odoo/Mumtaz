@@ -27,6 +27,26 @@ class TestKioskRequest(TrayCase):
         self.assertTrue(self.env['jewellery.tray']._lot_available(self.lots[0]))
         self.assertGreater(rec.price_quoted, 0)
 
+    def test_fit_notes_travel_with_a_request_bounded_and_whitelisted(self):
+        fit = {'height_cm': 162.4, 'wrist_girth_mm': 155, 'ring_eu': 54, 'ring_us': 7, 'bangle': '2-6',
+               'chain_sits': 'collarbone', 'verdict': 'fits',
+               'height_m': 1.6, 'neck_girth_mm': 9000, 'bangle_x': 'x', 'verdict_evil': '<script>', 'ring_eu_': 'drop table'}
+        out = self.Req.create_public('viewing', self.serial, 'Hind Walk-in', '+971500009001', fit=fit)
+        rec = self.Req.search([('name', '=', out['reference'])])
+        self.assertIn('height cm 162', rec.fit_notes)
+        self.assertIn('wrist girth mm 155', rec.fit_notes)
+        self.assertIn('ring us 7.0', rec.fit_notes)
+        self.assertIn('bangle 2-6', rec.fit_notes)
+        self.assertIn('chain sits collarbone', rec.fit_notes)
+        self.assertIn('verdict fits', rec.fit_notes)
+        self.assertNotIn('9000', rec.fit_notes)          # a neck of nine metres is not a neck
+        self.assertNotIn('script', rec.fit_notes)
+        self.assertNotIn('drop', rec.fit_notes)
+        self.assertEqual(self.Req._fit_notes('garbage'), '')
+        self.assertEqual(self.Req._fit_notes({'bangle': '9-9'}), '')
+        out2 = self.Req.create_public('viewing', self.serial, 'Hind Walk-in', '+971500009001')
+        self.assertFalse(self.Req.search([('name', '=', out2['reference'])]).fit_notes)
+
     def test_validation_and_the_daily_cap(self):
         with self.assertRaises(UserError):
             self.Req.create_public('viewing', self.serial, 'H', '123')
@@ -98,6 +118,21 @@ class TestKioskPublicHttp(HttpCase, TrayCase):
         self.assertEqual(one['rate_per_gram'], 245.80)
         self.get('/pieces/NOPE', status=404)
         self.assertEqual(self.get('/pieces?q=bangle&max_price=1')['data']['total'], 0)
+
+    def test_dims_are_public_and_the_door_takes_fit(self):
+        serial = self.lots[0].name
+        self.lots[0].product_id.product_tmpl_id.write({'jewellery_length_mm': 450, 'jewellery_width_mm': 120})
+        r = self.url_open('/jawhar/public/kiosk/pieces/%s' % serial)
+        self.assertEqual(r.status_code, 200)
+        d = r.json()['data']
+        self.assertEqual(d['dims'], {'length_mm': 450.0, 'inner_diameter_mm': None, 'width_mm': 120.0})
+        r = self.url_open('/jawhar/public/kiosk/request', data=json.dumps({
+            'kind': 'viewing', 'serial': serial, 'name': 'Door Fit', 'phone': '+971500009777',
+            'fit': {'height_cm': 158, 'ring_eu': 52}}), headers={'Content-Type': 'application/json'})
+        self.assertEqual(r.status_code, 201, r.text)
+        rec = self.env['jewellery.kiosk.request'].search([('name', '=', r.json()['data']['reference'])])
+        self.assertIn('height cm 158', rec.fit_notes)
+        self.assertNotIn('fit_notes', r.text)            # the estimates are for the fitter, not echoed to the screen
 
     def test_request_through_the_door(self):
         serial = self.lots[2].name

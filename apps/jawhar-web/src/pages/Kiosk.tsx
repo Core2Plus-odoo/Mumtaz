@@ -12,11 +12,12 @@ import { useT } from '../lib/i18n';
 import { money, num, when } from '../lib/format';
 import TryOn from '../components/TryOn';
 import { usesFace, usesHand, type Category } from '../lib/tryon';
+import type { FitSummary } from '../lib/fit';
 
 const AVATAR = '/app/agents/noor-avatar.webp';
 const CATS = ['bangle', 'chain', 'necklace', 'ring', 'earrings', 'bracelet', 'pendant', 'set', 'coin'];
 type Msg = { role: 'user' | 'agent'; text: string };
-type Form = { kind: 'viewing' | 'delivery'; serial: string; name: string; phone: string; preferred_time: string; address: string; slot: 'morning' | 'afternoon'; note: string };
+type Form = { kind: 'viewing' | 'delivery'; serial: string; name: string; phone: string; preferred_time: string; address: string; slot: 'morning' | 'afternoon'; note: string; fit?: FitSummary | null };
 
 export default function Kiosk() {
   const { t, lang, setLang } = useT();
@@ -34,6 +35,7 @@ export default function Kiosk() {
   const [done, setDone] = useState<KioskRequestOut | null>(null);
   const [busy, setBusy] = useState(false);
   const [tryon, setTryon] = useState<KioskPiece | null>(null);
+  const fitRef = useRef<FitSummary | null>(null);
   const convo = useRef<Convo | null>(null);
   const cur = rate?.currency ?? 'AED';
 
@@ -76,10 +78,19 @@ export default function Kiosk() {
     },
     kiosk_request_delivery: async (p: { serial: string; name: string; phone: string; address: string; slot: string; note?: string }) => {
       try {
-        const out = await api.kioskRequest({ kind: 'delivery', ...p, lang, channel: 'store' });
+        const out = await api.kioskRequest({ kind: 'delivery', ...p, lang, channel: 'store', fit: fitRef.current });
         setDone(out); return `Request ${out.reference} placed for ${out.delivery_date} (${out.slot}). ${out.message}`;
       } catch (e) { return `Could not place the request: ${(e as Error).message}`; }
     },
+    kiosk_try_on: async ({ serial }: { serial: string }) => {
+      try {
+        const p = await api.kioskPiece(serial);
+        if (!p.tryon_url || !(usesFace(p.category) || usesHand(p.category))) return `${p.design} has no try-on; a colleague can show it in person.`;
+        setFocus(p); setForm(null); setTryon(p);
+        return `The camera is open on the screen with ${p.design} placed on the client. Ask her to face the camera; the fit appears beside the picture.`;
+      } catch { return 'That piece is not on the shelf.'; }
+    },
+    kiosk_tryon_fit: async () => fitText(fitRef.current),
   };
 
   const start = async (textOnly = false) => {
@@ -107,14 +118,25 @@ export default function Kiosk() {
   };
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault(); if (!form) return; setBusy(true); setNotice(null);
-    try { const out = await api.kioskRequest({ ...form, lang, channel: 'store' }); setDone(out); setForm(null); }
+    try { const out = await api.kioskRequest({ ...form, fit: form.fit ?? undefined, lang, channel: 'store' }); setDone(out); setForm(null); }
     catch (ex) { setNotice((ex as Error).message); } finally { setBusy(false); }
   };
   const reset = async () => { await end(); setMsgs([]); setDone(null); setForm(null); setFocus(null); setCat(''); void load(''); };
   const live = status === 'connected';
   const lastAgent = [...msgs].reverse().find((m) => m.role === 'agent')?.text;
   const bubble = status === 'connecting' ? t('voice_connecting') : lastAgent ?? t('kiosk_greeting');
-  const openForm = (kind: Form['kind'], serial: string) => setForm({ kind, serial, name: '', phone: '', preferred_time: '', address: '', slot: kind === 'delivery' ? 'afternoon' : 'morning', note: '' });
+  const openForm = (kind: Form['kind'], serial: string, fit: FitSummary | null = fitRef.current) => setForm({ kind, serial, name: '', phone: '', preferred_time: '', address: '', slot: kind === 'delivery' ? 'afternoon' : 'morning', note: '', fit });
+  const fitLine = (f: FitSummary | null | undefined) => {
+    if (!f) return '';
+    const parts: string[] = [];
+    if (f.height_cm) parts.push(`${t('fit_height')} ≈ ${f.height_cm} ${t('cm')}`);
+    if (f.wrist_girth_mm) parts.push(`${t('fit_wrist')} ≈ ${f.wrist_girth_mm} ${t('mm')}`);
+    if (f.bangle) parts.push(`${t('fit_bangle')} ${f.bangle}`);
+    if (f.ring_eu) parts.push(`${t('fit_ring')} EU ${f.ring_eu}`);
+    if (f.chain_sits) parts.push(`${t('fit_chain_sits')} ${t(`sits_${f.chain_sits}`)}`);
+    if (f.verdict) parts.push(t(`fit_${f.verdict}`));
+    return parts.join(' · ');
+  };
 
   return (
     <div className={`kiosk2 ${lang === 'ar' ? 'rtl' : ''}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -171,6 +193,7 @@ export default function Kiosk() {
                   {(['morning', 'afternoon'] as const).map((s) => <button type="button" key={s} className={`chip ${form.slot === s ? 'on' : ''}`} onClick={() => setForm({ ...form, slot: s })}>{t(`kiosk_${s}`)}</button>)}
                 </div>
               </>}
+            {form.fit && fitLine(form.fit) && <div className="notice ok small">{t('tryon_fit_included')} {fitLine(form.fit)}</div>}
             <div className="actions">
               <button className="k2-btn" disabled={busy}>{t('kiosk_send')}</button>
               <button type="button" className="k2-btn ghost" onClick={() => setForm(null)}>{t('cancel')}</button>
@@ -183,6 +206,9 @@ export default function Kiosk() {
               <h2>{focus.design}</h2>
               <div className="k2-price">{money(focus.price_incl_vat, cur, lang)}</div>
               <div className="small muted">{focus.serial} · {focus.karat}K · {num(focus.net_weight_g, lang, 3)} g{focus.rate_per_gram ? ` · ${t('kiosk_rate')} ${num(focus.rate_per_gram, lang)} ${cur}/g` : ''}</div>
+              {focus.dims && (focus.dims.length_mm || focus.dims.inner_diameter_mm) && (
+                <div className="small muted">{focus.dims.length_mm ? `${t('fit_length')} ${num(focus.dims.length_mm / 10, lang, 1)} ${t('cm')}` : ''}{focus.dims.length_mm && focus.dims.inner_diameter_mm ? ' · ' : ''}{focus.dims.inner_diameter_mm ? `${t('fit_inner')} ${num(focus.dims.inner_diameter_mm, lang, 1)} ${t('mm')}` : ''}</div>
+              )}
               <div className="actions">
                 {focus.tryon_url && (usesFace(focus.category) || usesHand(focus.category)) && (
                   <button className="k2-btn tryon-btn" onClick={() => setTryon(focus)}>📷 {t('tryon_button')}</button>
@@ -215,11 +241,26 @@ export default function Kiosk() {
         <p className="k2-privacy">{t('kiosk_privacy')}</p>
       </section>
       {tryon && tryon.tryon_url && (
-        <TryOn category={tryon.category as Category} cutoutUrl={tryon.tryon_url} label={tryon.design}
-          onClose={() => setTryon(null)} onAskViewing={() => { setTryon(null); openForm('viewing', tryon.serial); }} />
+        <TryOn category={tryon.category as Category} cutoutUrl={tryon.tryon_url} label={tryon.design} dims={tryon.dims ?? null}
+          onFit={(f) => { if (f) fitRef.current = f; }}
+          onClose={() => setTryon(null)} onAskViewing={(f) => { setTryon(null); openForm('viewing', tryon.serial, f ?? fitRef.current); }} />
       )}
     </div>
   );
+}
+
+/** What Noor may say about the fit: the estimates as words, never a price. */
+function fitText(f: FitSummary | null) {
+  if (!f) return 'No fit has been measured yet. Open the try-on and ask the client to face the camera.';
+  const parts: string[] = [];
+  if (f.height_cm) parts.push(`height about ${f.height_cm} cm (${f.height_method === 'full_body' ? 'head to toe' : 'estimated from the shoulders'})`);
+  if (f.neck_girth_mm) parts.push(`neck about ${f.neck_girth_mm} mm`);
+  if (f.chain_sits) parts.push(`this length sits ${f.chain_sits.replace('_', ' ')}`);
+  if (f.wrist_girth_mm) parts.push(`wrist about ${f.wrist_girth_mm} mm`);
+  if (f.bangle) parts.push(`bangle size ${f.bangle}`);
+  if (f.ring_eu) parts.push(`ring size EU ${f.ring_eu}, US ${f.ring_us}`);
+  if (f.verdict) parts.push(`this piece ${f.verdict === 'fits' ? 'should fit' : `looks a little ${f.verdict}`}`);
+  return `Estimated from the camera, for a fitter to confirm in person: ${parts.join('; ')}.`;
 }
 
 function glyph(c: string | null) {
