@@ -449,6 +449,19 @@ update `pharma_core, pharma_pk_tax_core, pharma_reconciliation_hub, pharma_demo_
 Static checks only here (py_compile, pyflakes, XML well-formed, `bash -n`, no method shadows a reserved model attribute, no names or secrets in the new module). Next: owner runs `stage.sh test-combined` (must be green) and pastes the output;
 then a named go is needed before `stage.sh upgrade` on `mumtaz_pharma`.
 
+## 2026-11-18 — pharma-functionality commits LIVE on staging: test-combined 176/176, upgrade and smoke green (owner-run, output pasted back)
+
+- `stage.sh test-combined` (fresh throwaway DB, every pharma module plus the accounting kit and hardening): **0 failed, 0 error(s) of 176 tests**; DB dropped. `mumtaz_pharma` untouched by it.
+- `stage.sh upgrade`, run once after the owner's named go (dump `backups/mumtaz_pharma_pre_upgrade_20261118_145151.dump`). Upgrade line:
+  `update: pharma_core, pharma_pk_tax_core, pharma_reconciliation_hub, pharma_demo_data, pharma_website_demo, pharma_courier_cod, pharma_courier_cod_accounting, pharma_courier_cod_demo, pharma_accounting_hardening   install: pharma_partner_stock`.
+  108 modules loaded, neutralize re-ran automatically, odoo-pharma restarted, health 200.
+- Verified after (`verify`): `pharma_pk_tax_core` 19.0.1.1.0, `pharma_accounting_hardening` 19.0.1.1.0, `pharma_partner_stock` 19.0.1.0.0 installed, 108 modules installed;
+  support endpoint still `http://127.0.0.1:9/support-disabled-by-pharma-accounting-hardening` and the form still *Role / Administrator*; courier COD crons active 0; journal entries `draft=1`;
+  the earlier data is unchanged (2 couriers, 19 shipments, 3 remittances, 4 statements, 18 open exceptions, 8 tax rules, 9 tax events, 10 recon runs, 4 partner stock lines).
+- `smoke`: HTTP 200, `/`, `/pharma`, `/shop` 200, DEMO ribbon present, five products listed, admin login OK (uid 2), 20 of 20 Pharma menus visible, production mode still refuses DEMO rules (rolled back, mode `demo`).
+- Not exercised yet on staging: `tax rules linked to an Odoo sales tax = 0`, so the new tax-link gate is covered by the automated tests but has no live data; the partner-stock derivation has not been run against a real stock location.
+  The vendor support button removal is a web-client asset: it needs a hard refresh in the browser and a visual check (owner).
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
