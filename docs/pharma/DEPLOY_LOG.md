@@ -228,6 +228,19 @@ Owner asked for "the accounting module" from the Cybrosys page. Details, finding
 
 ---
 
+## 2026-11-18 — accounting kit: fetched on the VPS, packages present, vendor tests pass (owner-run, output pasted back)
+
+| Step | Result | Evidence |
+| --- | --- | --- |
+| `stage.sh thirdparty` (~12:57 UTC) | **done** | `/opt/thirdparty/cybroaddons` at the pinned commit `fdeea97df75b7b45a6ed0f9af3c0e9850399f517` (2026-11-13); `base_accounting_kit` 19.0.3.3.1, `base_account_budget` 19.0.1.0.2, `cybrosys_support_client` 19.0.1.1.0, all LGPL-3. Source only, nothing installed. |
+| `stage.sh deps` | **nothing to do** | `openpyxl`, `ofxparse`, `qifparse`, `xlsxwriter` already importable by the odoo user. No pip run, `/opt/thirdparty/pydeps` not created, no system change. |
+| `stage.sh test-kit` (12:58–13:00 UTC) | **PASS** | fresh throwaway DB with only the kit: `83 post-tests in 49.30s, 44025 queries`; `0 failed, 0 error(s) of 83 tests`. The vendor's own suite (kit, budget, support client) passes on this Odoo 19 build. Log `/var/local/pharma-staging/logs/test_kit_20261118_125838.log`. Test DB dropped (`--force`, 5 poller sessions ended). |
+| `stage.sh test-combined` (started ~13:01 UTC) | **result not yet seen** | the paste ends at the line announcing the run. Expected `0 failed, 0 error(s)` of 62 tests (54 + 8 hardening). Never run before; its hardening tests have not executed on any Odoo until now. |
+
+Still gated and not done: `install-accounting` (dump, install, neutralize, restart `odoo-pharma` only). Waits for a green `test-combined` and the owner's go.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
