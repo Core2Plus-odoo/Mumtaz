@@ -311,18 +311,23 @@ PY
   fi
   say "menus / mode / DEMO data as admin, and: production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
   render_conf "$STAGE_CONF" cli
-  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) 2>/dev/null <<'PY'
+  local err="$LOG_DIR/smoke_shell_$TS.err"
+  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) 2>"$err" <<'PY' || { echo "  odoo shell step FAILED — stderr:"; tail -n 25 "$err"; }
 from datetime import date
 admin = env.ref("base.user_admin")
+P = env["ir.config_parameter"].sudo()
 print("  company:", env.company.name)
-print("  pharma.mode:", env["ir.config_parameter"].sudo().get_param("pharma.mode"))
-print("  neutralized:", env["ir.config_parameter"].sudo().get_param("database.is_neutralized"))
-menus = env["ir.ui.menu"].with_user(admin).search([("complete_name", "like", "Pharma")], order="complete_name")
-print("  Pharma menus visible to admin:")
-for m in menus: print("    -", m.complete_name)
+print("  pharma.mode:", P.get_param("pharma.mode"))
+print("  neutralized:", P.get_param("database.is_neutralized"))
+Menu = env["ir.ui.menu"]
+root = env.ref("pharma_core.menu_pharma_root")
+visible = set(Menu.with_user(admin)._visible_menu_ids())
+pharma = Menu.sudo().search([("id", "child_of", root.id)])
+shown = sorted(m.complete_name for m in pharma if m.id in visible)
+print("  Pharma menus visible to admin (%d of %d):" % (len(shown), len(pharma)))
+for name in shown: print("    -", name)
 want = {"Pharma/Tax Centre", "Pharma/Reconciliation", "Pharma/Reconciliation/Exception Queue"}
-have = set(menus.mapped("complete_name"))
-print("  required menus present:", "YES" if want <= have else f"MISSING {sorted(want - have)}")
+print("  required menus present:", "YES" if want <= set(shown) else f"MISSING {sorted(want - set(shown))}")
 for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.raw.event"):
     M = env[model].sudo(); print(f"  {model}: total={M.search_count([])} demo={M.search_count([('is_demo', '=', True)])}")
 P = env["ir.config_parameter"].sudo()
