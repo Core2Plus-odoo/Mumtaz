@@ -2,7 +2,7 @@
     "name": "Pharma Pakistan Tax Core",
     "summary": "Effective-dated, approved-only tax rule engine; SKU tax classification; immutable tax events; posting gate",
     "description": "No rate is hardcoded. Unresolved treatment blocks posting. Rates must come from approved, sourced, effective-dated rules.",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Pharma",
     "author": "C2P Consultants",
     "license": "LGPL-3",
