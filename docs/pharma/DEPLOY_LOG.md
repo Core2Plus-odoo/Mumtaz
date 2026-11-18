@@ -192,6 +192,21 @@ Expected on a fresh install: **54 tests** (18 + 16 + 13 + 7). Pending on staging
 
 ---
 
+## 2026-11-18 — wellness build is LIVE on staging: 54/54 tests, upgrade 2, smoke green (owner-run, output pasted back)
+
+| Step | Result | Evidence |
+| --- | --- | --- |
+| `stage.sh test` (fresh install, throwaway DB, 12:46–12:48 UTC) | **PASS** | `54 post-tests in 38.72s, 3738 queries`; `0 failed, 0 error(s) of 54 tests when loading database 'mumtaz_pharma_test'`. Log `/var/local/pharma-staging/logs/test_20261118_124627.log`. Test DB dropped (`--force`, 2 poller sessions ended). The two `bad query` ERROR lines are the tax-event unique constraint firing inside the duplicate-withholding test (expected). The per-module stats add to 62 because Odoo also counts class-level setup entries; the result line is the authoritative 54. |
+| `stage.sh upgrade` (12:48 UTC) | **done** | dump `/var/local/pharma-staging/backups/mumtaz_pharma_pre_upgrade_20261118_124848.dump` (11 MB). `-u` of all five pharma modules. `pharma_demo_data: Running upgrade [19.0.1.1.1>] post-migrate` → `seed complete (idempotent)`; `pharma_website_demo: Running upgrade [19.0.1.1.0>] post-migrate`; `98 modules loaded in 5.39s`; `Modules loaded.` `odoo-pharma` restarted alone, health 200. Rollback: the command the script printed, using that dump. |
+| verify | as designed | `pharma.mode = demo`; demo users now `pharma.approver, pharma.finance, pharma.maker, pharma.ops` (the earlier `demo_*` users renamed in place, passwords carried over); published DEMO products 5; `website homepage_url = /pharma`; exceptions closed=1 investigating=1 open=3 pending_approval=1; rules approved=5 draft=2 superseded=1 |
+| `stage.sh smoke` (HTTPS) | **PASS** | `/web/login`, `/`, `/pharma`, `/shop` all 200; `DEMO ribbon on /shop: YES`; shop lists Golden Chai Blend, Green Leaf Infusion, Lavender Evening Infusion, Rose Petal Tea, Warm Spice Mix; login as the owner's admin OK uid 2; 14 of 14 Pharma menus; demo counts all flagged (tax rules 8, tax events 9, recon runs 5, exceptions 6, stock lines 4, raw events 8); production mode refuses DEMO rules; `pharma.mode` by SQL = `demo`. |
+
+History note: the first upgrade at 12:35 UTC (dump `..._pre_upgrade_20261118_123551.dump`) ran the earlier build whose seeded `demo_*` logins collided with the handed-over tests; it is superseded by the run above. Both dumps are still on the VPS.
+
+**Not yet verified by anyone:** the visual result in a browser (wellness theme, DEMO ribbon, neutralized banner, `/pharma` layout). The 7 storefront HTTP tests prove the pages render and contain the right content; they cannot judge how it looks. Owner to look at https://pharma.mumtaz.digital and report.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
