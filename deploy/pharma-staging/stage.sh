@@ -343,7 +343,7 @@ cmd_upgrade() {
   grep -E " (ERROR|CRITICAL|WARNING) .*pharma|Traceback|Modules loaded|migrat|pharma_demo_data: seed|modules loaded in" "$LOG_DIR/upgrade_$TS.log" | tail -25 || true
   grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/upgrade_$TS.log" && die "upgrade log has errors: $LOG_DIR/upgrade_$TS.log (DB dump kept for rollback)"
   grep -q "Modules loaded" "$LOG_DIR/upgrade_$TS.log" || die "upgrade did not reach 'Modules loaded': $LOG_DIR/upgrade_$TS.log"
-  if [ "$(sudo -u postgres psql -d "$DB" -tAc "select value from ir_config_parameter where key='database.is_neutralized'")" = "True" ]; then
+  if [ "$(sudo -u postgres psql -d "$DB" -tAc "select lower(value) from ir_config_parameter where key='database.is_neutralized'")" = "true" ]; then
     say "database is neutralized: run neutralize again so scheduled actions added by new modules stay off"
     as_odoo "$ODOO_BIN" neutralize -c "$STAGE_CONF" -d "$DB" 2>&1 | tail -3
   fi

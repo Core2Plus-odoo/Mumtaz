@@ -83,7 +83,7 @@ class TestCourierDemoSeed(TransactionCase):
 
     def test_the_built_upload_and_the_one_with_errors(self):
         Stmt = self.env["pharma.courier.statement"].sudo()
-        built = Stmt.search([("line_ids.reference", "=", "DEMO-A-0001")])
+        built = Stmt.search([("statement_type", "=", "shipments"), ("line_ids.reference", "=", "DEMO-A-0001")])
         self.assertEqual((built.state, built.shipments_created), ("built", 8))
         bad = Stmt.search([("line_ids.order_ref", "=", "DEMO-ERR-ROW")])
         self.assertEqual((bad.state, bad.error_count), ("draft", 3))

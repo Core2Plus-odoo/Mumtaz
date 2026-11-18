@@ -355,6 +355,26 @@ bash deploy/pharma-staging/stage.sh smoke
   `backups/mumtaz_pharma_pre_upgrade_20261118_135909.dump`. No rollback was needed.
 - Note: `pharma_courier_cod` itself loaded without error, but its 67 tests have still not run.
 
+## 2026-11-18 — slice 1 on staging: 129 of 130 tests green, courier modules INSTALLED in mumtaz_pharma (owner-run, output pasted back)
+
+- Fresh-install test on the throwaway DB: 130 tests ran, 0 failed, 1 error. The error was a defect in my own demo test (it searched
+  statements by tracking number only, and the DEMO-A-0001 slip statement matches too: "Expected singleton"); the module code
+  was not at fault. Fixed by also filtering on statement type. Per module: pharma_courier_cod 75 tests, pharma_courier_cod_demo 11,
+  pharma_demo_data 15, pharma_pk_tax_core 20, pharma_reconciliation_hub 18, pharma_website_demo 9. The `bad query ... pharma_tax_event`
+  lines in the log are the pre-existing negative tests that provoke a database constraint on purpose; they are not failures.
+- Live `stage.sh upgrade` (owner ran it with the single test error above in hand, dump
+  `backups/mumtaz_pharma_pre_upgrade_20261118_140410.dump`): updated six modules, installed `pharma_courier_cod_demo`, 105 modules loaded,
+  odoo-pharma restarted, health 200. Smoke green: ribbon present, five products, 20 Pharma menus visible.
+- Seeded: 2 couriers, 19 shipments, 3 remittances, 4 statements, 18 open exceptions in total. Courier COD findings by category:
+  collection 1, remittance 1, deduction 1, returned COD 1, intake 1, overdue 6 (see DEMO_SCENARIOS C6b).
+- **Found: `courier COD crons active = 1`, expected 0.** The re-neutralize step I added to `upgrade` did not fire: Odoo stores
+  `database.is_neutralized` as lowercase `true`, my check compared with `True`. Fixed in `stage.sh` (case-insensitive). The scheduled
+  action is therefore active on staging until `stage.sh neutralize` is run (gate: restarts odoo-pharma only).
+- **Found, not caused by this slice: the accounting hardening is no longer installed.** `pharma_accounting_hardening = uninstalled (-)`,
+  the vendor support endpoint is back at the vendor URL and its form is open to *Role / User*; right after the install-accounting step it
+  was installed, disabled and Administrator-only. The kit modules themselves are still installed. This was already the case before the
+  courier upgrade (visible in the module-state query run after the first failed upgrade). Cause not established from the pasted output.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
