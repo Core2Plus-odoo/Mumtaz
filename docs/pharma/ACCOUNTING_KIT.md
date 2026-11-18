@@ -1,6 +1,6 @@
 # Accounting for Odoo 19 Community: third-party kit, review and hardening
 
-Status: **fetched, reviewed, hardened and tested on throwaway databases (vendor suite 83/83, combined 62/62); NOT yet installed in `mumtaz_pharma`: the live install waits for the owner's go.**
+Status: **fetched, reviewed, hardened, tested on throwaway databases (vendor suite 83/83, combined 62/62) and INSTALLED in the staging database `mumtaz_pharma` on 2026-11-18 (103 modules). Production: not in scope.**
 Owner approved proceeding on 2026-11-18 with: hardening module, throwaway-database tests first, live install gated.
 
 ## Why

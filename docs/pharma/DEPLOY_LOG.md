@@ -277,6 +277,24 @@ restart `odoo-pharma` only, verify, print rollback). Gated on the owner's go.
 
 ---
 
+## 2026-11-18 — accounting kit INSTALLED in mumtaz_pharma (owner-run `stage.sh install-accounting`, output pasted back)
+
+| Step | Result | Evidence |
+| --- | --- | --- |
+| dump (13:06 UTC) | done | `/var/local/pharma-staging/backups/mumtaz_pharma_pre_accounting_20261118_130642.dump` (11 MB) |
+| install | **done** | `-i base_accounting_kit,base_account_budget,cybrosys_support_client,pharma_accounting_hardening`; `103 modules loaded in 6.74s, 4006 queries`; `Modules loaded.`; no ERROR lines (the script aborts on any). Log `/var/local/pharma-staging/logs/accounting_20261118_130642.log`. |
+| neutralize again | done | `odoo.modules.neutralize: Neutralization finished`: the kit's new scheduled actions are switched off again. |
+| service | done | kit folder added to `/etc/odoo-pharma.conf`; only `odoo-pharma` restarted; health 200. No python-packages folder was needed (all four packages were already installed), so the unit has no `PYTHONPATH`. |
+| verify | as designed | modules installed total **103** (was 98); `base_accounting_kit` 19.0.3.3.1, `base_account_budget` 19.0.1.0.2, `cybrosys_support_client` 19.0.1.1.0, `pharma_accounting_hardening` 19.0.1.0.0 all `installed`; `pharma.mode = demo`; all earlier demo counts unchanged. |
+| the two controls, live | in place | vendor support endpoint = `http://127.0.0.1:9/support-disabled-by-pharma-accounting-hardening`; vendor support form open to group `Role / Administrator` only; an anonymous POST to `/xlsx_report` answers **303** (redirect to login), no file. |
+
+Rollback if ever needed (printed by the script): stop `odoo-pharma`, drop and recreate `mumtaz_pharma`, `pg_restore` the dump above, `stage.sh accounting-off`.
+
+**Not yet verified:** (1) that only the expected scheduled actions are active after neutralize; (2) `stage.sh smoke` after the install; (3) how the Accounting menus and reports look and export in a browser. Also open from before: nobody has looked at the wellness storefront in a browser.
+**Known and accepted for staging:** the kit rewrote core accounting group records on install (finding 3 in `ACCOUNTING_KIT.md`); the demo books are nearly empty, so most reports will show little until accounting demo data is seeded.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
