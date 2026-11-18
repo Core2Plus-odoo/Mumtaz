@@ -18,6 +18,7 @@
 #   stage.sh verify        read-only facts about mumtaz_pharma (mode, module states, demo counts)
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
+#   stage.sh neutralize    GATE: odoo neutralize -d mumtaz_pharma (banner; mail/crons/payments off), restart odoo-pharma
 #   stage.sh smoke-local   via 127.0.0.1:8076 with Host: pharma.mumtaz.digital (before DNS/nginx)
 #   stage.sh smoke         via https://pharma.mumtaz.digital (after DNS + nginx + cert)
 #   stage.sh service-remove  rollback of `service` (stop, disable, delete the two files)
@@ -258,6 +259,21 @@ UNITEOF
   printf 'health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 20 "http://127.0.0.1:$HTTP_PORT/web/health" || echo "(not up yet; tail -f $SVC_LOG)"
 }
 
+cmd_neutralize() {
+  guards; render_conf "$STAGE_CONF" cli
+  say "neutralize $DB (standard Odoo: banner on every page, outgoing mail / crons / payment providers off). Reversible."
+  as_odoo "$ODOO_BIN" neutralize -c "$STAGE_CONF" -d "$DB" 2>&1 | grep -vE "^\s*$" | tail -15
+  sudo -u postgres psql -d "$DB" -tAc "select '  database.is_neutralized = '||value from ir_config_parameter where key='database.is_neutralized'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  pharma.mode = '||value from ir_config_parameter where key='pharma.mode'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  active crons = '||count(*) from ir_cron where active"
+  sudo -u postgres psql -d "$DB" -tAc "select '  active outgoing mail servers = '||count(*) from ir_mail_server where active"
+  if systemctl is-active --quiet $UNIT.service; then
+    say "restart $UNIT only, so its workers drop cached parameters"
+    systemctl restart $UNIT.service; sleep 5
+    printf '  health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 20 "http://127.0.0.1:$HTTP_PORT/web/health" || true
+  fi
+}
+
 cmd_service_remove() {
   say "rollback: stop + disable $UNIT, remove unit and conf (database untouched)"
   systemctl disable --now $UNIT.service 2>/dev/null || true
@@ -314,6 +330,7 @@ case "${1:-}" in
   verify)         guards; cmd_verify ;;
   test)           cmd_test ;;
   service)        cmd_service ;;
+  neutralize)     cmd_neutralize ;;
   service-remove) cmd_service_remove ;;
   smoke-local)    guards; smoke_common "http://127.0.0.1:$HTTP_PORT" "$DOMAIN" ;;
   smoke)          guards; smoke_common "https://$DOMAIN" "$DOMAIN" ;;
