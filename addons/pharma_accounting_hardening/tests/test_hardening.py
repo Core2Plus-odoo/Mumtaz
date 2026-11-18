@@ -92,3 +92,16 @@ class TestPharmaAccountingHardening(HttpCase):
         inv = self._draft_invoice("DEMO-SKU-A")
         inv.action_post()
         self.assertEqual(inv.state, "posted")
+
+    # ---- vendor support button --------------------------------------------------------------------
+    def test_vendor_support_button_is_removed_from_the_web_client(self):
+        """The headset icon and the user-menu item are taken out of the JS registries by an asset of this module.
+        Pinned on the manifest and the file, because the registries only exist in a browser."""
+        from odoo.modules.module import get_manifest
+        path = "pharma_accounting_hardening/static/src/js/remove_vendor_support_ui.js"
+        self.assertIn(path, get_manifest("pharma_accounting_hardening")["assets"]["web.assets_backend"])
+        with file_open(path, "r") as f:
+            js = f.read()
+        self.assertIn("cybrosys_support_client.ClientSupportSystray", js)
+        self.assertIn('"cybrosys_support"', js)
+        self.assertIn("cat.remove(key)", js)
