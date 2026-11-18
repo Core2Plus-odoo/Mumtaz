@@ -320,10 +320,11 @@ info = rpc("/web/session/authenticate", {"db": db, "login": login, "password": p
 print(f"  login as {login}:", f"OK uid={info['uid']}" if info.get("uid") else "FAILED")
 if not info.get("uid"): sys.exit(1)
 print("  session db:", info.get("db"), "| company:", info.get("user_companies", {}).get("current_company"))
-menus = rpc("/web/dataset/call_kw", {"model": "ir.ui.menu", "method": "search_read", "args": [[["complete_name", "like", "Pharma"]]],
-                                     "kwargs": {"fields": ["complete_name"], "order": "complete_name"}})
-print("  Pharma menus visible to admin via the web session:")
-for r in menus: print("    -", r["complete_name"])
+root = rpc("/web/dataset/call_kw", {"model": "ir.model.data", "method": "search_read",
+                                    "args": [[["module", "=", "pharma_core"], ["name", "=", "menu_pharma_root"]]], "kwargs": {"fields": ["res_id"]}})
+menus = rpc("/web/dataset/call_kw", {"model": "ir.ui.menu", "method": "search_read", "args": [[["id", "child_of", root[0]["res_id"]]]],
+                                     "kwargs": {"fields": ["complete_name"]}})
+print("  Pharma menus reachable through the web session: %d" % len(menus))
 PY
   fi
   say "menus / mode / DEMO data as admin, and: production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
@@ -355,7 +356,10 @@ res = env["pharma.tax.rule"].resolve(p, date(2026, 11, 3), 1000.0, "SALES_TAX_OU
 print("  in production mode:", res["resolution"], "|", res["reason"])
 assert res["resolution"] != "resolved" and "DEMO-only" in res["reason"], "DEMO rule was NOT refused"
 env.cr.rollback()
-print("  rolled back; pharma.mode is still:", env["ir.config_parameter"].sudo().get_param("pharma.mode"), f"(was {before})")
+env.cr.execute("select value from ir_config_parameter where key='pharma.mode'")
+after = env.cr.fetchone()[0]
+print(f"  rolled back; pharma.mode in the database (SQL, not cache): {after} (was {before})")
+assert after == before == "demo", "pharma.mode did not come back to demo after rollback"
 PY
 }
 
