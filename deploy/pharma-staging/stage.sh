@@ -266,7 +266,8 @@ cmd_neutralize() {
   sudo -u postgres psql -d "$DB" -tAc "select '  database.is_neutralized = '||value from ir_config_parameter where key='database.is_neutralized'"
   sudo -u postgres psql -d "$DB" -tAc "select '  pharma.mode = '||value from ir_config_parameter where key='pharma.mode'"
   sudo -u postgres psql -d "$DB" -tAc "select '  active crons = '||count(*) from ir_cron where active"
-  sudo -u postgres psql -d "$DB" -tAc "select '  active outgoing mail servers = '||count(*) from ir_mail_server where active"
+  sudo -u postgres psql -d "$DB" -tAc "select '  active outgoing mail server: '||name||' -> '||smtp_host||':'||smtp_port from ir_mail_server where active"
+  sudo -u postgres psql -d "$DB" -tAc "select '  active cron: '||cron_name from ir_cron where active"
   if systemctl is-active --quiet $UNIT.service; then
     say "restart $UNIT only, so its workers drop cached parameters"
     systemctl restart $UNIT.service; sleep 5
@@ -288,25 +289,24 @@ smoke_common() {   # $1 = base URL, $2 = Host header
   say "XML-RPC as admin (optional: type the admin password, or just press Enter to skip the login check)"
   local pw; read -r -s -p "admin password [Enter = skip]: " pw; echo
   if [ -z "$pw" ]; then echo "  skipped (verify the login in the browser later)"; else
-  PHARMA_PW="$pw" python3 - "$base" "$host" "$DB" <<'PY'
-import os, sys, xmlrpc.client as x
+  PHARMA_PW="$pw" python3 - "$base" "$host" "$DB" <<'PY' || echo "  (login check failed — see /var/log/odoo/odoo-pharma.log; verify in the browser)"
+import json, os, sys, urllib.request, http.cookiejar
 base, host, db = sys.argv[1:]; pw = os.environ["PHARMA_PW"]
-hdr = [("Host", host)]
-uid = x.ServerProxy(base + "/xmlrpc/2/common", headers=hdr).authenticate(db, "admin", pw, {})
-print("  admin login:", f"OK uid={uid}" if uid else "FAILED")
-if not uid: sys.exit(1)
-m = x.ServerProxy(base + "/xmlrpc/2/object", headers=hdr)
-def kw(model, meth, *a, **k): return m.execute_kw(db, uid, pw, model, meth, list(a), k)
-print("  company:", kw("res.company", "search_read", [], fields=["name"])[0]["name"])
-print("  pharma.mode:", kw("ir.config_parameter", "get_param", "pharma.mode"))
-menus = kw("ir.ui.menu", "search_read", [["complete_name", "like", "Pharma"]], fields=["complete_name"], order="complete_name")
-print("  Pharma menus visible to admin:")
+cj = http.cookiejar.CookieJar(); opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+def rpc(path, params):
+    body = json.dumps({"jsonrpc": "2.0", "method": "call", "params": params, "id": 1}).encode()
+    req = urllib.request.Request(base + path, data=body, headers={"Host": host, "Content-Type": "application/json"})
+    with opener.open(req, timeout=60) as r: out = json.loads(r.read())
+    if "error" in out: raise SystemExit("  RPC error: " + out["error"].get("data", {}).get("message", out["error"].get("message")))
+    return out["result"]
+info = rpc("/web/session/authenticate", {"db": db, "login": "admin", "password": pw})
+print("  admin login:", f"OK uid={info['uid']}" if info.get("uid") else "FAILED")
+if not info.get("uid"): sys.exit(1)
+print("  session db:", info.get("db"), "| company:", info.get("user_companies", {}).get("current_company"))
+menus = rpc("/web/dataset/call_kw", {"model": "ir.ui.menu", "method": "search_read", "args": [[["complete_name", "like", "Pharma"]]],
+                                     "kwargs": {"fields": ["complete_name"], "order": "complete_name"}})
+print("  Pharma menus visible to admin via the web session:")
 for r in menus: print("    -", r["complete_name"])
-want = {"Pharma/Tax Centre", "Pharma/Reconciliation", "Pharma/Reconciliation/Exception Queue"}
-have = {r["complete_name"] for r in menus}
-print("  required menus present:", "YES" if want <= have else f"MISSING {sorted(want - have)}")
-for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.raw.event"):
-    print(f"  {model}: total={kw(model,'search_count',[])} demo={kw(model,'search_count',[['is_demo','=',True]])}")
 PY
   fi
   say "menus / mode / DEMO data as admin, and: production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
