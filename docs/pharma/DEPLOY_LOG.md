@@ -97,6 +97,22 @@ Script defects found and fixed on the way (all in `stage.sh`, none on the server
 
 ---
 
+## 2026-11-18 — public side: DNS, certificate, HTTPS live (owner-run, evidence pasted back)
+
+| Step | Status | Evidence |
+| --- | --- | --- |
+| 1. DNS A record | **done** by the owner in Hostinger hPanel, ~16:00 Dubai (12:00 UTC) | `Type A | Name pharma | Content 187.77.128.199 | TTL 14400`. Nothing else added or changed; no pharma record existed before. Resolution confirmed externally by the owner. |
+| 2. Resolution on the VPS | done ~12:05 UTC | `getent hosts pharma.mumtaz.digital` → 187.77.128.199; `dig +short pharma.mumtaz.digital @1.1.1.1` → 187.77.128.199 |
+| 3. Certificate | **done** 12:06 UTC, one attempt | `certbot --nginx -d pharma.mumtaz.digital --redirect --non-interactive`: "Successfully received certificate", deployed to `/etc/nginx/sites-enabled/pharma.mumtaz.digital`; `nginx -t` ok; reloaded. Certificate Name `pharma.mumtaz.digital`, ECDSA, Domains `pharma.mumtaz.digital`, **Expiry 2027-02-16 11:06:37 UTC (89 days)**, path `/etc/letsencrypt/live/pharma.mumtaz.digital/`. Auto-renew scheduled by certbot. (The earlier NXDOMAIN failure at 11:57 UTC was before the record existed.) |
+| 4. HTTPS smoke | partial | `https://pharma.mumtaz.digital/web/login` → **200**. JSON-RPC admin login: `Access Denied` twice — the password typed at the prompt did not match the one set at install (server fine; reset available via `stage.sh install`, which resumes at the password prompt). Shell checks printed `company: Pharma Demo Co`, `pharma.mode: demo`, `neutralized: true`, then the menu check failed silently (script searched `complete_name`, not searchable in 19; stderr was hidden). Fixed in 343e5a6 (`_visible_menu_ids`, stderr shown); re-run pending. Menu and production-refusal evidence therefore **still outstanding**. |
+| 5. Browser check (banner, Pharma menu, screenshot) | owner, pending | — |
+| 6a. Cause of the earlier XML-RPC 500 | **explained** | `/var/log/odoo/odoo-pharma.log`: `ValueError: Port could not be cast to integer value as '8076,pharma.mumtaz.digital'` on `POST /xmlrpc/2/common` at 11:48:08 — the Python xmlrpc client sent its own Host header plus mine, werkzeug merged them. Client-side bug in the smoke script, not the server; replaced by a single-header JSON-RPC call. |
+| 6b. `smoke-local` re-run | same as 4 | loopback `/web/login` with Host header → 200; login Access Denied (same typed password); same shell-step gap. |
+
+**Live:** https://pharma.mumtaz.digital (staging, fictional DEMO data, neutralized, noindex).
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
