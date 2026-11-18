@@ -1,27 +1,32 @@
 # Pharma staging — `pharma.mumtaz.digital`
 
-Generic Odoo 19 Community tenant, database `mumtaz_pharma`, selected by the
-existing `dbfilter = ^mumtaz_%d$`. **Staging only.** Fictional DEMO data
-(`pharma_demo_data`, never for production). Branch: `pharma-erp-v0.1`.
+Generic Odoo 19 Community tenant, database `mumtaz_pharma`. **Staging only.**
+Fictional DEMO data (`pharma_demo_data`, never for production). Branch
+`pharma-erp-v0.1`, cloned at `/opt/mumtaz-pharma-staging` (never `/opt/mumtaz`).
+
+Shape, matching the other tenants on this VPS (one `odooN.service` +
+`/etc/odooN.conf` + one nginx vhost each): its own unit **`odoo-pharma.service`**,
+**`/etc/odoo-pharma.conf`** with `dbfilter = ^mumtaz_%d$`, ports
+`127.0.0.1:8076` (http) / `8077` (websocket), the same local Postgres. The live
+`/etc/odoo/odoo.conf` (dbfilter `^Mumtaz`, serving the production tenants) is
+never edited and its service never restarted.
 
 | File | What it does |
 | --- | --- |
-| `discover.sh` | Read-only look at the VPS: Odoo runtime, `dbfilter`, addons path, databases, nginx, certs, DNS. Masks passwords. Run first. |
-| `stage.sh` | `backup`, `install`, `test`, `serve-check`, `smoke`. Touches only `mumtaz_pharma` and the throwaway `mumtaz_pharma_test`. Never edits nginx/DNS/live `odoo.conf`, never restarts anything. |
-| `nginx/pharma.mumtaz.digital.conf` | Server block mirroring `erp.mumtaz.digital` (with `/websocket`); certbot adds TLS. |
-
-Order (the gates in bold need a named approval first):
+| `discover.sh` | Read-only look at the VPS. Masks passwords. |
+| `stage.sh` | `backup`, `install`, `test`, `service` (gate), `smoke-local`, `smoke`, `service-remove`. Touches only `mumtaz_pharma` and the throwaway `mumtaz_pharma_test`. |
+| `nginx/pharma.mumtaz.digital.conf` | Vhost like `erp.mumtaz.digital`, with `/websocket`; certbot adds TLS. |
 
 ```bash
-git clone <repo> /opt/mumtaz-pharma-staging && cd /opt/mumtaz-pharma-staging && git checkout pharma-erp-v0.1
 bash deploy/pharma-staging/discover.sh
 bash deploy/pharma-staging/stage.sh backup
 bash deploy/pharma-staging/stage.sh install      # -i <list> --without-demo, then sets the admin password
 bash deploy/pharma-staging/stage.sh test         # expect "0 failed, 0 error(s) of 34 tests"
-bash deploy/pharma-staging/stage.sh serve-check  # tells you whether the live service can see pharma_*
+bash deploy/pharma-staging/stage.sh service      # GATE: new unit on 8076/8077
+bash deploy/pharma-staging/stage.sh smoke-local  # dbfilter + menus + demo mode, before DNS
+# GATE: DNS A record pharma -> 187.77.128.199 (Hostinger hPanel)
+# GATE: nginx vhost + certbot --nginx -d pharma.mumtaz.digital
+bash deploy/pharma-staging/stage.sh smoke
 ```
-**DNS** A record `pharma -> 187.77.128.199` (Hostinger hPanel, like `delivery`/`jewel`) ·
-**nginx** block + `certbot --nginx -d pharma.mumtaz.digital` · **addons visibility** for the
-live service (symlink, or `addons_path` + restart) · then `stage.sh smoke`.
 
 Full record, commands and rollback: `docs/pharma/DEPLOY_LOG.md`.

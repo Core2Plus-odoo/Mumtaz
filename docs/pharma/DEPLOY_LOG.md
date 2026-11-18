@@ -33,92 +33,101 @@ refuses port 22 from it; its HTTPS egress also blocks `*.mumtaz.digital`. Steps
 
 ---
 
-## Plan for the VPS (pending — each ⛔ is a gate that needs a named approval)
+## 2026-11-18 — VPS discovery (done, read-only, run by the owner on the VPS and pasted back)
+
+`discover.sh` on `srv1446185` (187.77.128.199), Ubuntu 24.04, Odoo Server 19.0-20260719 native:
+
+| Fact | Value | Consequence |
+| --- | --- | --- |
+| Odoo runtime | native `/usr/bin/odoo`, one systemd unit per tenant: `odoo` (`/etc/odoo/odoo.conf`, :8069), `odoo2` (:8070), `odoo3` (:8071), `odoo4`, `faizy-odoo`; jewel is the only Docker Odoo (:8072/:8073) | pharma gets its own unit the same way |
+| Live `dbfilter` (`/etc/odoo/odoo.conf`) | `^Mumtaz` (case-sensitive, no `%d`), `db_name = Mumtaz_C2P`, `list_db = False` | `mumtaz_pharma` can never be selected by the live service; changing that means editing production config + restart. **Not done.** |
+| Postgres | local, user `odoo`; `mumtaz_pharma` does not exist | install creates it |
+| Free ports | 8076, 8077 | used for `odoo-pharma` |
+| nginx | one vhost file per tenant in `sites-enabled`, HTTP block + certbot-managed 443 block, per-host certificate | `nginx/pharma.mumtaz.digital.conf` follows `erp.mumtaz.digital` |
+| DNS | mumtaz.digital on Hostinger (`apollo/athena.dns-parking.com`); `pharma` does not resolve | A record in hPanel, same as `delivery` / `jewel` |
+| Checkouts | `/opt/mumtaz` and `/opt/custom_addons/Mumtaz` are on `claude/resume-help-95ne9v`, not `main` | untouched; pharma lives in `/opt/mumtaz-pharma-staging` |
+
+Pre-existing oddities seen and **left alone** (not part of this work): the
+`erp.mumtaz.digital` vhost proxies `/longpolling` to 127.0.0.1:8073, which is
+jewel's Docker websocket port; the `ig2.mumtaz.digital` vhost proxies
+`/websocket` to 127.0.0.1:8074, where nothing listens; `erp-server.service` is
+in `activating (auto-restart)`.
+
+**Decision:** serve pharma from its own small unit `odoo-pharma.service` with
+`/etc/odoo-pharma.conf` (`dbfilter = ^mumtaz_%d$`, addons path = the staging
+checkout, same Postgres, 127.0.0.1:8076/8077, `workers = 2`). This honours the
+requested dbfilter literally, matches how every other tenant on the box is
+run, and never touches the production config or service.
+
+---
+
+## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
-# 0. clone the branch beside, never inside, /opt/mumtaz (which tracks main)
-git clone <repo> /opt/mumtaz-pharma-staging && cd /opt/mumtaz-pharma-staging && git checkout pharma-erp-v0.1
-bash deploy/pharma-staging/discover.sh          # read-only; decides native-vs-docker, ports, dbfilter, addons_path
+cd /opt/mumtaz-pharma-staging && git pull --ff-only
+bash deploy/pharma-staging/stage.sh backup     # pg globals, DB list, /etc/nginx + /etc/odoo*.conf + odoo*.service tarball
+bash deploy/pharma-staging/stage.sh install    # odoo -c <private cli conf> -d mumtaz_pharma -i base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data --without-demo --stop-after-init --no-http
+bash deploy/pharma-staging/stage.sh test       # same -i list into mumtaz_pharma_test + --test-enable --test-tags pharma, then dropdb
+```
+`install` ends by **setting the admin password** interactively (a CLI-created DB
+starts as admin/admin). The private CLI conf is rendered from the live conf's
+db credentials only, with its own logfile, no dbfilter, and `--no-http`.
+
+Why a throwaway DB for tests: Odoo only runs post-install tests for modules it
+is installing or updating, so `--test-tags pharma` on the finished tenant would
+run nothing, and `-u` would exercise an update path the deployment never takes.
+Expected log line: `0 failed, 0 error(s) of 34 tests when loading database 'mumtaz_pharma_test'`.
+
+```bash
+# ⛔ new unit (no other unit/conf touched; rollback = stage.sh service-remove)
+bash deploy/pharma-staging/stage.sh service
+bash deploy/pharma-staging/stage.sh smoke-local   # Host: pharma.mumtaz.digital -> 127.0.0.1:8076 — proves the dbfilter mapping before DNS
 ```
 
 ```bash
-# 1. backup, then DB + modules (Odoo's own demo off, pharma DEMO data on)
-bash deploy/pharma-staging/stage.sh backup      # pg globals, DB list, /etc/nginx + odoo.conf tarball
-bash deploy/pharma-staging/stage.sh install     # odoo -d mumtaz_pharma -i base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data --without-demo --stop-after-init
-```
-`install` runs with a rendered private config (live `odoo.conf` + this
-checkout's `addons/`, no `dbfilter`, own logfile) and then **sets the admin
-password** interactively, because a CLI-created database starts with
-`admin/admin` and this host will be public.
-
-```bash
-# 2. tests — fresh install into a throwaway DB, exactly the deployment path, then dropped
-bash deploy/pharma-staging/stage.sh test        # ... --test-enable --test-tags pharma --stop-after-init
-# expected log line:  0 failed, 0 error(s) of 34 tests when loading database 'mumtaz_pharma_test'
-```
-Why a throwaway DB: Odoo only runs post-install tests for modules it is
-installing or updating, so `--test-tags pharma` on the already-installed
-`mumtaz_pharma` would run nothing, and `-u` would exercise an update path the
-deployment never takes.
-
-```bash
-# 3. ⛔ DNS: A record  pharma -> 187.77.128.199  (Hostinger hPanel > Domains > mumtaz.digital > DNS; same as `delivery`)
-# 3. ⛔ nginx block (mirrors erp.mumtaz.digital incl. /websocket) + certificate, same way as the other tenants
+# ⛔ DNS: A record  pharma -> 187.77.128.199  (Hostinger hPanel > Domains > mumtaz.digital > DNS)
+# ⛔ nginx vhost + certificate, the same way as the other tenants
 cp deploy/pharma-staging/nginx/pharma.mumtaz.digital.conf /etc/nginx/sites-available/pharma.mumtaz.digital
 ln -s /etc/nginx/sites-available/pharma.mumtaz.digital /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 certbot --nginx -d pharma.mumtaz.digital
-```
-
-```bash
-# 3b. ⛔ make the four pharma addons visible to the LIVE service (pick one after serve-check)
-bash deploy/pharma-staging/stage.sh serve-check
-#   A) symlink addons/pharma_* into the live addons dir  (no restart; `rm` the links to roll back)
-#   B) append /opt/mumtaz-pharma-staging/addons to addons_path in /etc/odoo/odoo.conf and `systemctl restart odoo`  (restart window)
-```
-
-```bash
-# 4–5. smoke: /web/login 200, admin login, Pharma menus (Tax Centre, Reconciliation, Exception Queue),
-#       pharma.mode == demo, DEMO record counts, and "production refuses DEMO rules" (odoo shell, rolled back)
-bash deploy/pharma-staging/stage.sh smoke
+bash deploy/pharma-staging/stage.sh smoke        # /web/login 200, admin login, Pharma menus, pharma.mode=demo, DEMO counts, production refuses DEMO rules
 ```
 
 ## Rollback (reverse order, each step independent)
 
 ```bash
-rm -f /etc/nginx/sites-enabled/pharma.mumtaz.digital && nginx -t && systemctl reload nginx   # site gone; cert can stay
-certbot delete --cert-name pharma.mumtaz.digital                                             # optional
-# undo 3b: remove the symlinks, or remove the addons_path entry and restart odoo
-sudo -u postgres pg_dump -Fc mumtaz_pharma > /opt/mumtaz/pharma-staging/backups/mumtaz_pharma_final.dump
-sudo -u postgres dropdb mumtaz_pharma                                                        # the only tenant DB this work created
-rm -rf /opt/mumtaz-pharma-staging /opt/mumtaz/pharma-staging                                  # checkout, rendered conf, logs (keep backups if wanted)
+rm -f /etc/nginx/sites-enabled/pharma.mumtaz.digital && nginx -t && systemctl reload nginx
+certbot delete --cert-name pharma.mumtaz.digital                      # optional
+bash /opt/mumtaz-pharma-staging/deploy/pharma-staging/stage.sh service-remove   # stop+disable odoo-pharma, delete unit + /etc/odoo-pharma.conf
+sudo -u postgres pg_dump -Fc mumtaz_pharma > /var/local/pharma-staging/backups/mumtaz_pharma_final.dump
+sudo -u postgres dropdb mumtaz_pharma                                 # the only tenant DB this work created
+rm -rf /opt/mumtaz-pharma-staging /var/local/pharma-staging           # checkout, rendered confs, logs (keep backups if wanted)
 # remove the A record in Hostinger
 ```
-No other database, the live `odoo.conf`, `/opt/mumtaz`, or any other vhost is
-touched by the forward path, so there is nothing else to undo.
+The forward path never writes to `/etc/odoo/odoo.conf`, any other
+`/etc/odooN.conf`, any other unit, any other vhost, `/opt/mumtaz`, or any other
+database.
 
 ## Differences from the repo's usual deploy path
 
-- `c2p-delivery-system/deploy/update.sh` and `ops/deployment/deploy.sh` both
-  pull **main** into the production checkout; this tenant lives on a feature
-  branch, so it uses its own clone, like `deploy/jewel-staging` proposes.
+- `c2p-delivery-system/deploy/update.sh` and `ops/deployment/deploy.sh` pull a
+  branch into the production checkout; this tenant has its own clone.
+- The requested `dbfilter ^mumtaz_%d$` is **not** what the live service runs
+  (`^Mumtaz`), so it is applied on a dedicated unit instead of the shared one.
 - `--without-demo=all` became a plain `--without-demo` flag in Odoo 19;
-  `stage.sh` probes `odoo --help` and uses whichever the installed build takes.
-- Tests run on a throwaway database created by the same `-i` list (see above),
-  not on the tenant database.
-- The nginx block addresses `127.0.0.1:8069/8072` directly and has no
-  `limit_req`, so it loads independently of the shared upstream/zone names in
-  `nginx-mumtaz-platform.conf`; it adds `X-Robots-Tag: noindex` because the
-  data is fictional.
+  `stage.sh` probes `odoo --help` and uses whichever the build accepts.
+- Tests run on a throwaway database created by the same `-i` list.
+- The vhost adds `X-Robots-Tag: noindex` because the data is fictional.
 
 ## Known gaps (not changed, flagged)
 
-- **There is no DEMO banner in the addons.** "DEMO" shows as the company
-  name *Pharma Demo Co*, a `DEMO` column on every list, and `(fictional)` in
-  record names. A visible banner (e.g. a systray/ribbon when
-  `pharma.mode = demo`) would be a new feature; not added without approval.
-- The install list has no `l10n_pk`, so the chart of accounts is Odoo's
-  generic one; `pharma_pk_tax_core` does not depend on it.
+- **There is no DEMO banner in the addons.** "DEMO" shows as the company name
+  *Pharma Demo Co*, a `DEMO` column on every list, and `(fictional)` in record
+  names. A visible banner when `pharma.mode = demo` would be a new feature;
+  not added without approval.
+- No `l10n_pk` in the install list, so the chart of accounts is Odoo's generic
+  one; `pharma_pk_tax_core` does not depend on it.
 - `pharma_demo_data` grants `admin` every Pharma role for convenience; its
-  manifest says never to install it on production, and `pharma.mode`
-  defaults to `production` in `pharma_pk_tax_core`, which refuses DEMO rules.
+  manifest says never to install it on production, and `pharma.mode` defaults
+  to `production` in `pharma_pk_tax_core`, which refuses DEMO rules.

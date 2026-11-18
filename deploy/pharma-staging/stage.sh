@@ -1,34 +1,46 @@
 #!/usr/bin/env bash
 # deploy/pharma-staging/stage.sh — stage the generic "pharma" Odoo 19 Community
-# tenant on the VPS. STAGING ONLY. Touches exactly two databases, both named
-# here: mumtaz_pharma (the tenant) and mumtaz_pharma_test (throwaway, dropped).
+# tenant on the VPS. STAGING ONLY.
 #
-# It never edits nginx, DNS, the live odoo.conf or restarts the live service.
-# Those are gates: see README.md / docs/pharma/DEPLOY_LOG.md.
+# Shape (same as the other tenants on this box: one odooN.service + /etc/odooN.conf
+# + one nginx vhost each): its own unit `odoo-pharma.service`, its own config
+# /etc/odoo-pharma.conf with dbfilter ^mumtaz_%d$, ports 127.0.0.1:8076 (http) and
+# 8077 (websocket), the same local Postgres. The live /etc/odoo/odoo.conf and the
+# live odoo*.service units are never read for anything but db credentials, and
+# never written or restarted.
 #
-#   bash deploy/pharma-staging/stage.sh backup       # pre-change backup
-#   bash deploy/pharma-staging/stage.sh install      # create mumtaz_pharma + install modules
-#   bash deploy/pharma-staging/stage.sh test         # fresh install into mumtaz_pharma_test with --test-tags pharma, then drop it
-#   bash deploy/pharma-staging/stage.sh serve-check  # can the LIVE service see the pharma addons? (prints, changes nothing)
-#   bash deploy/pharma-staging/stage.sh smoke        # /web/login, admin login, Pharma menus, pharma.mode, DEMO refusal
-#   bash deploy/pharma-staging/stage.sh all          # backup + install + test
+# Databases touched, both named here and nowhere else: mumtaz_pharma (the tenant)
+# and mumtaz_pharma_test (throwaway, dropped at the end of `test`).
+#
+#   stage.sh backup        pre-change backup (pg globals, DB list, /etc/nginx + odoo confs)
+#   stage.sh install       create mumtaz_pharma, install the module list, set admin password
+#   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
+#   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
+#   stage.sh smoke-local   via 127.0.0.1:8076 with Host: pharma.mumtaz.digital (before DNS/nginx)
+#   stage.sh smoke         via https://pharma.mumtaz.digital (after DNS + nginx + cert)
+#   stage.sh service-remove  rollback of `service` (stop, disable, delete the two files)
 #
 # Env overrides: ODOO_CONF (/etc/odoo/odoo.conf), ODOO_BIN (odoo), ODOO_USER (odoo),
-#                STAGE_DIR (/opt/mumtaz/pharma-staging), KEEP_TEST_DB=1
+#                STAGE_DIR (/var/local/pharma-staging), KEEP_TEST_DB=1
 set -euo pipefail
 
 DB=mumtaz_pharma
 TEST_DB=mumtaz_pharma_test
 BRANCH=pharma-erp-v0.1
 DOMAIN=pharma.mumtaz.digital
+HTTP_PORT=8076
+WS_PORT=8077
+UNIT=odoo-pharma
+SVC_CONF=/etc/odoo-pharma.conf
+SVC_LOG=/var/log/odoo/odoo-pharma.log
 MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data
 
 CHECKOUT="$(cd "$(dirname "$0")/../.." && pwd)"
 LIVE_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
 ODOO_BIN="${ODOO_BIN:-odoo}"
 ODOO_USER="${ODOO_USER:-odoo}"
-STAGE_DIR="${STAGE_DIR:-/opt/mumtaz/pharma-staging}"
-STAGE_CONF="$STAGE_DIR/odoo-stage.conf"
+STAGE_DIR="${STAGE_DIR:-/var/local/pharma-staging}"
+STAGE_CONF="$STAGE_DIR/odoo-cli.conf"
 BACKUP_DIR="$STAGE_DIR/backups"
 LOG_DIR="$STAGE_DIR/logs"
 TS="$(date +%Y%m%d_%H%M%S)"
@@ -40,39 +52,55 @@ db_exists() { psqlq "select 1 from pg_database where datname='$1'" | grep -q 1; 
 as_odoo() { sudo -u "$ODOO_USER" "$@"; }
 
 guards() {
-  [ "$(id -u)" -eq 0 ] || die "run as root (sudo)"
+  [ "$(id -u)" -eq 0 ] || die "run as root"
   local br; br="$(git -C "$CHECKOUT" rev-parse --abbrev-ref HEAD)"
   [ "$br" = "$BRANCH" ] || die "checkout $CHECKOUT is on '$br', expected '$BRANCH'"
-  [ "$CHECKOUT" != "/opt/mumtaz" ] || die "refusing to run from /opt/mumtaz (tracks main). Clone the branch elsewhere."
+  case "$CHECKOUT" in /opt/mumtaz|/opt/custom_addons/*) die "refusing to run from a production checkout ($CHECKOUT)";; esac
   [ -r "$LIVE_CONF" ] || die "cannot read $LIVE_CONF (set ODOO_CONF=...)"
   for m in pharma_core pharma_pk_tax_core pharma_reconciliation_hub pharma_demo_data; do
     [ -f "$CHECKOUT/addons/$m/__manifest__.py" ] || die "missing addon $m in $CHECKOUT/addons"
   done
-  command -v "$ODOO_BIN" >/dev/null || die "odoo binary '$ODOO_BIN' not found (set ODOO_BIN=...)"
-  id "$ODOO_USER" >/dev/null 2>&1 || die "user '$ODOO_USER' not found (set ODOO_USER=...)"
-  mkdir -p "$STAGE_DIR" "$BACKUP_DIR" "$LOG_DIR"
+  command -v "$ODOO_BIN" >/dev/null || die "odoo binary '$ODOO_BIN' not found"
+  id "$ODOO_USER" >/dev/null 2>&1 || die "user '$ODOO_USER' not found"
+  mkdir -p "$STAGE_DIR" "$BACKUP_DIR" "$LOG_DIR"; chmod 750 "$STAGE_DIR"
   chown "$ODOO_USER" "$LOG_DIR"
 }
 
-# A private config for the one-off CLI runs: the live conf + this checkout's
-# addons, no dbfilter, its own logfile. The live conf is never modified.
+# Render an Odoo config from the live one: keep db_* credentials, replace
+# everything tenant-specific. $1 = output path, $2 = "cli" or "service".
 render_conf() {
-  python3 - "$LIVE_CONF" "$STAGE_CONF" "$CHECKOUT/addons" "$LOG_DIR/odoo-stage.log" <<'PY'
+  local out="$1" mode="$2"
+  python3 - "$LIVE_CONF" "$out" "$mode" "$CHECKOUT/addons" "$LOG_DIR/odoo-cli.log" "$SVC_LOG" "$HTTP_PORT" "$WS_PORT" <<'PY'
 import configparser, sys
-live, out, addons, log = sys.argv[1:]
+live, out, mode, addons, cli_log, svc_log, http_port, ws_port = sys.argv[1:]
 cp = configparser.RawConfigParser(); cp.optionxform = str; cp.read(live)
 o = cp["options"]
-paths = [p.strip() for p in o.get("addons_path", "").split(",") if p.strip()]
-if addons not in paths: paths.append(addons)
-o["addons_path"] = ",".join(paths)
-for k in ("dbfilter", "db_name", "logfile", "logrotate", "syslog", "workers"):
-    o.pop(k, None)
-o["logfile"] = log
+keep = {k: o[k] for k in ("db_host", "db_port", "db_user", "db_password", "db_sslmode", "db_maxconn", "admin_passwd") if k in o}
+for k in list(o): del o[k]
+o.update(keep)
+o["addons_path"] = "/usr/lib/python3/dist-packages/odoo/addons," + addons
 o["list_db"] = "False"
-with open(out, "w") as f: cp.write(f)
+o["proxy_mode"] = "True"
+if mode == "service":
+    o["dbfilter"] = "^mumtaz_%d$"
+    o["http_interface"] = "127.0.0.1"
+    o["http_port"] = http_port
+    o["gevent_port"] = ws_port
+    o["workers"] = "2"
+    o["max_cron_threads"] = "1"
+    o["limit_memory_soft"] = str(640 * 1024 * 1024)
+    o["limit_memory_hard"] = str(1024 * 1024 * 1024)
+    o["limit_time_cpu"] = "120"
+    o["limit_time_real"] = "240"
+    o["logfile"] = svc_log
+    o["log_level"] = "info"
+else:
+    o["logfile"] = cli_log
+with open(out, "w") as f:
+    f.write("; rendered by deploy/pharma-staging/stage.sh (%s) — STAGING tenant pharma. Not hand-edited.\n" % mode)
+    cp.write(f)
 PY
-  chmod 640 "$STAGE_CONF"; chown root:"$ODOO_USER" "$STAGE_CONF"
-  echo "rendered $STAGE_CONF (live conf untouched)"
+  chmod 640 "$out"; chown root:"$ODOO_USER" "$out"
 }
 
 # Odoo 19 made --without-demo a plain flag; older builds want --without-demo=all.
@@ -81,25 +109,22 @@ without_demo_flag() {
 }
 
 cmd_backup() {
-  say "backup -> $BACKUP_DIR (globals, DB list, nginx + odoo conf; $DB dump if it exists)"
+  say "backup -> $BACKUP_DIR"
   sudo -u postgres pg_dumpall --globals-only | gzip > "$BACKUP_DIR/pg_globals_$TS.sql.gz"
   psqlq "select datname from pg_database where not datistemplate order by 1" > "$BACKUP_DIR/databases_$TS.txt"
-  tar czf "$BACKUP_DIR/conf_$TS.tgz" /etc/nginx "$LIVE_CONF" 2>/dev/null || tar czf "$BACKUP_DIR/conf_$TS.tgz" /etc/nginx
-  if db_exists "$DB"; then
-    sudo -u postgres pg_dump -Fc "$DB" > "$BACKUP_DIR/${DB}_$TS.dump"; echo "dumped existing $DB"
-  fi
+  tar czf "$BACKUP_DIR/conf_$TS.tgz" /etc/nginx /etc/odoo /etc/odoo*.conf /etc/systemd/system/odoo*.service 2>/dev/null || true
+  if db_exists "$DB"; then sudo -u postgres pg_dump -Fc "$DB" > "$BACKUP_DIR/${DB}_$TS.dump"; echo "dumped existing $DB"; fi
   chmod 600 "$BACKUP_DIR"/*; ls -la "$BACKUP_DIR"
 }
 
 set_admin_password() {
-  say "set the admin password for $DB (never echoed, never stored)"
+  say "set the admin password for $DB (typed twice, never echoed, never stored)"
   local pw pw2 f
   read -r -s -p "new admin password: " pw; echo
   read -r -s -p "again: " pw2; echo
   [ -n "$pw" ] && [ "$pw" = "$pw2" ] || die "passwords empty or do not match"
   f="$(mktemp "$STAGE_DIR/.pw.XXXXXX")"; chmod 600 "$f"; chown "$ODOO_USER" "$f"; printf '%s' "$pw" > "$f"
   as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" --no-http <<PY
-import os
 pw = open("$f").read()
 env.ref("base.user_admin").write({"password": pw})
 env.cr.commit()
@@ -109,64 +134,90 @@ PY
 }
 
 cmd_install() {
-  guards; render_conf
-  db_exists "$DB" && die "$DB already exists. This script never drops it; drop it yourself after a backup if a clean reinstall is wanted."
+  guards; render_conf "$STAGE_CONF" cli
+  db_exists "$DB" && die "$DB already exists. This script never drops it."
   local flag; flag="$(without_demo_flag)"
   say "create $DB and install: $MODULES  ($flag)"
   as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$DB" -i "$MODULES" "$flag" --stop-after-init --no-http \
-    2>&1 | tee "$LOG_DIR/install_$TS.log" | grep -E "ERROR|CRITICAL|Traceback|Modules loaded|loading .* modules" || true
-  grep -qE "ERROR|CRITICAL" "$LOG_DIR/install_$TS.log" && die "install log has errors: $LOG_DIR/install_$TS.log"
+    > "$LOG_DIR/install_$TS.log" 2>&1 || true
+  grep -E "ERROR|CRITICAL|Traceback|Modules loaded|loading [0-9]+ modules" "$LOG_DIR/install_$TS.log" | tail -20 || true
+  grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/install_$TS.log" && die "install log has errors: $LOG_DIR/install_$TS.log"
+  grep -q "Modules loaded" "$LOG_DIR/install_$TS.log" || die "install did not reach 'Modules loaded': $LOG_DIR/install_$TS.log"
   set_admin_password
-  say "pharma.mode after install:"
-  sudo -u postgres psql -d "$DB" -tAc "select '  pharma.mode = '||value from ir_config_parameter where key='pharma.mode'"
+  sudo -u postgres psql -d "$DB" -tAc "select 'pharma.mode = '||value from ir_config_parameter where key='pharma.mode'"
+  sudo -u postgres psql -d "$DB" -tAc "select 'installed pharma modules: '||string_agg(name, ', ') from ir_module_module where name like 'pharma%' and state='installed'"
 }
 
 cmd_test() {
-  guards; render_conf
+  guards; render_conf "$STAGE_CONF" cli
   db_exists "$TEST_DB" && die "$TEST_DB exists from a previous run; drop it first: sudo -u postgres dropdb $TEST_DB"
   local flag; flag="$(without_demo_flag)"
-  say "fresh install into throwaway $TEST_DB with --test-enable --test-tags pharma (same deployment path, same module list)"
+  say "fresh install into throwaway $TEST_DB with --test-enable --test-tags pharma (same module list as the real install)"
   set +e
   as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$TEST_DB" -i "$MODULES" "$flag" \
-    --test-enable --test-tags pharma --stop-after-init --no-http --log-level=test > "$LOG_DIR/test_$TS.log" 2>&1
+    --test-enable --test-tags pharma --stop-after-init --no-http > "$LOG_DIR/test_$TS.log" 2>&1
   local rc=$?
   set -e
-  say "result (rc=$rc)"
-  grep -E "tests when loading database|odoo.tests.result|post-tests in" "$LOG_DIR/test_$TS.log" || true
-  grep -E "^.* (ERROR|FAIL):" "$LOG_DIR/test_$TS.log" | head -40 || true
+  say "result (exit $rc)"
+  grep -E "tests when loading database|post-tests in|odoo.tests.stats|odoo.tests.result" "$LOG_DIR/test_$TS.log" || true
+  grep -E " (ERROR|FAIL|CRITICAL) " "$LOG_DIR/test_$TS.log" | head -40 || true
   echo "full log: $LOG_DIR/test_$TS.log"
   if [ "${KEEP_TEST_DB:-0}" = "1" ]; then echo "kept $TEST_DB (KEEP_TEST_DB=1)"; else
     sudo -u postgres dropdb "$TEST_DB" && echo "dropped $TEST_DB"; fi
   return $rc
 }
 
-cmd_serve_check() {
+cmd_service() {
   guards
-  say "would the LIVE service ($LIVE_CONF) serve $DB at https://$DOMAIN ?"
-  local f; f=$(grep -E '^\s*dbfilter\s*=' "$LIVE_CONF" | tail -1 | sed 's/.*=\s*//')
-  [ "$f" = '^mumtaz_%d$' ] && echo "dbfilter OK (^mumtaz_%d\$): host 'pharma' -> $DB" || echo "GATE: dbfilter is '${f:-unset}', not ^mumtaz_%d\$ — needs a config change + restart (ask first)"
-  grep -E '^\s*addons_path' "$LIVE_CONF" | sed 's/.*=\s*//' | tr ',' '\n' | while read -r p; do
-    p="${p## }"; [ -d "$p/pharma_core" ] && echo "live addons_path has pharma_core via $p"
-  done
-  echo "If none of the live addons_path entries contains pharma_*, pick ONE (both are gates, ask first):"
-  echo "  A) symlink the four addons/pharma_* dirs from $CHECKOUT/addons into an existing live addons dir (no restart, rm to roll back)"
-  echo "  B) add $CHECKOUT/addons to addons_path in $LIVE_CONF and restart odoo (needs a restart window)"
+  say "GATE: new unit $UNIT.service + $SVC_CONF (dbfilter ^mumtaz_%d\$, 127.0.0.1:$HTTP_PORT/$WS_PORT). Touches no other unit or conf."
+  ss -ltn | grep -qE ":($HTTP_PORT|$WS_PORT)\b" && die "port $HTTP_PORT or $WS_PORT is in use"
+  render_conf "$SVC_CONF" service
+  cat > /etc/systemd/system/$UNIT.service <<UNITEOF
+[Unit]
+Description=Odoo 19 — pharma STAGING tenant (mumtaz_pharma, $DOMAIN)
+Documentation=$CHECKOUT/docs/pharma/DEPLOY_LOG.md
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=$ODOO_USER
+Group=$ODOO_USER
+ExecStart=$(command -v "$ODOO_BIN") --config $SVC_CONF
+KillMode=mixed
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+UNITEOF
+  systemctl daemon-reload
+  systemctl enable --now $UNIT.service
+  sleep 6
+  systemctl --no-pager --lines=5 status $UNIT.service || true
+  printf 'health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 20 "http://127.0.0.1:$HTTP_PORT/web/health" || echo "(not up yet; tail -f $SVC_LOG)"
 }
 
-cmd_smoke() {
-  guards; render_conf
-  say "HTTP: https://$DOMAIN/web/login"
-  curl -sS -o /dev/null -w "  status=%{http_code}\n" --max-time 20 "https://$DOMAIN/web/login" || echo "  (curl failed)"
+cmd_service_remove() {
+  say "rollback: stop + disable $UNIT, remove unit and conf (database untouched)"
+  systemctl disable --now $UNIT.service 2>/dev/null || true
+  rm -f /etc/systemd/system/$UNIT.service "$SVC_CONF"
+  systemctl daemon-reload; echo "done"
+}
+
+smoke_common() {   # $1 = base URL, $2 = Host header
+  local base="$1" host="$2"
+  say "HTTP: $base/web/login  (Host: $host)"
+  curl -sS -o /dev/null -w "  status=%{http_code}\n" --max-time 20 -H "Host: $host" "$base/web/login" || echo "  (curl failed)"
   say "XML-RPC as admin (password prompt, never echoed)"
   local pw; read -r -s -p "admin password: " pw; echo
-  PHARMA_PW="$pw" python3 - "$DOMAIN" "$DB" <<'PY'
+  PHARMA_PW="$pw" python3 - "$base" "$host" "$DB" <<'PY'
 import os, sys, xmlrpc.client as x
-host, db = sys.argv[1:]; pw = os.environ["PHARMA_PW"]
-url = f"https://{host}"
-uid = x.ServerProxy(url + "/xmlrpc/2/common").authenticate(db, "admin", pw, {})
-print("  admin login:", "OK uid=%s" % uid if uid else "FAILED"); 
+base, host, db = sys.argv[1:]; pw = os.environ["PHARMA_PW"]
+hdr = [("Host", host)]
+uid = x.ServerProxy(base + "/xmlrpc/2/common", headers=hdr).authenticate(db, "admin", pw, {})
+print("  admin login:", f"OK uid={uid}" if uid else "FAILED")
 if not uid: sys.exit(1)
-m = x.ServerProxy(url + "/xmlrpc/2/object")
+m = x.ServerProxy(base + "/xmlrpc/2/object", headers=hdr)
 def kw(model, meth, *a, **k): return m.execute_kw(db, uid, pw, model, meth, list(a), k)
 print("  company:", kw("res.company", "search_read", [], fields=["name"])[0]["name"])
 print("  pharma.mode:", kw("ir.config_parameter", "get_param", "pharma.mode"))
@@ -176,10 +227,11 @@ for r in menus: print("    -", r["complete_name"])
 want = {"Pharma/Tax Centre", "Pharma/Reconciliation", "Pharma/Reconciliation/Exception Queue"}
 have = {r["complete_name"] for r in menus}
 print("  required menus present:", "YES" if want <= have else f"MISSING {sorted(want - have)}")
-for model in ("pharma.tax.rule", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.tax.event"):
+for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.raw.event"):
     print(f"  {model}: total={kw(model,'search_count',[])} demo={kw(model,'search_count',[['is_demo','=',True]])}")
 PY
   say "production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
+  render_conf "$STAGE_CONF" cli
   as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" --no-http <<'PY'
 from datetime import date
 P = env["ir.config_parameter"].sudo()
@@ -190,16 +242,17 @@ res = env["pharma.tax.rule"].resolve(p, date(2026, 11, 3), 1000.0, "SALES_TAX_OU
 print("  in production mode:", res["resolution"], "|", res["reason"])
 assert res["resolution"] != "resolved" and "DEMO-only" in res["reason"], "DEMO rule was NOT refused"
 env.cr.rollback()
-print("  rolled back; pharma.mode is still:", env["ir.config_parameter"].sudo().get_param("pharma.mode"), "(was %s)" % before)
+print("  rolled back; pharma.mode is still:", env["ir.config_parameter"].sudo().get_param("pharma.mode"), f"(was {before})")
 PY
 }
 
 case "${1:-}" in
-  backup)      guards; cmd_backup ;;
-  install)     cmd_install ;;
-  test)        cmd_test ;;
-  serve-check) cmd_serve_check ;;
-  smoke)       cmd_smoke ;;
-  all)         guards; cmd_backup; cmd_install; cmd_test ;;
-  *) sed -n '2,20p' "$0"; exit 2 ;;
+  backup)         guards; cmd_backup ;;
+  install)        cmd_install ;;
+  test)           cmd_test ;;
+  service)        cmd_service ;;
+  service-remove) cmd_service_remove ;;
+  smoke-local)    guards; smoke_common "http://127.0.0.1:$HTTP_PORT" "$DOMAIN" ;;
+  smoke)          guards; smoke_common "https://$DOMAIN" "$DOMAIN" ;;
+  *) sed -n '2,24p' "$0"; exit 2 ;;
 esac
