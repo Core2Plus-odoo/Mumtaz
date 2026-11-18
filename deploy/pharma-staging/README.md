@@ -30,3 +30,17 @@ bash deploy/pharma-staging/stage.sh smoke
 ```
 
 Full record, commands and rollback: `docs/pharma/DEPLOY_LOG.md`.
+
+## Accounting kit (third party, gated)
+
+Odoo 19 Community has no financial reports, assets, budgets or bank-statement import. `docs/pharma/ACCOUNTING_KIT.md` records the
+review of the Cybrosys kit, two findings (an unguarded Excel export route; a support form that can send data to the vendor) and the
+`pharma_accounting_hardening` module that closes them. Steps, each separate, none touching nginx or DNS:
+
+```bash
+bash deploy/pharma-staging/stage.sh thirdparty        # fetch the pinned commit into /opt/thirdparty (source only)
+bash deploy/pharma-staging/stage.sh deps              # gate: pip --target into /opt/thirdparty/pydeps
+bash deploy/pharma-staging/stage.sh test-kit          # vendor tests, throwaway DB without our modules
+bash deploy/pharma-staging/stage.sh test-combined     # our tests + kit + hardening, throwaway DB
+bash deploy/pharma-staging/stage.sh install-accounting  # gate: dump, install, neutralize, restart odoo-pharma only
+```

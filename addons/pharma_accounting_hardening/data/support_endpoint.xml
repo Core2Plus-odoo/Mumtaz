@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Not noupdate on purpose: the destination is re-pointed on every upgrade so it cannot drift back to the vendor.
+         Port 9 on loopback is the discard service; a submission fails with "Could not reach the support service".
+         (An empty value would NOT disable it: the vendor code falls back to its built-in URL.) -->
+    <function model="ir.config_parameter" name="set_param"
+              eval="('cybrosys_support_client.endpoint_url', 'http://127.0.0.1:9/support-disabled-by-pharma-accounting-hardening')"/>
+</odoo>

@@ -21,6 +21,12 @@
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
 #   stage.sh upgrade       GATE: backup mumtaz_pharma, -u pharma_* -i new pharma modules, restart odoo-pharma only, verify
 #   stage.sh demo-passwords  set one password on the four demo users (pharma.ops / .maker / .approver / .finance), typed interactively
+#   stage.sh thirdparty    fetch the pinned Cybrosys accounting kit (source only) into /opt/thirdparty/cybroaddons
+#   stage.sh deps          GATE: pip --target the kit's python packages into /opt/thirdparty/pydeps (isolated)
+#   stage.sh test-kit      vendor tests, fresh throwaway DB without our modules
+#   stage.sh test-combined our tests + kit + hardening in a fresh throwaway DB (tax gate still fires with the kit)
+#   stage.sh install-accounting  GATE: dump, install kit + hardening into mumtaz_pharma, neutralize, restart odoo-pharma only
+#   stage.sh accounting-off      undo the service side after restoring the pre-install dump
 #   stage.sh neutralize    GATE: odoo neutralize -d mumtaz_pharma (banner; mail/crons/payments off), restart odoo-pharma
 #   stage.sh smoke-local   via 127.0.0.1:8076 with Host: pharma.mumtaz.digital (before DNS/nginx)
 #   stage.sh smoke         via https://pharma.mumtaz.digital (after DNS + nginx + cert)
@@ -52,11 +58,27 @@ BACKUP_DIR="$STAGE_DIR/backups"
 LOG_DIR="$STAGE_DIR/logs"
 TS="$(date +%Y%m%d_%H%M%S)"
 
+# --- third-party accounting kit (Cybrosys, LGPL-3), pinned, read-only, outside every Mumtaz checkout ---
+THIRD_DIR="${THIRD_DIR:-/opt/thirdparty}"
+CYBRO_DIR="$THIRD_DIR/cybroaddons"
+CYBRO_URL=https://github.com/CybroOdoo/cybroaddons
+CYBRO_BRANCH=19.0
+CYBRO_SHA=fdeea97df75b7b45a6ed0f9af3c0e9850399f517
+CYBRO_MODULES="base_accounting_kit base_account_budget cybrosys_support_client"
+KIT_MODULES=base_accounting_kit,base_account_budget,cybrosys_support_client
+ACCT_INSTALL=base_accounting_kit,base_account_budget,cybrosys_support_client,pharma_accounting_hardening
+PYDEPS="$THIRD_DIR/pydeps"                       # pip --target folder, read only by odoo-pharma and the CLI runs
+ACCT_FLAG="$STAGE_DIR/accounting.enabled"        # present once the kit is installed in the live staging DB
+KIT_PY_MODULES="openpyxl ofxparse qifparse xlsxwriter"
+
 say()  { printf '\n==> %s\n' "$*"; }
 die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 psqlq(){ sudo -u postgres psql -tAc "$1"; }
 db_exists() { psqlq "select 1 from pg_database where datname='$1'" | grep -q 1; }
-as_odoo() { sudo -u "$ODOO_USER" "$@"; }
+as_odoo() {
+  if [ -d "$PYDEPS" ]; then sudo -u "$ODOO_USER" env PYTHONPATH="$PYDEPS${PYTHONPATH:+:$PYTHONPATH}" "$@"
+  else sudo -u "$ODOO_USER" "$@"; fi
+}
 
 guards() {
   [ "$(id -u)" -eq 0 ] || die "run as root"
@@ -84,10 +106,12 @@ free_cli_port() {
 # Render an Odoo config from the live one: keep db_* credentials, replace
 # everything tenant-specific. $1 = output path, $2 = "cli" or "service".
 render_conf() {
-  local out="$1" mode="$2"
-  python3 - "$LIVE_CONF" "$out" "$mode" "$CHECKOUT/addons" "$(free_cli_port)" "$SVC_LOG" "$HTTP_PORT" "$WS_PORT" <<'PY'
+  local out="$1" mode="$2" third=""
+  # CLI runs see the kit whenever it has been fetched; the live service only after install-accounting succeeded.
+  if [ -d "$CYBRO_DIR" ] && { [ "$mode" = cli ] || [ -f "$ACCT_FLAG" ]; }; then third="$CYBRO_DIR"; fi
+  python3 - "$LIVE_CONF" "$out" "$mode" "$CHECKOUT/addons" "$(free_cli_port)" "$SVC_LOG" "$HTTP_PORT" "$WS_PORT" "$third" <<'PY'
 import configparser, sys
-live, out, mode, addons, cli_port, svc_log, http_port, ws_port = sys.argv[1:]
+live, out, mode, addons, cli_port, svc_log, http_port, ws_port, third = sys.argv[1:]
 cp = configparser.RawConfigParser(); cp.optionxform = str; cp.read(live)
 o = cp["options"]
 keep = {k: o[k] for k in ("db_host", "db_port", "db_user", "db_password", "db_sslmode", "db_maxconn", "admin_passwd")
@@ -95,6 +119,8 @@ keep = {k: o[k] for k in ("db_host", "db_port", "db_user", "db_password", "db_ss
 for k in list(o): del o[k]
 o.update(keep)
 o["addons_path"] = "/usr/lib/python3/dist-packages/odoo/addons," + addons
+if third:
+    o["addons_path"] += "," + third
 o["list_db"] = "False"
 o["proxy_mode"] = "True"
 if mode == "service":
@@ -187,6 +213,9 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  demo users = '||string_agg(login, ', ' order by login) from res_users where login like 'pharma.%'"
   sudo -u postgres psql -d "$DB" -tAc "select '  published DEMO products = '||count(*) from product_template where is_published and default_code like 'DEMO-SKU-%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
+  sudo -u postgres psql -d "$DB" -tAc "select '  '||name||' = '||state||' ('||coalesce(latest_version,'-')||')' from ir_module_module where name in ('base_accounting_kit','base_account_budget','cybrosys_support_client','pharma_accounting_hardening') order by name"
+  sudo -u postgres psql -d "$DB" -tAc "select '  vendor support endpoint = '||value from ir_config_parameter where key='cybrosys_support_client.endpoint_url'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  vendor support form open to group: '||coalesce(g.name::text,'(none, every user)') from ir_model_access a join ir_model m on m.id=a.model_id left join res_groups g on g.id=a.group_id where m.model='client.support'"
 }
 
 cmd_install() {
@@ -238,11 +267,9 @@ cmd_test() {
   return $rc
 }
 
-cmd_service() {
-  guards
-  say "GATE: new unit $UNIT.service + $SVC_CONF (dbfilter ^mumtaz_%d\$, 127.0.0.1:$HTTP_PORT/$WS_PORT). Touches no other unit or conf."
-  ss -ltn | grep -qE ":($HTTP_PORT|$WS_PORT)\b" && die "port $HTTP_PORT or $WS_PORT is in use"
-  render_conf "$SVC_CONF" service
+write_unit() {
+  local envline=""
+  if [ -d "$PYDEPS" ] && [ -f "$ACCT_FLAG" ]; then envline="Environment=PYTHONPATH=$PYDEPS"; fi
   cat > /etc/systemd/system/$UNIT.service <<UNITEOF
 [Unit]
 Description=Odoo 19 — pharma STAGING tenant (mumtaz_pharma, $DOMAIN)
@@ -253,6 +280,7 @@ After=network.target postgresql.service
 Type=simple
 User=$ODOO_USER
 Group=$ODOO_USER
+$envline
 ExecStart=$(command -v "$ODOO_BIN") --config $SVC_CONF
 KillMode=mixed
 Restart=on-failure
@@ -261,6 +289,14 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 UNITEOF
+}
+
+cmd_service() {
+  guards
+  say "GATE: new unit $UNIT.service + $SVC_CONF (dbfilter ^mumtaz_%d\$, 127.0.0.1:$HTTP_PORT/$WS_PORT). Touches no other unit or conf."
+  ss -ltn | grep -qE ":($HTTP_PORT|$WS_PORT)\b" && die "port $HTTP_PORT or $WS_PORT is in use"
+  render_conf "$SVC_CONF" service
+  write_unit
   systemctl daemon-reload
   systemctl enable --now $UNIT.service
   sleep 6
@@ -424,6 +460,150 @@ assert after == before == "demo", "pharma.mode did not come back to demo after r
 PY
 }
 
+# ---------------------------------------------------------------------------------------------------------
+# Third-party accounting kit. Nothing below runs unless asked for by name; none of it touches nginx or DNS.
+# ---------------------------------------------------------------------------------------------------------
+kit_imports_ok() {
+  local m miss=""
+  for m in $KIT_PY_MODULES; do as_odoo python3 -c "import $m" 2>/dev/null || miss="$miss $m"; done
+  echo "$miss"
+}
+
+cmd_thirdparty() {
+  guards
+  say "fetch the Cybrosys accounting kit at the pinned commit into $CYBRO_DIR (new folder, source only, nothing installed)"
+  command -v git >/dev/null || die "git not found"
+  if [ -d "$CYBRO_DIR/.git" ]; then
+    local have; have="$(git -C "$CYBRO_DIR" rev-parse HEAD 2>/dev/null || true)"
+    [ "$have" = "$CYBRO_SHA" ] || die "$CYBRO_DIR is at '${have:-unknown}', expected $CYBRO_SHA. Inspect it; this script will not overwrite it."
+    echo "  already at the pinned commit"
+  else
+    if [ -e "$CYBRO_DIR" ] && [ -n "$(ls -A "$CYBRO_DIR" 2>/dev/null)" ]; then die "$CYBRO_DIR exists and is not a git checkout"; fi
+    mkdir -p "$THIRD_DIR"
+    GIT_LFS_SKIP_SMUDGE=1 git clone -q --depth 1 --branch "$CYBRO_BRANCH" --single-branch --filter=blob:none --no-checkout "$CYBRO_URL" "$CYBRO_DIR"
+    if [ "$(git -C "$CYBRO_DIR" rev-parse HEAD)" != "$CYBRO_SHA" ]; then
+      GIT_LFS_SKIP_SMUDGE=1 git -C "$CYBRO_DIR" fetch -q --depth 1 origin "$CYBRO_SHA"
+    fi
+    git -C "$CYBRO_DIR" sparse-checkout init --cone
+    # shellcheck disable=SC2086
+    git -C "$CYBRO_DIR" sparse-checkout set $CYBRO_MODULES
+    GIT_LFS_SKIP_SMUDGE=1 git -C "$CYBRO_DIR" checkout -q "$CYBRO_SHA"
+  fi
+  [ "$(git -C "$CYBRO_DIR" rev-parse HEAD)" = "$CYBRO_SHA" ] || die "checkout is not at the pinned commit"
+  chmod -R a+rX "$CYBRO_DIR"
+  local m f ver lic
+  for m in $CYBRO_MODULES; do
+    f="$CYBRO_DIR/$m/__manifest__.py"
+    [ -f "$f" ] || die "missing module $m"
+    ver="$(grep -m1 -E "^[[:space:]]*[\"']version[\"']" "$f" | tr -d " ,'\"")"
+    lic="$(grep -m1 -ioE "LGPL-3|OPL-1|AGPL-3|GPL-3" "$f")"
+    echo "  $m  ${ver:-version?}  ${lic:-licence?}"
+  done
+  echo "  pinned commit: $CYBRO_SHA ($(git -C "$CYBRO_DIR" log -1 --format=%cs))"
+  echo "  next: stage.sh deps"
+}
+
+cmd_deps() {
+  guards
+  say "python packages the kit imports: $KIT_PY_MODULES"
+  local miss; miss="$(kit_imports_ok)"
+  for m in $KIT_PY_MODULES; do case " $miss " in *" $m "*) echo "  $m: MISSING";; *) echo "  $m: ok";; esac; done
+  [ -z "${miss// /}" ] && { echo "  nothing to install"; return 0; }
+  python3 -m pip --version >/dev/null 2>&1 || die "python3-pip is not installed. Installing it is a system change, so it is not done here. Run: apt-get install -y python3-pip   then run this step again."
+  say "GATE: pip install into $PYDEPS only (--target). No system package is touched; only $UNIT and the CLI runs read this folder."
+  local pipnames="" m
+  for m in $miss; do case "$m" in xlsxwriter) pipnames="$pipnames XlsxWriter";; *) pipnames="$pipnames $m";; esac; done
+  mkdir -p "$PYDEPS"
+  # shellcheck disable=SC2086
+  python3 -m pip install --quiet --no-input --target "$PYDEPS" $pipnames \
+    || python3 -m pip install --quiet --no-input --break-system-packages --target "$PYDEPS" $pipnames
+  chmod -R a+rX "$PYDEPS"
+  miss="$(kit_imports_ok)"
+  [ -z "${miss// /}" ] || die "still missing:$miss"
+  echo "  all importable by $ODOO_USER with PYTHONPATH=$PYDEPS"
+}
+
+# $1 label, $2 modules for -i, $3 test tags
+run_throwaway_tests() {
+  local label="$1" mods="$2" tags="$3" flags
+  guards; preflight
+  [ -d "$CYBRO_DIR" ] || die "run: stage.sh thirdparty"
+  local miss; miss="$(kit_imports_ok)"; [ -z "${miss// /}" ] || die "python packages missing:$miss. Run: stage.sh deps"
+  if db_exists "$TEST_DB"; then say "$TEST_DB left over from a previous run, dropping it first"; drop_test_db; fi
+  flags="$(without_demo_flag) $(no_http_flag)"
+  say "$label: fresh throwaway $TEST_DB, -i $mods, --test-tags $tags"
+  set +e
+  # shellcheck disable=SC2086
+  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$TEST_DB" -i "$mods" $flags \
+    --test-enable --test-tags "$tags" --stop-after-init > "$LOG_DIR/test_${label}_$TS.log" 2>&1
+  local rc=$?
+  set -e
+  say "result of $label (exit $rc)"
+  grep -E "tests when loading database|post-tests in|odoo.tests.result|Modules loaded" "$LOG_DIR/test_${label}_$TS.log" | tail -6 || true
+  grep -E " (ERROR|FAIL|CRITICAL) |Traceback" "$LOG_DIR/test_${label}_$TS.log" | grep -v "bad query" | head -40 || true
+  tail -n 3 "$LOG_DIR/test_${label}_$TS.log"
+  echo "full log: $LOG_DIR/test_${label}_$TS.log"
+  if ! db_exists "$TEST_DB"; then echo "($TEST_DB was never created)"; else drop_test_db; fi
+  return $rc
+}
+
+cmd_test_kit() {
+  # The vendor's own tests, in a DB WITHOUT our modules: our tax gate blocks posting invoice lines whose product has
+  # no approved classification, which would fail the vendor's tests for a reason that has nothing to do with the kit.
+  run_throwaway_tests kit "$KIT_MODULES" "/base_accounting_kit,/base_account_budget,/cybrosys_support_client"
+}
+
+cmd_test_combined() {
+  # Everything we run on staging plus the kit and the hardening module; runs OUR tests (tag pharma), which include
+  # the checks that the tax gate still fires with the kit installed.
+  run_throwaway_tests combined "$MODULES,$ACCT_INSTALL" "pharma"
+}
+
+cmd_install_accounting() {
+  guards; preflight
+  db_exists "$DB" || die "$DB does not exist"
+  [ -d "$CYBRO_DIR" ] || die "run: stage.sh thirdparty"
+  local miss; miss="$(kit_imports_ok)"; [ -z "${miss// /}" ] || die "python packages missing:$miss. Run: stage.sh deps"
+  say "GATE: install the accounting kit and the hardening module into $DB (dump first, restart $UNIT only)"
+  local dump="$BACKUP_DIR/${DB}_pre_accounting_$TS.dump"
+  sudo -u postgres pg_dump -Fc "$DB" > "$dump"; chmod 600 "$dump"
+  echo "  dump: $dump ($(du -h "$dump" | cut -f1))"
+  local flags; flags="$(no_http_flag)"
+  say "install: -i $ACCT_INSTALL  (log: $LOG_DIR/accounting_$TS.log)"
+  # shellcheck disable=SC2086
+  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$DB" -i "$ACCT_INSTALL" $flags --stop-after-init > "$LOG_DIR/accounting_$TS.log" 2>&1 || true
+  grep -E " (ERROR|CRITICAL) |Traceback|modules loaded in|Modules loaded" "$LOG_DIR/accounting_$TS.log" | tail -15 || true
+  grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/accounting_$TS.log" && die "install log has errors: $LOG_DIR/accounting_$TS.log. Nothing was switched over; restore with: sudo -u postgres pg_restore -c -d $DB $dump"
+  grep -q "Modules loaded" "$LOG_DIR/accounting_$TS.log" || die "install did not reach 'Modules loaded': $LOG_DIR/accounting_$TS.log"
+  say "keep the database neutralized: the kit adds scheduled actions (follow-ups, recurring entries); neutralize switches them off again"
+  as_odoo "$ODOO_BIN" neutralize -c "$STAGE_CONF" -d "$DB" 2>&1 | tail -3
+  touch "$ACCT_FLAG"
+  render_conf "$SVC_CONF" service
+  write_unit
+  systemctl daemon-reload
+  say "restart $UNIT only (new addons path, python packages folder)"
+  systemctl restart $UNIT.service; sleep 8
+  printf '  health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 30 "http://127.0.0.1:$HTTP_PORT/web/health" || true
+  cmd_verify
+  printf '  anonymous POST /xlsx_report -> '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 20 -X POST -H "Host: $DOMAIN" -d 'model=res.partner&options={}&output_format=xlsx&report_name=x' "http://127.0.0.1:$HTTP_PORT/xlsx_report" || true
+  echo "rollback: systemctl stop $UNIT; sudo -u postgres dropdb $DB; sudo -u postgres createdb -O $ODOO_USER $DB; sudo -u postgres pg_restore -d $DB $dump; bash $0 accounting-off"
+}
+
+cmd_accounting_off() {
+  guards
+  if db_exists "$DB" && [ "$(sudo -u postgres psql -d "$DB" -tAc "select count(*) from ir_module_module where name='base_accounting_kit' and state='installed'" 2>/dev/null || echo 0)" != "0" ]; then
+    die "the kit is still installed in $DB. Restore the pre-install dump first (command printed by install-accounting), then run this."
+  fi
+  say "take the kit out of the live staging service: remove the marker, re-render conf and unit, restart $UNIT only"
+  rm -f "$ACCT_FLAG"
+  render_conf "$SVC_CONF" service
+  write_unit
+  systemctl daemon-reload
+  systemctl restart $UNIT.service; sleep 6
+  printf '  health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 30 "http://127.0.0.1:$HTTP_PORT/web/health" || true
+}
+
+
 case "${1:-}" in
   preflight)      guards; preflight ;;
   backup)         guards; cmd_backup ;;
@@ -436,6 +616,12 @@ case "${1:-}" in
   demo-passwords) cmd_demo_passwords ;;
   neutralize)     cmd_neutralize ;;
   service-remove) cmd_service_remove ;;
+  thirdparty)     cmd_thirdparty ;;
+  deps)           cmd_deps ;;
+  test-kit)       cmd_test_kit ;;
+  test-combined)  cmd_test_combined ;;
+  install-accounting) cmd_install_accounting ;;
+  accounting-off) cmd_accounting_off ;;
   smoke-local)    guards; smoke_common "http://127.0.0.1:$HTTP_PORT" "$DOMAIN" ;;
   smoke)          guards; smoke_common "https://$DOMAIN" "$DOMAIN" ;;
   *) sed -n '2,24p' "$0"; exit 2 ;;

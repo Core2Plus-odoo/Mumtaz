@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The vendor's help form was open to every internal user (group base.group_user, full CRUD).
+         Only administrators may open it. Re-applied on every upgrade of this module. -->
+    <record id="cybrosys_support_client.access_client_support" model="ir.model.access">
+        <field name="group_id" ref="base.group_system"/>
+    </record>
+</odoo>

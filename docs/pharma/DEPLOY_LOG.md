@@ -207,6 +207,27 @@ History note: the first upgrade at 12:35 UTC (dump `..._pre_upgrade_20261118_123
 
 ---
 
+## 2026-11-18 — accounting kit: fetched, reviewed, hardening module and test steps written (NOT installed)
+
+Owner asked for "the accounting module" from the Cybrosys page. Details, findings and decisions: `docs/pharma/ACCOUNTING_KIT.md`.
+
+- Network: `www.cybrosys.com` added to the allowed hosts of the personal `mumtaz` environment (owner approved on the card). Reads of the
+  public vendor repository went through the session's git proxy (read only). Nothing was downloaded to or run on the VPS.
+- Source pinned: CybroOdoo/cybroaddons, branch 19.0, commit `fdeea97df75b7b45a6ed0f9af3c0e9850399f517`: `base_accounting_kit` 19.0.3.3.1,
+  `base_account_budget` 19.0.1.0.2, `cybrosys_support_client` 19.0.1.1.0, all LGPL-3. Not vendored into this repository.
+- Two S2 findings: unguarded superuser Excel export route; support form open to every user that can post data to the vendor.
+  Also: the kit rewrites core accounting group records (S3).
+- New module `pharma_accounting_hardening` 19.0.1.0.0: guards `/xlsx_report`, makes the support form administrator-only, forces the support
+  endpoint to a dead loopback address on every upgrade. 8 tests, tagged `pharma`, including two that prove the tax gate still fires with the kit.
+- `stage.sh`: `thirdparty`, `deps`, `test-kit`, `test-combined`, `install-accounting`, `accounting-off`; `verify` shows the kit modules, the endpoint
+  and the support form's group. Dry-tested here: config renderer with and without the third-party path, version extraction against the real manifests,
+  shellcheck (no errors). Fixed on the way: a heredoc cut that left the old unit body in `cmd_service` (caught by `bash -n`), and a quoting bug in the
+  version extraction that would have missed double-quoted manifests (caught by testing the exact script text).
+- Not run on any Odoo: the hardening tests have never executed. First run is `test-combined`.
+- Expected: `test-kit` all vendor tests pass; `test-combined` **62 tests** (54 + 8), `0 failed, 0 error(s)`.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
