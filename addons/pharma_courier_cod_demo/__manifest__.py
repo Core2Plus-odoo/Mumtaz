@@ -5,9 +5,9 @@
                    "a clean batch, a customer who paid less, a courier that remitted less, a bank variance, "
                    "deductions above the authorized amount, one shipment per ageing bucket, a returned parcel with "
                    "COD collected, a parcel with no matching sale order, an upload with row errors and an upload "
-                   "that was built. Points the courier accounts at fictional accounts and creates one DRAFT settlement "
-                   "journal entry. Ships two sample CSV files for the live upload demonstration. Idempotent.",
-    "version": "19.0.1.1.0",
+                   "that was built. Points the courier accounts at fictional accounts and creates DRAFT settlement and collection "
+                   "journal entries. Ships two sample CSV files for the live upload demonstration. Idempotent.",
+    "version": "19.0.1.2.0",
     "category": "Pharma",
     "author": "C2P Consultants",
     "license": "LGPL-3",

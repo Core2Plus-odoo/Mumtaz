@@ -119,3 +119,14 @@ class TestCourierDemoSeed(TransactionCase):
         for slip in ("DEMO-SL-A-1002", "DEMO-SL-B-1001"):
             rem = Rem.search([("slip_ref", "=", slip)])
             self.assertTrue(rem.run_id and not rem.move_id, slip)
+
+    def test_the_clean_batch_has_collection_entries_that_net_the_clearing_account_to_zero(self):
+        Ship = self.env["pharma.courier.shipment"].sudo()
+        ships = Ship.search([("tracking_number", "in", ("DEMO-A-0001", "DEMO-A-0002", "DEMO-A-0003"))])
+        self.assertEqual(len(ships), 3)
+        self.assertTrue(all(s.collection_move_state == "draft" for s in ships))
+        settlement = self.env["pharma.courier.remittance"].sudo().search([("slip_ref", "=", "DEMO-SL-A-1001")]).move_id
+        lines = (ships.collection_move_id | settlement).line_ids.filtered(lambda l: l.account_id.code == "199910")
+        self.assertEqual(sum(lines.mapped("debit")) - sum(lines.mapped("credit")), 0.0)
+        # parcels from the other slips are left for the live demonstration
+        self.assertFalse(Ship.search([("tracking_number", "=", "DEMO-A-0004")]).collection_move_id)

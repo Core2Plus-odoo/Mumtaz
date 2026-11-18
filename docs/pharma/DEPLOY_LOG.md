@@ -462,6 +462,19 @@ then a named go is needed before `stage.sh upgrade` on `mumtaz_pharma`.
 - Not exercised yet on staging: `tax rules linked to an Odoo sales tax = 0`, so the new tax-link gate is covered by the automated tests but has no live data; the partner-stock derivation has not been run against a real stock location.
   The vendor support button removal is a web-client asset: it needs a hard refresh in the browser and a visual check (owner).
 
+## 2026-11-18 — slice 1c: COD collection entry (written and committed, NOT yet run on Odoo)
+
+`pharma_courier_cod_accounting` 19.0.1.1.0 adds **Create collection entry** on a delivered COD shipment (form button, and list Action for several at once, all or nothing):
+a draft entry that debits the courier COD clearing account with what the courier **collected** and credits the customer's receivable with the customer on the line, so the accountant
+reconciles it to the invoice in Accounting. With the settlement entry (1b) the clearing balance now means what the couriers still hold. Refused, with the reason named: not COD, not delivered
+(returned parcels too), nothing collected, no matching sale order, already has an active entry. Finance Controllers need no Accounting rights; nothing is posted by the module.
+I deliberately did not use Odoo's payment wizard: it cannot be tested from here and it changes between versions; a plain draft entry keeps the same review-and-post control as 1b.
+`pharma_courier_cod_demo` 19.0.1.2.0: draft collection entries for `DEMO-A-0001` to `-0003` (they cancel the clean-batch settlement on the clearing account); migration re-seeds on `-u`.
+12 new tests for the collection entry, 1 for the demo; shared account fixtures moved to `tests/common.py`. `stage.sh verify` prints collection entries by state; docs and presenter script (C15, C16) updated.
+
+Static checks only (py_compile, pyflakes, XML well-formed, `bash -n`). **Never executed against Odoo.** Next (owner-run): `git pull --ff-only`, `stage.sh test-combined` (expect 0 failed; 176 + 13 = 189 tests),
+and only when green and on a named go `stage.sh upgrade` (updates the accounting and demo modules) then `smoke`.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

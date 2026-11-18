@@ -1,7 +1,27 @@
-# Courier COD accounting (`pharma_courier_cod_accounting`, slice 1b)
+# Courier COD accounting (`pharma_courier_cod_accounting`, slices 1b and 1c)
 
-One action on a **reconciled** courier remittance: **Create journal entry**. It makes a **draft** miscellaneous journal entry.
-Nothing is posted for you: the accountant reviews and posts it in Accounting.
+Two actions, both producing **draft** miscellaneous journal entries. Nothing is posted for you: the accountant reviews and posts in Accounting.
+
+1. **Create collection entry** on a delivered COD shipment (slice 1c): the courier collected the customer's cash.
+2. **Create journal entry** on a **reconciled** remittance (slice 1b): the courier remitted it, less deductions.
+
+Together they make the clearing account mean something: collections debit it, settlements credit it, and its balance is **what the couriers still hold**.
+
+## Collection entry (per shipment, from the shipment form or the list Action menu)
+
+For a shipment with 1,000 collected:
+
+| Account | Debit | Credit |
+| --- | ---: | ---: |
+| **COD clearing account** (courier holds the cash) | 1,000 | |
+| Customer receivable, customer set on the line | | 1,000 |
+
+The receivable credit carries the customer, so in Accounting it is matched to the customer invoice with the standard
+reconciliation screen. The amount is what the courier **collected**, not what was declared. It needs a delivered COD
+shipment with collected money and a matching sale order (that is where the customer comes from). Several shipments can be selected
+in the list; it is all or nothing, and the error names each shipment that cannot have one. Returned parcels are refused: a
+return with COD collected is an exception for Finance to settle, not a collection to book. One entry per shipment; a cancelled or
+deleted draft can be recreated.
 
 ## What the entry books
 
@@ -21,10 +41,9 @@ folded into another line, and the Exception Queue already carries the matching f
 
 ## How the clearing account is meant to be used
 
-The customer's COD payment is registered the standard Odoo way against the courier's payment journal, so the courier's
-clearing account is debited when the parcel is paid. The settlement entry then credits the same account with what the courier
-actually remitted. The account's balance is therefore **what the courier still holds**, and it should trend to zero. This module does
-not create the collection side; it closes it.
+The collection entry debits the courier's clearing account when the courier collects; the settlement entry credits the same
+account with what the courier actually remits. The account's balance is therefore **what the couriers still hold**, and it should
+trend to zero. A parcel collected but not yet remitted shows as a balance; an overdue one is also an exception in the queue.
 
 ## Setup (once per courier, `Pharma › Configuration › Couriers › Accounting` tab, needs Accounting access)
 
@@ -38,5 +57,5 @@ slip that agrees with the bank does not need a difference account. A missing acc
   Finance does not need Accounting rights: the draft is created with elevated rights on purpose and records the Finance user as its creator.
   Opening the entry itself needs Accounting access.
 - One entry per remittance. If the draft is deleted, or cancelled, a new one can be created. A posted entry stays.
-- Not in this slice: the collection entry itself, reversing a posted settlement, and Pakistan chart-of-accounts specifics
-  (account choice is configuration, so a local chart works without code changes).
+- Not built: reversing a posted collection or settlement, refunding a returned parcel's COD, and Pakistan chart-of-accounts
+  specifics (account choice is configuration, so a local chart works without code changes).

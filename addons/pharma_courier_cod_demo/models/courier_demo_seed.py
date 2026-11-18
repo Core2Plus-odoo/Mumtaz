@@ -6,6 +6,7 @@ import logging
 from datetime import timedelta
 
 from odoo import SUPERUSER_ID, Command, api, fields, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -218,3 +219,13 @@ class PharmaCourierDemoSeed(models.AbstractModel):
             [("courier_id", "=", a.id), ("slip_ref", "=", "DEMO-SL-A-1001")], limit=1)
         if rem and rem.run_id and not rem.move_id:
             rem.with_user(finance).action_create_entry()
+        # the collection side of the same clean batch: the courier collected these three, so it holds the cash.
+        # Together with the settlement entry above the clearing account nets to zero for this batch.
+        for trk in ("DEMO-A-0001", "DEMO-A-0002", "DEMO-A-0003"):
+            ship = env["pharma.courier.shipment"].search(
+                [("courier_id", "=", a.id), ("tracking_number", "=", trk)], limit=1)
+            if ship and not ship.collection_move_id:
+                try:
+                    ship.with_user(finance).action_create_collection_entry()
+                except UserError as exc:
+                    _logger.warning("pharma_courier_cod_demo: no collection entry for %s (%s)", trk, exc)

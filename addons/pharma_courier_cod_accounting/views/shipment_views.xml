@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_shipment_form_accounting" model="ir.ui.view">
+        <field name="name">pharma.courier.shipment.form.accounting</field>
+        <field name="model">pharma.courier.shipment</field>
+        <field name="inherit_id" ref="pharma_courier_cod.view_pharma_courier_shipment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_check']" position="after">
+                <button name="action_create_collection_entry" type="object" string="Create collection entry"
+                        class="btn-primary"
+                        invisible="state != 'delivered' or payment_mode != 'cod' or cod_collected &lt;= 0 or (collection_move_id and collection_move_state != 'cancel')"
+                        groups="pharma_core.group_pharma_finance"/>
+                <button name="action_open_collection_entry" type="object" string="Open collection entry"
+                        invisible="not collection_move_id" groups="account.group_account_invoice"/>
+            </xpath>
+            <xpath expr="//field[@name='cod_outstanding']" position="after">
+                <field name="collection_move_id" invisible="1"/>
+                <field name="collection_move_ref" invisible="not collection_move_id"/>
+                <field name="collection_move_state" invisible="not collection_move_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- list action: select shipments, Action > Create collection entries -->
+    <record id="action_courier_create_collection_entries" model="ir.actions.server">
+        <field name="name">Create collection entries</field>
+        <field name="model_id" ref="pharma_courier_cod.model_pharma_courier_shipment"/>
+        <field name="binding_model_id" ref="pharma_courier_cod.model_pharma_courier_shipment"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_create_collection_entry()</field>
+    </record>
+</odoo>
