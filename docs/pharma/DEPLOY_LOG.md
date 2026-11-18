@@ -257,6 +257,26 @@ hardening module, tag `pharma`: `62 post-tests in 35.86s, 4432 queries`; **`1 fa
 
 ---
 
+## 2026-11-18 — accounting kit: combined run green, 62/62; live install is the next gate (owner-run, output pasted back)
+
+`stage.sh test-combined` after the test fix (13:03–13:06 UTC): `62 post-tests in 30.84s, 4432 queries`; **`0 failed, 0 error(s) of 62 tests`**.
+Log `/var/local/pharma-staging/logs/test_combined_20261118_130348.log`. Test DB dropped (`--force`, 6 poller sessions ended).
+
+Evidence now in hand for the live install:
+
+| Check | Result |
+| --- | --- |
+| vendor suite (kit, budget, support client) on this Odoo 19 build, database without our modules | 83 of 83 pass |
+| our 54 earlier tests with the kit installed in the same database | pass |
+| `/xlsx_report`: 403 for portal and plain internal users, 403 for a non-exporter model, reaches the kit for an accountant | pass |
+| vendor support form: administrator-only; endpoint is a dead loopback address | pass |
+| tax gate with the kit installed: unclassified product refuses to post, approved product posts | pass |
+
+**Not yet done:** `stage.sh install-accounting` (dump, install the four modules, neutralize again, add the kit folder to `/etc/odoo-pharma.conf`,
+restart `odoo-pharma` only, verify, print rollback). Gated on the owner's go.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

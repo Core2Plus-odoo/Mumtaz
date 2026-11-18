@@ -1,6 +1,6 @@
 # Accounting for Odoo 19 Community: third-party kit, review and hardening
 
-Status: **fetched and reviewed; hardening module and test steps written; NOT installed anywhere.**
+Status: **fetched, reviewed, hardened and tested on throwaway databases (vendor suite 83/83, combined 62/62); NOT yet installed in `mumtaz_pharma`: the live install waits for the owner's go.**
 Owner approved proceeding on 2026-11-18 with: hardening module, throwaway-database tests first, live install gated.
 
 ## Why
@@ -54,8 +54,8 @@ This is asserted by two tests in the hardening module, not assumed.
 | --- | --- | --- |
 | 1 | `stage.sh thirdparty` | pinned commit checked out, three modules with versions and LGPL-3 |
 | 2 | `stage.sh deps` (gate: pip into an isolated folder) | four python packages importable by the odoo user |
-| 3 | `stage.sh test-kit` | the vendor's own tests, in a database without our modules, `0 failed, 0 error(s)` |
-| 4 | `stage.sh test-combined` | our tests with the kit and the hardening module installed: 54 + 8 = 62, `0 failed, 0 error(s)` |
+| 3 | `stage.sh test-kit` | the vendor's own tests, in a database without our modules, `0 failed, 0 error(s)`. **Done: 83 of 83 pass.** |
+| 4 | `stage.sh test-combined` | our tests with the kit and the hardening module installed: 54 + 8 = 62, `0 failed, 0 error(s)`. **Done: 62 of 62 pass** (first run 61 of 62; the failure was a naive text check in one of my tests, fixed). |
 
 ## Live install (gate: needs the owner's go after steps 1 to 4 are green)
 
