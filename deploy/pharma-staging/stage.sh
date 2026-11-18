@@ -14,7 +14,8 @@
 #
 #   stage.sh preflight     detect CLI flags, check the rendered conf is readable by odoo
 #   stage.sh backup        pre-change backup (pg globals, DB list, /etc/nginx + odoo confs)
-#   stage.sh install       create mumtaz_pharma, install the module list, set admin password
+#   stage.sh install       create mumtaz_pharma + install the module list (resumes if done), set admin password, verify
+#   stage.sh verify        read-only facts about mumtaz_pharma (mode, module states, demo counts)
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
 #   stage.sh smoke-local   via 127.0.0.1:8076 with Host: pharma.mumtaz.digital (before DNS/nginx)
@@ -77,7 +78,8 @@ import configparser, sys
 live, out, mode, addons, cli_log, svc_log, http_port, ws_port = sys.argv[1:]
 cp = configparser.RawConfigParser(); cp.optionxform = str; cp.read(live)
 o = cp["options"]
-keep = {k: o[k] for k in ("db_host", "db_port", "db_user", "db_password", "db_sslmode", "db_maxconn", "admin_passwd") if k in o}
+keep = {k: o[k] for k in ("db_host", "db_port", "db_user", "db_password", "db_sslmode", "db_maxconn", "admin_passwd")
+        if k in o and o[k].strip() not in ("", "False", "None")}
 for k in list(o): del o[k]
 o.update(keep)
 o["addons_path"] = "/usr/lib/python3/dist-packages/odoo/addons," + addons
@@ -96,8 +98,7 @@ if mode == "service":
     o["limit_time_real"] = "240"
     o["logfile"] = svc_log
     o["log_level"] = "info"
-else:
-    o["logfile"] = cli_log
+# cli mode: no logfile, so Odoo logs to stderr and the run log is one file
 with open(out, "w") as f:
     f.write("; rendered by deploy/pharma-staging/stage.sh (%s) — STAGING tenant pharma. Not hand-edited.\n" % mode)
     cp.write(f)
@@ -108,11 +109,12 @@ PY
 # Odoo 19 splits the CLI into subcommands, so the server flags are under
 # `odoo server --help`; older builds list them under `odoo --help`.
 odoo_help() { "$ODOO_BIN" server --help 2>/dev/null || "$ODOO_BIN" --help 2>/dev/null || true; }
-# --without-demo=all (<=18) vs plain --without-demo (19) vs only --with-demo (demo off by default).
+odoo_major() { "$ODOO_BIN" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1 | cut -d. -f1; }
+# <=18: --without-demo=all ; 19+: plain --without-demo (a value is rejected with a warning)
 without_demo_flag() {
-  local h; h="$(odoo_help)"
-  if   grep -qE -- '--without-demo=?[A-Z<]' <<<"$h"; then echo "--without-demo=all"
-  elif grep -qE -- '--without-demo'          <<<"$h"; then echo "--without-demo"
+  local maj; maj="$(odoo_major)"
+  if [ -n "$maj" ] && [ "$maj" -ge 19 ]; then echo "--without-demo"
+  elif grep -qE -- '--without-demo' <<<"$(odoo_help)"; then echo "--without-demo=all"
   else echo ""; fi
 }
 no_http_flag() { grep -qE -- '--no-http' <<<"$(odoo_help)" && echo "--no-http" || echo ""; }
@@ -150,25 +152,49 @@ PY
   shred -u "$f" 2>/dev/null || rm -f "$f"
 }
 
+pharma_installed_count() { sudo -u postgres psql -d "$DB" -tAc "select count(*) from ir_module_module where name in ('pharma_core','pharma_pk_tax_core','pharma_reconciliation_hub','pharma_demo_data') and state='installed'" 2>/dev/null || echo 0; }
+
+cmd_verify() {
+  say "verify $DB"
+  sudo -u postgres psql -d "$DB" -tAc "select '  pharma.mode = '||value from ir_config_parameter where key='pharma.mode'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  '||name||' = '||state from ir_module_module where name like 'pharma%' order by name"
+  sudo -u postgres psql -d "$DB" -tAc "select '  modules installed total = '||count(*) from ir_module_module where state='installed'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  company = '||name from res_company order by id limit 1"
+  sudo -u postgres psql -d "$DB" -tAc "select '  demo tax rules = '||count(*) from pharma_tax_rule where is_demo"
+  sudo -u postgres psql -d "$DB" -tAc "select '  demo recon runs = '||count(*) from pharma_recon_run where is_demo"
+  sudo -u postgres psql -d "$DB" -tAc "select '  open exceptions = '||count(*) from pharma_recon_exception where state <> 'closed'"
+}
+
 cmd_install() {
   guards; preflight
-  db_exists "$DB" && die "$DB already exists. This script never drops it."
-  local flags; flags="$(without_demo_flag) $(no_http_flag)"
-  say "create $DB and install: $MODULES  ($flags)"
-  # shellcheck disable=SC2086
-  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$DB" -i "$MODULES" $flags --stop-after-init \
-    > "$LOG_DIR/install_$TS.log" 2>&1 || true
-  grep -E "ERROR|CRITICAL|Traceback|Modules loaded|loading [0-9]+ modules" "$LOG_DIR/install_$TS.log" | tail -20 || true
-  grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/install_$TS.log" && die "install log has errors: $LOG_DIR/install_$TS.log"
-  grep -q "Modules loaded" "$LOG_DIR/install_$TS.log" || die "install did not reach 'Modules loaded': $LOG_DIR/install_$TS.log"
+  if db_exists "$DB"; then
+    [ "$(pharma_installed_count)" = "4" ] || die "$DB exists but the pharma modules are not all installed. This script never drops it; inspect, then drop it yourself after a backup."
+    say "$DB already exists with all four pharma modules installed — skipping install, continuing with password + verify"
+  else
+    local flags; flags="$(without_demo_flag) $(no_http_flag)"
+    say "create $DB and install: $MODULES  ($flags)  — log: $LOG_DIR/install_$TS.log"
+    # shellcheck disable=SC2086
+    as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$DB" -i "$MODULES" $flags --stop-after-init \
+      > "$LOG_DIR/install_$TS.log" 2>&1 || true
+    grep -E " (ERROR|CRITICAL) |Traceback|modules loaded in|Modules loaded" "$LOG_DIR/install_$TS.log" | tail -20 || true
+    grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/install_$TS.log" && die "install log has errors: $LOG_DIR/install_$TS.log"
+    grep -q "Modules loaded" "$LOG_DIR/install_$TS.log" || die "install did not reach 'Modules loaded': $LOG_DIR/install_$TS.log"
+  fi
   set_admin_password
-  sudo -u postgres psql -d "$DB" -tAc "select 'pharma.mode = '||value from ir_config_parameter where key='pharma.mode'"
-  sudo -u postgres psql -d "$DB" -tAc "select 'installed pharma modules: '||string_agg(name, ', ') from ir_module_module where name like 'pharma%' and state='installed'"
+  cmd_verify
+}
+
+drop_test_db() {
+  # Other Odoo instances on this box without db_name/dbfilter poll every database for cron
+  # jobs, so a stray session on the throwaway DB is expected. --force ends only sessions on
+  # THIS database (mumtaz_pharma_test); nothing else is touched.
+  sudo -u postgres psql -tAc "select '  session on $TEST_DB: '||coalesce(application_name,'?')||' pid='||pid||' since '||backend_start from pg_stat_activity where datname='$TEST_DB'" || true
+  sudo -u postgres dropdb --force "$TEST_DB" && echo "dropped $TEST_DB"
 }
 
 cmd_test() {
   guards; preflight
-  db_exists "$TEST_DB" && die "$TEST_DB exists from a previous run; drop it first: sudo -u postgres dropdb $TEST_DB"
+  if db_exists "$TEST_DB"; then say "$TEST_DB left over from a previous run — dropping it first"; drop_test_db; fi
   local flags; flags="$(without_demo_flag) $(no_http_flag)"
   say "fresh install into throwaway $TEST_DB with --test-enable --test-tags pharma (same module list as the real install)"
   set +e
@@ -178,12 +204,13 @@ cmd_test() {
   local rc=$?
   set -e
   say "result (exit $rc)"
-  grep -E "tests when loading database|post-tests in|odoo.tests.stats|odoo.tests.result" "$LOG_DIR/test_$TS.log" || true
-  grep -E " (ERROR|FAIL|CRITICAL) " "$LOG_DIR/test_$TS.log" | head -40 || true
+  grep -E "tests when loading database|post-tests in|odoo.tests.stats|odoo.tests.result|Modules loaded" "$LOG_DIR/test_$TS.log" || true
+  grep -E " (ERROR|FAIL|CRITICAL) |Traceback|Error:" "$LOG_DIR/test_$TS.log" | head -40 || true
+  tail -n 5 "$LOG_DIR/test_$TS.log"
   echo "full log: $LOG_DIR/test_$TS.log"
   if ! db_exists "$TEST_DB"; then echo "($TEST_DB was never created — Odoo stopped before touching Postgres)"
   elif [ "${KEEP_TEST_DB:-0}" = "1" ]; then echo "kept $TEST_DB (KEEP_TEST_DB=1)"
-  else sudo -u postgres dropdb "$TEST_DB" && echo "dropped $TEST_DB"; fi
+  else drop_test_db; fi
   return $rc
 }
 
@@ -270,6 +297,7 @@ case "${1:-}" in
   preflight)      guards; preflight ;;
   backup)         guards; cmd_backup ;;
   install)        cmd_install ;;
+  verify)         guards; cmd_verify ;;
   test)           cmd_test ;;
   service)        cmd_service ;;
   service-remove) cmd_service_remove ;;
