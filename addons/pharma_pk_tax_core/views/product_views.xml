@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_template_form_pharma_tax" model="ir.ui.view">
+        <field name="name">product.template.form.pharma.tax</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Pakistan Tax" name="pharma_tax">
+                    <group>
+                        <group>
+                            <field name="pharma_tax_status"/>
+                            <field name="pharma_tax_class"/>
+                            <field name="pharma_hs_code"/>
+                            <field name="pharma_drap_ref"/>
+                            <field name="pharma_tax_evidence_ref"/>
+                        </group>
+                        <group>
+                            <field name="pharma_tax_proposed_by"/>
+                            <field name="pharma_tax_approved_by"/>
+                            <button name="action_pharma_approve_tax_class" type="object"
+                                    string="Approve classification" class="btn-primary"
+                                    invisible="pharma_tax_status == 'approved'"
+                                    groups="pharma_core.group_pharma_tax_approver"/>
+                        </group>
+                    </group>
+                    <p class="text-muted">Until classified with documented evidence, this product cannot be
+                        confirmed on a sales order or posted on a customer invoice. No rate is assumed.</p>
+                </page>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_product_template_list_pharma_tax" model="ir.ui.view">
+        <field name="name">product.template.list.pharma.tax</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <list string="Tax classification register" create="0" decoration-danger="pharma_tax_status == 'pending_evidence'">
+                <field name="default_code"/><field name="name"/><field name="pharma_hs_code"/>
+                <field name="pharma_drap_ref"/><field name="pharma_tax_class"/>
+                <field name="pharma_tax_evidence_ref"/><field name="pharma_tax_status"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_pharma_sku_tax_register" model="ir.actions.act_window">
+        <field name="name">SKU Tax Classification Register</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('view_product_template_list_pharma_tax')}),(0,0,{'view_mode':'form'})]"/>
+    </record>
+    <record id="action_pharma_tax_blocked" model="ir.actions.act_window">
+        <field name="name">Blocked: Tax Treatment Unresolved</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('pharma_tax_status','=','pending_evidence'),('sale_ok','=',True)]</field>
+        <field name="view_ids" eval="[(5,0,0),(0,0,{'view_mode':'list','view_id':ref('view_product_template_list_pharma_tax')}),(0,0,{'view_mode':'form'})]"/>
+    </record>
+</odoo>

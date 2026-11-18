@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pharma_raw_event_user,pharma.raw.event user,model_pharma_raw_event,group_pharma_user,1,0,0,0
+access_pharma_raw_event_finance,pharma.raw.event finance,model_pharma_raw_event,group_pharma_finance,1,1,1,0

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- production = DEMO rules refused. Set to 'demo' ONLY on demo databases. -->
+        <record id="param_pharma_mode" model="ir.config_parameter">
+            <field name="key">pharma.mode</field>
+            <field name="value">production</field>
+        </record>
+        <!-- block = confirm/post refused for products without approved tax classification. -->
+        <record id="param_pharma_tax_gate" model="ir.config_parameter">
+            <field name="key">pharma.tax_gate</field>
+            <field name="value">block</field>
+        </record>
+    </data>
+</odoo>

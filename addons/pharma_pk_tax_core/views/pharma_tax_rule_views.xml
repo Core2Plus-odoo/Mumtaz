@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_tax_rule_list" model="ir.ui.view">
+        <field name="name">pharma.tax.rule.list</field>
+        <field name="model">pharma.tax.rule</field>
+        <field name="arch" type="xml">
+            <list string="Tax Rules" decoration-muted="state == 'superseded'" decoration-warning="state == 'draft'">
+                <field name="name"/><field name="tax_type"/><field name="tax_class"/>
+                <field name="rate"/><field name="date_from"/><field name="date_to"/>
+                <field name="legal_ref"/><field name="evidence_ref"/><field name="approved_by"/>
+                <field name="state"/><field name="is_demo" string="DEMO"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_tax_rule_form" model="ir.ui.view">
+        <field name="name">pharma.tax.rule.form</field>
+        <field name="model">pharma.tax.rule</field>
+        <field name="arch" type="xml">
+            <form string="Tax Rule">
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_supersede" type="object" string="Supersede"
+                            invisible="state != 'approved'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved,superseded"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/><field name="tax_type"/><field name="tax_class"/>
+                            <field name="rate"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/><field name="date_to"/>
+                            <field name="legal_ref"/><field name="evidence_ref"/>
+                            <field name="approved_by"/><field name="approved_on"/>
+                            <field name="is_demo"/>
+                        </group>
+                    </group>
+                    <p class="text-muted">An approved rule cannot be edited. End-date it and create a new rule.
+                        No rate is assumed anywhere in the system.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_tax_rule" model="ir.actions.act_window">
+        <field name="name">Tax Rules</field>
+        <field name="res_model">pharma.tax.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

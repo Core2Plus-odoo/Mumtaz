@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_raw_event_list" model="ir.ui.view">
+        <field name="name">pharma.raw.event.list</field>
+        <field name="model">pharma.raw.event</field>
+        <field name="arch" type="xml">
+            <list string="Source Events" decoration-danger="state in ('conflict','invalid')" create="0">
+                <field name="create_date"/>
+                <field name="source"/>
+                <field name="event_id"/>
+                <field name="state"/>
+                <field name="error"/>
+                <field name="is_demo" string="DEMO"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_raw_event_form" model="ir.ui.view">
+        <field name="name">pharma.raw.event.form</field>
+        <field name="model">pharma.raw.event</field>
+        <field name="arch" type="xml">
+            <form string="Source Event" create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <group><field name="source"/><field name="event_id"/><field name="state"/></group>
+                        <group><field name="digest"/><field name="is_demo"/><field name="error"/></group>
+                    </group>
+                    <field name="payload"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_raw_event" model="ir.actions.act_window">
+        <field name="name">Source Events</field>
+        <field name="res_model">pharma.raw.event</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

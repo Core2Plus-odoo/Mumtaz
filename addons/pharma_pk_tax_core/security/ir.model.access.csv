@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pharma_tax_rule_user,pharma.tax.rule user,model_pharma_tax_rule,pharma_core.group_pharma_user,1,0,0,0
+access_pharma_tax_rule_approver,pharma.tax.rule approver,model_pharma_tax_rule,pharma_core.group_pharma_tax_approver,1,1,1,0
+access_pharma_tax_rule_admin,pharma.tax.rule admin,model_pharma_tax_rule,pharma_core.group_pharma_admin,1,1,1,0
+access_pharma_tax_event_user,pharma.tax.event user,model_pharma_tax_event,pharma_core.group_pharma_user,1,0,0,0

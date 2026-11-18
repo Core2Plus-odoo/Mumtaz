@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_pharma_recon" name="Reconciliation" parent="pharma_core.menu_pharma_root" sequence="10"/>
+    <menuitem id="menu_pharma_recon_exc" name="Exception Queue" parent="menu_pharma_recon"
+              action="action_pharma_recon_exception" sequence="5"/>
+    <menuitem id="menu_pharma_recon_runs" name="Reconciliation Runs" parent="menu_pharma_recon"
+              action="action_pharma_recon_run" sequence="10"/>
+    <menuitem id="menu_pharma_partner" name="Distribution Partner" parent="pharma_core.menu_pharma_root" sequence="20"/>
+    <menuitem id="menu_pharma_partner_stock" name="Stock Roll-forward" parent="menu_pharma_partner"
+              action="action_pharma_partner_stock" sequence="10"/>
+    <menuitem id="menu_pharma_partner_scenario" name="Commercial Model (A/B/C)" parent="menu_pharma_partner"
+              action="action_pharma_partner_scenario" sequence="20" groups="pharma_core.group_pharma_finance"/>
+</odoo>

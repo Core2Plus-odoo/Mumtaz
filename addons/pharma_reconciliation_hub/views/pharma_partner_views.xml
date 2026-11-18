@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_partner_stock_list" model="ir.ui.view">
+        <field name="name">pharma.partner.stock.line.list</field>
+        <field name="model">pharma.partner.stock.line</field>
+        <field name="arch" type="xml">
+            <list string="Distribution Partner Stock Roll-forward" decoration-danger="variance != 0">
+                <header><button name="action_raise_exceptions" type="object" string="Raise exceptions for variances"/></header>
+                <field name="sku"/><field name="lot"/><field name="location"/>
+                <field name="opening" sum="Opening"/><field name="inward_accepted" sum="Inward"/>
+                <field name="adj_positive_approved" optional="hide"/><field name="sold_or_issued" sum="Sold"/>
+                <field name="returned_to_pharma" optional="show"/><field name="expired_damaged_documented" optional="show"/>
+                <field name="adj_negative_approved" optional="hide"/>
+                <field name="expected_closing" sum="Expected"/><field name="reported" sum="Reported"/>
+                <field name="variance" sum="Variance"/><field name="is_demo" string="DEMO"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_partner_stock_form" model="ir.ui.view">
+        <field name="name">pharma.partner.stock.line.form</field>
+        <field name="model">pharma.partner.stock.line</field>
+        <field name="arch" type="xml">
+            <form string="Distribution Partner Stock Line">
+                <sheet>
+                    <group>
+                        <group><field name="run_id"/><field name="sku"/><field name="lot"/><field name="location"/>
+                            <field name="is_demo"/></group>
+                        <group><field name="opening"/><field name="inward_accepted"/><field name="adj_positive_approved"/>
+                            <field name="sold_or_issued"/><field name="returned_to_pharma"/>
+                            <field name="expired_damaged_documented"/><field name="adj_negative_approved"/>
+                            <field name="expected_closing"/><field name="reported"/><field name="variance"/></group>
+                    </group>
+                    <p class="text-muted">Opening + inward + approved positive adj. - sold/issued - returns - documented
+                        expiry/damage - approved negative adj. = expected closing. Physical custody is tracked separately
+                        from ownership.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_partner_stock" model="ir.actions.act_window">
+        <field name="name">Distribution Partner Stock Roll-forward</field>
+        <field name="res_model">pharma.partner.stock.line</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_pharma_partner_scenario_form" model="ir.ui.view">
+        <field name="name">pharma.partner.scenario.form</field>
+        <field name="model">pharma.partner.scenario</field>
+        <field name="arch" type="xml">
+            <form string="Distribution Partner Commercial Model">
+                <sheet>
+                    <group>
+                        <group><field name="name"/><field name="scenario"/><field name="contract_ref"/></group>
+                        <group><field name="finance_signoff_id"/><field name="tax_signoff_id"/><field name="complete"/></group>
+                    </group>
+                    <p class="text-muted">Until contract, finance and tax sign-off are all recorded, a transfer to Distribution Partner
+                        records physical custody only. No revenue and no tax are posted.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_partner_scenario" model="ir.actions.act_window">
+        <field name="name">Distribution Partner Commercial Model</field>
+        <field name="res_model">pharma.partner.scenario</field>
+        <field name="view_mode">form,list</field>
+    </record>
+</odoo>

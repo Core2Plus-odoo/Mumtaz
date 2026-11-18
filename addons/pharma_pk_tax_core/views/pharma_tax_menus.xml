@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_pharma_tax" name="Tax Centre" parent="pharma_core.menu_pharma_root" sequence="30"/>
+    <menuitem id="menu_pharma_tax_blocked" name="Blocked (Unresolved)" parent="menu_pharma_tax"
+              action="action_pharma_tax_blocked" sequence="5"/>
+    <menuitem id="menu_pharma_tax_events" name="Tax Events" parent="menu_pharma_tax"
+              action="action_pharma_tax_event" sequence="10"/>
+    <menuitem id="menu_pharma_tax_register" name="SKU Classification Register" parent="menu_pharma_tax"
+              action="action_pharma_sku_tax_register" sequence="20"/>
+    <menuitem id="menu_pharma_tax_rules" name="Tax Rules" parent="menu_pharma_tax"
+              action="action_pharma_tax_rule" sequence="30"/>
+</odoo>

@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_recon_run_user,recon.run user,model_pharma_recon_run,pharma_core.group_pharma_user,1,0,0,0
+access_recon_run_fin,recon.run finance,model_pharma_recon_run,pharma_core.group_pharma_finance,1,1,1,0
+access_recon_item_user,recon.item user,model_pharma_recon_item,pharma_core.group_pharma_user,1,0,0,0
+access_recon_item_fin,recon.item finance,model_pharma_recon_item,pharma_core.group_pharma_finance,1,1,1,0
+access_recon_exc_user,recon.exception user,model_pharma_recon_exception,pharma_core.group_pharma_user,1,1,1,0
+access_recon_exc_fin,recon.exception finance,model_pharma_recon_exception,pharma_core.group_pharma_finance,1,1,1,0
+access_partner_stock_user,partner.stock user,model_pharma_partner_stock_line,pharma_core.group_pharma_user,1,0,0,0
+access_partner_stock_fin,partner.stock finance,model_pharma_partner_stock_line,pharma_core.group_pharma_finance,1,1,1,0
+access_partner_scn_user,partner.scenario user,model_pharma_partner_scenario,pharma_core.group_pharma_user,1,0,0,0
+access_partner_scn_fin,partner.scenario finance,model_pharma_partner_scenario,pharma_core.group_pharma_finance,1,1,1,0
