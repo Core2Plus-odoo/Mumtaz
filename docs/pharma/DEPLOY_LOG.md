@@ -382,6 +382,16 @@ bash deploy/pharma-staging/stage.sh smoke
   outgoing mail server forced to `invalid:1025`, `courier COD crons active = 0`. The slice-1 data is intact (2 couriers, 19 shipments, 3 remittances, 4 statements).
 - Still open: `pharma_accounting_hardening` is not installed (see the entry above); waiting for the owner to say whether that was intended.
 
+## 2026-11-18 — accounting hardening reinstalled (owner-run `stage.sh install-accounting`, output pasted back)
+
+- Dump first: `backups/mumtaz_pharma_pre_accounting_20261118_140810.dump`. Installed `pharma_accounting_hardening` (kit modules were already present),
+  neutralize re-run, odoo-pharma restarted, health 200. 106 modules installed.
+- Verified: vendor support endpoint = `http://127.0.0.1:9/support-disabled-by-pharma-accounting-hardening`, support form open to
+  *Role / Administrator* only, anonymous `POST /xlsx_report` refused (303), courier COD crons active = 0, slice-1 data intact
+  (2 couriers, 19 shipments, 3 remittances, 4 statements, 18 open exceptions in total).
+- Cause of the earlier uninstall was not established from the pasted output (it predates the courier upgrade). Nothing else changed.
+  The separate `pharma-hide-cybrosys` branch (hides the support button in the UI) is not merged here.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
