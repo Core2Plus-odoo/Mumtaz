@@ -116,6 +116,38 @@ Remaining script tidy-ups noted, none affecting the deployment (S4): `@mute_logg
 
 ---
 
+## 2026-11-18 — build: website + demo data for every scenario (committed on the branch, NOT yet on staging)
+
+Owner asked for "design website, demo data, all scenarios". Built, compile- and XML-checked, not yet run on any Odoo:
+
+- **`pharma_demo_data` 19.0.1.0.0 → 19.0.1.1.0.** The one-shot `post_init_hook` became an idempotent seeder
+  (`pharma.demo.seed.seed()`), called by the hook on install and by `migrations/19.0.1.1.0/post-migrate.py` on
+  `-u`, so the live staging DB gets the new scenarios through the real upgrade path (version bump → migration),
+  never by reinstall. Natural keys (rule code, SKU, login, run name, event id, order ref) prevent duplicates.
+  Scenarios added: 4 demo users (one per Pharma role); rules draft / evidence-missing / effective-dated /
+  overlapping (ambiguous) / superseded; SKU D (ambiguous class) and E (classification proposed, awaiting approver);
+  a tax-event reversal; raw-event replay and conflict; a clean COD batch, a bank-vs-ledger run with exact match,
+  amount difference, ambiguous amount/date and a low-confidence match; exceptions in all four states driven through
+  the real buttons (take ownership, propose, approve by a second controller); two more partner stock lines
+  (surplus and zero variance) and an incomplete commercial-model record (gate blocked); a confirmed sale order
+  and posted invoice for the approved SKU, and a quotation plus draft invoice for the pending SKU that the gate
+  refuses. Placeholder product images generated with Pillow, stamped DEMO. `set_demo_passwords()` for the
+  staging script; no password in code. 12 new tests (`tests/test_demo_seed.py`), tagged `pharma`.
+- **`pharma_website_demo` 19.0.1.0.0 (new).** Depends on `website_sale` + `pharma_demo_data`. DEMO ribbon
+  inserted before `div#wrapwrap/header` of `website.layout` (verified against Odoo 19 source) while
+  `pharma.mode = demo`; demo home page at `/pharma` set as `website.homepage_url`; products published into
+  two public categories; website renamed "Pharma Demo Co (DEMO)". Idempotent seeder, post_init_hook.
+- **`docs/pharma/DEMO_SCENARIOS.md`**: presenter script, per scenario: user, menu, action, expected result.
+- **`stage.sh`**: module list includes `pharma_website_demo`; `upgrade` (dump → `-u` installed pharma modules /
+  `-i` new ones → restart `odoo-pharma` only → verify, prints the exact rollback); `demo-passwords`; `verify`
+  shows exceptions/rules by state, demo users, published products, homepage; `smoke` also checks `/`, `/pharma`,
+  `/shop` return 200 and that the DEMO ribbon and product names appear in `/shop`.
+
+Expected test count after upgrade: 34 + 12 = **46**. Staging steps pending owner approval (gate: restart of
+`odoo-pharma` only; nothing else touched).
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

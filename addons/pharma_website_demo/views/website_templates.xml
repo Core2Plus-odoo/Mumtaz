@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- A ribbon above the header on EVERY public page while pharma.mode = demo.
+         website.layout inherits portal.frontend_layout, whose body is <div id="wrapwrap"><header/>…;
+         inserting before that header keeps the theme untouched. -->
+    <template id="pharma_demo_ribbon" inherit_id="website.layout" name="Pharma DEMO ribbon">
+        <xpath expr="//div[@id='wrapwrap']/header" position="before">
+            <t t-set="pharma_demo_mode" t-value="bool(request) and request.env['ir.config_parameter'].sudo().get_param('pharma.mode') == 'demo'"/>
+            <div t-if="pharma_demo_mode" class="o_pharma_demo_ribbon text-center small fw-bold py-1 px-3"
+                 style="background:#b02a37;color:#fff;letter-spacing:.06em;position:relative;z-index:1030">
+                DEMO ENVIRONMENT — all products, prices, tax rates and transactions are fictional. Nothing here is real.
+            </div>
+        </xpath>
+    </template>
+</odoo>

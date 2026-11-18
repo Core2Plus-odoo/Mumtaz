@@ -19,6 +19,8 @@
 #   stage.sh verify        read-only facts about mumtaz_pharma (mode, module states, demo counts)
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
+#   stage.sh upgrade       GATE: backup mumtaz_pharma, -u pharma_* -i new pharma modules, restart odoo-pharma only, verify
+#   stage.sh demo-passwords  set one password on the four demo users (demo_ops/maker/approver/finance), typed interactively
 #   stage.sh neutralize    GATE: odoo neutralize -d mumtaz_pharma (banner; mail/crons/payments off), restart odoo-pharma
 #   stage.sh smoke-local   via 127.0.0.1:8076 with Host: pharma.mumtaz.digital (before DNS/nginx)
 #   stage.sh smoke         via https://pharma.mumtaz.digital (after DNS + nginx + cert)
@@ -37,7 +39,8 @@ WS_PORT=8077
 UNIT=odoo-pharma
 SVC_CONF=/etc/odoo-pharma.conf
 SVC_LOG=/var/log/odoo/odoo-pharma.log
-MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data
+MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo
+PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo
 
 CHECKOUT="$(cd "$(dirname "$0")/../.." && pwd)"
 LIVE_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
@@ -179,6 +182,11 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  demo tax rules = '||count(*) from pharma_tax_rule where is_demo"
   sudo -u postgres psql -d "$DB" -tAc "select '  demo recon runs = '||count(*) from pharma_recon_run where is_demo"
   sudo -u postgres psql -d "$DB" -tAc "select '  open exceptions = '||count(*) from pharma_recon_exception where state <> 'closed'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  exceptions by state: '||string_agg(state||'='||n, ', ' order by state) from (select state, count(*) n from pharma_recon_exception group by state) x"
+  sudo -u postgres psql -d "$DB" -tAc "select '  tax rules by state: '||string_agg(state||'='||n, ', ' order by state) from (select state, count(*) n from pharma_tax_rule group by state) x"
+  sudo -u postgres psql -d "$DB" -tAc "select '  demo users = '||string_agg(login, ', ' order by login) from res_users where login like 'demo_%'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  published DEMO products = '||count(*) from product_template where is_published and default_code like 'DEMO-SKU-%'" 2>/dev/null || true
+  sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
 }
 
 cmd_install() {
@@ -275,6 +283,52 @@ PY
   set_admin_password
 }
 
+cmd_upgrade() {
+  guards; preflight
+  db_exists "$DB" || die "$DB does not exist; run install first"
+  say "GATE: upgrade $DB — dump first, then -u (pharma modules already installed) -i (pharma modules not yet installed)"
+  sudo -u postgres pg_dump -Fc "$DB" > "$BACKUP_DIR/${DB}_pre_upgrade_$TS.dump"; chmod 600 "$BACKUP_DIR/${DB}_pre_upgrade_$TS.dump"
+  echo "  dump: $BACKUP_DIR/${DB}_pre_upgrade_$TS.dump ($(du -h "$BACKUP_DIR/${DB}_pre_upgrade_$TS.dump" | cut -f1))"
+  local installed to_update="" to_install=""
+  installed="$(sudo -u postgres psql -d "$DB" -tAc "select string_agg(name, ',') from ir_module_module where state='installed' and name like 'pharma%'")"
+  for m in ${PHARMA_MODULES//,/ }; do
+    case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac
+  done
+  to_update="${to_update#,}"; to_install="${to_install#,}"
+  echo "  update: ${to_update:-<none>}   install: ${to_install:-<none>}"
+  local args=(-c "$STAGE_CONF" -d "$DB" --stop-after-init)
+  [ -n "$to_update" ] && args+=(-u "$to_update")
+  [ -n "$to_install" ] && args+=(-i "$to_install")
+  # shellcheck disable=SC2086
+  as_odoo "$ODOO_BIN" "${args[@]}" $(no_http_flag) > "$LOG_DIR/upgrade_$TS.log" 2>&1 || true
+  grep -E " (ERROR|CRITICAL|WARNING) .*pharma|Traceback|Modules loaded|migrat|pharma_demo_data: seed|modules loaded in" "$LOG_DIR/upgrade_$TS.log" | tail -25 || true
+  grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/upgrade_$TS.log" && die "upgrade log has errors: $LOG_DIR/upgrade_$TS.log (DB dump kept for rollback)"
+  grep -q "Modules loaded" "$LOG_DIR/upgrade_$TS.log" || die "upgrade did not reach 'Modules loaded': $LOG_DIR/upgrade_$TS.log"
+  if systemctl is-active --quiet $UNIT.service; then
+    say "restart $UNIT only (new code + assets)"
+    systemctl restart $UNIT.service; sleep 6
+    printf '  health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 30 "http://127.0.0.1:$HTTP_PORT/web/health" || true
+  fi
+  cmd_verify
+  echo "rollback of this upgrade: systemctl stop $UNIT; sudo -u postgres dropdb $DB; sudo -u postgres createdb -O $ODOO_USER $DB; sudo -u postgres pg_restore -d $DB $BACKUP_DIR/${DB}_pre_upgrade_$TS.dump; systemctl start $UNIT"
+}
+
+cmd_demo_passwords() {
+  guards; render_conf "$STAGE_CONF" cli
+  say "one password for the four DEMO users (typed twice, never echoed, never stored)"
+  local pw pw2 f
+  read -r -s -p "demo users password: " pw; echo
+  read -r -s -p "again: " pw2; echo
+  [ -n "$pw" ] && [ "$pw" = "$pw2" ] || die "passwords empty or do not match"
+  f="$(mktemp "$STAGE_DIR/.pw.XXXXXX")"; chmod 600 "$f"; chown "$ODOO_USER" "$f"; printf '%s' "$pw" > "$f"
+  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) 2>/dev/null <<PY
+pw = open("$f").read()
+print("  password set for:", ", ".join(env["pharma.demo.seed"].set_demo_passwords(pw)))
+env.cr.commit()
+PY
+  shred -u "$f" 2>/dev/null || rm -f "$f"
+}
+
 cmd_neutralize() {
   guards; render_conf "$STAGE_CONF" cli
   say "neutralize $DB (standard Odoo: banner on every page, outgoing mail / crons / payment providers off). Reversible."
@@ -302,6 +356,13 @@ smoke_common() {   # $1 = base URL, $2 = Host header
   local base="$1" host="$2"
   say "HTTP: $base/web/login  (Host: $host)"
   curl -sS -o /dev/null -w "  status=%{http_code}\n" --max-time 20 -H "Host: $host" "$base/web/login" || echo "  (curl failed)"
+  say "public site: / (demo home), /shop, DEMO ribbon"
+  for path in / /pharma /shop; do
+    curl -sS -o /dev/null -w "  $path -> %{http_code}\n" --max-time 30 -L -H "Host: $host" "$base$path" || echo "  $path (curl failed)"
+  done
+  curl -sS --max-time 30 -L -H "Host: $host" "$base/shop" | grep -q "DEMO ENVIRONMENT" && echo "  DEMO ribbon on /shop: YES" || echo "  DEMO ribbon on /shop: NOT FOUND"
+  curl -sS --max-time 30 -L -H "Host: $host" "$base/shop" | grep -o "DEMO Wellness Product [A-E]" | sort -u | sed 's/^/  shop lists: /'
+
   say "XML-RPC as admin (optional: type the admin password, or just press Enter to skip the login check)"
   local login; login="$(admin_login)"; echo "  admin login on $DB: $login"
   local pw; read -r -s -p "password for $login [Enter = skip]: " pw; echo
@@ -371,6 +432,8 @@ case "${1:-}" in
   admin-login)    cmd_admin_login "${2:-}" ;;
   test)           cmd_test ;;
   service)        cmd_service ;;
+  upgrade)        cmd_upgrade ;;
+  demo-passwords) cmd_demo_passwords ;;
   neutralize)     cmd_neutralize ;;
   service-remove) cmd_service_remove ;;
   smoke-local)    guards; smoke_common "http://127.0.0.1:$HTTP_PORT" "$DOMAIN" ;;

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="pharma_home" name="Pharma DEMO home">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Pharma Demo Co — DEMO</t>
+            <div id="wrap" class="oe_structure">
+                <section class="s_cover pt96 pb96 o_colored_level" style="background:#2e2e2e;color:#fff">
+                    <div class="container">
+                        <div class="row align-items-center">
+                            <div class="col-lg-7">
+                                <span class="badge rounded-pill" style="background:#b02a37">DEMO · fictional data</span>
+                                <h1 class="display-4 mt-3" style="color:#fff">Pharma Demo Co</h1>
+                                <p class="lead" style="color:#cfd8dc">
+                                    A generic Odoo 19 Community tenant showing how a pharma distributor keeps
+                                    tax, cash and partner stock under control: no rate is ever assumed, nothing
+                                    is adjusted without evidence, and every change has a maker and a checker.
+                                </p>
+                                <a href="/shop" class="btn btn-lg me-2" style="background:#00b3b3;color:#fff">Browse DEMO products</a>
+                                <a href="/web/login" class="btn btn-lg btn-outline-light">Open the back office</a>
+                            </div>
+                            <div class="col-lg-5 mt-4 mt-lg-0">
+                                <div class="p-4 rounded" style="background:#008080;color:#fff">
+                                    <h5 class="mb-3" style="color:#fff">What you can try</h5>
+                                    <ul class="mb-0">
+                                        <li>Add a product to the cart: one of them has <em>no approved tax classification</em> and cannot be confirmed.</li>
+                                        <li>Sign in and open <strong>Pharma › Tax Centre</strong>: rules in draft, approved, superseded; a DEMO rule refused in production mode.</li>
+                                        <li><strong>Pharma › Reconciliation</strong>: a clean match, a short COD settlement, an unidentified bank credit, an ambiguous amount.</li>
+                                        <li><strong>Distribution Partner</strong>: stock roll-forward variances and a commercial model still awaiting sign-off.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pt64 pb64">
+                    <div class="container">
+                        <h2 class="text-center mb-5">Three controls, one standard-first build</h2>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="h-100 p-4 border rounded">
+                                    <h4 style="color:#008080">Tax Centre</h4>
+                                    <p>Effective-dated, approved-only tax rules. A sale or invoice line with an unresolved treatment is blocked at confirmation, not fixed later. Every posted tax event is immutable and corrected only by a reversal.</p>
+                                    <p class="small text-muted mb-0">Scenarios: approved · pending evidence · draft awaiting approver · evidence missing · overlapping rules (ambiguous) · superseded · reversal.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="h-100 p-4 border rounded">
+                                    <h4 style="color:#008080">Reconciliation Hub</h4>
+                                    <p>COD courier batches, gateway payouts and bank lines matched by exact reference first, then by batch, then by amount and date flagged low confidence. Variances become exceptions with an owner, a note and a second approver. Nothing is written off automatically.</p>
+                                    <p class="small text-muted mb-0">Scenarios: clean batch · short settlement · unidentified credit · reference with amount difference · ambiguous amount · low-confidence match.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="h-100 p-4 border rounded">
+                                    <h4 style="color:#008080">Distribution Partner</h4>
+                                    <p>A stock roll-forward per SKU and lot: opening, inward, issued, returned, expired, reported. Each variance raises an exception. Custody is always recorded; revenue and tax follow only an approved commercial model with contract and sign-offs.</p>
+                                    <p class="small text-muted mb-0">Scenarios: zero variance · shortfall · surplus · scenario gate blocked awaiting sign-off.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="pt48 pb64" style="background:#f4f6f7">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-8 offset-lg-2 text-center">
+                                <h3>About this environment</h3>
+                                <p>
+                                    This is a staging demonstration. The company, customers, products, prices,
+                                    tax rates, bank lines and partner stock are all fictional and marked
+                                    <strong>DEMO</strong>. The database is neutralized: no e-mail is sent and no
+                                    payment provider is active, so the checkout stops at the payment step by design.
+                                </p>
+                                <p class="small text-muted mb-0">Built on Odoo 19 Community by C2P Consultants. Standard configuration first, native automation second, custom code last.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <record id="pharma_home_page" model="website.page">
+        <field name="name">Pharma DEMO home</field>
+        <field name="url">/pharma</field>
+        <field name="view_id" ref="pharma_home"/>
+        <field name="is_published" eval="True"/>
+        <field name="website_indexed" eval="False"/>
+    </record>
+</odoo>
