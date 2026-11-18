@@ -45,8 +45,8 @@ WS_PORT=8077
 UNIT=odoo-pharma
 SVC_CONF=/etc/odoo-pharma.conf
 SVC_LOG=/var/log/odoo/odoo-pharma.log
-MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_accounting,pharma_courier_cod_demo
-PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_accounting,pharma_courier_cod_demo
+MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_partner_stock,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_accounting,pharma_courier_cod_demo
+PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_partner_stock,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_accounting,pharma_courier_cod_demo
 
 CHECKOUT="$(cd "$(dirname "$0")/../.." && pwd)"
 LIVE_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
@@ -214,6 +214,8 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  published DEMO products = '||count(*) from product_template where is_published and default_code like 'DEMO-SKU-%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  '||name||' = '||state||' ('||coalesce(latest_version,'-')||')' from ir_module_module where name in ('base_accounting_kit','base_account_budget','cybrosys_support_client','pharma_accounting_hardening') order by name"
+  sudo -u postgres psql -d "$DB" -tAc "select '  version '||name||' = '||coalesce(latest_version,'-') from ir_module_module where name in ('pharma_pk_tax_core','pharma_accounting_hardening','pharma_partner_stock') order by name"
+  sudo -u postgres psql -d "$DB" -tAc "select '  tax rules linked to an Odoo sales tax = '||count(*) from pharma_tax_rule where account_tax_id is not null" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD: couriers='||(select count(*) from pharma_courier)||' shipments='||(select count(*) from pharma_courier_shipment)||' remittances='||(select count(*) from pharma_courier_remittance)||' statements='||(select count(*) from pharma_courier_statement)" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD journal entries: '||coalesce(string_agg(m.state||'='||n, ', ' order by m.state),'(none)') from (select m.state, count(*) n from pharma_courier_remittance r join account_move m on m.id=r.move_id group by m.state) m" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD exceptions by category: '||coalesce(string_agg(category||'='||n, ', ' order by category),'(none)') from (select category, count(*) n from pharma_recon_exception where category is not null group by category) x" 2>/dev/null || true
@@ -334,6 +336,8 @@ cmd_upgrade() {
   for m in ${PHARMA_MODULES//,/ }; do
     case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac
   done
+  # not part of PHARMA_MODULES (it needs the third-party kit) but it must be refreshed with the rest
+  case ",$installed," in *",pharma_accounting_hardening,"*) to_update="$to_update,pharma_accounting_hardening";; esac
   to_update="${to_update#,}"; to_install="${to_install#,}"
   echo "  update: ${to_update:-<none>}   install: ${to_install:-<none>}"
   local args=(-c "$STAGE_CONF" -d "$DB" --stop-after-init)

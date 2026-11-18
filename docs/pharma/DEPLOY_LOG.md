@@ -431,6 +431,24 @@ Next (owner-run): `git pull --ff-only` then `stage.sh test` (expect 0 failed of 
   which is the idempotency proof on a live database. The first smoke's XML-RPC login returned "Access Denied" (password prompt, most likely mistyped); the second smoke logged in as uid 2.
 - Still owner-side and not yet done by anyone: a browser walkthrough of C1-C14 in DEMO_SCENARIOS.md as `pharma.finance` / admin.
 
+## 2026-11-18 — branch pharma-functionality taken onto pharma-erp-v0.1 (cherry-picked, NOT yet tested or on staging)
+
+Cherry-picked, in order, with no conflicts and no file overlap with the slice-1/1b work (no PR, nothing to main, no merge of the other branch):
+
+| Source | Here | What |
+| --- | --- | --- |
+| `7886a47` | `bf79bd4` | `pharma_accounting_hardening` 19.0.1.1.0: removes the vendor support button (top-bar icon and user-menu item) from the web client; asset bundle change, so a hard refresh is needed after the upgrade |
+| `3fee1ae` | `3ecb8c8` | `pharma_pk_tax_core` 19.0.1.1.0: a tax rule can be linked to a standard Odoo sales tax (opt-in); a sale-order or invoice line for a product resolved by such a rule must carry exactly that tax or it cannot be confirmed / posted. Demo rules are not linked, so existing demo behaviour is unchanged |
+| `8838578` | `84beb56` | new `pharma_partner_stock` 19.0.1.0.0 (depends `pharma_reconciliation_hub`, `stock`): derives the Distribution Partner stock roll-forward from done stock move lines instead of typed numbers; undocumented loss moves show as variance |
+
+`stage.sh` changes made here so the gate does what was asked: `pharma_partner_stock` added to `MODULES` and `PHARMA_MODULES` (so `test`, `test-combined`, `install`, `upgrade` include it);
+`upgrade` now also updates `pharma_accounting_hardening` when it is installed (it is not in `PHARMA_MODULES` because it needs the third-party kit, so it would previously have been skipped);
+`verify` prints the versions of the three changed modules and how many tax rules are linked to an Odoo tax. Simulated against the current staging module set the upgrade list is:
+update `pharma_core, pharma_pk_tax_core, pharma_reconciliation_hub, pharma_demo_data, pharma_website_demo, pharma_courier_cod, pharma_courier_cod_accounting, pharma_courier_cod_demo, pharma_accounting_hardening`; install `pharma_partner_stock`.
+
+Static checks only here (py_compile, pyflakes, XML well-formed, `bash -n`, no method shadows a reserved model attribute, no names or secrets in the new module). Next: owner runs `stage.sh test-combined` (must be green) and pastes the output;
+then a named go is needed before `stage.sh upgrade` on `mumtaz_pharma`.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
