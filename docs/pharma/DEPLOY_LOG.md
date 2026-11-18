@@ -475,6 +475,17 @@ I deliberately did not use Odoo's payment wizard: it cannot be tested from here 
 Static checks only (py_compile, pyflakes, XML well-formed, `bash -n`). **Never executed against Odoo.** Next (owner-run): `git pull --ff-only`, `stage.sh test-combined` (expect 0 failed; 176 + 13 = 189 tests),
 and only when green and on a named go `stage.sh upgrade` (updates the accounting and demo modules) then `smoke`.
 
+## 2026-11-18 — slice 1c LIVE on staging: test-combined 189/189, upgrade and smoke green (owner-run, output pasted back)
+
+- `stage.sh test-combined` (fresh throwaway DB, every pharma module plus the accounting kit): **0 failed, 0 error(s) of 189 tests** (176 + 13 new), first run, no code change needed. DB dropped.
+- `stage.sh upgrade`, run once after the owner's named go (dump `backups/mumtaz_pharma_pre_upgrade_20261118_150007.dump`): updated ten modules including
+  `pharma_courier_cod_accounting` 19.0.1.1.0 and `pharma_courier_cod_demo` 19.0.1.2.0 (post-migrate ran), installed nothing, 108 modules loaded, neutralize re-ran automatically, odoo-pharma restarted, health 200.
+- Verified after (`verify`): `courier COD collection entries: draft=3` (the clean batch) and `journal entries: draft=1` (its settlement), crons active 0, accounting hardening 19.0.1.1.0 with the support endpoint still
+  `http://127.0.0.1:9/support-disabled-by-pharma-accounting-hardening` and the form *Role / Administrator*, `pharma_pk_tax_core` 19.0.1.1.0, `pharma_partner_stock` 19.0.1.0.0, and every earlier count unchanged
+  (2 couriers, 19 shipments, 3 remittances, 4 statements, 18 open exceptions). Smoke: ribbon present, five products, admin login OK, 20 of 20 menus, production mode still refuses DEMO rules.
+- Not exercised yet on staging: pressing Create collection entry / Create journal entry in the browser (C13, C16), the list Action for several shipments, reconciling a collection credit against a real customer invoice,
+  and the tax-link gate (no rule is linked to an Odoo tax). These need the owner's browser pass.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
