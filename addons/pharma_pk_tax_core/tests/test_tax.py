@@ -1,7 +1,8 @@
 from datetime import date
 
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
+from odoo.addons.pharma_pk_tax_core.models.tax_gate import _tax_link_check
 
 
 @tagged("post_install", "-at_install", "pharma")
@@ -159,3 +160,102 @@ class TestPharmaTax(TransactionCase):
         so = self._so(self.pending)
         so.action_confirm()
         self.assertEqual(so.state, "sale")
+
+    # --- link between an approved rule and the standard Odoo sales tax
+    def _tax(self, name, amount, **kw):
+        vals = {"name": name, "amount": amount, "amount_type": "percent", "type_tax_use": "sale"}
+        vals.update(kw)
+        return self.env["account.tax"].create(vals)
+
+    def _linked_and_approved(self, tax):
+        self.rule.with_user(self.maker).write({"account_tax_id": tax.id})
+        self._approve_all()
+        return tax
+
+    def _so_with_tax(self, taxes):
+        partner = self.env["res.partner"].create({"name": "DEMO Customer Link"})
+        return self.env["sale.order"].create({"partner_id": partner.id, "order_line": [
+            (0, 0, {"product_id": self.ok.id, "product_uom_qty": 1, "price_unit": 1000,
+                    "tax_ids": [(6, 0, taxes.ids)]})]})
+
+    def _invoice_with_tax(self, taxes, move_type="out_invoice"):
+        partner = self.env["res.partner"].create({"name": "DEMO Customer Link Inv"})
+        return self.env["account.move"].create({"move_type": move_type, "partner_id": partner.id,
+            "invoice_date": date(2026, 11, 2),
+            "invoice_line_ids": [(0, 0, {"product_id": self.ok.id, "quantity": 1, "price_unit": 1000,
+                                         "tax_ids": [(6, 0, taxes.ids)]})]})
+
+    def test_link_rate_must_equal_rule_rate(self):
+        with self.assertRaises(ValidationError):
+            self.rule.with_user(self.maker).write({"account_tax_id": self._tax("DEMO 12", 12).id})
+        self.rule.with_user(self.maker).write({"account_tax_id": self._tax("DEMO 10", 10).id})
+
+    def test_link_only_for_output_sales_tax_rules(self):
+        with self.assertRaises(ValidationError):
+            self.Rule.with_user(self.maker).create({
+                "name": "DEMO-R-WHT", "tax_type": "INCOME_TAX_153_2A", "tax_class": "QA_TEST_CLASS_ONLY",
+                "rate": 10, "date_from": date(2026, 1, 1), "is_demo": True,
+                "account_tax_id": self._tax("DEMO 10 wht", 10).id})
+
+    def test_link_must_be_a_percentage_sales_tax(self):
+        for kw in ({"amount_type": "fixed"}, {"type_tax_use": "purchase"}):
+            with self.assertRaises(ValidationError, msg=str(kw)):
+                self.rule.with_user(self.maker).write({"account_tax_id": self._tax("DEMO bad", 10, **kw).id})
+
+    def test_approved_rule_link_is_immutable(self):
+        tax = self._linked_and_approved(self._tax("DEMO 10", 10))
+        with self.assertRaises(UserError):
+            self.rule.with_user(self.maker).write({"account_tax_id": self._tax("DEMO 10 b", 10).id})
+        self.assertEqual(self.rule.account_tax_id, tax)
+
+    def test_sale_order_blocked_when_line_carries_another_tax(self):
+        tax = self._linked_and_approved(self._tax("DEMO 10", 10))
+        with self.assertRaises(UserError) as cm:
+            self._so_with_tax(self._tax("DEMO 5", 5)).action_confirm()
+        self.assertIn(tax.name, str(cm.exception))
+        self.assertIn("DEMO 5", str(cm.exception))
+
+    def test_sale_order_blocked_when_line_has_no_sales_tax(self):
+        self._linked_and_approved(self._tax("DEMO 10", 10))
+        with self.assertRaises(UserError) as cm:
+            self._so_with_tax(self.env["account.tax"]).action_confirm()
+        self.assertIn("no sales tax", str(cm.exception))
+
+    def test_sale_order_confirms_when_line_carries_the_linked_tax(self):
+        tax = self._linked_and_approved(self._tax("DEMO 10", 10))
+        so = self._so_with_tax(tax)
+        so.action_confirm()
+        self.assertEqual(so.state, "sale")
+
+    def test_unlinked_rule_changes_nothing(self):
+        self._approve_all()      # rule has no Odoo tax: behaviour is exactly as before
+        so = self._so_with_tax(self.env["account.tax"])
+        so.action_confirm()
+        self.assertEqual(so.state, "sale")
+
+    def test_tax_rate_drift_is_caught(self):
+        tax = self._linked_and_approved(self._tax("DEMO 10", 10))
+        tax.amount = 12
+        with self.assertRaises(UserError) as cm:
+            self._so_with_tax(tax).action_confirm()
+        self.assertIn("now 12%", str(cm.exception))
+
+    def test_link_check_can_be_switched_off_with_the_gate(self):
+        self._linked_and_approved(self._tax("DEMO 10", 10))
+        self.env["ir.config_parameter"].sudo().set_param("pharma.tax_gate", "off")
+        so = self._so_with_tax(self._tax("DEMO 5", 5))
+        so.action_confirm()
+        self.assertEqual(so.state, "sale")
+
+    def test_invoice_and_credit_note_posting_blocked_on_mismatch(self):
+        self._linked_and_approved(self._tax("DEMO 10", 10))
+        wrong = self._tax("DEMO 5", 5)
+        for move_type in ("out_invoice", "out_refund"):
+            with self.assertRaises(UserError, msg=move_type) as cm:
+                self._invoice_with_tax(wrong, move_type).action_post()
+            self.assertIn("does not match the approved tax rule", str(cm.exception))
+
+    def test_invoice_check_passes_when_tax_matches(self):
+        tax = self._linked_and_approved(self._tax("DEMO 10", 10))
+        inv = self._invoice_with_tax(tax)
+        _tax_link_check(self.env, inv.invoice_line_ids, date(2026, 11, 2))     # must not raise

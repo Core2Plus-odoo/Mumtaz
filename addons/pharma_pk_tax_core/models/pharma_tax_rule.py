@@ -34,6 +34,13 @@ class PharmaTaxRule(models.Model):
     approved_by = fields.Many2one("res.users", readonly=True)
     approved_on = fields.Datetime(readonly=True)
     is_demo = fields.Boolean(string="DEMO rule (fictional rate)")
+    account_tax_id = fields.Many2one(
+        "account.tax", string="Odoo Sales Tax", ondelete="restrict",
+        domain="[('type_tax_use', '=', 'sale'), ('amount_type', '=', 'percent')]",
+        help="Optional. The standard Odoo sales tax that carries this rule's rate on sale and invoice lines. "
+             "When set, a sale order or customer invoice line for a product resolved by this rule must carry exactly "
+             "this tax, or it cannot be confirmed or posted. Leave empty for a rule that is not applied through "
+             "Odoo's own tax lines. Fixed when the rule is approved.")
 
     _sql_name_unique = models.Constraint("unique(name)", "Rule code must be unique.")
 
@@ -42,6 +49,19 @@ class PharmaTaxRule(models.Model):
         for r in self:
             if r.date_to and r.date_to < r.date_from:
                 raise ValidationError("Effective To cannot be before Effective From.")
+
+    @api.constrains("account_tax_id", "tax_type", "rate")
+    def _check_account_tax(self):
+        for r in self.filtered("account_tax_id"):
+            tax = r.account_tax_id
+            if r.tax_type != "SALES_TAX_OUTPUT":
+                raise ValidationError("Only an output sales-tax rule can be linked to an Odoo sales tax.")
+            if tax.type_tax_use != "sale" or tax.amount_type != "percent":
+                raise ValidationError("The linked Odoo tax must be a percentage tax used on sales.")
+            if abs(tax.amount - r.rate) > 0.00005:
+                raise ValidationError(
+                    "Odoo tax '%s' is %g%% but rule %s says %g%%. They must be equal; "
+                    "no rate is changed automatically." % (tax.name, tax.amount, r.name, r.rate))
 
     def write(self, vals):
         if not self.env.context.get("pharma_internal"):
