@@ -12,6 +12,7 @@
 # Databases touched, both named here and nowhere else: mumtaz_pharma (the tenant)
 # and mumtaz_pharma_test (throwaway, dropped at the end of `test`).
 #
+#   stage.sh preflight     detect CLI flags, check the rendered conf is readable by odoo
 #   stage.sh backup        pre-change backup (pg globals, DB list, /etc/nginx + odoo confs)
 #   stage.sh install       create mumtaz_pharma, install the module list, set admin password
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
@@ -62,8 +63,9 @@ guards() {
   done
   command -v "$ODOO_BIN" >/dev/null || die "odoo binary '$ODOO_BIN' not found"
   id "$ODOO_USER" >/dev/null 2>&1 || die "user '$ODOO_USER' not found"
-  mkdir -p "$STAGE_DIR" "$BACKUP_DIR" "$LOG_DIR"; chmod 750 "$STAGE_DIR"
-  chown "$ODOO_USER" "$LOG_DIR"
+  mkdir -p "$STAGE_DIR" "$BACKUP_DIR" "$LOG_DIR"
+  chown root:"$ODOO_USER" "$STAGE_DIR"; chmod 750 "$STAGE_DIR"   # odoo must traverse it to read the rendered conf
+  chown "$ODOO_USER" "$LOG_DIR"; chmod 700 "$BACKUP_DIR"
 }
 
 # Render an Odoo config from the live one: keep db_* credentials, replace
@@ -103,9 +105,24 @@ PY
   chmod 640 "$out"; chown root:"$ODOO_USER" "$out"
 }
 
-# Odoo 19 made --without-demo a plain flag; older builds want --without-demo=all.
+# Odoo 19 splits the CLI into subcommands, so the server flags are under
+# `odoo server --help`; older builds list them under `odoo --help`.
+odoo_help() { "$ODOO_BIN" server --help 2>/dev/null || "$ODOO_BIN" --help 2>/dev/null || true; }
+# --without-demo=all (<=18) vs plain --without-demo (19) vs only --with-demo (demo off by default).
 without_demo_flag() {
-  if "$ODOO_BIN" --help 2>/dev/null | grep -qE -- '--without-demo=?[A-Z]'; then echo "--without-demo=all"; else echo "--without-demo"; fi
+  local h; h="$(odoo_help)"
+  if   grep -qE -- '--without-demo=?[A-Z<]' <<<"$h"; then echo "--without-demo=all"
+  elif grep -qE -- '--without-demo'          <<<"$h"; then echo "--without-demo"
+  else echo ""; fi
+}
+no_http_flag() { grep -qE -- '--no-http' <<<"$(odoo_help)" && echo "--no-http" || echo ""; }
+preflight() {
+  render_conf "$STAGE_CONF" cli
+  say "preflight"
+  echo "  odoo: $(command -v "$ODOO_BIN")  $("$ODOO_BIN" --version 2>/dev/null | tail -1)"
+  echo "  demo flag: '$(without_demo_flag)'   no-http flag: '$(no_http_flag)'"
+  as_odoo test -r "$STAGE_CONF" && echo "  $STAGE_CONF readable by $ODOO_USER: yes" || die "$STAGE_CONF not readable by $ODOO_USER"
+  as_odoo test -r "$CHECKOUT/addons/pharma_core/__manifest__.py" && echo "  checkout readable by $ODOO_USER: yes" || die "$CHECKOUT not readable by $ODOO_USER"
 }
 
 cmd_backup() {
@@ -124,7 +141,7 @@ set_admin_password() {
   read -r -s -p "again: " pw2; echo
   [ -n "$pw" ] && [ "$pw" = "$pw2" ] || die "passwords empty or do not match"
   f="$(mktemp "$STAGE_DIR/.pw.XXXXXX")"; chmod 600 "$f"; chown "$ODOO_USER" "$f"; printf '%s' "$pw" > "$f"
-  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" --no-http <<PY
+  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) <<PY
 pw = open("$f").read()
 env.ref("base.user_admin").write({"password": pw})
 env.cr.commit()
@@ -134,11 +151,12 @@ PY
 }
 
 cmd_install() {
-  guards; render_conf "$STAGE_CONF" cli
+  guards; preflight
   db_exists "$DB" && die "$DB already exists. This script never drops it."
-  local flag; flag="$(without_demo_flag)"
-  say "create $DB and install: $MODULES  ($flag)"
-  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$DB" -i "$MODULES" "$flag" --stop-after-init --no-http \
+  local flags; flags="$(without_demo_flag) $(no_http_flag)"
+  say "create $DB and install: $MODULES  ($flags)"
+  # shellcheck disable=SC2086
+  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$DB" -i "$MODULES" $flags --stop-after-init \
     > "$LOG_DIR/install_$TS.log" 2>&1 || true
   grep -E "ERROR|CRITICAL|Traceback|Modules loaded|loading [0-9]+ modules" "$LOG_DIR/install_$TS.log" | tail -20 || true
   grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/install_$TS.log" && die "install log has errors: $LOG_DIR/install_$TS.log"
@@ -149,21 +167,23 @@ cmd_install() {
 }
 
 cmd_test() {
-  guards; render_conf "$STAGE_CONF" cli
+  guards; preflight
   db_exists "$TEST_DB" && die "$TEST_DB exists from a previous run; drop it first: sudo -u postgres dropdb $TEST_DB"
-  local flag; flag="$(without_demo_flag)"
+  local flags; flags="$(without_demo_flag) $(no_http_flag)"
   say "fresh install into throwaway $TEST_DB with --test-enable --test-tags pharma (same module list as the real install)"
   set +e
-  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$TEST_DB" -i "$MODULES" "$flag" \
-    --test-enable --test-tags pharma --stop-after-init --no-http > "$LOG_DIR/test_$TS.log" 2>&1
+  # shellcheck disable=SC2086
+  as_odoo "$ODOO_BIN" -c "$STAGE_CONF" -d "$TEST_DB" -i "$MODULES" $flags \
+    --test-enable --test-tags pharma --stop-after-init > "$LOG_DIR/test_$TS.log" 2>&1
   local rc=$?
   set -e
   say "result (exit $rc)"
   grep -E "tests when loading database|post-tests in|odoo.tests.stats|odoo.tests.result" "$LOG_DIR/test_$TS.log" || true
   grep -E " (ERROR|FAIL|CRITICAL) " "$LOG_DIR/test_$TS.log" | head -40 || true
   echo "full log: $LOG_DIR/test_$TS.log"
-  if [ "${KEEP_TEST_DB:-0}" = "1" ]; then echo "kept $TEST_DB (KEEP_TEST_DB=1)"; else
-    sudo -u postgres dropdb "$TEST_DB" && echo "dropped $TEST_DB"; fi
+  if ! db_exists "$TEST_DB"; then echo "($TEST_DB was never created — Odoo stopped before touching Postgres)"
+  elif [ "${KEEP_TEST_DB:-0}" = "1" ]; then echo "kept $TEST_DB (KEEP_TEST_DB=1)"
+  else sudo -u postgres dropdb "$TEST_DB" && echo "dropped $TEST_DB"; fi
   return $rc
 }
 
@@ -232,7 +252,7 @@ for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma
 PY
   say "production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
   render_conf "$STAGE_CONF" cli
-  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" --no-http <<'PY'
+  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) <<'PY'
 from datetime import date
 P = env["ir.config_parameter"].sudo()
 before = P.get_param("pharma.mode")
@@ -247,6 +267,7 @@ PY
 }
 
 case "${1:-}" in
+  preflight)      guards; preflight ;;
   backup)         guards; cmd_backup ;;
   install)        cmd_install ;;
   test)           cmd_test ;;
