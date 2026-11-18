@@ -8,7 +8,7 @@
                    "exceptions in every state, Distribution Partner stock variance and an incomplete "
                    "scenario gate, raw-event duplicate and conflict, and a sale order / invoice pair "
                    "that the tax gate blocks. Idempotent: re-running the seeder adds nothing twice.",
-    "version": "19.0.1.1.0",
+    "version": "19.0.1.1.1",
     "category": "Pharma",
     "author": "C2P Consultants",
     "license": "LGPL-3",

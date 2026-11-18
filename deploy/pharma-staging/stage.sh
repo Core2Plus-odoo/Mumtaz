@@ -20,7 +20,7 @@
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
 #   stage.sh upgrade       GATE: backup mumtaz_pharma, -u pharma_* -i new pharma modules, restart odoo-pharma only, verify
-#   stage.sh demo-passwords  set one password on the four demo users (demo_ops/maker/approver/finance), typed interactively
+#   stage.sh demo-passwords  set one password on the four demo users (pharma.ops / .maker / .approver / .finance), typed interactively
 #   stage.sh neutralize    GATE: odoo neutralize -d mumtaz_pharma (banner; mail/crons/payments off), restart odoo-pharma
 #   stage.sh smoke-local   via 127.0.0.1:8076 with Host: pharma.mumtaz.digital (before DNS/nginx)
 #   stage.sh smoke         via https://pharma.mumtaz.digital (after DNS + nginx + cert)
@@ -184,7 +184,7 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  open exceptions = '||count(*) from pharma_recon_exception where state <> 'closed'"
   sudo -u postgres psql -d "$DB" -tAc "select '  exceptions by state: '||string_agg(state||'='||n, ', ' order by state) from (select state, count(*) n from pharma_recon_exception group by state) x"
   sudo -u postgres psql -d "$DB" -tAc "select '  tax rules by state: '||string_agg(state||'='||n, ', ' order by state) from (select state, count(*) n from pharma_tax_rule group by state) x"
-  sudo -u postgres psql -d "$DB" -tAc "select '  demo users = '||string_agg(login, ', ' order by login) from res_users where login like 'demo_%'"
+  sudo -u postgres psql -d "$DB" -tAc "select '  demo users = '||string_agg(login, ', ' order by login) from res_users where login like 'pharma.%'"
   sudo -u postgres psql -d "$DB" -tAc "select '  published DEMO products = '||count(*) from product_template where is_published and default_code like 'DEMO-SKU-%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
 }
@@ -361,7 +361,7 @@ smoke_common() {   # $1 = base URL, $2 = Host header
     curl -sS -o /dev/null -w "  $path -> %{http_code}\n" --max-time 30 -L -H "Host: $host" "$base$path" || echo "  $path (curl failed)"
   done
   curl -sS --max-time 30 -L -H "Host: $host" "$base/shop" | grep -q "DEMO ENVIRONMENT" && echo "  DEMO ribbon on /shop: YES" || echo "  DEMO ribbon on /shop: NOT FOUND"
-  curl -sS --max-time 30 -L -H "Host: $host" "$base/shop" | grep -o "DEMO Wellness Product [A-E]" | sort -u | sed 's/^/  shop lists: /'
+  curl -sS --max-time 30 -L -H "Host: $host" "$base/shop" | grep -oE "(Green Leaf Infusion|Golden Chai Blend|Rose Petal Tea|Lavender Evening Infusion|Warm Spice Mix)" | sort -u | sed 's/^/  shop lists: /'
 
   say "XML-RPC as admin (optional: type the admin password, or just press Enter to skip the login check)"
   local login; login="$(admin_login)"; echo "  admin login on $DB: $login"

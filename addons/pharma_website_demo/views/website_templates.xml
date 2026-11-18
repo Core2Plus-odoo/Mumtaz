@@ -7,8 +7,8 @@
         <xpath expr="//div[@id='wrapwrap']/header" position="before">
             <t t-set="pharma_demo_mode" t-value="bool(request) and request.env['ir.config_parameter'].sudo().get_param('pharma.mode') == 'demo'"/>
             <div t-if="pharma_demo_mode" class="o_pharma_demo_ribbon text-center small fw-bold py-1 px-3"
-                 style="background:#b02a37;color:#fff;letter-spacing:.06em;position:relative;z-index:1030">
-                DEMO ENVIRONMENT — all products, prices, tax rates and transactions are fictional. Nothing here is real.
+                 style="background:#b5583a;color:#fff;position:relative;z-index:1030">
+                <strong>DEMO ENVIRONMENT</strong> — all products, prices, tax rates and transactions are fictional. Nothing here is real.
             </div>
         </xpath>
     </template>

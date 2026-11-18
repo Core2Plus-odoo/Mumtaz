@@ -5,8 +5,6 @@ fresh install (post_init_hook) and again on every upgrade (post-migrate)
 without creating anything twice. Real business methods are used wherever one
 exists (approve, match, take ownership, propose / approve closure, confirm,
 post), so the data went through the same code a user would exercise."""
-import base64
-import io
 import json
 import logging
 from datetime import date
@@ -14,16 +12,21 @@ from datetime import date
 from odoo import SUPERUSER_ID, api, models
 from odoo.exceptions import UserError
 
+from . import demo_images
+
 _logger = logging.getLogger(__name__)
 
 DEMO_USERS = {
-    # login: (name, pharma groups, extra groups)
-    "demo_ops": ("DEMO Operations User", ["group_pharma_user"], []),
-    "demo_maker": ("DEMO Tax Maker (admin role)", ["group_pharma_admin"], ["product.group_product_manager"]),
-    "demo_approver": ("DEMO Tax Approver", ["group_pharma_tax_approver"], ["product.group_product_manager"]),
-    "demo_finance": ("DEMO Finance Controller", ["group_pharma_finance"], []),
+    # role: (login, name, pharma groups, extra groups). Logins are "pharma.*" so they never collide with
+    # the users the module test suites create in their own setUp ("demo_ops", "demo_maker", ...).
+    "ops": ("pharma.ops", "DEMO Operations User", ["group_pharma_user"], []),
+    "maker": ("pharma.maker", "DEMO Tax Maker (admin role)", ["group_pharma_admin"], ["product.group_product_manager"]),
+    "approver": ("pharma.approver", "DEMO Tax Approver", ["group_pharma_tax_approver"], ["product.group_product_manager"]),
+    "finance": ("pharma.finance", "DEMO Finance Controller", ["group_pharma_finance"], []),
 }
-DEMO_LOGINS = list(DEMO_USERS)
+DEMO_LOGINS = [v[0] for v in DEMO_USERS.values()]
+# 19.0.1.1.0 seeded these logins; 19.0.1.1.1 renames them in place instead of creating a second set
+LEGACY_LOGINS = {"ops": "demo_ops", "maker": "demo_maker", "approver": "demo_approver", "finance": "demo_finance"}
 
 ORDERS = [  # order, channel, payment, sku, amount, date
     ("DEMO-O-1001", "shopify", "COD", "DEMO-SKU-A", 10000, date(2026, 11, 3)),
@@ -51,6 +54,7 @@ class PharmaDemoSeed(models.AbstractModel):
         users = s._seed_users()
         s._seed_rules(users)
         prods = s._seed_products(users)
+        s._refresh_images()
         s._seed_events(prods)
         s._seed_runs(users, prods)
         s._seed_partner_stock(users)
@@ -73,13 +77,18 @@ class PharmaDemoSeed(models.AbstractModel):
         Users = env["res.users"].with_context(no_reset_password=True)
         base = env.ref("base.group_user").id
         out = {"admin": env.ref("base.user_admin")}
-        for login, (name, pgroups, extra) in DEMO_USERS.items():
+        for role, (login, name, pgroups, extra) in DEMO_USERS.items():
             u = Users.search([("login", "=", login)], limit=1)
+            if not u:
+                legacy = Users.search([("login", "=", LEGACY_LOGINS[role]), ("name", "=", name)], limit=1)
+                if legacy:
+                    legacy.write({"login": login, "email": f"{login}@example.invalid"})
+                    u = legacy
             if not u:
                 gids = [base] + [env.ref(f"pharma_core.{g}").id for g in pgroups] + [env.ref(x).id for x in extra]
                 u = Users.create({"name": name, "login": login, "email": f"{login}@example.invalid",
                                   "group_ids": [(6, 0, gids)]})
-            out[login] = u
+            out[role] = u
         # Demo convenience ONLY: admin may try every role. Maker-checker is shown with the demo users.
         admin_groups = [env.ref(f"pharma_core.{g}").id for g in
                         ("group_pharma_finance", "group_pharma_tax_approver", "group_pharma_admin")]
@@ -96,9 +105,9 @@ class PharmaDemoSeed(models.AbstractModel):
         vals = {"name": name, "tax_type": ttype, "tax_class": tclass, "rate": rate, "date_from": dfrom,
                 "date_to": dto, "legal_ref": legal, "evidence_ref": evid, "is_demo": True}
         if state == "draft":
-            return Rule.with_user(creator or users["demo_maker"]).create(vals)
+            return Rule.with_user(creator or users["maker"]).create(vals)
         r = Rule.with_context(pharma_internal=True).create(dict(
-            vals, state="approved", approved_by=users["demo_approver"].id, approved_on="2026-01-01 00:00:00"))
+            vals, state="approved", approved_by=users["approver"].id, approved_on="2026-01-01 00:00:00"))
         if state == "superseded":
             r.with_context(pharma_internal=True).write({"state": "superseded"})
         return r
@@ -122,62 +131,65 @@ class PharmaDemoSeed(models.AbstractModel):
         self._rule(users, "DEMO-RULE-7", "SALES_TAX_OUTPUT", "DEMO_CLASS_Z", 9.0, date(2025, 6, 1), state="superseded")
 
     # --------------------------------------------------------------- products
-    @staticmethod
-    def _image(code, colour):
-        """600x600 PNG placeholder labelled DEMO. Pillow ships with Odoo; any failure just means no image."""
-        try:
-            from PIL import Image, ImageDraw
-            img = Image.new("RGB", (600, 600), colour)
-            d = ImageDraw.Draw(img)
-            d.rectangle([20, 20, 580, 580], outline=(255, 255, 255), width=6)
-            try:
-                d.text((60, 220), "DEMO", fill=(255, 255, 255), font_size=96)
-                d.text((60, 340), code, fill=(255, 255, 255), font_size=44)
-                d.text((60, 410), "fictional product", fill=(255, 255, 255), font_size=28)
-            except TypeError:  # Pillow < 10.1 has no font_size argument
-                d.text((60, 260), f"DEMO {code} (fictional)", fill=(255, 255, 255))
-            buf = io.BytesIO()
-            img.save(buf, format="PNG")
-            return base64.b64encode(buf.getvalue())
-        except Exception as exc:  # noqa: BLE001 - cosmetic only
-            _logger.warning("pharma_demo_data: placeholder image skipped: %s", exc)
-            return False
-
-    def _product(self, users, code, name, price, colour, tax_class=None, status="pending", proposer=None, descr=""):
-        """status: approved | pending | proposed (class + evidence set by the maker, not yet approved)."""
+    def _product(self, users, code, name, price, tax_class=None, status="pending", proposer=None,
+                 blurb="", scenario=""):
+        """status: approved | pending | proposed (class + evidence set by the maker, not yet approved).
+        `blurb` is the public shop copy (no health claims); `scenario` is the internal note that explains
+        which control the product demonstrates."""
         Prod = self.env["product.template"]
         p = Prod.search([("default_code", "=", code)], limit=1)
+        public = f"{blurb} Fictional product for the demo storefront. No health claims.".strip()
+        notes = f"<p>DEMO scenario: {scenario}</p>" if scenario else False
         if not p:
             p = Prod.create({"name": name, "default_code": code, "type": "consu", "is_storable": True,
-                             "list_price": price, "sale_ok": True, "description_sale": descr})
+                             "list_price": price, "sale_ok": True, "description_sale": public, "description": notes})
             if status == "approved":
                 p.with_context(pharma_internal=True).write({
                     "pharma_tax_class": tax_class, "pharma_tax_evidence_ref": "DEMO-EVID-1",
-                    "pharma_tax_status": "approved", "pharma_tax_approved_by": users["demo_approver"].id,
-                    "pharma_tax_proposed_by": users["demo_maker"].id})
+                    "pharma_tax_status": "approved", "pharma_tax_approved_by": users["approver"].id,
+                    "pharma_tax_proposed_by": users["maker"].id})
             elif status == "proposed":
-                p.with_user(proposer or users["demo_maker"]).write({
+                p.with_user(proposer or users["maker"]).write({
                     "pharma_tax_class": tax_class, "pharma_tax_evidence_ref": "DEMO-EVID-5"})
-        if not p.image_1920:
-            img = self._image(code, colour)
+        elif p.name.startswith("DEMO Wellness Product"):
+            # 19.0.1.1.1: replace the engineering-style names from the first build with the shop-ready ones
+            p.write({"name": name, "description_sale": public, "description": notes})
+        return p.product_variant_id
+
+    def _refresh_images(self):
+        """Pack art is versioned: a DB seeded with an older style gets the current one exactly once."""
+        P = self.env["ir.config_parameter"]
+        done = P.get_param("pharma.demo.image_version") == demo_images.VERSION
+        for p in self.env["product.template"].search([("default_code", "in", list(demo_images.STYLES))]):
+            if done and p.image_1920:
+                continue
+            img = demo_images.b64(p.default_code)
             if img:
                 p.write({"image_1920": img})
-        return p.product_variant_id
+        P.set_param("pharma.demo.image_version", demo_images.VERSION)
 
     def _seed_products(self, users):
         P = {}
-        P["A"] = self._product(users, "DEMO-SKU-A", "DEMO Wellness Product A (fictional)", 1000.0, (0, 128, 128),
-                               "DEMO_CLASS_X", "approved", descr="Fictional wellness product. Approved tax classification.")
-        P["B"] = self._product(users, "DEMO-SKU-B", "DEMO Wellness Product B (fictional)", 1000.0, (46, 46, 46),
-                               "DEMO_CLASS_X", "approved", descr="Fictional wellness product. Approved tax classification.")
-        P["C"] = self._product(users, "DEMO-SKU-C", "DEMO Wellness Product C (fictional, tax pending)", 1000.0,
-                               (176, 42, 55), descr="Fictional. No approved tax classification: confirm and post are blocked.")
-        P["D"] = self._product(users, "DEMO-SKU-D", "DEMO Wellness Product D (fictional, ambiguous rules)", 1500.0,
-                               (120, 90, 160), "DEMO_CLASS_Y", "approved",
-                               descr="Fictional. Two approved rules overlap for its class: posting is blocked as ambiguous.")
-        P["E"] = self._product(users, "DEMO-SKU-E", "DEMO Wellness Product E (fictional, classification proposed)", 800.0,
-                               (200, 120, 40), "DEMO_CLASS_X", "proposed",
-                               descr="Fictional. Classification proposed by the maker; waits for the Tax Approver.")
+        P["A"] = self._product(
+            users, "DEMO-SKU-A", "Green Leaf Infusion (DEMO)", 1000.0, "DEMO_CLASS_X", "approved",
+            blurb="A light whole-leaf infusion with a fresh, grassy finish.",
+            scenario="approved tax classification. Confirms and posts normally; resolves to the effective-dated rules.")
+        P["B"] = self._product(
+            users, "DEMO-SKU-B", "Golden Chai Blend (DEMO)", 1000.0, "DEMO_CLASS_X", "approved",
+            blurb="Warming spices and black tea, ready to steep.",
+            scenario="approved tax classification. Second SKU on the clean path (website channel COD order).")
+        P["C"] = self._product(
+            users, "DEMO-SKU-C", "Rose Petal Tea (DEMO)", 1000.0,
+            blurb="Soft floral notes from dried rose petals.",
+            scenario="NO approved tax classification. Sale order confirm and invoice post are blocked by the tax gate.")
+        P["D"] = self._product(
+            users, "DEMO-SKU-D", "Lavender Evening Infusion (DEMO)", 1500.0, "DEMO_CLASS_Y", "approved",
+            blurb="Lavender and chamomile, caffeine free.",
+            scenario="approved classification, but two approved rules overlap for DEMO_CLASS_Y: resolves as blocked / ambiguous.")
+        P["E"] = self._product(
+            users, "DEMO-SKU-E", "Warm Spice Mix (DEMO)", 800.0, "DEMO_CLASS_X", "proposed",
+            blurb="Cinnamon, ginger and cardamom for baking and drinks.",
+            scenario="classification PROPOSED by the maker, waiting for the Tax Approver (maker-checker).")
         return P
 
     # ----------------------------------------------------------------- events
@@ -220,7 +232,7 @@ class PharmaDemoSeed(models.AbstractModel):
         for it in items:
             Item.create(dict(it, run_id=run.id))
         if match:
-            run.with_user(users["demo_finance"]).action_match()
+            run.with_user(users["finance"]).action_match()
         return run
 
     def _seed_runs(self, users, prods):
@@ -301,7 +313,7 @@ class PharmaDemoSeed(models.AbstractModel):
             [("run_id", "=", run.id), ("description", "like", needle)], limit=1) if run else self.env["pharma.recon.exception"]
 
     def _seed_exception_states(self, users):
-        fin, admin = users["demo_finance"], users["admin"]
+        fin, admin = users["finance"], users["admin"]
         # investigating: owner took it
         e = self._exc("DEMO R04 gateway payout DEMO-PAYOUT-7 (DEMO Gateway)", "Unidentified bank item")
         if e and e.state == "open":
@@ -346,7 +358,16 @@ class PharmaDemoSeed(models.AbstractModel):
         # pending SKU: stays a quotation; "Confirm" is refused by the tax gate
         order("DEMO-SO-BLOCKED", prods["C"], 1, confirm=False)
 
-        if not env["account.journal"].search_count([("type", "=", "sale"), ("company_id", "=", env.company.id)]):
+        def sale_journal():
+            return env["account.journal"].search_count([("type", "=", "sale"), ("company_id", "=", env.company.id)])
+        if not sale_journal():
+            # On a fresh -i run Odoo auto-installs the chart of accounts AFTER this hook; a demo company
+            # without a country gets the generic chart anyway, so load it now rather than skip the invoices.
+            try:
+                env["account.chart.template"].try_loading("generic_coa", env.company, install_demo=False)
+            except Exception as exc:  # noqa: BLE001
+                _logger.warning("pharma_demo_data: generic chart not loaded (%s)", exc)
+        if not sale_journal():
             _logger.warning("pharma_demo_data: no sale journal, invoice scenarios skipped")
             return
         Move = env["account.move"]

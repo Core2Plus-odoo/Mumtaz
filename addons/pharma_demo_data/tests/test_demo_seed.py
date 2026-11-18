@@ -14,12 +14,26 @@ class TestPharmaDemoSeed(TransactionCase):
         return {m: env[m].sudo().search_count([]) for m in (
             "pharma.tax.rule", "pharma.tax.event", "pharma.raw.event", "pharma.recon.run", "pharma.recon.item",
             "pharma.recon.exception", "pharma.partner.stock.line", "pharma.partner.scenario", "sale.order",
-            "account.move")} | {"users": env["res.users"].sudo().search_count([("login", "like", "demo_")])}
+            "account.move")} | {"users": env["res.users"].sudo().search_count([("login", "like", "pharma.%")])}
 
     def test_seed_is_idempotent(self):
+        self.env["pharma.demo.seed"].seed()      # bring the DB to the seeded steady state first
         before = self._counts()
         self.env["pharma.demo.seed"].seed()
         self.assertEqual(self._counts(), before)
+
+    def test_products_are_shop_ready(self):
+        Prod = self.env["product.template"].sudo()
+        names = {p.default_code: p.name for p in Prod.search([("default_code", "=like", "DEMO-SKU-%")])}
+        self.assertEqual(names, {
+            "DEMO-SKU-A": "Green Leaf Infusion (DEMO)", "DEMO-SKU-B": "Golden Chai Blend (DEMO)",
+            "DEMO-SKU-C": "Rose Petal Tea (DEMO)", "DEMO-SKU-D": "Lavender Evening Infusion (DEMO)",
+            "DEMO-SKU-E": "Warm Spice Mix (DEMO)"})
+        for p in Prod.search([("default_code", "=like", "DEMO-SKU-%")]):
+            self.assertTrue(p.image_1920, p.name)
+            self.assertIn("No health claims", p.description_sale)
+            self.assertIn("DEMO scenario", p.description or "")        # the control it demonstrates, internal only
+        self.assertEqual(self.env["ir.config_parameter"].sudo().get_param("pharma.demo.image_version"), "2")
 
     def test_mode_and_company(self):
         self.assertEqual(self.env["ir.config_parameter"].sudo().get_param("pharma.mode"), "demo")
@@ -27,12 +41,12 @@ class TestPharmaDemoSeed(TransactionCase):
 
     def test_demo_users_one_per_role(self):
         U = self.env["res.users"].sudo()
-        for login, group in (("demo_ops", "group_pharma_user"), ("demo_maker", "group_pharma_admin"),
-                             ("demo_approver", "group_pharma_tax_approver"), ("demo_finance", "group_pharma_finance")):
+        for login, group in (("pharma.ops", "group_pharma_user"), ("pharma.maker", "group_pharma_admin"),
+                             ("pharma.approver", "group_pharma_tax_approver"), ("pharma.finance", "group_pharma_finance")):
             u = U.search([("login", "=", login)])
             self.assertEqual(len(u), 1, login)
             self.assertTrue(U.with_user(u).env.user.has_group(f"pharma_core.{group}"), login)
-        ops = U.search([("login", "=", "demo_ops")])
+        ops = U.search([("login", "=", "pharma.ops")])
         self.assertFalse(U.with_user(ops).env.user.has_group("pharma_core.group_pharma_finance"))
 
     def test_tax_rule_scenarios(self):
@@ -57,8 +71,8 @@ class TestPharmaDemoSeed(TransactionCase):
 
     def test_maker_checker_on_demo_rule(self):
         Rule = self.env["pharma.tax.rule"].sudo()
-        maker = self.env["res.users"].sudo().search([("login", "=", "demo_maker")])
-        approver = self.env["res.users"].sudo().search([("login", "=", "demo_approver")])
+        maker = self.env["res.users"].sudo().search([("login", "=", "pharma.maker")])
+        approver = self.env["res.users"].sudo().search([("login", "=", "pharma.approver")])
         r3 = Rule.search([("name", "=", "DEMO-RULE-3")])
         with self.assertRaises(UserError):
             r3.with_user(maker).action_approve()          # maker is not an approver
@@ -71,8 +85,8 @@ class TestPharmaDemoSeed(TransactionCase):
     def test_classification_proposed_awaits_approver(self):
         E = self.env["product.template"].sudo().search([("default_code", "=", "DEMO-SKU-E")], limit=1)
         self.assertEqual(E.pharma_tax_status, "pending_evidence")
-        self.assertEqual(E.pharma_tax_proposed_by.login, "demo_maker")
-        approver = self.env["res.users"].sudo().search([("login", "=", "demo_approver")])
+        self.assertEqual(E.pharma_tax_proposed_by.login, "pharma.maker")
+        approver = self.env["res.users"].sudo().search([("login", "=", "pharma.approver")])
         E.with_user(approver).action_pharma_approve_tax_class()
         self.assertEqual(E.pharma_tax_status, "approved")
 

@@ -148,6 +148,50 @@ Expected test count after upgrade: 34 + 12 = **46**. Staging steps pending owner
 
 ---
 
+## 2026-11-18 — upgrade attempt 1 of the demo build, findings, and the wellness redesign (committed, NOT yet on staging)
+
+**Evidence from the VPS (owner-run, pasted back):**
+- `stage.sh test` on the throwaway DB: `1 failed, 2 error(s) of 12 tests`. Original `test_tax` / `test_recon` died in `setUpClass`
+  with *"You can not have two users with the same login!"*: my seeder created `demo_ops`, `demo_maker`, `demo_approver`,
+  which the handed-over test suites create themselves. `test_seed_is_idempotent` failed because the two invoice scenarios were
+  skipped on a fresh install (the chart of accounts is loaded after the post-install hook) and created on the second `seed()`.
+  The upgrade was nevertheless run (owner's call) and **succeeded on the live staging DB**: dump
+  `/var/local/pharma-staging/backups/mumtaz_pharma_pre_upgrade_20261118_123551.dump` (11 MB), migration 19.0.1.1.0 ran,
+  `pharma_demo_data: seed complete (idempotent)`, `98 modules loaded`, `pharma_website_demo` installed, `odoo-pharma` restarted
+  alone, health 200, `stage.sh smoke` fully green (`/`, `/pharma`, `/shop` 200, DEMO ribbon YES, five products listed, login OK,
+  14 of 14 menus, demo counts, production refusal, mode `demo` by SQL). `demo-passwords` set on the four demo users.
+
+**Fixes (pharma_demo_data 19.0.1.1.1, migration `19.0.1.1.1` renames in place, nothing deleted):**
+- Seeded logins are now `pharma.ops`, `pharma.maker`, `pharma.approver`, `pharma.finance`; the seeder renames the four
+  `demo_*` users already on staging (same records, same passwords) instead of creating a second set. Handed-over tests untouched.
+- The seeder loads the generic chart of accounts itself when no sales journal exists, so the invoice scenarios exist on a fresh
+  install; the idempotency test reaches the steady state first.
+
+**Health and wellness look (owner request), pharma_website_demo 19.0.1.1.0:**
+- `static/src/css/wellness.css` (plain CSS, no external fonts or images, declared in `web.assets_frontend`): sage / forest / cream /
+  sand / terracotta palette, serif headings, pill buttons, rounded soft-shadow cards, calm header and footer, restyled shop grid,
+  product page and DEMO ribbon (now terracotta, still unmissable). Selectors verified against Odoo 19 `website_sale` markup
+  (`.oe_product`, `.o_wsale_product_grid_wrapper`, `#product_detail`, `#add_to_cart`).
+- New `/pharma` home: hero with product art, trust strip, featured products read live from the shop, three control cards, a
+  "demonstration, clearly marked" panel. Verified in the real source: `slug`, `len`, `website.currency_id`, the monetary
+  `t-options` pattern are all used by stock templates.
+- Generated artwork (Pillow, no files committed): five pastel pack illustrations with botanical sprigs, every one stamped DEMO /
+  fictional / "no health claims"; a leaf-and-wordmark logo set on the website. Versioned (`pharma.demo.image_version`), so an
+  existing DB gets the new art exactly once.
+- Products renamed in place by SKU to shop-ready names (Green Leaf Infusion, Golden Chai Blend, Rose Petal Tea, Lavender Evening
+  Infusion, Warm Spice Mix, each "(DEMO)"); the control each one demonstrates moved from the name into the internal note.
+  Categories renamed Infusions / Blends & Mixes; shop order A to E. Copy makes no health claim; a test asserts that.
+- Rendered the real template markup with the real CSS plus Bootstrap 5.3.3 in headless Chromium at 1440 px and 390 px (home, shop,
+  product page) and fixed what it showed: invisible heading on the dark note panel (selector specificity) and an over-crowded
+  hero collage. This is a design check only; it is not Odoo, so the render test below is the integration check.
+- 7 new HTTP tests fetch `/pharma`, `/shop` and a product page as a visitor, check ribbon, names, no-health-claims wording, the
+  frontend CSS bundle (fetched and searched for the wellness variables), seeded state and website-seed idempotency.
+
+Expected on a fresh install: **54 tests** (18 + 16 + 13 + 7). Pending on staging: `test`, then `upgrade` (restarts `odoo-pharma` only),
+`smoke`, and a browser look. Rollback of the upgrade is the dump above plus the command `stage.sh upgrade` prints.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
