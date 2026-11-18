@@ -8,7 +8,10 @@
             <xpath expr="//header/button[@name='action_check']" position="after">
                 <button name="action_create_collection_entry" type="object" string="Create collection entry"
                         class="btn-primary"
-                        invisible="state != 'delivered' or payment_mode != 'cod' or cod_collected &lt;= 0 or (collection_move_id and collection_move_state != 'cancel')"
+                        invisible="state != 'delivered' or payment_mode != 'cod' or cod_collected &lt;= 0 or collection_move_open"
+                        groups="pharma_core.group_pharma_finance"/>
+                <button name="action_open_reverse_wizard" type="object" string="Reverse collection entry"
+                        invisible="collection_move_state != 'posted' or collection_reversal_state"
                         groups="pharma_core.group_pharma_finance"/>
                 <button name="action_open_collection_entry" type="object" string="Open collection entry"
                         invisible="not collection_move_id" groups="account.group_account_invoice"/>
@@ -17,6 +20,10 @@
                 <field name="collection_move_id" invisible="1"/>
                 <field name="collection_move_ref" invisible="not collection_move_id"/>
                 <field name="collection_move_state" invisible="not collection_move_id"/>
+                <field name="collection_reversal_state" invisible="not collection_reversal_state"/>
+                <field name="collection_move_open" invisible="1"/>
+                <field name="previous_move_ids" widget="many2many_tags" invisible="not previous_move_ids"
+                       groups="account.group_account_invoice"/>
             </xpath>
         </field>
     </record>

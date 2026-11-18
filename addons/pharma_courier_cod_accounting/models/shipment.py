@@ -2,23 +2,38 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from .remittance import MOVE_STATES
+from .reversal import entry_is_open, reversal_state
 
 
 class PharmaCourierShipment(models.Model):
-    _inherit = "pharma.courier.shipment"
+    _name = "pharma.courier.shipment"
+    _inherit = ["pharma.courier.shipment", "pharma.cod.entry.reversal"]
+    _entry_field = "collection_move_id"
 
     collection_move_id = fields.Many2one(
         "account.move", string="Collection Entry", readonly=True, copy=False, ondelete="set null", index=True)
     collection_move_ref = fields.Char(string="Collection Entry No.", compute="_compute_collection_info")
     collection_move_state = fields.Selection(MOVE_STATES, string="Collection Entry Status",
                                              compute="_compute_collection_info")
+    collection_reversal_state = fields.Selection(
+        [("draft", "Reversal drafted"), ("posted", "Reversed")], string="Collection Entry Reversal",
+        compute="_compute_collection_info")
+    collection_move_open = fields.Boolean(
+        compute="_compute_collection_info", help="The entry still stands: a draft, or posted and not reversed.")
+    previous_move_ids = fields.Many2many(
+        "account.move", "pharma_courier_shipment_prev_move_rel", "shipment_id", "move_id",
+        string="Superseded Entries", readonly=True, copy=False,
+        help="Collection entries that were cancelled or reversed before the current one was created.")
 
-    @api.depends("collection_move_id", "collection_move_id.state", "collection_move_id.name")
+    @api.depends("collection_move_id", "collection_move_id.state", "collection_move_id.name",
+                 "collection_move_id.reversal_move_ids.state")
     def _compute_collection_info(self):
         for s in self:
             move = s.collection_move_id.sudo()
             s.collection_move_ref = move.name if move else False
             s.collection_move_state = move.state if move else False
+            s.collection_reversal_state = reversal_state(move) if move else False
+            s.collection_move_open = entry_is_open(move) if move else False
 
     # ------------------------------------------------------------------ the entry
     def _collection_problem(self):
@@ -32,7 +47,7 @@ class PharmaCourierShipment(models.Model):
             return _("has no COD collected")
         if not self.sale_order_id:
             return _("has no matching sale order, so there is no customer to credit")
-        if self.collection_move_id and self.collection_move_id.sudo().state != "cancel":
+        if self.collection_move_open:
             return _("already has collection entry %s", self.collection_move_id.sudo().name)
         return False
 
@@ -77,6 +92,7 @@ class PharmaCourierShipment(models.Model):
                 "line_ids": [(0, 0, {"account_id": acc.id, "name": label, "debit": debit, "credit": credit,
                                      "partner_id": partner.id or False})
                              for acc, label, debit, credit, partner in lines]})
+            s._retire_open_entry()
             s.collection_move_id = move
             s.message_post(body=_("Draft collection entry %s created. Post it from Accounting.", move.name or move.ref))
         return {"type": "ir.actions.client", "tag": "display_notification",

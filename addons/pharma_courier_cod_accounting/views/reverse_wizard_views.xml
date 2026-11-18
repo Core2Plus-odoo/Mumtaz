@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_entry_reverse_form" model="ir.ui.view">
+        <field name="name">pharma.courier.entry.reverse.form</field>
+        <field name="model">pharma.courier.entry.reverse</field>
+        <field name="arch" type="xml">
+            <form string="Reverse entry">
+                <p class="text-muted">
+                    This creates a <b>draft</b> reversal of the posted entry. An accountant posts it from Accounting;
+                    after that a corrected entry can be created. Nothing is posted for you.
+                </p>
+                <group>
+                    <field name="res_model" invisible="1"/>
+                    <field name="res_id" invisible="1"/>
+                    <field name="date"/>
+                    <field name="reason" placeholder="Why is the posted entry being withdrawn?"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Create draft reversal" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
