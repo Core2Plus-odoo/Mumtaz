@@ -99,6 +99,8 @@ for on a remittance slip). A shortfall between any two is its own finding, never
 | C15 | admin | **Shipments** › `DEMO-A-0001` › **Open collection entry** | draft entry from slice 1c: debit courier clearing 2,500, credit the customer's receivable with the customer on the line. Same for `-0002` (4,200) and `-0003` (1,800). Together they cancel the settlement entry of C12 on the clearing account: the clearing balance for that batch is zero |
 | C16 | `pharma.finance` | **Shipments** › `DEMO-A-0004` (delivered, collected 2,700) › **Create collection entry** | a draft is created for 2,700, not the declared 3,000. Try it on `DEMO-A-0302` (in transit) or `DEMO-B-0201` (returned): refused with the reason. Select several shipments in the list, **Action › Create collection entries**: all or nothing |
 
+| C17 | admin, then `pharma.finance` | As admin post `DEMO-A-0001`'s collection entry (Accounting). As `pharma.finance`: **Reverse collection entry**, enter a reason | wizard creates a *draft* reversal, the shipment shows *Reversal drafted* and **Create collection entry** stays hidden. Post the reversal as admin: the shipment shows *Reversed*, the button returns, and a corrected entry can be created; the old one is listed under *Superseded Entries* |
+
 ### Live upload (the part to do in front of the audience)
 
 Sample files are in the module at `pharma_courier_cod_demo/static/samples/`. Open them at

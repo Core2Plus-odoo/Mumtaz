@@ -57,5 +57,19 @@ slip that agrees with the bank does not need a difference account. A missing acc
   Finance does not need Accounting rights: the draft is created with elevated rights on purpose and records the Finance user as its creator.
   Opening the entry itself needs Accounting access.
 - One entry per remittance. If the draft is deleted, or cancelled, a new one can be created. A posted entry stays.
-- Not built: reversing a posted collection or settlement, refunding a returned parcel's COD, and Pakistan chart-of-accounts
+- Not built: refunding a returned parcel's COD, and Pakistan chart-of-accounts
   specifics (account choice is configuration, so a local chart works without code changes).
+
+## Reversing a posted entry (slice 1d, `pharma_courier_cod_accounting` 19.0.1.2.0)
+
+A posted entry can be withdrawn, from the remittance (**Reverse entry**) or the shipment (**Reverse collection entry**).
+
+1. A Finance Controller opens the wizard, gives a **reason** (required) and a date. Odoo's own reversal is created as a **draft**; the reason is on the
+   reversal entry and in the record's history. Only a posted entry can be reversed; a draft is cancelled in Accounting instead, and an entry that
+   already has a live reversal is refused.
+2. An accountant posts the reversal. Nothing is posted by the module.
+3. Once the reversal is **posted**, the record is released and a corrected entry can be created; the withdrawn entry is kept under *Superseded Entries*
+   (accounting users). While the reversal is still a draft the original entry still stands, so nothing can be booked twice meanwhile.
+
+The reversal is created without touching reconciliations. If the withdrawn entry had been reconciled against a customer invoice, that
+reconciliation stays as it is until an accountant deals with it in Accounting.

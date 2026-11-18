@@ -19,7 +19,7 @@
 #   stage.sh verify        read-only facts about mumtaz_pharma (mode, module states, demo counts)
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
-#   stage.sh upgrade       GATE: backup mumtaz_pharma, -u pharma_* -i new pharma modules, restart odoo-pharma only, verify
+#   stage.sh upgrade [mod[,mod]]  GATE: backup mumtaz_pharma, -u pharma_* -i new pharma modules (or only the modules named), restart odoo-pharma only, verify
 #   stage.sh demo-passwords  set one password on the four demo users (pharma.ops / .maker / .approver / .finance), typed interactively
 #   stage.sh thirdparty    fetch the pinned Cybrosys accounting kit (source only) into /opt/thirdparty/cybroaddons
 #   stage.sh deps          GATE: pip --target the kit's python packages into /opt/thirdparty/pydeps (isolated)
@@ -214,11 +214,12 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  published DEMO products = '||count(*) from product_template where is_published and default_code like 'DEMO-SKU-%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  '||name||' = '||state||' ('||coalesce(latest_version,'-')||')' from ir_module_module where name in ('base_accounting_kit','base_account_budget','cybrosys_support_client','pharma_accounting_hardening') order by name"
-  sudo -u postgres psql -d "$DB" -tAc "select '  version '||name||' = '||coalesce(latest_version,'-') from ir_module_module where name in ('pharma_pk_tax_core','pharma_accounting_hardening','pharma_partner_stock') order by name"
+  sudo -u postgres psql -d "$DB" -tAc "select '  version '||name||' = '||coalesce(latest_version,'-') from ir_module_module where name in ('pharma_pk_tax_core','pharma_accounting_hardening','pharma_partner_stock','pharma_courier_cod_accounting') order by name"
   sudo -u postgres psql -d "$DB" -tAc "select '  tax rules linked to an Odoo sales tax = '||count(*) from pharma_tax_rule where account_tax_id is not null" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD: couriers='||(select count(*) from pharma_courier)||' shipments='||(select count(*) from pharma_courier_shipment)||' remittances='||(select count(*) from pharma_courier_remittance)||' statements='||(select count(*) from pharma_courier_statement)" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD journal entries: '||coalesce(string_agg(m.state||'='||n, ', ' order by m.state),'(none)') from (select m.state, count(*) n from pharma_courier_remittance r join account_move m on m.id=r.move_id group by m.state) m" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD collection entries: '||coalesce(string_agg(m.state||'='||n, ', ' order by m.state),'(none)') from (select m.state, count(*) n from pharma_courier_shipment s join account_move m on m.id=s.collection_move_id group by m.state) m" 2>/dev/null || true
+  sudo -u postgres psql -d "$DB" -tAc "select '  courier COD reversal entries (by state): '||coalesce(string_agg(r.state||'='||n, ', ' order by r.state),'(none)') from (select r.state, count(*) n from account_move r where r.reversed_entry_id in (select move_id from pharma_courier_remittance where move_id is not null union select collection_move_id from pharma_courier_shipment where collection_move_id is not null) group by r.state) r" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD exceptions by category: '||coalesce(string_agg(category||'='||n, ', ' order by category),'(none)') from (select category, count(*) n from pharma_recon_exception where category is not null group by category) x" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD crons active (expect 0 while neutralized): '||count(*) from ir_cron where active and cron_name like 'Courier COD%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  vendor support endpoint = '||value from ir_config_parameter where key='cybrosys_support_client.endpoint_url'"
@@ -327,18 +328,33 @@ PY
 }
 
 cmd_upgrade() {
+  # optional argument: a comma-separated module list to upgrade INSTEAD of every installed pharma module,
+  # e.g. `stage.sh upgrade pharma_courier_cod_accounting`. Checked before anything is dumped or touched.
+  local only="${1:-}" m
   guards; preflight
   db_exists "$DB" || die "$DB does not exist; run install first"
+  if [ -n "$only" ]; then
+    for m in ${only//,/ }; do
+      case ",$PHARMA_MODULES,pharma_accounting_hardening," in *",$m,"*) ;; *) die "unknown module '$m': upgrade takes pharma modules only (${PHARMA_MODULES},pharma_accounting_hardening)";; esac
+    done
+  fi
   say "GATE: upgrade $DB — dump first, then -u (pharma modules already installed) -i (pharma modules not yet installed)"
   sudo -u postgres pg_dump -Fc "$DB" > "$BACKUP_DIR/${DB}_pre_upgrade_$TS.dump"; chmod 600 "$BACKUP_DIR/${DB}_pre_upgrade_$TS.dump"
   echo "  dump: $BACKUP_DIR/${DB}_pre_upgrade_$TS.dump ($(du -h "$BACKUP_DIR/${DB}_pre_upgrade_$TS.dump" | cut -f1))"
   local installed to_update="" to_install=""
   installed="$(sudo -u postgres psql -d "$DB" -tAc "select string_agg(name, ',') from ir_module_module where state='installed' and name like 'pharma%'")"
-  for m in ${PHARMA_MODULES//,/ }; do
-    case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac
-  done
-  # not part of PHARMA_MODULES (it needs the third-party kit) but it must be refreshed with the rest
-  case ",$installed," in *",pharma_accounting_hardening,"*) to_update="$to_update,pharma_accounting_hardening";; esac
+  if [ -n "$only" ]; then
+    say "scope: ONLY $only (other pharma modules are left as they are)"
+    for m in ${only//,/ }; do
+      case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac
+    done
+  else
+    for m in ${PHARMA_MODULES//,/ }; do
+      case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac
+    done
+    # not part of PHARMA_MODULES (it needs the third-party kit) but it must be refreshed with the rest
+    case ",$installed," in *",pharma_accounting_hardening,"*) to_update="$to_update,pharma_accounting_hardening";; esac
+  fi
   to_update="${to_update#,}"; to_install="${to_install#,}"
   echo "  update: ${to_update:-<none>}   install: ${to_install:-<none>}"
   local args=(-c "$STAGE_CONF" -d "$DB" --stop-after-init)
@@ -625,7 +641,7 @@ case "${1:-}" in
   admin-login)    cmd_admin_login "${2:-}" ;;
   test)           cmd_test ;;
   service)        cmd_service ;;
-  upgrade)        cmd_upgrade ;;
+  upgrade)        cmd_upgrade "${2:-}" ;;
   demo-passwords) cmd_demo_passwords ;;
   neutralize)     cmd_neutralize ;;
   service-remove) cmd_service_remove ;;

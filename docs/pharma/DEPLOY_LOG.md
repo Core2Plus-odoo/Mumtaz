@@ -486,6 +486,20 @@ and only when green and on a named go `stage.sh upgrade` (updates the accounting
 - Not exercised yet on staging: pressing Create collection entry / Create journal entry in the browser (C13, C16), the list Action for several shipments, reconciling a collection credit against a real customer invoice,
   and the tax-link gate (no rule is linked to an Odoo tax). These need the owner's browser pass.
 
+## 2026-11-18 — slice 1d: reversal of posted collection and settlement entries (cherry-picked `de063d4`, NOT yet tested or on staging)
+
+Cherry-picked from `origin/pharma-reversal` as `a3f31ba` on top of `6b09f6d` (single commit, no conflicts; main untouched, no PR). `pharma_courier_cod_accounting` 19.0.1.2.0:
+a Finance Controller asks to reverse a **posted** collection or settlement entry with a required reason; Odoo's own reversal is created as a **draft** (`_reverse_moves(cancel=False)`, reconciliations untouched);
+an accountant posts it; once the reversal is posted the record is released so a corrected entry can be created, and the withdrawn entry is kept in *Superseded Entries*. A draft reversal keeps the original standing, so nothing is booked twice meanwhile.
+Shared behaviour lives in the abstract `pharma.cod.entry.reversal` mixin; one transient wizard `pharma.courier.entry.reverse` with one access row (Finance, read/write/create/unlink); 14 tests.
+
+Schema note for the upgrade: **three** new tables, not two: the wizard's transient table plus one many2many relation table each for remittances and shipments (`pharma_courier_remittance_prev_move_rel`, `pharma_courier_shipment_prev_move_rel`). The abstract mixin has no table.
+
+Made here: `stage.sh upgrade` takes an optional module argument (`stage.sh upgrade pharma_courier_cod_accounting` updates only that module; unknown names are refused before anything is dumped; no argument keeps the old behaviour);
+`verify` prints the accounting module's version and reversal entries by state; docs (COURIER_COD_ACCOUNTING.md, DEMO_SCENARIOS C17). No demo data is seeded for this (it needs posted entries). Static checks only (py_compile, pyflakes, XML, `bash -n`); expected suite: 189 + 14 = 203.
+Next (owner-run): `git pull --ff-only`, `stage.sh test-combined` (must be green); then a named go for `stage.sh upgrade pharma_courier_cod_accounting`, `verify`, `smoke`. Neutralize needs no separate step; `upgrade` re-runs it only as a no-op safeguard on a neutralized database.
+Caveat to test in the browser: reversing an entry that was already reconciled against a customer invoice leaves that reconciliation for the accountant to resolve.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
