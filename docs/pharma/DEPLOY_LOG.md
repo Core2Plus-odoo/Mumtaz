@@ -82,6 +82,21 @@ Script defects found and fixed on the way (all in `stage.sh`, none on the server
 
 ---
 
+## 2026-11-18 — service, neutralize, nginx done; DNS + certificate pending (owner-run, evidence pasted back)
+
+| Step | Status | Evidence |
+| --- | --- | --- |
+| `stage.sh service` (gate 1, approved by owner) | **done** 11:45 UTC | `odoo-pharma.service` active, enabled; PIDs: main, 2 workers, gevent, cron; 254 MB; `/web/health` on 127.0.0.1:8076 → 200. Re-run correctly refused ("port in use"). |
+| `smoke-local` | partial | `/web/login` via 127.0.0.1:8076 with `Host: pharma.mumtaz.digital` → **200** (dbfilter `^mumtaz_%d$` maps the host to `mumtaz_pharma`). XML-RPC login returned 500 — client sent two Host headers (python xmlrpc adds its own); replaced by JSON-RPC with one header, re-run pending; server-side log not yet read. |
+| `stage.sh neutralize` (approved by owner) | **done** 11:48 UTC | `odoo.cli.neutralize: Neutralization finished`; `database.is_neutralized = true`; `pharma.mode = demo`; 1 active cron (autovacuum, as Odoo leaves it); 1 active mail server = Odoo's placeholder "neutralization - disable emails" → nothing can send. `odoo-pharma` restarted alone; health 200. |
+| Memory / other units | ok | `free`: 4.1 GiB used, 3.6 GiB available. `odoo`, `odoo2`, `odoo3`, `odoo4`, `faizy-odoo`, `odoo-pharma` all `active`. |
+| nginx vhost (gate 2, approved) | **done** ~11:56 UTC | `/etc/nginx/sites-available/pharma.mumtaz.digital` + symlink in `sites-enabled`; `nginx -t` ok; reloaded; `curl -H 'Host: pharma.mumtaz.digital' http://127.0.0.1/web/login` → **200**. |
+| DNS A record `pharma → 187.77.128.199` | **pending** | not yet added in Hostinger hPanel; `getent hosts pharma.mumtaz.digital` empty |
+| `certbot --nginx -d pharma.mumtaz.digital` | **failed once, expected** | Let's Encrypt: `NXDOMAIN looking up A for pharma.mumtaz.digital`. Retry only after DNS resolves (5 failures/hour limit). |
+| `stage.sh smoke` (HTTPS), browser login, banner + menus | pending | needs DNS + certificate |
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
