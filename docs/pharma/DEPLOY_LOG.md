@@ -295,6 +295,20 @@ Rollback if ever needed (printed by the script): stop `odoo-pharma`, drop and re
 
 ---
 
+## 2026-11-18 — accounting kit: post-install checks green (owner-run, output pasted back)
+
+- **Scheduled actions:** `select cron_name from ir_cron where active` returns one row, `Base: Auto-vacuum internal data`. The kit's follow-up,
+  recurring-entry and bank auto-reconcile actions are all off, as neutralize intends.
+- **`stage.sh smoke` with the kit installed:** `/web/login`, `/`, `/pharma`, `/shop` all 200; DEMO ribbon on `/shop` YES; the five shop products listed;
+  login as the owner's admin OK uid 2; 14 of 14 Pharma menus; demo counts unchanged (tax rules 8, tax events 9, recon runs 5, exceptions 6, stock lines 4,
+  raw events 8); production mode still refuses DEMO rules; `pharma.mode` by SQL `demo`.
+
+Closed: the install checks in the previous entry marked "not yet verified" items (1) and (2). Still open and owned by the owner: the browser look at the Accounting menus and reports
+(and an Excel export), and at the wellness storefront. Suggested next step, not started: seed fictional accounting data (invoices, bills, payments, a bank
+statement, an asset, a budget) through the normal flows so the reports have something to show.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
