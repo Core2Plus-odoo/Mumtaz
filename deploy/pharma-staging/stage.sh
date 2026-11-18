@@ -285,8 +285,9 @@ smoke_common() {   # $1 = base URL, $2 = Host header
   local base="$1" host="$2"
   say "HTTP: $base/web/login  (Host: $host)"
   curl -sS -o /dev/null -w "  status=%{http_code}\n" --max-time 20 -H "Host: $host" "$base/web/login" || echo "  (curl failed)"
-  say "XML-RPC as admin (password prompt, never echoed)"
-  local pw; read -r -s -p "admin password: " pw; echo
+  say "XML-RPC as admin (optional: type the admin password, or just press Enter to skip the login check)"
+  local pw; read -r -s -p "admin password [Enter = skip]: " pw; echo
+  if [ -z "$pw" ]; then echo "  skipped (verify the login in the browser later)"; else
   PHARMA_PW="$pw" python3 - "$base" "$host" "$DB" <<'PY'
 import os, sys, xmlrpc.client as x
 base, host, db = sys.argv[1:]; pw = os.environ["PHARMA_PW"]
@@ -307,10 +308,23 @@ print("  required menus present:", "YES" if want <= have else f"MISSING {sorted(
 for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.raw.event"):
     print(f"  {model}: total={kw(model,'search_count',[])} demo={kw(model,'search_count',[['is_demo','=',True]])}")
 PY
-  say "production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
+  fi
+  say "menus / mode / DEMO data as admin, and: production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
   render_conf "$STAGE_CONF" cli
-  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) <<'PY'
+  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) 2>/dev/null <<'PY'
 from datetime import date
+admin = env.ref("base.user_admin")
+print("  company:", env.company.name)
+print("  pharma.mode:", env["ir.config_parameter"].sudo().get_param("pharma.mode"))
+print("  neutralized:", env["ir.config_parameter"].sudo().get_param("database.is_neutralized"))
+menus = env["ir.ui.menu"].with_user(admin).search([("complete_name", "like", "Pharma")], order="complete_name")
+print("  Pharma menus visible to admin:")
+for m in menus: print("    -", m.complete_name)
+want = {"Pharma/Tax Centre", "Pharma/Reconciliation", "Pharma/Reconciliation/Exception Queue"}
+have = set(menus.mapped("complete_name"))
+print("  required menus present:", "YES" if want <= have else f"MISSING {sorted(want - have)}")
+for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.raw.event"):
+    M = env[model].sudo(); print(f"  {model}: total={M.search_count([])} demo={M.search_count([('is_demo', '=', True)])}")
 P = env["ir.config_parameter"].sudo()
 before = P.get_param("pharma.mode")
 P.set_param("pharma.mode", "production")
