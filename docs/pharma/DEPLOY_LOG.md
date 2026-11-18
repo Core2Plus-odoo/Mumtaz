@@ -69,7 +69,7 @@ run, and never touches the production config or service.
 | `stage.sh install` | **done** 11:31–11:33 UTC | Odoo log: `97 modules loaded in 70.73s`, `Modules loaded.`, `Registry loaded in 84.463s` for `mumtaz_pharma`. Odoo's own demo data off. |
 | admin password | done 11:38 UTC | set interactively via `odoo shell`, not stored anywhere |
 | `stage.sh verify` | done | `pharma.mode = demo`; pharma_core, pharma_pk_tax_core, pharma_reconciliation_hub, pharma_demo_data all `installed`; 97 modules total; company `Pharma Demo Co`; 2 DEMO tax rules; 3 DEMO reconciliation runs; 3 open exceptions |
-| `stage.sh test` | **not yet** | first two attempts never reached Odoo (conf unreadable by `odoo`; see below), third was killed by a port clash (see below) |
+| `stage.sh test` | **done** 11:41–11:43 UTC | fresh `-i` of the full list into `mumtaz_pharma_test` on 127.0.0.1:8086 with `--test-enable --test-tags pharma`: **`0 failed, 0 error(s) of 34 tests when loading database 'mumtaz_pharma_test'`**, `34 post-tests in 2.55s, 2040 queries`. Log: `/var/local/pharma-staging/logs/test_20261118_114145.log`. Test DB dropped (`--force`, 5 poller sessions from odoo2/odoo3 ended). Two `odoo.sql_db: bad query` ERROR lines are the `pharma_tax_event` unique constraint firing inside the duplicate-withholding test, expected; add `@mute_logger('odoo.sql_db')` to that test (S4). |
 
 Script defects found and fixed on the way (all in `stage.sh`, none on the server):
 - `/var/local/pharma-staging` was created `root:staff 750`, so the `odoo` user could not read the rendered conf → Odoo exit 2 at option parsing. Fixed: dir is `root:odoo`.
