@@ -241,6 +241,22 @@ Still gated and not done: `install-accounting` (dump, install, neutralize, resta
 
 ---
 
+## 2026-11-18 — accounting kit: first combined run, 61 of 62, one test defect fixed (owner-run, output pasted back)
+
+`stage.sh test-combined` (13:00–13:03 UTC), fresh throwaway DB with our five modules, the kit, the budget and support modules and the
+hardening module, tag `pharma`: `62 post-tests in 35.86s, 4432 queries`; **`1 failed, 0 error(s) of 62`**. Log
+`/var/local/pharma-staging/logs/test_combined_20261118_130028.log`.
+
+- **Passed, first time they ever ran:** the guard on `/xlsx_report` (403 for portal and plain internal users, 403 for a model that is not an
+  exporter, reaches the kit for an accountant), the administrator-only support form, the dead support endpoint, and both tax-gate tests with the
+  kit installed (an unclassified product still cannot be posted; an approved one still posts). All 54 earlier pharma tests also pass with the kit installed.
+- **Failed:** `test_endpoint_is_enforced_on_every_upgrade`. Defect in the test, not the control: it asserted the data file never contains the text
+  "noupdate", and the file's own comment says "Not noupdate on purpose". The data record is a plain `<function>` call outside any `noupdate` block.
+- **Fix:** the test now parses the XML and asserts that no element carries `noupdate="1"` and that exactly one `ir.config_parameter.set_param` call exists.
+  Checked against the real file here. Needs one more `test-combined` run for a clean record; expect `0 failed, 0 error(s) of 62`.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

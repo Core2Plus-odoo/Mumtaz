@@ -1,4 +1,5 @@
 import json
+import xml.etree.ElementTree as ET
 from datetime import date
 
 from odoo.exceptions import AccessError, UserError
@@ -61,11 +62,15 @@ class TestPharmaAccountingHardening(HttpCase):
         self.assertTrue(endpoint.startswith("http://127.0.0.1:"), endpoint)
 
     def test_endpoint_is_enforced_on_every_upgrade(self):
-        """The data file must not be noupdate, or a later upgrade would leave a manually restored vendor URL alone."""
-        with file_open("pharma_accounting_hardening/data/support_endpoint.xml") as f:
-            content = f.read()
-        self.assertNotIn("noupdate", content)
-        self.assertIn("set_param", content)
+        """The data file must not be noupdate, or a later upgrade would leave a manually restored vendor URL alone.
+        Checked on the parsed structure, not on the text, because the file's own comment mentions the word."""
+        with file_open("pharma_accounting_hardening/data/support_endpoint.xml", "rb") as f:
+            root = ET.parse(f).getroot()
+        for el in root.iter():
+            self.assertNotEqual(el.get("noupdate"), "1", f"<{el.tag}> is noupdate")
+        calls = root.findall(".//function[@name='set_param']")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0].get("model"), "ir.config_parameter")
 
     # ---- tax gate with the kit installed ----------------------------------------------------------
     def _draft_invoice(self, sku):
