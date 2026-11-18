@@ -15,6 +15,7 @@
 #   stage.sh preflight     detect CLI flags, check the rendered conf is readable by odoo
 #   stage.sh backup        pre-change backup (pg globals, DB list, /etc/nginx + odoo confs)
 #   stage.sh install       create mumtaz_pharma + install the module list (resumes if done), set admin password, verify
+#   stage.sh admin-login <login>  rename the admin user's login (e.g. to an email) and set its password
 #   stage.sh verify        read-only facts about mumtaz_pharma (mode, module states, demo counts)
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
@@ -259,6 +260,21 @@ UNITEOF
   printf 'health: '; curl -sS -o /dev/null -w '%{http_code}\n' --max-time 20 "http://127.0.0.1:$HTTP_PORT/web/health" || echo "(not up yet; tail -f $SVC_LOG)"
 }
 
+admin_login() { sudo -u postgres psql -d "$DB" -tAc "select u.login from res_users u join ir_model_data d on d.res_id=u.id and d.model='res.users' and d.module='base' and d.name='user_admin'" | tr -d ' '; }
+
+cmd_admin_login() {
+  guards; render_conf "$STAGE_CONF" cli
+  local new="${1:-}"; [ -n "$new" ] || die "usage: stage.sh admin-login <new login, e.g. an email>"
+  say "set the admin user's login to '$new' on $DB (password prompted next)"
+  as_odoo "$ODOO_BIN" shell -c "$STAGE_CONF" -d "$DB" $(no_http_flag) 2>/dev/null <<PY
+u = env.ref("base.user_admin")
+u.write({"login": "$new"})
+env.cr.commit()
+print("  admin login is now:", u.login)
+PY
+  set_admin_password
+}
+
 cmd_neutralize() {
   guards; render_conf "$STAGE_CONF" cli
   say "neutralize $DB (standard Odoo: banner on every page, outgoing mail / crons / payment providers off). Reversible."
@@ -287,11 +303,12 @@ smoke_common() {   # $1 = base URL, $2 = Host header
   say "HTTP: $base/web/login  (Host: $host)"
   curl -sS -o /dev/null -w "  status=%{http_code}\n" --max-time 20 -H "Host: $host" "$base/web/login" || echo "  (curl failed)"
   say "XML-RPC as admin (optional: type the admin password, or just press Enter to skip the login check)"
-  local pw; read -r -s -p "admin password [Enter = skip]: " pw; echo
+  local login; login="$(admin_login)"; echo "  admin login on $DB: $login"
+  local pw; read -r -s -p "password for $login [Enter = skip]: " pw; echo
   if [ -z "$pw" ]; then echo "  skipped (verify the login in the browser later)"; else
-  PHARMA_PW="$pw" python3 - "$base" "$host" "$DB" <<'PY' || echo "  (login check failed — see /var/log/odoo/odoo-pharma.log; verify in the browser)"
+  PHARMA_PW="$pw" PHARMA_LOGIN="$login" python3 - "$base" "$host" "$DB" <<'PY' || echo "  (login check failed — see /var/log/odoo/odoo-pharma.log; verify in the browser)"
 import json, os, sys, urllib.request, http.cookiejar
-base, host, db = sys.argv[1:]; pw = os.environ["PHARMA_PW"]
+base, host, db = sys.argv[1:]; pw = os.environ["PHARMA_PW"]; login = os.environ["PHARMA_LOGIN"]
 cj = http.cookiejar.CookieJar(); opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
 def rpc(path, params):
     body = json.dumps({"jsonrpc": "2.0", "method": "call", "params": params, "id": 1}).encode()
@@ -299,8 +316,8 @@ def rpc(path, params):
     with opener.open(req, timeout=60) as r: out = json.loads(r.read())
     if "error" in out: raise SystemExit("  RPC error: " + out["error"].get("data", {}).get("message", out["error"].get("message")))
     return out["result"]
-info = rpc("/web/session/authenticate", {"db": db, "login": "admin", "password": pw})
-print("  admin login:", f"OK uid={info['uid']}" if info.get("uid") else "FAILED")
+info = rpc("/web/session/authenticate", {"db": db, "login": login, "password": pw})
+print(f"  login as {login}:", f"OK uid={info['uid']}" if info.get("uid") else "FAILED")
 if not info.get("uid"): sys.exit(1)
 print("  session db:", info.get("db"), "| company:", info.get("user_companies", {}).get("current_company"))
 menus = rpc("/web/dataset/call_kw", {"model": "ir.ui.menu", "method": "search_read", "args": [[["complete_name", "like", "Pharma"]]],
@@ -347,6 +364,7 @@ case "${1:-}" in
   backup)         guards; cmd_backup ;;
   install)        cmd_install ;;
   verify)         guards; cmd_verify ;;
+  admin-login)    cmd_admin_login "${2:-}" ;;
   test)           cmd_test ;;
   service)        cmd_service ;;
   neutralize)     cmd_neutralize ;;
