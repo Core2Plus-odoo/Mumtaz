@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_recon_run_form_stock_moves" model="ir.ui.view">
+        <field name="name">pharma.recon.run.form.stock.moves</field>
+        <field name="model">pharma.recon.run</field>
+        <field name="inherit_id" ref="pharma_reconciliation_hub.view_pharma_recon_run_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date_window_days']" position="after">
+                <field name="partner_location_id" invisible="run_type != 'partner_stock'"/>
+                <field name="date_from" invisible="run_type != 'partner_stock'"/>
+                <field name="date_to" invisible="run_type != 'partner_stock'"/>
+            </xpath>
+            <xpath expr="//field[@name='stock_line_ids']" position="before">
+                <button name="action_compute_stock_from_moves" type="object" class="btn-primary"
+                        string="Compute from stock moves" groups="pharma_core.group_pharma_finance"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_pharma_partner_stock_list_moves" model="ir.ui.view">
+        <field name="name">pharma.partner.stock.line.list.moves</field>
+        <field name="model">pharma.partner.stock.line</field>
+        <field name="inherit_id" ref="pharma_reconciliation_hub.view_pharma_partner_stock_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='is_demo']" position="before">
+                <field name="from_stock_moves" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
