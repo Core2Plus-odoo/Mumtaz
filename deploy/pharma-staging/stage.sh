@@ -69,13 +69,20 @@ guards() {
   chown "$ODOO_USER" "$LOG_DIR"; chmod 700 "$BACKUP_DIR"
 }
 
+# A free loopback port pair for one-off CLI runs (test mode starts an HTTP server).
+free_cli_port() {
+  local p; for p in 8086 8088 8090 8092 8094 8096; do
+    ss -ltn | grep -qE ":($p|$((p+1)))\b" || { echo "$p"; return; }
+  done; die "no free port pair in 8086-8097 for the CLI run"
+}
+
 # Render an Odoo config from the live one: keep db_* credentials, replace
 # everything tenant-specific. $1 = output path, $2 = "cli" or "service".
 render_conf() {
   local out="$1" mode="$2"
-  python3 - "$LIVE_CONF" "$out" "$mode" "$CHECKOUT/addons" "$LOG_DIR/odoo-cli.log" "$SVC_LOG" "$HTTP_PORT" "$WS_PORT" <<'PY'
+  python3 - "$LIVE_CONF" "$out" "$mode" "$CHECKOUT/addons" "$(free_cli_port)" "$SVC_LOG" "$HTTP_PORT" "$WS_PORT" <<'PY'
 import configparser, sys
-live, out, mode, addons, cli_log, svc_log, http_port, ws_port = sys.argv[1:]
+live, out, mode, addons, cli_port, svc_log, http_port, ws_port = sys.argv[1:]
 cp = configparser.RawConfigParser(); cp.optionxform = str; cp.read(live)
 o = cp["options"]
 keep = {k: o[k] for k in ("db_host", "db_port", "db_user", "db_password", "db_sslmode", "db_maxconn", "admin_passwd")
@@ -87,6 +94,7 @@ o["list_db"] = "False"
 o["proxy_mode"] = "True"
 if mode == "service":
     o["dbfilter"] = "^mumtaz_%d$"
+    o["db_name"] = "mumtaz_pharma"      # scopes the cron scheduler to this DB; without it Odoo polls EVERY database on the server
     o["http_interface"] = "127.0.0.1"
     o["http_port"] = http_port
     o["gevent_port"] = ws_port
@@ -98,6 +106,12 @@ if mode == "service":
     o["limit_time_real"] = "240"
     o["logfile"] = svc_log
     o["log_level"] = "info"
+else:
+    # --test-enable starts the HTTP server even with --no-http (browser tests need it), so
+    # bind loopback on a free port instead of colliding with the live service on 8069.
+    o["http_interface"] = "127.0.0.1"
+    o["http_port"] = cli_port
+    o["gevent_port"] = str(int(cli_port) + 1)
 # cli mode: no logfile, so Odoo logs to stderr and the run log is one file
 with open(out, "w") as f:
     f.write("; rendered by deploy/pharma-staging/stage.sh (%s) — STAGING tenant pharma. Not hand-edited.\n" % mode)
@@ -122,7 +136,7 @@ preflight() {
   render_conf "$STAGE_CONF" cli
   say "preflight"
   echo "  odoo: $(command -v "$ODOO_BIN")  $("$ODOO_BIN" --version 2>/dev/null | tail -1)"
-  echo "  demo flag: '$(without_demo_flag)'   no-http flag: '$(no_http_flag)'"
+  echo "  demo flag: '$(without_demo_flag)'   no-http flag: '$(no_http_flag)'   cli http port: $(grep -E '^http_port' "$STAGE_CONF" | sed 's/.*= *//') (loopback)"
   as_odoo test -r "$STAGE_CONF" && echo "  $STAGE_CONF readable by $ODOO_USER: yes" || die "$STAGE_CONF not readable by $ODOO_USER"
   as_odoo test -r "$CHECKOUT/addons/pharma_core/__manifest__.py" && echo "  checkout readable by $ODOO_USER: yes" || die "$CHECKOUT not readable by $ODOO_USER"
 }

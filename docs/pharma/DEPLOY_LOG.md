@@ -61,6 +61,27 @@ run, and never touches the production config or service.
 
 ---
 
+## 2026-11-18 — install done on the VPS (evidence pasted back by the owner)
+
+| Step | Status | Evidence |
+| --- | --- | --- |
+| `stage.sh backup` | done 11:27 UTC | `/var/local/pharma-staging/backups/{pg_globals,databases}_20261118_112747.*`, `conf_20261118_112747.tgz` (/etc/nginx, /etc/odoo*.conf, odoo*.service) |
+| `stage.sh install` | **done** 11:31–11:33 UTC | Odoo log: `97 modules loaded in 70.73s`, `Modules loaded.`, `Registry loaded in 84.463s` for `mumtaz_pharma`. Odoo's own demo data off. |
+| admin password | done 11:38 UTC | set interactively via `odoo shell`, not stored anywhere |
+| `stage.sh verify` | done | `pharma.mode = demo`; pharma_core, pharma_pk_tax_core, pharma_reconciliation_hub, pharma_demo_data all `installed`; 97 modules total; company `Pharma Demo Co`; 2 DEMO tax rules; 3 DEMO reconciliation runs; 3 open exceptions |
+| `stage.sh test` | **not yet** | first two attempts never reached Odoo (conf unreadable by `odoo`; see below), third was killed by a port clash (see below) |
+
+Script defects found and fixed on the way (all in `stage.sh`, none on the server):
+- `/var/local/pharma-staging` was created `root:staff 750`, so the `odoo` user could not read the rendered conf → Odoo exit 2 at option parsing. Fixed: dir is `root:odoo`.
+- Odoo 19 lists server flags under `odoo server --help`, and takes a plain `--without-demo` (a value is refused with a warning). Fixed: version-based.
+- The install success check read the stdout capture while the rendered conf sent Odoo's log to a file, so a **successful** install was reported as failed. Fixed: CLI conf has no logfile; one run log.
+- `--test-enable` makes Odoo 19 start its HTTP server even with `--no-http`, and it took the default 8069 owned by the live `odoo.service` → "Port 8069 is in use". Fixed: CLI runs bind 127.0.0.1 on the first free pair from 8086.
+- A cosmetic `(ERROR/3) Unexpected indentation` line during install is docutils rendering some module's description; harmless, module not yet identified (S4).
+
+**Finding on the server (pre-existing, not changed):** `odoo2.service` (Mumtaz_ERP) and `odoo3.service` (Mumtaz_IG2) have a `dbfilter` but **no `db_name`**. Odoo's scheduler ignores `dbfilter` and, without `db_name`, polls every database on the Postgres server for cron jobs. `pg_stat_activity` showed 8 idle sessions from exactly those two processes on `mumtaz_pharma` and `mumtaz_pharma_test` within seconds of their creation. Consequences: those production processes will run our DB's scheduled jobs with an addons path that lacks `pharma_*` (expect warnings in their logs), and one of them blocked a plain `dropdb`. Recommended fix, owner's decision, production change: `db_name = Mumtaz_ERP` in `/etc/odoo2.conf`, `db_name = Mumtaz_IG2` in `/etc/odoo3.conf`, restart each. Our side: `/etc/odoo-pharma.conf` carries `db_name = mumtaz_pharma` so it never does this to them; the throwaway test DB is dropped with `--force`.
+
+---
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
