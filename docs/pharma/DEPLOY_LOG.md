@@ -410,6 +410,15 @@ the collection entry itself, reversing a posted settlement.
 
 Next (owner-run): `git pull --ff-only` then `stage.sh test` (expect 0 failed of 148), and only when green and on a named go `stage.sh upgrade` then `smoke`.
 
+## 2026-11-18 — slice 1b: 148 of 148 tests green on the throwaway DB, first run (owner-run, output pasted back)
+
+- Fresh install of the full module list into `mumtaz_pharma_test` with `--test-tags pharma`: **0 failed, 0 error(s) of 148 tests**, no code change needed.
+  Per module: pharma_courier_cod 75, pharma_courier_cod_accounting 19, pharma_courier_cod_demo 12, pharma_demo_data 15, pharma_pk_tax_core 20,
+  pharma_reconciliation_hub 18, pharma_website_demo 9. The two `bad query ... pharma_tax_event` log lines are the same intentional negative tests as before.
+- Staging was left at the earlier state while the throwaway DB was tested: accounting hardening installed, courier cron off. `mumtaz_pharma` is untouched by this run.
+- Next gate (owner's go needed): `stage.sh upgrade` installs `pharma_courier_cod_accounting`, updates `pharma_courier_cod_demo` to 19.0.1.1.0 (its migration seeds the accounts and one draft entry),
+  re-runs neutralize, restarts odoo-pharma only.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
