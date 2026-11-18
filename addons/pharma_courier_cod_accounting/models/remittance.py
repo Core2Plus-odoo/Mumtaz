@@ -2,6 +2,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from .courier import ACCOUNT_FIELDS
+from .reversal import entry_is_open, reversal_state
 
 # remittance line deduction field -> courier account field
 DEDUCTION_ACCOUNTS = {
@@ -15,7 +16,9 @@ MOVE_STATES = [("draft", "Draft"), ("posted", "Posted"), ("cancel", "Cancelled")
 
 
 class PharmaCourierRemittance(models.Model):
-    _inherit = "pharma.courier.remittance"
+    _name = "pharma.courier.remittance"
+    _inherit = ["pharma.courier.remittance", "pharma.cod.entry.reversal"]
+    _entry_field = "move_id"
 
     move_id = fields.Many2one("account.move", string="Journal Entry", readonly=True, copy=False, ondelete="set null",
                               index=True)
@@ -23,13 +26,23 @@ class PharmaCourierRemittance(models.Model):
                            help="Read with elevated rights so Finance sees the entry's number and state without "
                                 "needing Accounting access.")
     move_state = fields.Selection(MOVE_STATES, string="Entry Status", compute="_compute_move_info")
+    move_reversal_state = fields.Selection(
+        [("draft", "Reversal drafted"), ("posted", "Reversed")], string="Entry Reversal", compute="_compute_move_info")
+    move_open = fields.Boolean(compute="_compute_move_info",
+                               help="The entry still stands: a draft, or posted and not reversed.")
+    previous_move_ids = fields.Many2many(
+        "account.move", "pharma_courier_remittance_prev_move_rel", "remittance_id", "move_id",
+        string="Superseded Entries", readonly=True, copy=False,
+        help="Entries that were cancelled or reversed before the current one was created.")
 
-    @api.depends("move_id", "move_id.state", "move_id.name")
+    @api.depends("move_id", "move_id.state", "move_id.name", "move_id.reversal_move_ids.state")
     def _compute_move_info(self):
         for r in self:
             move = r.move_id.sudo()
             r.move_ref = move.name if move else False
             r.move_state = move.state if move else False
+            r.move_reversal_state = reversal_state(move) if move else False
+            r.move_open = entry_is_open(move) if move else False
 
     # ------------------------------------------------------------------ the entry
     def _entry_lines(self):
@@ -77,7 +90,7 @@ class PharmaCourierRemittance(models.Model):
             if r.state != "posted" or not r.run_id:
                 raise UserError(_("%s must be posted and reconciled against the bank before an entry is created.",
                                   r.display_name))
-            if r.move_id and r.move_id.sudo().state != "cancel":
+            if r.move_open:
                 raise UserError(_("%(r)s already has journal entry %(m)s.", r=r.display_name, m=r.move_id.sudo().name))
             if r.bank_amount <= 0 or r.amount_gross <= 0:
                 raise UserError(_("%s needs a bank amount and a remitted gross above zero.", r.display_name))
@@ -92,6 +105,7 @@ class PharmaCourierRemittance(models.Model):
                 "ref": _("COD %(c)s %(s)s", c=courier.code, s=r.slip_ref),
                 "line_ids": [(0, 0, {"account_id": acc.id, "name": label, "debit": debit, "credit": credit,
                                      "partner_id": partner}) for acc, label, debit, credit in lines]})
+            r._retire_open_entry()
             r.move_id = move
             r.message_post(body=_("Draft journal entry %s created. Post it from Accounting.", move.name or move.ref))
         return True

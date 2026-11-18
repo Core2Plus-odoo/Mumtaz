@@ -7,7 +7,10 @@
         <field name="arch" type="xml">
             <xpath expr="//header/button[@name='action_cancel']" position="before">
                 <button name="action_create_entry" type="object" string="Create journal entry" class="btn-primary"
-                        invisible="state != 'posted' or not run_id or (move_id and move_state != 'cancel')"
+                        invisible="state != 'posted' or not run_id or move_open"
+                        groups="pharma_core.group_pharma_finance"/>
+                <button name="action_open_reverse_wizard" type="object" string="Reverse entry"
+                        invisible="move_state != 'posted' or move_reversal_state"
                         groups="pharma_core.group_pharma_finance"/>
             </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
@@ -20,6 +23,10 @@
                 <field name="move_id" invisible="1"/>
                 <field name="move_ref" invisible="not move_id"/>
                 <field name="move_state" invisible="not move_id"/>
+                <field name="move_reversal_state" invisible="not move_reversal_state"/>
+                <field name="move_open" invisible="1"/>
+                <field name="previous_move_ids" widget="many2many_tags" invisible="not previous_move_ids"
+                       groups="account.group_account_invoice"/>
             </xpath>
         </field>
     </record>
