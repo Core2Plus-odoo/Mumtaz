@@ -375,6 +375,13 @@ bash deploy/pharma-staging/stage.sh smoke
   was installed, disabled and Administrator-only. The kit modules themselves are still installed. This was already the case before the
   courier upgrade (visible in the module-state query run after the first failed upgrade). Cause not established from the pasted output.
 
+## 2026-11-18 — courier COD cron switched off (owner-run `stage.sh neutralize`, output pasted back)
+
+- Neutralize re-run on `mumtaz_pharma` (twice; idempotent), odoo-pharma restarted, health 200.
+- Result: `database.is_neutralized = true`, active crons = 1 (`Base: Auto-vacuum internal data` only),
+  outgoing mail server forced to `invalid:1025`, `courier COD crons active = 0`. The slice-1 data is intact (2 couriers, 19 shipments, 3 remittances, 4 statements).
+- Still open: `pharma_accounting_hardening` is not installed (see the entry above); waiting for the owner to say whether that was intended.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
