@@ -343,6 +343,18 @@ bash deploy/pharma-staging/stage.sh upgrade     # dumps mumtaz_pharma first, ins
 bash deploy/pharma-staging/stage.sh smoke
 ```
 
+## 2026-11-18 — slice 1 first run on the VPS: one defect found and fixed (owner-run, output pasted back)
+
+- `stage.sh test` (fresh throwaway DB) and the live `stage.sh upgrade` both failed while loading `pharma_courier_cod_demo` with
+  `psycopg2.ProgrammingError: can't adapt type 'method'` during `ir.model._reflect_models`.
+- Cause: the seeder defined a helper named `_order`, which replaced Odoo's own `_order` class attribute (default sort order),
+  so a bound method reached the `ir_model` INSERT. Fixed by renaming it `_sale_order`. A scan of every pharma model for methods that
+  shadow reserved model attributes (`_order`, `_name`, `_table`, `_rec_name`, ...) found no other collision.
+- State left on `mumtaz_pharma` by the aborted upgrade (read from `ir_module_module`): `pharma_courier_cod` installed 19.0.1.0.0 (its menus are visible),
+  `pharma_courier_cod_demo` uninstalled, everything else unchanged, service not restarted. Pre-upgrade dump kept:
+  `backups/mumtaz_pharma_pre_upgrade_20261118_135909.dump`. No rollback was needed.
+- Note: `pharma_courier_cod` itself loaded without error, but its 67 tests have still not run.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

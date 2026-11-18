@@ -51,7 +51,7 @@ class PharmaCourierDemoSeed(models.AbstractModel):
                 "is_demo": True})
         return courier("DEMOA", "Courier A (DEMO)", 14, 1.0), courier("DEMOB", "Courier B (DEMO)", 7, 0.0)
 
-    def _order(self, product, ref, amount):
+    def _sale_order(self, product, ref, amount):
         """A confirmed sale order the shipment can be matched to. Approved SKU, so the tax gate passes it."""
         SO = self.env["sale.order"]
         so = SO.search([("client_order_ref", "=", ref)], limit=1)
@@ -75,7 +75,7 @@ class PharmaCourierDemoSeed(models.AbstractModel):
             return found
         ref = order_ref or f"DEMO-ORD-{trk[5:]}"
         if with_order:
-            self._order(product, ref, declared)
+            self._sale_order(product, ref, declared)
         vals = {"courier_id": courier.id, "tracking_number": trk, "order_ref": ref, "state": state,
                 "payment_mode": mode, "cod_declared": declared, "destination_city": city, "is_demo": True,
                 "consignee_name": "DEMO Consignee", "date_booked": self._day((days_ago or 1) + 3),
@@ -109,7 +109,7 @@ class PharmaCourierDemoSeed(models.AbstractModel):
             n, declared, ago = r[0], r[1], r[2]
             collected = r[3] if len(r) > 3 else declared
             ref = f"DEMO-ORD-A-{n:04d}"
-            self._order(product, ref, declared)
+            self._sale_order(product, ref, declared)
             lines.append({"reference": f"DEMO-A-{n:04d}", "order_ref": ref, "consignee_name": "DEMO Consignee",
                           "destination_city": ("Lahore", "Karachi", "Islamabad")[n % 3], "provider_status": "Delivered",
                           "date_booked": self._day(ago + 3), "date_delivered": self._day(ago),
@@ -184,4 +184,4 @@ class PharmaCourierDemoSeed(models.AbstractModel):
         """Confirmed orders for the sample delivery report (static/samples), so its rows match an order on upload.
         DEMO-A-0406 is left without one on purpose: the upload then shows an intake finding."""
         for n, amount in ((401, 2400), (402, 1950), (403, 3100), (404, 2750), (405, 1600)):
-            self._order(product, f"DEMO-ORD-A-{n:04d}", amount)
+            self._sale_order(product, f"DEMO-ORD-A-{n:04d}", amount)
