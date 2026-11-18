@@ -419,6 +419,18 @@ Next (owner-run): `git pull --ff-only` then `stage.sh test` (expect 0 failed of 
 - Next gate (owner's go needed): `stage.sh upgrade` installs `pharma_courier_cod_accounting`, updates `pharma_courier_cod_demo` to 19.0.1.1.0 (its migration seeds the accounts and one draft entry),
   re-runs neutralize, restarts odoo-pharma only.
 
+## 2026-11-18 — slice 1b LIVE on staging: accounting addon installed, one draft entry seeded, smoke green (owner-run, output pasted back)
+
+- `stage.sh upgrade` (dump `backups/mumtaz_pharma_pre_upgrade_20261118_141934.dump`): installed `pharma_courier_cod_accounting`, updated the other seven pharma modules,
+  `pharma_courier_cod_demo` 19.0.1.1.0 migration ran (post-migrate), 107 modules loaded, neutralize re-ran automatically this time (the lowercase-flag fix works),
+  odoo-pharma restarted, health 200.
+- Verified after: `courier COD journal entries: draft=1`, `courier COD crons active = 0`, accounting hardening still installed with the support endpoint at
+  `http://127.0.0.1:9/support-disabled-by-pharma-accounting-hardening` and the form limited to *Role / Administrator*, 18 open exceptions and the slice-1 counts unchanged
+  (2 couriers, 19 shipments, 3 remittances, 4 statements). Smoke: ribbon present, five products, 20 Pharma menus visible.
+- The upgrade was run a second time (command block pasted twice, dump `..._143232.dump`): updated all eight modules, installed nothing, counts identical (draft entry still 1),
+  which is the idempotency proof on a live database. The first smoke's XML-RPC login returned "Access Denied" (password prompt, most likely mistyped); the second smoke logged in as uid 2.
+- Still owner-side and not yet done by anyone: a browser walkthrough of C1-C14 in DEMO_SCENARIOS.md as `pharma.finance` / admin.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash
