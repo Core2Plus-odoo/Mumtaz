@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_courier_user,courier user,model_pharma_courier,pharma_core.group_pharma_user,1,0,0,0
+access_courier_admin,courier admin,model_pharma_courier,pharma_core.group_pharma_admin,1,1,1,1
+access_courier_finance,courier finance,model_pharma_courier,pharma_core.group_pharma_finance,1,0,0,0
+access_shipment_user,courier shipment user,model_pharma_courier_shipment,pharma_core.group_pharma_user,1,0,0,0
+access_shipment_finance,courier shipment finance,model_pharma_courier_shipment,pharma_core.group_pharma_finance,1,1,1,0
+access_remittance_user,courier remittance user,model_pharma_courier_remittance,pharma_core.group_pharma_user,1,0,0,0
+access_remittance_finance,courier remittance finance,model_pharma_courier_remittance,pharma_core.group_pharma_finance,1,1,1,1
+access_remittance_line_user,courier remittance line user,model_pharma_courier_remittance_line,pharma_core.group_pharma_user,1,0,0,0
+access_remittance_line_finance,courier remittance line finance,model_pharma_courier_remittance_line,pharma_core.group_pharma_finance,1,1,1,1
+access_statement_user,courier statement user,model_pharma_courier_statement,pharma_core.group_pharma_user,1,0,0,0
+access_statement_finance,courier statement finance,model_pharma_courier_statement,pharma_core.group_pharma_finance,1,1,1,1
+access_statement_line_user,courier statement row user,model_pharma_courier_statement_line,pharma_core.group_pharma_user,1,0,0,0
+access_statement_line_finance,courier statement row finance,model_pharma_courier_statement_line,pharma_core.group_pharma_finance,1,1,1,1

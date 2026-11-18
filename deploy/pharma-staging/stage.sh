@@ -45,8 +45,8 @@ WS_PORT=8077
 UNIT=odoo-pharma
 SVC_CONF=/etc/odoo-pharma.conf
 SVC_LOG=/var/log/odoo/odoo-pharma.log
-MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo
-PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo
+MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_demo
+PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_demo
 
 CHECKOUT="$(cd "$(dirname "$0")/../.." && pwd)"
 LIVE_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
@@ -214,6 +214,9 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  published DEMO products = '||count(*) from product_template where is_published and default_code like 'DEMO-SKU-%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  '||name||' = '||state||' ('||coalesce(latest_version,'-')||')' from ir_module_module where name in ('base_accounting_kit','base_account_budget','cybrosys_support_client','pharma_accounting_hardening') order by name"
+  sudo -u postgres psql -d "$DB" -tAc "select '  courier COD: couriers='||(select count(*) from pharma_courier)||' shipments='||(select count(*) from pharma_courier_shipment)||' remittances='||(select count(*) from pharma_courier_remittance)||' statements='||(select count(*) from pharma_courier_statement)" 2>/dev/null || true
+  sudo -u postgres psql -d "$DB" -tAc "select '  courier COD exceptions by category: '||coalesce(string_agg(category||'='||n, ', ' order by category),'(none)') from (select category, count(*) n from pharma_recon_exception where category is not null group by category) x" 2>/dev/null || true
+  sudo -u postgres psql -d "$DB" -tAc "select '  courier COD crons active (expect 0 while neutralized): '||count(*) from ir_cron where active and cron_name like 'Courier COD%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  vendor support endpoint = '||value from ir_config_parameter where key='cybrosys_support_client.endpoint_url'"
   sudo -u postgres psql -d "$DB" -tAc "select '  vendor support form open to group: '||coalesce(g.name::text,'(none, every user)') from ir_model_access a join ir_model m on m.id=a.model_id left join res_groups g on g.id=a.group_id where m.model='client.support'"
 }
@@ -340,6 +343,10 @@ cmd_upgrade() {
   grep -E " (ERROR|CRITICAL|WARNING) .*pharma|Traceback|Modules loaded|migrat|pharma_demo_data: seed|modules loaded in" "$LOG_DIR/upgrade_$TS.log" | tail -25 || true
   grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/upgrade_$TS.log" && die "upgrade log has errors: $LOG_DIR/upgrade_$TS.log (DB dump kept for rollback)"
   grep -q "Modules loaded" "$LOG_DIR/upgrade_$TS.log" || die "upgrade did not reach 'Modules loaded': $LOG_DIR/upgrade_$TS.log"
+  if [ "$(sudo -u postgres psql -d "$DB" -tAc "select value from ir_config_parameter where key='database.is_neutralized'")" = "True" ]; then
+    say "database is neutralized: run neutralize again so scheduled actions added by new modules stay off"
+    as_odoo "$ODOO_BIN" neutralize -c "$STAGE_CONF" -d "$DB" 2>&1 | tail -3
+  fi
   if systemctl is-active --quiet $UNIT.service; then
     say "restart $UNIT only (new code + assets)"
     systemctl restart $UNIT.service; sleep 6

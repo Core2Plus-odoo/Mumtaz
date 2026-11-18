@@ -66,6 +66,45 @@ not in this repository.
 | P2 | `pharma.finance` | **Commercial Model (A/B/C)** | scenario B chosen, contract reference empty, no sign-offs → *complete* unticked. Custody moves are recorded; revenue is **BLOCKED awaiting sign-off** |
 | P3 | `pharma.ops` | **Commercial Model** menu | not visible (Finance only) |
 
+## Courier COD ledger (`Pharma › Courier COD`, Pakistan cash on delivery)
+
+Seeded by `pharma_courier_cod_demo` with two fictional couriers, **Courier A (DEMO)** (14-day remittance cycle) and
+**Courier B (DEMO)** (7-day cycle). Three amounts are tracked per parcel: **declared** (what the shop asked the courier
+to collect), **collected** (what the courier says it took from the customer) and **remitted** (what the courier accounted
+for on a remittance slip). A shortfall between any two is its own finding, never absorbed.
+
+| # | As | Do | Expect |
+| --- | --- | --- | --- |
+| C1 | `pharma.finance` | **Shipments** (list) | 19 parcels across both couriers; COD status, days outstanding, ageing bucket and **Overdue** on each; DEMO column ticked |
+| C2 | any | **COD Ageing** (pivot) | parcels awaiting remittance split into 0-7, 8-15, 16-30 and 31+ days by courier. Ageing runs from the **delivery date**, not the booking date. Use the **Refresh ageing** action (list **Action** menu, or the button on a parcel) first if this database is more than a few days old: ageing moves with the calendar |
+| C3 | `pharma.finance` | **Remittances** › `DEMO-SL-A-1001` | clean batch: collected = declared = remitted gross, bank = gross minus itemised deductions (freight, COD fee, sales tax on services); reconciled run is **matched**, no exceptions |
+| C4 | `pharma.finance` | `DEMO-SL-A-1002` › the reconciliation-run smart button | partial, with three findings: `DEMO-A-0004` customer paid less than declared (**collection**), `DEMO-A-0005` courier remitted less than it collected (**remittance**), and the bank deposit is 400 short of the slip |
+| C5 | `pharma.finance` | `DEMO-SL-B-1001` | deductions 800 against an authorized 500: a **deduction** finding for the 300 above what was agreed (the unexplained *Other Deductions*) |
+| C6 | any | **Shipments** filtered Overdue | `DEMO-A-0103` (20 days), `DEMO-A-0104` (45 days) and `DEMO-B-0102` (9 days, over Courier B's 7-day cycle) are overdue; `DEMO-A-0102` at 10 days is not, because Courier A's cycle is 14 |
+| C7 | any | `DEMO-B-0201` | state *Returned* but COD was collected: a **returned COD** finding, because the customer's money is with the courier |
+| C8 | any | `DEMO-A-0301` | the courier reports an order reference the shop has no sale order for: an **intake** finding |
+| C9 | `pharma.finance` | **Statement Uploads** › the one in *Draft* with 3 bad rows | each row names its problem (no tracking number, delivered with no date, negative amount); **Build documents** stays refused until fixed. Nothing from it reached the ledger |
+| C10 | `pharma.finance` | **Statement Uploads** › the *Built* one | 8 parcels created from one delivery report; each row is archived unchanged in **Source Events** |
+| C11 | `pharma.ops` | open **Remittances** or **Statement Uploads**; try *Reconcile* or *Build documents* | read-only for Operations; matching and building are Finance Controller actions |
+
+### Live upload (the part to do in front of the audience)
+
+Sample files are in the module at `pharma_courier_cod_demo/static/samples/`. Open them at
+`https://pharma.mumtaz.digital/pharma_courier_cod_demo/static/samples/<file>` or take them from the repository; headings are the exact field labels, so Odoo's import screen maps every column by itself.
+
+1. `pharma.finance` › **Statement Uploads** › New: Courier A, type *Shipment / delivery report* › Save › **Upload file**
+   › choose `courier_a_delivery_report.csv` › **Test** then **Import**. Six staging rows appear.
+2. **Validate rows**. The file is clean, so the statement turns *Validated*. **Build documents** creates six parcels;
+   `DEMO-A-0406` has no sale order and `DEMO-A-0405` came back with COD collected, so two findings appear at once.
+3. New statement: Courier A, type *COD remittance slip*, slip reference `DEMO-SL-A-1003`, a date, **Received at Bank
+   6660** › **Upload file** › `courier_a_remittance_slip.csv` › **Validate rows** › **Build documents**. A *draft* remittance
+   with three lines appears. Nothing is counted as remitted until it is posted.
+4. Open the remittance › **Post** › **Reconcile against the bank**. The run matches (2320 + 3120 + 1220 = 6660) and the three
+   parcels move to *Remitted*.
+5. Run step 3 again with bank 6460: the 200 difference is a finding. Run it a third time with the same slip reference: refused,
+   "already has remittance". Uploading the same delivery report twice updates the same parcels and never blanks a field the
+   second file left empty.
+
 ## Source events (`Pharma › Configuration › Source Events`, Pharma Administrator)
 
 | # | Expect |
@@ -82,4 +121,4 @@ DEMO column on every Pharma list, "(fictional)" in every product name, DEMO ribb
 ## Mapping to automated tests (`--test-tags pharma`)
 
 pharma_pk_tax_core (T1–T10): 18 tests · pharma_reconciliation_hub (R1–R7, P1–P3, S1–S3): 16 tests ·
-pharma_demo_data (every row above exists after install, seeding is idempotent, products are shop-ready): 13 tests · pharma_website_demo (home page, shop, product page, ribbon, stylesheet bundle, no health claims, seeding): 7 tests. Total 54.
+pharma_demo_data (every row above exists after install, seeding is idempotent, products are shop-ready): 13 tests · pharma_website_demo (home page, shop, product page, ribbon, stylesheet bundle, no health claims, seeding): 7 tests. pharma_courier_cod (shipment states and ageing, exceptions and their dedupe, remittance locking and deductions, statement validation / build / archiving, end-to-end flow): 67 tests · pharma_courier_cod_demo (every scenario above exists, seeding is idempotent, sample files match the staging labels): 9 tests. Total 54 for the first five modules, 130 with the courier COD ledger.

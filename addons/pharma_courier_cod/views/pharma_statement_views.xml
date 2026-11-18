@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_statement_list" model="ir.ui.view">
+        <field name="name">pharma.courier.statement.list</field>
+        <field name="model">pharma.courier.statement</field>
+        <field name="arch" type="xml">
+            <list string="Courier Statements" decoration-danger="error_count &gt; 0" decoration-muted="state == 'cancel'">
+                <field name="name"/><field name="courier_id"/><field name="statement_type"/><field name="slip_ref"/>
+                <field name="state"/><field name="line_count"/><field name="error_count"/>
+                <field name="is_demo" string="DEMO" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_courier_statement_form" model="ir.ui.view">
+        <field name="name">pharma.courier.statement.form</field>
+        <field name="model">pharma.courier.statement</field>
+        <field name="arch" type="xml">
+            <form string="Courier Statement">
+                <header>
+                    <button name="action_upload_file" type="object" string="Upload file" class="btn-primary"
+                            invisible="state not in ('draft', 'validated')" groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_validate" type="object" string="Validate rows"
+                            invisible="state not in ('draft', 'validated')" groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_build" type="object" string="Build documents" class="btn-primary"
+                            invisible="state != 'validated'" groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('built', 'cancel')" groups="pharma_core.group_pharma_finance"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,validated,built"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_result" type="object" class="oe_stat_button" icon="fa-external-link"
+                                invisible="state != 'built'" string="Result"/>
+                    </div>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="courier_id" readonly="state != 'draft'"/>
+                            <field name="statement_type" readonly="state != 'draft'"/>
+                            <field name="slip_ref" invisible="statement_type != 'cod_remittance'" readonly="state not in ('draft', 'validated')"/>
+                            <field name="remittance_date" invisible="statement_type != 'cod_remittance'" readonly="state not in ('draft', 'validated')"/>
+                            <field name="bank_amount" invisible="statement_type != 'cod_remittance'" readonly="state not in ('draft', 'validated')"/>
+                        </group>
+                        <group>
+                            <field name="line_count"/><field name="error_count" decoration-danger="error_count &gt; 0"/>
+                            <field name="shipments_created" invisible="statement_type != 'shipments'"/>
+                            <field name="shipments_updated" invisible="statement_type != 'shipments'"/>
+                            <field name="remittance_id" invisible="not remittance_id"/><field name="is_demo"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Rows" name="rows">
+                            <field name="line_ids" readonly="state not in ('draft', 'validated')">
+                                <list editable="bottom" decoration-danger="state == 'error'" decoration-success="state == 'built'">
+                                    <field name="reference"/><field name="order_ref"/><field name="provider_status"/>
+                                    <field name="date_booked" optional="show"/><field name="date_delivered" optional="show"/>
+                                    <field name="cod_declared" optional="show"/><field name="cod_collected" optional="show"/>
+                                    <field name="amount_gross" optional="show"/><field name="deduction_freight" optional="show"/>
+                                    <field name="deduction_cod_fee" optional="show"/><field name="deduction_wht_income_tax" optional="show"/>
+                                    <field name="deduction_wht_sales_tax" optional="show"/><field name="deduction_other" optional="show"/>
+                                    <field name="state"/><field name="error_message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <p class="text-muted">Upload the courier's CSV or Excel file with the button above: Odoo's own import screen
+                        maps its columns onto these rows and remembers the mapping. Nothing reaches a shipment or a remittance
+                        until every row validates, and each row is archived unchanged in the source-event log when built.</p>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_courier_statement" model="ir.actions.act_window">
+        <field name="name">Statement Uploads</field>
+        <field name="res_model">pharma.courier.statement</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_pharma_courier_statement_line_list" model="ir.ui.view">
+        <field name="name">pharma.courier.statement.line.list</field>
+        <field name="model">pharma.courier.statement.line</field>
+        <field name="arch" type="xml">
+            <list string="Statement Rows" decoration-danger="state == 'error'">
+                <field name="statement_id"/><field name="reference"/><field name="order_ref"/><field name="provider_status"/>
+                <field name="amount_gross"/><field name="amount_net"/><field name="state"/><field name="error_message"/>
+            </list>
+        </field>
+    </record>
+</odoo>

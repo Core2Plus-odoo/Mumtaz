@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Ageing depends on today's date, not on any field, so it cannot refresh itself. -->
+    <record id="cron_courier_cod_daily" model="ir.cron">
+        <field name="name">Courier COD: refresh ageing and raise exceptions</field>
+        <field name="model_id" ref="model_pharma_courier_shipment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_daily()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="action_courier_refresh_ageing" model="ir.actions.server">
+        <field name="name">Refresh ageing and check exceptions</field>
+        <field name="model_id" ref="model_pharma_courier_shipment"/>
+        <field name="binding_model_id" ref="model_pharma_courier_shipment"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = model.action_refresh_all()</field>
+    </record>
+</odoo>

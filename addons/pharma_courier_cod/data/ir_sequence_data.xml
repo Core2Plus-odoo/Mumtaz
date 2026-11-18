@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_courier_remittance" model="ir.sequence">
+            <field name="name">Courier COD Remittance</field>
+            <field name="code">pharma.courier.remittance</field>
+            <field name="prefix">PCR/</field>
+            <field name="padding">5</field>
+        </record>
+        <record id="seq_courier_statement" model="ir.sequence">
+            <field name="name">Courier Statement Upload</field>
+            <field name="code">pharma.courier.statement</field>
+            <field name="prefix">PCS/</field>
+            <field name="padding">5</field>
+        </record>
+    </data>
+</odoo>

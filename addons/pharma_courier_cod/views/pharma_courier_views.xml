@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_list" model="ir.ui.view">
+        <field name="name">pharma.courier.list</field>
+        <field name="model">pharma.courier</field>
+        <field name="arch" type="xml">
+            <list string="Couriers">
+                <field name="name"/><field name="code"/><field name="remittance_cycle_days"/>
+                <field name="variance_tolerance"/><field name="shipment_count"/><field name="is_demo" string="DEMO"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_courier_form" model="ir.ui.view">
+        <field name="name">pharma.courier.form</field>
+        <field name="model">pharma.courier</field>
+        <field name="arch" type="xml">
+            <form string="Courier">
+                <sheet>
+                    <group>
+                        <group><field name="name"/><field name="code"/><field name="partner_id"/><field name="active"/></group>
+                        <group><field name="remittance_cycle_days"/><field name="variance_tolerance"/><field name="is_demo"/></group>
+                    </group>
+                    <p class="text-muted">The remittance cycle is the number of days after delivery by which the courier must
+                        remit the COD it collected. Beyond it a shipment is overdue. Deduction rates are not kept here: a
+                        courier's deductions are facts reported on its statement and checked against an authorized amount.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_courier" model="ir.actions.act_window">
+        <field name="name">Couriers</field>
+        <field name="res_model">pharma.courier</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

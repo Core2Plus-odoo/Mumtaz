@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_shipment_list" model="ir.ui.view">
+        <field name="name">pharma.courier.shipment.list</field>
+        <field name="model">pharma.courier.shipment</field>
+        <field name="arch" type="xml">
+            <list string="Courier Shipments" decoration-danger="cod_is_overdue"
+                  decoration-warning="cod_collection_variance &lt; 0 and not cod_is_overdue"
+                  decoration-muted="state in ('cancelled', 'returned')">
+                <field name="courier_id"/><field name="tracking_number"/><field name="order_ref"/>
+                <field name="state"/><field name="payment_mode" optional="hide"/>
+                <field name="date_delivered"/>
+                <field name="cod_declared" sum="Declared" optional="show"/>
+                <field name="cod_collected" sum="Collected"/>
+                <field name="cod_remitted" sum="Remitted"/>
+                <field name="cod_outstanding" sum="Outstanding"/>
+                <field name="cod_state"/><field name="cod_ageing_bucket"/>
+                <field name="cod_days_outstanding" optional="hide"/>
+                <field name="cod_is_overdue" optional="hide"/>
+                <field name="order_matched" optional="hide"/>
+                <field name="is_demo" string="DEMO" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_courier_shipment_form" model="ir.ui.view">
+        <field name="name">pharma.courier.shipment.form</field>
+        <field name="model">pharma.courier.shipment</field>
+        <field name="arch" type="xml">
+            <form string="Courier Shipment">
+                <header>
+                    <button name="action_refresh_ageing" type="object" string="Refresh ageing"
+                            groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_check" type="object" string="Check exceptions"
+                            groups="pharma_core.group_pharma_finance"/>
+                    <field name="state" widget="statusbar" statusbar_visible="booked,in_transit,delivered"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group string="Parcel">
+                            <field name="courier_id"/><field name="tracking_number"/><field name="order_ref"/>
+                            <field name="sale_order_id" groups="sales_team.group_sale_salesman"/><field name="order_matched"/><field name="consignee_name"/><field name="destination_city"/>
+                            <field name="provider_status"/><field name="payment_mode"/>
+                            <field name="date_booked"/><field name="date_delivered"/>
+                        </group>
+                        <group string="Cash on delivery">
+                            <field name="cod_declared"/><field name="cod_collected"/>
+                            <field name="cod_collection_variance" decoration-danger="cod_collection_variance &lt; 0"/>
+                            <field name="cod_remitted"/><field name="cod_deductions"/><field name="cod_net_received"/>
+                            <field name="cod_remittance_variance" decoration-danger="cod_remittance_variance &lt; 0"/>
+                            <field name="cod_outstanding"/><field name="cod_state"/>
+                        </group>
+                    </group>
+                    <group string="Ageing">
+                        <group><field name="cod_days_outstanding"/><field name="cod_ageing_bucket"/></group>
+                        <group><field name="cod_is_overdue"/><field name="raw_event_id"/><field name="is_demo"/></group>
+                    </group>
+                    <notebook>
+                        <page string="Remittance lines" name="lines">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="remittance_id"/><field name="date"/><field name="amount_gross"/>
+                                    <field name="deduction_freight"/><field name="deduction_cod_fee"/>
+                                    <field name="deduction_wht_income_tax"/><field name="deduction_wht_sales_tax"/>
+                                    <field name="deduction_other"/><field name="amount_net"/><field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_pharma_courier_shipment_search" model="ir.ui.view">
+        <field name="name">pharma.courier.shipment.search</field>
+        <field name="model">pharma.courier.shipment</field>
+        <field name="arch" type="xml">
+            <search string="Shipments">
+                <field name="tracking_number"/><field name="order_ref"/><field name="courier_id"/>
+                <field name="consignee_name"/>
+                <filter name="overdue" string="Overdue" domain="[('cod_is_overdue', '=', True)]"/>
+                <filter name="outstanding" string="COD outstanding" domain="[('cod_outstanding', '&gt;', 0)]"/>
+                <filter name="short_collected" string="Customer paid less" domain="[('cod_collection_variance', '&lt;', 0)]"/>
+                <filter name="short_remitted" string="Courier accounted for less" domain="[('cod_remittance_variance', '&lt;', 0), ('cod_remitted', '&gt;', 0)]"/>
+                <filter name="no_order" string="No matching order" domain="[('order_matched', '=', False)]"/>
+                <separator/>
+                <filter name="delivered" string="Delivered" domain="[('state', '=', 'delivered')]"/>
+                <filter name="returned" string="Returned" domain="[('state', '=', 'returned')]"/>
+                <group>
+                    <filter name="group_courier" string="Courier" context="{'group_by': 'courier_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_cod" string="COD status" context="{'group_by': 'cod_state'}"/>
+                    <filter name="group_bucket" string="Ageing" context="{'group_by': 'cod_ageing_bucket'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_pharma_courier_shipment_pivot" model="ir.ui.view">
+        <field name="name">pharma.courier.shipment.pivot</field>
+        <field name="model">pharma.courier.shipment</field>
+        <field name="arch" type="xml">
+            <pivot string="COD Ageing">
+                <field name="courier_id" type="row"/>
+                <field name="cod_ageing_bucket" type="col"/>
+                <field name="cod_outstanding" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="action_pharma_courier_shipment" model="ir.actions.act_window">
+        <field name="name">Shipments</field>
+        <field name="res_model">pharma.courier.shipment</field>
+        <field name="view_mode">list,form,pivot</field>
+    </record>
+    <record id="action_pharma_courier_ageing" model="ir.actions.act_window">
+        <field name="name">COD Ageing</field>
+        <field name="res_model">pharma.courier.shipment</field>
+        <field name="view_mode">pivot,list,form</field>
+        <field name="domain">[('cod_outstanding', '&gt;', 0)]</field>
+        <field name="search_view_id" ref="view_pharma_courier_shipment_search"/>
+    </record>
+</odoo>

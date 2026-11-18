@@ -309,6 +309,40 @@ statement, an asset, a budget) through the normal flows so the reports have some
 
 ---
 
+## 2026-11-18 — slice 1: Courier COD ledger with statement upload (written and committed, NOT yet run on Odoo)
+
+Pakistan cash-on-delivery, built as generic `pharma_` addons that extend the reconciliation hub. Nothing client-, courier-
+or partner-specific is in the repository (demo couriers are "Courier A (DEMO)" and "Courier B (DEMO)"). **Never executed
+against Odoo yet: first-run failures are possible and expected; the throwaway-database test step is what finds them.**
+
+What was added
+
+| Module | Version | What it does |
+| --- | --- | --- |
+| `pharma_courier_cod` | 19.0.1.0.0 | Couriers, shipments (declared / collected / remitted ledger, ageing from the delivery date in four buckets, overdue against each courier's cycle), remittances (slips with itemised deductions: freight, COD fee, withholding income tax, withholding sales tax, other; posted then reconciled against the bank through the hub's matcher), statement uploads (header + staging rows loaded with Odoo's own import screen, validated row by row, built into shipments or a draft remittance only by a Finance Controller), exceptions (collection, remittance, overdue, deduction, returned COD, intake) raised once per finding, a daily cron. 67 tests. |
+| `pharma_courier_cod_demo` | 19.0.1.0.0 | Idempotent seeder for every scenario above plus two sample CSV files for the live upload. 9 tests. |
+
+Rules held
+
+- Maker-checker and the tax gate are untouched; matching and building are Finance Controller actions, run as `pharma.finance` by the seeder.
+- Every uploaded row is archived unchanged in the immutable raw-event log; a thinner later file never blanks a field.
+- Reconciled remittances are locked; a posted slip cannot gain lines; deductions above the authorized amount are a finding, never absorbed.
+- Nothing posts to accounting. Booking COD settlement into the ledger is a separate, later slice (1b).
+
+`stage.sh` changes: both modules added to `MODULES` / `PHARMA_MODULES` (so `test` and `upgrade` include them); `verify` prints courier COD counts, exceptions by category and the number of active courier crons; `upgrade` now runs `odoo neutralize` again afterwards when the database is neutralized, so the new scheduled action stays off.
+
+Static checks done here: `py_compile` and `pyflakes` clean, XML well-formed, `bash -n stage.sh` clean. No Odoo is available in the cloud checkout, so no test has run.
+
+Next (owner-run on the VPS, in this order, each gated)
+
+```bash
+cd /opt/mumtaz-pharma-staging && git fetch origin pharma-erp-v0.1 && git merge --ff-only FETCH_HEAD
+bash deploy/pharma-staging/stage.sh test        # throwaway DB: expect 0 failed of 130 (54 + 67 + 9)
+# only after that is green, and on a named go:
+bash deploy/pharma-staging/stage.sh upgrade     # dumps mumtaz_pharma first, installs the two modules, restarts odoo-pharma only
+bash deploy/pharma-staging/stage.sh smoke
+```
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

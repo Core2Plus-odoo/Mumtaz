@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_remittance_list" model="ir.ui.view">
+        <field name="name">pharma.courier.remittance.list</field>
+        <field name="model">pharma.courier.remittance</field>
+        <field name="arch" type="xml">
+            <list string="Courier Remittances" decoration-danger="open_exceptions &gt; 0" decoration-muted="state == 'cancel'">
+                <field name="name"/><field name="courier_id"/><field name="slip_ref"/><field name="date"/>
+                <field name="state"/><field name="line_count" optional="hide"/>
+                <field name="amount_gross" sum="Gross"/><field name="amount_deductions" sum="Deductions"/>
+                <field name="amount_net" sum="Net"/><field name="bank_amount" sum="Bank"/>
+                <field name="amount_bank_variance" sum="Variance"/>
+                <field name="run_state"/><field name="open_exceptions" sum="Open exceptions"/>
+                <field name="is_demo" string="DEMO" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pharma_courier_remittance_form" model="ir.ui.view">
+        <field name="name">pharma.courier.remittance.form</field>
+        <field name="model">pharma.courier.remittance</field>
+        <field name="arch" type="xml">
+            <form string="Courier Remittance">
+                <header>
+                    <button name="action_post" type="object" string="Post" class="btn-primary"
+                            invisible="state != 'draft'" groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_reconcile" type="object" string="Reconcile against the bank" class="btn-primary"
+                            invisible="state != 'posted' or run_id" groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state == 'cancel' or run_id" groups="pharma_core.group_pharma_finance"/>
+                    <button name="action_draft" type="object" string="Reset to draft"
+                            invisible="state != 'cancel'" groups="pharma_core.group_pharma_finance"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,posted"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_run" type="object" class="oe_stat_button" icon="fa-balance-scale"
+                                invisible="not run_id">
+                            <field name="open_exceptions" widget="statinfo" string="Open exceptions"/>
+                        </button>
+                    </div>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="courier_id" readonly="state != 'draft'"/>
+                            <field name="slip_ref" readonly="state != 'draft'"/>
+                            <field name="date" readonly="state != 'draft'"/>
+                            <field name="bank_amount" readonly="run_id"/>
+                            <field name="statement_id"/><field name="is_demo"/>
+                        </group>
+                        <group>
+                            <field name="amount_gross"/><field name="amount_deductions"/><field name="amount_net"/>
+                            <field name="amount_bank_variance" decoration-danger="amount_bank_variance != 0"/>
+                            <field name="check_deductions" readonly="run_id"/>
+                            <field name="deductions_authorized" invisible="not check_deductions" readonly="run_id"/>
+                            <field name="deductions_excess" invisible="not check_deductions"
+                                   decoration-danger="deductions_excess &gt; 0"/>
+                            <field name="run_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lines" name="lines">
+                            <field name="line_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="shipment_id" domain="[('courier_id', '=', parent.courier_id)]"/>
+                                    <field name="amount_gross"/><field name="deduction_freight"/><field name="deduction_cod_fee"/>
+                                    <field name="deduction_wht_income_tax"/><field name="deduction_wht_sales_tax"/>
+                                    <field name="deduction_other"/><field name="amount_deductions"/><field name="amount_net"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <p class="text-muted">The two withholding taxes are credits against the business's own tax liability:
+                        recoverable receivables, not costs. A difference at the bank is never forced to zero: it opens an
+                        exception with an owner.</p>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_pharma_courier_remittance" model="ir.actions.act_window">
+        <field name="name">Remittances</field>
+        <field name="res_model">pharma.courier.remittance</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
