@@ -44,7 +44,7 @@ This is asserted by two tests in the hardening module, not assumed.
 
 - After the checks, the export still runs as superuser. Correct for accountants in a single-company database. **In a
   multi-company database an accountant restricted to one company could export another company's report.** Review before a second company exists.
-- The support icon stays visible in the systray; for non-administrators it is inert (access error), for administrators a submission cannot leave the server.
+- The vendor support button (top-bar headset icon with its Alt+Shift+H hotkey, and the user-menu item) is removed from the web client by `pharma_accounting_hardening` 19.0.1.1.0. The access and endpoint controls stay as defence in depth, because the form model still exists.
 - The kit installs scheduled actions (follow-ups, recurring entries, bank auto-reconcile). `install-accounting` re-runs `odoo neutralize` so they stay off on staging.
 - Python packages are installed with `pip --target /opt/thirdparty/pydeps` and added to `odoo-pharma` only; no system package changes, other tenants are unaffected.
 
