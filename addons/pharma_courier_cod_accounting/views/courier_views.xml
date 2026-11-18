@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_form_accounting" model="ir.ui.view">
+        <field name="name">pharma.courier.form.accounting</field>
+        <field name="model">pharma.courier</field>
+        <field name="inherit_id" ref="pharma_courier_cod.view_pharma_courier_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook groups="account.group_account_readonly">
+                    <page string="Accounting" name="accounting">
+                        <p class="text-muted">Used by <b>Create journal entry</b> on a reconciled remittance. The entry is a draft;
+                            nothing is posted for you. Only the accounts a slip actually uses are required: an account for
+                            withholding tax is needed only if a slip reports that withholding.</p>
+                        <group>
+                            <group string="Entry">
+                                <field name="acc_journal_id"/>
+                                <field name="acc_clearing_account_id"/>
+                                <field name="acc_bank_account_id"/>
+                                <field name="acc_difference_account_id"/>
+                            </group>
+                            <group string="Deductions">
+                                <field name="acc_freight_account_id"/>
+                                <field name="acc_cod_fee_account_id"/>
+                                <field name="acc_wht_income_account_id"/>
+                                <field name="acc_wht_sales_account_id"/>
+                                <field name="acc_other_account_id"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

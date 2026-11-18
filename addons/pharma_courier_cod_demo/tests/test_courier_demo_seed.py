@@ -18,7 +18,7 @@ class TestCourierDemoSeed(TransactionCase):
         return {m: env[m].sudo().search_count([]) for m in (
             "pharma.courier", "pharma.courier.shipment", "pharma.courier.remittance", "pharma.courier.remittance.line",
             "pharma.courier.statement", "pharma.courier.statement.line", "pharma.recon.run", "pharma.recon.exception",
-            "pharma.raw.event", "sale.order")}
+            "pharma.raw.event", "sale.order", "account.move", "account.account")}
 
     def _ship(self, trk):
         return self.env["pharma.courier.shipment"].sudo().search([("tracking_number", "=", trk)])
@@ -105,3 +105,17 @@ class TestCourierDemoSeed(TransactionCase):
         with open(file_path(os.path.join(SAMPLES, "courier_a_delivery_report.csv")), newline="") as fh:
             for row in csv.DictReader(fh):
                 self.assertFalse(self._ship(row["Tracking Number"]), row)    # new parcels, so the upload creates them
+
+    def test_courier_accounts_are_configured_and_one_draft_entry_exists(self):
+        couriers = self.env["pharma.courier"].sudo().search([("code", "like", "DEMO%")])
+        for c in couriers:
+            self.assertTrue(c.acc_journal_id and c.acc_clearing_account_id and c.acc_bank_account_id
+                            and c.acc_freight_account_id and c.acc_difference_account_id, c.name)
+        Rem = self.env["pharma.courier.remittance"].sudo()
+        clean = Rem.search([("slip_ref", "=", "DEMO-SL-A-1001")])
+        self.assertEqual((clean.move_state, clean.move_id.move_type), ("draft", "entry"))
+        self.assertEqual(sum(clean.move_id.line_ids.mapped("debit")), sum(clean.move_id.line_ids.mapped("credit")))
+        # the other reconciled slips are left for the live demonstration
+        for slip in ("DEMO-SL-A-1002", "DEMO-SL-B-1001"):
+            rem = Rem.search([("slip_ref", "=", slip)])
+            self.assertTrue(rem.run_id and not rem.move_id, slip)

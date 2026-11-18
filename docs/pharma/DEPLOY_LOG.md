@@ -392,6 +392,24 @@ bash deploy/pharma-staging/stage.sh smoke
 - Cause of the earlier uninstall was not established from the pasted output (it predates the courier upgrade). Nothing else changed.
   The separate `pharma-hide-cybrosys` branch (hides the support button in the UI) is not merged here.
 
+## 2026-11-18 — slice 1b: COD settlement accounting (written and committed, NOT yet run on Odoo)
+
+New addon `pharma_courier_cod_accounting` 19.0.1.0.0 (depends `pharma_courier_cod`, `account`; separate so a tenant without Accounting keeps the lean ledger).
+One action on a reconciled remittance, **Create journal entry**, builds a **draft** miscellaneous entry: credit the courier clearing account with the gross
+remitted, debit the bank/receipts account with what actually arrived, each deduction (freight, COD fee, withholding income tax, withholding sales tax, other)
+to its own account, and any bank difference to a difference account (debit if short, credit if over). Accounts and journal are per courier, configured on a new
+*Accounting* tab; only accounts a slip uses are required and a missing one is named. Finance Controllers do not need Accounting rights (the draft is created with
+elevated rights and records the Finance user as creator); nothing is ever posted by the module. 17 tests. Details: `docs/pharma/COURIER_COD_ACCOUNTING.md`.
+
+`pharma_courier_cod_demo` 19.0.1.1.0: now depends on the accounting addon, creates eight fictional accounts if absent (codes 1999xx / 5999xx), points both demo couriers at them and creates one draft
+entry (clean batch `DEMO-SL-A-1001`); the other two reconciled slips are left for the live demonstration. Migration re-seeds on `-u`. 12 tests.
+`stage.sh`: new module in the lists; `verify` prints journal entries by state.
+
+Static checks done here only (py_compile, pyflakes, XML well-formed, `bash -n`). **Never executed against Odoo**; first-run failures are possible. Not in this slice:
+the collection entry itself, reversing a posted settlement.
+
+Next (owner-run): `git pull --ff-only` then `stage.sh test` (expect 0 failed of 148), and only when green and on a named go `stage.sh upgrade` then `smoke`.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

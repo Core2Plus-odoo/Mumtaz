@@ -10,6 +10,17 @@ from odoo import SUPERUSER_ID, Command, api, fields, models
 _logger = logging.getLogger(__name__)
 
 FREIGHT, COD_FEE, WHT_SALES = 200.0, 50.0, 30.0           # typical per-parcel deductions on a slip
+# courier accounting field -> (account code, name, account type). Fictional accounts created only if absent.
+DEMO_ACCOUNTS = {
+    "acc_clearing_account_id": ("199910", "DEMO Courier COD clearing", "asset_current"),
+    "acc_bank_account_id": ("199911", "DEMO Courier receipts", "asset_current"),
+    "acc_wht_income_account_id": ("199912", "DEMO Withholding income tax receivable", "asset_current"),
+    "acc_wht_sales_account_id": ("199913", "DEMO Withholding sales tax receivable", "asset_current"),
+    "acc_freight_account_id": ("599910", "DEMO Courier freight", "expense"),
+    "acc_cod_fee_account_id": ("599911", "DEMO Courier COD fee", "expense"),
+    "acc_other_account_id": ("599912", "DEMO Courier other deductions", "expense"),
+    "acc_difference_account_id": ("599913", "DEMO Courier remittance difference", "expense"),
+}
 
 
 class PharmaCourierDemoSeed(models.AbstractModel):
@@ -36,6 +47,7 @@ class PharmaCourierDemoSeed(models.AbstractModel):
         s._seed_ageing_and_edge_cases(a, b, finance, product)
         s._seed_error_statement(b, finance)
         s._seed_sample_file_orders(a, product)
+        s._seed_accounting(a, b, finance)
         env["pharma.courier.shipment"].action_refresh_all()
 
     # ------------------------------------------------------------------ helpers
@@ -185,3 +197,24 @@ class PharmaCourierDemoSeed(models.AbstractModel):
         DEMO-A-0406 is left without one on purpose: the upload then shows an intake finding."""
         for n, amount in ((401, 2400), (402, 1950), (403, 3100), (404, 2750), (405, 1600)):
             self._sale_order(product, f"DEMO-ORD-A-{n:04d}", amount)
+
+    def _seed_accounting(self, a, b, finance):
+        """Point both demo couriers at fictional accounts, then create ONE draft entry (the clean batch). The two other
+        reconciled slips are left for the presenter to press Create journal entry on."""
+        env = self.env
+        journal = env["account.journal"].search([("type", "=", "general"), ("company_id", "=", env.company.id)], limit=1)
+        if not journal:
+            _logger.warning("pharma_courier_cod_demo: no general journal, accounting scenario skipped")
+            return
+        Account = env["account.account"]
+        accounts = {}
+        for fname, (code, name, typ) in DEMO_ACCOUNTS.items():
+            accounts[fname] = Account.search([("code", "=", code)], limit=1) or \
+                Account.create({"code": code, "name": name, "account_type": typ})
+        for courier in (a, b):
+            if not courier.acc_journal_id:
+                courier.write({"acc_journal_id": journal.id, **{f: acc.id for f, acc in accounts.items()}})
+        rem = env["pharma.courier.remittance"].search(
+            [("courier_id", "=", a.id), ("slip_ref", "=", "DEMO-SL-A-1001")], limit=1)
+        if rem and rem.run_id and not rem.move_id:
+            rem.with_user(finance).action_create_entry()

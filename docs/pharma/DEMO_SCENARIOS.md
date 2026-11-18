@@ -88,6 +88,14 @@ for on a remittance slip). A shortfall between any two is its own finding, never
 | C10 | `pharma.finance` | **Statement Uploads** › the *Built* one | 8 parcels created from one delivery report; each row is archived unchanged in **Source Events** |
 | C11 | `pharma.ops` | open **Remittances** or **Statement Uploads**; try *Reconcile* or *Build documents* | read-only for Operations; matching and building are Finance Controller actions |
 
+### Settlement accounting (`pharma_courier_cod_accounting`, see COURIER_COD_ACCOUNTING.md)
+
+| # | As | Do | Expect |
+| --- | --- | --- | --- |
+| C12 | admin (an accountant) | **Remittances** › `DEMO-SL-A-1001` › **Journal Entry** | a *draft* entry already exists: credit to the courier clearing account for the gross, debits to bank, freight, COD fee and withholding sales tax. Balanced, nothing posted |
+| C13 | `pharma.finance` | `DEMO-SL-A-1002` › **Create journal entry** | draft created even though this user has no Accounting rights; the 400 bank shortfall is its own line on the *difference* account |
+| C14 | `pharma.finance` | same button again, or on `DEMO-SL-A-1003` before it is reconciled | refused: "already has journal entry" / "must be posted and reconciled first". Only admin can open the entry itself |
+
 ### Live upload (the part to do in front of the audience)
 
 Sample files are in the module at `pharma_courier_cod_demo/static/samples/`. Open them at
@@ -122,4 +130,4 @@ DEMO column on every Pharma list, "(fictional)" in every product name, DEMO ribb
 ## Mapping to automated tests (`--test-tags pharma`)
 
 pharma_pk_tax_core (T1–T10): 18 tests · pharma_reconciliation_hub (R1–R7, P1–P3, S1–S3): 16 tests ·
-pharma_demo_data (every row above exists after install, seeding is idempotent, products are shop-ready): 13 tests · pharma_website_demo (home page, shop, product page, ribbon, stylesheet bundle, no health claims, seeding): 7 tests. pharma_courier_cod (shipment states and ageing, exceptions and their dedupe, remittance locking and deductions, statement validation / build / archiving, end-to-end flow): 67 tests · pharma_courier_cod_demo (every scenario above exists, seeding is idempotent, sample files match the staging labels): 9 tests. Total 54 for the first five modules, 130 with the courier COD ledger.
+pharma_demo_data (every row above exists after install, seeding is idempotent, products are shop-ready): 13 tests · pharma_website_demo (home page, shop, product page, ribbon, stylesheet bundle, no health claims, seeding): 7 tests. pharma_courier_cod (shipment states and ageing, exceptions and their dedupe, remittance locking and deductions, statement validation / build / archiving, end-to-end flow): 67 tests · pharma_courier_cod_accounting (balanced draft entry, every deduction on its own account, bank difference both ways, guards, missing configuration named): 17 tests · pharma_courier_cod_demo (every scenario above exists, seeding is idempotent, sample files match the staging labels, accounts configured, one draft entry): 12 tests. Total 54 for the first five modules, 148 with the courier COD ledger and its accounting.

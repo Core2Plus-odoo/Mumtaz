@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pharma_courier_remittance_form_accounting" model="ir.ui.view">
+        <field name="name">pharma.courier.remittance.form.accounting</field>
+        <field name="model">pharma.courier.remittance</field>
+        <field name="inherit_id" ref="pharma_courier_cod.view_pharma_courier_remittance_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_cancel']" position="before">
+                <button name="action_create_entry" type="object" string="Create journal entry" class="btn-primary"
+                        invisible="state != 'posted' or not run_id or (move_id and move_state != 'cancel')"
+                        groups="pharma_core.group_pharma_finance"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_entry" type="object" class="oe_stat_button" icon="fa-book"
+                        invisible="not move_id" groups="account.group_account_invoice">
+                    <div class="o_stat_info"><span class="o_stat_text">Journal Entry</span></div>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='run_id']" position="after">
+                <field name="move_id" invisible="1"/>
+                <field name="move_ref" invisible="not move_id"/>
+                <field name="move_state" invisible="not move_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

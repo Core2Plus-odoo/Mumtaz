@@ -45,8 +45,8 @@ WS_PORT=8077
 UNIT=odoo-pharma
 SVC_CONF=/etc/odoo-pharma.conf
 SVC_LOG=/var/log/odoo/odoo-pharma.log
-MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_demo
-PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_demo
+MODULES=base,account,sale_management,purchase,stock,mrp,website_sale,contacts,pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_accounting,pharma_courier_cod_demo
+PHARMA_MODULES=pharma_core,pharma_pk_tax_core,pharma_reconciliation_hub,pharma_demo_data,pharma_website_demo,pharma_courier_cod,pharma_courier_cod_accounting,pharma_courier_cod_demo
 
 CHECKOUT="$(cd "$(dirname "$0")/../.." && pwd)"
 LIVE_CONF="${ODOO_CONF:-/etc/odoo/odoo.conf}"
@@ -215,6 +215,7 @@ cmd_verify() {
   sudo -u postgres psql -d "$DB" -tAc "select '  website homepage_url = '||coalesce(homepage_url,'(default)')||' | name = '||name from website order by id limit 1" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  '||name||' = '||state||' ('||coalesce(latest_version,'-')||')' from ir_module_module where name in ('base_accounting_kit','base_account_budget','cybrosys_support_client','pharma_accounting_hardening') order by name"
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD: couriers='||(select count(*) from pharma_courier)||' shipments='||(select count(*) from pharma_courier_shipment)||' remittances='||(select count(*) from pharma_courier_remittance)||' statements='||(select count(*) from pharma_courier_statement)" 2>/dev/null || true
+  sudo -u postgres psql -d "$DB" -tAc "select '  courier COD journal entries: '||coalesce(string_agg(m.state||'='||n, ', ' order by m.state),'(none)') from (select m.state, count(*) n from pharma_courier_remittance r join account_move m on m.id=r.move_id group by m.state) m" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD exceptions by category: '||coalesce(string_agg(category||'='||n, ', ' order by category),'(none)') from (select category, count(*) n from pharma_recon_exception where category is not null group by category) x" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  courier COD crons active (expect 0 while neutralized): '||count(*) from ir_cron where active and cron_name like 'Courier COD%'" 2>/dev/null || true
   sudo -u postgres psql -d "$DB" -tAc "select '  vendor support endpoint = '||value from ir_config_parameter where key='cybrosys_support_client.endpoint_url'"
