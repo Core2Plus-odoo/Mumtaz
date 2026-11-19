@@ -12,6 +12,8 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +47,7 @@ jobs:
             'cd /opt/mumtaz && bash scripts/rollback.sh'
 
       - name: Slack Notification - Production
-        if: ${{ always() && secrets.SLACK_WEBHOOK != '' }}
+        if: ${{ always() && env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v1
         with:
           payload: |

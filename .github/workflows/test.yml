@@ -126,9 +126,12 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     needs: [lint, test, build]
-    if: always() && secrets.SLACK_WEBHOOK != ''
+    if: always()
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - name: Slack Notification
+        if: ${{ env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v1
         with:
           payload: |
