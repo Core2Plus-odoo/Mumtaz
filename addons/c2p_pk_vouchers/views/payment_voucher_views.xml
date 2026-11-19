@@ -12,7 +12,7 @@
                         <field name="payment_type" widget="radio"
                                invisible="is_bank_transfer"/>
                         <field name="partner_id" invisible="is_bank_transfer"
-                               required="not is_bank_transfer and not is_intercompany"/>
+                               required="not is_bank_transfer and not is_intercompany and not is_direct"/>
                         <field name="journal_id" invisible="is_bank_transfer"
                                required="not is_bank_transfer"/>
                         <field name="date"/>
@@ -23,6 +23,7 @@
                         <field name="memo"/>
                         <field name="is_intercompany"/>
                         <field name="is_bank_transfer"/>
+                        <field name="is_direct"/>
                     </group>
                 </group>
 
@@ -50,7 +51,22 @@
                     <field name="amount"/>
                 </group>
 
-                <div invisible="is_intercompany or is_bank_transfer">
+                <group string="Direct Payment / Receipt (no vendor)"
+                       invisible="not is_direct">
+                    <field name="direct_line_ids">
+                        <list editable="bottom">
+                            <field name="account_id"/>
+                            <field name="name"/>
+                            <field name="amount"/>
+                            <field name="currency_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                    <group class="oe_subtotal_footer">
+                        <field name="direct_total"/>
+                    </group>
+                </group>
+
+                <div invisible="is_intercompany or is_bank_transfer or is_direct">
                     <button name="action_load_open_items" type="object"
                             string="Load Open Items" class="btn-secondary"/>
                     <field name="line_ids">

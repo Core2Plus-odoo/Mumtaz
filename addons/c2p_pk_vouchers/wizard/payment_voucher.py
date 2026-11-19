@@ -56,6 +56,14 @@ class C2pPaymentVoucher(models.TransientModel):
                "('id', '!=', src_journal_id)]",
         help="Destination bank of the same company as the source.")
 
+    is_direct = fields.Boolean(
+        string="Direct Payment",
+        help="Pay or receive directly against an expense/income account with "
+             "no vendor and no bill (e.g. fines, penalties, one-off items).")
+    direct_line_ids = fields.One2many(
+        "c2p.payment.voucher.direct.line", "voucher_id", string="Direct Lines")
+    direct_total = fields.Monetary(compute="_compute_direct_total", store=True)
+
     # Withholding codes bound to the partner (income tax + sales tax), shown so
     # the operator can see which ledgers drive the per-line WHT columns.
     wht_it_tax_id = fields.Many2one(
@@ -102,6 +110,11 @@ class C2pPaymentVoucher(models.TransientModel):
             v.wht_st_amount = sum(selected.mapped("wht_st"))
             v.wht_total = v.wht_it_amount + v.wht_st_amount
             v.net_amount = v.total_selected - v.wht_total
+
+    @api.depends("direct_line_ids.amount")
+    def _compute_direct_total(self):
+        for v in self:
+            v.direct_total = sum(v.direct_line_ids.mapped("amount"))
 
     def action_load_open_items(self):
         self.ensure_one()
@@ -150,11 +163,19 @@ class C2pPaymentVoucher(models.TransientModel):
     def _onchange_is_bank_transfer(self):
         if self.is_bank_transfer:
             self.is_intercompany = False
+            self.is_direct = False
 
     @api.onchange("is_intercompany")
     def _onchange_is_intercompany(self):
         if self.is_intercompany:
             self.is_bank_transfer = False
+            self.is_direct = False
+
+    @api.onchange("is_direct")
+    def _onchange_is_direct(self):
+        if self.is_direct:
+            self.is_bank_transfer = False
+            self.is_intercompany = False
 
     def action_post(self):
         self.ensure_one()
@@ -162,7 +183,53 @@ class C2pPaymentVoucher(models.TransientModel):
             return self._post_bank_transfer()
         if self.is_intercompany:
             return self._post_intercompany()
+        if self.is_direct:
+            return self._post_direct()
         return self._post_voucher()
+
+    def _post_direct(self):
+        self.ensure_one()
+        if not self.journal_id:
+            raise UserError("Select the bank/cash journal.")
+        bank_account = self.journal_id.default_account_id
+        if not bank_account:
+            raise UserError("The selected journal has no bank/cash account set.")
+        lines = self.direct_line_ids.filtered(
+            lambda ln: ln.account_id and ln.amount)
+        if not lines:
+            raise UserError("Add at least one line with an account and amount.")
+        outbound = self.payment_type == "outbound"
+        total = sum(lines.mapped("amount"))
+        label = self.memo or ("Direct Payment" if outbound else "Direct Receipt")
+        partner = self.partner_id.id or False
+        move_lines = []
+        for ln in lines:
+            vals = {"account_id": ln.account_id.id, "partner_id": partner,
+                    "name": ln.name or label}
+            if outbound:
+                vals.update(debit=ln.amount, credit=0.0)
+            else:
+                vals.update(debit=0.0, credit=ln.amount)
+            move_lines.append((0, 0, vals))
+        bank_vals = {"account_id": bank_account.id, "partner_id": partner,
+                     "name": label}
+        if outbound:
+            bank_vals.update(debit=0.0, credit=total)
+        else:
+            bank_vals.update(debit=total, credit=0.0)
+        move_lines.append((0, 0, bank_vals))
+        move = self.env["account.move"].create({
+            "move_type": "entry",
+            "journal_id": self.journal_id.id,
+            "date": self.date,
+            "ref": label,
+            "partner_id": partner,
+            "cheque_no": self.cheque_no,
+            "cheque_date": self.cheque_date,
+            "line_ids": move_lines,
+        })
+        move.action_post()
+        return self._open_result(move)
 
     def _post_bank_transfer(self):
         self.ensure_one()
@@ -425,3 +492,19 @@ class C2pPaymentVoucherLine(models.TransientModel):
             line.wht_it = it
             line.wht_st = st
             line.net_pay = line.to_pay - it - st
+
+
+class C2pPaymentVoucherDirectLine(models.TransientModel):
+    _name = "c2p.payment.voucher.direct.line"
+    _description = "Payment / Receipt Voucher Direct Line"
+
+    voucher_id = fields.Many2one(
+        "c2p.payment.voucher", required=True, ondelete="cascade")
+    currency_id = fields.Many2one(related="voucher_id.currency_id")
+    account_id = fields.Many2one(
+        "account.account", string="Account", required=True,
+        domain="[('account_type', 'not in', "
+               "('asset_cash', 'liability_credit_card'))]",
+        help="The expense/income (or other) account to pay or receive against.")
+    name = fields.Char(string="Description")
+    amount = fields.Monetary(string="Amount", required=True)
