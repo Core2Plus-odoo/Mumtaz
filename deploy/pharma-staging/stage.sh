@@ -19,6 +19,7 @@
 #   stage.sh verify        read-only facts about mumtaz_pharma (mode, module states, demo counts)
 #   stage.sh test          fresh install into mumtaz_pharma_test with --test-tags pharma, drop it
 #   stage.sh service       GATE: write /etc/odoo-pharma.conf + odoo-pharma.service, enable + start
+#   stage.sh rehearse-upgrade [mod[,mod]]  upgrade a throwaway COPY of mumtaz_pharma, report, drop it (mumtaz_pharma only read)
 #   stage.sh upgrade [mod[,mod]]  GATE: backup mumtaz_pharma, -u pharma_* -i new pharma modules (or only the modules named), restart odoo-pharma only, verify
 #   stage.sh demo-passwords  set one password on the four demo users (pharma.ops / .maker / .approver / .finance), typed interactively
 #   stage.sh thirdparty    fetch the pinned Cybrosys accounting kit (source only) into /opt/thirdparty/cybroaddons
@@ -378,6 +379,47 @@ cmd_upgrade() {
   echo "rollback of this upgrade: systemctl stop $UNIT; sudo -u postgres dropdb $DB; sudo -u postgres createdb -O $ODOO_USER $DB; sudo -u postgres pg_restore -d $DB $BACKUP_DIR/${DB}_pre_upgrade_$TS.dump; systemctl start $UNIT"
 }
 
+cmd_rehearse_upgrade() {
+  # Rehearse `upgrade` on a COPY of mumtaz_pharma, so anything that only shows up when upgrading an existing database
+  # (moved menus, changed data files, migrations) fails here and not on the real one. mumtaz_pharma is only READ
+  # (pg_dump); the copy is the throwaway test database, dropped at the end. The copy is neutralized like the original.
+  local only="${1:-}" m installed to_update="" to_install=""
+  guards; preflight
+  db_exists "$DB" || die "$DB does not exist"
+  if [ -n "$only" ]; then
+    for m in ${only//,/ }; do
+      case ",$PHARMA_MODULES,pharma_accounting_hardening," in *",$m,"*) ;; *) die "unknown module '$m'";; esac
+    done
+  fi
+  if db_exists "$TEST_DB"; then say "$TEST_DB left over from a previous run — dropping it first"; drop_test_db; fi
+  say "REHEARSAL: copy $DB -> $TEST_DB (read-only on $DB), upgrade the copy, drop it"
+  sudo -u postgres createdb -O "$ODOO_USER" "$TEST_DB"
+  sudo -u postgres pg_dump -Fc "$DB" | sudo -u postgres pg_restore --no-owner --role="$ODOO_USER" -d "$TEST_DB" || true
+  installed="$(sudo -u postgres psql -d "$TEST_DB" -tAc "select string_agg(name, ',') from ir_module_module where state='installed' and name like 'pharma%'")"
+  if [ -n "$only" ]; then
+    for m in ${only//,/ }; do case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac; done
+  else
+    for m in ${PHARMA_MODULES//,/ }; do case ",$installed," in *",$m,"*) to_update="$to_update,$m";; *) to_install="$to_install,$m";; esac; done
+    case ",$installed," in *",pharma_accounting_hardening,"*) to_update="$to_update,pharma_accounting_hardening";; esac
+  fi
+  to_update="${to_update#,}"; to_install="${to_install#,}"
+  echo "  update: ${to_update:-<none>}   install: ${to_install:-<none>}"
+  local args=(-c "$STAGE_CONF" -d "$TEST_DB" --stop-after-init)
+  [ -n "$to_update" ] && args+=(-u "$to_update")
+  [ -n "$to_install" ] && args+=(-i "$to_install")
+  # shellcheck disable=SC2086
+  as_odoo "$ODOO_BIN" "${args[@]}" $(no_http_flag) > "$LOG_DIR/rehearse_$TS.log" 2>&1 || true
+  grep -E " (ERROR|CRITICAL|WARNING) .*pharma|Traceback|Modules loaded|migrat|modules loaded in" "$LOG_DIR/rehearse_$TS.log" | tail -25 || true
+  local verdict="PASSED"
+  grep -qE " (ERROR|CRITICAL) " "$LOG_DIR/rehearse_$TS.log" && verdict="FAILED: errors in $LOG_DIR/rehearse_$TS.log"
+  grep -q "Modules loaded" "$LOG_DIR/rehearse_$TS.log" || verdict="FAILED: did not reach 'Modules loaded' ($LOG_DIR/rehearse_$TS.log)"
+  sudo -u postgres psql -d "$TEST_DB" -tAc "select '  app roots on the copy: '||coalesce(string_agg(m.name->>'en_US', ', ' order by m.sequence),'(none)') from ir_ui_menu m where m.parent_id is null and m.id in (select res_id from ir_model_data where model='ir.ui.menu' and name like 'menu_pharma_%_app')" 2>/dev/null || true
+  sudo -u postgres psql -d "$TEST_DB" -tAc "select '  leftover shared Pharma root on the copy: '||count(*) from ir_ui_menu where parent_id is null and name->>'en_US'='Pharma'" 2>/dev/null || true
+  drop_test_db
+  say "rehearsal $verdict"
+  case "$verdict" in PASSED) ;; *) exit 1;; esac
+}
+
 cmd_demo_passwords() {
   guards; render_conf "$STAGE_CONF" cli
   say "one password for the four DEMO users (typed twice, never echoed, never stored)"
@@ -446,11 +488,11 @@ info = rpc("/web/session/authenticate", {"db": db, "login": login, "password": p
 print(f"  login as {login}:", f"OK uid={info['uid']}" if info.get("uid") else "FAILED")
 if not info.get("uid"): sys.exit(1)
 print("  session db:", info.get("db"), "| company:", info.get("user_companies", {}).get("current_company"))
-root = rpc("/web/dataset/call_kw", {"model": "ir.model.data", "method": "search_read",
-                                    "args": [[["module", "=", "pharma_core"], ["name", "=", "menu_pharma_root"]]], "kwargs": {"fields": ["res_id"]}})
-menus = rpc("/web/dataset/call_kw", {"model": "ir.ui.menu", "method": "search_read", "args": [[["id", "child_of", root[0]["res_id"]]]],
+roots = rpc("/web/dataset/call_kw", {"model": "ir.model.data", "method": "search_read",
+                                     "args": [[["model", "=", "ir.ui.menu"], ["name", "like", "menu_pharma_%_app"]]], "kwargs": {"fields": ["res_id"]}})
+menus = rpc("/web/dataset/call_kw", {"model": "ir.ui.menu", "method": "search_read", "args": [[["id", "child_of", [r["res_id"] for r in roots]]]],
                                      "kwargs": {"fields": ["complete_name"]}})
-print("  Pharma menus reachable through the web session: %d" % len(menus))
+print("  Pharma apps: %d, menus reachable through the web session (apps included): %d" % (len(roots), len(menus)))
 PY
   fi
   say "menus / mode / DEMO data as admin, and: production mode must refuse DEMO rules (odoo shell, transaction ROLLED BACK, DB unchanged)"
@@ -464,13 +506,16 @@ print("  company:", env.company.name)
 print("  pharma.mode:", P.get_param("pharma.mode"))
 print("  neutralized:", P.get_param("database.is_neutralized"))
 Menu = env["ir.ui.menu"]
-root = env.ref("pharma_core.menu_pharma_root")
+apps = Menu.sudo().search([("parent_id", "=", False), ("id", "in", env["ir.model.data"].sudo().search(
+    [("model", "=", "ir.ui.menu"), ("name", "like", "menu_pharma_%_app")]).mapped("res_id"))])
 visible = set(Menu.with_user(admin)._visible_menu_ids())
-pharma = Menu.sudo().search([("id", "child_of", root.id)])
+pharma = Menu.sudo().search([("id", "child_of", apps.ids)])
 shown = sorted(m.complete_name for m in pharma if m.id in visible)
+print("  Pharma apps (top level): %s" % ", ".join(sorted(apps.mapped("name"))))
 print("  Pharma menus visible to admin (%d of %d):" % (len(shown), len(pharma)))
 for name in shown: print("    -", name)
-want = {"Pharma/Tax Centre", "Pharma/Reconciliation", "Pharma/Reconciliation/Exception Queue"}
+print("  no leftover shared 'Pharma' root:", "YES" if not Menu.sudo().search([("parent_id", "=", False), ("name", "=", "Pharma")]) else "NO, an old root still exists")
+want = {"Tax Centre", "Reconciliation", "Reconciliation/Exception Queue", "Distribution Partner", "Courier COD/Shipments", "Pharma Admin/Source Events"}
 print("  required menus present:", "YES" if want <= set(shown) else f"MISSING {sorted(want - set(shown))}")
 for model in ("pharma.tax.rule", "pharma.tax.event", "pharma.recon.run", "pharma.recon.exception", "pharma.partner.stock.line", "pharma.raw.event"):
     M = env[model].sudo(); print(f"  {model}: total={M.search_count([])} demo={M.search_count([('is_demo', '=', True)])}")
@@ -642,6 +687,7 @@ case "${1:-}" in
   test)           cmd_test ;;
   service)        cmd_service ;;
   upgrade)        cmd_upgrade "${2:-}" ;;
+  rehearse-upgrade) cmd_rehearse_upgrade "${2:-}" ;;
   demo-passwords) cmd_demo_passwords ;;
   neutralize)     cmd_neutralize ;;
   service-remove) cmd_service_remove ;;

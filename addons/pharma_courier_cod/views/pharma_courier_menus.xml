@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_pharma_courier" name="Courier COD" parent="pharma_core.menu_pharma_root" sequence="15"/>
-    <menuitem id="menu_pharma_courier_shipments" name="Shipments" parent="menu_pharma_courier"
+    <menuitem id="menu_pharma_courier_app" name="Courier COD" sequence="15"
+              web_icon="pharma_courier_cod,static/description/icon.svg" groups="pharma_core.group_pharma_user"/>
+    <menuitem id="menu_pharma_courier_shipments" name="Shipments" parent="menu_pharma_courier_app"
               action="action_pharma_courier_shipment" sequence="10"/>
-    <menuitem id="menu_pharma_courier_ageing" name="COD Ageing" parent="menu_pharma_courier"
+    <menuitem id="menu_pharma_courier_ageing" name="COD Ageing" parent="menu_pharma_courier_app"
               action="action_pharma_courier_ageing" sequence="20"/>
-    <menuitem id="menu_pharma_courier_remittances" name="Remittances" parent="menu_pharma_courier"
+    <menuitem id="menu_pharma_courier_remittances" name="Remittances" parent="menu_pharma_courier_app"
               action="action_pharma_courier_remittance" sequence="30"/>
-    <menuitem id="menu_pharma_courier_statements" name="Statement Uploads" parent="menu_pharma_courier"
+    <menuitem id="menu_pharma_courier_statements" name="Statement Uploads" parent="menu_pharma_courier_app"
               action="action_pharma_courier_statement" sequence="40"/>
-    <menuitem id="menu_pharma_courier_config" name="Couriers" parent="pharma_core.menu_pharma_config"
+    <menuitem id="menu_pharma_courier_conf" name="Configuration" parent="menu_pharma_courier_app" sequence="90"
+              groups="pharma_core.group_pharma_admin"/>
+    <menuitem id="menu_pharma_courier_config" name="Couriers" parent="menu_pharma_courier_conf"
               action="action_pharma_courier" sequence="20"/>
 </odoo>

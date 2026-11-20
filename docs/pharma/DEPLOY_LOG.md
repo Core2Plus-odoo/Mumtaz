@@ -500,6 +500,19 @@ Made here: `stage.sh upgrade` takes an optional module argument (`stage.sh upgra
 Next (owner-run): `git pull --ff-only`, `stage.sh test-combined` (must be green); then a named go for `stage.sh upgrade pharma_courier_cod_accounting`, `verify`, `smoke`. Neutralize needs no separate step; `upgrade` re-runs it only as a no-op safeguard on a neutralized database.
 Caveat to test in the browser: reversing an entry that was already reconciled against a customer invoice leaves that reconciliation for the accountant to resolve.
 
+## 2026-11-18 — structure: one app per area instead of one "Pharma" menu (written and committed, NOT yet tested or on staging)
+
+The single shared "Pharma" menu (four unrelated areas hung under `pharma_core.menu_pharma_root`) is replaced by five apps in the app switcher, each owned by the module that provides it and with its own icon:
+**Tax Centre** (`pharma_pk_tax_core`), **Reconciliation** and **Distribution Partner** (`pharma_reconciliation_hub`), **Courier COD** (`pharma_courier_cod`, now with its own Configuration › Couriers),
+**Pharma Admin** (`pharma_core`, Source Events, Administrator only). Menu items keep their technical ids and are re-parented; the old shared root and section menus are removed. Visibility is unchanged
+(Pharma users see the apps; Commercial Model stays Finance-only; configuration stays Administrator-only). Module technical names are untouched.
+
+Why new root ids rather than reusing the old ones: Odoo does not clear a menu's parent when a data file simply drops it, and a menu cannot be deleted while it still has children, so the roots are new records and the old ones are garbage-collected at the end of the upgrade.
+That upgrade-path behaviour is exactly what a fresh-install test cannot show, so `stage.sh rehearse-upgrade [mod,...]` is new: it copies `mumtaz_pharma` into the throwaway database (`pg_dump` read only), runs the same upgrade on the copy, prints the app roots and any leftover shared "Pharma" root, and drops it.
+`smoke` now counts the app roots and checks the menu paths per app. Docs: DEMO_SCENARIOS has an "apps" table and updated headings; COURIER_COD_ACCOUNTING paths updated.
+
+Static checks only (XML and SVG well-formed, `bash -n`, no stale menu references). Next (owner-run): `git pull --ff-only`, `stage.sh test-combined`, then `stage.sh rehearse-upgrade` (this must say PASSED), and only then a named go for `stage.sh upgrade` and `smoke`, followed by a hard refresh in the browser.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

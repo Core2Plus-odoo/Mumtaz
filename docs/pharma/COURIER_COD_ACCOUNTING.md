@@ -45,7 +45,7 @@ The collection entry debits the courier's clearing account when the courier coll
 account with what the courier actually remits. The account's balance is therefore **what the couriers still hold**, and it should
 trend to zero. A parcel collected but not yet remitted shows as a balance; an overdue one is also an exception in the queue.
 
-## Setup (once per courier, `Pharma › Configuration › Couriers › Accounting` tab, needs Accounting access)
+## Setup (once per courier, app **Courier COD › Configuration › Couriers › Accounting** tab, needs Accounting access)
 
 Journal (a miscellaneous one), clearing account, bank or receipts account, difference account, and one account for each deduction
 type a slip reports. Only what a slip uses is required: a slip with no withholding does not need the withholding accounts, and a

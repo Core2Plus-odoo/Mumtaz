@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_pharma_root" name="Pharma" sequence="20"
-              groups="pharma_core.group_pharma_user"/>
-    <menuitem id="menu_pharma_config" name="Configuration" parent="menu_pharma_root" sequence="90"
-              groups="pharma_core.group_pharma_admin"/>
-    <menuitem id="menu_pharma_raw_event" name="Source Events" parent="menu_pharma_config"
+    <!-- Each Pharma area is its own app in the app switcher, owned by the module that provides it. This one holds the
+         cross-cutting administration of the platform. -->
+    <menuitem id="menu_pharma_admin_app" name="Pharma Admin" sequence="90"
+              web_icon="pharma_core,static/description/icon.svg" groups="pharma_core.group_pharma_admin"/>
+    <menuitem id="menu_pharma_raw_event" name="Source Events" parent="menu_pharma_admin_app"
               action="action_pharma_raw_event" sequence="10"/>
 </odoo>

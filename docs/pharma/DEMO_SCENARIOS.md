@@ -5,6 +5,21 @@ Environment: https://pharma.mumtaz.digital · Odoo 19 Community · database `mum
 seeded by `pharma_demo_data` + `pharma_website_demo` and flagged **DEMO**. Re-seeding is
 idempotent (`-u pharma_demo_data` adds nothing twice).
 
+## Where things are: one app per area
+
+The Pharma platform is not one big menu. Each area is its own app in the app switcher (top-left grid), with its own icon and menus,
+and each is provided by the module that owns it. A user only sees the apps their role allows.
+
+| App | Menus | Provided by |
+| --- | --- | --- |
+| **Tax Centre** | Blocked (Unresolved), Tax Events, SKU Classification Register, Tax Rules | `pharma_pk_tax_core` |
+| **Reconciliation** | Exception Queue, Reconciliation Runs | `pharma_reconciliation_hub` |
+| **Distribution Partner** | Stock Roll-forward, Commercial Model (A/B/C) (Finance only) | `pharma_reconciliation_hub` |
+| **Courier COD** | Shipments, COD Ageing, Remittances, Statement Uploads, Configuration › Couriers (Administrator) | `pharma_courier_cod` |
+| **Pharma Admin** | Source Events (Administrator only) | `pharma_core` |
+
+The standard Odoo apps (Sales, Website, Inventory, Purchase, Manufacturing, Accounting) sit beside them. After an upgrade, hard-refresh the browser to see the new switcher.
+
 ## Who logs in
 
 | Login | Role | Use it to show |
@@ -27,7 +42,7 @@ not in this repository.
 | W3 | Add *Green Leaf Infusion (DEMO)* to the cart, proceed to checkout | Address step works; payment step shows **no provider** (database is neutralized) — say so, this is by design |
 | W4 | Add *Rose Petal Tea (DEMO)* | It can be carted; the control bites at order confirmation in the back office (T4 below), never silently at checkout |
 
-## Tax Centre (`Pharma › Tax Centre`)
+## Tax Centre (app: **Tax Centre**)
 
 | # | As | Do | Expect |
 | --- | --- | --- | --- |
@@ -45,7 +60,7 @@ not in this repository.
 | T9 | admin | Settings › Technical › System Parameters › `pharma.mode` = `production` (then back to `demo`) | with `production`, resolving a DEMO rule returns *needs_approval: DEMO-only and refused in production*; proven by the test suite and `stage.sh smoke` without touching the database |
 | T10 | any | Product D "ambiguous rules" | two approved rules overlap for its class: any posting resolves **blocked: ambiguous**; nothing is guessed |
 
-## Reconciliation (`Pharma › Reconciliation`)
+## Reconciliation (app: **Reconciliation**)
 
 | # | As | Do | Expect |
 | --- | --- | --- | --- |
@@ -58,7 +73,7 @@ not in this repository.
 | R6b | admin (second controller) | same › **Approve closure** | closed; `proposed_by` and `approved_by` differ |
 | R7 | `pharma.finance` | an *open* exception › **Propose closure** without owner / note | refused: "Assign an owner", then "A resolution and a note are required" |
 
-## Distribution Partner (`Pharma › Distribution Partner`)
+## Distribution Partner (app: **Distribution Partner**)
 
 | # | As | Do | Expect |
 | --- | --- | --- | --- |
@@ -66,7 +81,7 @@ not in this repository.
 | P2 | `pharma.finance` | **Commercial Model (A/B/C)** | scenario B chosen, contract reference empty, no sign-offs → *complete* unticked. Custody moves are recorded; revenue is **BLOCKED awaiting sign-off** |
 | P3 | `pharma.ops` | **Commercial Model** menu | not visible (Finance only) |
 
-## Courier COD ledger (`Pharma › Courier COD`, Pakistan cash on delivery)
+## Courier COD ledger (app: **Courier COD**, Pakistan cash on delivery)
 
 Seeded by `pharma_courier_cod_demo` with two fictional couriers, **Courier A (DEMO)** (14-day remittance cycle) and
 **Courier B (DEMO)** (7-day cycle). Three amounts are tracked per parcel: **declared** (what the shop asked the courier
@@ -119,7 +134,7 @@ Sample files are in the module at `pharma_courier_cod_demo/static/samples/`. Ope
    "already has remittance". Uploading the same delivery report twice updates the same parcels and never blanks a field the
    second file left empty.
 
-## Source events (`Pharma › Configuration › Source Events`, Pharma Administrator)
+## Source events (app: **Pharma Admin › Source Events**, Pharma Administrator)
 
 | # | Expect |
 | --- | --- |
