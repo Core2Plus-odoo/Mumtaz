@@ -41,9 +41,9 @@ class CrmLead(models.Model):
     faizy_family_size = fields.Integer(
         string='Family members to enrol', default=1)
     faizy_plan_interest = fields.Selection([
-        ('lite', 'Lite — AED 26.50'),
-        ('standard', 'Standard — AED 66.20'),
-        ('family_pro', 'Family Pro — AED 119.20'),
+        ('lite', 'Lite'),
+        ('standard', 'Standard'),
+        ('family_pro', 'Family Pro'),
         ('undecided', 'Undecided'),
     ], string='Plan interest', default='undecided')
     faizy_whatsapp_notes = fields.Text(
