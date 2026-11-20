@@ -7,6 +7,7 @@ from . import faizy_order
 from . import faizy_request
 from . import faizy_wallet
 from . import faizy_whatsapp
+from . import faizy_whatsapp_transport
 from . import faizy_document
 from . import faizy_sample_data
 from . import faizy_dashboard

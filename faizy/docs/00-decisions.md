@@ -576,3 +576,48 @@ falsy — both are harmless guards against a state that would be a genuine
 problem if it ever occurred. Only the claim was wrong, and commit `4024183`'s
 message overstates it as a live incident.
 
+## 12. WhatsApp transport — built, not yet live
+
+Every customer-facing WhatsApp message this product has ever queued —
+booking confirmations, "a Faizy has been assigned", status updates, the
+receipt on completion, the ops new-order alert — has sat in
+`faizy.whatsapp.message` as `queued` forever. `_get_provider()` was a literal
+`return False`. No provider, template or credential existed anywhere in the
+codebase. Nothing has ever actually reached a phone.
+
+What changed: `faizy_whatsapp_transport.py` adds a `faizy_whatsapp_provider`
+flag on the company (none / meta / twilio) plus the credential fields each
+needs, under Settings → Faizy → WhatsApp. `_get_provider()` now returns the
+company once it holds working credentials for whichever provider is picked —
+matching §2's "one interface, provider is a config change" plan. Meta Cloud
+API sends direct via `requests`; Twilio is the fallback, same call shape.
+
+**What is NOT done, and can't be done from code:**
+
+- **No real credentials exist yet.** Nothing will send until a Meta System
+  User token + phone number ID, or a Twilio SID/token/sender, are entered in
+  Settings. Business verification (trade licence for C2P Consultants FZC LLC)
+  is still the schedule risk §2 already flagged.
+- **No WhatsApp template is approved.** `booking_confirmation`,
+  `faizy_assigned`, `worker_assignment`, `status_update` and `receipt` are
+  now the *default template names* a queued message carries (see
+  `TEMPLATE_DEFAULT_TYPES` in `faizy_whatsapp.py`) — but Meta will reject all
+  five until each is actually submitted and approved in Meta Business
+  Manager, built as one body variable carrying the whole rendered English
+  text (the simplest shape to get approved; see the comment in
+  `faizy_whatsapp_transport.py` for why). `otp` and `generic` are
+  deliberately excluded from the default — `otp` needs an authentication
+  template (code + button, priced differently), `generic` text is ad hoc per
+  call and can't be a template at all.
+- **Twilio template support isn't built.** Twilio addresses its WhatsApp
+  Content Templates by a ContentSid, not a human name, so until one is built
+  in the Twilio Console and mapped, Twilio always sends free text — which
+  only Twilio/Meta deliver inside a customer-initiated 24h session. That's
+  real, limited value (works for anyone who messaged in first) but not a
+  substitute for the template path above.
+
+So: the plumbing is real and wired end to end, but turning the flag on today
+sends nothing until a human does three things outside this repo — get Meta
+(or Twilio) credentials, register the five template names above, get them
+approved — none of which I can do from here.
+
