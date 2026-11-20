@@ -255,6 +255,9 @@ export type PublicTray = {
   pieces: { ref: string; product: string; karat: string | false; net_weight_g: number; price: number; why: string; feedback: string; question: string | null }[];
 };
 export type Page<T> = { items: T[]; total?: number };
+export type ImportRow = { line: number; serial: string; design: string; status: 'new' | 'exists' | 'error'; message: string; lot_id?: number };
+export type ImportResult = { dry_run: boolean; import_id?: number; rows: ImportRow[]; summary: { rows: number; new: number; exists: number; errors: number } };
+export type ImportRun = { id: number; name: string; by: Ref; at: string; store: Ref; rows: number; created: number; skipped: number; errors: number; report: string | null };
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) {
@@ -316,6 +319,9 @@ export const api = {
   pieces: (p: { q?: string; karat?: string; on_hand?: boolean; category?: string; sort?: string; limit?: number; offset?: number } = {}) =>
     call<Page<Piece>>(`/pieces${q(p)}`),
   piece: (id: number, discount?: number) => call<PieceDetail>(`/pieces/${id}${q({ discount })}`),
+  piecesImport: (p: { csv?: string; xlsx?: string; dry_run: boolean; store_id?: number; skip_errors?: boolean; name?: string }) => call<ImportResult>('/pieces/import', { method: 'POST', body: JSON.stringify(p) }),
+  piecesImports: () => call<{ items: ImportRun[] }>('/pieces/imports'),
+  piecesImportTemplate: () => call<{ csv: string; columns: string[] }>('/pieces/import/template'),
   createClient: (p: NewClient) => call<ClientDetail>('/clients', { method: 'POST', body: JSON.stringify(p) }),
   clients: (p: { q?: string; tier?: string; sort?: string; city?: string; limit?: number; offset?: number } = {}) =>
     call<Page<Client>>(`/clients${q(p)}`),

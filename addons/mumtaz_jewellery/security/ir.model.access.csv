@@ -3,3 +3,5 @@ access_gold_rate_user,jewellery.gold.rate user,model_jewellery_gold_rate,group_j
 access_gold_rate_manager,jewellery.gold.rate manager,model_jewellery_gold_rate,group_jewellery_manager,1,1,1,1
 access_old_gold_user,jewellery.old.gold user,model_jewellery_old_gold,group_jewellery_user,1,1,1,0
 access_old_gold_manager,jewellery.old.gold manager,model_jewellery_old_gold,group_jewellery_manager,1,1,1,1
+access_piece_import_user,jewellery.piece.import user,model_jewellery_piece_import,group_jewellery_user,1,0,0,0
+access_piece_import_manager,jewellery.piece.import manager,model_jewellery_piece_import,group_jewellery_manager,1,1,1,0

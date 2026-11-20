@@ -79,6 +79,27 @@ class ResPartner(models.Model):
                 {'partner_id': p.id, 'user_id': self.env.user.id, 'action': 'view'} for p in restricted])
         return res
 
+    def _log_query_access(self, action, note=None):
+        """One log line for a list, search or export that returned restricted
+        clients; nothing for the superuser or when no restricted client is in
+        the result."""
+        if self.env.su or self.env.context.get('vip_access_logged') or not self:
+            return
+        restricted = self.sudo().filtered(lambda p: p.jewellery_tier in RESTRICTED)
+        if restricted:
+            self.env['jewellery.vip.access.log'].sudo().create({
+                'user_id': self.env.user.id, 'action': action, 'count': len(restricted),
+                'partner_ids': [(6, 0, restricted.ids)], 'note': note})
+
+    def search_fetch(self, domain, field_names, offset=0, limit=None, order=None):
+        res = super().search_fetch(domain, field_names, offset=offset, limit=limit, order=order)
+        res._log_query_access('list')
+        return res
+
+    def export_data(self, fields_to_export):
+        self._log_query_access('export', note=', '.join(fields_to_export)[:200])
+        return super().export_data(fields_to_export)
+
     def action_suggest_pieces(self):
         self.ensure_one()
         self.env['jewellery.offer.suggestion'].generate_for(self)

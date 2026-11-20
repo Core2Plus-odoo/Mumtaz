@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { api, type Rate, type User } from '../lib/api';
+import { api, type ImportResult, type Rate, type User } from '../lib/api';
 import { useT } from '../lib/i18n';
-import { grams, money } from '../lib/format';
+import { grams, money, when } from '../lib/format';
 import { TopBar } from '../components/Shell';
 import { Card, Empty, ErrorBox, Loading, useLoad } from '../components/ui';
 
@@ -25,6 +25,8 @@ export default function Pieces() {
   const total = pieces.data?.total ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE));
   const cur = user.company.currency;
+  const isManager = user.roles.includes('jewellery_manager');
+  const [importing, setImporting] = useState(false);
 
   return (
     <>
@@ -47,6 +49,12 @@ export default function Pieces() {
           <span className="sp" />
           {pieces.data && <span className="small muted num">{total}</span>}
         </div>
+        {isManager && (
+          <div className="actions" style={{ marginBottom: 12 }}>
+            <button className="btn ghost small" onClick={() => setImporting(!importing)}>{importing ? t('import_hide') : t('import_pieces')}</button>
+          </div>
+        )}
+        {isManager && importing && <ImportPanel onDone={() => { pieces.reload(); }} />}
         <Card title={t('pieces_title')} right={pages > 1 ? (
           <div className="pager">
             <button className="btn ghost small" disabled={page === 0} onClick={() => setPage(page - 1)}>{t('prev')}</button>
@@ -81,5 +89,76 @@ export default function Pieces() {
         </Card>
       </div>
     </>
+  );
+}
+
+/** The stock book as a spreadsheet: preview every row, then write the new
+ * pieces onto the shelf. A serial already in the book is skipped, so a file
+ * can be loaded twice; a row with a problem is named by line. */
+function ImportPanel({ onDone }: { onDone: () => void }) {
+  const { t, lang } = useT();
+  const [csv, setCsv] = useState('');
+  const [xlsx, setXlsx] = useState<string | null>(null);
+  const [fileName, setFileName] = useState('');
+  const [preview, setPreview] = useState<ImportResult | null>(null);
+  const [skipErrors, setSkipErrors] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ kind: 'ok' | 'warn'; text: string } | null>(null);
+  const runs = useLoad(() => api.piecesImports());
+  const payload = () => (xlsx ? { xlsx } : { csv });
+  const pick = (f: File | undefined) => {
+    setPreview(null); setMsg(null);
+    if (!f) return;
+    setFileName(f.name);
+    const r = new FileReader();
+    if (/\.xlsx$/i.test(f.name)) { r.onload = () => { setXlsx(String(r.result).split(',')[1] ?? null); setCsv(''); }; r.readAsDataURL(f); }
+    else { r.onload = () => { setCsv(String(r.result)); setXlsx(null); }; r.readAsText(f); }
+  };
+  const run = async (dry: boolean) => {
+    setBusy(true); setMsg(null);
+    try {
+      const out = await api.piecesImport({ ...payload(), dry_run: dry, skip_errors: skipErrors, name: fileName || undefined });
+      setPreview(out);
+      if (!dry) { setMsg({ kind: 'ok', text: `${t('import_done')}: ${out.summary.new} ${t('import_new')}, ${out.summary.exists} ${t('import_exists')}, ${out.summary.errors} ${t('import_errors')}` }); runs.reload(); onDone(); }
+    } catch (e) { setMsg({ kind: 'warn', text: (e as Error).message }); }
+    finally { setBusy(false); }
+  };
+  const template = async () => {
+    const tpl = await api.piecesImportTemplate();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([tpl.csv], { type: 'text/csv' })); a.download = 'pieces-import-template.csv'; a.click();
+  };
+  const ready = !!(csv.trim() || xlsx);
+  return (
+    <Card title={t('import_pieces')} sub={t('import_sub')}>
+      <div className="kyc">
+        <p className="small muted">{t('import_rule')} <a href="#" onClick={(e) => { e.preventDefault(); void template(); }}>{t('import_template')}</a></p>
+        <div className="actions">
+          <input type="file" accept=".csv,.txt,.xlsx" onChange={(e) => pick(e.target.files?.[0])} aria-label={t('import_file')} />
+          <label className="small"><input type="checkbox" checked={skipErrors} onChange={(e) => setSkipErrors(e.target.checked)} /> {t('import_skip_errors')}</label>
+        </div>
+        <textarea className="payload" rows={4} placeholder={t('import_paste')} value={csv} onChange={(e) => { setCsv(e.target.value); setXlsx(null); setPreview(null); }} dir="ltr" />
+        <div className="actions">
+          <button className="btn ghost" disabled={busy || !ready} onClick={() => run(true)}>{t('import_preview')}</button>
+          <button className="btn" disabled={busy || !ready || !preview || !preview.dry_run || (preview.summary.errors > 0 && !skipErrors) || preview.summary.new === 0} onClick={() => run(false)}>{t('import_apply')}</button>
+        </div>
+        {msg && <div className={`notice ${msg.kind}`}>{msg.text}</div>}
+        {preview && (
+          <>
+            <div className="small"><b className="num">{preview.summary.rows}</b> {t('import_rows')} · <span className="tag ok">{preview.summary.new} {t('import_new')}</span> <span className="tag">{preview.summary.exists} {t('import_exists')}</span> <span className={`tag ${preview.summary.errors ? 'bad' : ''}`}>{preview.summary.errors} {t('import_errors')}</span></div>
+            <table className="tbl">
+              <thead><tr><th>#</th><th>{t('serial')}</th><th>{t('product')}</th><th>{t('state')}</th><th>{t('note')}</th></tr></thead>
+              <tbody>{preview.rows.slice(0, 200).map((r) => (
+                <tr key={r.line}><td className="num">{r.line}</td><td><b>{r.serial || '—'}</b></td><td>{r.design}</td>
+                  <td><span className={`tag ${r.status === 'new' ? 'ok' : r.status === 'error' ? 'bad' : ''}`}>{t(`import_${r.status}`)}</span></td>
+                  <td className="small muted">{r.message}</td></tr>))}</tbody>
+            </table>
+          </>
+        )}
+        {runs.data && runs.data.items.length > 0 && (
+          <div><div className="small muted">{t('import_runs')}</div>
+            <ul className="plain small">{runs.data.items.slice(0, 5).map((r) => <li key={r.id}>{r.name} · {r.by?.name} · {when(r.at, lang)} · {r.created} {t('import_new')} · {r.skipped} {t('import_exists')} · {r.errors} {t('import_errors')}</li>)}</ul></div>
+        )}
+      </div>
+    </Card>
   );
 }
