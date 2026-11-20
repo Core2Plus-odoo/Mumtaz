@@ -1,7 +1,5 @@
 """Baseline tests for faizy.order (audit M0). They pin today's behaviour so the
 completion gate (B05) and send-window gate (B06) can be added without regressions."""
-import unittest
-
 from odoo.exceptions import UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
@@ -59,11 +57,12 @@ class TestOrderBaseline(TransactionCase):
         with self.assertRaises(ValidationError):
             self._order(vendor_id=prospect.id)
 
-    @unittest.expectedFailure
-    def test_completion_requires_photo_and_receipt(self):
+    def test_known_gap_completion_without_evidence_is_allowed(self):
         """KNOWN GAP F-1 (audit 20 Nov 2026): completion is currently allowed with no
-        evidence. Remove expectedFailure when the evidence gate (B05) ships."""
+        photo or receipt. This pins TODAY's behaviour. When the evidence gate (B05)
+        ships, invert it: completing without both accepted evidence must raise UserError."""
         order = self._order(worker_id=self.worker.id)
         order.action_assign()
-        with self.assertRaises(UserError):
-            order.action_complete()
+        order.action_complete()
+        self.assertEqual(order.state, 'completed')
+        self.assertFalse(order.proof_image or order.receipt_image)
