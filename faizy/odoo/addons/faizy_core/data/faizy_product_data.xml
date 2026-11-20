@@ -90,5 +90,31 @@
             <field name="description_sale">Charge for carrying out a care activity.</field>
         </record>
 
+        <!-- Vendor-bill side. We owe a fulfilling vendor the purchase value of
+             what they supplied, minus the commission we retain — see
+             faizy_vendor.py's own docstring: "vendor bills, payments and the
+             accounting side of a commission" already point at this contact.
+             Two products so the gross and the retained amount are both visible
+             as separate lines on the same bill, not folded into one net
+             number nobody can audit. purchase_ok, not sale_ok: these never
+             appear on a customer document. -->
+        <record id="product_vendor_procurement" model="product.product">
+            <field name="name">Goods/services procured via Faizy vendor</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="False"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="description_purchase">What a Faizy vendor supplied on a customer's order.</field>
+        </record>
+
+        <record id="product_vendor_commission_retained" model="product.product">
+            <field name="name">Faizy commission retained</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="False"/>
+            <field name="purchase_ok" eval="True"/>
+            <field name="description_purchase">Deducted from the vendor payable, not charged to the customer.</field>
+        </record>
+
     </data>
 </odoo>

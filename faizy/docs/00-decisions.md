@@ -576,3 +576,95 @@ falsy — both are harmless guards against a state that would be a genuine
 problem if it ever occurred. Only the claim was wrong, and commit `4024183`'s
 message overstates it as a live incident.
 
+## 12. WhatsApp transport — built, not yet live
+
+Every customer-facing WhatsApp message this product has ever queued —
+booking confirmations, "a Faizy has been assigned", status updates, the
+receipt on completion, the ops new-order alert — has sat in
+`faizy.whatsapp.message` as `queued` forever. `_get_provider()` was a literal
+`return False`. No provider, template or credential existed anywhere in the
+codebase. Nothing has ever actually reached a phone.
+
+What changed: `faizy_whatsapp_transport.py` adds a `faizy_whatsapp_provider`
+flag on the company (none / meta / twilio) plus the credential fields each
+needs, under Settings → Faizy → WhatsApp. `_get_provider()` now returns the
+company once it holds working credentials for whichever provider is picked —
+matching §2's "one interface, provider is a config change" plan. Meta Cloud
+API sends direct via `requests`; Twilio is the fallback, same call shape.
+
+**What is NOT done, and can't be done from code:**
+
+- **No real credentials exist yet.** Nothing will send until a Meta System
+  User token + phone number ID, or a Twilio SID/token/sender, are entered in
+  Settings. Business verification (trade licence for C2P Consultants FZC LLC)
+  is still the schedule risk §2 already flagged.
+- **No WhatsApp template is approved.** `booking_confirmation`,
+  `faizy_assigned`, `worker_assignment`, `status_update` and `receipt` are
+  now the *default template names* a queued message carries (see
+  `TEMPLATE_DEFAULT_TYPES` in `faizy_whatsapp.py`) — but Meta will reject all
+  five until each is actually submitted and approved in Meta Business
+  Manager, built as one body variable carrying the whole rendered English
+  text (the simplest shape to get approved; see the comment in
+  `faizy_whatsapp_transport.py` for why). `otp` and `generic` are
+  deliberately excluded from the default — `otp` needs an authentication
+  template (code + button, priced differently), `generic` text is ad hoc per
+  call and can't be a template at all.
+- **Twilio template support isn't built.** Twilio addresses its WhatsApp
+  Content Templates by a ContentSid, not a human name, so until one is built
+  in the Twilio Console and mapped, Twilio always sends free text — which
+  only Twilio/Meta deliver inside a customer-initiated 24h session. That's
+  real, limited value (works for anyone who messaged in first) but not a
+  substitute for the template path above.
+
+So: the plumbing is real and wired end to end, but turning the flag on today
+sends nothing until a human does three things outside this repo — get Meta
+(or Twilio) credentials, register the five template names above, get them
+approved — none of which I can do from here.
+
+## 13. ERP methodology pack adopted — G0/G1 only, scope narrowed on purpose
+
+A reusable "C2P Group" ERP delivery methodology pack (generic templates, not Faizy-specific) was
+applied to this product on request. Added `faizy/CLAUDE.md` (scoped to this subtree; does not touch
+the repo-root CLAUDE.md, which governs the separate Mumtaz product), `docs/ERP_MASTER_BLUEPRINT.md`,
+and the discovery/architecture deliverables the pack's own methodology calls for before any new
+module work: `docs/project/PROJECT_CHARTER.md`, `docs/project/DECISION_REGISTER.md` (ADR-001..013,
+answered as-built from evidence), `docs/project/FIT_GAP_REGISTER.md`, and
+`docs/architecture/{MODULE_DEPENDENCY_MAP,ENTITY_RELATIONSHIPS}.md`.
+
+The headline finding, stated plainly rather than softened: **Faizy is not a general ERP**, and most
+of the pack's canonical module list (CRM pipeline, purchasing, inventory, manufacturing, HR/payroll,
+POS/e-commerce, projects, fixed assets, intercompany) is correctly out of scope — building any of it
+without a real business reason would be the over-engineering the pack itself warns against. The one
+concrete, worth-fixing gap the audit actually surfaced: vendor commission is computed and shown
+(`faizy_vendor_commission_total`) but never becomes an automatic AP vendor bill — a human creates it
+by hand today. That's the strongest candidate for the next backlog item, pending the product owner's
+sign-off on this read of scope — detailed module specs, a field-level data dictionary and a
+prioritized backlog are deliberately deferred until that approval, per the pack's own stage-gate
+methodology ("use templates and stage-gates rather than generating the entire ERP in one run").
+
+## 14. Vendor commission now reaches accounting — drafted, not posted
+
+Closed the one concrete gap FIT_GAP_REGISTER's audit found (row FIN-03), per the product owner's
+approval of the fit-gap read. New `faizy_vendor_billing.py` (`_inherit = "faizy.order"`): on
+`action_complete`, when the order has a vendor and `purchase_value > 0`, drafts a Vendor Bill
+(`account.move`, `move_type=in_invoice`) — one line for what was procured at `purchase_value`, one
+negative line for the commission Faizy retains, net payable = `purchase_value - vendor_commission`.
+Two new purchase-side products (`product_vendor_procurement`, `product_vendor_commission_retained`)
+carry the account/tax mapping, following the exact convention `faizy_product_data.xml` already used
+for the sale-side fee products.
+
+Never auto-posts — mirrors `faizy.subscription._generate_invoice`'s existing convention exactly; an
+accountant reviews and posts. Guarded the same way `_generate_invoice` guards: refuses with a clear
+message if the vendor's currency has no exchange rate, rather than letting Odoo post 1:1 silently
+(the SAR-price class of bug this codebase has already hit once). A billing failure (bad rate, etc.)
+never blocks `action_complete` itself — same "notification failing must never undo the real-world
+fact" rule `faizy_order_alert.py` already established — logged and left retryable via a manual
+`action_create_vendor_bill` button on the order form, visible to Operations.
+
+**New gap found while closing this one, deliberately not bundled in:** the *customer* side of order
+money (`purchase_value`/`platform_fee`/`service_fee`) is computed but never invoiced or debited
+anywhere, and `faizy.wallet.transaction` — a fully-built ledger model — is never written to by any
+code path. `faizy_product_data.xml`'s own comment already said as much ("orders do not reach
+accounting at all today") about the sale-side products it pre-built for exactly this. Recorded in
+FIT_GAP_REGISTER.md as the next candidate, pending its own explicit scoping decision.
+

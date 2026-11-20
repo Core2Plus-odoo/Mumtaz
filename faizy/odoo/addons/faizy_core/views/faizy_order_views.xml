@@ -99,10 +99,26 @@
                             invisible="state in ('completed', 'cancelled')"/>
                     <button name="action_reset_to_pending" type="object" string="Reset"
                             invisible="state != 'cancelled'"/>
+                    <!-- Retry only: the normal path drafts this automatically on
+                         Complete. This is for when that draft failed (e.g. a
+                         missing exchange rate) and ops needs another try. -->
+                    <button name="action_create_vendor_bill" type="object"
+                            string="Create Vendor Bill"
+                            groups="faizy_core.group_faizy_ops"
+                            invisible="not vendor_id or vendor_bill_id or state != 'completed'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="pending,assigned,in_progress,completed"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_vendor_bill" type="object"
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="not vendor_bill_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Vendor Bill</span>
+                            </div>
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <label for="title"/>
                         <h1><field name="title" placeholder="e.g. Weekly groceries"/></h1>
@@ -137,6 +153,8 @@
                         <group string="Vendor">
                             <field name="vendor_id"/>
                             <field name="vendor_commission" readonly="1"
+                                   invisible="not vendor_id"/>
+                            <field name="vendor_bill_id" readonly="1"
                                    invisible="not vendor_id"/>
                             <field name="consumed_activity" readonly="1"/>
                             <field name="activity_source" readonly="1"

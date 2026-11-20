@@ -102,6 +102,39 @@
                             <field name="faizy_free_activity_grant"/>
                         </setting>
                     </block>
+                    <!-- Transport only. Templates still need registering and
+                         approving with the chosen provider before anything
+                         business-initiated actually delivers — see
+                         faizy/docs/00-decisions.md §2. -->
+                    <block title="WhatsApp" name="faizy_whatsapp_settings">
+                        <setting string="Provider"
+                                 help="Who actually sends queued WhatsApp messages. Leave 'Not configured' and everything stays queued, same as before this was built.">
+                            <field name="faizy_whatsapp_provider"/>
+                        </setting>
+                        <setting string="Meta Access Token"
+                                 invisible="faizy_whatsapp_provider != 'meta'"
+                                 help="Permanent System User token for the WhatsApp Business app, not the 24h test token.">
+                            <field name="faizy_whatsapp_meta_token" password="True"/>
+                        </setting>
+                        <setting string="Meta Phone Number ID"
+                                 invisible="faizy_whatsapp_provider != 'meta'"
+                                 help="From Meta Business Manager — the number's numeric ID, not the phone number.">
+                            <field name="faizy_whatsapp_meta_phone_id"/>
+                        </setting>
+                        <setting string="Twilio Account SID"
+                                 invisible="faizy_whatsapp_provider != 'twilio'">
+                            <field name="faizy_whatsapp_twilio_sid"/>
+                        </setting>
+                        <setting string="Twilio Auth Token"
+                                 invisible="faizy_whatsapp_provider != 'twilio'">
+                            <field name="faizy_whatsapp_twilio_token" password="True"/>
+                        </setting>
+                        <setting string="Twilio WhatsApp Sender"
+                                 invisible="faizy_whatsapp_provider != 'twilio'"
+                                 help="The Twilio number enabled for WhatsApp, e.g. +14155238886.">
+                            <field name="faizy_whatsapp_twilio_from"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>
