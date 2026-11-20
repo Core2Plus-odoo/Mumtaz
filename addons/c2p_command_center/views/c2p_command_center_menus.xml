@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_c2p_command_center_root"
+              name="Command Center"
+              action="action_c2p_command_center"
+              web_icon="c2p_command_center,static/description/icon.png"
+              groups="c2p_command_center.group_c2p_command_center"
+              sequence="1"/>
+</odoo>

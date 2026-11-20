@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="c2p_command_center.CommandCenter">
+<div class="o_c2p_cc">
+    <div t-if="state.loading and !state.data" class="cc-loading">Loading the Command Center…</div>
+    <div t-if="state.error" class="cc-error"><b>Could not load:</b> <t t-esc="state.error"/></div>
+    <t t-if="state.data">
+    <t t-set="d" t-value="state.data"/>
+
+    <!-- header -->
+    <div class="cc-head">
+        <div>
+            <div class="cc-kicker">C2P Command Center</div>
+            <h1>Good day, <t t-esc="d.user_name"/></h1>
+            <div class="cc-sub"><t t-esc="d.local_time"/> Dubai · refreshes every 5 minutes</div>
+        </div>
+        <button class="btn btn-primary cc-refresh" t-on-click="() => this.fetchData()">
+            <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/> Refresh
+        </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="cc-kpis">
+        <t t-foreach="d.kpis" t-as="k" t-key="k.label">
+            <div t-attf-class="cc-kpi tone-{{k.tone}}" t-on-click="() => this.scrollTo(k.section)">
+                <div class="cc-kpi-label" t-esc="k.label"/>
+                <div class="cc-kpi-value" t-esc="kpiValue(k)"/>
+                <div class="cc-kpi-sub" t-esc="k.sub"/>
+            </div>
+        </t>
+    </div>
+
+    <div class="cc-grid">
+
+        <!-- My activities -->
+        <section class="cc-card cc-span-1" id="c2p-cc-activities">
+            <header>
+                <h2>My activities</h2>
+                <div class="cc-tabs">
+                    <span t-att-class="{'on': state.actFilter === 'open'}" t-on-click="() => this.setActFilter('open')">
+                        Overdue + today (<t t-esc="d.activities.overdue + d.activities.today"/>)</span>
+                    <span t-att-class="{'on': state.actFilter === 'all'}" t-on-click="() => this.setActFilter('all')">
+                        All (<t t-esc="d.activities.rows.length"/>)</span>
+                </div>
+            </header>
+            <div t-if="d.activities.error" class="cc-note" t-esc="d.activities.error"/>
+            <div class="cc-list" t-else="">
+                <div t-if="!activities.length" class="cc-empty">Nothing due. 🎉</div>
+                <t t-foreach="activities" t-as="a" t-key="a.id">
+                    <div class="cc-row clickable" t-on-click="() => this.openRecord(a.res_model, a.res_id)">
+                        <span t-attf-class="cc-dot {{a.state}}"/>
+                        <div class="cc-row-main">
+                            <div class="cc-row-title" t-esc="a.summary"/>
+                            <div class="cc-row-meta"><t t-esc="a.model_label"/> · <t t-esc="a.record"/></div>
+                        </div>
+                        <span t-attf-class="cc-date {{a.state}}" t-esc="a.date"/>
+                    </div>
+                </t>
+            </div>
+        </section>
+
+        <!-- Outreach -->
+        <section class="cc-card cc-span-2" id="c2p-cc-outreach">
+            <header>
+                <h2>Outreach engine</h2>
+                <span class="cc-meta">cap <t t-esc="d.outreach.daily_cap"/>/day · follow-ups <t t-esc="d.outreach.max_followups"/></span>
+            </header>
+            <div t-if="d.outreach.error" class="cc-note" t-esc="d.outreach.error"/>
+            <t t-else="">
+                <div class="cc-stats">
+                    <div><b t-esc="d.outreach.sent7"/><span>sent · 7 days</span></div>
+                    <div><b t-esc="d.outreach.replies14"/><span>replies · 14 days</span></div>
+                    <div class="clickable" t-on-click="() => this.openAct(d.outreach.act_due)"><b t-esc="d.outreach.due"/><span>follow-ups due</span></div>
+                    <div class="clickable" t-on-click="() => this.openAct(d.outreach.act_queued)"><b t-esc="d.outreach.queued"/><span>new leads queued</span></div>
+                    <div><b t-esc="d.outreach.in_sequence"/><span>in sequence</span></div>
+                    <div class="clickable" t-att-class="{'bad': d.outreach.failures24}" t-on-click="() => this.openAct(d.outreach.act_fail)"><b t-esc="d.outreach.failures24"/><span>failed · 24h</span></div>
+                </div>
+                <div class="cc-chart">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <t t-foreach="chart" t-as="b" t-key="b.label">
+                            <rect class="bar-first" t-att-x="b.x" t-att-width="b.width" t-att-y="100 - b.firstH" t-att-height="b.firstH"/>
+                            <rect class="bar-follow" t-att-x="b.x" t-att-width="b.width" t-att-y="100 - b.firstH - b.followH" t-att-height="b.followH"/>
+                        </t>
+                    </svg>
+                    <div class="cc-chart-labels">
+                        <t t-foreach="chart" t-as="b" t-key="b.label">
+                            <span t-att-title="b.total + ' sent, ' + b.replies + ' replies'">
+                                <i t-esc="b.total"/><t t-if="b.replies"><em t-esc="'↩' + b.replies"/></t><br/><t t-esc="b.label"/></span>
+                        </t>
+                    </div>
+                    <div class="cc-legend"><span class="sw first"/>first emails <span class="sw follow"/>follow-ups <em>↩ replies</em></div>
+                </div>
+                <div class="cc-subhead">Latest replies</div>
+                <div t-if="!d.outreach.recent_replies.length" class="cc-empty">No replies in the last 14 days.</div>
+                <t t-foreach="d.outreach.recent_replies" t-as="r" t-key="r.id + r.date">
+                    <div class="cc-row clickable" t-on-click="() => this.openRecord('crm.lead', r.id)">
+                        <span class="cc-dot reply"/>
+                        <div class="cc-row-main"><div class="cc-row-title" t-esc="r.name"/><div class="cc-row-meta" t-esc="r.from"/></div>
+                        <span class="cc-date" t-esc="r.date"/>
+                    </div>
+                </t>
+            </t>
+        </section>
+
+        <!-- Pipeline -->
+        <section class="cc-card cc-span-3" id="c2p-cc-pipeline">
+            <header>
+                <h2>Pipeline</h2>
+                <span class="cc-meta"><t t-esc="d.pipeline.open_count"/> deals · <t t-esc="d.pipeline.currency"/> <t t-esc="amount(d.pipeline.open_value)"/> open · won this month: <t t-esc="d.pipeline.won_month_count"/></span>
+            </header>
+            <div t-if="d.pipeline.error" class="cc-note" t-esc="d.pipeline.error"/>
+            <div class="cc-pipe" t-else="">
+                <t t-foreach="d.pipeline.columns" t-as="c" t-key="c.stage">
+                    <div class="cc-pipe-col">
+                        <div class="cc-pipe-head"><b t-esc="c.stage"/><span><t t-esc="c.count"/> · <t t-esc="money(c.value)"/></span></div>
+                        <t t-foreach="c.rows" t-as="l" t-key="l.id">
+                            <div t-attf-class="cc-deal {{l.stale ? 'stale' : ''}} {{l.overdue ? 'late' : ''}}" t-on-click="() => this.openRecord('crm.lead', l.id)">
+                                <div class="cc-deal-name" t-esc="l.name"/>
+                                <div class="cc-deal-meta">
+                                    <span t-if="l.value"><t t-esc="money(l.value)"/></span>
+                                    <span t-if="l.stale" class="tag-stale">idle <t t-esc="l.idle_days"/>d</span>
+                                    <span t-if="l.overdue" class="tag-late">overdue</span>
+                                </div>
+                                <div class="cc-deal-next" t-if="l.next">→ <t t-esc="l.next"/></div>
+                                <div class="cc-deal-next none" t-else="">no next step</div>
+                            </div>
+                        </t>
+                        <div t-if="!c.rows.length" class="cc-empty small">—</div>
+                    </div>
+                </t>
+            </div>
+        </section>
+
+        <!-- Money -->
+        <section class="cc-card cc-span-1" id="c2p-cc-money">
+            <header>
+                <h2>Money</h2>
+                <span class="cc-meta clickable" t-on-click="() => this.openAct(d.money.act_drafts)"><t t-esc="d.money.drafts"/> drafts</span>
+            </header>
+            <div t-if="d.money.error" class="cc-note" t-esc="d.money.error"/>
+            <t t-else="">
+                <div class="cc-stats two">
+                    <div class="clickable" t-on-click="() => this.openAct(d.money.act_unpaid)"><b><t t-esc="d.money.currency"/> <t t-esc="money(d.money.receivable)"/></b><span>receivable</span></div>
+                    <div><b><t t-esc="d.money.currency"/> <t t-esc="money(d.money.invoiced_paid_month)"/></b><span>paid this month</span></div>
+                </div>
+                <div t-if="!d.money.rows.length" class="cc-empty">Every invoice is paid.</div>
+                <t t-foreach="d.money.rows" t-as="m" t-key="m.id">
+                    <div class="cc-row clickable" t-on-click="() => this.openRecord('account.move', m.id)">
+                        <span t-attf-class="cc-dot {{m.days_overdue ? 'overdue' : 'planned'}}"/>
+                        <div class="cc-row-main"><div class="cc-row-title" t-esc="m.partner"/><div class="cc-row-meta"><t t-esc="m.name"/> · due <t t-esc="m.due"/></div></div>
+                        <span class="cc-amt"><t t-esc="m.currency"/> <t t-esc="amount(m.amount)"/><t t-if="m.days_overdue"><br/><em class="late"><t t-esc="m.days_overdue"/>d late</em></t></span>
+                    </div>
+                </t>
+            </t>
+        </section>
+
+        <!-- AI agents -->
+        <section class="cc-card cc-span-2" id="c2p-cc-agents">
+            <header>
+                <h2>AI agents</h2>
+                <span class="cc-meta clickable" t-on-click="() => this.openBoard()">Open work board →</span>
+            </header>
+            <div t-if="d.agents.error" class="cc-note" t-esc="d.agents.error"/>
+            <div t-elif="d.agents.missing" class="cc-note">The AI Agents work board was not found.</div>
+            <t t-else="">
+                <div t-if="d.agents.review.length" class="cc-review">
+                    <div class="cc-subhead">Waiting for your review</div>
+                    <t t-foreach="d.agents.review" t-as="r" t-key="r.id">
+                        <div class="cc-row clickable" t-on-click="() => this.openRecord('project.task', r.id)">
+                            <span t-attf-class="cc-dot {{r.since >= 3 ? 'overdue' : 'today'}}"/>
+                            <div class="cc-row-main"><div class="cc-row-title" t-esc="r.name"/><div class="cc-row-meta">in review <t t-esc="r.since"/> day(s)</div></div>
+                            <a t-if="r.url" class="cc-link" t-on-click.stop="() => this.openUrl(r.url)">preview ↗</a>
+                        </div>
+                    </t>
+                </div>
+                <table class="cc-table">
+                    <thead><tr><th>Agent</th><t t-foreach="d.agents.stages" t-as="s" t-key="s"><th t-esc="s"/></t><th>Overdue</th><th>Next due</th></tr></thead>
+                    <tbody>
+                        <t t-foreach="d.agents.rows" t-as="r" t-key="r.agent">
+                            <tr>
+                                <td><b t-esc="r.agent"/></td>
+                                <t t-foreach="d.agents.stages" t-as="s" t-key="s"><td t-att-class="{'zero': !stageCount(r, s)}" t-esc="stageCount(r, s)"/></t>
+                                <td t-att-class="{'bad': r.overdue}" t-esc="r.overdue"/>
+                                <td class="small"><t t-esc="r.next_date"/> <span class="muted" t-esc="r.next_name"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </t>
+        </section>
+
+        <!-- Delivery -->
+        <section class="cc-card cc-span-2" id="c2p-cc-delivery">
+            <header><h2>Client delivery</h2><span class="cc-meta"><t t-esc="d.delivery.overdue_total"/> overdue tasks</span></header>
+            <div t-if="d.delivery.error" class="cc-note" t-esc="d.delivery.error"/>
+            <table class="cc-table" t-else="">
+                <thead><tr><th/><th>Project</th><th>Company</th><th>Open</th><th>Overdue</th><th>Due 7d</th><th>Last activity</th></tr></thead>
+                <tbody>
+                    <t t-foreach="d.delivery.rows" t-as="p" t-key="p.id">
+                        <tr class="clickable" t-on-click="() => this.openProjectTasks(p.id, p.name)">
+                            <td><span t-attf-class="cc-rag {{p.rag}}"/></td>
+                            <td><b t-esc="p.name"/></td>
+                            <td class="small muted" t-esc="p.company"/>
+                            <td t-esc="p.open"/>
+                            <td t-att-class="{'bad': p.overdue}" t-esc="p.overdue"/>
+                            <td t-esc="p.due7"/>
+                            <td class="small" t-att-class="{'bad': p.idle_days >= 7}"><t t-esc="p.idle_days"/>d ago</td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Content -->
+        <section class="cc-card cc-span-1" id="c2p-cc-content">
+            <header><h2>Content</h2><span class="cc-meta"><t t-esc="d.content.total"/> blog posts</span></header>
+            <div t-if="d.content.error" class="cc-note" t-esc="d.content.error"/>
+            <t t-else="">
+                <div class="cc-stats two">
+                    <div><b t-esc="d.content.published30"/><span>published · 30 days</span></div>
+                    <div><b t-esc="d.content.drafts"/><span>drafts</span></div>
+                </div>
+                <div t-if="d.content.last_days_ago !== null and d.content.last_days_ago > 7" class="cc-warnline">
+                    Last post was <t t-esc="d.content.last_days_ago"/> days ago.</div>
+                <t t-foreach="d.content.latest" t-as="p" t-key="p.id">
+                    <div class="cc-row clickable" t-on-click="() => this.openUrl(p.url)">
+                        <span class="cc-dot planned"/>
+                        <div class="cc-row-main"><div class="cc-row-title" t-esc="p.name"/></div>
+                        <span class="cc-date" t-esc="p.date"/>
+                    </div>
+                </t>
+            </t>
+        </section>
+
+        <!-- Health -->
+        <section class="cc-card cc-span-3" id="c2p-cc-health">
+            <header><h2>Automation health</h2><span class="cc-meta"><t t-esc="d.health.problems"/> need attention</span></header>
+            <div t-if="d.health.error" class="cc-note" t-esc="d.health.error"/>
+            <div class="cc-health" t-else="">
+                <t t-foreach="d.health.crons" t-as="c" t-key="c.id">
+                    <div t-attf-class="cc-job {{c.status}}" t-on-click="() => this.openRecord('ir.cron', c.id)">
+                        <div class="cc-job-name" t-esc="c.name"/>
+                        <div class="cc-job-meta">last <t t-esc="c.last"/> · next <t t-esc="c.next"/></div>
+                    </div>
+                </t>
+            </div>
+        </section>
+    </div>
+    </t>
+</div>
+</t>
+</templates>
