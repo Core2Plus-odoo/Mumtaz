@@ -12,6 +12,8 @@ class OwnerCard(models.Model):
     _order = 'priority desc, id'
 
     kind = fields.Selection(KINDS, required=True, index=True)
+    company_id = fields.Many2one('res.company', required=True, index=True, default=lambda s: s.env.company,
+                                 help='Cards never cross companies: each company has its own deck.')
     title = fields.Char(required=True)
     detail = fields.Text()
     recommendation = fields.Char()
@@ -117,13 +119,15 @@ class OwnerCard(models.Model):
 
     @api.model
     def refresh(self):
-        cards = self.sudo().search([])
+        """Rebuild the current company's deck; another company's cards are untouched."""
+        company = self.env.company
+        cards = self.sudo().search([('company_id', '=', company.id)])
 
         def key(card):
             return (card['kind'], card['res_model'] or '', card['res_id'] or 0)
 
         existing = {key(c): c for c in cards}
-        desired = {key(d): d for d in self._desired()}
+        desired = {key(d): dict(d, company_id=company.id) for d in self._desired()}
         for k, d in desired.items():
             c = existing.get(k)
             if c:

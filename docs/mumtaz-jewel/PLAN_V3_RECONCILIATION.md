@@ -200,6 +200,17 @@ Measured: 7 channels tests (the fixture feed drafts and never approves, the make
 
 Measured: 8 client tests (a code for a known phone and the same answer for an unknown one; three codes an hour then silence; verify gives a token and five misses close the code; expired codes and tokens are cleared; she reads only her own things: her sale not another client's, her tray, her request; the door: code, verify, home, consent given and withdrawn, sign-out; the echo is off by default; staff see the live code) incl. 2 through the door; headless walk on a phone viewport: the sign-in screen, the code (demo echo) and the same code on her record for staff, a wrong code refused, her page with the rate, her pieces with metal value, her choices changed, Arabic RTL, sign out; 0 page errors.
 
+## Slice 11 (Closing the open findings; stock book import) — built 20 Nov 2026
+
+| Element | Delivered |
+| --- | --- |
+| Finding 3 | Owner cards carry `company_id` (default the current company), a global record rule keeps each company's deck to itself, `refresh()` rebuilds only the current company's cards. 2 tests. |
+| Finding 1 | The restricted-client access log now covers lists, searches and exports: one line per query (`action` list / export, `count`, the restricted clients returned, the exported fields), never one per row; the superuser and queries that return no restricted client write nothing. Form views still log per client. 4 tests; the Odoo list shows the new columns. |
+| Stock book import (Slice 4, pilot readiness) | `jewellery.piece.import`: a CSV (delimiter sniffed, headers read loosely: *Gross (g)*, *RFID tag*, *Purity* …) or an .xlsx first sheet, up to 2,000 rows. **Preview** judges every row by line (missing serial, repeated serial, unknown karat / category / making type / store, non-numbers, stone above gross, RFID already on another piece, serial already in the book) and writes nothing. **Apply** (managers only) creates missing designs once, the pieces with their weights, karat, making, RFID, certificate and cost, puts each on its store's shelf, in one transaction; refuses the whole file on a problem unless *skip rows with a problem*; a serial already there is skipped, so the same file loads twice without doubling. Every run is written down (who, when, store, rows, created, skipped, problems by line). Door: `POST /pieces/import` (dry_run), `GET /pieces/imports`, `GET /pieces/import/template`. Web: *Import stock book* on Pieces for managers: file or paste, preview table, write, recent runs, template download; EN/AR. |
+| Gap table | `FEATURE_GAP_ANALYSIS.md` brought up to date: rows the later slices closed (counter, tray, approval stock moves, agents, voice, cost basis, multi-company) now read *Built*; the open questions list what is configuration or a hardware/partner decision rather than code. |
+
+Measured: 5 importer tests + 2 door tests + 4 access-log tests + 2 card tests; full CI on a fresh database 242 Odoo tests + 19 engine tests, 0 failures; headless walk: manager previews a pasted book (two good rows, one bad), apply stays disabled until the bad row is skipped, writes two pieces that appear in the Pieces list, the run is listed, Arabic.
+
 ## Known limits after Slice 1
 
 - A piece sold through *Quotes & orders* leaves stock when its delivery is

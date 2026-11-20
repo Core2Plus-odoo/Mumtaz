@@ -651,3 +651,39 @@ class TestJawharApiLists(TestJawharApiSale):
         self.assertTrue(out['order'])
         self.assertTrue(out['client'])
         self.assertEqual(self.api('/kiosk/requests')['data']['count'], 0)
+
+
+@tagged('post_install', '-at_install')
+class TestStockImportDoor(TestJawharApi):
+    """The stock book through the door: staff refused, a manager previews
+    then applies, the run is listed."""
+
+    CSV = 'serial,design,category,karat,gross_g,stone_g,making_type,making_value,cost\nIMP-API-1,Door Chain 21K,chain,21,18.75,0,per_gram,12.5,3900\nIMP-API-2,Door Ring 18K,ring,18,6.4,1.1,fixed,250,2100\n'
+
+    def test_staff_cannot_import(self):
+        self.sign_in('api_staff')
+        out = self.api('/pieces/import', 'POST', {'csv': self.CSV}, status=403)
+        self.assertEqual(out['error']['code'], 'forbidden')
+
+    def test_manager_previews_then_applies_then_the_file_is_idempotent(self):
+        self.sign_in('api_maker')
+        tpl = self.api('/pieces/import/template')['data']
+        self.assertTrue(tpl['csv'].startswith('serial,design'))
+        prev = self.api('/pieces/import', 'POST', {'csv': self.CSV, 'dry_run': True})['data']
+        self.assertTrue(prev['dry_run'])
+        self.assertEqual(prev['summary'], {'rows': 2, 'new': 2, 'exists': 0, 'errors': 0})
+        self.assertFalse(self.env['stock.lot'].sudo().search([('name', 'like', 'IMP-API-%')]))
+        done = self.api('/pieces/import', 'POST', {'csv': self.CSV, 'dry_run': False, 'name': 'TEST door book'})['data']
+        self.assertEqual(done['summary']['new'], 2)
+        lots = self.env['stock.lot'].sudo().search([('name', 'like', 'IMP-API-%')])
+        self.assertEqual(len(lots), 2)
+        self.assertTrue(all(l.product_qty == 1.0 for l in lots))
+        listed = self.api('/pieces?q=IMP-API')['data']
+        self.assertEqual(listed['total'], 2)
+        again = self.api('/pieces/import', 'POST', {'csv': self.CSV, 'dry_run': False})['data']
+        self.assertEqual(again['summary'], {'rows': 2, 'new': 0, 'exists': 2, 'errors': 0})
+        runs = self.api('/pieces/imports')['data']['items']
+        self.assertEqual(runs[1]['name'], 'TEST door book')
+        self.assertEqual((runs[0]['created'], runs[0]['skipped']), (0, 2))
+        bad = self.api('/pieces/import', 'POST', {'csv': 'nothing here'}, status=400)
+        self.assertEqual(bad['error']['code'], 'empty')
