@@ -7,7 +7,7 @@
 #
 # Run this script whenever a tenant's custom domain changes:
 #   - Manually:  sudo bash scripts/update-nginx-domains.sh
-#   - Via cron:  */5 * * * * root /opt/Mumtaz/scripts/update-nginx-domains.sh
+#   - Via cron:  */5 * * * * root /opt/mumtaz/scripts/update-nginx-domains.sh
 #
 # Requirements:
 #   - sqlite3 CLI installed

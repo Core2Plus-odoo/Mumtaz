@@ -1,11 +1,11 @@
 #!/bin/bash
 # =============================================================
 #  Mumtaz Platform — Full Deploy Script
-#  Run on VPS as root: bash /opt/Mumtaz/ops/deployment/deploy.sh
+#  Run on VPS as root: bash /opt/mumtaz/ops/deployment/deploy.sh
 # =============================================================
 set -e
 
-REPO="/opt/Mumtaz"
+REPO="/opt/mumtaz"
 CUSTOM="/opt/custom_addons/Mumtaz"
 DB="Mumtaz_ERP"
 ODOO_CONF="/etc/odoo/odoo.conf"

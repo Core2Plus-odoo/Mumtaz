@@ -3,7 +3,7 @@
 # and optionally trigger module install/upgrade in Odoo.
 #
 # Usage on VPS:
-#   cd /opt/Mumtaz
+#   cd /opt/mumtaz
 #   git pull origin claude/odoo-architecture-review-ujm0W
 #   sudo bash apps/addons/deploy.sh
 #

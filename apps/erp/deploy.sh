@@ -2,7 +2,7 @@
 # Deploy Mumtaz ERP to /var/www/erp.mumtaz.digital
 #
 # Usage on VPS:
-#   cd /opt/Mumtaz
+#   cd /opt/mumtaz
 #   git pull origin claude/odoo-architecture-review-ujm0W
 #   sudo bash apps/erp/deploy.sh
 #

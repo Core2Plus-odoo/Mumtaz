@@ -10,7 +10,7 @@
 #      - Creates or promotes umer@mumtaz.digital to is_super_admin=TRUE
 #
 # Usage:
-#   cd /opt/Mumtaz
+#   cd /opt/mumtaz
 #   sudo bash apps/platform/setup_master_admin.sh
 #
 # Options:
