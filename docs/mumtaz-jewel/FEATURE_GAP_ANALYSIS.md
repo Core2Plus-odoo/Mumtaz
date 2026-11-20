@@ -57,7 +57,7 @@ owner.
 | No price without an approved rate | No | **Built** | |
 | Price carried into quote, order, invoice | Partly (`sale`) | **Built** | Slices 1 (sale) and 1b (invoice snapshot) |
 | Rate feed adapter | No | **Built** | Fixture or JSON-over-HTTPS provider, value path, gram or ounce; enters a draft, a person approves; every read logged; 5 tests |
-| Piece cost basis, real margin | Partly (`stock`) | **Planned** | Slice 1 |
+| Piece cost basis, real margin | Partly (`stock`) | **Built** | `jewellery_cost_value` on the piece, margin on the order line (Slice 1) |
 
 ## Pieces and inventory
 
@@ -69,6 +69,7 @@ owner.
 | Multi-warehouse / per-store stock | **`stock`** | **Standard** | Configure, do not build |
 | Inter-store transfers | **`stock`** | **Built** | Two-sided: dispatch to the transit location, receive by the other store; overdue and lost are cards; 9 tests + walk |
 | Stock count by barcode | **`stock`**, `barcodes` | **Standard** | |
+| Stock book import (pilot readiness) | `base_import` | **Built** | CSV or .xlsx through the Jawhar door: preview by line, write once, idempotent on serial, designs created, pieces on the store's shelf, run log; 5 + 2 tests + walk |
 | Daily reconciliation in fine grams | No | **Built** | Snapshot per store per day, scanned by serial, variance in fine grams with missing serials, manager closes with a note |
 
 ## Counter
@@ -81,11 +82,11 @@ owner.
 | Price changes restricted to managers | **`point_of_sale`** | **Standard** | `restrict_price_control` |
 | Barcode / tag scan | **`barcodes`** | **Standard** | |
 | Who served | **`pos_hr`** | **Standard** | |
-| Price a POS line from the approved rate | No | **Gap** | Slice 2. Must be server-side, not a manual price |
-| Rate snapshot and expiry in an offline session | No | **Gap** | Slice 2. The real offline risk |
-| Same serial sold on two offline tills | No | **Gap** | Slice 2 |
-| Old gold at the till | No | **Gap** | Slice 2 |
-| Weight and making breakdown on the receipt | No | **Gap** | Slice 2 |
+| Price a POS line from the approved rate | No | **Built** | The Counter screen prices every line server-side from the approved rate (Slice 2) |
+| Rate snapshot and expiry in an offline session | No | **Decision** | The Counter is online-only by design: no offline till, so no stale rate. Revisit only if an offline till is wanted |
+| Same serial sold on two tills | No | **Built** | Row lock and live-order check at commit (Slice 2) |
+| Old gold at the till | No | **Built** | Old-gold intake credited on the Counter (Slice 2) |
+| Weight and making breakdown on the receipt | No | **Built** | Counter receipt (Slice 2) |
 | Connected scale | **Enterprise** | **Decision** | `iot`/`pos_iot` are not in Community. Weigh on real hardware before promising it |
 
 ## Clients
@@ -94,13 +95,13 @@ owner.
 | --- | --- | --- | --- |
 | Tiers, relationship manager, deputy | `res.partner` extended | **Built** | |
 | Private / Royal record restriction | `ir.rule` | **Built** | |
-| Access log on a restricted client | No | **Partial** | **Only `web_read` logs.** A list view, `search_read`, an export or a report writes nothing. See finding 1 |
+| Access log on a restricted client | No | **Built** | Form views log per client; lists, searches and exports log one line per query with the restricted clients returned (finding 1, decided: queries, not rows); 4 tests |
 | Preferences, usual spend, taste notes | `res.partner` extended | **Built** | |
 | Occasion calendar with prepared drafts | No | **Built** | |
 | Pieces on approval, reminders | No | **Built** | |
-| Pieces on approval move stock | `stock` | **Gap** | State only today, so stock value counts metal that is with a client. See finding 2 |
+| Pieces on approval move stock | `stock` | **Built** | Memos move pieces to the on-approval location and back (finding 2) |
 | Explainable next-piece ranking | No | **Built** | Deterministic, reasons stored |
-| Tray: share, viewing request, reserve | **`crm` + `sale`** | **Planned** | Slice 2B. **Mostly standard** — build the token link and the ranking only |
+| Tray: share, viewing request, reserve | **`crm` + `sale`** | **Built** | Sales Hub: Private Tray, client link, viewing request, staff reservation |
 | Loyalty, wishlist, campaigns | **`loyalty`** | **Standard** | Slice 8 |
 | Touchpoints across channels | `mail`, `sms` | **Partial** | Email and SMS standard; WhatsApp is a hand-over link (Outreach); requests by channel on the Channels screen |
 
@@ -109,7 +110,7 @@ owner.
 | Capability | Standard? | Status | Note |
 | --- | --- | --- | --- |
 | Decision cards | No | **Built** | |
-| Cards scoped per company | No | **Gap** | No `company_id`; cards cross companies. See finding 3 |
+| Cards scoped per company | No | **Built** | `company_id` on every card, record rule, refresh per company (finding 3); 2 tests |
 | Consolidated multi-store view | Partly | **Built** | Stores screen: pieces, fine grams, value, limit, on the road, today's count per store; staff see their store |
 | Owner summary by WhatsApp | **Enterprise** | **Decision** | `whatsapp` is not in Community — Meta Cloud API integration, custom |
 
@@ -122,15 +123,15 @@ owner.
 | ZATCA e-invoicing (Saudi) | **`l10n_sa_edi`** | **Standard** | UBL 2.1, certificates, clearance — in Community |
 | Old-gold exchange with threshold approval | No | **Built** | Guard covers state, approver and valuation |
 | AML / KYC status, screening, risk band | No | **Built** | Identity (type, last 4, expiry), screening and risk band on the client; events log; 11 tests + walk |
-| Cash threshold per client per year | No | **Gap** | Shown in the prototype at the till |
+| Cash threshold per client per year | No | **Built as configuration** | AML window in days is a parameter the finance manager sets (365 for a year); the counter gate reads it |
 | Metal journals | Partly (`account`) | **Planned** | Slice 11 |
 
 ## AI and channels
 
 | Capability | Standard? | Status | Note |
 | --- | --- | --- | --- |
-| Agent gateway, autonomy levels, audit | No | **Planned** | Slice 5 |
-| Voice (speech in, speech out) | No | **Planned** | Slice 5/7. A demo clip exists; no live stack |
+| Agent gateway, autonomy levels, audit | No | **Built** | Slice 4: tools with levels A–E, drafts, approvals inbox, audit, pause |
+| Voice (speech in, speech out) | No | **Built** | ElevenLabs conversational agents (Zayan, Layla, Noor) with client tools in the browser (Slice 4b, 5); live verification needs a device |
 | WhatsApp | **Enterprise** | **Decision** | Custom against Meta Cloud API |
 | Client app | No | **Built** | Sign-in by one-time code a person gives her (server sends nothing); today's rate, what she owns with metal value, selections, requests, consent; 8 tests + phone walk |
 
@@ -143,22 +144,26 @@ owner.
 | Front end | — | **Decision** | OWL inside Odoo keeps the record rules; a separate app re-proves them on an API. See `ARCHITECTURE_REVIEW.md` |
 | Repairs | **`repair`** | **Standard** | Slice 10 |
 | Workshop / custom orders | **`mrp`** | **Standard** | Slice 10 |
-| Multi-company | `base` | **Partial** | New models must carry `company_id` from the start |
+| Multi-company | `base` | **Built** | Every custom model carries `company_id`; owner cards were the last (finding 3) |
 
 ## Open findings, by the order I would fix them
 
 | # | Finding | Severity | Why this order |
 | --- | --- | --- | --- |
-| 3 | Owner cards have no `company_id` | Medium | Smallest change, and it is a leak shape. Do before a second company exists |
-| 2 | Pieces on approval do not move stock | Medium | Falls out of Slice 1; until then show the on-approval value separately so stock is not read as free and clear |
-| 1 | Access log covers `web_read` only | Medium | Needs a decision on cost: logging every row of a 200-client list is not free |
+| 3 | Owner cards have no `company_id` | Medium | **Closed** 20 Nov 2026: `company_id`, record rule, refresh per company |
+| 2 | Pieces on approval do not move stock | Medium | **Closed**: memos move pieces to the on-approval location and back |
+| 1 | Access log covers `web_read` only | Medium | **Closed** 20 Nov 2026: lists, searches and exports log one line per query (queries, not rows) |
 | 4 | Dead `if False` in `offer.py` | Trivial | **Closed** |
 
 ## Waiting on the owner
 
-1. Fix finding 3 now, or wait for a multi-company need?
-2. Widen the access log, and if so, log rows or log queries?
-3. Front end: OWL inside Odoo, or a separate app?
-4. Does `deploy.sh --install` set the Odoo admin password? It is the default on a fresh database today.
+1. ~~Fix finding 3 now?~~ Done.
+2. ~~Widen the access log?~~ Done: one line per query, with the restricted clients it returned.
+3. ~~Front end~~ Decided: the separate Jawhar app on the API door, record rules re-proved by tests.
+4. ~~Admin password on `--install`~~ `deploy.sh` sets it from `DEMO_LOGIN_PASSWORD` and refuses to continue when it cannot.
 5. Should the landing page move to the new indigo, or stay on Mumtaz brand gold?
 6. Who weighs something on a real scale before a connected scale is promised?
+7. Compliance configuration (Slice 11): VAT, `l10n_ae` / `l10n_gcc_invoice` / ZATCA, AML threshold and window, retention: a named finance manager confirms the values; nothing is invented in code.
+8. Workshop and repairs (Slice 10): standard `repair` and `mrp`, install and configure when a workshop tenant exists.
+9. WhatsApp (Slices 6/8): a Meta Cloud API account; until then the hand-over link.
+10. B2B dealers (Slice 9: consignment, metal accounts, credit limits, portal): the next build slice once a dealer tenant is named.

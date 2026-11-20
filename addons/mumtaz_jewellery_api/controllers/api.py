@@ -614,6 +614,48 @@ class JawharApi(Controller):
             recs = Lot.search(domain, limit=lim, offset=off, order=order)
         return {'items': [_piece_dict(l) for l in recs], 'total': Lot.search_count(domain)}
 
+    @_r('/pieces/import', methods=['POST'])
+    @endpoint()
+    def pieces_import(self, **kw):
+        """A stock book as CSV text or an .xlsx (base64). dry_run judges every
+        row and writes nothing; otherwise the new pieces land on the store's
+        shelf in one transaction and the run is written down. Managers only."""
+        from odoo.addons.mumtaz_jewellery.models.piece_import import rows_from_csv, rows_from_xlsx
+        if not request.env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
+            raise ApiError(403, 'forbidden', 'Only a jewellery manager may import stock.')
+        body = _body()
+        try:
+            if body.get('xlsx'):
+                rows = rows_from_xlsx(base64.b64decode(body['xlsx']))
+            else:
+                rows = rows_from_csv(body.get('csv') or '')
+        except Exception as exc:  # noqa: BLE001 -- a file that will not parse is a 400, not a 500
+            raise ApiError(400, 'unreadable', 'The file could not be read: %s' % str(exc)[:200]) from exc
+        if not rows:
+            raise ApiError(400, 'empty', 'No rows found under the header line.')
+        wh = None
+        if body.get('store_id'):
+            wh = request.env['stock.warehouse'].browse(int(body['store_id'])).exists() or None
+        Imp = request.env['jewellery.piece.import']
+        if body.get('dry_run', True) in (True, 1, '1', 'true'):
+            return dict(Imp.preview(rows, wh), dry_run=True)
+        out = Imp.apply(rows, wh, skip_errors=bool(body.get('skip_errors')), name=(body.get('name') or '')[:80] or None)
+        return dict(out, dry_run=False)
+
+    @_r('/pieces/imports')
+    @endpoint()
+    def pieces_imports(self, limit=20, **kw):
+        runs = request.env['jewellery.piece.import'].search([], limit=_int(limit, 20), order='id desc')
+        return {'items': [{'id': r.id, 'name': r.name, 'by': _m2o(r.user_id), 'at': r.date, 'store': _m2o(r.warehouse_id),
+                           'rows': r.rows, 'created': r.created, 'skipped': r.skipped, 'errors': r.errors,
+                           'report': r.report or None} for r in runs]}
+
+    @_r('/pieces/import/template')
+    @endpoint()
+    def pieces_import_template(self, **kw):
+        from odoo.addons.mumtaz_jewellery.models.piece_import import COLUMNS
+        return {'csv': request.env['jewellery.piece.import'].template_csv(), 'columns': list(COLUMNS)}
+
     @_r('/pieces/<int:piece_id>/image')
     def piece_image(self, piece_id, **kw):
         """The design's photo, as the signed-in user (a 404 for anyone else,

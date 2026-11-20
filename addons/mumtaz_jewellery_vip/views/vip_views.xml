@@ -152,7 +152,10 @@
                 <field name="date"/>
                 <field name="user_id"/>
                 <field name="partner_id"/>
+                <field name="partner_ids" widget="many2many_tags"/>
                 <field name="action"/>
+                <field name="count"/>
+                <field name="note" optional="hide"/>
             </list>
         </field>
     </record>

@@ -1,0 +1,4 @@
+serial,design,category,karat,gross_g,stone_g,stones_value,wastage_pct,making_type,making_value,rfid,certificate,cost,store
+SAMPLE-BNG-0001,Sample Bangle 22K,bangle,22,24.5,0,0,2,percent,10,SAMPLE-RFID-0001,,5100,
+SAMPLE-RNG-0001,Sample Ring 18K with stone,ring,18,6.4,1.1,1800,1,fixed,250,,SAMPLE-CERT-1,2200,
+SAMPLE-CHN-0001,Sample Chain 21K,chain,21,18.75,0,0,1.5,per_gram,12.5,,,3900,
