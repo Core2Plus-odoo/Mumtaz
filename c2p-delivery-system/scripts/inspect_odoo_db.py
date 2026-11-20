@@ -18,8 +18,20 @@ Usage, on the VPS:
     python3 scripts/inspect_odoo_db.py --list
     python3 scripts/inspect_odoo_db.py Mumtaz_C2P --leads
     python3 scripts/inspect_odoo_db.py Mumtaz_C2P --diagnose
+    python3 scripts/inspect_odoo_db.py Mumtaz_C2P --pm-audit
+    python3 scripts/inspect_odoo_db.py Mumtaz_C2P --pm-audit --json > /tmp/pm_audit.json
 
 Env is read from delivery_api/.env (the service env file) when present.
+
+For an audit, prefer a dedicated read-only Odoo user over an administrator:
+create one in Settings > Users with read access to the apps being audited, then
+
+    export ODOO_URL=http://127.0.0.1:8069
+    export ODOO_USER=audit.readonly@core2plus.com
+    read -rs ODOO_PASSWORD && export ODOO_PASSWORD   # keeps it out of history
+
+Nothing here writes, so a read-only account is sufficient for every mode and
+limits the blast radius if the credential leaks.
 """
 
 from __future__ import annotations
@@ -796,6 +808,464 @@ def report_databases() -> int:
     return 0
 
 
+# ── project-management audit (--pm-audit) ────────────────────────────────
+# Answers the ten-point current-state audit for the Group PM system. Every
+# call is search_read / search_count / read_group / fields_get: nothing is
+# created, written or installed. Each probe is isolated so a missing app only
+# blanks its own section.
+
+PM_PROJECT_FIELDS = [
+    "name", "company_id", "user_id", "partner_id", "stage_id", "date_start",
+    "date", "active", "privacy_visibility", "allow_milestones",
+    "allow_task_dependencies", "last_update_status",
+]
+PM_TASK_FIELDS = [
+    "name", "project_id", "stage_id", "user_ids", "parent_id", "depend_on_ids",
+    "date_deadline", "state", "priority", "milestone_id", "allocated_hours",
+    "write_date", "active",
+]
+# Fields whose presence proves a capability exists natively in this install.
+PM_CAPABILITY_FIELDS = {
+    "project.task": [
+        "depend_on_ids", "dependent_ids", "parent_id", "child_ids",
+        "milestone_id", "recurring_task", "state", "allocated_hours",
+        "personal_stage_type_id",
+    ],
+    "project.project": [
+        "allow_milestones", "allow_task_dependencies", "privacy_visibility",
+        "last_update_status", "allow_timesheets", "tasks",
+    ],
+}
+MOM_HINTS = ("meeting", "minute", "mom", "approval", "signoff", "sign_off",
+             "checklist", "risk", "issue", "change.request", "template")
+
+
+def _probe(report: dict, key: str, fn):
+    """Run one audit probe; record the failure instead of losing the report."""
+    try:
+        report[key] = fn()
+    except Exception as exc:
+        report[key] = {"error": error_text(exc), "error_type": type(exc).__name__}
+
+
+def pm_audit(db: str) -> dict:
+    """Read-only current-state audit of the project-management estate."""
+    from delivery_api.odoo import OdooClient
+
+    client = OdooClient(db)
+    ex = client.execute
+    rep: dict = {
+        "db": db, "url": client.url, "login": client.user, "uid": client.uid,
+        "generated_at": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+    }
+    rep["version"] = client._common.version()
+
+    # 1 ── installed modules, split by provenance
+    def modules():
+        rows = ex("ir.module.module", "search_read",
+                  [("state", "=", "installed")],
+                  fields=["name", "shortdesc", "author", "license",
+                          "latest_version", "application"],
+                  context=ALL_RECORDS, order="name")
+        own, oca, standard = [], [], []
+        for m in rows:
+            author = (m.get("author") or "")
+            name = m["name"]
+            if name.startswith(("mumtaz", "c2p", "zaki", "jewellery")):
+                own.append(m)
+            elif "Odoo" in author and "Community Association" not in author:
+                standard.append(m)
+            elif "Community Association" in author or "OCA" in author:
+                oca.append(m)
+            else:
+                own.append(m)
+        return {"total": len(rows),
+                "standard_count": len(standard), "oca_count": len(oca),
+                "custom_count": len(own),
+                "custom": [{k: m.get(k) for k in
+                            ("name", "latest_version", "author", "license")}
+                           for m in own],
+                "oca": [{k: m.get(k) for k in ("name", "author")} for m in oca],
+                "applications": sorted(m["name"] for m in rows
+                                       if m.get("application")),
+                }
+    _probe(rep, "modules", modules)
+
+    # 2 ── project.project / project.task shape and volume
+    def project_models():
+        out = {}
+        for model in ("project.project", "project.task", "project.task.type",
+                      "project.milestone", "project.update", "project.tags"):
+            try:
+                fg = ex(model, "fields_get", [],
+                        attributes=["type", "required", "store", "relation",
+                                    "readonly", "selection"])
+            except Exception as exc:
+                out[model] = {"error": error_text(exc)}
+                continue
+            try:
+                total = ex(model, "search_count", [], context=ALL_RECORDS)
+            except Exception:
+                total = None
+            custom = sorted(f for f in fg if f.startswith("x_"))
+            out[model] = {
+                "field_count": len(fg), "record_count": total,
+                "custom_fields": custom,
+                "fields": {f: {"type": d.get("type"),
+                               "relation": d.get("relation"),
+                               "required": d.get("required"),
+                               "store": d.get("store")}
+                           for f, d in sorted(fg.items())},
+            }
+        return out
+    _probe(rep, "project_models", project_models)
+
+    # 3 ── which PM capabilities this install already has natively
+    def capabilities():
+        out = {}
+        for model, wanted in PM_CAPABILITY_FIELDS.items():
+            try:
+                fg = ex(model, "fields_get", [], attributes=["type"])
+            except Exception as exc:
+                out[model] = {"error": error_text(exc)}
+                continue
+            out[model] = {f: (f in fg) for f in wanted}
+        # usage, not just availability: a field nobody fills is not a capability
+        usage = {}
+        for label, model, domain in [
+            ("tasks with a dependency", "project.task", [("depend_on_ids", "!=", False)]),
+            ("tasks that are subtasks", "project.task", [("parent_id", "!=", False)]),
+            ("tasks with a milestone", "project.task", [("milestone_id", "!=", False)]),
+            ("recurring tasks", "project.task", [("recurring_task", "=", True)]),
+            ("projects with milestones on", "project.project", [("allow_milestones", "=", True)]),
+            ("projects with dependencies on", "project.project", [("allow_task_dependencies", "=", True)]),
+            ("milestones", "project.milestone", []),
+            ("project updates", "project.update", []),
+        ]:
+            try:
+                usage[label] = ex(model, "search_count", domain, context=ALL_RECORDS)
+            except Exception as exc:
+                usage[label] = f"n/a ({type(exc).__name__})"
+        out["usage"] = usage
+        return out
+    _probe(rep, "capabilities", capabilities)
+
+    # 4 ── the projects themselves, with stages and task counts
+    def projects():
+        rows = ex("project.project", "search_read", [],
+                  fields=PM_PROJECT_FIELDS, context=ALL_RECORDS, order="id")
+        for p in rows:
+            for key, dom in (("task_count", []),
+                             ("open_tasks", [("state", "not in", ("1_done", "1_canceled"))])):
+                try:
+                    p[key] = ex("project.task", "search_count",
+                                [("project_id", "=", p["id"])] + dom,
+                                context=ALL_RECORDS)
+                except Exception:
+                    p[key] = None
+        stages = ex("project.task.type", "search_read", [],
+                    fields=["name", "sequence", "project_ids", "fold"],
+                    context=ALL_RECORDS, order="sequence,id")
+        return {"projects": rows, "stages": stages}
+    _probe(rep, "projects", projects)
+
+    # 5 ── CRM → quotation → sales order → project
+    def crm_to_delivery():
+        out = {}
+        for label, model, domain in [
+            ("leads", "crm.lead", [("type", "=", "lead")]),
+            ("opportunities", "crm.lead", [("type", "=", "opportunity")]),
+            ("quotations", "sale.order", [("state", "in", ("draft", "sent"))]),
+            ("sales orders", "sale.order", [("state", "=", "sale")]),
+            ("customer invoices", "account.move", [("move_type", "=", "out_invoice")]),
+        ]:
+            try:
+                out[label] = ex(model, "search_count", domain, context=ALL_RECORDS)
+            except Exception as exc:
+                out[label] = f"n/a ({type(exc).__name__})"
+        # service_tracking on products is what makes a confirmed line create a
+        # project or a task; without it there is no CRM-to-delivery handoff.
+        try:
+            out["service_tracking"] = ex(
+                "product.template", "read_group",
+                [("type", "=", "service")], ["id"], ["service_tracking"],
+                lazy=False, context=ALL_RECORDS)
+        except Exception as exc:
+            out["service_tracking"] = f"n/a ({type(exc).__name__})"
+        for label, model, field in [("projects linked to a sale order",
+                                     "project.project", "sale_order_id"),
+                                    ("tasks linked to a sale order line",
+                                     "project.task", "sale_line_id")]:
+            try:
+                out[label] = ex(model, "search_count", [(field, "!=", False)],
+                                context=ALL_RECORDS)
+            except Exception as exc:
+                out[label] = f"n/a ({type(exc).__name__})"
+        return out
+    _probe(rep, "crm_to_delivery", crm_to_delivery)
+
+    # 6 ── c2p.command.center: installed? who can open it?
+    def command_center():
+        out = {}
+        mod = ex("ir.module.module", "search_read",
+                 [("name", "=", "c2p_command_center")],
+                 fields=["name", "state", "latest_version"], context=ALL_RECORDS)
+        out["module"] = mod or "not present on this database"
+        try:
+            grp = ex("res.groups", "search_read",
+                     [("name", "ilike", "Command Center")],
+                     fields=["name", "user_ids", "comment"])
+            for g in grp:
+                g["members"] = ex("res.users", "search_read",
+                                  [("id", "in", g.get("user_ids") or [])],
+                                  fields=["login", "name"], context=ALL_RECORDS)
+            out["groups"] = grp
+        except Exception as exc:
+            out["groups"] = {"error": error_text(exc)}
+        try:
+            out["model_present"] = bool(ex("ir.model", "search_count",
+                                           [("model", "=", "c2p.command.center")]))
+        except Exception as exc:
+            out["model_present"] = f"n/a ({type(exc).__name__})"
+        return out
+    _probe(rep, "command_center", command_center)
+
+    # 7 ── users, groups, record rules on the project models
+    def security():
+        groups = ex("res.groups", "search_read", [],
+                    fields=["name", "user_ids", "implied_ids"], order="name")
+        for g in groups:
+            g["member_count"] = len(g.get("user_ids") or [])
+            g.pop("user_ids", None)
+        rules = ex("ir.rule", "search_read",
+                   [("model_id.model", "in",
+                     ["project.project", "project.task", "project.milestone",
+                      "project.update", "account.move", "crm.lead"])],
+                   fields=["name", "model_id", "domain_force", "groups",
+                           "perm_read", "perm_write", "perm_create",
+                           "perm_unlink", "global"], context=ALL_RECORDS)
+        users = ex("res.users", "search_read", [],
+                   fields=["login", "name", "share", "company_id",
+                           "company_ids", "active"], context=ALL_RECORDS,
+                   order="login")
+        return {"groups": groups, "project_record_rules": rules,
+                "user_count": len(users),
+                "internal_users": [u for u in users if not u.get("share")],
+                "portal_users": sum(1 for u in users if u.get("share")),
+                "inactive_users": sum(1 for u in users if not u.get("active"))}
+    _probe(rep, "security", security)
+
+    # 8 ── documents, meeting records, approvals: do any exist yet?
+    def documents_and_mom():
+        out = {}
+        try:
+            out["attachments_by_model"] = ex(
+                "ir.attachment", "read_group", [], ["id"], ["res_model"],
+                lazy=False, context=ALL_RECORDS)
+        except Exception as exc:
+            out["attachments_by_model"] = f"n/a ({type(exc).__name__})"
+        try:
+            models = ex("ir.model", "search_read", [], fields=["model", "name", "state"],
+                        context=ALL_RECORDS, order="model")
+            out["mom_like_models"] = [
+                m for m in models
+                if any(h in m["model"].replace("_", ".") for h in MOM_HINTS)]
+            out["studio_models"] = [m for m in models if m.get("state") == "manual"]
+        except Exception as exc:
+            out["mom_like_models"] = {"error": error_text(exc)}
+        for label, model, domain in [
+            ("open activities", "mail.activity", []),
+            ("calendar events", "calendar.event", []),
+            ("mail templates", "mail.template", []),
+        ]:
+            try:
+                out[label] = ex(model, "search_count", domain, context=ALL_RECORDS)
+            except Exception as exc:
+                out[label] = f"n/a ({type(exc).__name__})"
+        return out
+    _probe(rep, "documents_and_mom", documents_and_mom)
+
+    # 9 ── data quality on the existing task population
+    def data_quality():
+        import datetime as _dt
+        cutoff = (_dt.date.today() - _dt.timedelta(days=30)).isoformat()
+        checks = [
+            ("tasks with no assignee", [("user_ids", "=", False)]),
+            ("tasks with no deadline", [("date_deadline", "=", False)]),
+            ("open tasks past their deadline",
+             [("date_deadline", "<", _dt.date.today().isoformat()),
+              ("state", "not in", ("1_done", "1_canceled"))]),
+            ("tasks untouched for 30 days", [("write_date", "<", cutoff)]),
+            ("tasks with no project", [("project_id", "=", False)]),
+            ("archived tasks", [("active", "=", False)]),
+        ]
+        out = {}
+        for label, dom in checks:
+            try:
+                out[label] = ex("project.task", "search_count", dom,
+                                context=ALL_RECORDS)
+            except Exception as exc:
+                out[label] = f"n/a ({type(exc).__name__})"
+        try:
+            out["projects with no manager"] = ex(
+                "project.project", "search_count", [("user_id", "=", False)],
+                context=ALL_RECORDS)
+        except Exception as exc:
+            out["projects with no manager"] = f"n/a ({type(exc).__name__})"
+        try:
+            out["tasks_by_stage"] = ex("project.task", "read_group", [], ["id"],
+                                       ["stage_id"], lazy=False,
+                                       context=ALL_RECORDS)
+        except Exception as exc:
+            out["tasks_by_stage"] = f"n/a ({type(exc).__name__})"
+        return out
+    _probe(rep, "data_quality", data_quality)
+
+    # 10 ── automation that already runs: preserve it, do not break it
+    def automation():
+        out = {}
+        try:
+            out["crons"] = ex("ir.cron", "search_read", [],
+                              fields=["name", "active", "interval_number",
+                                      "interval_type", "nextcall", "model_id",
+                                      "user_id"],
+                              context=ALL_RECORDS, order="name")
+        except Exception as exc:
+            out["crons"] = {"error": error_text(exc)}
+        for label, model, fields_ in [
+            ("automation_rules", "base.automation",
+             ["name", "active", "model_id", "trigger", "filter_domain"]),
+            ("server_actions", "ir.actions.server",
+             ["name", "model_id", "state", "usage"]),
+        ]:
+            try:
+                out[label] = ex(model, "search_read", [], fields=fields_,
+                                context=ALL_RECORDS, order="name")
+            except Exception as exc:
+                out[label] = {"error": error_text(exc)}
+        try:
+            out["manual_fields_on_project_models"] = ex(
+                "ir.model.fields", "search_read",
+                [("state", "=", "manual"),
+                 ("model", "in", ["project.project", "project.task",
+                                  "crm.lead", "sale.order"])],
+                fields=["model", "name", "field_description", "ttype"],
+                context=ALL_RECORDS, order="model,name")
+        except Exception as exc:
+            out["manual_fields_on_project_models"] = {"error": error_text(exc)}
+        return out
+    _probe(rep, "automation", automation)
+
+    return rep
+
+
+def render_pm_audit(rep: dict) -> str:
+    """Readable summary. The JSON carries everything; this is for a human."""
+    L: list[str] = []
+    a = L.append
+    a(f"PM AUDIT — {rep.get('db')} @ {rep.get('url')}")
+    a(f"  as {rep.get('login')} (uid {rep.get('uid')}) at {rep.get('generated_at')}")
+    v = rep.get("version") or {}
+    if isinstance(v, dict):
+        a(f"  Odoo {v.get('server_version')}  ({v.get('server_serie')})")
+    a("")
+
+    m = rep.get("modules") or {}
+    if "error" in m:
+        a(f"MODULES: ERROR {m['error']}")
+    else:
+        a(f"MODULES: {m['total']} installed — "
+          f"{m['standard_count']} Odoo, {m['oca_count']} OCA, "
+          f"{m['custom_count']} custom")
+        for c in m.get("custom", []):
+            a(f"    {c['name']:<34} {str(c.get('latest_version') or ''):<14}"
+              f"{(c.get('license') or '')}")
+        if m.get("oca"):
+            a("  OCA:")
+            for c in m["oca"]:
+                a(f"    {c['name']}")
+    a("")
+
+    cap = rep.get("capabilities") or {}
+    if "error" not in cap:
+        a("NATIVE PM CAPABILITIES (field present = available in this install)")
+        for model in ("project.task", "project.project"):
+            d = cap.get(model) or {}
+            if "error" in d:
+                a(f"  {model}: ERROR {d['error']}")
+                continue
+            have = [k for k, ok in d.items() if ok]
+            miss = [k for k, ok in d.items() if not ok]
+            a(f"  {model}")
+            a(f"     present: {', '.join(have) or '(none)'}")
+            if miss:
+                a(f"     ABSENT : {', '.join(miss)}")
+        a("  actual usage:")
+        for k, val in (cap.get("usage") or {}).items():
+            a(f"     {k:<34} {val}")
+    a("")
+
+    pr = rep.get("projects") or {}
+    if "error" in pr:
+        a(f"PROJECTS: ERROR {pr['error']}")
+    else:
+        rows = pr.get("projects") or []
+        a(f"PROJECTS: {len(rows)}")
+        for p in rows:
+            a(f"  [{p['id']:>4}] {(p.get('name') or '')[:42]:<44}"
+              f"tasks={p.get('task_count')!s:<6}open={p.get('open_tasks')!s:<6}"
+              f"vis={p.get('privacy_visibility')}")
+        a(f"  stages: {len(pr.get('stages') or [])}")
+    a("")
+
+    for key, title in [("crm_to_delivery", "CRM → QUOTE → ORDER → PROJECT"),
+                       ("data_quality", "DATA QUALITY"),
+                       ("command_center", "COMMAND CENTER")]:
+        d = rep.get(key) or {}
+        a(title)
+        if "error" in d:
+            a(f"  ERROR {d['error']}")
+        else:
+            for k, val in d.items():
+                if isinstance(val, (list, dict)):
+                    a(f"  {k}: {json.dumps(val, default=str)[:400]}")
+                else:
+                    a(f"  {k:<40} {val}")
+        a("")
+
+    sec = rep.get("security") or {}
+    if "error" in sec:
+        a(f"SECURITY: ERROR {sec['error']}")
+    else:
+        a(f"SECURITY: {sec.get('user_count')} users "
+          f"({len(sec.get('internal_users') or [])} internal, "
+          f"{sec.get('portal_users')} portal, "
+          f"{sec.get('inactive_users')} inactive)")
+        a("  record rules on project/CRM/account models:")
+        for r in sec.get("project_record_rules") or []:
+            mid = r.get("model_id")
+            a(f"    {(mid[1] if isinstance(mid, list) else mid)!s:<22}"
+              f"{(r.get('name') or '')[:38]:<40}{r.get('domain_force')}")
+    a("")
+
+    au = rep.get("automation") or {}
+    if "error" not in au:
+        crons = au.get("crons") or []
+        if isinstance(crons, list):
+            act = [c for c in crons if c.get("active")]
+            a(f"AUTOMATION: {len(crons)} scheduled actions ({len(act)} active)")
+            for c in act:
+                a(f"    {(c.get('name') or '')[:46]:<48}"
+                  f"every {c.get('interval_number')} {c.get('interval_type')}"
+                  f"  next {c.get('nextcall')}")
+        mf = au.get("manual_fields_on_project_models")
+        if isinstance(mf, list) and mf:
+            a(f"  Studio/manual fields on project & CRM models: {len(mf)}")
+            for f in mf:
+                a(f"    {f.get('model'):<18}{f.get('name'):<26}{f.get('ttype')}")
+    return "\n".join(L)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("db", nargs="?",
@@ -820,6 +1290,13 @@ def main() -> int:
     parser.add_argument("--action", metavar="NAME",
                         help="print the code of server actions whose name "
                              "matches NAME (substring, case-insensitive)")
+    parser.add_argument("--pm-audit", action="store_true", dest="pm_audit",
+                        help="ten-point read-only audit of the project-"
+                             "management estate: modules, project models and "
+                             "usage, dependencies/subtasks/milestones, CRM-to-"
+                             "delivery, command centre access, users/groups/"
+                             "record rules, documents and MoM, data quality, "
+                             "automations and Studio fields")
     parser.add_argument("--json", action="store_true",
                         help="emit the full report as JSON instead of a summary")
     args = parser.parse_args()
@@ -833,7 +1310,9 @@ def main() -> int:
         return report_databases()
 
     try:
-        if args.schema:
+        if args.pm_audit:
+            report = pm_audit(args.db)
+        elif args.schema:
             report = show_schema(args.db, args.schema)
         elif args.projects:
             report = show_projects(args.db)
@@ -857,7 +1336,9 @@ def main() -> int:
     if args.json:
         print(json.dumps(report, indent=2, default=str))
     else:
-        if args.schema:
+        if args.pm_audit:
+            print(render_pm_audit(report))
+        elif args.schema:
             print(render_schema(report))
         elif args.projects:
             print(render_projects(report))
