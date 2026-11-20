@@ -621,3 +621,24 @@ sends nothing until a human does three things outside this repo — get Meta
 (or Twilio) credentials, register the five template names above, get them
 approved — none of which I can do from here.
 
+## 13. ERP methodology pack adopted — G0/G1 only, scope narrowed on purpose
+
+A reusable "C2P Group" ERP delivery methodology pack (generic templates, not Faizy-specific) was
+applied to this product on request. Added `faizy/CLAUDE.md` (scoped to this subtree; does not touch
+the repo-root CLAUDE.md, which governs the separate Mumtaz product), `docs/ERP_MASTER_BLUEPRINT.md`,
+and the discovery/architecture deliverables the pack's own methodology calls for before any new
+module work: `docs/project/PROJECT_CHARTER.md`, `docs/project/DECISION_REGISTER.md` (ADR-001..013,
+answered as-built from evidence), `docs/project/FIT_GAP_REGISTER.md`, and
+`docs/architecture/{MODULE_DEPENDENCY_MAP,ENTITY_RELATIONSHIPS}.md`.
+
+The headline finding, stated plainly rather than softened: **Faizy is not a general ERP**, and most
+of the pack's canonical module list (CRM pipeline, purchasing, inventory, manufacturing, HR/payroll,
+POS/e-commerce, projects, fixed assets, intercompany) is correctly out of scope — building any of it
+without a real business reason would be the over-engineering the pack itself warns against. The one
+concrete, worth-fixing gap the audit actually surfaced: vendor commission is computed and shown
+(`faizy_vendor_commission_total`) but never becomes an automatic AP vendor bill — a human creates it
+by hand today. That's the strongest candidate for the next backlog item, pending the product owner's
+sign-off on this read of scope — detailed module specs, a field-level data dictionary and a
+prioritized backlog are deliberately deferred until that approval, per the pack's own stage-gate
+methodology ("use templates and stage-gates rather than generating the entire ERP in one run").
+
