@@ -27,11 +27,11 @@ for this product).
 | SLS-02 | Contracts, recurring billing, subscriptions | Custom | `faizy.subscription` — a hand-built recurring-billing model, because Odoo Community has no Subscriptions app (explicit, documented reason) |
 | SLS-03 | Returns, rebates, customer service | **Out of scope** | No RMA/return/credit-note-request model. A cancelled order is just `state = cancelled`; no refund workflow modeled |
 | PUR-01 | Requisition, RFQ, PO | **Out of scope** | No purchasing workflow — vendors are routed to via `faizy.order.vendor_id`, not a PO |
-| PUR-02 | Supplier invoices, settlement | **Gap (flagged, not built)** | Vendor commission is computed and shown (`faizy_vendor_commission_total`) but **no vendor bill is ever created automatically** — see FIN-03 below and DECISION_REGISTER ADR-004 |
+| PUR-02 | Supplier invoices, settlement | **Closed** | A draft Vendor Bill is now created automatically on order completion (`faizy_vendor_billing.py`); see FIN-03 below |
 | INV-01/02/03 | Inventory, lots/serials, valuation | **Out of scope** | Faizy buys on the customer's behalf; it never holds stock. Confirmed by the absence of any `stock.*` dependency |
 | FIN-01 | General ledger | Standard | Native `account.move`/`l10n_pk` chart of accounts |
 | FIN-02 | AR, customer invoicing | Extend | `faizy.subscription._cron_recurring_invoice` creates real `account.move` invoices on schedule |
-| FIN-03 | AP, bank reconciliation | **Gap** | No automated vendor-bill creation for the 10% commission model; a human must create a Vendor Bill by hand today. **This is the clearest concrete gap in the whole register** — the product's own vendor-commission revenue line is tracked but not booked |
+| FIN-03 | AP, bank reconciliation | **Closed (drafted, not posted)** | `faizy.order.action_complete` now drafts a Vendor Bill (`move_type=in_invoice`) — a gross-procured line plus a negative commission-retained line, net payable = `purchase_value - vendor_commission`. Never auto-posted; an accountant reviews and posts, mirroring `faizy.subscription._generate_invoice`'s existing convention. A manual `action_create_vendor_bill` retry button covers the case where the automatic draft fails (e.g. a missing exchange rate — same guard as subscriptions). **New, bigger gap found while closing this one:** `faizy_product_data.xml`'s own comment on `product_platform_fee` states plainly "orders do not reach accounting at all today" on the *customer* side either — `purchase_value`/`platform_fee`/`service_fee` (the money the customer owes per order) are computed but never invoiced or debited anywhere, and `faizy.wallet.transaction` is a fully-built ledger model that is never populated by any code path. That is a materially bigger, separate piece of work (deciding per-order vs. wallet-funded billing) and is deliberately **not** bundled into this fix — flagged here for a future, explicitly-scoped decision |
 | FIN-04 | Budgets, cash forecast, fixed assets | **Out of scope** | Not relevant at current scale; no budget/asset model exists or is implied |
 | FIN-05 | Intercompany, consolidation | N/A | Single company — not applicable (ADR-002) |
 | PRJ-01 | Projects, tasks, timesheets | **Out of scope** | Not a project business |
@@ -54,7 +54,9 @@ HR/payroll, POS/e-commerce, projects, fixed assets, intercompany). **Building an
 scope" rows without a real business reason would be over-engineering**, directly against the
 blueprint's own standard-first and no-fake-completion principles.
 
-The one row that is a genuine, concrete, worth-fixing gap rather than a correct exclusion is
-**FIN-03 — vendor commission never becomes an AP bill.** That is the most defensible next backlog
-item to come out of this audit, if the product owner wants it; it is not being proposed as code
-here without approval (see PROJECT_CHARTER.md's stage-gate note).
+The one row that was a genuine, concrete, worth-fixing gap rather than a correct exclusion —
+**FIN-03, vendor commission never becoming an AP bill** — is now closed (drafted, not posted; see
+above). Closing it surfaced a bigger sibling gap on the customer side: order-level charges
+(`purchase_value`/`platform_fee`/`service_fee`) and the `faizy.wallet.transaction` ledger are never
+invoiced or posted either. That is the most defensible next backlog item, and is deliberately left
+for a separate, explicitly-scoped decision rather than built as a drive-by addition here.

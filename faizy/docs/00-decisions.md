@@ -642,3 +642,29 @@ sign-off on this read of scope — detailed module specs, a field-level data dic
 prioritized backlog are deliberately deferred until that approval, per the pack's own stage-gate
 methodology ("use templates and stage-gates rather than generating the entire ERP in one run").
 
+## 14. Vendor commission now reaches accounting — drafted, not posted
+
+Closed the one concrete gap FIT_GAP_REGISTER's audit found (row FIN-03), per the product owner's
+approval of the fit-gap read. New `faizy_vendor_billing.py` (`_inherit = "faizy.order"`): on
+`action_complete`, when the order has a vendor and `purchase_value > 0`, drafts a Vendor Bill
+(`account.move`, `move_type=in_invoice`) — one line for what was procured at `purchase_value`, one
+negative line for the commission Faizy retains, net payable = `purchase_value - vendor_commission`.
+Two new purchase-side products (`product_vendor_procurement`, `product_vendor_commission_retained`)
+carry the account/tax mapping, following the exact convention `faizy_product_data.xml` already used
+for the sale-side fee products.
+
+Never auto-posts — mirrors `faizy.subscription._generate_invoice`'s existing convention exactly; an
+accountant reviews and posts. Guarded the same way `_generate_invoice` guards: refuses with a clear
+message if the vendor's currency has no exchange rate, rather than letting Odoo post 1:1 silently
+(the SAR-price class of bug this codebase has already hit once). A billing failure (bad rate, etc.)
+never blocks `action_complete` itself — same "notification failing must never undo the real-world
+fact" rule `faizy_order_alert.py` already established — logged and left retryable via a manual
+`action_create_vendor_bill` button on the order form, visible to Operations.
+
+**New gap found while closing this one, deliberately not bundled in:** the *customer* side of order
+money (`purchase_value`/`platform_fee`/`service_fee`) is computed but never invoiced or debited
+anywhere, and `faizy.wallet.transaction` — a fully-built ledger model — is never written to by any
+code path. `faizy_product_data.xml`'s own comment already said as much ("orders do not reach
+accounting at all today") about the sale-side products it pre-built for exactly this. Recorded in
+FIT_GAP_REGISTER.md as the next candidate, pending its own explicit scoping decision.
+

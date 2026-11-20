@@ -14,3 +14,4 @@ from . import faizy_dashboard
 from . import res_partner
 from . import faizy_vendor
 from . import faizy_order_alert
+from . import faizy_vendor_billing
