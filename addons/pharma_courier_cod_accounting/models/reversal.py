@@ -52,7 +52,7 @@ class PharmaCodEntryReversal(models.AbstractModel):
         # Standard Odoo reversal, kept as a DRAFT (cancel=False also leaves every reconciliation untouched).
         # Elevated rights on purpose, as for the entries themselves: a Finance Controller asks, an accountant posts.
         reversal = move._reverse_moves([{
-            "ref": _("Reversal of %(m)s: %(r)s", m=move.name, r=reason),
+            "ref": _("Reversal of %(m)s: %(r)s", m=move.name, r=reason), "pharma_cod_kind": "reversal",
             "date": date or fields.Date.context_today(self)}], cancel=False)
         self.message_post(body=_("Draft reversal entry %(rev)s created for %(m)s. Reason: %(r)s. "
                                  "Post it from Accounting.", rev=reversal.name or reversal.ref, m=move.name, r=reason))

@@ -7,7 +7,7 @@
                    "COD collected, a parcel with no matching sale order, an upload with row errors and an upload "
                    "that was built. Points the courier accounts at fictional accounts and creates DRAFT settlement and collection "
                    "journal entries. Ships two sample CSV files for the live upload demonstration. Idempotent.",
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Pharma",
     "author": "C2P Consultants",
     "license": "LGPL-3",

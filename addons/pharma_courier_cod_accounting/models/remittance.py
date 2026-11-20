@@ -94,6 +94,7 @@ class PharmaCourierRemittance(models.Model):
                 raise UserError(_("%(r)s already has journal entry %(m)s.", r=r.display_name, m=r.move_id.sudo().name))
             if r.bank_amount <= 0 or r.amount_gross <= 0:
                 raise UserError(_("%s needs a bank amount and a remitted gross above zero.", r.display_name))
+            r._check_flow_order()
             lines = r._entry_lines()
             courier = r.courier_id.sudo()
             partner = courier.partner_id.id or False
@@ -101,7 +102,7 @@ class PharmaCourierRemittance(models.Model):
             # necessarily an accountant. It is a DRAFT, so posting still needs an accountant. The user is unchanged,
             # so the entry records who created it.
             move = self.env["account.move"].sudo().create({
-                "move_type": "entry", "journal_id": courier.acc_journal_id.id, "date": r.date,
+                "move_type": "entry", "pharma_cod_kind": "settlement", "journal_id": courier.acc_journal_id.id, "date": r.date,
                 "ref": _("COD %(c)s %(s)s", c=courier.code, s=r.slip_ref),
                 "line_ids": [(0, 0, {"account_id": acc.id, "name": label, "debit": debit, "credit": credit,
                                      "partner_id": partner}) for acc, label, debit, credit in lines]})

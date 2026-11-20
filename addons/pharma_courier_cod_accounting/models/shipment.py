@@ -86,7 +86,7 @@ class PharmaCourierShipment(models.Model):
             # Elevated rights on purpose, as for the settlement entry: a Finance Controller creates a DRAFT; an
             # accountant posts it. The user is unchanged, so the entry records who created it.
             move = self.env["account.move"].sudo().create({
-                "move_type": "entry", "journal_id": courier.acc_journal_id.id,
+                "move_type": "entry", "pharma_cod_kind": "collection", "journal_id": courier.acc_journal_id.id,
                 "date": s.date_delivered or fields.Date.context_today(s),
                 "ref": _("COD collected %(c)s %(t)s", c=courier.code, t=s.tracking_number),
                 "line_ids": [(0, 0, {"account_id": acc.id, "name": label, "debit": debit, "credit": credit,

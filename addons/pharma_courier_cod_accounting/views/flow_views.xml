@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The accountant's queue: every COD entry waiting to be posted. Needs the Pharma user role (to see the app) and
+         the Accounting invoicing role (to see this menu). -->
+    <record id="action_pharma_cod_entries_to_post" model="ir.actions.act_window">
+        <field name="name">Entries to Post</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('pharma_cod_kind', '!=', False), ('state', '=', 'draft')]</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No COD entries are waiting.</p>
+            <p>Collection, settlement and reversal entries created by Finance appear here until you post them.</p></field>
+    </record>
+    <menuitem id="menu_pharma_courier_entries_to_post" name="Entries to Post"
+              parent="pharma_courier_cod.menu_pharma_courier_app" action="action_pharma_cod_entries_to_post"
+              sequence="3" groups="account.group_account_invoice"/>
+</odoo>

@@ -25,6 +25,9 @@
                 <field name="move_state" invisible="not move_id"/>
                 <field name="move_reversal_state" invisible="not move_reversal_state"/>
                 <field name="move_open" invisible="1"/>
+                <field name="flow_override_reason" invisible="move_open or state != 'posted' or not run_id"
+                       placeholder="Only if a parcel has no posted collection entry and settling now is right"
+                       groups="pharma_core.group_pharma_finance"/>
                 <field name="previous_move_ids" widget="many2many_tags" invisible="not previous_move_ids"
                        groups="account.group_account_invoice"/>
             </xpath>

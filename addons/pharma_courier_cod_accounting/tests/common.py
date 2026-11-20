@@ -32,6 +32,9 @@ class AccountingCase(CourierCase):
                 {"code": "CODT09", "name": "TEST receivable", "account_type": "asset_receivable"})
             cls.partner.property_account_receivable_id = receivable
         cls.receivable = cls.partner.property_account_receivable_id
+        # The existing entry tests create settlement entries on their own. The strict process order is tested in
+        # test_flow.py, which switches it on explicitly.
+        cls.env["ir.config_parameter"].sudo().set_param("pharma.cod_flow_mode", "advisory")
 
     def _by_account(self, move):
         """{account code: (debit, credit)} summed, so the tests state what was booked where."""

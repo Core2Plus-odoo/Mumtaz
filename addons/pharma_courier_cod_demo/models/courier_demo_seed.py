@@ -215,17 +215,27 @@ class PharmaCourierDemoSeed(models.AbstractModel):
         for courier in (a, b):
             if not courier.acc_journal_id:
                 courier.write({"acc_journal_id": journal.id, **{f: acc.id for f, acc in accounts.items()}})
-        rem = env["pharma.courier.remittance"].search(
-            [("courier_id", "=", a.id), ("slip_ref", "=", "DEMO-SL-A-1001")], limit=1)
-        if rem and rem.run_id and not rem.move_id:
-            rem.with_user(finance).action_create_entry()
-        # the collection side of the same clean batch: the courier collected these three, so it holds the cash.
-        # Together with the settlement entry above the clearing account nets to zero for this batch.
+        # The clean batch, in the order the process requires: the courier collected these three parcels, so the
+        # collection entries are created and POSTED (an accountant's step, done here by the seeder); only then can
+        # the slip be settled. Together they net the clearing account to zero for this batch. The settlement entry is
+        # left as a DRAFT, so the demo still shows the accountant's "post it" step.
         for trk in ("DEMO-A-0001", "DEMO-A-0002", "DEMO-A-0003"):
             ship = env["pharma.courier.shipment"].search(
                 [("courier_id", "=", a.id), ("tracking_number", "=", trk)], limit=1)
-            if ship and not ship.collection_move_id:
-                try:
+            if not ship:
+                continue
+            try:
+                if ship.collection_move_open is False or not ship.collection_move_id:
                     ship.with_user(finance).action_create_collection_entry()
-                except UserError as exc:
-                    _logger.warning("pharma_courier_cod_demo: no collection entry for %s (%s)", trk, exc)
+            except UserError as exc:
+                _logger.warning("pharma_courier_cod_demo: no collection entry for %s (%s)", trk, exc)
+                continue
+            if ship.collection_move_id.state == "draft":
+                ship.collection_move_id.sudo().action_post()
+        rem = env["pharma.courier.remittance"].search(
+            [("courier_id", "=", a.id), ("slip_ref", "=", "DEMO-SL-A-1001")], limit=1)
+        if rem and rem.run_id and not rem.move_id:
+            try:
+                rem.with_user(finance).action_create_entry()
+            except UserError as exc:
+                _logger.warning("pharma_courier_cod_demo: no settlement entry for %s (%s)", rem.slip_ref, exc)

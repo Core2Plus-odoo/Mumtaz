@@ -2,6 +2,10 @@
 <odoo>
     <menuitem id="menu_pharma_courier_app" name="Courier COD" sequence="15"
               web_icon="pharma_courier_cod,static/description/icon.svg" groups="pharma_core.group_pharma_user"/>
+    <menuitem id="menu_pharma_courier_pipeline" name="Pipeline" parent="menu_pharma_courier_app"
+              action="action_pharma_courier_pipeline" sequence="1"/>
+    <menuitem id="menu_pharma_courier_queue" name="Work Queue" parent="menu_pharma_courier_app"
+              action="action_pharma_courier_queue" sequence="2"/>
     <menuitem id="menu_pharma_courier_shipments" name="Shipments" parent="menu_pharma_courier_app"
               action="action_pharma_courier_shipment" sequence="10"/>
     <menuitem id="menu_pharma_courier_ageing" name="COD Ageing" parent="menu_pharma_courier_app"

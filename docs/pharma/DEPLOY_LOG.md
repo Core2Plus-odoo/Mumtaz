@@ -513,6 +513,14 @@ That upgrade-path behaviour is exactly what a fresh-install test cannot show, so
 
 Static checks only (XML and SVG well-formed, `bash -n`, no stale menu references). Next (owner-run): `git pull --ff-only`, `stage.sh test-combined`, then `stage.sh rehearse-upgrade` (this must say PASSED), and only then a named go for `stage.sh upgrade` and `smoke`, followed by a hard refresh in the browser.
 
+## 2026-11-20 — process flow: stage, next step and owner on every parcel; queues; strict order (written, NOT yet tested or on staging)
+
+`pharma_courier_cod` 19.0.1.1.0: stored `flow_stage`, `flow_next`, `flow_owner` on parcels, computed from the real records, and `flow_next` on remittances; a Pipeline pivot and a Work Queue (grouped by next step, filtered by owner) in the Courier COD app; a "Next step" banner on parcel and remittance forms; open findings per parcel.
+`pharma_courier_cod_accounting` 19.0.1.3.0: the accounting steps (collection entry, post collection, settlement entry, post settlement, post reversal) with owners; the **strict order** (a slip cannot be settled until every parcel on it has a posted collection entry; override with a logged written reason, or advisory via `pharma.cod_flow_mode`);
+`pharma_cod_kind` tag on COD entries and an accountant's **Entries to Post** queue; migration 19.0.1.3.0 tags existing entries. `pharma_courier_cod_demo` 19.0.1.3.0: collection entries are now created and POSTED before the clean batch is settled (the settlement stays a draft). Docs: COD_PROCESS_FLOW.md.
+Expected suite: 203 + 28 new = about 231. The existing accounting tests run in advisory mode on purpose; the strict order is tested in `test_flow.py`.
+Static checks only. Not run on Odoo. Staging is still at the state of the last verified upgrade: the reversal slice, the app split and this flow are all written and not yet run on the VPS. They go through `test-combined`, `rehearse-upgrade` and a named go, in that order.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

@@ -124,7 +124,7 @@ class TestCourierDemoSeed(TransactionCase):
         Ship = self.env["pharma.courier.shipment"].sudo()
         ships = Ship.search([("tracking_number", "in", ("DEMO-A-0001", "DEMO-A-0002", "DEMO-A-0003"))])
         self.assertEqual(len(ships), 3)
-        self.assertTrue(all(s.collection_move_state == "draft" for s in ships))
+        self.assertTrue(all(s.collection_move_state == "posted" for s in ships))   # the process needs them posted before the slip is settled
         settlement = self.env["pharma.courier.remittance"].sudo().search([("slip_ref", "=", "DEMO-SL-A-1001")]).move_id
         lines = (ships.collection_move_id | settlement).line_ids.filtered(lambda l: l.account_id.code == "199910")
         self.assertEqual(sum(lines.mapped("debit")) - sum(lines.mapped("credit")), 0.0)

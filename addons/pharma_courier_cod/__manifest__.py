@@ -9,7 +9,7 @@
                    "through Odoo's own import screen onto staging lines, validated row by row, then built into documents; every row is "
                    "archived in the immutable raw-event log. No rate is hard-coded: deductions are facts reported by the courier, "
                    "checked against an authorized amount when Finance supplies one.",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Pharma",
     "author": "C2P Consultants",
     "license": "LGPL-3",
@@ -21,6 +21,7 @@
         "views/pharma_shipment_views.xml",
         "views/pharma_remittance_views.xml",
         "views/pharma_statement_views.xml",
+        "views/pharma_flow_views.xml",
         "views/pharma_courier_menus.xml",
         "data/ir_cron_data.xml",
     ],

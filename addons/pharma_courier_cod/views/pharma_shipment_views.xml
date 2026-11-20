@@ -8,7 +8,8 @@
                   decoration-warning="cod_collection_variance &lt; 0 and not cod_is_overdue"
                   decoration-muted="state in ('cancelled', 'returned')">
                 <field name="courier_id"/><field name="tracking_number"/><field name="order_ref"/>
-                <field name="state"/><field name="payment_mode" optional="hide"/>
+                <field name="state" optional="hide"/><field name="flow_stage"/><field name="flow_next"/>
+                <field name="flow_owner" optional="hide"/><field name="payment_mode" optional="hide"/>
                 <field name="date_delivered"/>
                 <field name="cod_declared" sum="Declared" optional="show"/>
                 <field name="cod_collected" sum="Collected"/>
@@ -35,7 +36,11 @@
                     <field name="state" widget="statusbar" statusbar_visible="booked,in_transit,delivered"/>
                 </header>
                 <sheet>
+                    <div class="alert alert-info" role="status" invisible="flow_next == 'none'">
+                        <b>Next step:</b> <field name="flow_next_text" nolabel="1" class="oe_inline"/>
+                    </div>
                     <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <field name="flow_next" invisible="1"/>
                     <group>
                         <group string="Parcel">
                             <field name="courier_id"/><field name="tracking_number"/><field name="order_ref"/>
@@ -49,6 +54,7 @@
                             <field name="cod_remitted"/><field name="cod_deductions"/><field name="cod_net_received"/>
                             <field name="cod_remittance_variance" decoration-danger="cod_remittance_variance &lt; 0"/>
                             <field name="cod_outstanding"/><field name="cod_state"/>
+                            <field name="flow_stage"/><field name="open_findings" decoration-danger="open_findings &gt; 0"/>
                         </group>
                     </group>
                     <group string="Ageing">

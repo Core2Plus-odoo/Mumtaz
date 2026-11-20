@@ -8,12 +8,12 @@
                    "account, with any difference booked to the difference account. Posting stays with the accountant. A posted entry can be withdrawn: Finance asks "
                    "with a reason, Odoo's own reversal is created as a DRAFT, and once an accountant posts it a corrected "
                    "entry can be created.",
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Pharma",
     "author": "C2P Consultants",
     "license": "LGPL-3",
     "depends": ["pharma_courier_cod", "account"],
     "data": ["security/ir.model.access.csv", "views/courier_views.xml", "views/remittance_views.xml", "views/shipment_views.xml",
-             "views/reverse_wizard_views.xml"],
+             "views/reverse_wizard_views.xml", "views/flow_views.xml"],
     "installable": True,
 }
