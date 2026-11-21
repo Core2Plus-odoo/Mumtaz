@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── CRM → Proposals root menu ────────────────────────────────────────── -->
+
+    <menuitem id="menu_mumtaz_proposal_root"
+              name="Proposals"
+              parent="crm.crm_menu_root"
+              sequence="20"
+              groups="mumtaz_proposal.group_proposal_viewer"/>
+
+    <!-- ── CRM → Proposals → All Proposals ──────────────────────────────────── -->
+
+    <menuitem id="menu_mumtaz_proposal_list"
+              name="All Proposals"
+              parent="menu_mumtaz_proposal_root"
+              action="action_mumtaz_proposal"
+              sequence="10"
+              groups="mumtaz_proposal.group_proposal_viewer"/>
+
+    <!-- ── CRM → Proposals → Templates ──────────────────────────────────────── -->
+
+    <menuitem id="menu_mumtaz_proposal_templates"
+              name="Templates"
+              parent="menu_mumtaz_proposal_root"
+              action="action_mumtaz_proposal_template"
+              sequence="20"
+              groups="mumtaz_proposal.group_proposal_manager"/>
+
+</odoo>

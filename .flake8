@@ -13,6 +13,13 @@ extend-ignore = E203, W503, E501, E221, E241, E251, E272, W504, E126, E127, E131
 per-file-ignores =
     __init__.py: F401
     __manifest__.py: B018
+    # Modules brought from the production server on 21 Nov 2026, kept as found.
+    # Formatting debt is tolerated until each is reviewed (REVIEW-05).
+    addons/c2p_master_agent/models/master_agent.py: E225, E701, E702, E401, E302, F841, F401, E128
+    addons/c2p_appointment/controllers/main.py: E225, E701, E702, E401, E302, F841, F401, E128
+    addons/c2p_appointment/models/appointment_type.py: E225, E701, E702, E401, E302, F841, F401, E128
+    addons/c2p_proposal/models/sale_order.py: E128
+    addons/mumtaz_proposal/models/proposal.py: F401
 
 # Generated/vendored/non-product code and Odoo-shell scripts (where `env` is an
 # injected global) are out of scope for the product lint.
