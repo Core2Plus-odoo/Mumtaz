@@ -19,6 +19,7 @@ class StockWarehouse(models.Model):
         """Jewellery pieces on this store's shelves (any internal location
         under the warehouse), by quant."""
         self.ensure_one()
+        # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
         quants = self.env['stock.quant'].sudo().search([
             ('location_id', 'child_of', self.view_location_id.id), ('location_id.usage', '=', 'internal'),
             ('quantity', '>', 0), ('lot_id', '!=', False),
@@ -34,10 +35,12 @@ class StockWarehouse(models.Model):
             rate = self.env['jewellery.gold.rate'].get_current(self.company_id)
         except UserError:
             rate = None
+        # sudo: store summary across stock the user may not read directly; counts and grams only
         Transfer = self.env['jewellery.transfer'].sudo()
         out_t = Transfer.search([('from_warehouse_id', '=', self.id), ('state', '=', 'in_transit')])
         in_t = Transfer.search([('to_warehouse_id', '=', self.id), ('state', '=', 'in_transit')])
         today = fields.Date.context_today(self)
+        # sudo: store summary across stock the user may not read directly; counts and grams only
         recon = self.env['jewellery.gold.reconciliation'].sudo().search(
             [('warehouse_id', '=', self.id), ('date', '=', today)], order='id desc', limit=1)
         return {
@@ -72,6 +75,7 @@ class StockLot(models.Model):
 
     def jewellery_current_location(self):
         self.ensure_one()
+        # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
         quant = self.env['stock.quant'].sudo().search([
             ('lot_id', '=', self.id), ('quantity', '>', 0), ('location_id.usage', '=', 'internal')], limit=1)
         return quant.location_id if quant else None
@@ -84,6 +88,7 @@ class StockLot(models.Model):
     def _jewellery_move(self, lot, source, destination, reference):
         """Move one serial from one internal location to another, done at
         once, as the approval memo does. Ownership and valuation unchanged."""
+        # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
         move = self.env['stock.move'].sudo().create({
             'description_picking': '%s: %s' % (reference, lot.name),
             'product_id': lot.product_id.id, 'product_uom_qty': 1.0, 'product_uom': lot.product_id.uom_id.id,
@@ -93,6 +98,7 @@ class StockLot(models.Model):
         move._action_assign()
         move.move_line_ids.write({'lot_id': lot.id, 'quantity': 1.0})
         if not move.move_line_ids:
+            # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
             self.env['stock.move.line'].sudo().create({
                 'move_id': move.id, 'product_id': lot.product_id.id, 'product_uom_id': lot.product_id.uom_id.id,
                 'lot_id': lot.id, 'quantity': 1.0, 'location_id': source.id, 'location_dest_id': destination.id,

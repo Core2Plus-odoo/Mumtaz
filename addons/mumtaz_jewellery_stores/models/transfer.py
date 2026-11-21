@@ -40,6 +40,7 @@ class Transfer(models.Model):
 
     def _days(self):
         try:
+            # sudo: system parameter; only administrators may read ir.config_parameter
             return max(1, int(self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.transfer_days', 2)))
         except (TypeError, ValueError):
             return 2

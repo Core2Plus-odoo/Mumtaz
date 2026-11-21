@@ -111,6 +111,7 @@ class JewelleryOldGold(models.Model):
         return super().write(values)
 
     def _threshold(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env['ir.config_parameter'].sudo().get_param(
             'mumtaz_jewellery.exchange_approval_threshold')
         return float(param) if param else 0.0

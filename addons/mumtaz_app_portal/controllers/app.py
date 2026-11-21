@@ -52,6 +52,7 @@ class MumtazApp(http.Controller):
         # Tenant profile
         tenant_profile = None
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             tenant_profile = env['mumtaz.sme.profile'].sudo().search(
                 [('company_id', '=', company_id)], limit=1
             )
@@ -61,6 +62,7 @@ class MumtazApp(http.Controller):
         # Active subscription
         subscription = None
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             subscription = env['mumtaz.subscription'].sudo().search(
                 [('company_id', '=', company_id), ('status', '!=', 'cancelled')],
                 order='create_date desc',
@@ -137,6 +139,7 @@ class MumtazApp(http.Controller):
 
         # Revenue this month + outstanding invoices
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Move = env['account.move'].sudo()
             # Posted customer invoices issued this month
             mtd_invoices = Move.search([
@@ -184,6 +187,7 @@ class MumtazApp(http.Controller):
 
         # Cash / bank balance
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             journals = env['account.journal'].sudo().search([
                 ('type', 'in', ['bank', 'cash']),
                 ('company_id', '=', company_id),
@@ -195,6 +199,7 @@ class MumtazApp(http.Controller):
 
         # Open sales orders
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Sale = env['sale.order'].sudo()
             open_sales_count = Sale.search_count([
                 ('state', 'in', ['draft', 'sent', 'sale']),
@@ -205,6 +210,7 @@ class MumtazApp(http.Controller):
 
         # Open purchase orders
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             PO = env['purchase.order'].sudo()
             open_po_count = PO.search_count([
                 ('state', 'in', ['draft', 'sent', 'purchase']),
@@ -222,6 +228,7 @@ class MumtazApp(http.Controller):
 
         # Low-stock alert
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             low_stock_count = env['stock.quant'].sudo().search_count([
                 ('location_id.usage', '=', 'internal'),
                 ('quantity', '<=', 0),
@@ -239,6 +246,7 @@ class MumtazApp(http.Controller):
 
         # Pending timesheets / leave approvals (HR)
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             pending_leaves = env['hr.leave'].sudo().search_count([
                 ('state', '=', 'confirm'),
                 ('company_id', '=', company_id),
@@ -321,6 +329,7 @@ class MumtazApp(http.Controller):
         recent_nurture_logs = []
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Lead = env['crm.lead'].sudo()
             leads_total = Lead.search_count([('type', '=', 'lead')])
             opps_open = Lead.search_count([('type', '=', 'opportunity'), ('probability', '<', 100)])
@@ -330,22 +339,28 @@ class MumtazApp(http.Controller):
             pass
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             ScraperJob = env['lead.scraper.job'].sudo()
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             scraper_source_count = env['lead.scraper.source'].sudo().search_count([('active', '=', True)])
             scraper_job_count = ScraperJob.search_count([])
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             total_scraped_records = env['lead.scraper.record'].sudo().search_count([])
             last_scraper_job = ScraperJob.search([], order='create_date desc', limit=1)
         except Exception:
             pass
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Campaign = env['lead.nurture.campaign'].sudo()
             campaign_count = Campaign.search_count([])
             active_campaigns = Campaign.search([('active', '=', True)], order='create_date desc', limit=5)
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             NLead = env['crm.lead'].sudo()
             nurturing_leads = NLead.search_count([('nurture_stage', '=', 'nurturing')])
             qualified_leads = NLead.search_count([('nurture_stage', '=', 'qualified')])
             converted_leads = NLead.search_count([('nurture_stage', '=', 'converted')])
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             recent_nurture_logs = env['lead.nurture.log'].sudo().search(
                 [], order='timestamp desc', limit=5
             )
@@ -393,10 +408,12 @@ class MumtazApp(http.Controller):
         recent_sessions = []
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             workspace = env['mumtaz.cfo.workspace'].sudo().search(
                 [('company_id', '=', company_id)], limit=1
             )
             if workspace:
+                # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
                 Tx = env['mumtaz.cfo.transaction'].sudo()
                 tx_count = Tx.search_count([('workspace_id', '=', workspace.id)])
                 review_count = Tx.search_count([
@@ -416,9 +433,11 @@ class MumtazApp(http.Controller):
             pass
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             ai_session_count = env['mumtaz.ai.session'].sudo().search_count(
                 [('company_id', '=', company_id)]
             )
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             recent_sessions = env['mumtaz.ai.session'].sudo().search(
                 [('company_id', '=', company_id)],
                 order='create_date desc',
@@ -463,6 +482,7 @@ class MumtazApp(http.Controller):
         product_count = service_count = partnership_count = 0
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Listing = env['mumtaz.marketplace.listing'].sudo()
             total_listings = Listing.search_count([('state', '=', 'published')])
             my_listings = Listing.search_count([('company_id', '=', company_id), ('state', '=', 'published')])
@@ -475,6 +495,7 @@ class MumtazApp(http.Controller):
             pass
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Inquiry = env['mumtaz.marketplace.inquiry'].sudo()
             inquiry_count = Inquiry.search_count([('listing_id.company_id', '=', company_id)])
             new_inquiry_count = Inquiry.search_count([
@@ -489,6 +510,7 @@ class MumtazApp(http.Controller):
             pass
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             categories = env['mumtaz.marketplace.category'].sudo().search(
                 [('active', '=', True)], order='sequence'
             )
@@ -528,6 +550,7 @@ class MumtazApp(http.Controller):
         active_features = []
         locked_features = []
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             all_features = env['mumtaz.feature'].sudo().search([('active', '=', True)])
             sub = ctx.get('subscription')
             if sub and sub.plan_id:

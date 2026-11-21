@@ -111,8 +111,10 @@ class ProjectProjectReport(models.Model):
         # plus any open RAID dependency. Read with sudo because delivery is in
         # another company, and only the reason text is surfaced.
         actions = []
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         delivery = self.sudo().c2p_counterpart_id
         if delivery:
+            # sudo: delivery company read across the counterpart link; counts, dates and stage names only
             tasks = self.env["project.task"].sudo().search(
                 [("project_id", "=", delivery.id), ("waiting_since", "!=", False)])
             for task in tasks:

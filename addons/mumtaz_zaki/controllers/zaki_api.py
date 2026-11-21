@@ -13,6 +13,7 @@ class ZakiApi(http.Controller):
     @http.route("/zaki/api/snapshot", type="jsonrpc", auth="user")
     def snapshot(self, **kw):
         try:
+            # sudo: REVIEW-03: finance snapshot read with sudo for any auth=user session; restrict to accounting users
             return request.env["zaki.connector"].sudo().get_snapshot()
         except Exception:
             _logger.exception("ZAKI snapshot failed for uid=%s company=%s",

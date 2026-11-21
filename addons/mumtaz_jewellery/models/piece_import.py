@@ -84,8 +84,11 @@ class PieceImport(models.Model):
     def _check_rows(self, rows, warehouse=None):
         """Every row judged, nothing written. Returns (results, products_needed):
         results is a list per row with status new / exists / error."""
+        # sudo: existence checks and writes for the import; apply() refuses anyone but a jewellery manager
         Lot = self.env['stock.lot'].sudo()
+        # sudo: existence checks and writes for the import; apply() refuses anyone but a jewellery manager
         Template = self.env['product.template'].sudo()
+        # sudo: existence checks and writes for the import; apply() refuses anyone but a jewellery manager
         Warehouse = self.env['stock.warehouse'].sudo()
         karats = dict(KARATS)
         making_types = dict(MAKING_TYPES)
@@ -182,8 +185,11 @@ class PieceImport(models.Model):
         summary = self._summary(results)
         if summary['errors'] and not skip_errors:
             raise UserError(_('%s row(s) have a problem; fix them or import with skip_errors.') % summary['errors'])
+        # sudo: existence checks and writes for the import; apply() refuses anyone but a jewellery manager
         Template = self.env['product.template'].sudo()
+        # sudo: existence checks and writes for the import; apply() refuses anyone but a jewellery manager
         Lot = self.env['stock.lot'].sudo()
+        # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
         Quant = self.env['stock.quant'].sudo().with_context(inventory_mode=True)
         storable = 'is_storable' in Template._fields
         made = {}

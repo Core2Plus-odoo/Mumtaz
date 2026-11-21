@@ -64,6 +64,7 @@ class KioskRequest(models.Model):
     # -- the public side ---------------------------------------------------
     @api.model
     def _cap(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.kiosk_daily_cap')
         try:
             return max(1, int(param))
@@ -82,18 +83,22 @@ class KioskRequest(models.Model):
         phone = _clean_phone(phone)
         if len(client_name) < 2 or len(phone) < 7:
             raise UserError(_('A name and a phone number are needed so a colleague can call you back.'))
+        # sudo: public kiosk door: narrow read keyed by serial, request created after validation and a per-phone cap; no internal id leaves
         lot = self.env['stock.lot'].sudo().search([('name', '=', (serial or '').strip()), ('product_id.is_jewellery', '=', True)], limit=1)
+        # sudo: public kiosk door: narrow read keyed by serial, request created after validation and a per-phone cap; no internal id leaves
         if not lot or not self.env['jewellery.tray'].sudo()._lot_public(lot):
             raise UserError(_('That piece is not on the shelf any more. Ask about another.'))
         if kind == 'delivery' and (not address or len(address.strip()) < 8 or slot not in dict(SLOTS)):
             raise UserError(_('Delivery needs an address and a morning or afternoon slot.'))
         since = fields.Datetime.now() - timedelta(days=1)
+        # sudo: public kiosk door: narrow read keyed by serial, request created after validation and a per-phone cap; no internal id leaves
         if self.sudo().search_count([('phone', '=', phone), ('create_date', '>=', since)]) >= self._cap():
             raise UserError(_('That number has already placed several requests today. A colleague will call you.'))
         try:
             price = float(lot.get_price_breakdown()['total'])
         except Exception:  # noqa: BLE001 -- the price is for the record only
             price = 0.0
+        # sudo: public kiosk door: narrow read keyed by serial, request created after validation and a per-phone cap; no internal id leaves
         rec = self.sudo().create({
             'kind': kind, 'lot_id': lot.id, 'price_quoted': price, 'client_name': client_name, 'phone': phone,
             'preferred_time': (preferred_time or '')[:120] or False, 'address': (address or '')[:400] or False,

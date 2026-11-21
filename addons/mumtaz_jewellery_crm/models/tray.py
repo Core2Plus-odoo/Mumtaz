@@ -85,9 +85,11 @@ class JewelleryTray(models.Model):
         """On the shelf, not on another live order, not out on approval."""
         if lot.product_qty <= 0:
             return False
+        # sudo: eligibility ranking reads sales, memos and quants the salesperson may not open; serials and counts only
         Line = self.env['sale.order.line'].sudo()
         if Line.search_count([('jewellery_lot_id', '=', lot.id), ('order_id.state', 'in', ('sale', 'done'))]):
             return False
+        # sudo: eligibility ranking reads sales, memos and quants the salesperson may not open; serials and counts only
         Memo = self.env['jewellery.approval.memo'].sudo()
         if Memo.search_count([('lot_ids', 'in', lot.id), ('state', '=', 'out')]):
             return False
@@ -100,6 +102,7 @@ class JewelleryTray(models.Model):
 
     @api.model
     def _eligible_lots(self):
+        # sudo: eligibility ranking reads sales, memos and quants the salesperson may not open; serials and counts only
         lots = self.env['stock.quant'].sudo().search([
             ('location_id.usage', '=', 'internal'), ('quantity', '>', 0), ('lot_id', '!=', False),
             ('lot_id.product_id.product_tmpl_id.is_jewellery', '=', True),
@@ -135,6 +138,7 @@ class JewelleryTray(models.Model):
                 'occasions': [t.strip() for t in (lot.occasion_tags or '').split(',') if t.strip()],
             })
         partner = self.partner_id
+        # sudo: eligibility ranking reads sales, memos and quants the salesperson may not open; serials and counts only
         bought = self.env['sale.order.line'].sudo().search([
             ('order_id.partner_id', '=', partner.id), ('order_id.state', 'in', ('sale', 'done')),
             ('jewellery_lot_id', '!=', False)]).mapped('jewellery_lot_id').ids
@@ -238,6 +242,7 @@ class JewelleryTray(models.Model):
         self.action_refresh_eligibility()
         if not self.line_ids:
             raise UserError(_('Nothing on the tray is available any more.'))
+        # sudo: system parameter; only administrators may read ir.config_parameter
         days = self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.tray_link_days')
         days = int(days) if days else 7
         token = secrets.token_urlsafe(24)
@@ -265,6 +270,7 @@ class JewelleryTray(models.Model):
         """The tray behind a live link, or None. Sudo: the client has no user."""
         if not token or len(token) > 128:
             return None
+        # sudo: client link: tray resolved by token digest only; the public user writes her like/ask on her own tray lines
         tray = self.sudo().search([('token_digest', '=', _digest(token))], limit=1)
         if not tray or not tray.link_live:
             return None
@@ -274,7 +280,9 @@ class JewelleryTray(models.Model):
         """What the client's phone gets: pieces and prices, nothing about her,
         no internal ids. Availability is re-checked on every open."""
         self.ensure_one()
+        # sudo: client link: tray resolved by token digest only; the public user writes her like/ask on her own tray lines
         self.sudo().action_refresh_eligibility()
+        # sudo: client link: tray resolved by token digest only; the public user writes her like/ask on her own tray lines
         self.sudo().link_opened_at = fields.Datetime.now()
         company = self.company_id if 'company_id' in self._fields else self.env.company
         return {
@@ -309,17 +317,20 @@ class JewelleryTray(models.Model):
             vals['feedback'] = 'none'
         if kind == 'question':
             vals['question'] = (question or '').strip()[:500]
+        # sudo: client link: tray resolved by token digest only; the public user writes her like/ask on her own tray lines
         line.sudo().write(vals)
         if self.lead_id:
             body = _('Client feedback on %(piece)s: %(kind)s %(q)s',
                      piece=line.lot_id.name, kind=kind,
                      q=('— ' + vals['question']) if vals.get('question') else '')
+            # sudo: mail record written by the business action on the user's behalf
             self.lead_id.sudo().message_post(body=body)
         return True
 
     def _public_request_viewing(self, preferred=None, note=None):
         """A request is not a reservation: it opens an activity for staff."""
         self.ensure_one()
+        # sudo: client link: tray resolved by token digest only; the public user writes her like/ask on her own tray lines
         tray = self.sudo()
         tray.write({
             'state': 'viewing',

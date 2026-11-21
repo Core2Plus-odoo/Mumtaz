@@ -194,6 +194,7 @@ class ProjectProject(models.Model):
         self.ensure_one()
         if self.c2p_layer != "portfolio":
             return self.browse()
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         return self.sudo().c2p_counterpart_id
 
     def _c2p_milestones(self):
@@ -278,6 +279,7 @@ class ProjectProject(models.Model):
         """Aggregate the delivery side. Reads with sudo because delivery is in
         another company, and returns only counts and a timestamp."""
         today = fields.Date.context_today(self)
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         Task = self.env["project.task"].sudo()
         for project in self:
             delivery = project._c2p_delivery_project() if project.id else project.browse()
@@ -301,6 +303,7 @@ class ProjectProject(models.Model):
 
     def _c2p_thresholds(self):
         """Health thresholds from Settings, falling back to the defaults."""
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env["ir.config_parameter"].sudo()
         out = {}
         for key, default in DEFAULT_THRESHOLDS.items():
@@ -363,6 +366,7 @@ class ProjectProject(models.Model):
             # Read commercials with sudo: the health of a project is visible to
             # the Delivery Lead even though the figures behind it are not, so
             # the reason text deliberately states no amounts.
+            # sudo: commercials read for the stored margin; the fields themselves carry groups=
             money = project.sudo()
             if money.commercials_missing:
                 amber.append(_("Commercials are missing."))
@@ -391,6 +395,7 @@ class ProjectProject(models.Model):
         recomputation. Called from the delivery side when a task changes in a
         way the portfolio reports on (stage, blocker age, deadline)."""
         portfolios = self.browse()
+        # sudo: delivery company read across the counterpart link; only marks fields for recomputation
         for project in self.sudo():
             portfolio = project.c2p_counterpart_id if project.c2p_layer == "delivery" else project
             if portfolio and portfolio.c2p_layer == "portfolio":
@@ -409,6 +414,7 @@ class ProjectProject(models.Model):
         if not delivery:
             return 0
         today = fields.Date.context_today(self)
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         tasks = self.env["project.task"].sudo().search(
             [("project_id", "=", delivery.id), ("waiting_since", "!=", False)])
         ages = [(today - t.waiting_since).days for t in tasks
@@ -435,11 +441,13 @@ class ProjectProject(models.Model):
         """
         changed = 0
         History = self.env["c2p.milestone.history"]
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         Task = self.env["project.task"].sudo()
 
         for project in self:
             portfolio = project
             if project.c2p_layer == "delivery":
+                # sudo: delivery company read across the counterpart link; counts, dates and stage names only
                 portfolio = project.sudo().c2p_counterpart_id
             if not portfolio or portfolio.c2p_layer != "portfolio":
                 continue
@@ -447,6 +455,7 @@ class ProjectProject(models.Model):
             for milestone in portfolio._c2p_milestones():
                 if milestone.sync_locked or not milestone.delivery_milestone_id:
                     continue
+                # sudo: delivery company read across the counterpart link; counts, dates and stage names only
                 dm = milestone.delivery_milestone_id.sudo()
                 tasks = Task.search([("milestone_id", "=", dm.id)])
                 counts = {
@@ -529,6 +538,7 @@ class ProjectProject(models.Model):
         error — the count on the button is the aggregate they are entitled to.
         """
         self.ensure_one()
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         delivery = self.sudo().c2p_counterpart_id
         return {
             "type": "ir.actions.act_window",
@@ -563,6 +573,7 @@ class ProjectProject(models.Model):
 
     def action_c2p_open_counterpart(self):
         self.ensure_one()
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         counterpart = self.sudo().c2p_counterpart_id
         if not counterpart:
             raise UserError(_("This project has no counterpart linked."))

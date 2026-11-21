@@ -128,11 +128,13 @@ class MumtazFeatureAccessService(models.AbstractModel):
         company_id = company.id if hasattr(company, "id") else int(company)
 
         if "mumtaz.core.settings" in self.env:
+            # sudo: tenant resolved from platform settings for the entitlement check
             settings = self.env["mumtaz.core.settings"].sudo().search(
                 [("company_id", "=", company_id), ("active", "=", True)],
                 limit=1,
             )
             if settings and settings.tenant_code:
+                # sudo: tenant resolved from platform settings for the entitlement check
                 tenant = self.env["mumtaz.tenant"].sudo().search([("code", "=", settings.tenant_code)], limit=1)
                 if tenant:
                     return tenant

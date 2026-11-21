@@ -31,6 +31,7 @@ class MumtazPlatformController(http.Controller):
 
         settings = (
             request.env["mumtaz.core.settings"]
+            # sudo: platform token authenticates the call (auth=none); settings singleton
             .sudo()
             .search([("platform_token", "=", token), ("active", "=", True)], limit=1)
         )
@@ -54,6 +55,7 @@ class MumtazPlatformController(http.Controller):
 
         try:
             settings._apply_platform_credentials(payload)
+            # sudo: platform token authenticates the call (auth=none); settings singleton
             settings.sudo().write({"platform_last_sync": fields.Datetime.now()})
             _logger.info(
                 "push-credentials: credentials applied for tenant %s from %s",
