@@ -668,6 +668,14 @@ code path. `faizy_product_data.xml`'s own comment already said as much ("orders 
 accounting at all today") about the sale-side products it pre-built for exactly this. Recorded in
 FIT_GAP_REGISTER.md as the next candidate, pending its own explicit scoping decision.
 
+## CRM lead fields captured from live (20 Nov 2026)
+
+While deploying `faizy_ai` on 3 Nov 2026 the server's working tree refused the checkout because of local, uncommitted changes in `faizy_core`: a dependency on the standard `crm` app, a `crm.lead` extension (`models/crm_lead.py`) and a "Faizy" tab on the lead form (`views/crm_lead_views.xml`). They had been added by hand on the server and existed in no branch. They were stashed (`server-local-before-ai-team-2026-11-03`), re-applied on top of the new code so the upgrade could run, and committed to the repo in PR #139 byte-for-byte, so the repository matches production.
+
+This contradicts FIT_GAP_REGISTER row CRM-01 ("Out of scope"). The register row is updated to say so; **whether CRM stays is the product owner's decision and is not made here.** Also open: the Plan interest field carries hard-coded AED amounts (Lite 26.50, Standard 66.20, Family Pro 119.20) that were not checked against the published plan prices; the owner said plan prices will change later, so those labels should be removed or made to read from the plan table.
+
+Process note: this is the second time a hand edit on the server blocked a deploy. Changes to `/opt/faizy/src` should be made in the repo and pulled, not edited in place.
+
 
 ## 15. Document vault: portal customers were able to read every family's documents — closed
 
