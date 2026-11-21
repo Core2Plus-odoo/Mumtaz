@@ -17,13 +17,13 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   /* surfaces */
-  --paper:#F7F3EC; --paper2:#F0EAE0; --paper3:#E2D9CB; --surface:#FFFFFF;
+  --paper:#F4F7F5; --paper2:#EAF0EC; --paper3:#D9E3DD; --surface:#FFFFFF;
   /* ink */
-  --ink:#14202B; --ink2:#2D3B4A; --ink3:#5E6B7A; --ink4:#8A96A3;
+  --ink:#0B1F2A; --ink2:#2A3B45; --ink3:#5C6E76; --ink4:#8A9AA2;
   /* primary: indigo */
   --gold:#0F6B55; --gold2:#168A6E; --gold3:#C4A464; --gold-bg:#E6F2EE;
   --gold-border:#BFD9CF; --gold-dark:#0B4F3F;
@@ -34,8 +34,8 @@
   --coral:#B42318; --coral2:#D64A3C; --coral-bg:#FDECEA; --coral-border:#F6CFC9;
   /* chrome */
   --rail:#111826; --rail2:#1B2638;
-  --display:'Cormorant Garamond',Georgia,system-ui,-apple-system,Segoe UI,sans-serif;
-  --body:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+  --display:'Space Grotesk','Inter',system-ui,-apple-system,Segoe UI,sans-serif;
+  --body:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;
   --r:10px; --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
 }
 *{box-sizing:border-box}
@@ -55,14 +55,14 @@ button{font-family:inherit;cursor:pointer}
 .mk{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--gold);color:#fff;font-family:var(--display);font-size:1rem}
 .brandrow b{color:#fff;font-size:.98rem;display:block;line-height:1.2}
 .brandrow small{font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:#7D8B9C}
-.railsec{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#5E6B7A;padding:14px 12px 6px}
+.railsec{font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#5C6E76;padding:14px 12px 6px}
 .navb{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:#C9D2DC;padding:9px 12px;border-radius:9px;font-size:.9rem;font-weight:500;text-align:left}
 .navb:hover{background:rgba(255,255,255,.06);color:#fff}
 .navb.on{background:rgba(240,204,120,.13);color:#fff;font-weight:600}
 .navb.on svg{stroke:var(--gold3)}
 .navb svg{width:17px;height:17px;fill:none;stroke:#8E9CAC;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .navb .pill{margin-left:auto;background:var(--coral);color:#fff;font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px}
-.railfoot{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.08);font-size:.74rem;color:#5E6B7A}
+.railfoot{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,.08);font-size:.74rem;color:#5C6E76}
 
 /* top bar */
 .main{display:flex;flex-direction:column;min-width:0}
@@ -127,7 +127,7 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .bar i{display:block;height:100%;border-radius:99px;background:var(--teal2)}
 .gal{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
 .pc{border:1px solid var(--paper3);border-radius:11px;overflow:hidden;background:var(--paper2)}
-.pc .im{height:74px;display:grid;place-items:center;background:linear-gradient(160deg,#CBD5E1,#8A96A3);}
+.pc .im{height:74px;display:grid;place-items:center;background:linear-gradient(160deg,#CBD5E1,#8A9AA2);}
 .pc .im svg{width:30px;height:30px;stroke:rgba(255,255,255,.92);fill:none;stroke-width:1.5}
 .pc .lb{padding:7px 9px;background:var(--surface)}
 .pc .lb b{display:block;font-size:.76rem}
@@ -160,10 +160,10 @@ td{padding:11px 18px;border-top:1px solid var(--paper3)}
 .m-ai{align-self:flex-start;background:var(--pri-bg,var(--gold-bg));border:1px solid var(--gold-border);border-bottom-left-radius:4px}
 .m-ai .by{display:flex;align-items:center;gap:6px;font-size:.67rem;letter-spacing:.07em;text-transform:uppercase;color:var(--gold-dark);font-weight:700;margin-bottom:5px}
 .m-ai .by svg{width:13px;height:13px;stroke:var(--gold-dark);fill:none;stroke-width:2}
-.m-me{align-self:flex-end;background:var(--ink);color:#F0EAE0;border-bottom-right-radius:4px}
+.m-me{align-self:flex-end;background:var(--ink);color:#EAF0EC;border-bottom-right-radius:4px}
 .pcards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
 .pcard{background:var(--surface);border:1px solid var(--paper3);border-radius:10px;overflow:hidden}
-.pcard .im{height:58px;background:linear-gradient(160deg,#CBD5E1,#8A96A3);display:grid;place-items:center}
+.pcard .im{height:58px;background:linear-gradient(160deg,#CBD5E1,#8A9AA2);display:grid;place-items:center}
 .pcard .im svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.6}
 .pcard .lb{padding:7px 9px}
 .pcard .lb b{display:block;font-size:.76rem}
@@ -467,7 +467,7 @@ table{font-size:.83rem}
 
 /* vibrance: saturated primaries, no flat fills on the things you look at */
 .b-gold{background:linear-gradient(135deg,#6366F1,#0F6B55);border-color:transparent}
-.b-dark{background:linear-gradient(135deg,#1E2638,#14202B)}
+.b-dark{background:linear-gradient(135deg,#1E2638,#0B1F2A)}
 .mk{background:linear-gradient(140deg,var(--a1),var(--gold-dark))}
 .ava{background:linear-gradient(140deg,var(--a1),var(--gold-dark))}
 .who{background:linear-gradient(140deg,var(--a2),var(--teal))}

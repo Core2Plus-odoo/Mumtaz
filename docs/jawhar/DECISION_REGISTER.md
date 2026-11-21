@@ -7,7 +7,7 @@ Proposed, Blocked.
 | ID | Decision | Evidence / reasoning | Status · owner |
 | --- | --- | --- | --- |
 | J-01 | Readiness vocabulary on every surface: Built & tested · Device test pending · Specified only · In progress · Planned (mapping to the register's six statuses) | stale labels were the top credibility finding | Taken (this PR) |
-| J-02 | Design system v2 "Vibrant Luxury Enterprise" with the directive's palette; site first, then the app | audit W7–W8 | Taken (site #179, app Phase 2b) |
+| J-02 | Design system: v2 "Vibrant Luxury Enterprise" (site #179, app #181); **revised 21 Nov to v2.1 "Vibrant Enterprise"** for the public site on the owner's request, matching the Mumtaz Digital website (navy/emerald, lime/teal, Space Grotesk/Inter), gold kept as the jewellery accent | owner | Taken · app palette pass to follow |
 | J-03 | Public site stays `noindex` on the staging domain; index only on the production domain | no production domain yet | Taken · revisit with J-07 |
 | J-04 | Provisioning and white-label proven on a disposable host before any tenant | real provisioner NOT VERIFIED | Proposed · needs a host |
 | J-05 | Prices and editions | placeholders on the site | Blocked · owner |

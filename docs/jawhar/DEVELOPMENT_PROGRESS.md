@@ -52,3 +52,13 @@ full page, home mobile, form success state, sub-page contact sheet).
 **DECISIONS / BLOCKERS.** None new. Density on Today and empty states move to Phase 3 with the command centre.
 
 **NEXT ACTION.** Human review and merge; staging promotion (user); then Phase 2c (Arabic site, module pages) or Phase 3 (command centre) on your call.
+
+## 2026-11-21 — Public site v2.1: enterprise look to match the Mumtaz Digital website
+
+**TASK.** Owner request: give the Jawhar website the same bold enterprise look as the Mumtaz Digital site.
+
+**IMPLEMENTED.** `website/jewel/site/jawhar.css` v2.1 tokens (navy bands, cool light ground, lime/teal highlights, gold accent kept), Space Grotesk + Inter; homepage hero and demo section as navy bands with lime CTAs, dark icon tiles, navy table heads; the six sub-pages take the same fonts and ground. Content, readiness labels and the form unchanged.
+
+**VERIFIED.** All seven pages at 1440 and 390 px (home also dark): 0 errors, 0 horizontal scroll, 0 failed requests; form success/error paths against a mocked server; link checker clean. Screenshots `docs/jawhar/screenshots/home-v21-*.jpg`.
+
+**NEXT ACTION.** Merge; promote staging with the usual command; app palette pass to v2.1 on request.
