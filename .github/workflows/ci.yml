@@ -197,6 +197,24 @@ jobs:
         shell: python
 
   # ────────────────────────────────────────────────────────────────────
+  # 5b. Module registry and layering
+  # Every module is classified into a layer (registry/classification.json);
+  # a lower layer may not depend on a higher one; registry.yaml is current.
+  # ────────────────────────────────────────────────────────────────────
+  module-registry:
+    name: Module Registry and Layering
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Registry is current and layering holds
+        run: python3 scripts/module_registry.py --check
+
+  # ────────────────────────────────────────────────────────────────────
   # 6. Secrets scanning — TruffleHog
   # Detects accidentally committed secrets, API keys, and credentials.
   # ────────────────────────────────────────────────────────────────────

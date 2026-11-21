@@ -1,10 +1,17 @@
 # Mumtaz repo — working knowledge
 
-Two products live here:
+**Start with `REPO_MAP.md`** — it says what every top-level folder is, which
+copies are duplicates, and what is still undecided. `registry.yaml` lists every
+Odoo module with its layer; `python3 scripts/module_registry.py --check` runs in
+CI and fails on an unclassified module or a new cross-layer dependency.
+
+Several products live here (see `REPO_MAP.md` for all of them). The two with
+the most activity:
 
 - **`c2p-delivery-system/`** — the C2P Agency OS: an AI-run Odoo delivery agency
-  (FastAPI backend + single-file console). This is where most work happens.
-- **`addons/`** — Odoo custom addons for the Mumtaz marketplace (separate product).
+  (FastAPI backend + single-file console).
+- **`addons/`** — 53 Odoo 19 Community addons: the Mumtaz SaaS platform, the
+  Jawhar jewellery edition and C2P internal modules.
 
 Production: Hostinger VPS `187.77.128.199`, repo checked out at `/opt/mumtaz`,
 console at `https://delivery.mumtaz.digital`. **Deploys go to `main`** — the VPS
