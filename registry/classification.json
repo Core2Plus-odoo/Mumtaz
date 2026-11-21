@@ -54,6 +54,7 @@
     "mumtaz_jewellery_sale": {"layer": "edition", "disposition": "keep", "note": "Jawhar."},
     "mumtaz_jewellery_stores": {"layer": "edition", "disposition": "keep", "note": "Jawhar."},
     "mumtaz_jewellery_vip": {"layer": "edition", "disposition": "keep", "note": "Jawhar."},
+    "mumtaz_jewellery_website": {"layer": "edition", "disposition": "keep", "note": "Jawhar public-site door: demo requests into the CRM."},
 
     "c2p_command_center": {"layer": "internal", "disposition": "keep", "note": "C2P group internal."},
     "c2p_project_tracker": {"layer": "internal", "disposition": "keep", "note": "C2P group internal."},

@@ -25,10 +25,10 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F5F7F6; --paper2:#EBEFEE; --paper3:#D9E0DD; --surface:#FFFFFF;
+  --paper:#F7F3EC; --paper2:#F0EAE0; --paper3:#E2D9CB; --surface:#FFFFFF;
   --ink:#0E1512; --ink2:#2B3B35; --ink3:#5F7570; --ink4:#90A39D;
   /* emerald primary, charcoal ground (Agent Universe identity) */
   --em:#0C6B4F; --em2:#12916B; --em3:#6FCFAE; --em-bg:#E8F5F0;
@@ -41,7 +41,7 @@
   --shadow:0 1px 2px rgba(14,21,18,.05),0 1px 3px rgba(14,21,18,.06);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#0A100E; --paper2:#121A17; --paper3:#223029; --surface:#121A17;
+  --paper:#0B1B2B; --paper2:#122638; --paper3:#223A4F; --surface:#122638;
   --ink:#EFF3F1; --ink2:#D3DDD9; --ink3:#92A69F; --ink4:#64776F;
   --em-bg:#0D2B22; --em-border:#1D4B3B; --em:#6FCFAE; --em2:#8EDCC2;
   --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
@@ -49,7 +49,7 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
 }}
 :root[data-theme="dark"]{
-  --paper:#0A100E; --paper2:#121A17; --paper3:#223029; --surface:#121A17;
+  --paper:#0B1B2B; --paper2:#122638; --paper3:#223A4F; --surface:#122638;
   --ink:#EFF3F1; --ink2:#D3DDD9; --ink3:#92A69F; --ink4:#64776F;
   --em-bg:#0D2B22; --em-border:#1D4B3B; --em:#6FCFAE; --em2:#8EDCC2;
   --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
@@ -226,7 +226,7 @@ footer a{color:var(--em)}
     box-shadow:0 10px 30px rgba(16,21,28,.12);padding:6px;margin:0}
   .navtog:checked ~ .links a{padding:13px 14px;border-radius:8px;font-size:1rem;
     min-height:44px;display:flex;align-items:center}
-  .navtog:checked ~ .links .m-cta{margin-top:4px;background:var(--gold,#3D56C4);
+  .navtog:checked ~ .links .m-cta{margin-top:4px;background:var(--gold,#0F6B55);
     color:#fff;justify-content:center;font-weight:600}
   .nav .sp,.nav .spacer{display:none}
 }
@@ -245,12 +245,14 @@ footer a{color:var(--em)}
    smooth and the measurement lands mid-flight. It has to wait for scrollY to
    settle. Mine did not, at first. */
 html{scroll-padding-top:84px}
+/* design system v2: serif display face (site/jawhar.css) */
+h1,h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;letter-spacing:-.01em;line-height:1.12}
 </style>
 </head>
 <body>
 
 <div class="ribbon">
-  Zayan and Layla run inside the product (brief, trays, drafts, approvals inbox). Zayan in the corner is the product guide; Rayan, Amara and Noor are still a plan.
+  Zayan and Layla run inside the product (brief, trays, drafts, approvals inbox). Zayan in the corner is the product guide; Noor runs the client kiosk (voice and try-on, awaiting a device test); Rayan and Amara are specified, not built.
   <a href="../index.html">Back to Jawhar</a>
 </div>
 
@@ -437,7 +439,7 @@ html{scroll-padding-top:84px}
             conversation — nobody has set them yet. Per store where the agent
             works a counter, per company where it works the books.
           </p>
-          <p style="margin-top:12px"><a class="btn btn-em" style="width:100%;text-align:center" href="../index.html#contact">Talk about a pilot</a></p>
+          <p style="margin-top:12px"><a class="btn btn-em" style="width:100%;text-align:center" href="../index.html#demo">Talk about a pilot</a></p>
         </div>
       </aside>
     </div>
@@ -561,7 +563,7 @@ html{scroll-padding-top:84px}
         <div class="say">
           <span>"How does the two-person rate approval work?"</span>
           <span>"ما الفرق بين عميل Private و Royal؟"</span>
-          <span>"What runs offline at the counter?"</span>
+          <span>"Why is the counter online only?"</span>
           <span>"ما الذي لم يُبنَ بعد؟"</span>
         </div>
       </div>
@@ -581,7 +583,7 @@ html{scroll-padding-top:84px}
       <table>
         <thead><tr><th>Capability</th><th style="width:150px">Status</th></tr></thead>
         <tbody>
-          <tr><td><b>Gold rate maker-checker, pricing engine, piece-level stock, old-gold exchange</b><br><span class="muted tiny">The ground the agents stand on. 73 automated tests on a clean database.</span></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
+          <tr><td><b>Gold rate maker-checker, pricing engine, piece-level stock, old-gold exchange</b><br><span class="muted tiny">The ground the agents stand on. 266 automated tests on a clean database (21 Nov 2026).</span></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
           <tr><td><b>Client tiers, Private/Royal record restriction, consent per channel</b></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
           <tr><td><b>Explainable next-piece ranking</b><br><span class="muted tiny">Deterministic, reasons stored. Not a model.</span></td><td><span class="tag t-built">Built &amp; tested</span></td></tr>
           <tr><td><b>Zayan, as the product guide on this page</b><br><span class="muted tiny">ElevenLabs conversational agent, English and Arabic, no business data.</span></td><td><span class="tag t-built">Live here</span></td></tr>
