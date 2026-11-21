@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | Jawhar web app (`apps/jawhar-web`) | React, one `styles.css` with tokens (`--k-teal`, `--k-gold`, paper tones), EN/AR with RTL, numerals localised | Calm enterprise screens: TopBar with the approved rate, cards, worklists, tags (`ok`/`warn`/`bad`), notices, tables with `.num`; kiosk is a separate portrait teal-and-gold theme | 26 pages, every screen walked headlessly in both languages |
 | Odoo web client (platform, C2P) | standard views + `mumtaz_theme` rebrand | Odoo default | no custom OWL widgets found |
-| Portals and sites (`apps/portal`, `marketplace`, `website`, `zaki`) | static HTML/JS | per site | untested |
+| Portals and sites (under `sites/`: portal, marketplace, marketing site, ZAKI) | static HTML/JS | per site | untested |
 | C2P console | single-file HTML, layered CSS passes | teal theme v4/v5 | see root `CLAUDE.md` |
 
 ## 9.2 Design system rules [PROPOSED, adopting the Jawhar conventions]

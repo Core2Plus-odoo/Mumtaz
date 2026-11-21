@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Deploy the Mumtaz portal (apps/portal) to /var/www/app.mumtaz.digital.
+# Deploy the Mumtaz portal (sites/app.mumtaz.digital/portal) to /var/www/app.mumtaz.digital.
 #
 # Usage on the VPS:
 #   cd /home/user/Mumtaz
 #   git pull origin claude/odoo-architecture-review-ujm0W
-#   sudo bash apps/portal/deploy.sh
+#   sudo bash sites/app.mumtaz.digital/portal/deploy.sh
 #
 # What this does:
 #   1. Syncs portal HTML/CSS/JS → /var/www/app.mumtaz.digital

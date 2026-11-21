@@ -11,7 +11,7 @@
 #
 # Usage:
 #   cd /opt/Mumtaz
-#   sudo bash apps/platform/setup_master_admin.sh
+#   sudo bash ops/platform-routing/setup_master_admin.sh
 #
 # Options:
 #   ADMIN_EMAIL=other@example.com sudo bash ... — use a different email

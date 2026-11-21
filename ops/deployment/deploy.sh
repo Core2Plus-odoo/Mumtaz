@@ -33,13 +33,13 @@ mkdir -p /var/www/zaki.mumtaz.digital
 mkdir -p /var/www/marketplace.mumtaz.digital
 mkdir -p /var/www/mumtaz.digital
 
-cp $REPO/apps/portal/index.html               /var/www/app.mumtaz.digital/index.html
-cp $REPO/apps/zaki/static/index.html          /var/www/zaki.mumtaz.digital/index.html
-cp $REPO/apps/marketplace/index.html          /var/www/marketplace.mumtaz.digital/index.html
-cp $REPO/apps/marketplace/vendor.html         /var/www/marketplace.mumtaz.digital/vendor.html
+cp $REPO/sites/app.mumtaz.digital/portal/index.html               /var/www/app.mumtaz.digital/index.html
+cp $REPO/sites/zaki.mumtaz.digital/static/index.html          /var/www/zaki.mumtaz.digital/index.html
+cp $REPO/sites/marketplace.mumtaz.digital/storefront/index.html          /var/www/marketplace.mumtaz.digital/index.html
+cp $REPO/sites/marketplace.mumtaz.digital/storefront/vendor.html         /var/www/marketplace.mumtaz.digital/vendor.html
 
-if [ -d "$REPO/apps/website" ]; then
-  cp -r $REPO/apps/website/. /var/www/mumtaz.digital/
+if [ -d "$REPO/sites/mumtaz.digital/site" ]; then
+  cp -r $REPO/sites/mumtaz.digital/site/. /var/www/mumtaz.digital/
 fi
 
 echo "      ✓ portal    → app.mumtaz.digital"

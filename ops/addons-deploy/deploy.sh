@@ -5,7 +5,7 @@
 # Usage on VPS:
 #   cd /opt/Mumtaz
 #   git pull origin claude/odoo-architecture-review-ujm0W
-#   sudo bash apps/addons/deploy.sh
+#   sudo bash ops/addons-deploy/deploy.sh
 #
 # What this does:
 #   1. Rsyncs addons/ → /opt/custom_addons/
