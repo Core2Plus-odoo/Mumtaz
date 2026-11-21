@@ -80,6 +80,7 @@ fails the lint job on any unlabelled call. Reasons fall into these classes:
 | **REVIEW-01** | `mumtaz_app_portal` and `mumtaz_portal_routing` dashboards read business data with `sudo()` on routes open to any `auth='user'` session, portal users included | **Closed 21 Nov 2026**: portal users redirected to `/my`; 34 `sudo()` calls dropped so business data is read as the user; control-plane rows keep `sudo()`; 5 tests |
 | **REVIEW-03** | `mumtaz_zaki` `/zaki/api/snapshot` returned a finance snapshot to any `auth='user'` session | **Closed 21 Nov 2026**: portal users and users without an accounting group are refused before any query; 2 tests |
 | **REVIEW-04** | `c2p_command_center` aggregates across companies with `sudo()` | **Closed by evidence 21 Nov 2026**: `get_data()` checks the command-centre group on every call, the menu is restricted to it; 2 tests |
+| **REVIEW-05** | Modules brought from the production server on 21 Nov 2026 (`c2p_appointment`, `c2p_master_agent`) carry 20 `sudo()` calls with no recorded reason; `c2p_appointment` creates leads and calendar events from a public website route; `c2p_master_agent` calls `urlopen` on a URL read from a system parameter without checking its scheme | **Open.** Each call needs a reason or removal; the public booking route needs a cross-company and rate-limit review; validate the Ollama URL scheme |
 
 Sites per module:
 

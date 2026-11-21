@@ -32,3 +32,23 @@ Chronological. Each entry follows the mandatory report format.
 
 Screenshots for this slice: `docs/jawhar/screenshots/` (home desktop fold and
 full page, home mobile, form success state, sub-page contact sheet).
+
+## 2026-11-21 — Phase 2b: app palette migration, dark theme, kiosk unified
+
+**TASK.** Bring the Jawhar React app onto design system v2 without changing behaviour.
+
+**REPOSITORY STATUS.** App on v1 indigo tokens; kiosk on its own teal/gold set; no dark theme; display face sans everywhere.
+
+**PROCESS IMPACT.** None: presentation only. No API, model or data change.
+
+**PLAN.** Repoint the v1 token names to v2 values (components untouched) → add `[data-theme="dark"]` set → alias the kiosk `--k-*` tokens into the system, keeping deep emerald for white-on-colour surfaces → serif page title and wordmark → focus ring → theme toggle in the rail footer, remembered per browser and applied before first paint → verify in EN/AR × light/dark.
+
+**IMPLEMENTED.** `apps/jawhar-web/src/styles.css` (token block, dark set, kiosk aliases, literals replaced by tokens, amber text token for dark readability), `index.html` (Cormorant Garamond), `components/Shell.tsx` (theme state and toggle), `lib/i18n.ts` (two keys, EN/AR), `main.tsx` (boot-time theme). Docs: `DESIGN_SYSTEM.md` §8, `DECISION_REGISTER.md` J-02, roadmap row 2b. Screenshots in `docs/jawhar/screenshots/app-*.jpg`.
+
+**VERIFIED.** `tsc` clean; vitest 34/34; headless walk of 17 routes × EN/AR × light/dark (68 loads) against the demo database: 0 page errors, 0 horizontal overflow, `dir` and `data-theme` correct on every load; kiosk and login shot in both themes. Not verified: tablet ergonomics on a device; contrast audit by tool (manual check of the main pairs only).
+
+**RECONCILIATION.** Site and app now share one palette, one display face and one readiness vocabulary; the kiosk no longer carries a third theme.
+
+**DECISIONS / BLOCKERS.** None new. Density on Today and empty states move to Phase 3 with the command centre.
+
+**NEXT ACTION.** Human review and merge; staging promotion (user); then Phase 2c (Arabic site, module pages) or Phase 3 (command centre) on your call.

@@ -13,6 +13,8 @@ class LeadScraperJob(models.Model):
     _inherit = ["mail.thread"]
 
     name = fields.Char(compute="_compute_name", store=True)
+    company_id = fields.Many2one(
+        "res.company", required=True, default=lambda self: self.env.company, index=True)
     source_id = fields.Many2one(
         "lead.scraper.source", required=True, ondelete="cascade", tracking=True
     )

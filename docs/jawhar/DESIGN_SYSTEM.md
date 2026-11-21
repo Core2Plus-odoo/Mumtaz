@@ -1,9 +1,12 @@
 # Jawhar design system v2 — "Vibrant Luxury Enterprise"
 
 Source of truth for the public site: `website/jewel/site/jawhar.css`. The
-product app (`apps/jawhar-web/src/styles.css`) is migrated to the same names
-in Phase 2b; until then the app keeps its indigo tokens (recorded in
-`DECISION_REGISTER.md` J-02).
+product app (`apps/jawhar-web/src/styles.css`) carries the same values under
+its own v1 token names (Phase 2b, done): `--gold*` there is the primary-action
+family (emerald), `--accent-gold*` the real champagne gold, `--rail` the
+midnight-sapphire chrome, and `[data-theme="dark"]` the dark set. The kiosk's
+`--k-*` tokens alias the same system; `--k-deep/--k-deeper` stay emerald in
+both themes so white text keeps its contrast.
 
 ## 1. Principles
 
@@ -67,11 +70,17 @@ AI-generated photography is allowed for brand imagery and is labelled on the
 page. No stock photos of real people presented as clients. Agent portraits
 are illustrations and say so.
 
-## 8. App mapping (Phase 2b)
+## 8. App mapping (Phase 2b, done 21 Nov 2026)
 
-| App token (today) | Becomes |
-| --- | --- |
-| `--gold:#3D56C4` (indigo) | `--emerald` for actions; `--gold` reserved for highlights |
-| `--teal` | `--teal-ink` for links, `--teal` for focus |
-| kiosk theme | same tokens, dark sapphire ground with emerald accents |
-| Plus Jakarta display | Cormorant for page titles only; UI stays sans |
+| App token | Value (light / dark) | Role |
+| --- | --- | --- |
+| `--gold` / `--gold-dark` / `--gold-bg` | #0F6B55 / #0B4F3F / #E6F2EE · #2FB48F / #8FE3CC / #163528 | primary action, active states, links |
+| `--accent-gold` | #C4A464 · #D6BC7E | rail active marker, kiosk outlines |
+| `--teal` | #0E8C78 · #5ED9BE | secondary tags, switches, bars |
+| `--rail` / `--rail2` | #0B1B2B / #122638 · #071321 / #0B1B2B | navigation rail, utility bar, kiosk header |
+| `--paper` … `--ink4` | ivory / sapphire-ink · sapphire / ivory-ink | ground and text |
+| `--serif` | Cormorant Garamond | page title (`.crumb b`), wordmark; UI and numbers stay sans |
+| `--ring` | teal 3 px | focus-visible on every control |
+
+Theme: `data-theme` on `<html>`, toggled in the rail footer, remembered per
+browser (`jawhar_theme`), applied before first paint in `main.tsx`.

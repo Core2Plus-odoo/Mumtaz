@@ -19,15 +19,18 @@ which checkout. That mapping is the input for any consolidation.
 
 ## Top-level folders
 
+Eight `apps/*` folders moved on 21 Nov 2026 when the repository was organized by website. Nothing was deleted or merged; the old-to-new table is in `sites/README.md`.
+
 | Folder | What it is | Belongs to |
 | --- | --- | --- |
-| `addons/` | 53 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
+| `addons/` | 57 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
 | `apps/jawhar-web` | Jawhar React app | Jawhar |
-| `apps/portal` | Static customer portal pages | Mumtaz platform |
-| `apps/marketplace` | Static B2B storefront and vendor page | Mumtaz platform |
-| `apps/website` | 16-page static marketing site | Mumtaz (see duplicates) |
-| `apps/zaki`, `apps/zaki-ai` | Two ZAKI front ends | Mumtaz (see duplicates) |
-| `apps/erp`, `apps/platform`, `apps/addons` | nginx configs and deploy scripts | Operations |
+| `sites/` | One folder per website: an index for every site, plus the code of the static sites below (see `sites/README.md`) | All |
+| `sites/app.mumtaz.digital/portal` | Static customer portal pages (was `apps/portal`) | Mumtaz platform |
+| `sites/marketplace.mumtaz.digital/storefront` | Static B2B storefront and vendor page (was `apps/marketplace`) | Mumtaz platform |
+| `sites/mumtaz.digital/site` | 14-page static marketing site (was `apps/website`) | Mumtaz (see duplicates) |
+| `sites/zaki.mumtaz.digital/static`, `sites/zaki.mumtaz.digital/node-app` | Two ZAKI front ends (were `apps/zaki`, `apps/zaki-ai`) | Mumtaz (see duplicates) |
+| `sites/erp.mumtaz.digital/legacy-spa`, `ops/platform-routing`, `ops/addons-deploy` | nginx configs and deploy scripts (were `apps/erp`, `apps/platform`, `apps/addons`) | Operations |
 | `platform/` | A later platform generation: FastAPI ZAKI back end, marketing page, SQL schema, ops | Mumtaz (see duplicates) |
 | `website/` | Landing page plus the Jawhar public site (`website/jewel`) | Mumtaz, Jawhar |
 | `brand/` | CSS design tokens and components | Mumtaz |
@@ -48,8 +51,8 @@ Generated detail is in `registry.yaml`. Summary at this commit:
 | foundation | 4 | 0 |
 | platform | 17 | 2 |
 | product | 12 | 1 |
-| edition (Jawhar) | 14 | 13 |
-| internal | 6 | 2 |
+| edition (Jawhar) | 15 | 14 |
+| internal | 9 | 2 |
 | venture | 2 | 0 |
 
 Findings:
@@ -70,14 +73,14 @@ then one pull request per row.
 
 | Area | Copies | Evidence so far |
 | --- | --- | --- |
-| Marketing site | `apps/website` (16 pages), `website/index.html`, `platform/marketing/index.html` | On 21 Nov the live page title at mumtaz.digital matched `platform/marketing` |
-| ZAKI application | `apps/zaki` (static), `apps/zaki-ai` (Node), `platform/zaki` (FastAPI + page) | Which one is served is not determinable from git |
+| Marketing site | `sites/mumtaz.digital/site` (14 pages), `website/index.html`, `platform/marketing/index.html` | On 21 Nov the live page title at mumtaz.digital matched `platform/marketing` |
+| ZAKI application | `sites/zaki.mumtaz.digital/static` (static), `sites/zaki.mumtaz.digital/node-app` (Node), `platform/zaki` (FastAPI + page) | Which one is served is not determinable from git |
 | AI and CFO modules | `mumtaz_ai`, `mumtaz_voice`, `mumtaz_zaki`, `mumtaz_cfo_*`, plus the Jawhar provider layer | Decision D-03 in the decision register covers part of this |
 | Foundation | `mumtaz_core`, `mumtaz_base` | `mumtaz_base` is 46 lines |
 | Brand source | `mumtaz_branding`, `mumtaz_theme`, `brand/tokens.css` | — |
 | Organisation model | `mumtaz_org_config`, `mumtaz_organization` | — |
 | Portal shells | `mumtaz_portal` (12 lines), `mumtaz_customer_portal` (21 lines) | — |
-| Deploy scripts and nginx | `ops/deployment`, `platform/ops`, `deploy/`, `scripts/`, `apps/*/deploy.sh` | 15 distinct `server_name` patterns, including `mumtaz.io` |
+| Deploy scripts and nginx | `ops/deployment`, `platform/ops`, `deploy/`, `scripts/`, `sites/*/*/deploy.sh` | 15 distinct `server_name` patterns, including `mumtaz.io` |
 | API port | 8001 in the previous README, 8002 in configuration files | — |
 | Price list | $49 / $199 on the live site (21 Nov); $149 / $399 / $999 in the previous README's description of the portal wizard | — |
 

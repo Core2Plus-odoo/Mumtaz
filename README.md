@@ -5,7 +5,7 @@ Community** plus proprietary `mumtaz_*` modules: a multi-tenant SaaS shell,
 industry editions (Jawhar for jewellery is the first), an AI layer (ZAKI) and
 white-label deployment for partners.
 
-**Read [`REPO_MAP.md`](REPO_MAP.md) first.** This repository holds more than
+**Read [`REPO_MAP.md`](REPO_MAP.md) first**, and [`sites/`](sites/) for a website-by-website view (one folder per site: what it is, where its code lives, its database, how it deploys). This repository holds more than
 one product and several generations of the same component. The map says what
 each folder is, which copy is which, and what is still undecided.
 
@@ -13,10 +13,10 @@ each folder is, which copy is which, and what is still undecided.
 
 | Area | Where | State |
 | --- | --- | --- |
-| Odoo modules (53) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
+| Odoo modules (57) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
 | Jawhar web app | `apps/jawhar-web` (React + TypeScript + Vite) | Talks to Odoo through `mumtaz_jewellery_api` |
-| Customer portal, marketplace, ZAKI front ends | `apps/`, `platform/` | Several variants; see the duplicates table in `REPO_MAP.md` |
-| Marketing sites | `apps/website`, `website/`, `platform/marketing` | Three variants; see `REPO_MAP.md` |
+| Customer portal, marketplace, ZAKI front ends | `sites/<domain>/`, `platform/` | Several variants; see the duplicates table in `REPO_MAP.md` |
+| Marketing sites | `sites/mumtaz.digital/site`, `website/`, `platform/marketing` | Three variants; see `REPO_MAP.md` |
 | C2P Agency OS | `c2p-delivery-system/` | Separate product; documented in `CLAUDE.md` |
 | Other ventures | `faizy/`, `wordpress-sites/` | Not part of Mumtaz; candidates to move out |
 
@@ -60,6 +60,8 @@ The scripts document their own prerequisites. Workflows are in
 
 ## Documentation
 
+- `sites/README.md` — every website with its code, database, status and open points
+- `docs/infrastructure-audit/` — read-only infrastructure and security audit (21 Nov 2026)
 - `docs/erp/` — audit, capability matrix, roadmap, decision register, standards
 - `docs/mumtaz-jewel/` — Jawhar architecture, slices, test reports
 - `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` — platform operations

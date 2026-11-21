@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mumtaz Estate Audit</title>
+<style>
+/* Layout: one reading column; summary first, then four numbered deliverables.
+   The map is the only wide element and scrolls inside its own frame. */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#18212b; --muted:#5a6878; --line:#d9dee5;
+  --accent:#0f6f73; --accent-soft:#e2f1f1;
+  --crit:#b3261e; --crit-soft:#fbe9e7; --high:#a85b00; --high-soft:#fdf0dc;
+  --med:#4a5f7a; --med-soft:#e8edf4; --ok:#22703f; --ok-soft:#e3f3e8;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161c; --surface:#19212a; --ink:#e7ecf2; --muted:#9aa8b8; --line:#2c3743;
+    --accent:#5cc4c8; --accent-soft:#163538;
+    --crit:#ff8a80; --crit-soft:#3b1a18; --high:#ffb95c; --high-soft:#3a2a12;
+    --med:#a9bbd2; --med-soft:#222d3a; --ok:#7bd69a; --ok-soft:#163324;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#19212a; --ink:#e7ecf2; --muted:#9aa8b8; --line:#2c3743;
+  --accent:#5cc4c8; --accent-soft:#163538;
+  --crit:#ff8a80; --crit-soft:#3b1a18; --high:#ffb95c; --high-soft:#3a2a12;
+  --med:#a9bbd2; --med-soft:#222d3a; --ok:#7bd69a; --ok-soft:#163324;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--font)}
+.wrap{max-width:980px;margin:0 auto;padding-block:28px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  display:flex;flex-direction:column;gap:36px}
+h1{font-size:28px;line-height:1.15;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:20px;line-height:1.25;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0}
+p{margin:0;max-width:68ch}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.lede{color:var(--muted);font-size:16px}
+header{display:flex;flex-direction:column;gap:10px}
+section{display:flex;flex-direction:column;gap:16px}
+.sec-head{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:20px}
+.note{background:var(--high-soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14px}
+.note b{color:var(--high)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stat{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.bad b{color:var(--crit)}
+.frame{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.frame svg{display:block;min-width:900px;width:100%;height:auto;color:var(--ink)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px}
+figcaption{font-size:13px;color:var(--muted);max-width:75ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:26px;height:0;border-top:2px solid var(--ink);vertical-align:middle;margin-right:6px}
+.legend i.bad{border-top:2px dashed var(--crit)}
+.legend i.unk{border-top:2px dotted var(--muted)}
+.tbl{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td code,p code,li code{font-family:var(--mono);font-size:.92em;background:var(--med-soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.p-crit{background:var(--crit-soft);color:var(--crit)}
+.p-high{background:var(--high-soft);color:var(--high)}
+.p-med{background:var(--med-soft);color:var(--med)}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.findings{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.finding{background:var(--surface);padding:14px 16px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:baseline}
+.finding h3{grid-column:2}
+.finding p{grid-column:2;color:var(--muted);font-size:14px}
+.finding .pill{grid-row:1}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+pre{margin:0;font:12.5px/1.6 var(--mono);overflow-x:auto;color:var(--ink)}
+pre .dim{color:var(--muted)}
+ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.ask{background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.ask h3{color:var(--accent);font-size:16px}
+ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.phase{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;font-size:13px;min-width:0}
+.phase b{font-size:14px}
+.phase span{color:var(--muted)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Read-only audit · 21 Nov 2026 · nothing was changed</div>
+  <h1>Mumtaz estate: what runs where, what is at risk, and what to do first</h1>
+  <p class="lede">One repository and one VPS carry fourteen projects for at least four different data owners. This page is the short version of the 16-document audit pack.</p>
+  <div class="note"><b>How to read the evidence.</b> The repository was inspected in full. The server was not reachable from this audit, so everything about live services comes from command output recorded in the repository between 5 Oct and 20 Nov 2026. Those items are marked <span class="pill p-med">reported</span> until a read-only check on the server confirms them.</div>
+</header>
+
+<div class="stats">
+  <div class="stat"><b>14</b><span>projects in one repo</span></div>
+  <div class="stat"><b>4+</b><span>separate data owners</span></div>
+  <div class="stat"><b>1</b><span>server for everything</span></div>
+  <div class="stat bad"><b>5</b><span>critical risks (46 total)</span></div>
+  <div class="stat bad"><b>0</b><span>verified backups</span></div>
+</div>
+
+<!-- ───────────────────────── 1. MAP ───────────────────────── -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Deliverable 1</div>
+    <h2>Infrastructure map</h2>
+    <p>Each row follows one website from its address to the program that answers and the database behind it. Read the red dashed lines first: they are routes that are wrong or unsafe.</p>
+  </div>
+
+  <figure>
+    <div class="frame">
+    <svg viewBox="0 0 930 640" role="img" aria-label="Map of websites, the programs serving them and their databases. Five databases share one login. One client system is reached directly without the secure proxy. Two programs point at the same CRM database.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+        <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--crit)"/></marker>
+      </defs>
+      <g font-family="system-ui, sans-serif" font-size="12" fill="currentColor">
+        <!-- column titles -->
+        <g font-size="11" font-weight="600" fill="var(--muted)" letter-spacing=".06em">
+          <text x="16" y="24">ADDRESS</text><text x="250" y="24">PROXY</text><text x="350" y="24">PROGRAM (PORT)</text><text x="650" y="24">DATABASE</text>
+        </g>
+
+        <!-- nginx bar: rows 1..9 -->
+        <rect x="250" y="96" width="56" height="506" rx="6" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <text x="278" y="350" text-anchor="middle" transform="rotate(-90 278 350)" font-weight="600" fill="var(--accent)">nginx · HTTPS</text>
+
+        <!-- shared-login bracket around DB rows 0..4 -->
+        <rect x="640" y="36" width="240" height="276" rx="8" fill="var(--high-soft)" stroke="var(--high)" stroke-dasharray="4 3"/>
+        <text x="902" y="174" text-anchor="middle" transform="rotate(90 902 174)" font-weight="600" fill="var(--high)">one shared database login</text>
+
+        <!-- row helper: y = 44 + i*56 ; box h 36 -->
+        <!-- r0 IG2 -->
+        <rect x="16" y="44" width="200" height="36" rx="6" fill="var(--crit-soft)" stroke="var(--crit)"/><text x="26" y="59" font-weight="600">http://server-ip:8071</text><text x="26" y="73" font-size="11" fill="var(--muted)">no encryption, bypasses proxy</text>
+        <rect x="350" y="44" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="59" font-weight="600">odoo3 (8071, public)</text><text x="360" y="73" font-size="11" fill="var(--muted)">client accounting</text>
+        <rect x="650" y="44" width="220" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="660" y="59" font-weight="600">Mumtaz_IG2</text><text x="660" y="73" font-size="11" fill="var(--muted)">a client's ledger · production</text>
+        <path d="M216 62H348" stroke="var(--crit)" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#ahr)"/>
+        <path d="M560 62H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- r1 core2plus -->
+        <rect x="16" y="100" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="123" font-weight="600">core2plus.com</text>
+        <rect x="350" y="100" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="115" font-weight="600">odoo4 (8075)</text><text x="360" y="129" font-size="11" fill="var(--muted)">group CRM, 41 users</text>
+        <rect x="650" y="100" width="220" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="660" y="115" font-weight="600">Mumtaz_C2P</text><text x="660" y="129" font-size="11" fill="var(--muted)">41k leads · production</text>
+        <path d="M216 118H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 118H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M560 118H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- r2 erp/admin -> odoo -> (also C2P) -->
+        <rect x="16" y="156" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="171" font-weight="600">erp. / admin.mumtaz.digital</text><text x="26" y="185" font-size="11" fill="var(--muted)">which program answers: unverified</text>
+        <rect x="350" y="156" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="171" font-weight="600">odoo (8069)</text><text x="360" y="185" font-size="11" fill="var(--muted)">pinned to the CRM database</text>
+        <path d="M216 174H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 174H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <path d="M560 170L648 126" stroke="var(--crit)" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#ahr)"/>
+        <text x="566" y="206" font-size="11" fill="var(--crit)">second program on the same database</text>
+
+        <!-- r3 odoo2 -> ERP -->
+        <rect x="350" y="212" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="227" font-weight="600">odoo2 (8070)</text><text x="360" y="241" font-size="11" fill="var(--muted)">platform ERP</text>
+        <rect x="650" y="212" width="220" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="660" y="227" font-weight="600">Mumtaz_ERP</text><text x="660" y="241" font-size="11" fill="var(--muted)">tenant registry · production</text>
+        <path d="M306 184H338V230H348" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+        <path d="M560 230H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- r4 pharma -->
+        <rect x="16" y="268" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="291" font-weight="600">pharma.mumtaz.digital</text>
+        <rect x="350" y="268" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="283" font-weight="600">odoo-pharma (8076)</text><text x="360" y="297" font-size="11" fill="var(--muted)">staging tenant</text>
+        <rect x="650" y="268" width="220" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="660" y="283" font-weight="600">mumtaz_pharma</text><text x="660" y="297" font-size="11" fill="var(--muted)">demo data · staging</text>
+        <path d="M216 286H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 286H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <path d="M560 286H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- r5 faizy -->
+        <rect x="16" y="324" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="347" font-weight="600">myfaizy.com</text>
+        <rect x="350" y="324" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="339" font-weight="600">faizy-odoo</text><text x="360" y="353" font-size="11" fill="var(--muted)">separate product, own user</text>
+        <rect x="650" y="324" width="220" height="36" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="660" y="339" font-weight="600">faizy_prod</text><text x="660" y="353" font-size="11" fill="var(--muted)">own login · identity documents</text>
+        <path d="M216 342H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 342H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M560 342H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- r6 jewel -->
+        <rect x="16" y="380" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="403" font-weight="600">jewel.mumtaz.digital</text>
+        <rect x="350" y="380" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="395" font-weight="600">Docker Odoo (8072/8073)</text><text x="360" y="409" font-size="11" fill="var(--muted)">jewellery demo</text>
+        <rect x="650" y="380" width="220" height="36" rx="6" fill="var(--ok-soft)" stroke="var(--ok)"/><text x="660" y="395" font-weight="600">jewel_demo</text><text x="660" y="409" font-size="11" fill="var(--muted)">own container · synthetic data</text>
+        <path d="M216 398H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 404H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M560 398H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <!-- wrong longpolling route from erp vhost to jewel -->
+        <path d="M306 164H328V390H348" stroke="var(--crit)" stroke-width="2" stroke-dasharray="6 4" fill="none" marker-end="url(#ahr)"/>
+        <text x="16" y="227" font-size="11" fill="var(--crit)">erp live-updates are routed to the</text><text x="16" y="241" font-size="11" fill="var(--crit)">jewellery demo (red line, wrong program)</text>
+
+        <!-- r7 delivery -->
+        <rect x="16" y="436" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="459" font-weight="600">delivery.mumtaz.digital</text>
+        <rect x="350" y="436" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="451" font-weight="600">delivery-api (8800)</text><text x="360" y="465" font-size="11" fill="var(--muted)">AI delivery console</text>
+        <rect x="650" y="436" width="220" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="660" y="451" font-weight="600">SQLite files</text><text x="660" y="465" font-size="11" fill="var(--muted)">beside the code · no backup</text>
+        <path d="M216 454H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 454H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M560 454H648" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- r8 app/zaki/marketplace -->
+        <rect x="16" y="492" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="507" font-weight="600">app. / zaki. / marketplace.</text><text x="26" y="521" font-size="11" fill="var(--muted)">mumtaz.digital</text>
+        <rect x="350" y="492" width="210" height="36" rx="6" fill="var(--surface)" stroke="var(--muted)" stroke-dasharray="3 3"/><text x="360" y="507" font-weight="600">zaki-server (8002)?</text><text x="360" y="521" font-size="11" fill="var(--muted)">source deleted in July</text>
+        <rect x="650" y="492" width="220" height="36" rx="6" fill="var(--surface)" stroke="var(--muted)" stroke-dasharray="3 3"/><text x="660" y="507" font-weight="600">SQLite users.db</text><text x="660" y="521" font-size="11" fill="var(--muted)">accounts + tenant list · unknown</text>
+        <path d="M216 510H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <path d="M306 510H348M560 510H648" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="2 4" fill="none"/>
+
+        <!-- r9 static -->
+        <rect x="16" y="548" width="200" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="26" y="571" font-weight="600">mumtaz.digital</text>
+        <rect x="350" y="548" width="210" height="36" rx="6" fill="var(--surface)" stroke="currentColor"/><text x="360" y="563" font-weight="600">static files</text><text x="360" y="577" font-size="11" fill="var(--muted)">three competing copies in repo</text>
+        <path d="M216 566H248" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/><path d="M306 566H348" stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+        <!-- footnote inside drawing -->
+        <text x="650" y="565" font-size="11" fill="var(--muted)">Also on the same database server, owner</text>
+        <text x="650" y="579" font-size="11" fill="var(--muted)">unknown: 4 stray databases, one a copy of</text>
+        <text x="650" y="593" font-size="11" fill="var(--muted)">real CRM data.</text>
+        <text x="16" y="622" font-size="11" fill="var(--muted)">odoo2 and odoo3 also open every database on the server to look for scheduled jobs (observed 18 Nov).</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption>Ten addresses, nine programs, eight data stores on one server. Five databases sit behind a single shared login; a client's ledger is reached without the encrypted proxy; and two programs serve the same CRM database.</figcaption>
+    <div class="legend"><span><i></i>documented route</span><span><i class="bad"></i>wrong or unsafe route</span><span><i class="unk"></i>unknown / unverified</span></div>
+  </figure>
+
+  <div class="tbl">
+  <table>
+    <thead><tr><th>System</th><th>Code lives</th><th>Environment</th><th>Backup</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td><b>Client accounting (IG2)</b></td><td>unmerged branch + third-party kit</td><td><span class="pill p-crit">production, no staging</span></td><td><span class="pill p-crit">none found</span></td><td><span class="pill p-med">reported</span></td></tr>
+      <tr><td><b>Group CRM</b></td><td>main + unmerged branch + server-only modules + rules stored in the database</td><td><span class="pill p-crit">production</span></td><td><span class="pill p-crit">none found</span></td><td><span class="pill p-med">reported</span></td></tr>
+      <tr><td><b>Platform ERP</b></td><td><code>addons/mumtaz_*</code></td><td><span class="pill p-high">production</span></td><td><span class="pill p-crit">none found</span></td><td><span class="pill p-med">reported</span></td></tr>
+      <tr><td><b>Faizy</b></td><td>unmerged branch, 37 commits ahead of main</td><td><span class="pill p-high">production</span></td><td><span class="pill p-high">unknown</span></td><td><span class="pill p-med">reported</span></td></tr>
+      <tr><td><b>Delivery console</b></td><td><code>c2p-delivery-system/</code></td><td><span class="pill p-high">production</span></td><td><span class="pill p-crit">none found</span></td><td><span class="pill p-ok">repo verified</span></td></tr>
+      <tr><td><b>Jewel demo</b></td><td>main, tested, CI green</td><td><span class="pill p-ok">staging</span></td><td><span class="pill p-ok">scripted</span></td><td><span class="pill p-ok">repo verified</span></td></tr>
+      <tr><td><b>Pharma demo</b></td><td>four unmerged branches</td><td><span class="pill p-ok">staging</span></td><td><span class="pill p-med">same-disk dumps</span></td><td><span class="pill p-med">reported</span></td></tr>
+      <tr><td><b>Portal, ZAKI, marketplace</b></td><td>front ends only; back end deleted</td><td><span class="pill p-med">unknown</span></td><td><span class="pill p-crit">none found</span></td><td><span class="pill p-med">unverified</span></td></tr>
+      <tr><td><b>WordPress sites ×2</b></td><td><code>wordpress-sites/</code></td><td><span class="pill p-med">unknown</span></td><td><span class="pill p-crit">none found</span></td><td><span class="pill p-med">unverified</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ───────────────────────── 2. RISK ───────────────────────── -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Deliverable 2</div>
+    <h2>Security and risk report</h2>
+    <p>46 ranked risks, backed by 99 itemised code findings. These are the ones that could lose data or a client.</p>
+  </div>
+
+  <div class="findings">
+    <div class="finding"><span class="pill p-crit">Critical</span><h3>The repository is public</h3><p>Anyone can read the server address, the port of every system, database names, a client's name and customer list, staff names, and a note that one reachable system still has a weak administrator password. <b>Verified.</b></p></div>
+    <div class="finding"><span class="pill p-crit">Critical</span><h3>Systems reachable directly from the internet</h3><p>A client's accounting system is used over an unencrypted connection on a raw port; marketing pages link to another raw port; no site blocks the database-manager page. Reported in three earlier sessions and not fixed. <b>Reported, to confirm on the server.</b></p></div>
+    <div class="finding"><span class="pill p-crit">Critical</span><h3>No working backup</h3><p>The nightly backup job has run 920 times and failed every time before doing anything. No production database, attachment store or application store has a verified copy off the server. <b>Verified in the repository and CI history.</b></p></div>
+    <div class="finding"><span class="pill p-crit">Critical</span><h3>One customer's administrator can sign in to another customer's system</h3><p>A single sign-on secret is copied into every tenant database, and the login endpoint accepts a token naming any database. <b>Verified in code; live exposure depends on which modules are installed.</b></p></div>
+    <div class="finding"><span class="pill p-crit">Critical</span><h3>A finance API with no authentication</h3><p>One of the two ZAKI back ends returns any tenant's financial snapshot by number and lets anyone rewrite its AI knowledge base. <b>Verified in code; unknown whether it is deployed.</b></p></div>
+    <div class="finding"><span class="pill p-high">High</span><h3>Nobody can say what code production runs</h3><p>Servers track an unmerged feature branch, not <code>main</code>; some modules exist only on the server; 25 business rules live only inside the CRM database.</p></div>
+    <div class="finding"><span class="pill p-high">High</span><h3>Weak separation between tenants</h3><p>One database login for the CRM, the ERP and the client's ledger; two programs open every database on the server; one database has two programs writing to it.</p></div>
+    <div class="finding"><span class="pill p-high">High</span><h3>Customer documents and financials over-exposed inside the apps</h3><p>Any Faizy customer can read every family's identity documents. Any logged-in platform user can read every company's financial summary or change everyone's permissions.</p></div>
+    <div class="finding"><span class="pill p-high">High</span><h3>Delivery console is open unless a setting is switched on</h3><p>If it is on, fine. If not, anyone reaching it can redirect its stored CRM key and GitHub token to their own server. Which mode production uses is unverified.</p></div>
+    <div class="finding"><span class="pill p-high">High</span><h3>Automation that looks alive but is not</h3><p>Four of eight CI workflows cannot start, the default branch is red, the secret scan fails, and 39 of 53 Odoo modules have no tests.</p></div>
+  </div>
+
+  <div class="cols">
+    <div class="card"><h3>What held up well</h3><ul>
+      <li>No API key or password found in 1,089 commits of history.</li>
+      <li>Jewellery modules: tested, CI-gated, carefully scoped public endpoints.</li>
+      <li>Faizy's server layout: own user, own database login, loopback only.</li>
+      <li>Pharma and Jewel deploy kits: backup first, gated steps, printed rollback.</li>
+      <li>All SQL parameterised; no dangerous code primitives.</li></ul></div>
+    <div class="card"><h3>What is still unknown</h3><ul>
+      <li>Which ports are actually open today.</li>
+      <li>Which database each website really opens.</li>
+      <li>Whether Hostinger snapshots exist.</li>
+      <li>Certificate and domain expiry (one note says the main domain lapsed).</li>
+      <li>Whether the half-built services are running.</li>
+      <li>Who holds server, registrar and GitHub access.</li></ul></div>
+  </div>
+</section>
+
+<!-- ───────────────────────── 3. REORG ───────────────────────── -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Deliverable 3</div>
+    <h2>Repository reorganization blueprint</h2>
+    <p>Keep what changes together in one private repository, organised by product. Split out what belongs to someone else. Archive what no longer runs. History is preserved in every move, and the live deploy paths keep working through each step.</p>
+  </div>
+
+  <div class="cols">
+    <div class="card"><h3>Today</h3>
+<pre>Mumtaz/  <span class="dim">(public)</span>
+├─ addons/          <span class="dim">53 modules, 3 products mixed</span>
+├─ apps/            <span class="dim">1 active, 7 orphaned or dead</span>
+├─ platform/        <span class="dim">stalled rebuild</span>
+├─ website/         <span class="dim">site #3 + jewel landing</span>
+├─ c2p-delivery-system/
+├─ faizy/           <span class="dim">stale copy of a branch</span>
+├─ wordpress-sites/ <span class="dim">unrelated</span>
+├─ deploy/ ops/ scripts/ config/
+│                   <span class="dim">4 deploy methods, 9 nginx defs</span>
+└─ docker-compose*  <span class="dim">a stack that never ran</span>
+<span class="dim">+ 23 unmerged branches holding
+  Pharma, Faizy prod, client code</span></pre></div>
+    <div class="card"><h3>Target</h3>
+<pre>mumtaz-platform/  <span class="dim">(private)</span>
+├─ infra/         <span class="dim">inventory, ports, runbook,
+│                 nginx + systemd + backup</span>
+├─ products/
+│  ├─ platform/   <span class="dim">addons, site, deploy, docs</span>
+│  ├─ c2p/        <span class="dim">all C2P modules, in git</span>
+│  ├─ jawhar/     <span class="dim">addons, web, site, deploy</span>
+│  └─ agency-os/  <span class="dim">delivery console</span>
+└─ docs/
+
+faizy/            <span class="dim">own repo</span>
+client-ig2/       <span class="dim">own repo, client-confidential</span>
+tenant-pharma/    <span class="dim">own repo</span>
+content-sites/    <span class="dim">own repo</span>
+mumtaz-legacy/    <span class="dim">read-only archive</span></pre></div>
+  </div>
+
+  <div class="tbl">
+  <table>
+    <thead><tr><th>Rule</th><th>From</th><th>To</th></tr></thead>
+    <tbody>
+      <tr><td>Production code</td><td>a feature branch on the server</td><td>a tagged release of <code>main</code></td></tr>
+      <tr><td>Service names</td><td><code>odoo</code>, <code>odoo2</code>, <code>odoo3</code>, <code>odoo4</code></td><td><code>odoo-c2p</code>, <code>odoo-erp</code>, <code>odoo-ig2</code></td></tr>
+      <tr><td>Database logins</td><td>one shared</td><td>one per application</td></tr>
+      <tr><td>Listening addresses</td><td>some public ports</td><td>loopback only; nginx is the single entrance</td></tr>
+      <tr><td>Staging</td><td>on the production host</td><td>a second small host, restored from last night's backup, mail and jobs off</td></tr>
+      <tr><td>Config and secrets</td><td>hand-edited, password copied between files</td><td>templates in <code>infra/</code>; one secret per service; an inventory of names, never values</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ───────────────────────── 4. PLAN ───────────────────────── -->
+<section>
+  <div class="sec-head">
+    <div class="eyebrow">Deliverable 4</div>
+    <h2>Cleanup and improvement plan</h2>
+    <p>Nothing below has been done. Every line needs the approval shown, and nothing is deleted because it merely looks unused.</p>
+  </div>
+
+  <div class="tbl">
+  <table>
+    <thead><tr><th>Action</th><th>What</th><th>Needs</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-crit">Fix now</span></td><td>Make the repo private · change the weak admin password · first off-server backups and one test restore · put the client system behind HTTPS and close direct ports · give each program only its own database</td><td>Owner, per batch; client notice for the URL change</td></tr>
+      <tr><td><span class="pill p-high">Fix next</span></td><td>Automated encrypted backups with an alert when one is missed · monitoring · sign-on redesign · document and finance access rules · delivery console start-up check · working CI on a green <code>main</code></td><td>Owner / tech lead</td></tr>
+      <tr><td><span class="pill p-ok">Retain</span></td><td>Jewel (addons, web app, deploy kit) · delivery console · Faizy server layout · Pharma deploy kit as the pattern for everything else</td><td>—</td></tr>
+      <tr><td><span class="pill p-med">Relocate</span></td><td>Faizy, Pharma, client IG2 code and WordPress sites into their own private repositories · staging tenants to a second host</td><td>Owner</td></tr>
+      <tr><td><span class="pill p-med">Consolidate</span></td><td>Three marketing sites into one · nine nginx definitions into one template per site · five portal modules · production branch into <code>main</code> · server-only modules and database-stored rules into git</td><td>Tech lead; staging rehearsal</td></tr>
+      <tr><td><span class="pill p-med">Decide</span></td><td>ZAKI, customer portal, marketplace and the stalled platform rebuild: rebuild one properly or retire all · four stray databases · the scraper · where WordPress should live</td><td>Owner</td></tr>
+      <tr><td><span class="pill p-med">Retire</span></td><td>Dead apps and scripts whose back end was deleted · the Docker stack that never ran · the crash-looping service · 28 merged branches. Archive first, remove second</td><td>Owner, after server checks</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="phases">
+    <div class="phase"><b>0 · Discovery</b><span>1 day · server checks</span></div>
+    <div class="phase"><b>1 · Risk review</b><span>½ day · owners named</span></div>
+    <div class="phase"><b>2 · Urgent security</b><span>3 days · 3 short restarts</span></div>
+    <div class="phase"><b>3 · Repository</b><span>4–6 days</span></div>
+    <div class="phase"><b>4 · Infrastructure</b><span>6–8 days</span></div>
+    <div class="phase"><b>5 · Applications</b><span>8–12 days</span></div>
+    <div class="phase"><b>6 · Deployment</b><span>4–5 days</span></div>
+    <div class="phase"><b>7 · Handover</b><span>2 days + 14-day watch</span></div>
+  </div>
+
+  <div class="ask">
+    <h3>First batch for approval</h3>
+    <p>It restarts nothing and changes nothing a user can see.</p>
+    <ol class="steps">
+      <li>Run the read-only check script on the server and send the output privately. It prints ports, routes, services, code versions, database list and schedules, with passwords masked.</li>
+      <li>Make the GitHub repository private, after each server checkout has a read credential so deploys keep working.</li>
+      <li>Change any default-strength administrator password in Odoo. No restart needed.</li>
+      <li>Close pull request #127 and delete its branch.</li>
+    </ol>
+    <p>Three decisions go with it: where this audit pack is stored, who owns each system, and how server evidence is collected.</p>
+  </div>
+</section>
+
+<footer>Full detail, evidence and file references are in the 16 documents under <code>docs/infrastructure-audit/</code>. Committed on 21 Nov 2026 at the owner's instruction while the repository is public; the first three critical items are the more urgent for it.</footer>
+
+</div>
+</body>
+</html>

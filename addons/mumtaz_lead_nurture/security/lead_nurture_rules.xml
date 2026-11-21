@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Company scoping: campaigns, their steps and the log of what was sent
+         belong to one company; scoring rules are shared only when they
+         carry no company. -->
+    <record id="rule_lead_nurture_campaign_company" model="ir.rule">
+        <field name="name">Nurture campaigns: own companies</field>
+        <field name="model_id" ref="model_lead_nurture_campaign"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_lead_nurture_step_company" model="ir.rule">
+        <field name="name">Nurture steps: own companies</field>
+        <field name="model_id" ref="model_lead_nurture_step"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_lead_nurture_log_company" model="ir.rule">
+        <field name="name">Nurture log: own companies</field>
+        <field name="model_id" ref="model_lead_nurture_log"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_lead_nurture_rule_company" model="ir.rule">
+        <field name="name">Scoring rules: own companies or shared</field>
+        <field name="model_id" ref="model_lead_nurture_rule"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

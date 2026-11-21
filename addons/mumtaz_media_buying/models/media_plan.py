@@ -269,6 +269,8 @@ class MediaPlanLine(models.Model):
     plan_id = fields.Many2one(
         "media.plan", required=True, ondelete="cascade", index=True
     )
+    # Lines belong to their plan's company; stored so record rules can read it.
+    company_id = fields.Many2one(related="plan_id.company_id", store=True, index=True)
     outlet_id = fields.Many2one("media.outlet", required=True)
     channel = fields.Selection(
         MEDIA_CHANNELS, related="outlet_id.channel", store=True

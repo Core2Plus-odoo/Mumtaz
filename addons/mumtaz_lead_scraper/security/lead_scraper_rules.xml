@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Company scoping: jobs and their records belong to one company;
+         a source is shared only when it carries no company. -->
+    <record id="rule_lead_scraper_job_company" model="ir.rule">
+        <field name="name">Scraper jobs: own companies</field>
+        <field name="model_id" ref="model_lead_scraper_job"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_lead_scraper_record_company" model="ir.rule">
+        <field name="name">Scraper records: own companies</field>
+        <field name="model_id" ref="model_lead_scraper_record"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_lead_scraper_source_company" model="ir.rule">
+        <field name="name">Scraper sources: own companies or shared</field>
+        <field name="model_id" ref="model_lead_scraper_source"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+</odoo>

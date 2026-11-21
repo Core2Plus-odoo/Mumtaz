@@ -9,7 +9,7 @@ BRANCH="claude/odoo-architecture-review-ujm0W"
 echo "==> Pulling latest code..."
 cd $REPO
 git fetch origin $BRANCH
-git checkout origin/$BRANCH -- zaki/index.html apps/portal/index.html ops/deployment/nginx-mumtaz-platform.conf
+git checkout origin/$BRANCH -- zaki/index.html sites/app.mumtaz.digital/portal/index.html ops/deployment/nginx-mumtaz-platform.conf
 
 echo "==> Creating web directories..."
 mkdir -p /var/www/mumtaz.digital
@@ -18,9 +18,9 @@ mkdir -p /var/www/app.mumtaz.digital
 
 echo "==> Deploying files..."
 cp zaki/index.html /var/www/zaki.mumtaz.digital/index.html
-cp apps/portal/index.html /var/www/app.mumtaz.digital/index.html
-cp apps/website/index.html /var/www/mumtaz.digital/index.html 2>/dev/null || true
-cp -r apps/website/assets /var/www/mumtaz.digital/ 2>/dev/null || true
+cp sites/app.mumtaz.digital/portal/index.html /var/www/app.mumtaz.digital/index.html
+cp sites/mumtaz.digital/site/index.html /var/www/mumtaz.digital/index.html 2>/dev/null || true
+cp -r sites/mumtaz.digital/site/assets /var/www/mumtaz.digital/ 2>/dev/null || true
 
 echo "==> Deploying nginx config..."
 cp ops/deployment/nginx-mumtaz-platform.conf /etc/nginx/sites-available/mumtaz

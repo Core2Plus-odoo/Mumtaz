@@ -269,11 +269,11 @@ jobs:
           node-version: "20"
 
       - name: Install zaki-ai deps
-        working-directory: apps/zaki-ai
+        working-directory: sites/zaki.mumtaz.digital/node-app
         run: npm ci --ignore-scripts
 
       - name: npm audit
-        working-directory: apps/zaki-ai
+        working-directory: sites/zaki.mumtaz.digital/node-app
         run: npm audit --audit-level=high
 
   # ────────────────────────────────────────────────────────────────────

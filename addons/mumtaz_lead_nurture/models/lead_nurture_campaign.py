@@ -11,6 +11,8 @@ class LeadNurtureCampaign(models.Model):
     _rec_name = "name"
 
     name = fields.Char(required=True, tracking=True)
+    company_id = fields.Many2one(
+        "res.company", required=True, default=lambda self: self.env.company, index=True)
     active = fields.Boolean(default=True, tracking=True)
     description = fields.Text()
 
