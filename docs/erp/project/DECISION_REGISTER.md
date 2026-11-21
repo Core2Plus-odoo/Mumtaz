@@ -31,3 +31,8 @@ record. Owner names are left for the sponsor to fill.
 | D-06 | Who is the named finance manager for VAT, AML, lock dates, valuation | Blueprint rule: no invented policy | Required before Wave 2 |
 | D-07 | Branch model (warehouse vs analytic) | Data model | See ADR-003 |
 | D-08 | Jawhar staging promotion cadence | Demo credibility | Promote `main` after each merged slice |
+| D-09 | Which marketing site is canonical: `apps/website`, `website/index.html` or `platform/marketing`? | Three variants in git; see `REPO_MAP.md` | Keep the one that is live, archive the others |
+| D-10 | Which ZAKI application is canonical: `apps/zaki`, `apps/zaki-ai` or `platform/zaki`? | Three variants; four Odoo AI/CFO module families | Decide after the server inventory shows which is served |
+| D-11 | Which price list is correct: $49/$199 (live site, 21 Nov 2026) or $149/$399/$999 (portal wizard per the previous README)? | Public and in-app prices disagree | One price list, one source file |
+| D-12 | Move `faizy/`, `wordpress-sites/` and `c2p-delivery-system/` to their own repositories? | Unrelated products in a public repository that production pulls | Move, with a deployment plan first |
+| D-13 | Fold `mumtaz_base` into `mumtaz_core`, and choose one brand source? | Two foundations, three brand sources | Yes, by migration script, tested per tenant database |
