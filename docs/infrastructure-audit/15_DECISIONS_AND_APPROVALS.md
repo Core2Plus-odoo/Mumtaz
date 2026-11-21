@@ -18,6 +18,23 @@ This is the audit trail. Record each decision here with a name and date before t
 
 Not done, by design: no SSH, no database connection, no port scan, no login attempt, no exploit test, no load, no change to any setting, credential, DNS record, service or branch.
 
+### Changes on `main` after the audit (recorded at merge time, 21 Nov 2026)
+
+Five pull requests merged to `main` while this pack was in review (#170, #172, #174, #175, #177). They were merged into this branch; the audit findings were **not** re-reviewed in depth. What a quick check shows:
+
+| Finding | State after those merges |
+|---|---|
+| F-09 (red `main`): flake8 errors | **Fixed** by #170/#172 — `flake8 addons/ tools/scrapers/` is clean |
+| F-09: no install test for platform modules | **Addressed** by #172 (fresh-database install CI) |
+| ODOO-04 / F-26: finance snapshot open to any logged-in user | **Addressed** by #175 — `/zaki/api/snapshot` now refuses portal users and non-accounting users; tests added |
+| ODOO-05 / F-26: portal dashboards read under `sudo()` | **Addressed** by #175 — portal controllers read as the user; tests added |
+| `sudo()` overuse | #174 labels every `sudo()` call with its reason and enforces that in CI |
+| ODOO-02, ODOO-03 / F-27: RPC-callable group rewrite and Stripe methods | **Still open** — methods are still public |
+| ODOO-01 / F-23: shared sign-on secret | **Still open** — `mumtaz_sso` unchanged |
+| Repository documentation | #177 added `REPO_MAP.md`, `registry.yaml` and a layering check; `sites/` complements it website by website |
+
+Everything about the server (F-01, F-02, F-04 to F-08 and the rest) is unchanged by these merges.
+
 ## 2. Decisions needed
 
 | ID | Decision | Options | Recommendation | Owner | Status |

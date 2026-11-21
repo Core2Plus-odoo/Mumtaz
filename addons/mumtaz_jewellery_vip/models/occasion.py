@@ -44,6 +44,7 @@ class Occasion(models.Model):
     @api.model
     def _cron_prepare(self):
         today = fields.Date.context_today(self)
+        # sudo: daily cron over occasions
         for occ in self.sudo().search([]):
             nxt = occ._next_date(today)
             if nxt < today or (nxt - today).days > occ.lead_days:

@@ -49,6 +49,7 @@ class MumtazVoiceController(http.Controller):
         if not text:
             return {"error": "Empty text"}
         try:
+            # sudo: platform settings for the speech key; never returned to the client
             settings = request.env["mumtaz.core.settings"].sudo().search(
                 [("company_id", "=", request.env.company.id), ("active", "=", True)], limit=1
             )

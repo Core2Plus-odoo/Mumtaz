@@ -8,6 +8,7 @@ class AgentsKiosk(models.AbstractModel):
 
     def voice_config(self):
         out = super().voice_config()
+        # sudo: system parameter; only administrators may read ir.config_parameter
         aid = self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.voice_agent_noor')
         if aid:
             out['noor'] = aid

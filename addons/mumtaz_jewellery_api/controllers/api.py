@@ -533,6 +533,7 @@ class JawharApi(Controller):
     @endpoint(auth=False)
     def health(self):
         return {'service': 'jawhar-api', 'version': API_VERSION,
+                # sudo: installed version for the health endpoint; read-only
                 'odoo': request.env['ir.module.module'].sudo().search(
                     [('name', '=', 'mumtaz_jewellery_api')], limit=1).installed_version or None}
 
@@ -993,6 +994,7 @@ class JawharApi(Controller):
         if pct <= 0 or env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
             check('discount', True, {'pct': pct, 'limit': None})
         else:
+            # sudo: system parameter; only administrators may read ir.config_parameter
             param = env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.staff_discount_limit_pct')
             limit = float(param) if param else 0.0
             check('discount', pct <= limit, {'pct': pct, 'limit': limit})

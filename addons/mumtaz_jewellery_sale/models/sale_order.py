@@ -101,6 +101,7 @@ class SaleOrderLine(models.Model):
     @api.depends('price_subtotal', 'jewellery_lot_id.jewellery_cost_value')
     def _compute_jewellery_margin(self):
         for line in self:
+            # sudo: cost basis is a restricted field; the margin is shown to managers only
             cost = line.jewellery_lot_id.sudo().jewellery_cost_value if line.jewellery_lot_id else 0.0
             line.jewellery_has_cost = bool(line.jewellery_lot_id and cost)
             line.jewellery_margin = (line.price_subtotal - cost) if line.jewellery_has_cost else 0.0
@@ -122,6 +123,7 @@ class SaleOrderLine(models.Model):
         # that matters. The price itself stays the engine's either way.
         if self.env.su or self.env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
             return
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env['ir.config_parameter'].sudo().get_param(
             'mumtaz_jewellery.staff_discount_limit_pct')
         limit = float(param) if param else 0.0

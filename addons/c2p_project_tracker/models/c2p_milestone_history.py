@@ -52,7 +52,8 @@ class C2pMilestoneHistory(models.Model):
         """Create a row for a change. Returns the record, or an empty recordset
         when nothing actually changed, so callers can skip chatter too."""
         stage_changed = (old_stage.id or False) != (milestone.stage_id.id or False)
-        date_changed = (old_deadline or False) != (milestone.date_deadline or False)
+        new_deadline = milestone._c2p_deadline_date()
+        date_changed = (old_deadline or False) != (new_deadline or False)
         if not stage_changed and not date_changed:
             return self.browse()
         return self.create({
@@ -61,7 +62,7 @@ class C2pMilestoneHistory(models.Model):
             "old_stage_id": old_stage.id or False,
             "new_stage_id": milestone.stage_id.id or False,
             "old_deadline": old_deadline or False,
-            "new_deadline": milestone.date_deadline or False,
+            "new_deadline": new_deadline or False,
             "done_task_count": counts.get("done", 0),
             "open_task_count": counts.get("open", 0),
             "waiting_task_count": counts.get("waiting", 0),

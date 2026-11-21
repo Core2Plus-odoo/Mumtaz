@@ -24,6 +24,7 @@ class OwnerCard(models.Model):
                             recommendation=_('Finance manager: confirm the threshold and the window'), impact=''))
         today = fields.Date.context_today(self)
         soon = today + timedelta(days=30)
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for p in env['res.partner'].sudo().search([('kyc_status', '=', 'verified'), ('kyc_id_expiry', '!=', False),
                                                    ('kyc_id_expiry', '<=', soon)]):
             late = p.kyc_id_expiry < today
@@ -32,6 +33,7 @@ class OwnerCard(models.Model):
                             title=_('%(n)s: identity document %(w)s', n=p.name, w=_('expired') if late else _('expires soon')),
                             detail=_('%(doc)s ending %(l4)s, expiry %(d)s.', doc=p.kyc_id_type or '', l4=p.kyc_id_last4 or '', d=p.kyc_id_expiry),
                             recommendation=_('Ask for a current document at her next visit'), impact=''))
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for p in env['res.partner'].sudo().search([('aml_screening_status', '=', 'match')]):
             out.append(dict(kind='aml', res_model='res.partner', res_id=p.id, priority=10, restricted=p.jewellery_restricted,
                             title=_('%s: screening match open') % p.name,

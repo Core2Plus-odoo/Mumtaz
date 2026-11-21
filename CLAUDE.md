@@ -1,10 +1,17 @@
 # Mumtaz repo — working knowledge
 
-Two products live here:
+**Start with `REPO_MAP.md`** — it says what every top-level folder is, which
+copies are duplicates, and what is still undecided. `registry.yaml` lists every
+Odoo module with its layer; `python3 scripts/module_registry.py --check` runs in
+CI and fails on an unclassified module or a new cross-layer dependency.
+
+Several products live here (see `REPO_MAP.md` for all of them). The two with
+the most activity:
 
 - **`c2p-delivery-system/`** — the C2P Agency OS: an AI-run Odoo delivery agency
-  (FastAPI backend + single-file console). This is where most work happens.
-- **`addons/`** — Odoo custom addons for the Mumtaz marketplace (separate product).
+  (FastAPI backend + single-file console).
+- **`addons/`** — 53 Odoo 19 Community addons: the Mumtaz SaaS platform, the
+  Jawhar jewellery edition and C2P internal modules.
 
 **Repo layout by website:** `sites/` has one folder per website (what it is,
 where its code lives, its database, how it deploys). Start at `sites/README.md`.
@@ -143,3 +150,13 @@ bus → hub v2 → new role prompts. Extend, never replace; new code goes in
 - Secrets never in git: `.env`, `*.db`, `web/` are gitignored; tokens/keys are
   encrypted at rest via `C2P_SECRET_KEY` (Fernet) and never echoed back.
 - `docs/05-build-log.md` is the chronological build record; keep appending.
+
+## ERP programme standard (added 20 Nov 2026)
+
+The C2P ERP Master Development Blueprint governs ERP work in `addons/` and
+the connected apps. Its project instance lives in `docs/erp/` (audit,
+capability matrix, decision register, data model, process linkage, security
+and posting rules, standards, roadmap, backlog). Read
+`docs/erp/DEVELOPMENT_STANDARDS.md` before changing any addon, report in its
+mandatory format, and never claim a test passed that did not run. The Jawhar
+rules in `docs/mumtaz-jewel/CLAUDE.md` stay in force and are stricter.

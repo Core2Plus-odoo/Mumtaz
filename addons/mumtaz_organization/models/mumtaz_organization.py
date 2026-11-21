@@ -76,6 +76,18 @@ class MumtazOrganization(models.Model):
         for rec in self:
             rec.member_count = len(rec.signup_ids)
 
+    def action_view_signups(self):
+        """The form's stat button: this organisation's SME signups."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "SME Signups",
+            "res_model": "mumtaz.sme.signup",
+            "view_mode": "list,form",
+            "domain": [("org_id", "=", self.id)],
+            "context": {"default_org_id": self.id},
+        }
+
     # ── Constraints ───────────────────────────────────────────────────
     _sql_slug_unique = models.Constraint("unique(slug)", "Organisation slug must be unique.")
 

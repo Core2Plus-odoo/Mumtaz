@@ -1,57 +1,68 @@
-# Mumtaz
+# Mumtaz Digital
 
-This repository holds several products and websites run by the Core 2 Plus group. They share one server but **not** one owner: some are the group's own systems, one is a client's, one is a separate product, and some are demos.
+An AI-first business platform for the GCC and Pakistan, built on **Odoo 19
+Community** plus proprietary `mumtaz_*` modules: a multi-tenant SaaS shell,
+industry editions (Jawhar for jewellery is the first), an AI layer (ZAKI) and
+white-label deployment for partners.
 
-Start with **[`sites/`](sites/)** — one folder per website, each saying what the site is, where its code lives, which database it uses and how it is deployed.
+**Read [`REPO_MAP.md`](REPO_MAP.md) first**, and [`sites/`](sites/) for a website-by-website view (one folder per site: what it is, where its code lives, its database, how it deploys). This repository holds more than
+one product and several generations of the same component. The map says what
+each folder is, which copy is which, and what is still undecided.
 
-## Websites
+## What is here
 
-| Website | What it is | Status |
-|---|---|---|
-| [core2plus.com](sites/core2plus.com/) | Group CRM and internal ERP (Odoo 19) | Production |
-| [erp.mumtaz.digital](sites/erp.mumtaz.digital/) | Mumtaz platform ERP (Odoo 19) | Production |
-| [ig2.mumtaz.digital](sites/ig2.mumtaz.digital/) | Client accounting system (Odoo 19) | Production |
-| [myfaizy.com](sites/myfaizy.com/) | Faizy, a separate product (Odoo 19) | Production |
-| [delivery.mumtaz.digital](sites/delivery.mumtaz.digital/) | C2P Agency OS delivery console (FastAPI) | Production |
-| [jewel.mumtaz.digital](sites/jewel.mumtaz.digital/) | Jawhar jewellery system (Odoo 19 + React) | Staging / demo |
-| [pharma.mumtaz.digital](sites/pharma.mumtaz.digital/) | Pharma demo tenant (Odoo 19) | Staging / demo |
-| [mumtaz.digital](sites/mumtaz.digital/) | Marketing site | Unverified |
-| [app.mumtaz.digital](sites/app.mumtaz.digital/) | Customer portal | Orphaned |
-| [marketplace.mumtaz.digital](sites/marketplace.mumtaz.digital/) | B2B marketplace | Orphaned |
-| [zaki.mumtaz.digital](sites/zaki.mumtaz.digital/) | ZAKI AI CFO | Unknown |
-| [odditytrend.com](sites/odditytrend.com/), [youngcraze.com](sites/youngcraze.com/) | WordPress content sites | Unknown |
+| Area | Where | State |
+| --- | --- | --- |
+| Odoo modules (53) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
+| Jawhar web app | `apps/jawhar-web` (React + TypeScript + Vite) | Talks to Odoo through `mumtaz_jewellery_api` |
+| Customer portal, marketplace, ZAKI front ends | `sites/<domain>/`, `platform/` | Several variants; see the duplicates table in `REPO_MAP.md` |
+| Marketing sites | `sites/mumtaz.digital/site`, `website/`, `platform/marketing` | Three variants; see `REPO_MAP.md` |
+| C2P Agency OS | `c2p-delivery-system/` | Separate product; documented in `CLAUDE.md` |
+| Other ventures | `faizy/`, `wordpress-sites/` | Not part of Mumtaz; candidates to move out |
 
-"Status" for anything on the server is as last recorded in this repository, not re-verified.
+## Module layers
 
-## Layout
+Every module is classified in `registry/classification.json`:
 
-```
-sites/                  one folder per website (index + code that is safe to hold there)
-addons/                 Odoo 19 modules: platform (mumtaz_*), jewellery (mumtaz_jewellery*), C2P (c2p_*)
-c2p-delivery-system/    C2P Agency OS — API, console, deploy scripts (production deploy path)
-apps/jawhar-web/        Jawhar web app (React)
-website/                single-page marketing site + Jawhar landing page (website/jewel/)
-deploy/jewel-staging/   Jawhar staging stack: compose, deploy, backup, restore drill
-faizy/                  Faizy product (the production branch is ahead of this copy)
-wordpress-sites/        two WordPress themes and their installer
-ops/                    nginx/Odoo config templates and older deploy scripts
-scripts/                CI helpers and older deploy scripts
-platform/               stalled "platform rebuild" (schema, ZAKI back end, installers)
-tools/scrapers/         a lead scraper
-docs/                   architecture notes, Jawhar docs, and the infrastructure audit
+1. **foundation** — shared base (`mumtaz_core`, branding, theme)
+2. **platform** — the SaaS shell: tenants, control plane, billing, SSO, routing, portals
+3. **product** — generic business and AI modules: e-invoicing, reports, ZAKI, marketplace
+4. **edition** — industry packs: `mumtaz_jewellery*` (Jawhar)
+5. **internal** — C2P's own modules and business-development tooling
+6. **venture** — unrelated ventures kept here for now
+
+A module may depend only on its own layer or a lower one. CI enforces this:
+
+```bash
+python3 scripts/module_registry.py --check   # what CI runs
+python3 scripts/module_registry.py --write   # after adding or changing a module
 ```
 
-Three folders are deliberately **not** yet under `sites/`, because a running server depends on their exact path: `addons/`, `c2p-delivery-system/` and the Jawhar folders. [`sites/README.md`](sites/README.md) explains why and lists the next steps.
+A new module must be added to `registry/classification.json` or CI fails.
 
-## Before you deploy anything
+## Running and testing
 
-- Read [`docs/infrastructure-audit/16_AUDIT_EXECUTIVE_SUMMARY.md`](docs/infrastructure-audit/16_AUDIT_EXECUTIVE_SUMMARY.md). Several documented deploy paths in this repository describe a setup that was never built, and production is reported to track a feature branch rather than `main`.
-- The root `Dockerfile` and `docker-compose*.yml` describe a Docker setup that production is **not** reported to use (the server runs Odoo as native services). Treat them as a local development stack.
-- Scripts under `ops/deployment/` and `scripts/deploy-*.sh` predate the current server layout. Check each against the server before running it.
-- Working deploy kits to copy from: [`deploy/jewel-staging/`](deploy/jewel-staging/) and [`c2p-delivery-system/deploy/`](c2p-delivery-system/deploy/).
+```bash
+docker compose up                 # Odoo 19 + Postgres, addons mounted
+bash scripts/jewel_ci.sh          # Jawhar Odoo test suite on a fresh database
+bash scripts/platform_ci.sh       # install + upgrade every platform module
+```
 
-## Working rules
+The scripts document their own prerequisites. Workflows are in
+`.github/workflows/`.
 
-- Agent and contributor rules: [`CLAUDE.md`](CLAUDE.md). Jawhar has its own, stricter rules in [`docs/mumtaz-jewel/CLAUDE.md`](docs/mumtaz-jewel/CLAUDE.md).
-- Secrets never go in git. Only `*.example` templates are tracked.
-- Client work is confidential: no client names, customer data or credentials in code, tests or docs.
+## Rules for changing anything
+
+- `docs/erp/DEVELOPMENT_STANDARDS.md` governs every addon change.
+- `docs/mumtaz-jewel/CLAUDE.md` governs Jawhar and is stricter.
+- Production deploys from `main`. Work on a branch and open a pull request.
+- No secrets in git. Use the `.env.example` files.
+
+## Documentation
+
+- `sites/README.md` — every website with its code, database, status and open points
+- `docs/infrastructure-audit/` — read-only infrastructure and security audit (21 Nov 2026)
+- `docs/erp/` — audit, capability matrix, roadmap, decision register, standards
+- `docs/mumtaz-jewel/` — Jawhar architecture, slices, test reports
+- `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` — platform operations
+- `docs/archive/README-legacy-2026-11.md` — the previous README, kept for reference; parts of it are out of date

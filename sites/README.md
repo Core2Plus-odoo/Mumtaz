@@ -1,5 +1,7 @@
 # Sites
 
+Companion to [`REPO_MAP.md`](../REPO_MAP.md): that file describes the repository folder by folder; this one describes it website by website.
+
 One folder per website. Each has a `README.md` saying what the site is, where its code lives, which database it uses, how it is deployed, and what is open.
 
 > Server facts are **reported**, not re-verified: they come from owner-run output recorded in this repo between Oct and Nov 2026. The full picture is in [`docs/infrastructure-audit/`](../docs/infrastructure-audit/).
