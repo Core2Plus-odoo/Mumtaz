@@ -116,7 +116,12 @@
     "mumtaz_website": {
       "layer": "platform",
       "disposition": "review",
-      "note": "Odoo website shell; the public marketing site is static HTML elsewhere."
+      "note": "Earlier marketing-site prototype with its own controllers and navbar; superseded by mumtaz_website_builder (21 Nov 2026). Keep until the production homepage is cut over, then retire."
+    },
+    "mumtaz_website_builder": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "Mumtaz Digital homepage as native Website Builder blocks + CRM demo form; CSS scoped to .o_mumtaz_site."
     },
     "mumtaz_ai": {
       "layer": "product",

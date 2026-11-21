@@ -165,6 +165,7 @@ jobs:
               "base", "mail", "web", "website", "account", "crm", "sale",
               "sale_management", "purchase", "stock", "hr", "project",
               "contacts", "base_setup", "portal", "utm", "auth_signup",
+              "website_crm",  # standard Odoo CE: native website form -> crm.lead
           }
 
           errors = []
