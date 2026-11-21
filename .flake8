@@ -19,7 +19,6 @@ per-file-ignores =
     addons/c2p_appointment/controllers/main.py: E225, E701, E702, E401, E302, F841, F401, E128
     addons/c2p_appointment/models/appointment_type.py: E225, E701, E702, E401, E302, F841, F401, E128
     addons/c2p_proposal/models/sale_order.py: E128
-    addons/mumtaz_proposal/models/proposal.py: F401
 
 # Generated/vendored/non-product code and Odoo-shell scripts (where `env` is an
 # injected global) are out of scope for the product lint.

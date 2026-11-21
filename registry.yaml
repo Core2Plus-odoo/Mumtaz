@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 62
+module_count: 61
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -820,20 +820,6 @@ modules:
     test_files: 0
     access_csv: true
     note: "Media-agency vertical; either promote to an edition or keep as a customer extension."
-  mumtaz_proposal:
-    layer: internal
-    disposition: review
-    path: addons/mumtaz_proposal
-    title: "Mumtaz Proposal Management"
-    version: "19.0.1.0.0"
-    license: "LGPL-3"
-    application: false
-    depends_local: []
-    depends_standard: ["crm", "sale", "mail", "account"]
-    python_lines: 688
-    test_files: 0
-    access_csv: true
-    note: "Found in /opt/custom_addons on the server; not installed in any inspected database. Overlaps c2p_proposal."
   mumtaz_tenant_profile:
     layer: internal
     disposition: review

@@ -313,11 +313,6 @@
       "disposition": "keep",
       "note": "Installed in Mumtaz_C2P_staging. Existed only in a server checkout until 21 Nov 2026."
     },
-    "mumtaz_proposal": {
-      "layer": "internal",
-      "disposition": "review",
-      "note": "Found in /opt/custom_addons on the server; not installed in any inspected database. Overlaps c2p_proposal."
-    },
     "mumtaz_tenant_profile": {
       "layer": "internal",
       "disposition": "review",
