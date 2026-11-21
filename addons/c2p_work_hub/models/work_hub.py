@@ -84,20 +84,30 @@ class C2pWorkHub(models.AbstractModel):
             out[key] = self._read_section(spec["label"], spec["domain"],
                                           task_fields, blocker_field)
 
-        # Blocked and waiting are stage-name matched, which no domain can
-        # express, so they are filtered in Python over the user's open tasks.
+        # Blocked, waiting and review are stage-name matched, which no domain
+        # can express, so they are filtered in Python over the user's open
+        # tasks. Blocked and waiting are kept apart deliberately: "something is
+        # stopping this and here is why" and "this sits with someone else" are
+        # different situations needing different action, and the directive lists
+        # them as separate sections. A task can legitimately be in both.
         open_tasks = self.env["project.task"].search(base, limit=200)
         blocked = open_tasks.filtered(
-            lambda t: (blocker_field and t[blocker_field])
-            or t._c2p_is_waiting_stage())
+            lambda t: bool(blocker_field and t[blocker_field]))
+        waiting = open_tasks.filtered(lambda t: t._c2p_is_waiting_stage())
         in_review = open_tasks.filtered(lambda t: t._c2p_is_review_stage())
         out["blocked"] = self._serialise(
-            "Blocked or waiting", blocked[:LIST_LIMIT], task_fields,
+            "Blocked", blocked[:LIST_LIMIT], task_fields,
             blocker_field, len(blocked))
+        out["waiting_on_others"] = self._serialise(
+            "Waiting on someone else", waiting[:LIST_LIMIT], task_fields,
+            blocker_field, len(waiting))
         out["in_review"] = self._serialise(
             "With a reviewer", in_review[:LIST_LIMIT], task_fields,
             blocker_field, len(in_review))
 
+        out["waiting_for_me"] = self._review_queue(task_fields, blocker_field,
+                                                   closed)
+        out["my_milestones"] = self._upcoming_milestones()
         out["my_projects"] = self._my_projects(base)
         out["states"] = self._state_choices()
         out["meta"] = {
@@ -158,6 +168,68 @@ class C2pWorkHub(models.AbstractModel):
             "next_action": record.get("c2p_next_action") or "",
             "blocker": (record.get(blocker_field) or "") if blocker_field else "",
         }
+
+    def _review_queue(self, task_fields, blocker_field, closed):
+        """Work sitting with this user as a project manager, not as an assignee.
+
+        Wave B's "manager review queue". It is deliberately derived from the
+        project's manager field and a review-named stage, because formal
+        approval records do not exist yet — approvals are a separate model in a
+        later wave, and inventing a half version here would give the business a
+        second answer later. Tasks the user is themselves assigned to are
+        excluded: those are their own work and already appear above.
+        """
+        managed = self.env["project.project"].search(
+            [("user_id", "=", self.env.uid)])
+        if not managed:
+            return {"label": "Waiting for my review", "count": 0,
+                    "truncated": False, "tasks": [], "is_manager": False,
+                    "action": {"res_model": "project.task", "domain": [("id", "in", [])],
+                               "name": "Waiting for my review", "views": "list"}}
+
+        candidates = self.env["project.task"].search([
+            ("project_id", "in", managed.ids),
+            ("state", "not in", closed),
+            ("user_ids", "not in", self.env.uid),
+        ], limit=200)
+        queue = candidates.filtered(lambda t: t._c2p_is_review_stage())
+        payload = self._serialise("Waiting for my review", queue[:LIST_LIMIT],
+                                  task_fields, blocker_field, len(queue))
+        payload["is_manager"] = True
+        return payload
+
+    def _upcoming_milestones(self):
+        """Standard project.milestone records falling due soon.
+
+        This repository carries three milestone notions: standard
+        project.milestone (which c2p_project_tracker's hygiene constraint
+        requires delivery tasks to reference), portfolio milestone *tasks*
+        named "M1 ..." matched by name, and delivery_milestone_id pairing the
+        two. The hub reads the standard model because it is the one with
+        enforced data behind it, and because reading the name-matched tasks here
+        would make this a fourth place that decides what a milestone is.
+        Reconciling the three is an architecture decision, not a dashboard's.
+        """
+        Milestone = self.env["project.milestone"]
+        today = fields.Date.context_today(self)
+        horizon = fields.Date.to_string(fields.Date.add(today, days=30))
+        mine = self.env["project.project"].search(["|",
+                                                   ("user_id", "=", self.env.uid),
+                                                   ("task_ids.user_ids", "in", self.env.uid)])
+        if not mine:
+            return []
+        rows = Milestone.search_read(
+            [("project_id", "in", mine.ids),
+             ("is_reached", "=", False),
+             ("deadline", "!=", False),
+             ("deadline", "<=", horizon)],
+            ["name", "project_id", "deadline"],
+            limit=LIST_LIMIT, order="deadline asc")
+        return [{"id": r["id"], "name": r.get("name") or "",
+                 "project": (r["project_id"][1] if r.get("project_id") else ""),
+                 "deadline": r.get("deadline") or "",
+                 "overdue": bool(r.get("deadline") and r["deadline"] < today)}
+                for r in rows]
 
     def _my_projects(self, base):
         """Projects the user has open work in, with their open-task counts."""

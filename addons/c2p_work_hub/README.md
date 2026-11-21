@@ -6,8 +6,19 @@
 
 One page per employee listing only their own open work, split into the
 sections people actually act on — overdue, due today, due soon, not updated
-recently, blocked or waiting, with a reviewer, no deadline, recently assigned —
-and a single call that records an update without opening a form.
+recently, waiting for my review, blocked, waiting on someone else, with a
+reviewer, no deadline, recently assigned — plus upcoming milestones, and a
+single call that records an update without opening a form.
+
+**Blocked and waiting are kept apart.** "Something is stopping this and here is
+why" and "this sits with someone else" need different action, so they are
+separate sections. A task can be in both.
+
+**The manager review queue** is derived from the project's manager field plus a
+review-named stage, and excludes the manager's own tasks — those are their work,
+not their queue. It is deliberately *not* an approval record: formal approvals
+are a separate model in a later wave, and a half version here would leave the
+business with two answers.
 
 ## What it deliberately does not do
 
@@ -44,9 +55,24 @@ ordinary projects are unaffected. On a delivery project:
 - Every write goes through `write()`, so the tracker's `waiting_since`
   bookkeeping, baseline capture and portfolio resync all keep working.
 
+## Three milestone notions, one chosen
+
+This repository defines a milestone in three places:
+
+| Notion | Where |
+|---|---|
+| Standard `project.milestone` | Odoo's own model; `c2p_project_tracker`'s hygiene constraint requires delivery tasks to reference one |
+| Portfolio milestone *tasks* | `project.task` named `M1 …`, matched by `MILESTONE_CODE_RE` and tracked by `c2p.milestone.history` |
+| `delivery_milestone_id` / `current_milestone_id` | pairing a portfolio milestone task to its delivery counterpart |
+
+The hub reads the **standard model**, because it is the one with enforced data
+behind it and because reading the name-matched tasks here would make this a
+fourth place that decides what a milestone is. Reconciling the three is an
+architecture decision and is raised with the owner rather than settled here.
+
 ## Status
 
-**NOT RUN.** The tests are written and the module has never been installed —
+**NOT RUN.** 25 tests are written and the module has never been installed —
 this session has no route to an Odoo instance. Install on staging and run:
 
 ```bash

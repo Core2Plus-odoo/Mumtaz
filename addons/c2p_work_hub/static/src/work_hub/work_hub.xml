@@ -26,6 +26,28 @@
             <p>No open tasks are assigned to you.</p>
         </div>
 
+        <section t-if="milestones.length" class="c2p-hub__section c2p-hub__section--milestones">
+            <header class="c2p-hub__sectionhead">
+                <h2>
+                    My upcoming milestones
+                    <span class="c2p-hub__count" t-esc="milestones.length"/>
+                </h2>
+            </header>
+            <ul class="c2p-hub__list">
+                <li t-foreach="milestones" t-as="ms" t-key="ms.id" class="c2p-hub__milestone">
+                    <span class="c2p-hub__msflag" t-att-class="ms.overdue ? 'c2p-hub__msflag c2p-hub__msflag--late' : 'c2p-hub__msflag'">
+                        <t t-if="ms.overdue">▲ Late</t>
+                        <t t-else="">◆ Due</t>
+                    </span>
+                    <button class="c2p-hub__name" t-on-click="() => this.openProject(ms.project_id)">
+                        <t t-esc="ms.name"/>
+                    </button>
+                    <span class="c2p-hub__chip" t-if="ms.project" t-esc="ms.project"/>
+                    <span class="c2p-hub__chip" t-esc="ms.deadline"/>
+                </li>
+            </ul>
+        </section>
+
         <div t-else="" class="c2p-hub__sections">
             <t t-foreach="sections" t-as="entry" t-key="entry[0]">
                 <section class="c2p-hub__section" t-att-data-section="entry[0]">

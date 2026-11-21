@@ -223,3 +223,36 @@
         --hub-grey: #96958c;
     }
 }
+
+// Milestones read as a timeline rather than a task list: the flag comes first
+// so a late gate is visible before the name is read. Glyph plus word, never
+// colour alone.
+.c2p-hub {
+    &__milestone {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.45rem 0;
+        border-top: 1px solid var(--hub-border);
+
+        &:first-child { border-top: 0; }
+    }
+
+    &__msflag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--hub-text-2);
+        border: 1px solid var(--hub-border);
+        border-radius: 6px;
+        padding: 0.05rem 0.4rem;
+        white-space: nowrap;
+
+        &--late {
+            color: var(--hub-red);
+            border-color: var(--hub-red);
+        }
+    }
+
+    &__section--milestones { margin-bottom: 1rem; }
+}

@@ -229,6 +229,105 @@ class TestWorkHub(TransactionCase):
                 self.assertIn("action", section, f"{key} must be drillable")
                 self.assertEqual(section["action"]["res_model"], "project.task")
 
+    # ── manager review queue (Wave B) ───────────────────────────────────
+    def test_review_queue_is_empty_for_a_non_manager(self):
+        self._task("Not a manager's problem", self.alice)
+        data = self.Hub.with_user(self.alice).get_data()
+        self.assertFalse(data["waiting_for_me"]["is_manager"])
+        self.assertEqual(data["waiting_for_me"]["count"], 0)
+
+    def test_review_queue_shows_others_work_awaiting_me(self):
+        managed = self.env["project.project"].create(
+            {"name": "Alice Manages", "user_id": self.alice.id})
+        review = self.env["project.task.type"].create(
+            {"name": "In Review", "sequence": 1,
+             "project_ids": [(6, 0, [managed.id])]})
+        theirs = self.Task.create({
+            "name": "Bob's work for review", "project_id": managed.id,
+            "stage_id": review.id, "user_ids": [(6, 0, [self.bob.id])]})
+
+        data = self.Hub.with_user(self.alice).get_data()
+        queue = data["waiting_for_me"]
+        self.assertTrue(queue["is_manager"])
+        self.assertIn(theirs.id, [t["id"] for t in queue["tasks"]])
+
+    def test_review_queue_excludes_my_own_tasks(self):
+        """A manager's own work belongs in their work list, not their queue —
+        otherwise every task they own is counted twice."""
+        managed = self.env["project.project"].create(
+            {"name": "Alice Manages Too", "user_id": self.alice.id})
+        review = self.env["project.task.type"].create(
+            {"name": "In Review", "sequence": 1,
+             "project_ids": [(6, 0, [managed.id])]})
+        own = self.Task.create({
+            "name": "Alice's own task", "project_id": managed.id,
+            "stage_id": review.id, "user_ids": [(6, 0, [self.alice.id])]})
+
+        data = self.Hub.with_user(self.alice).get_data()
+        self.assertNotIn(own.id,
+                         [t["id"] for t in data["waiting_for_me"]["tasks"]])
+
+    # ── blocked is not the same as waiting ──────────────────────────────
+    def test_blocked_and_waiting_are_separate_sections(self):
+        waiting = self._task("Sat with the client", self.alice,
+                             stage_id=self.stage_waiting.id)
+        data = self.Hub.with_user(self.alice).get_data()
+        self.assertIn(waiting.id,
+                      [t["id"] for t in data["waiting_on_others"]["tasks"]])
+
+        blocker_field = self.Task._c2p_blocker_field()
+        if blocker_field:
+            # Waiting-on-Client needs a reason on a delivery project, so set it
+            # on a plain To Do task to isolate the blocked section.
+            blocked = self._task("Stuck", self.alice)
+            blocked.write({blocker_field: "Vendor silent"})
+            data = self.Hub.with_user(self.alice).get_data()
+            self.assertIn(blocked.id,
+                          [t["id"] for t in data["blocked"]["tasks"]])
+
+    # ── upcoming milestones ─────────────────────────────────────────────
+    def test_upcoming_milestones_use_the_standard_model(self):
+        from datetime import date, timedelta
+        self.project.write({"allow_milestones": True})
+        self._task("Work on the project", self.alice)
+        soon = self.env["project.milestone"].create({
+            "name": "Design sign-off", "project_id": self.project.id,
+            "deadline": date.today() + timedelta(days=5)})
+
+        data = self.Hub.with_user(self.alice).get_data()
+        rows = {m["id"]: m for m in data["my_milestones"]}
+        self.assertIn(soon.id, rows)
+        self.assertFalse(rows[soon.id]["overdue"])
+
+    def test_a_late_milestone_is_flagged(self):
+        from datetime import date, timedelta
+        self.project.write({"allow_milestones": True})
+        self._task("Work on the project", self.alice)
+        late = self.env["project.milestone"].create({
+            "name": "UAT gate", "project_id": self.project.id,
+            "deadline": date.today() - timedelta(days=3)})
+
+        data = self.Hub.with_user(self.alice).get_data()
+        rows = {m["id"]: m for m in data["my_milestones"]}
+        self.assertIn(late.id, rows)
+        self.assertTrue(rows[late.id]["overdue"])
+
+    def test_reached_and_distant_milestones_are_excluded(self):
+        from datetime import date, timedelta
+        self.project.write({"allow_milestones": True})
+        self._task("Work on the project", self.alice)
+        reached = self.env["project.milestone"].create({
+            "name": "Already done", "project_id": self.project.id,
+            "deadline": date.today() + timedelta(days=2), "is_reached": True})
+        distant = self.env["project.milestone"].create({
+            "name": "Far away", "project_id": self.project.id,
+            "deadline": date.today() + timedelta(days=200)})
+
+        data = self.Hub.with_user(self.alice).get_data()
+        ids = [m["id"] for m in data["my_milestones"]]
+        self.assertNotIn(reached.id, ids)
+        self.assertNotIn(distant.id, ids)
+
     def test_my_projects_counts_open_work(self):
         self._task("One", self.alice)
         self._task("Two", self.alice)

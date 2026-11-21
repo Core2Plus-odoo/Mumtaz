@@ -9,7 +9,9 @@ import { _t } from "@web/core/l10n/translation";
 // not, and the things nobody can act on (blocked, in review) come last.
 const SECTION_ORDER = [
     "overdue", "today", "due_soon", "stale",
-    "blocked", "in_review", "no_deadline", "recently_assigned",
+    "waiting_for_me",
+    "blocked", "waiting_on_others", "in_review",
+    "no_deadline", "recently_assigned",
 ];
 
 export class C2pWorkHub extends Component {
@@ -42,6 +44,10 @@ export class C2pWorkHub extends Component {
         );
     }
 
+    get milestones() {
+        return this.state.data?.my_milestones || [];
+    }
+
     async load() {
         this.state.loading = true;
         this.state.error = null;
@@ -71,6 +77,18 @@ export class C2pWorkHub extends Component {
             type: "ir.actions.act_window",
             res_model: "project.task",
             res_id: taskId,
+            views: [[false, "form"]],
+        });
+    }
+
+    openProject(projectId) {
+        if (!projectId) {
+            return;
+        }
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "project.project",
+            res_id: projectId,
             views: [[false, "form"]],
         });
     }
