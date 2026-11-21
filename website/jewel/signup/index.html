@@ -23,13 +23,13 @@
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F4F6F8; --paper2:#EDF0F4; --paper3:#DDE3EA; --surface:#FFFFFF;
-  --ink:#10151C; --ink2:#2B3744; --ink3:#64748B; --ink4:#94A3B8;
-  --pri:#3D56C4; --pri2:#5570DF; --pri-bg:#EEF1FD; --pri-border:#C8D2F7; --pri-dark:#2B3E96;
-  --teal:#0E7490; --teal2:#0EA5BE; --teal-bg:#E7F6FA; --teal-border:#B3E2EE;
+  --paper:#F7F3EC; --paper2:#F0EAE0; --paper3:#E2D9CB; --surface:#FFFFFF;
+  --ink:#14202B; --ink2:#2D3B4A; --ink3:#5E6B7A; --ink4:#8A96A3;
+  --pri:#0F6B55; --pri2:#168A6E; --pri-bg:#E6F2EE; --pri-border:#BFD9CF; --pri-dark:#0B4F3F;
+  --teal:#0E8C78; --teal2:#1ABC9C; --teal-bg:#E3F6F1; --teal-border:#BFE8DD;
   --amber:#B4791A; --amber-bg:#FDF3E2; --amber-border:#F0DCB4;
   --rose:#B42318; --rose-bg:#FDECEA; --rose-border:#F6CFC9;
   --a1:#5B5BF0; --a5:#0FA37F;
@@ -37,19 +37,19 @@
   --r:12px; --shadow:0 1px 2px rgba(16,21,28,.05),0 1px 3px rgba(16,21,28,.06);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
-  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
-  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
-  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --paper:#0B1B2B; --paper2:#122638; --paper3:#223A4F; --surface:#122638;
+  --ink:#F2EEE6; --ink2:#D5DCE4; --ink3:#9FB0C0; --ink4:#6F8192;
+  --pri-bg:#163528; --pri-border:#2A5A47; --pri:#D6BC7E;
+  --teal-bg:#0F2F2A; --teal-border:#1E5A4E; --teal:#5ED9BE;
   --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
   --rose-bg:#2E1512; --rose-border:#4C241D; --rose:#E8917E;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
 }}
 :root[data-theme="dark"]{
-  --paper:#0C1118; --paper2:#141B25; --paper3:#232D3B; --surface:#141B25;
-  --ink:#F2F0EB; --ink2:#D8DDE5; --ink3:#9BAAB8; --ink4:#6B7A90;
-  --pri-bg:#1A2140; --pri-border:#33406F; --pri:#8FA3F0;
-  --teal-bg:#0C2730; --teal-border:#1B4A58; --teal:#67D3E8;
+  --paper:#0B1B2B; --paper2:#122638; --paper3:#223A4F; --surface:#122638;
+  --ink:#F2EEE6; --ink2:#D5DCE4; --ink3:#9FB0C0; --ink4:#6F8192;
+  --pri-bg:#163528; --pri-border:#2A5A47; --pri:#D6BC7E;
+  --teal-bg:#0F2F2A; --teal-border:#1E5A4E; --teal:#5ED9BE;
   --amber-bg:#2A2010; --amber-border:#4A3A18; --amber:#E3B45F;
   --rose-bg:#2E1512; --rose-border:#4C241D; --rose:#E8917E;
 }
@@ -64,7 +64,7 @@ a{color:inherit}
 .sp{flex:1}
 button,input,select{font-family:inherit}
 
-.ribbon{background:var(--ink);color:#A9B8F5;text-align:center;padding:6px 14px;font-size:.74rem;font-weight:600}
+.ribbon{background:var(--ink);color:#C4A464;text-align:center;padding:6px 14px;font-size:.74rem;font-weight:600}
 .ribbon a{color:#fff}
 
 .shell{display:grid;grid-template-columns:268px 1fr;min-height:calc(100vh - 28px)}
@@ -86,9 +86,9 @@ button,input,select{font-family:inherit}
 .st.done{color:#C9D2DC}
 .st.done .n{background:rgba(15,163,127,.2);border-color:rgba(15,163,127,.4);color:#6FE3BF}
 .st b{display:block;font-weight:600}
-.st span{font-size:.74rem;color:#64748B;display:block}
-.st.on span{color:#A9B8F5}
-.railfoot{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:.74rem;color:#64748B}
+.st span{font-size:.74rem;color:#5E6B7A;display:block}
+.st.on span{color:#C4A464}
+.railfoot{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:.74rem;color:#5E6B7A}
 @media (max-width:900px){.rail{padding:14px;min-width:0}.steps{flex-direction:row;overflow-x:auto;gap:6px;min-width:0;-webkit-overflow-scrolling:touch}.st span{display:none}.st{white-space:nowrap;flex:none}.railfoot{display:none}.main{min-width:0}}
 
 /* main */
@@ -174,6 +174,8 @@ input:focus,select:focus{outline:2px solid var(--pri);outline-offset:-1px;border
 .b-ghost{border-color:var(--paper3);color:var(--ink2);background:var(--surface)}
 .pane{display:none}
 .pane.on{display:block}
+/* design system v2: serif display face (site/jawhar.css) */
+h1,h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;letter-spacing:-.01em;line-height:1.12}
 </style>
 </head>
 <body>
