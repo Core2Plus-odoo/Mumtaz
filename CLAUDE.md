@@ -136,3 +136,13 @@ bus → hub v2 → new role prompts. Extend, never replace; new code goes in
 - Secrets never in git: `.env`, `*.db`, `web/` are gitignored; tokens/keys are
   encrypted at rest via `C2P_SECRET_KEY` (Fernet) and never echoed back.
 - `docs/05-build-log.md` is the chronological build record; keep appending.
+
+## ERP programme standard (added 20 Nov 2026)
+
+The C2P ERP Master Development Blueprint governs ERP work in `addons/` and
+the connected apps. Its project instance lives in `docs/erp/` (audit,
+capability matrix, decision register, data model, process linkage, security
+and posting rules, standards, roadmap, backlog). Read
+`docs/erp/DEVELOPMENT_STANDARDS.md` before changing any addon, report in its
+mandatory format, and never claim a test passed that did not run. The Jawhar
+rules in `docs/mumtaz-jewel/CLAUDE.md` stay in force and are stricter.

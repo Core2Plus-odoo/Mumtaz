@@ -16,9 +16,12 @@ class TestHygiene(C2pTrackerCommon):
         self.assertTrue(task.id)
 
     def test_leaving_backlog_requires_all_three(self):
+        # Odoo 19 assigns the creating user when user_ids is absent from the
+        # values, so "no assignee" has to be said explicitly.
         task = self.env["project.task"].create({
             "name": "Rough idea", "project_id": self.delivery.id,
             "stage_id": self.d_stage["Backlog"].id,
+            "user_ids": [(5, 0, 0)],
         })
         with self.assertRaises(ValidationError) as caught:
             task.write({"stage_id": self.d_stage["To Do"].id})

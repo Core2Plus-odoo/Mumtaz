@@ -55,7 +55,8 @@ class TestSync(C2pTrackerCommon):
         self.dm1.deadline = "2026-11-01"
         self.portfolio._c2p_sync_portfolio_milestones()
         self.pm1.invalidate_recordset()
-        self.assertEqual(str(self.pm1.date_deadline), "2026-11-01")
+        # date_deadline is a Datetime in Odoo 19; the module compares dates.
+        self.assertEqual(str(self.pm1._c2p_deadline_date()), "2026-11-01")
         self.assertEqual(str(self.pm1.baseline_deadline), "2026-11-01")
 
         # A later change moves the deadline but must leave the baseline, which
@@ -63,7 +64,7 @@ class TestSync(C2pTrackerCommon):
         self.dm1.deadline = "2026-11-21"
         self.portfolio._c2p_sync_portfolio_milestones()
         self.pm1.invalidate_recordset()
-        self.assertEqual(str(self.pm1.date_deadline), "2026-11-21")
+        self.assertEqual(str(self.pm1._c2p_deadline_date()), "2026-11-21")
         self.assertEqual(str(self.pm1.baseline_deadline), "2026-11-01")
         self.assertEqual(self.pm1.slippage_days, 20)
 
@@ -74,7 +75,7 @@ class TestSync(C2pTrackerCommon):
         self.assertFalse(self.dm1.deadline)
         self.portfolio._c2p_sync_portfolio_milestones()
         self.pm1.invalidate_recordset()
-        self.assertEqual(str(self.pm1.date_deadline), "2026-11-01")
+        self.assertEqual(str(self.pm1._c2p_deadline_date()), "2026-11-01")
 
     def test_sync_locked_is_respected(self):
         self.pm1.sync_locked = True
