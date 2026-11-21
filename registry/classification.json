@@ -307,11 +307,6 @@
       "layer": "internal",
       "disposition": "keep",
       "note": "Installed in Mumtaz_C2P. Existed only in the server's system addons folder until 21 Nov 2026. REVIEW-05 open."
-    },
-    "c2p_agents": {
-      "layer": "internal",
-      "disposition": "keep",
-      "note": "Installed in Mumtaz_C2P_staging. Existed only in a server checkout until 21 Nov 2026."
     }
   }
 }

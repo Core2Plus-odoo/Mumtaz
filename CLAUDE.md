@@ -10,7 +10,7 @@ the most activity:
 
 - **`c2p-delivery-system/`** — the C2P Agency OS: an AI-run Odoo delivery agency
   (FastAPI backend + single-file console).
-- **`addons/`** — 58 Odoo 19 Community addons: the Mumtaz SaaS platform, the
+- **`addons/`** — 57 Odoo 19 Community addons: the Mumtaz SaaS platform, the
   Jawhar jewellery edition and C2P internal modules.
 
 Production: Hostinger VPS `187.77.128.199`, repo checked out at `/opt/mumtaz`,
