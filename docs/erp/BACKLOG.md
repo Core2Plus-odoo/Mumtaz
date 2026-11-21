@@ -6,7 +6,7 @@ decision first.
 
 | # | Item | Wave | Req | Acceptance (GIVEN / WHEN / THEN) |
 | --- | --- | --- | --- | --- |
-| 1 | **Fresh-database install CI for every module** (`.github/workflows/platform-odoo-tests.yml`, mirror of the Jawhar workflow; a smoke test per module that installs, upgrades and loads the main menu) | 1 | PLT-REQ-001 | GIVEN a clean Odoo 19 CE database WHEN all 52 modules install and upgrade THEN exit 0 and 0 errors in the log; a module that fails blocks merge |
+| 1 | **Fresh-database install CI for every module** — **built 21 Nov 2026** (`scripts/platform_ci.sh`, `.github/workflows/platform-odoo-install.yml`: all 39 non-jewellery modules in one database, upgrade with tests, fail on any logged ERROR; four modules that could not install were fixed, see the changelog). Still open: a per-module smoke test that loads the main menu | 1 | PLT-REQ-001 | GIVEN a clean Odoo 19 CE database WHEN all 52 modules install and upgrade THEN exit 0 and 0 errors in the log; a module that fails blocks merge |
 | 2 | **Access CSV and company scoping audit** (add missing `ir.model.access.csv`; `company_id` on unscoped platform models; one cross-company negative test per tenant-facing module) | 1 | PLT-REQ-002 | GIVEN users A and B in different companies WHEN B requests A's record by id over RPC THEN access error / 404 and nothing written |
 | 3 | **`sudo()` inventory and justification** (comment on each; CI grep fails on an unlabelled `sudo(`) | 1 | PLT-REQ-002 | GIVEN the repository WHEN CI runs THEN every `sudo()` carries `# sudo:` and `SECURITY_MATRIX.md` §8a.5 lists the counts |
 | 4 | **Versioned C2P CRM rules** (`c2p_crm_rules`: qualification, scoring, assignment, archival as code with tests and a dry-run flag; disables the database actions on install) | 1 | CRM-REQ-001 | GIVEN a staging copy of `Mumtaz_C2P` WHEN the module runs in dry-run THEN its proposed changes match the live actions' on a sample of 500 leads, differences listed; archival writes a lost reason |
@@ -32,7 +32,6 @@ the workshop, service desk, rental, consolidation, WhatsApp Cloud API.
 
 ## Next smallest safe task
 
-**Item 1**: the fresh-database install workflow for all modules. It needs no
-decision, touches no data, and every later item depends on it to prove
-anything. Estimated as one slice: workflow file, a `scripts/platform_ci.sh`
-mirroring `scripts/jewel_ci.sh`, and a smoke test package per module family.
+Item 1 is built. **Item 3** (the `sudo()` inventory with a CI grep for
+unlabelled uses) is the next one that needs no decision and no data: a
+read-and-annotate pass over 56 call sites that also feeds item 2.
