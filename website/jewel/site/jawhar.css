@@ -185,8 +185,9 @@ table.status td:last-child{white-space:nowrap;text-align:right}
 .foot .legal{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:var(--s4);justify-content:space-between;font-size:.82rem}
 
 /* ---------- 5. motion & accessibility ---------- */
-.reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
-.reveal.in{opacity:1;transform:none}
+.js .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.js .reveal.in{opacity:1;transform:none}
+@media print{.reveal{opacity:1!important;transform:none!important}}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation:none!important;transition:none!important}

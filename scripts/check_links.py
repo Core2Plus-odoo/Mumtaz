@@ -103,6 +103,8 @@ def main():
                 continue
 
             target, frag = urldefrag(href)
+            # a cache-busting query (site/jawhar.css?v=abc) is not part of the file name
+            target = target.split('?', 1)[0]
 
             if not target:                              # same page
                 if frag and frag not in doc.ids and frag not in routers.get(f, set()):

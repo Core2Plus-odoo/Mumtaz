@@ -160,6 +160,10 @@ if [ -d "$LANDING_SRC" ]; then
     mkdir -p "$LANDING_DIR"
     if command -v rsync >/dev/null 2>&1; then
       rsync -a --delete "$LANDING_SRC/." "$LANDING_DIR/"
+      # /site/ is served with a 30-day immutable cache, so the stylesheet link carries
+      # the commit: a new deploy can never leave a browser on last week's CSS.
+      stamp="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || date +%Y%m%d%H%M)"
+      find "$LANDING_DIR" -name index.html -exec sed -i "s#site/jawhar.css?v=[A-Za-z0-9]*#site/jawhar.css?v=$stamp#g" {} +
     else
       # No rsync: rebuild the directory so removed files do not linger.
       tmp="$(mktemp -d "${LANDING_DIR%/}.new.XXXXXX")"

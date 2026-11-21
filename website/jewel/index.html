@@ -15,13 +15,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="site/jawhar.css">
+<link rel="stylesheet" href="site/jawhar.css?v=20261121b">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Jawhar","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Jewellery retail operating system for Gulf boutiques and chains, built on Odoo 19 Community.","author":{"@type":"Organization","name":"Mumtaz Digital"}}
 </script>
 <style>
 /* page-only styles; everything reusable lives in site/jawhar.css */
-.hero{padding:var(--s7) 0 var(--s8);position:relative;overflow:hidden;background:radial-gradient(circle at 83% 36%,rgba(23,77,80,.55),transparent 43%),var(--navy);color:var(--on-dark)}
+.hero{padding:var(--s7) 0 var(--s8);position:relative;overflow:hidden;background-color:#071A25;background-image:radial-gradient(circle at 83% 36%,rgba(23,77,80,.55),transparent 43%);color:#F4F7F5}
 .hero::before{content:"";position:absolute;inset:4% 0 auto 55%;width:46vw;height:46vw;max-width:620px;max-height:620px;border:1px solid rgba(88,215,171,.12);border-radius:50%;pointer-events:none}
 .hero h1,.hero .lead{color:#fff}
 .hero .lead{color:var(--on-dark-2)}
@@ -99,6 +99,7 @@
 </style>
 </head>
 <body>
+<script>document.documentElement.classList.add('js')</script>
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="head">
@@ -392,10 +393,13 @@
     document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('jawhar_theme',next);}catch(e2){}});
   // reveal on scroll
   var els=document.querySelectorAll('.reveal');
+  function showAll(){els.forEach(function(el){el.classList.add('in');});}
   if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion:reduce)').matches){
     var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});},{rootMargin:'0px 0px -8% 0px'});
     els.forEach(function(el){io.observe(el);});
-  }else{els.forEach(function(el){el.classList.add('in');});}
+    // safety net: whatever the observer does, nothing stays hidden (print, capture tools, odd viewports)
+    setTimeout(showAll,1500); window.addEventListener('beforeprint',showAll);
+  }else{showAll();}
   // demo request → /jawhar/public/site/demo-request (mumtaz_jewellery_website)
   var f=document.getElementById('demo-form'),msg=document.getElementById('f-msg'),btn=document.getElementById('f-submit');
   function say(kind,text){msg.className='form-msg '+kind;msg.innerHTML=text;}
