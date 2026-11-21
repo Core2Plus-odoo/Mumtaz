@@ -395,6 +395,7 @@ class ProjectProject(models.Model):
         recomputation. Called from the delivery side when a task changes in a
         way the portfolio reports on (stage, blocker age, deadline)."""
         portfolios = self.browse()
+        # sudo: delivery company read across the counterpart link; only marks fields for recomputation
         for project in self.sudo():
             portfolio = project.c2p_counterpart_id if project.c2p_layer == "delivery" else project
             if portfolio and portfolio.c2p_layer == "portfolio":
