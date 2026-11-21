@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 61
+module_count: 60
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -820,20 +820,6 @@ modules:
     test_files: 0
     access_csv: true
     note: "Media-agency vertical; either promote to an edition or keep as a customer extension."
-  mumtaz_tenant_profile:
-    layer: internal
-    disposition: review
-    path: addons/mumtaz_tenant_profile
-    title: "Mumtaz Tenant Profile"
-    version: "19.0.1.0.0"
-    license: "LGPL-3"
-    application: false
-    depends_local: ["mumtaz_lead_scraper", "mumtaz_lead_nurture", "mumtaz_control_plane"]
-    depends_standard: ["base", "crm"]
-    python_lines: 23
-    test_files: 0
-    access_csv: false
-    note: "Found in /opt/custom_addons on the server; not installed in any inspected database. Depends on lead tooling and the control plane."
   faizy_core:
     layer: venture
     disposition: relocate-candidate
