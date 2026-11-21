@@ -16,7 +16,7 @@ Priorities: **P0** unblocks everything (evidence), **P1** foundation/spine, **P2
 | `PHA-SEC-003` | P1 | Security | Register every `sudo()`: justification, pre-check, negative test | - |
 | `PHA-SEC-004` | P1 | Audit | Audit trail for process mode, courier accounts and authorized deductions | - |
 | `PHA-MON-001` | P1 | Data | Money fields to Monetary with currency (non-destructive migration) | D-003 |
-| `PHA-CI-001` | P1 | Quality | CI job running pharma Odoo tests and the reserved-name scan | - |
+| `PHA-CI-001` | P1 | Quality | CI job running pharma Odoo tests and the reserved-name scan (feasibility proven 2026-11-21: `deploy/pharma-staging/local-test.sh tests` runs the suite on a plain Linux box with PostgreSQL; remaining work is the workflow file and the reserved-name scan) | - |
 | `PHA-L2C-001` | P1 | Slice | Reference transaction: COD lead-to-cash verified end to end | OPS-003, PHA-FIN-001 |
 | `PHA-FIN-001` | P1 | Finance | Localization and period-lock policy (Pakistan chart or documented alternative) | D-006, D-011 |
 | `PHA-REC-001` | P1 | Quality | Automate reconciliation checks REC-1..8 | PHA-L2C-001 |
