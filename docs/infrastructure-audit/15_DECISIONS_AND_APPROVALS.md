@@ -33,7 +33,9 @@ Five pull requests merged to `main` while this pack was in review (#170, #172, #
 | ODOO-01 / F-23: shared sign-on secret | **Still open** — `mumtaz_sso` unchanged |
 | Repository documentation | #177 added `REPO_MAP.md`, `registry.yaml` and a layering check; `sites/` complements it website by website |
 
-Everything about the server (F-01, F-02, F-04 to F-08 and the rest) is unchanged by these merges.
+| F-05 / O-04: modules that existed only on the server | **Largely addressed** by #180 (merged later the same day): `c2p_appointment`, `c2p_proposal` and `c2p_master_agent` are now in git "as found", with review item REVIEW-05 open. The 25 database-stored CRM rules (O-03) and the IG2 modules are still outside `main` |
+
+Everything else about the server (F-01, F-02, F-04, F-06 to F-08 and the rest) is unchanged by these merges. #179 (Jawhar site and design work) does not touch any audit finding.
 
 ## 2. Decisions needed
 

@@ -8,7 +8,7 @@ One folder per website. Each has a `README.md` saying what the site is, where it
 
 | Website | What it is | Code | Database | Status |
 |---|---|---|---|---|
-| [core2plus.com](core2plus.com/) | Group CRM / internal ERP | `addons/c2p_*` + branch + server-only modules | `Mumtaz_C2P` | Production |
+| [core2plus.com](core2plus.com/) | Group CRM / internal ERP | `addons/c2p_*` + rules stored in the database | `Mumtaz_C2P` | Production |
 | [erp.mumtaz.digital](erp.mumtaz.digital/) | Platform ERP (also `admin.`) | `addons/mumtaz_*` | `Mumtaz_ERP` | Production |
 | [ig2.mumtaz.digital](ig2.mumtaz.digital/) | **Client** accounting | branch `claude/resume-help-95ne9v` | `Mumtaz_IG2` | Production, no staging |
 | [myfaizy.com](myfaizy.com/) | Faizy (separate product) | `faizy/` + production branch | `faizy_prod` | Production |

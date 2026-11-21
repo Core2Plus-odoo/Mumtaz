@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_c2p_agent_crm" name="Ask Agent" parent="crm.crm_menu_root" action="action_c2p_master_agent" sequence="1"/>
+  <menuitem id="menu_c2p_agent_project" name="Ask Agent" parent="project.menu_main_pm" action="action_c2p_master_agent" sequence="1"/>
+</odoo>

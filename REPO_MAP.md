@@ -23,7 +23,7 @@ Eight `apps/*` folders moved on 21 Nov 2026 when the repository was organized by
 
 | Folder | What it is | Belongs to |
 | --- | --- | --- |
-| `addons/` | 53 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
+| `addons/` | 57 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
 | `apps/jawhar-web` | Jawhar React app | Jawhar |
 | `sites/` | One folder per website: an index for every site, plus the code of the static sites below (see `sites/README.md`) | All |
 | `sites/app.mumtaz.digital/portal` | Static customer portal pages (was `apps/portal`) | Mumtaz platform |
@@ -51,8 +51,8 @@ Generated detail is in `registry.yaml`. Summary at this commit:
 | foundation | 4 | 0 |
 | platform | 17 | 2 |
 | product | 12 | 1 |
-| edition (Jawhar) | 14 | 13 |
-| internal | 6 | 2 |
+| edition (Jawhar) | 15 | 14 |
+| internal | 9 | 2 |
 | venture | 2 | 0 |
 
 Findings:

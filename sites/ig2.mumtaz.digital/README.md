@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Status** | **Production client data, no staging copy** (reported) |
-| **Code** | Not on `main`. Branch `claude/resume-help-95ne9v`: `c2p_pk_vouchers` and `mumtaz_financial_reports`, plus the third-party `base_accounting_kit` installed on the server |
+| **Code** | Not on `main` (PR #180 deliberately left the IG2 modules out). Branch `claude/resume-help-95ne9v`: `c2p_pk_vouchers` and the IG2 financial reports, plus the third-party `base_accounting_kit` installed on the server |
 | **Database** | `Mumtaz_IG2` (PostgreSQL) |
 | **Service** | `odoo3` on port 8071 |
 | **Deploy** | By hand: `git pull`, then `-u` on the live database |
