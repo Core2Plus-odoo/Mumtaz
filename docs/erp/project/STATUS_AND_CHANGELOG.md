@@ -10,11 +10,11 @@ As of 2026-11-20. Scale (blueprint §23): **Not started / In progress / Evidence
 | `pharma_pk_tax_core` | 19.0.1.1.0 | Evidence provided | 176/176 and 189/189 runs | live data on the tax-link gate (no rule linked) |
 | `pharma_reconciliation_hub` | 19.0.1.0.0 | Evidence provided | 189/189 | bank import; Operations write surface |
 | `pharma_partner_stock` | 19.0.1.0.0 | Evidence provided (tests) | 176/176 | never run on a real stock location |
-| `pharma_courier_cod` | 19.0.1.1.0 | **In progress** | ledger and upload: green up to 1.0.0 | the flow layer (stored stage/next/owner, queues) **NOT RUN** |
-| `pharma_courier_cod_accounting` | 19.0.1.3.0 | **In progress** | collection and settlement entries live, green | reversal (1.2.0), strict order, Entries to Post, kind tag + migration (1.3.0) **NOT RUN** |
+| `pharma_courier_cod` | 19.0.1.1.0 | Evidence provided (local) | ledger on the VPS to 1.0.0; flow layer: 92 tests green locally 2026-11-21 | flow layer not yet on the VPS |
+| `pharma_courier_cod_accounting` | 19.0.1.3.0 | Evidence provided (local) | entries live on the VPS; 64 tests green locally 2026-11-21 incl. reversal, strict order, Entries to Post, kind tag + migration | 1.2.0 and 1.3.0 not yet on the VPS |
 | `pharma_accounting_hardening` | 19.0.1.1.0 | Evidence provided | live, controls verified | none |
-| `pharma_demo_data`, `pharma_courier_cod_demo`, `pharma_website_demo` | 1.1.1 / 1.3.0 / 1.1.0 | In progress | demo through 1.1.x live | 1.3.0 seeding (collection entries posted before settlement) **NOT RUN** |
-| App-per-area menus, `stage.sh rehearse-upgrade`, `upgrade [module]` | n/a | **In progress** | none | **NOT RUN** |
+| `pharma_demo_data`, `pharma_courier_cod_demo`, `pharma_website_demo` | 1.1.1 / 1.3.0 / 1.1.0 | Evidence provided (local) | 1.3.0 seeding and its migration ran in the local upgrade rehearsal | not yet on the VPS |
+| App-per-area menus, `stage.sh rehearse-upgrade`, `upgrade [module]` | n/a | Evidence provided (local, menus) | menus: real upgrade from `6b09f6d` passed locally 2026-11-21 | the `stage.sh` commands themselves **NOT RUN** on the VPS |
 | Environment `mumtaz_pharma` | n/a | Staging, demo mode | last verify 2026-11-18 | state after pending slices unknown |
 
 ## 2. Requirements traceability (summary)
@@ -29,7 +29,8 @@ Process → requirement → entity/field → UI → permission → test, kept in
 
 | Date | Commit | Change | Verified? |
 | --- | --- | --- | --- |
-| 2026-11-20 | `8db4cff` | COD process flow: stage, next step, owner, queues, strict order, Entries to Post | static only, **NOT RUN** |
+| 2026-11-21 | `8204b42` | Base flow tests assert base rules directly | 0 failed of 222, local |
+| 2026-11-20 | `8db4cff` | COD process flow: stage, next step, owner, queues, strict order, Entries to Post | local 222/222 after the test fix; **VPS NOT RUN** |
 | 2026-11-20 | `f687c3b` | One app per area; `rehearse-upgrade` | static only, **NOT RUN** |
 | 2026-11-18 | `a3f31ba`, `7d30d2b` | Reversal of posted entries; `upgrade [module]` | static only, **NOT RUN** |
 | 2026-11-18 | `d95ab00` | Collection entry (1c) | **189/189**, live |

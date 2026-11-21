@@ -521,6 +521,17 @@ Static checks only (XML and SVG well-formed, `bash -n`, no stale menu references
 Expected suite: 203 + 28 new = about 231. The existing accounting tests run in advisory mode on purpose; the strict order is tested in `test_flow.py`.
 Static checks only. Not run on Odoo. Staging is still at the state of the last verified upgrade: the reversal slice, the app split and this flow are all written and not yet run on the VPS. They go through `test-combined`, `rehearse-upgrade` and a named go, in that order.
 
+## 2026-11-21 — first EXECUTED run of the reversal, app split and process flow, in the cloud session (real Odoo 19; NOT the VPS)
+
+The cloud session can run Odoo after all: PostgreSQL 16 + Python 3.13 + a clone of `odoo/odoo` branch `19.0` (commit `0a722221`, 2026-11-10), requirements installed with `psycopg2-binary` and without `python-ldap` (no pharma module uses LDAP). Databases were throwaway; no server, no nginx, no staging database was touched.
+
+- **Run 1** (fresh install of the pharma module list, `--test-tags pharma`): 222 tests, **7 failed**, all in `pharma_courier_cod/tests/test_flow.py`. Cause: a defect in the tests' premise, not in the code: the accounting add-on is installed in the same database and by design puts the collection and settlement entry steps ahead of the base steps, so base-only expectations did not hold. The accounting suite (64 tests, which includes reversal, the accounting flow, strict order, override, kind tag and Entries to Post) passed. Fixed in `8204b42` by asserting the base rules directly.
+- **Run 2** (fresh database again, after the fix): **`0 failed, 0 error(s) of 222 tests`**, exit 0. Per module: pharma_courier_cod 92, pharma_courier_cod_accounting 64, pharma_courier_cod_demo 13, pharma_demo_data 15, pharma_partner_stock 9, pharma_pk_tax_core 32, pharma_reconciliation_hub 18, pharma_website_demo 9. The only ERROR lines are the two intentional negative-test SQL statements seen in every earlier run.
+- **Upgrade rehearsal** (install the add-ons as of `6b09f6d`, the state staging runs, then `-u` the same database with the new code): exit 0, no ERROR or Traceback. Menu roots before: `Pharma`; after: `Reconciliation, Courier COD, Distribution Partner, Tax Centre, Pharma Admin`; leftover shared `Pharma` root: **0**; orphaned old section menus: **0**; 18 menus under the five apps. Both migrations ran (accounting 19.0.1.3.0 tagging, demo 19.0.1.3.0). Parcels by next step after the upgrade (19 parcels): await_remittance 7, chase_remittance 3, none 4, post_settlement 3, settle_returned 1, track 1. COD entries: collection/posted 3, settlement/draft 1.
+- `deploy/pharma-staging/local-test.sh` (`tests`, `rehearse <rev>`) captures this procedure for any Linux box with PostgreSQL. It is syntax-checked (`bash -n`); its own first end-to-end run was still in progress when this was committed (result to be appended).
+
+**What this does NOT prove (still open):** the third-party accounting kit and `pharma_accounting_hardening` were not in this run (their source is not in the repo), so the **176/189/203-test totals on the VPS differ from the 222 here**; the real VPS service, nginx, TLS, neutralize behaviour, `stage.sh upgrade` itself and `smoke`; and every browser-level check. Those remain the owner's gates; `rehearse-upgrade` on the VPS is still worth one run because it uses the real staging data.
+
 ## Plan for the VPS (⛔ = gate, needs a named approval first)
 
 ```bash

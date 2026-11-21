@@ -75,12 +75,12 @@ Labels: `[V]` verified (evidence given) · `[R]` reported by the owner from the 
 | Courier COD ledger + statement upload (1) | Live on staging | green |
 | COD settlement entry (1b), collection entry (1c) | Live on staging | `test-combined` **189/189**, `upgrade` + `smoke` green, 2026-11-18 |
 | `pharma-functionality` cherry-picks (tax link, partner stock, hide support button) | Live on staging | `test-combined` **176/176**, upgrade + smoke green |
-| Reversal of posted entries (cherry-picked `de063d4`) | **Written, NOT RUN** | static checks only; 14 tests expected |
-| App-per-area menu split + `rehearse-upgrade` | **Written, NOT RUN** | static checks only |
-| COD process flow, queues, strict order | **Written, NOT RUN** | static checks only; about 28 new tests |
+| Reversal of posted entries (cherry-picked `de063d4`) | **Executed locally 2026-11-21** | `0 failed, 0 error(s) of 222` on a fresh real Odoo 19 database (cloud session); **not yet on the VPS** |
+| App-per-area menu split + `rehearse-upgrade` | **Executed locally 2026-11-21** | fresh install and a real upgrade from `6b09f6d`: 5 app roots, 0 leftover shared root, exit 0; the `stage.sh rehearse-upgrade` command itself is **NOT RUN** |
+| COD process flow, queues, strict order | **Executed locally 2026-11-21** | in the same 222-test run, after a test-premise fix; **not yet on the VPS** |
 | **Acceptance by a business owner** | **None** | no UAT sign-off exists for any slice |
 
-The next smallest safe task is therefore **not new code**: it is to burn down this evidence debt (backlog items `OPS-001..004`).
+**Update 2026-11-21:** the three written-but-unrun pieces were then executed in the cloud session against a real Odoo 19 (see `docs/pharma/DEPLOY_LOG.md`): 222 tests, 0 failed, plus a real upgrade rehearsal. That is real evidence but **not a substitute for the VPS gates** (the kit and hardening module were not in that run; no browser). The remaining evidence debt is `OPS-001..004` on the VPS and the owner's browser pass.
 
 ## 7. Risks that could cause irreversible harm (none triggered by this audit)
 
