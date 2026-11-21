@@ -1,6 +1,7 @@
 import logging
 
-from odoo import http
+from odoo import _, http
+from odoo.exceptions import AccessError
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
@@ -12,8 +13,15 @@ class ZakiApi(http.Controller):
 
     @http.route("/zaki/api/snapshot", type="jsonrpc", auth="user")
     def snapshot(self, **kw):
+        # The snapshot is the company's books in figures. It is served only to
+        # internal users who may read accounting; everyone else is refused
+        # before any query runs.
+        user = request.env.user
+        if user.share or not (user.has_group("account.group_account_readonly")
+                              or user.has_group("account.group_account_invoice")):
+            raise AccessError(_("The ZAKI snapshot is available to accounting users only."))
         try:
-            # sudo: REVIEW-03: finance snapshot read with sudo for any auth=user session; restrict to accounting users
+            # sudo: the snapshot aggregates moves, payslips and leads company-wide for a user already checked above for accounting rights
             return request.env["zaki.connector"].sudo().get_snapshot()
         except Exception:
             _logger.exception("ZAKI snapshot failed for uid=%s company=%s",
