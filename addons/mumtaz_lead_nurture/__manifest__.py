@@ -10,6 +10,7 @@
     "data": [
         "security/lead_nurture_security.xml",
         "security/ir.model.access.csv",
+        "security/lead_nurture_rules.xml",
         "data/lead_nurture_data.xml",
         "data/lead_nurture_cron.xml",
         "views/lead_nurture_campaign_views.xml",

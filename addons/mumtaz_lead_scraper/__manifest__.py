@@ -9,6 +9,7 @@
     "data": [
         "security/lead_scraper_security.xml",
         "security/ir.model.access.csv",
+        "security/lead_scraper_rules.xml",
         "data/lead_scraper_cron.xml",
         "views/lead_scraper_source_views.xml",
         "views/lead_scraper_job_views.xml",

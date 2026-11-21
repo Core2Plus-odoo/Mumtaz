@@ -424,8 +424,8 @@ modules:
     application: false
     depends_local: ["mumtaz_sme_profile", "mumtaz_control_plane"]
     depends_standard: ["mail", "purchase", "sale"]
-    python_lines: 676
-    test_files: 0
+    python_lines: 735
+    test_files: 1
     access_csv: true
     note: "No tests."
   mumtaz_super_toolkit:
@@ -774,8 +774,8 @@ modules:
     application: false
     depends_local: ["mumtaz_lead_scraper"]
     depends_standard: ["crm", "mail"]
-    python_lines: 1431
-    test_files: 0
+    python_lines: 1494
+    test_files: 1
     access_csv: true
     note: "BD tooling, not ERP product."
   mumtaz_lead_scraper:
@@ -788,8 +788,8 @@ modules:
     application: true
     depends_local: []
     depends_standard: ["base", "mail", "crm"]
-    python_lines: 2608
-    test_files: 0
+    python_lines: 2666
+    test_files: 1
     access_csv: true
     note: "BD tooling, not ERP product."
   mumtaz_media_buying:
@@ -802,8 +802,8 @@ modules:
     application: true
     depends_local: []
     depends_standard: ["mail", "sale", "purchase"]
-    python_lines: 974
-    test_files: 0
+    python_lines: 1045
+    test_files: 1
     access_csv: true
     note: "Media-agency vertical; either promote to an edition or keep as a customer extension."
   faizy_core:

@@ -12,6 +12,7 @@ class LeadScraperRecord(models.Model):
     job_id = fields.Many2one(
         "lead.scraper.job", required=True, ondelete="cascade", index=True
     )
+    company_id = fields.Many2one(related="job_id.company_id", store=True, index=True)
     source_id = fields.Many2one(
         "lead.scraper.source", required=True, ondelete="cascade", index=True
     )

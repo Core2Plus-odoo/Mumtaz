@@ -34,6 +34,7 @@ Purchase and Invoicing:
     "data": [
         "security/media_security.xml",
         "security/ir.model.access.csv",
+        "security/media_rules.xml",
         "data/media_data.xml",
         "views/media_outlet_views.xml",
         "views/media_rate_card_views.xml",
