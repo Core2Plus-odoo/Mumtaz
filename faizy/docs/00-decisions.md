@@ -668,3 +668,50 @@ code path. `faizy_product_data.xml`'s own comment already said as much ("orders 
 accounting at all today") about the sale-side products it pre-built for exactly this. Recorded in
 FIT_GAP_REGISTER.md as the next candidate, pending its own explicit scoping decision.
 
+
+## 15. Document vault: portal customers were able to read every family's documents — closed
+
+Found by the repository-wide infrastructure audit of 21 Nov 2026 (finding ODOO-06,
+`docs/infrastructure-audit/04_SECURITY_AUDIT.md` on `main`). `ir.model.access.csv` grants
+`base.group_portal` read on `faizy.document`, but `faizy_security.xml` carried "customers see only
+their own" record rules for orders, family members and subscriptions and none for documents. No
+portal page lists documents, so nothing in the UI showed it; the exposure was the standard RPC
+interface, where any signed-in customer could `search_read` the model and pull every family's
+CNIC, passport or medical file, attachment included. `faizy_document.py`'s own docstring already
+stated the intent ("Read access is the owning customer plus Operations").
+
+Fix: `rule_document_portal`, the same shape as the three existing portal rules —
+`[('partner_id', '=', user.partner_id.id)]`, read only. `faizy_core` 19.0.1.22.0 → 19.0.1.22.1.
+The security file is deliberately not `noupdate`, so `-u faizy_core` creates the rule.
+
+`faizy_core` gets its first test file, `tests/test_document_access.py` (6 tests): a customer finds
+and reads only their own document; is refused another customer's record and its file; still cannot
+write; Operations still sees everything.
+
+Verified on Odoo 19.0 + PostgreSQL 16, throwaway databases, all dropped afterwards:
+
+- Installed this branch's `faizy_core` unchanged (19.0.1.22.0, no document rule), then ran
+  `-u faizy_core --test-enable` from the fixed tree: rule created, `0 failed, 0 error(s) of 6 tests`.
+- Fresh install of `faizy_core,faizy_website,faizy_ai` with the fix and all three test tags:
+  `0 failed, 0 error(s) of 23 tests`.
+- The same 6 tests against the security file without the rule (run on `main`'s copy, PR #182):
+  3 fail — the two cross-customer reads and the search. The gap was real on a running Odoo 19.
+- `validate_modules.py`, `check_portal_access.py`, `check_self_fields.py`, `check_plan_prices.py`,
+  `flake8` — all pass.
+
+**Not verified:** nothing has been run on `faizy_prod`. Per this project's own rule, this is not
+"fixed in production" until the upgrade below has been run there and its output seen:
+
+    sudo systemctl stop faizy-odoo && sudo -u faizy git -C /opt/faizy/src pull && cd /opt/faizy && \
+      sudo -u faizy /opt/faizy/venv/bin/python3 /opt/faizy/odoo/odoo-bin -c /opt/faizy/odoo.conf \
+      --logfile= -d faizy_prod -u faizy_core --stop-after-init && echo "upgrade exit: $?" && \
+      sudo systemctl start faizy-odoo
+
+**Left as it is, needs a product decision:** `access_faizy_document_user` gives the whole staff
+group read on documents, which the model docstring says it should not have ("never the whole staff
+group"). Narrowing it could break an agent workflow that relies on it, so it is not bundled here.
+
+**Seen in passing, not investigated:** during the `faizy_ai` order tests, `faizy_order_alert.py`
+logs `Faizy ops alert failed for order N` with `ValueError: Expected singleton: faizy.order()` for
+each order created. It is caught by design and does not fail a test, and it is unrelated to this
+change; worth a look in case the same happens for real orders.

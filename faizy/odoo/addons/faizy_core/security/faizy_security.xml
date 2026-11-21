@@ -80,6 +80,20 @@
         <field name="perm_unlink" eval="False"/>
     </record>
 
+    <!-- The document vault holds CNICs, passports and medical records. The
+         portal ACL grants read on the model, so without this rule every
+         signed-in customer could read every family's documents over RPC. -->
+    <record id="rule_document_portal" model="ir.rule">
+        <field name="name">Faizy Document: customers see only their own</field>
+        <field name="model_id" ref="model_faizy_document"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
     <!-- A Faizy in the portal sees the jobs assigned to them, nothing else. -->
     <record id="rule_order_worker_portal" model="ir.rule">
         <field name="name">Faizy Order: workers see their own assignments</field>
