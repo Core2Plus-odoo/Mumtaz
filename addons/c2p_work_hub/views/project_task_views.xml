@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_form_c2p_work_hub" model="ir.ui.view">
+        <field name="name">project.task.form.c2p.work.hub</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <!-- Next action and update freshness belong next to the dates a
+                 user is already looking at, not on a tab of their own. -->
+            <field name="date_deadline" position="after">
+                <field name="c2p_next_action" placeholder="The one next step"/>
+                <field name="c2p_last_update" readonly="1"/>
+            </field>
+            <xpath expr="//div[@name='button_box']" position="before">
+                <button name="action_c2p_submit_for_review"
+                        type="object"
+                        string="Submit for Review"
+                        class="btn-secondary"
+                        invisible="not project_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_task_search_c2p_work_hub" model="ir.ui.view">
+        <field name="name">project.task.search.c2p.work.hub</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form"/>
+        <field name="arch" type="xml">
+            <filter name="my_tasks" position="after">
+                <filter name="c2p_stale"
+                        string="Not updated recently"
+                        domain="['|', ('c2p_last_update', '=', False),
+                                 ('c2p_last_update', '&lt;',
+                                  (context_today() - datetime.timedelta(days=3)).strftime('%Y-%m-%d'))]"/>
+            </filter>
+        </field>
+    </record>
+</odoo>

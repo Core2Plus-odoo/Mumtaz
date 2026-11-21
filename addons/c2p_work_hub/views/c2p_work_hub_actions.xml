@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_c2p_work_hub" model="ir.actions.client">
+        <field name="name">My Work Today</field>
+        <field name="tag">c2p_work_hub</field>
+    </record>
+</odoo>
