@@ -6,9 +6,13 @@ test record, the list of issues corrected and the production checklist.
 
 ## 1. What the module is
 
-- Seven Website Builder blocks under **Blocks → Mumtaz Digital**: Hero, Three
-  Visitor Paths, ERP Highlights (eight module tiles), Industry Editions, ZAKI
-  AI Showcase, White-Label Partners, Native CRM Demo Form.
+- Ten Website Builder blocks under **Blocks → Mumtaz Digital**: Hero, Three
+  Visitor Paths, ERP Highlights (eight module tiles), Industry Editions,
+  Localisation & Compliance, ZAKI AI Showcase, White-Label Partners, Pricing
+  Plans, FAQ, Native CRM Demo Form. The localisation, pricing and FAQ copy was
+  carried verbatim from the previous static mumtaz.digital on 21 Nov 2026 at
+  the owner's request; the prices and the "free forever" statements are the
+  owner's published claims, not something verified here.
 - One **unpublished** page at `/mumtaz-native-preview`, assembled from those
   blocks inside the standard `website.layout`, so the site's own header,
   footer, menus, SEO fields, translations and the Edit button apply.
@@ -50,6 +54,7 @@ test record, the list of issues corrected and the production checklist.
 | 11 | Form had no `#s_website_form_result` element | Odoo's form script crashed with an error dialog the moment it tried to show any status (so a server refusal could never be displayed) | Native submit-row markup restored; covered by test |
 | 12 | Server accepted posts with no contact, e-mail or consent | Odoo only enforces model-required fields server side; a bot posting directly would create empty leads | Scoped controller override for this one form (by its fixed subject): required fields, e-mail format, phone length, honeypot, size cap; message returned to the form |
 | 14 | Same `css2` import defect found in `mumtaz_organization` (frontend bundle) while running the whole-platform install | Any database with that module installed served an unparsable frontend stylesheet, so the website rendered unstyled | Same one-line URL fix in that module; the stylesheet test now checks that every hoisted `@import` in the bundle is a complete rule, whichever module contributed it |
+| 15 | Previous site content missing (pricing, FAQ, localisation) | Visitors lost pages they could find on the old site | Three native blocks with the previous site's copy verbatim; page order hero → paths → ERP → editions → localisation → ZAKI → partners → pricing → FAQ → form |
 | 13 | (introduced and removed during this work) QWeb `t-att` inside the page wrap | Odoo could not brand `#wrap` as one editable structure; every block group showed "cannot be dropped on this page" | Markup kept literal; the chosen solution travels as text and the controller maps it to the CRM tag; a test forbids directives inside the wrap |
 
 ## 4. Test results (fresh Odoo 19 database, `website` + `website_crm` + this module, 21 Nov 2026)
@@ -91,6 +96,19 @@ page record is `noupdate`, so a page already edited in the Website Builder
 keeps its content; to receive the new page layout on an existing database,
 delete the preview page (Website → Pages) before upgrading, or rebuild it from
 the blocks in the editor.
+
+## 5b. Adding blocks to a page that already exists (production)
+
+The preview page is `noupdate`, so an upgrade does not add new blocks to a
+page already in the database. Either drag them in from Blocks → Mumtaz
+Digital in the editor, or insert them in one go after
+`-u mumtaz_website_builder`, with the script in the repository (Localisation
+after Industry Editions, Pricing and FAQ before the demo form; blocks already
+on the page are left alone):
+
+```bash
+sudo -u odoo odoo shell -c /etc/odoo2.conf -d Mumtaz_ERP --no-http < /opt/mumtaz-main/scripts/mumtaz_site_add_blocks.py
+```
 
 ## 6. Production deployment checklist (each step needs a named approval)
 

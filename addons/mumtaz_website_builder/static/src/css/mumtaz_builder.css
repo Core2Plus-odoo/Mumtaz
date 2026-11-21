@@ -42,3 +42,38 @@
 .o_mumtaz_site .mumtaz_form_success{background:#e6f7ee;border:1px solid #bfe7d0;color:#0b5a3d;border-radius:10px;padding:14px 16px;font-weight:700}
 .o_mumtaz_site .s_website_form_result .alert{border-radius:10px;font-size:13px}
 .o_mumtaz_site .s_website_form_submit{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.o_mumtaz_site .s_website_form_submit .s_website_form_label{display:none}.o_mumtaz_site #s_website_form_result{display:block;width:100%}
+
+/* --- localisation, pricing, FAQ (content carried from the previous mumtaz.digital, 21 Nov 2026) --- */
+:is(.o_mumtaz_site .s_mumtaz_localisation, .o_mumtaz_site.s_mumtaz_localisation){padding:56px 0;background:#f6f8f4}
+.o_mumtaz_site .mumtaz_loc_grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+.o_mumtaz_site .mumtaz_loc_card{background:#fff;border:1px solid #dce6df;border-radius:14px;padding:22px 22px 20px}
+.o_mumtaz_site .mumtaz_loc_flag{font-size:26px;display:block;margin-bottom:10px}
+.o_mumtaz_site .mumtaz_loc_card h3{font-size:17px;margin-bottom:6px}
+.o_mumtaz_site .mumtaz_loc_card p{font-size:13.5px;line-height:1.7;color:#5f7470}
+.o_mumtaz_site .mumtaz_loc_note{text-align:center;margin-top:22px;font-size:13px;color:#5f7470}
+:is(.o_mumtaz_site .s_mumtaz_pricing, .o_mumtaz_site.s_mumtaz_pricing){padding:64px 0;background:#fff}
+.o_mumtaz_site .mumtaz_plan_group{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#197862;font-weight:800;margin:30px 0 12px;font-family:'Inter',sans-serif}
+.o_mumtaz_site .mumtaz_plan_grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.o_mumtaz_site .mumtaz_plan{position:relative;background:#f6f8f4;border:1px solid #dce6df;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.o_mumtaz_site .mumtaz_plan.is_popular{background:var(--mm-navy);color:#fff;border-color:#1f4a48}
+.o_mumtaz_site .mumtaz_plan.is_popular h3,.o_mumtaz_site .mumtaz_plan.is_popular .mumtaz_plan_price b{color:#fff}
+.o_mumtaz_site .mumtaz_plan_badge{position:absolute;top:-11px;left:22px;background:var(--mm-lime);color:#10261d;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:100px}
+.o_mumtaz_site .mumtaz_plan h3{font-size:18px}
+.o_mumtaz_site .mumtaz_plan_price b{font-family:'Space Grotesk',sans-serif;font-size:36px;letter-spacing:-.06em;color:#10261d}
+.o_mumtaz_site .mumtaz_plan_price small{font-size:12px;color:#7a8f89;margin-left:4px}
+.o_mumtaz_site .mumtaz_plan.is_popular .mumtaz_plan_price small{color:#b7c9c9}
+.o_mumtaz_site .mumtaz_plan ul{list-style:none;margin:0;padding:0;font-size:13.5px;line-height:1.6;flex:1}
+.o_mumtaz_site .mumtaz_plan li{padding:6px 0 6px 20px;position:relative;border-top:1px solid #e3ebe7}
+.o_mumtaz_site .mumtaz_plan.is_popular li{border-top-color:#ffffff1f}
+.o_mumtaz_site .mumtaz_plan li::before{content:"✓";position:absolute;left:0;color:#168d65;font-weight:800}
+.o_mumtaz_site .mumtaz_plan.is_popular li::before{color:var(--mm-lime)}
+.o_mumtaz_site .mumtaz_plan .mumtaz_button_ghost{color:#10261d;border-color:#cdd9d3;background:#fff}
+.o_mumtaz_site .mumtaz_plan .mumtaz_button{justify-content:center}
+:is(.o_mumtaz_site .s_mumtaz_faq, .o_mumtaz_site.s_mumtaz_faq){padding:64px 0;background:#f6f8f4}
+.o_mumtaz_site .mumtaz_faq_wrap{max-width:860px}
+.o_mumtaz_site .mumtaz_faq_acc{margin-top:26px}
+.o_mumtaz_site .mumtaz_faq_acc .accordion-item{border:1px solid #dce6df;border-radius:12px!important;margin-bottom:10px;background:#fff;overflow:hidden}
+.o_mumtaz_site .mumtaz_faq_acc .accordion-button{font-weight:700;font-size:15px;color:#10261d;background:#fff;box-shadow:none;padding:16px 20px;font-family:'Inter',sans-serif}
+.o_mumtaz_site .mumtaz_faq_acc .accordion-button:not(.collapsed){background:#eef5f1;color:#0b332e}
+.o_mumtaz_site .mumtaz_faq_acc .accordion-body{font-size:14px;line-height:1.75;color:#5f7470;padding:4px 20px 18px}
+@media(max-width:1080px){.o_mumtaz_site .mumtaz_plan_grid{grid-template-columns:1fr}.o_mumtaz_site .mumtaz_loc_grid{grid-template-columns:1fr}}
