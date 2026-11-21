@@ -13,6 +13,7 @@ class LeadNurtureStep(models.Model):
     campaign_id = fields.Many2one(
         "lead.nurture.campaign", required=True, ondelete="cascade", index=True
     )
+    company_id = fields.Many2one(related="campaign_id.company_id", store=True, index=True)
     step_number = fields.Integer(required=True, default=1)
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
