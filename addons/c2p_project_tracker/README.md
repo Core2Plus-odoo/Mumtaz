@@ -1,7 +1,7 @@
 # C2P Project Tracker
 
 Portfolio and delivery tracking across the C2P consulting group, on Odoo 19
-**Community**. No Enterprise dependency: `depends` is `project` and `mail` only.
+**Community**. No Enterprise dependency: `depends` is `project`, `mail` and `sale` (the portfolio project links to its sales order).
 
 ## Why it exists
 

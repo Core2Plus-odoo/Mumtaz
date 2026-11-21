@@ -188,7 +188,7 @@
                 <filter name="commercials_missing" string="Commercials missing"
                         domain="[('commercials_missing', '=', True)]"
                         groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_rag" string="RAG"
                             context="{'group_by': 'rag_status'}"/>
                     <filter name="group_type" string="Engagement Type"
