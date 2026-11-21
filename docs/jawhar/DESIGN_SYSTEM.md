@@ -1,4 +1,6 @@
-# Jawhar design system v2 — "Vibrant Luxury Enterprise"
+# Jawhar design system v2.1 — "Vibrant Enterprise"
+
+> v2.1 (21 Nov 2026, owner request): the public site takes the same bold enterprise look as the Mumtaz Digital website: deep navy and emerald bands, lime and teal highlights, Space Grotesk headings over Inter. Gold stays the jewellery accent (logo ring, highlights). The luxury ivory/serif v2 below is superseded for the site; the app keeps v2 tokens until its own pass.
 
 Source of truth for the public site: `website/jewel/site/jawhar.css`. The
 product app (`apps/jawhar-web/src/styles.css`) carries the same values under
@@ -26,7 +28,9 @@ both themes so white text keeps its contrast.
 | `--gold` / `-2` / `-ink` / `-soft` / `-line` | #C4A464 / #D9BF86 / #7A5F22 / #F6EFDF / #E6D6AE | #D6BC7E / #E3CD98 / #E3CD98 / #2A2514 / #4C4323 | eyebrows, hairlines, "device pending" |
 | `--teal` / `--teal-ink` / `--teal-soft` | #1ABC9C / #0E8C78 / #E3F6F1 | — / #5ED9BE / #0F2F2A | focus ring, "staging" |
 | `--coral` / `--coral-soft` | #B42318 / #FDECEA | — / #2E1512 | errors |
-| `--paper` / `--paper-2` / `--line` / `--surface` | #F7F3EC / #F0EAE0 / #E2D9CB / #FFFFFF | #0B1B2B / #122638 / #223A4F / #122638 | ground |
+| `--navy` / `-2` / `-3` | #071A25 / #0B2A33 / #10363D | same | hero, dark bands, icon tiles, table heads |
+| `--lime` / `-2` / `--lime-ink` | #C5F69C / #D8FFA8 / #2F5A12 | same | primary CTA on dark, emphasis word, eyebrows on dark |
+| `--paper` / `--paper-2` / `--line` / `--surface` | #F4F7F5 / #EAF0EC / #D9E3DD / #FFFFFF | #071A25 / #0B2A33 / #1C3A41 / #0B2A33 | ground |
 | `--ink` … `--ink-4` | #14202B / #2D3B4A / #5E6B7A / #8A96A3 | #F2EEE6 / #D5DCE4 / #9FB0C0 / #6F8192 | text |
 
 Contrast: body ink on paper 13.5:1; emerald-deep on paper 7.6:1; gold-ink on
@@ -35,8 +39,8 @@ under 24 px. Dark mode follows `prefers-color-scheme` and `data-theme`.
 
 ## 3. Typography
 
-- Display: Cormorant Garamond 600 (h1 2.5–4.4 rem, h2 1.9–2.9 rem), italic for the one emphasised phrase.
-- Body/UI: Plus Jakarta Sans 400–800, 17 px / 1.65.
+- Display: Space Grotesk 700, tracking −0.045em (h1 2.6–4.6 rem, h2 1.9–2.8 rem); the emphasised phrase is lime on dark, emerald on light.
+- Body/UI: Inter 400–800, 16 px / 1.7.
 - Arabic: IBM Plex Sans Arabic for `lang="ar"` or `dir="rtl"`; display falls back to the same (no Arabic serif pairing yet: open item).
 - Numerals: `font-variant-numeric: tabular-nums` on every figure (`.num`).
 
