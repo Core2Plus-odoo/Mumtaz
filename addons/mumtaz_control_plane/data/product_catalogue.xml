@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        The product catalogue and the first plan.
+
+        noupdate="1": the owner edits status, evidence and prices here; an
+        upgrade must not put them back.
+
+        Status is set from evidence (see the field's help). Customer
+        deployments (C2P's internal ERP, a client's own instance) and
+        independent ventures are not products and are not listed.
+    -->
+    <data noupdate="1">
+
+        <record id="product_erp" model="mumtaz.product">
+            <field name="name">Mumtaz ERP</field>
+            <field name="code">erp</field>
+            <field name="sequence">10</field>
+            <field name="category">erp</field>
+            <field name="summary">General business ERP on Odoo 19 Community: CRM, sales, purchasing, inventory, accounting.</field>
+            <field name="status">pilot</field>
+            <field name="evidence">A staging tenant was provisioned end to end on a development rig on 21 Nov 2026 (scripts/tenant_journey_ci.sh): registration, approval, trial entitlement, an isolated database, administrator sign-in. Not yet run on the production server; billing is not connected.</field>
+            <field name="delivery_mode">odoo_database</field>
+            <field name="bundle_id" ref="mumtaz_tenant_manager.bundle_mumtaz_erp"/>
+            <field name="access_feature_id" ref="feature_erp_access"/>
+            <field name="self_service" eval="True"/>
+        </record>
+
+        <record id="product_jawhar" model="mumtaz.product">
+            <field name="name">Jawhar</field>
+            <field name="code">jawhar</field>
+            <field name="sequence">20</field>
+            <field name="category">edition</field>
+            <field name="summary">Jewellery edition.</field>
+            <field name="status">pilot</field>
+            <field name="evidence">Runs as a staging/demo instance with its own test suite. The control plane has no install profile for it yet, so it cannot be provisioned from here.</field>
+            <field name="delivery_mode">odoo_database</field>
+        </record>
+
+        <record id="product_pharma" model="mumtaz.product">
+            <field name="name">Mumtaz Pharma</field>
+            <field name="code">pharma</field>
+            <field name="sequence">30</field>
+            <field name="category">edition</field>
+            <field name="summary">Pharmacy edition.</field>
+            <field name="status">planned</field>
+            <field name="evidence">Its modules are on a separate branch, not on main, and have not been reviewed for the platform.</field>
+            <field name="delivery_mode">odoo_database</field>
+        </record>
+
+        <record id="product_zaki" model="mumtaz.product">
+            <field name="name">ZAKI</field>
+            <field name="code">zaki</field>
+            <field name="sequence">40</field>
+            <field name="category">ai</field>
+            <field name="summary">AI finance assistant: embedded in the ERP, standalone, or as part of an edition.</field>
+            <field name="status">planned</field>
+            <field name="evidence">Reviewed 21 Nov 2026 (docs/platform/MUMTAZ_AI_ARCHITECTURE.md): none of the existing implementations is safe to expose. A single architecture is proposed, not built.</field>
+            <field name="delivery_mode">embedded</field>
+            <field name="access_feature_id" ref="feature_zaki_access"/>
+        </record>
+
+        <record id="product_delivery_os" model="mumtaz.product">
+            <field name="name">Delivery OS</field>
+            <field name="code">delivery_os</field>
+            <field name="sequence">50</field>
+            <field name="category">service</field>
+            <field name="summary">The agency delivery system (FastAPI).</field>
+            <field name="status">planned</field>
+            <field name="evidence">In internal use. It has no customer accounts, billing or tenant separation that would let an outside organization subscribe.</field>
+            <field name="delivery_mode">shared_service</field>
+        </record>
+
+        <record id="product_marketplace" model="mumtaz.product">
+            <field name="name">Marketplace</field>
+            <field name="code">marketplace</field>
+            <field name="sequence">60</field>
+            <field name="category">marketplace</field>
+            <field name="summary">Supplier discovery, catalogues and requests for quotation.</field>
+            <field name="status">planned</field>
+            <field name="evidence">An Odoo module exists but assumes all tenants share one database, which the platform does not do. Needs a design decision first.</field>
+            <field name="delivery_mode">shared_service</field>
+            <field name="access_feature_id" ref="feature_marketplace_access"/>
+        </record>
+
+        <!-- The plan a registration request starts on. Price 0: a staging
+             trial is not billed, and the paid price list is undecided (D-11). -->
+        <record id="plan_erp_staging_trial" model="mumtaz.plan">
+            <field name="name">Mumtaz ERP — staging trial</field>
+            <field name="code">erp_staging_trial</field>
+            <field name="sequence">5</field>
+            <field name="product_id" ref="product_erp"/>
+            <field name="legacy_bundle_id" ref="mumtaz_tenant_manager.bundle_mumtaz_erp"/>
+            <field name="list_price">0</field>
+            <field name="trial_days">14</field>
+            <field name="notes">Staging only. Grants the ERP and its accounting, inventory and sales areas. ZAKI and Marketplace are switched off explicitly, not left undefined.</field>
+        </record>
+
+        <record id="plan_erp_trial_f_erp" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_erp_access"/>
+            <field name="enabled" eval="True"/>
+        </record>
+        <record id="plan_erp_trial_f_accounting" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_erp_accounting"/>
+            <field name="enabled" eval="True"/>
+        </record>
+        <record id="plan_erp_trial_f_inventory" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_erp_inventory"/>
+            <field name="enabled" eval="True"/>
+        </record>
+        <record id="plan_erp_trial_f_sales" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_erp_sales"/>
+            <field name="enabled" eval="True"/>
+        </record>
+        <record id="plan_erp_trial_f_hr" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_erp_hr"/>
+            <field name="enabled" eval="False"/>
+        </record>
+        <record id="plan_erp_trial_f_mrp" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_erp_manufacturing"/>
+            <field name="enabled" eval="False"/>
+        </record>
+        <record id="plan_erp_trial_f_zaki" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_zaki_access"/>
+            <field name="enabled" eval="False"/>
+        </record>
+        <record id="plan_erp_trial_f_marketplace" model="mumtaz.plan.feature">
+            <field name="plan_id" ref="plan_erp_staging_trial"/>
+            <field name="feature_id" ref="feature_marketplace_access"/>
+            <field name="enabled" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

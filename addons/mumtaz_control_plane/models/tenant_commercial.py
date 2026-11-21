@@ -32,6 +32,23 @@ class MumtazTenantCommercial(models.Model):
         compute="_compute_cp_subscription_visibility",
     )
 
+    customer_partner_id = fields.Many2one(
+        "res.partner", string="Organization", tracking=True,
+        help="The customer organization this tenant belongs to. Not the "
+             "white-label partner, which is a separate field.",
+    )
+    signup_request_ids = fields.One2many(
+        "mumtaz.signup.request", "tenant_id", string="Registration Requests")
+
+    def _apply_provision_result(self, result):
+        res = super()._apply_provision_result(result)
+        # sudo: the request mirrors the tenant's outcome whoever ran the worker
+        requests = self.env["mumtaz.signup.request"].sudo().search([
+            ("tenant_id", "=", self.id), ("state", "=", "provisioning"),
+        ])
+        requests._on_provision_result(result)
+        return res
+
     def _current_subscription(self):
         self.ensure_one()
         # sudo: usage and subscription rows read by the control plane's own services

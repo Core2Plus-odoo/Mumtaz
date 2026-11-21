@@ -1,9 +1,7 @@
-import datetime
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..services.provisioning import get_provisioner
+from ..services.provisioning import ProvisioningDisabled, get_provisioner
 
 
 class MumtazProvisionWizard(models.TransientModel):
@@ -45,7 +43,8 @@ class MumtazProvisionWizard(models.TransientModel):
         string="Dry Run (simulate only)",
         default=True,
         help="When enabled, no database is actually created. "
-             "Useful for validating the configuration before committing.",
+             "Useful for validating the configuration before committing. "
+             "A dry run never activates the tenant.",
     )
 
     # Output
@@ -72,35 +71,29 @@ class MumtazProvisionWizard(models.TransientModel):
         self.ensure_one()
         tenant = self.tenant_id
 
+        tenant._check_can_provision()
+
         # Validate readiness
         tenant._check_provision_ready()
+
+        # Pick the provisioner before touching the tenant, so a refusal
+        # changes nothing. The checkbox decides: ticked never creates
+        # anything; unticked creates a real database or refuses.
+        try:
+            provisioner = get_provisioner(odoo_env=self.env, dry_run=self.dry_run)
+        except ProvisioningDisabled as exc:
+            raise UserError(_(
+                "This server is not allowed to create tenant databases. "
+                "Tick 'Dry Run' to check the configuration, or ask the "
+                "platform owner to enable real provisioning.")) from exc
 
         # Transition tenant to provisioning state
         if tenant.state == "draft":
             tenant.write({"state": "provisioning"})
             tenant.message_post(body=_("Provisioning initiated via wizard."))
 
-        # Execute
-        provisioner = get_provisioner(odoo_env=self.env)
         result = provisioner.run(tenant)
-
-        # Persist the log to the tenant record
-        tenant._append_log(result.log)
-
-        if result.success:
-            tenant.write({
-                "state": "active",
-                "provisioned_on": datetime.datetime.utcnow(),
-                "admin_password": False,  # clear temp password
-            })
-            tenant.message_post(
-                body=_("Provisioning completed successfully.")
-            )
-        else:
-            tenant.write({"state": "draft"})
-            tenant.message_post(
-                body=_("Provisioning failed. See log for details.")
-            )
+        tenant._apply_provision_result(result)
 
         self.write({
             "state": "done",

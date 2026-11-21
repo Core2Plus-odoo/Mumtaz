@@ -18,6 +18,8 @@ on:
       - "addons/**"
       - "!addons/mumtaz_jewellery*/**"
       - "scripts/platform_ci.sh"
+      - "scripts/tenant_journey_ci.sh"
+      - "scripts/tenant_journey/**"
       - ".github/workflows/platform-odoo-install.yml"
   push:
     branches: [main]
@@ -25,6 +27,8 @@ on:
       - "addons/**"
       - "!addons/mumtaz_jewellery*/**"
       - "scripts/platform_ci.sh"
+      - "scripts/tenant_journey_ci.sh"
+      - "scripts/tenant_journey/**"
       - ".github/workflows/platform-odoo-install.yml"
   workflow_dispatch:
 
@@ -133,6 +137,17 @@ jobs:
           ODOO_PATH: ${{ runner.temp }}/odoo
           LOG_DIR: ${{ runner.temp }}/platform-ci-logs
         run: bash scripts/platform_ci.sh
+
+      # The first platform milestone, proven on every change: an organization
+      # registers, chooses Mumtaz ERP, is given a trial entitlement, gets a
+      # real, separate staging database, and its administrator signs in over
+      # HTTP. Also proves that a server not allowed to create databases ends
+      # the same journey with no database and no "active" tenant.
+      - name: Tenant journey — register, entitle, provision a real staging database, sign in
+        env:
+          ODOO_PATH: ${{ runner.temp }}/odoo
+          LOG_DIR: ${{ runner.temp }}/platform-ci-logs/tenant-journey
+        run: bash scripts/tenant_journey_ci.sh
 
       # Uploaded on failure only: a green run's logs are tens of MB of noise,
       # but a red one is unreadable without them.

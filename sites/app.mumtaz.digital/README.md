@@ -12,6 +12,16 @@ Customer portal: signup, onboarding, billing, admin pages. Static HTML that call
 
 > Server facts below are **reported** (from owner-run output recorded in this repo, Oct–Nov 2026) and have not been re-verified. See the [audit pack](../../docs/infrastructure-audit/16_AUDIT_EXECUTIVE_SUMMARY.md).
 
+## The control plane is not this folder
+
+The SaaS control plane (tenants, products, plans, subscriptions, entitlements,
+provisioning, registration requests) is Odoo code in
+`addons/mumtaz_tenant_manager` and `addons/mumtaz_control_plane`. Since
+21 Nov 2026 it carries a tested journey from registration to an isolated
+staging ERP database (`scripts/tenant_journey_ci.sh`). It has not been run on
+any server, and which Odoo instance should host it is undecided (decision
+P-02). See [`docs/platform/MUMTAZ_SAAS_CONTROL_PLANE.md`](../../docs/platform/MUMTAZ_SAAS_CONTROL_PLANE.md).
+
 ## Open points
 
 - Product decision needed: rebuild the back end or retire the portal (audit decision D-08).
