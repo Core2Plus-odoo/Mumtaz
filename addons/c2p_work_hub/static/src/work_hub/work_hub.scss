@@ -1,0 +1,258 @@
+// C2P Work Hub
+//
+// Palette is the validated C2P set already used by c2p_project_tracker's
+// dashboards: charcoal text, brand red for blockers, and the same status
+// quartet. Dark mode is a selected second set, not an inversion, because
+// inverting a validated palette invalidates it.
+//
+// Every status carries a glyph AND a word in the template, so colour is never
+// the only carrier of meaning (WCAG 2.2 AA, 1.4.1).
+
+.c2p-hub {
+    --hub-surface-1: #fcfcfb;
+    --hub-surface-2: #ffffff;
+    --hub-border: #e4e4e1;
+    --hub-text: #0f0f0f;
+    --hub-text-2: #52514e;
+    --hub-text-muted: #85847f;
+    --hub-red: #be1e2d;
+    --hub-amber: #f29900;
+    --hub-green: #1e8e3e;
+    --hub-grey: #9aa0a6;
+
+    padding: 1.25rem;
+    background: var(--hub-surface-1);
+    color: var(--hub-text);
+    min-height: 100%;
+
+    &__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    &__title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    &__sub {
+        margin: 0.15rem 0 0;
+        color: var(--hub-text-muted);
+        font-size: 0.875rem;
+    }
+
+    &__sections {
+        display: grid;
+        gap: 1rem;
+    }
+
+    &__section {
+        background: var(--hub-surface-2);
+        border: 1px solid var(--hub-border);
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+    }
+
+    &__sectionhead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+
+        h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    }
+
+    &__count {
+        background: var(--hub-surface-1);
+        border: 1px solid var(--hub-border);
+        border-radius: 999px;
+        padding: 0 0.5rem;
+        font-size: 0.8rem;
+        color: var(--hub-text-2);
+    }
+
+    &__list {
+        list-style: none;
+        margin: 0.5rem 0 0;
+        padding: 0;
+    }
+
+    &__task {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem 1rem;
+        padding: 0.6rem 0;
+        border-top: 1px solid var(--hub-border);
+
+        &:first-child { border-top: 0; }
+    }
+
+    &__name {
+        background: none;
+        border: 0;
+        padding: 0;
+        font: inherit;
+        font-weight: 500;
+        color: var(--hub-text);
+        text-align: start;
+        cursor: pointer;
+
+        &:hover { text-decoration: underline; }
+    }
+
+    &__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.25rem;
+    }
+
+    &__chip {
+        font-size: 0.75rem;
+        color: var(--hub-text-2);
+        background: var(--hub-surface-1);
+        border: 1px solid var(--hub-border);
+        border-radius: 6px;
+        padding: 0.05rem 0.4rem;
+
+        &--stage { color: var(--hub-text); }
+        &--pri { color: var(--hub-amber); border-color: var(--hub-amber); }
+    }
+
+    &__blocker,
+    &__next {
+        display: flex;
+        align-items: baseline;
+        gap: 0.35rem;
+        font-size: 0.8125rem;
+        margin-top: 0.3rem;
+    }
+
+    &__blocker { color: var(--hub-red); }
+    &__next { color: var(--hub-text-2); }
+
+    &__actions {
+        display: flex;
+        align-items: start;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    &__panel {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 0.6rem;
+        padding: 0.75rem;
+        margin-top: 0.4rem;
+        background: var(--hub-surface-1);
+        border: 1px solid var(--hub-border);
+        border-radius: 8px;
+    }
+
+    &__label {
+        display: grid;
+        gap: 0.2rem;
+        font-size: 0.8125rem;
+        color: var(--hub-text-2);
+    }
+
+    &__panelactions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    &__note {
+        color: var(--hub-text-muted);
+        font-size: 0.8125rem;
+        margin: 0.5rem 0 0;
+    }
+
+    &__error {
+        border: 1px solid var(--hub-red);
+        border-left-width: 4px;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        color: var(--hub-red);
+        background: var(--hub-surface-2);
+    }
+
+    &__empty {
+        background: var(--hub-surface-2);
+        border: 1px solid var(--hub-border);
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+
+        h2 { font-size: 1.125rem; margin: 0 0 0.25rem; }
+        p { margin: 0; color: var(--hub-text-muted); }
+    }
+
+    // One column on a phone; the action buttons move under the task.
+    @media (max-width: 640px) {
+        padding: 0.75rem;
+
+        &__task { grid-template-columns: 1fr; }
+        &__actions { justify-content: flex-start; }
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .c2p-hub {
+        --hub-surface-1: #1a1a19;
+        --hub-surface-2: #232322;
+        --hub-border: #3a3a38;
+        --hub-text: #ffffff;
+        --hub-text-2: #c3c2b7;
+        --hub-text-muted: #96958c;
+        --hub-red: #e0414f;
+        --hub-amber: #ffb020;
+        --hub-green: #37a855;
+        --hub-grey: #96958c;
+    }
+}
+
+// Milestones read as a timeline rather than a task list: the flag comes first
+// so a late gate is visible before the name is read. Glyph plus word, never
+// colour alone.
+.c2p-hub {
+    &__milestone {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.45rem 0;
+        border-top: 1px solid var(--hub-border);
+
+        &:first-child { border-top: 0; }
+    }
+
+    &__msflag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--hub-text-2);
+        border: 1px solid var(--hub-border);
+        border-radius: 6px;
+        padding: 0.05rem 0.4rem;
+        white-space: nowrap;
+
+        &--late {
+            color: var(--hub-red);
+            border-color: var(--hub-red);
+        }
+    }
+
+    &__section--milestones { margin-bottom: 1rem; }
+}

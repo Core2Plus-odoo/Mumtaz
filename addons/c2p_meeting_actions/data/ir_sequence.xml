@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Meeting references are human-readable and stable. Action references
+         derive from the meeting's, so an action can be cited in an email or a
+         client document and still be found years later. -->
+    <record id="seq_c2p_meeting" model="ir.sequence">
+        <field name="name">C2P Meeting Minutes</field>
+        <field name="code">c2p.meeting</field>
+        <field name="prefix">MOM/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

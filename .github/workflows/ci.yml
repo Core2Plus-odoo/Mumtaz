@@ -226,12 +226,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: TruffleHog OSS
+      # `base` used to be the default branch unconditionally, so a push to main
+      # compared main against itself and the action exited 1 with "BASE and HEAD
+      # commits are the same" before scanning anything. The job had been red on
+      # every push to main since at least 11 Nov without ever having found a
+      # secret. Splitting by event keeps the diff scan while making the
+      # degenerate comparisons impossible.
+      - name: TruffleHog OSS (pull request)
+        if: github.event_name == 'pull_request'
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      # On a push, scan only what the push introduced. The first push of a new
+      # branch reports an all-zero `before`, which the action also rejects, so
+      # that case is skipped rather than failed — the pull request scan above is
+      # the gate that every change has to pass anyway.
+      - name: TruffleHog OSS (push)
+        if: >-
+          github.event_name == 'push' &&
+          github.event.before != '0000000000000000000000000000000000000000'
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.before }}
+          head: ${{ github.sha }}
           extra_args: --only-verified
 
   # ────────────────────────────────────────────────────────────────────
