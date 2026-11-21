@@ -312,7 +312,7 @@ modules:
     application: false
     depends_local: []
     depends_standard: ["website", "website_crm"]
-    python_lines: 211
+    python_lines: 214
     test_files: 1
     access_csv: false
     note: "Mumtaz Digital homepage as native Website Builder blocks + CRM demo form; CSS scoped to .o_mumtaz_site."
