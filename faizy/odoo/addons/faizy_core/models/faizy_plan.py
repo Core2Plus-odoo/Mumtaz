@@ -177,19 +177,35 @@ class FaizyPlan(models.Model):
         self.ensure_one()
         return self._money(self.overage_for(currency))
 
+    def default_currency(self):
+        """PKR — the currency Faizy prices in when nothing else applies.
+
+        Muhammad's call. The work is done in Pakistan and costed in rupees;
+        every other market price is a commercial decision made on top of that
+        one, not a conversion of it. So PKR is the base, and a visitor or a
+        customer we cannot place sees the rupee price rather than a Gulf price
+        that happens to be the company's reporting currency.
+
+        Falls back to the company currency only if PKR is somehow not on the
+        database — an empty recordset here would render prices as blanks.
+        """
+        self.ensure_one()
+        pkr = self.env.ref("base.PKR", raise_if_not_found=False)
+        return pkr or self.env.company.currency_id
+
     def market_currency(self, partner):
         """The currency to bill `partner` in.
 
-        Their country's currency when we publish a price in it, the company's
-        otherwise. A customer in a market we have not priced is billed in the
-        company currency rather than being quoted a converted number — and that
-        is the signal to go and publish a price for that market.
+        Their country's currency when we publish a price in it, PKR otherwise.
+        A customer in a market we have not priced is billed in rupees rather
+        than being quoted a converted number — and that is the signal to go and
+        publish a price for that market.
         """
         self.ensure_one()
         country_currency = partner.country_id.currency_id if partner else False
         if country_currency and self._published(country_currency):
             return country_currency
-        return self.env.company.currency_id
+        return self.default_currency()
 
     def action_view_subscriptions(self):
         self.ensure_one()

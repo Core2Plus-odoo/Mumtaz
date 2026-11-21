@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="cron_release_held" model="ir.cron">
+        <field name="name">Faizy AI: release held customer messages in working hours</field>
+        <field name="model_id" ref="model_faizy_ai_draft"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_release_held()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="cron_stale_drafts" model="ir.cron">
+        <field name="name">Faizy AI: nudge approvers about stale drafts</field>
+        <field name="model_id" ref="model_faizy_ai_draft"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_stale_drafts()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

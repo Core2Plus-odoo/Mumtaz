@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_faizy_ai_root" name="Faizy AI" sequence="95"
+              groups="group_ai_agent,group_comms,faizy_core.group_faizy_ops,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_faizy_ai_queue" name="Approval queue" parent="menu_faizy_ai_root"
+              action="action_faizy_ai_draft" sequence="10"/>
+    <menuitem id="menu_faizy_ai_inbound" name="Inbound WhatsApp" parent="menu_faizy_ai_root"
+              action="action_faizy_ai_inbound" sequence="20"/>
+    <menuitem id="menu_faizy_ai_agents" name="AI team" parent="menu_faizy_ai_root"
+              action="action_faizy_ai_agent" sequence="30"/>
+</odoo>

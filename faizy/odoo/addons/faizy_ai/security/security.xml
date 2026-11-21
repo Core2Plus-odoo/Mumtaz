@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- AI agent API users: read most things, create drafts, nothing else. -->
+    <record id="group_ai_agent" model="res.groups">
+        <field name="name">Faizy AI / Agent (API user)</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Mashood: approves customer-facing drafts and handles inbound messages. -->
+    <record id="group_comms" model="res.groups">
+        <field name="name">Faizy AI / Customer communications approver</field>
+        <field name="implied_ids" eval="[(4, ref('faizy_core.group_faizy_user'))]"/>
+    </record>
+
+    <record id="rule_draft_ai_write" model="ir.rule">
+        <field name="name">Faizy AI: agents edit drafts only while waiting for approval</field>
+        <field name="model_id" ref="model_faizy_ai_draft"/>
+        <field name="groups" eval="[(4, ref('group_ai_agent'))]"/>
+        <field name="domain_force">[('state', '=', 'draft')]</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+        <field name="perm_write" eval="True"/>
+    </record>
+
+    <record id="rule_draft_approvers_all" model="ir.rule">
+        <field name="name">Faizy AI: approvers see and edit all drafts</field>
+        <field name="model_id" ref="model_faizy_ai_draft"/>
+        <field name="groups" eval="[(4, ref('group_comms')), (4, ref('faizy_core.group_faizy_ops')), (4, ref('faizy_core.group_faizy_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>
