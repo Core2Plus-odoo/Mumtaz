@@ -164,7 +164,7 @@
                 domain="[('start_datetime','&gt;=',context_today().strftime('%Y-%m-%d'))]"/>
         <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
         <filter name="cancelled" string="Cancelled" domain="[('state','=','cancelled')]"/>
-        <group expand="0" string="Group By">
+        <group>
           <filter name="gb_type" string="Type" context="{'group_by':'appointment_type_id'}"/>
           <filter name="gb_staff" string="Staff" context="{'group_by':'staff_id'}"/>
           <filter name="gb_state" string="Status" context="{'group_by':'state'}"/>

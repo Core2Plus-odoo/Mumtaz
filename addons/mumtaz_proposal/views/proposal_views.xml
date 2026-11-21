@@ -272,7 +272,7 @@
                 <separator/>
                 <filter string="Expiring Soon" name="expiring_soon"
                         domain="[('date_valid', '&lt;=', (context_today() + relativedelta(days=7)).strftime('%Y-%m-%d')), ('state', 'in', ['confirmed', 'sent', 'viewed'])]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
                     <filter string="Salesperson" name="group_by_user" context="{'group_by': 'user_id'}"/>
                     <filter string="Customer" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
