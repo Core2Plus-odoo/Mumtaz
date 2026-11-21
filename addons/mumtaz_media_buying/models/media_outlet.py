@@ -21,6 +21,10 @@ class MediaOutlet(models.Model):
     _order = "channel, name"
 
     name = fields.Char(required=True)
+    # An outlet is a vendor master: owned by one company, or shared when empty.
+    company_id = fields.Many2one(
+        "res.company", default=lambda self: self.env.company, index=True,
+        help="Leave empty to share this outlet with every company of the database.")
     channel = fields.Selection(MEDIA_CHANNELS, required=True, default="tv")
     vendor_id = fields.Many2one(
         "res.partner",
