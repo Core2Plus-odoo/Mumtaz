@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 55
+module_count: 59
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -666,6 +666,34 @@ modules:
     test_files: 4
     access_csv: true
     note: "Jawhar."
+  mumtaz_jewellery_website:
+    layer: edition
+    disposition: keep
+    path: addons/mumtaz_jewellery_website
+    title: "Jawhar: public website door"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: ["mumtaz_jewellery"]
+    depends_standard: ["crm", "mail"]
+    python_lines: 285
+    test_files: 1
+    access_csv: true
+    note: "Jawhar public-site door: demo requests into the CRM."
+  c2p_appointment:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_appointment
+    title: "C2P Appointment Booking"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: true
+    depends_local: []
+    depends_standard: ["base", "calendar", "resource", "website", "crm", "mail"]
+    python_lines: 582
+    test_files: 0
+    access_csv: true
+    note: "Installed in Mumtaz_C2P. Brought from the production branch 21 Nov 2026. Three copies exist on the server."
   c2p_command_center:
     layer: internal
     disposition: keep
@@ -680,6 +708,20 @@ modules:
     test_files: 1
     access_csv: false
     note: "C2P group internal."
+  c2p_master_agent:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_master_agent
+    title: "C2P Master Agent"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: true
+    depends_local: []
+    depends_standard: ["base", "crm", "project", "hr", "account", "sale", "utm"]
+    python_lines: 272
+    test_files: 0
+    access_csv: true
+    note: "Installed in Mumtaz_C2P. Existed only in the server's system addons folder until 21 Nov 2026. REVIEW-05 open."
   c2p_project_tracker:
     layer: internal
     disposition: keep
@@ -694,6 +736,20 @@ modules:
     test_files: 6
     access_csv: true
     note: "C2P group internal."
+  c2p_proposal:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_proposal
+    title: "C2P Proposal Maker"
+    version: "19.0.17.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: []
+    depends_standard: ["sale_management", "crm"]
+    python_lines: 1402
+    test_files: 0
+    access_csv: true
+    note: "Installed in Mumtaz_C2P (19.0.17.0.0). Brought from the production branch 21 Nov 2026."
   mumtaz_ceo_dashboard:
     layer: internal
     disposition: review

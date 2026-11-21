@@ -21,7 +21,7 @@ which checkout. That mapping is the input for any consolidation.
 
 | Folder | What it is | Belongs to |
 | --- | --- | --- |
-| `addons/` | 53 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
+| `addons/` | 57 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
 | `apps/jawhar-web` | Jawhar React app | Jawhar |
 | `apps/portal` | Static customer portal pages | Mumtaz platform |
 | `apps/marketplace` | Static B2B storefront and vendor page | Mumtaz platform |
@@ -48,8 +48,8 @@ Generated detail is in `registry.yaml`. Summary at this commit:
 | foundation | 4 | 0 |
 | platform | 17 | 2 |
 | product | 12 | 1 |
-| edition (Jawhar) | 14 | 13 |
-| internal | 6 | 2 |
+| edition (Jawhar) | 15 | 14 |
+| internal | 9 | 2 |
 | venture | 2 | 0 |
 
 Findings:

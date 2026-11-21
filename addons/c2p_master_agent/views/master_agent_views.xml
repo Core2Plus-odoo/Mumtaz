@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_c2p_master_agent_form" model="ir.ui.view">
+    <field name="name">c2p.master.agent.form</field>
+    <field name="model">c2p.master.agent</field>
+    <field name="arch" type="xml">
+      <form string="C2P Master Agent">
+        <sheet>
+          <div style="background:linear-gradient(135deg,#1F2937,#374151);color:white;padding:20px;border-radius:10px;margin-bottom:16px;">
+            <h2 style="color:white;margin:0 0 4px 0;">&#9889; C2P Master Agent</h2>
+            <p style="color:#9CA3AF;margin:0;font-size:0.85em;">AI Business Operator — CRM &#xB7; Projects &#xB7; HR &#xB7; Finance &#xB7; Powered by Mistral (local)</p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+            <button name="action_briefing" type="object" string="Morning Briefing" class="btn btn-outline-primary"/>
+            <button name="action_assign_all" type="object" string="Assign All Tasks" class="btn btn-outline-success"/>
+            <button name="action_pipeline_review" type="object" string="Pipeline Review" class="btn btn-outline-warning"/>
+            <button name="action_finance_review" type="object" string="Finance Snapshot" class="btn btn-outline-info"/>
+            <button name="action_clear" type="object" string="Clear" class="btn btn-outline-secondary"/>
+          </div>
+          <group string="Conversation" invisible="not conversation">
+            <field name="conversation" nolabel="1" readonly="1" widget="text" style="min-height:320px;background:#F9FAFB;font-size:0.9rem;line-height:1.7;white-space:pre-wrap;border:1px solid #E5E7EB;border-radius:8px;padding:12px;"/>
+          </group>
+          <group string="Command">
+            <field name="command" nolabel="1" placeholder="Ask anything... e.g. 'Who should handle the RVOS proposal?' or 'What is stalled in our KSA pipeline?' or 'Create a task for Shafat to review the API integration'"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_send" type="object" string="Send to Agent" class="btn-primary"/>
+          <button string="Close" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+  <record id="action_c2p_master_agent" model="ir.actions.act_window">
+    <field name="name">C2P Master Agent</field>
+    <field name="res_model">c2p.master.agent</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <field name="view_id" ref="view_c2p_master_agent_form"/>
+  </record>
+</odoo>
