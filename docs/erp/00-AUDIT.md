@@ -86,7 +86,7 @@ which modules each has installed are not in the repository.
 | --- | --- | --- | --- |
 | R1 | Business logic of the live C2P CRM lives in database server actions with no version control, tests or rollback | High | `Mumtaz_C2P` |
 | R2 | 37 platform modules, including e-invoicing and financial reports (both touch statutory output), have no automated tests; the fresh-database install check exists since 21 Nov 2026, and four modules could not install before it | High | `addons/mumtaz_*` |
-| R3 | 298 `sudo()` calls, now labelled and CI-checked; 53 sites in three places serve data with `sudo()` to any signed-in user, portal users included (REVIEW-01/03/04); cross-company tests exist only for Jawhar | High | control plane, marketplace, vendor portal, e-invoicing |
+| R3 | `sudo()` calls labelled and CI-checked (264 after 34 were dropped); the three places that served data to any signed-in user are closed with tests (REVIEW-01/03/04); cross-company tests still cover Jawhar and the four portal modules only | Medium | control plane, marketplace, vendor portal, e-invoicing |
 | R4 | No localisation installed by code: tax, chart of accounts and invoice layout depend on what each tenant's database happens to have | High | finance |
 | R5 | Three application stacks (Odoo, two FastAPI services with SQLite) each hold user or engagement state; the SQLite stores are not backed up by the documented Odoo backup | Medium | `zaki-server`, C2P delivery |
 | R6 | No `migrations/` discipline; every schema change so far has been additive, which will not hold for finance work | Medium | repository |

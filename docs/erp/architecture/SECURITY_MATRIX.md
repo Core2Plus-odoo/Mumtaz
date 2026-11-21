@@ -77,9 +77,9 @@ fails the lint job on any unlabelled call. Reasons fall into these classes:
 | Cross-company and aggregate reads | owner cards, store summaries, C2P tracker reading the delivery company; figures, counts and names only | Justified |
 | Entitlements and group membership | feature-access resolution and group writes done by the control plane | Justified |
 | Payment and tenant state | Stripe webhook (signature-verified), card page (gated), provisioning | Justified |
-| **REVIEW-01** (41 sites) | `mumtaz_app_portal` and `mumtaz_portal_routing` dashboards read invoices, orders, stock, leave, CFO and AI data with `sudo()` on routes open to any `auth='user'` session, **portal users included** | **Open**: restrict to internal users of the tenant and drop `sudo()` where the user's own rights suffice |
-| **REVIEW-03** (1 site) | `mumtaz_zaki` `/zaki/api/snapshot` returns a finance snapshot with `sudo()` to any `auth='user'` session | **Open**: require the accounting group |
-| **REVIEW-04** (11 sites) | `c2p_command_center` aggregates across companies with `sudo()` | **Open**: confirm the action is reachable only by the owner group |
+| **REVIEW-01** | `mumtaz_app_portal` and `mumtaz_portal_routing` dashboards read business data with `sudo()` on routes open to any `auth='user'` session, portal users included | **Closed 21 Nov 2026**: portal users redirected to `/my`; 34 `sudo()` calls dropped so business data is read as the user; control-plane rows keep `sudo()`; 5 tests |
+| **REVIEW-03** | `mumtaz_zaki` `/zaki/api/snapshot` returned a finance snapshot to any `auth='user'` session | **Closed 21 Nov 2026**: portal users and users without an accounting group are refused before any query; 2 tests |
+| **REVIEW-04** | `c2p_command_center` aggregates across companies with `sudo()` | **Closed by evidence 21 Nov 2026**: `get_data()` checks the command-centre group on every call, the menu is restricted to it; 2 tests |
 
 Sites per module:
 
@@ -120,6 +120,6 @@ Sites per module:
 | `mumtaz_tenant_manager` | 1 |
 | `mumtaz_website` | 1 |
 
-The three REVIEW items are backlog item 2's first targets (company scoping
-and negative tests). A label is not a licence: a reviewed call may still be
-removed when the user's own rights are enough.
+The three REVIEW items are closed (backlog item 2, first part); 264 labelled
+calls remain. A label is not a licence: a reviewed call may still be removed
+when the user's own rights are enough, as 34 of them were.
