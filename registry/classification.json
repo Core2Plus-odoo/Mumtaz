@@ -25,7 +25,8 @@
     "mumtaz_portal": {"layer": "platform", "disposition": "merge-candidate", "note": "12-line shell."},
     "mumtaz_customer_portal": {"layer": "platform", "disposition": "merge-candidate", "note": "21-line shell."},
     "mumtaz_vendor_portal": {"layer": "platform", "disposition": "keep", "note": "No tests."},
-    "mumtaz_website": {"layer": "platform", "disposition": "review", "note": "Odoo website shell; the public marketing site is static HTML elsewhere."},
+    "mumtaz_website": {"layer": "platform", "disposition": "review", "note": "Earlier marketing-site prototype with its own controllers and navbar; superseded by mumtaz_website_builder (21 Nov 2026). Keep until the production homepage is cut over, then retire."},
+    "mumtaz_website_builder": {"layer": "platform", "disposition": "keep", "note": "Mumtaz Digital homepage as native Website Builder blocks + CRM demo form; CSS scoped to .o_mumtaz_site."},
 
     "mumtaz_ai": {"layer": "product", "disposition": "review", "note": "One of four AI/CFO module families; no tests, no documented policy."},
     "mumtaz_voice": {"layer": "product", "disposition": "review", "note": "Depends on mumtaz_ai."},

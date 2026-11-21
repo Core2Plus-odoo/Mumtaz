@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo noupdate="1">
+  <record id="page_mumtaz_preview" model="website.page">
+    <field name="name">Mumtaz Digital | Editable Landing Page</field>
+    <field name="url">/mumtaz-native-preview</field>
+    <field name="key">mumtaz_website_builder.page_mumtaz_preview</field>
+    <field name="type">qweb</field>
+    <field name="is_published" eval="False"/>
+    <field name="arch" type="xml">
+      <t t-name="mumtaz_website_builder.page_mumtaz_preview">
+        <t t-call="website.layout">
+          <t t-set="additional_title">Mumtaz Digital | Intelligent business software</t>
+          <div id="wrap" class="oe_structure o_mumtaz_site">
+            <section class="s_mumtaz_hero o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_hero" data-name="Mumtaz Hero" id="mumtaz_hero">
+  <div class="container mumtaz_hero_grid">
+    <div class="mumtaz_hero_copy">
+      <p class="mumtaz_eyebrow"><span class="mumtaz_mark_dot">​</span> THE INTELLIGENT BUSINESS OPERATING PLATFORM</p>
+      <h1>Run the business.<br/><span>Not the software.</span></h1>
+      <p class="mumtaz_lead">Mumtaz is an intelligent, modular SaaS ERP: finance, sales, CRM, procurement, inventory, people and operations in one place, with ZAKI AI and editions built for your industry.</p>
+      <div class="mumtaz_hero_actions">
+        <a href="#mumtaz_contact" class="mumtaz_button mumtaz_button_lime">Book a demo <span aria-hidden="true">↗</span></a>
+        <a href="#mumtaz_paths" class="mumtaz_button mumtaz_button_ghost">Explore solutions <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="mumtaz_hero_points"><span><b>01</b> Business ERP</span><span><b>02</b> Industry editions</span><span><b>03</b> White-label</span></div>
+    </div>
+    <div class="mumtaz_hero_visual">
+      <div class="mumtaz_orbit mumtaz_orbit_one">​</div><div class="mumtaz_orbit mumtaz_orbit_two">​</div>
+      <div class="mumtaz_dash">
+        <div class="mumtaz_dash_top"><div class="mumtaz_dash_brand"><span class="mumtaz_dash_symbol">M</span> mumtaz<span class="mumtaz_dash_muted"> / command centre</span></div><span class="mumtaz_dash_avatar">JD</span></div>
+        <div class="mumtaz_dash_body">
+          <div class="mumtaz_dash_intro"><div><small>GOOD MORNING</small><h3>Business overview</h3></div><span class="mumtaz_live">● Illustrative data</span></div>
+          <div class="mumtaz_dash_kpis"><div><small>Revenue this month</small><strong>AED 284,000</strong><span>↗ 12.4% vs previous</span></div><div><small>Open opportunities</small><strong>38</strong><span>8 need attention</span></div><div><small>Tasks completed</small><strong>92%</strong><span>Across the team</span></div></div>
+          <div class="mumtaz_dash_lower"><div class="mumtaz_dash_chart"><div class="mumtaz_dline"><b>Business performance</b><small>Last 7 months</small></div><div class="mumtaz_bars" aria-label="Illustrative rising performance chart"><i style="--h:41%">​</i><i style="--h:57%">​</i><i style="--h:48%">​</i><i style="--h:72%">​</i><i style="--h:65%">​</i><i style="--h:85%">​</i><i style="--h:95%">​</i></div><div class="mumtaz_bar_axis"><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span></div></div><div class="mumtaz_dash_next"><b>ZAKI suggests</b><p>Review overdue receivables and two pending approvals.</p><span>✦ Suggested next action</span></div></div>
+        </div>
+      </div>
+      <div class="mumtaz_floating_note">✦   Better decisions, sooner.</div>
+    </div>
+  </div>
+</section>
+            <section class="s_mumtaz_paths o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_paths" data-name="Three Visitor Paths" id="mumtaz_paths">
+  <div class="container">
+    <div class="mumtaz_section_intro"><p class="mumtaz_eyebrow mumtaz_eyebrow_dark">BUILT AROUND YOUR AMBITION</p><h2>Choose your solution</h2><p>Three ways in. Everything runs on one modular foundation.</p></div>
+    <div class="mumtaz_path_grid">
+      <article class="mumtaz_path_card mumtaz_path_erp"><div class="mumtaz_path_icon">◈</div><span class="mumtaz_path_num">01 / MUMTAZ ERP</span><h3>Run my business.</h3><p>Bring sales, CRM, finance, purchases and operations into one clear workspace.</p><a href="#mumtaz_platform">Explore Mumtaz ERP <span aria-hidden="true">↗</span></a></article>
+      <article class="mumtaz_path_card mumtaz_path_industry"><div class="mumtaz_path_icon">◇</div><span class="mumtaz_path_num">02 / INDUSTRY SOLUTIONS</span><h3>Find my industry.</h3><p>Start with a proven foundation, then add jewellery and other focused workflows.</p><a href="#mumtaz_editions">Explore editions <span aria-hidden="true">↗</span></a></article>
+      <article class="mumtaz_path_card mumtaz_path_partner"><div class="mumtaz_path_icon">⌘</div><span class="mumtaz_path_num">03 / WHITE-LABEL ERP</span><h3>Offer ERP under my brand.</h3><p>Explore branded ERP experiences for institutions, consultants and channel partners.</p><a href="#mumtaz_partners">Partner solutions <span aria-hidden="true">↗</span></a></article>
+    </div>
+  </div>
+</section>
+            <section class="s_mumtaz_platform o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_platform" data-name="ERP Highlights" id="mumtaz_platform">
+  <div class="container mumtaz_platform_grid"><div><p class="mumtaz_eyebrow mumtaz_eyebrow_dark">MUMTAZ ERP</p><h2>The bigger picture.<br/><span>Without the noise.</span></h2><p class="mumtaz_body_text">Connect your everyday work in one practical system. Start with the capabilities you need, extend as your business grows.</p><div class="mumtaz_module_grid"><div><span>◎</span><b>Finance</b><small>Invoicing, payments, VAT, reports</small></div><div><span>◈</span><b>Sales</b><small>Quotes to orders to invoices</small></div><div><span>◇</span><b>CRM</b><small>Leads, pipeline, follow-ups</small></div><div><span>⟲</span><b>Procurement</b><small>Vendors, purchase orders, bills</small></div><div><span>▣</span><b>Inventory</b><small>Stock, warehouses, transfers</small></div><div><span>☺</span><b>HR</b><small>Employees, leave, attendance</small></div><div><span>✦</span><b>Operations</b><small>Projects, tasks, approvals</small></div><div><span>✳</span><b>ZAKI AI</b><small>Insight on top of your data</small></div></div><a href="#mumtaz_contact" class="mumtaz_text_link">See the ERP in action ↗</a></div>
+  <div class="mumtaz_platform_visual"><div class="mumtaz_preview_label">MUMTAZ / OVERVIEW</div><div class="mumtaz_preview_bignum">One platform<span class="mumtaz_spark">✳</span><small>Built for the way businesses work.</small></div><div class="mumtaz_preview_tiles"><div><span>CRM</span><b>Know your customers.</b></div><div><span>OPERATIONS</span><b>Move work forward.</b></div><div><span>INTELLIGENCE</span><b>Act with confidence.</b></div></div></div></div>
+</section>
+            <section class="s_mumtaz_editions o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_editions" data-name="Industry Editions" id="mumtaz_editions">
+  <div class="container mumtaz_editions_grid"><div class="mumtaz_editions_copy"><p class="mumtaz_eyebrow">SPECIALIST SOLUTIONS</p><h2>Focused on<br/><span>your world.</span></h2><p>Go beyond generic workflows with editions designed for how your industry really operates.</p><a href="https://jewel.mumtaz.digital/" class="mumtaz_button mumtaz_button_lime">Explore Jawhar <span aria-hidden="true">↗</span></a><div class="mumtaz_edition_note">Jawhar Jewellery <span class="is_available">● Available</span></div><div class="mumtaz_edition_note">Pharma Edition <span class="is_planned">◌ Planned</span></div><div class="mumtaz_edition_note">Retail &amp; distribution <span class="is_planned">◌ Planned</span></div></div><div class="mumtaz_edition_art"><img src="/mumtaz_website_builder/static/src/img/content/jawhar_visual.png" alt="Illustrated gemstone ring representing Jawhar, the jewellery ERP edition" loading="lazy"/><span class="mumtaz_edition_overlay">JAWHAR <small>JEWELLERY INTELLIGENCE</small></span></div></div>
+</section>
+            <section class="s_mumtaz_ai o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_ai" data-name="ZAKI AI Showcase" id="mumtaz_ai">
+  <div class="container mumtaz_ai_grid"><div><p class="mumtaz_eyebrow mumtaz_eyebrow_dark">MEET ZAKI</p><h2>More insight.<br/><span>Less guesswork.</span></h2><p class="mumtaz_body_text">ZAKI reads your finance data and answers in plain language: what is overdue, what needs approval, where margins moved. Recommendations, never unsupervised actions.</p><p class="mumtaz_disclaimer">Illustrative conversation. Actual capabilities depend on the connected implementation.</p></div><div class="mumtaz_ai_panel"><div class="mumtaz_ai_top"><span>✦ ZAKI / Finance intelligence</span><span class="mumtaz_ai_demo">ILLUSTRATIVE</span></div><div class="mumtaz_ai_question">“What should I focus on this week?”</div><div class="mumtaz_ai_answer"><span>✦ ZAKI</span><p>Start with overdue receivables, pending approvals and the margin movements that deserve a closer look.</p><div class="mumtaz_ai_tags"><span>Cash visibility</span><span>Approval checks</span><span>Margins</span></div></div></div></div>
+</section>
+            <section class="s_mumtaz_partners o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_partners" data-name="White-Label Partners" id="mumtaz_partners">
+  <div class="container mumtaz_partners_grid"><div><p class="mumtaz_eyebrow mumtaz_eyebrow_dark">PARTNERS &amp; INSTITUTIONS</p><h2>Your brand.<br/><span>Our platform.</span></h2><p class="mumtaz_body_text">Explore branded ERP experiences for banks, business communities, advisors and enterprise partners — powered by reusable technology.</p><a href="#mumtaz_contact" class="mumtaz_text_link">Discuss a partnership ↗</a></div><div class="mumtaz_partner_mock"><div class="mumtaz_partner_mock_top"><span class="mumtaz_partner_logo">PARTNER<span>.</span></span><span>Business workspace</span></div><div class="mumtaz_partner_mock_body"><p>Welcome to your business.</p><div class="mumtaz_partner_mock_grid"><span>Sales</span><span>Finance</span><span>Customers</span><span>Insights</span></div></div><div class="mumtaz_partner_mock_foot">Your identity. A connected business experience.</div></div></div>
+</section>
+            <section class="s_mumtaz_contact o_mumtaz_site o_colored_level" data-snippet="s_mumtaz_contact" data-name="Native CRM Demo Form" id="mumtaz_contact">
+  <div class="container mumtaz_contact_grid"><div><p class="mumtaz_eyebrow">LET'S TALK</p><h2>See what Mumtaz<br/><span>could do for you.</span></h2><p>A focused walkthrough for your business, industry or white-label opportunity.</p><div class="mumtaz_contact_privacy">Your enquiry creates a lead in our CRM and a person replies. No automated marketing.</div></div>
+  <div class="mumtaz_contact_form_wrap"><h3>Request a product demo</h3><p>Tell us where to start.</p>
+    <div class="s_website_form" data-snippet="s_website_form" data-name="Form">
+      <form action="/website/form/" method="post" enctype="multipart/form-data" class="o_mark_required" data-mark="*" data-pre-fill="true" data-success-mode="message" data-model_name="crm.lead">
+        <div class="s_website_form_rows row s_col_no_bgcolor">
+          <div class="s_website_form_field col-12 col-md-6 mb-3 s_website_form_required" data-name="Your Name" data-type="char"><label class="s_website_form_label" for="mumtaz_lead_contact_name">Your name <span class="s_website_form_mark">*</span></label><input id="mumtaz_lead_contact_name" type="text" name="contact_name" class="form-control s_website_form_input" required="required" autocomplete="name" placeholder="Your name"/></div>
+          <div class="s_website_form_field col-12 col-md-6 mb-3 s_website_form_required" data-name="Work Email" data-type="email"><label class="s_website_form_label" for="mumtaz_lead_email">Work email <span class="s_website_form_mark">*</span></label><input id="mumtaz_lead_email" type="email" name="email_from" class="form-control s_website_form_input" required="required" autocomplete="email" placeholder="you@company.com"/></div>
+          <div class="s_website_form_field col-12 col-md-6 mb-3 s_website_form_required" data-name="Company" data-type="char"><label class="s_website_form_label" for="mumtaz_lead_company">Business name <span class="s_website_form_mark">*</span></label><input id="mumtaz_lead_company" type="text" name="partner_name" class="form-control s_website_form_input" required="required" autocomplete="organization" placeholder="Company or institution"/></div>
+          <div class="s_website_form_field col-12 col-md-6 mb-3" data-name="Phone" data-type="tel"><label class="s_website_form_label" for="mumtaz_lead_phone">Phone</label><input id="mumtaz_lead_phone" type="tel" name="phone" class="form-control s_website_form_input" autocomplete="tel" placeholder="+971 ..."/></div>
+          <div class="s_website_form_field col-12 mb-3 s_website_form_required s_website_form_custom" data-name="Interested solution" data-type="selection"><label class="s_website_form_label" for="mumtaz_lead_solution">Interested solution <span class="s_website_form_mark">*</span></label><select id="mumtaz_lead_solution" name="Interested solution" class="form-select s_website_form_input" required="required"><option value="">Choose one</option><option value="Mumtaz ERP">Mumtaz ERP — run my business</option><option value="Industry solution">Industry solution (Jawhar jewellery or other)</option><option value="White-label ERP">White-label ERP under my brand</option><option value="ZAKI AI">ZAKI AI</option></select></div>
+          <div class="s_website_form_field col-12 mb-3" data-name="Project" data-type="text"><label class="s_website_form_label" for="mumtaz_lead_description">What are you exploring?</label><textarea id="mumtaz_lead_description" name="description" class="form-control s_website_form_input" rows="3" placeholder="General ERP, jewellery, white-label partnership...">
+</textarea></div>
+          <div class="s_website_form_field col-12 mb-3 s_website_form_required" data-name="Privacy consent" data-type="boolean"><div class="form-check"><input type="checkbox" id="mumtaz_lead_consent" name="Privacy consent" value="Yes" class="s_website_form_input form-check-input" required="required"/><label class="form-check-label s_website_form_check_label" for="mumtaz_lead_consent">I agree that Mumtaz Digital contacts me about this request and keeps these details for that purpose until I ask otherwise. <span class="s_website_form_mark">*</span></label></div></div>
+          <div class="s_website_form_field col-12 s_website_form_dnone" data-name="Subject" data-type="char"><input type="hidden" name="name" value="Mumtaz Digital — Website demo request"/></div>
+          <div class="s_website_form_field col-12 s_website_form_dnone" data-name="Website" data-type="char" aria-hidden="true" style="position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden"><label class="s_website_form_label" for="mumtaz_lead_hp">Website</label><input id="mumtaz_lead_hp" type="text" name="website_url_hp" class="form-control s_website_form_input" tabindex="-1" autocomplete="off"/></div>
+          <div class="s_website_form_submit col-12 mt-1" data-name="Submit Button"><div style="width: 200px;" class="s_website_form_label"/><a href="#" role="button" class="s_website_form_send mumtaz_button mumtaz_button_lime">Request demo <span aria-hidden="true">↗</span></a><span id="s_website_form_result"></span></div>
+        </div>
+      </form>
+      <div class="s_website_form_end_message d-none"><div class="mumtaz_form_success">Thank you. Your request has been received and a person from Mumtaz Digital will reply within two working days.</div></div>
+    </div>
+  </div></div>
+</section>
+          </div>
+        </t>
+      </t>
+    </field>
+  </record>
+</odoo>
