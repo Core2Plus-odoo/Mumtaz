@@ -13,6 +13,13 @@ the most activity:
 - **`addons/`** — 57 Odoo 19 Community addons: the Mumtaz SaaS platform, the
   Jawhar jewellery edition and C2P internal modules.
 
+**Repo layout by website:** `sites/` has one folder per website (what it is,
+where its code lives, its database, how it deploys). Start at `sites/README.md`.
+Do not move `addons/`, `c2p-delivery-system/` or the Jawhar folders
+(`apps/jawhar-web`, `website/jewel`, `deploy/jewel-staging`) without the
+server-side step described there — running services depend on those exact paths.
+The read-only infrastructure audit is in `docs/infrastructure-audit/`.
+
 Production: Hostinger VPS `187.77.128.199`, repo checked out at `/opt/mumtaz`,
 console at `https://delivery.mumtaz.digital`. **Deploys go to `main`** — the VPS
 pulls main; feature branches never reach production.
