@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Report action ────────────────────────────────────────────────────── -->
+
+    <record id="action_report_proposal" model="ir.actions.report">
+        <field name="name">Proposal</field>
+        <field name="model">mumtaz.proposal</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">mumtaz_proposal.report_proposal_document</field>
+        <field name="report_file">mumtaz_proposal.report_proposal_document</field>
+        <field name="binding_model_id" ref="model_mumtaz_proposal"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+
+</odoo>

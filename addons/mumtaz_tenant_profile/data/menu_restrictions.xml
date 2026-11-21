@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Applied on every module update (noupdate="0"):
+
+        1. "Apps" menu  → visible only to Technical Administrators (base.group_system).
+           Tenant users and even ERP Managers cannot install/remove Odoo apps.
+
+        2. "Mumtaz Control Plane" root menu → already group-gated in mumtaz_control_plane,
+           but we add base.group_system as an additional allowed group so the platform
+           owner (Mumtaz) can always reach it even without a control-plane group explicitly
+           assigned.  Tenant users never receive group_system.
+    -->
+
+    <!-- ── Hide Apps from everyone except Technical Admins ──────────────── -->
+    <record id="base.menu_apps" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+    </record>
+
+    <!-- ── Control Plane: add system admin as an allowed group ──────────── -->
+    <record id="mumtaz_control_plane.menu_mumtaz_control_plane_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+    </record>
+
+</odoo>

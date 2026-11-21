@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- noupdate="1" is load-bearing. Without it, every module upgrade would reset
+     dry_run to True and silently disarm four agents somebody had deliberately
+     turned on — the same class of failure this module was written to end. -->
+<odoo noupdate="1">
+
+    <!-- The only knob. Everything else — thresholds, per-run limits — is a
+         constant in models/, where it can be diffed and reviewed. This one is
+         seeded here rather than left to the code default so that it is visible
+         and editable under Settings > Technical > System Parameters.
+
+         The module installs inert: the crons run on schedule, record what they
+         would have touched, and write nothing until this is set to False. -->
+    <record id="param_dry_run" model="ir.config_parameter">
+        <field name="key">c2p_agents.dry_run</field>
+        <field name="value">True</field>
+    </record>
+
+</odoo>
