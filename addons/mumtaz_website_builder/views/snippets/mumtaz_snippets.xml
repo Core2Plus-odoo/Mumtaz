@@ -23,6 +23,15 @@
       <t t-snippet="mumtaz_website_builder.s_mumtaz_partners" string="White-Label Partners" group="mumtaz" t-thumbnail="/mumtaz_website_builder/static/src/img/wbuilder/partners.svg">
         <keywords>Mumtaz partners White-Label Partners reusable website builder</keywords>
       </t>
+      <t t-snippet="mumtaz_website_builder.s_mumtaz_localisation" string="Localisation &amp; Compliance" group="mumtaz" t-thumbnail="/mumtaz_website_builder/static/src/img/wbuilder/localisation.svg">
+        <keywords>Mumtaz localisation compliance UAE Saudi Pakistan VAT ZATCA FBR</keywords>
+      </t>
+      <t t-snippet="mumtaz_website_builder.s_mumtaz_pricing" string="Pricing Plans" group="mumtaz" t-thumbnail="/mumtaz_website_builder/static/src/img/wbuilder/pricing.svg">
+        <keywords>Mumtaz pricing plans starter growth enterprise organisations</keywords>
+      </t>
+      <t t-snippet="mumtaz_website_builder.s_mumtaz_faq" string="FAQ" group="mumtaz" t-thumbnail="/mumtaz_website_builder/static/src/img/wbuilder/faq.svg">
+        <keywords>Mumtaz faq questions accordion</keywords>
+      </t>
       <t t-snippet="mumtaz_website_builder.s_mumtaz_contact" string="Native CRM Demo Form" group="mumtaz" t-thumbnail="/mumtaz_website_builder/static/src/img/wbuilder/contact.svg">
         <keywords>Mumtaz contact Native CRM Demo Form reusable website builder</keywords>
       </t>

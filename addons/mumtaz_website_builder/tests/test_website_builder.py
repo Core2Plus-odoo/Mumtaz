@@ -10,8 +10,8 @@ from odoo.tests import HttpCase, tagged
 from odoo.addons.http_routing.tests.common import MockRequest
 
 URL = '/mumtaz-native-preview'
-SNIPPETS = ['s_mumtaz_hero', 's_mumtaz_paths', 's_mumtaz_platform', 's_mumtaz_editions',
-            's_mumtaz_ai', 's_mumtaz_partners', 's_mumtaz_contact']
+SNIPPETS = ['s_mumtaz_hero', 's_mumtaz_paths', 's_mumtaz_platform', 's_mumtaz_editions', 's_mumtaz_localisation',
+            's_mumtaz_ai', 's_mumtaz_partners', 's_mumtaz_pricing', 's_mumtaz_faq', 's_mumtaz_contact']
 
 
 @tagged('post_install', '-at_install')
@@ -27,7 +27,7 @@ class TestMumtazWebsiteBuilder(HttpCase):
         r = self.url_open(URL)
         self.assertEqual(r.status_code, 404, 'an unpublished page must stay invisible to visitors')
 
-    def test_admin_sees_seven_editable_sections_with_the_site_scope(self):
+    def test_admin_sees_ten_editable_sections_with_the_site_scope(self):
         self.authenticate('admin', 'admin')
         r = self.url_open(URL)
         self.assertEqual(r.status_code, 200)
@@ -36,6 +36,9 @@ class TestMumtazWebsiteBuilder(HttpCase):
             self.assertIn('data-snippet="%s"' % key, html)
         self.assertIn('id="wrap" class="oe_structure o_mumtaz_site"', html)
         self.assertIn('Run the business.', html)
+        self.assertIn('Simple pricing.', html)
+        self.assertIn('data-bs-toggle="collapse"', html)
+        self.assertIn('ZATCA Phase 2', html)
         self.assertIn('action="/website/form/"', html)
         for name in ('contact_name', 'email_from', 'partner_name', 'phone', 'Interested solution', 'Privacy consent'):
             self.assertIn('name="%s"' % name, html)
