@@ -61,13 +61,65 @@ configuration).
 5. Integration key reuse / replayed webhook.
 6. Agent service account attempting a prohibited write.
 
-## 8a.5 `sudo()` inventory (to be completed in Wave 1)
+## 8a.5 `sudo()` inventory (completed 21 Nov 2026, backlog item 3)
 
-| Module | Count | Justified in code | Action |
-| --- | --- | --- | --- |
-| `mumtaz_control_plane` | 21 | no | document or remove |
-| `mumtaz_marketplace` | 12 | no | document or remove |
-| `mumtaz_vendor_portal` | 9 | no | document or remove |
-| `mumtaz_einvoicing` | 0 | no | document or remove |
-| `mumtaz_api`, `mumtaz_api_gateway` | 9 + 5 | no | document or remove |
-| Jawhar modules | public doors only | yes (narrow reads, serial-addressed) | keep |
+The audit's first count (56) covered five modules. The full count is **298
+call sites in 34 modules** (tests excluded). Every one now carries a
+`# sudo: <reason>` label on the line above it, and `scripts/check_sudo.py`
+fails the lint job on any unlabelled call. Reasons fall into these classes:
+
+| Class | Typical reason | Verdict |
+| --- | --- | --- |
+| System parameters | `ir.config_parameter` reads that only administrators may do | Justified |
+| Append-only logs | audit, AML, access, run, billing and usage rows the acting user may not create | Justified |
+| Public doors | kiosk, client app, tray link, website forms, organisation pages: narrow reads keyed by serial, token, phone or slug; requests created after validation and caps | Justified; tested for the Jawhar doors |
+| Business actions on stock | memos, transfers, imports, counter: stock moves written by the action for staff without stock rights; locations fixed by the action | Justified |
+| Cross-company and aggregate reads | owner cards, store summaries, C2P tracker reading the delivery company; figures, counts and names only | Justified |
+| Entitlements and group membership | feature-access resolution and group writes done by the control plane | Justified |
+| Payment and tenant state | Stripe webhook (signature-verified), card page (gated), provisioning | Justified |
+| **REVIEW-01** (41 sites) | `mumtaz_app_portal` and `mumtaz_portal_routing` dashboards read invoices, orders, stock, leave, CFO and AI data with `sudo()` on routes open to any `auth='user'` session, **portal users included** | **Open**: restrict to internal users of the tenant and drop `sudo()` where the user's own rights suffice |
+| **REVIEW-03** (1 site) | `mumtaz_zaki` `/zaki/api/snapshot` returns a finance snapshot with `sudo()` to any `auth='user'` session | **Open**: require the accounting group |
+| **REVIEW-04** (11 sites) | `c2p_command_center` aggregates across companies with `sudo()` | **Open**: confirm the action is reachable only by the owner group |
+
+Sites per module:
+
+| Module | `sudo()` sites |
+| --- | --- |
+| `mumtaz_app_portal` | 23 |
+| `mumtaz_portal_routing` | 23 |
+| `mumtaz_control_plane` | 21 |
+| `mumtaz_jewellery_client` | 17 |
+| `c2p_command_center` | 16 |
+| `mumtaz_billing_stripe` | 16 |
+| `c2p_project_tracker` | 12 |
+| `mumtaz_jewellery_vip` | 12 |
+| `mumtaz_marketplace` | 12 |
+| `mumtaz_jewellery_aml` | 11 |
+| `mumtaz_jewellery_crm` | 11 |
+| `mumtaz_jewellery_stores` | 10 |
+| `mumtaz_api` | 9 |
+| `mumtaz_core` | 9 |
+| `mumtaz_vendor_portal` | 9 |
+| `mumtaz_jewellery` | 8 |
+| `mumtaz_jewellery_owner` | 8 |
+| `mumtaz_org_config` | 8 |
+| `mumtaz_organization` | 8 |
+| `mumtaz_jewellery_channels` | 6 |
+| `mumtaz_jewellery_demo` | 6 |
+| `mumtaz_jewellery_kiosk` | 6 |
+| `mumtaz_api_gateway` | 5 |
+| `mumtaz_jewellery_ai` | 5 |
+| `mumtaz_jewellery_outreach` | 5 |
+| `mumtaz_cfo_base` | 4 |
+| `mumtaz_subdomain_routing` | 4 |
+| `mumtaz_zaki` | 4 |
+| `mumtaz_voice` | 3 |
+| `mumtaz_jewellery_api` | 2 |
+| `mumtaz_jewellery_sale` | 2 |
+| `mumtaz_sso` | 1 |
+| `mumtaz_tenant_manager` | 1 |
+| `mumtaz_website` | 1 |
+
+The three REVIEW items are backlog item 2's first targets (company scoping
+and negative tests). A label is not a licence: a reviewed call may still be
+removed when the user's own rights are enough.

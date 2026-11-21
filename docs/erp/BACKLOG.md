@@ -8,7 +8,7 @@ decision first.
 | --- | --- | --- | --- | --- |
 | 1 | **Fresh-database install CI for every module** — **built 21 Nov 2026** (`scripts/platform_ci.sh`, `.github/workflows/platform-odoo-install.yml`: all 39 non-jewellery modules in one database, upgrade with tests, fail on any logged ERROR; four modules that could not install were fixed, see the changelog). Still open: a per-module smoke test that loads the main menu | 1 | PLT-REQ-001 | GIVEN a clean Odoo 19 CE database WHEN all 52 modules install and upgrade THEN exit 0 and 0 errors in the log; a module that fails blocks merge |
 | 2 | **Access CSV and company scoping audit** (add missing `ir.model.access.csv`; `company_id` on unscoped platform models; one cross-company negative test per tenant-facing module) | 1 | PLT-REQ-002 | GIVEN users A and B in different companies WHEN B requests A's record by id over RPC THEN access error / 404 and nothing written |
-| 3 | **`sudo()` inventory and justification** (comment on each; CI grep fails on an unlabelled `sudo(`) | 1 | PLT-REQ-002 | GIVEN the repository WHEN CI runs THEN every `sudo()` carries `# sudo:` and `SECURITY_MATRIX.md` §8a.5 lists the counts |
+| 3 | **`sudo()` inventory and justification** — **built 21 Nov 2026**: 298 sites in 34 modules labelled, `scripts/check_sudo.py` in the lint job; three REVIEW items opened (portal dashboards, ZAKI snapshot, command centre) for item 2 | 1 | PLT-REQ-002 | GIVEN the repository WHEN CI runs THEN every `sudo()` carries `# sudo:` and `SECURITY_MATRIX.md` §8a.5 lists the counts |
 | 4 | **Versioned C2P CRM rules** (`c2p_crm_rules`: qualification, scoring, assignment, archival as code with tests and a dry-run flag; disables the database actions on install) | 1 | CRM-REQ-001 | GIVEN a staging copy of `Mumtaz_C2P` WHEN the module runs in dry-run THEN its proposed changes match the live actions' on a sample of 500 leads, differences listed; archival writes a lost reason |
 | 5 | ⚠ **Localisation bundle** (`mumtaz_tenant_manager` bundle installs `l10n_*` by country; finance manager enters VAT) | 1 | PLT-REQ-003 | GIVEN a new UAE tenant WHEN provisioned THEN chart, VAT taxes and bilingual invoice layout exist; no tax rate hard-coded in the repository |
 | 6 | ⚠ **Retire SQLite stores** (zaki-server users → Odoo only; C2P engagement store → Postgres) with a restore drill | 1 | ADR-010 | GIVEN a backup WHEN restored to a new host THEN sign-in and engagement history work; drill documented |
@@ -32,6 +32,7 @@ the workshop, service desk, rental, consolidation, WhatsApp Cloud API.
 
 ## Next smallest safe task
 
-Item 1 is built. **Item 3** (the `sudo()` inventory with a CI grep for
-unlabelled uses) is the next one that needs no decision and no data: a
-read-and-annotate pass over 56 call sites that also feeds item 2.
+Items 1 and 3 are built. **Item 2** (access CSVs, company scoping and one
+cross-company negative test per tenant-facing module) is next, starting with
+the three REVIEW items the inventory opened: the portal dashboards and the
+ZAKI snapshot must not serve finance figures to portal users.
