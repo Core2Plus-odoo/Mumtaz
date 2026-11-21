@@ -106,6 +106,11 @@
                             string="Create Vendor Bill"
                             groups="faizy_core.group_faizy_ops"
                             invisible="not vendor_id or vendor_bill_id or state != 'completed'"/>
+                    <!-- Same retry-only role as the vendor bill button above. -->
+                    <button name="action_create_customer_invoice" type="object"
+                            string="Create Customer Invoice"
+                            groups="faizy_core.group_faizy_ops"
+                            invisible="customer_invoice_id or amount_total &lt;= 0 or state != 'completed'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="pending,assigned,in_progress,completed"/>
                 </header>
@@ -116,6 +121,13 @@
                                 invisible="not vendor_bill_id">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">Vendor Bill</span>
+                            </div>
+                        </button>
+                        <button name="action_view_customer_invoice" type="object"
+                                class="oe_stat_button" icon="fa-file-text-o"
+                                invisible="not customer_invoice_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Customer Invoice</span>
                             </div>
                         </button>
                     </div>
@@ -147,6 +159,8 @@
                             <field name="service_fee"/>
                             <field name="platform_fee" readonly="1"/>
                             <field name="amount_total" readonly="1" class="oe_subtotal_footer_separator"/>
+                            <field name="customer_invoice_id" readonly="1"
+                                   invisible="not customer_invoice_id"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="company_id" invisible="1"/>
                         </group>

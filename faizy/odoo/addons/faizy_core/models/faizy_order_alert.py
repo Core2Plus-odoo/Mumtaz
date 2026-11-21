@@ -35,15 +35,25 @@ class FaizyOrderAlert(models.Model):
             if order.is_sample:
                 continue
             try:
-                self._alert_ops_new_order(order)
+                order._alert_ops_new_order()
             except Exception:
                 _logger.exception(
                     "Faizy ops alert failed for order %s", order.id
                 )
         return orders
 
-    def _alert_ops_new_order(self, order):
+    def _alert_ops_new_order(self):
+        # Must be called on `order`, not on the `self` create() was entered
+        # with — that's the model's own empty recordset
+        # (`@api.model_create_multi`), and ensure_one() on it always raised
+        # "Expected singleton: faizy.order()", silently swallowed by the
+        # except above. Every alert this method ever tried to send has died
+        # on this line before reaching the WhatsApp/email create() calls —
+        # confirmed by a test run elsewhere logging exactly that message on
+        # ordinary order creation. The message_type fix earlier in this
+        # build log never actually took effect in practice because of this.
         self.ensure_one()
+        order = self
         svc = order.service_id.name or "Unknown service"
         cust = order.partner_id.name or "Unknown customer"
         fam = order.family_member_id.name or "The household"
