@@ -117,14 +117,14 @@ ok "Odoo modules updated."
 systemctl start odoo
 systemctl is-active --quiet odoo && ok "odoo running" || die "Odoo failed to start."
 
-# ── 4. Sync portal static HTML (apps/portal) ─────────────────────────────────
-if [[ -d "$REPO_DIR/apps/portal" && -d "$PORTAL_DIR" ]]; then
+# ── 4. Sync portal static HTML (sites/app.mumtaz.digital/portal) ─────────────────────────────────
+if [[ -d "$REPO_DIR/sites/app.mumtaz.digital/portal" && -d "$PORTAL_DIR" ]]; then
     log "Syncing portal HTML to $PORTAL_DIR …"
     rsync -a --delete \
           --exclude='nginx.conf' \
           --exclude='*.sh' \
           --exclude='__pycache__' \
-          "$REPO_DIR/apps/portal/" "$PORTAL_DIR/"
+          "$REPO_DIR/sites/app.mumtaz.digital/portal/" "$PORTAL_DIR/"
     ok "portal synced"
 fi
 
@@ -142,7 +142,7 @@ fi
 # ── 6. Optional: install wildcard nginx vhost ────────────────────────────────
 if [[ $DEPLOY_NGINX -eq 1 ]]; then
     log "Installing wildcard nginx vhost …"
-    cp "$REPO_DIR/apps/platform/nginx-wildcard.conf" /etc/nginx/sites-available/mumtaz-wildcard
+    cp "$REPO_DIR/ops/platform-routing/nginx-wildcard.conf" /etc/nginx/sites-available/mumtaz-wildcard
     ln -sf /etc/nginx/sites-available/mumtaz-wildcard /etc/nginx/sites-enabled/
     if nginx -t >/dev/null 2>&1; then
         systemctl reload nginx

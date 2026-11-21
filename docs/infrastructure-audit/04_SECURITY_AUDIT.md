@@ -1,5 +1,7 @@
 # 04 — Security Audit
 
+> File paths in this document are as of 21 Nov 2026, before the `sites/` reorganization. Eight `apps/*` folders have since moved; see the mapping table in `sites/README.md`.
+
 **Method:** static analysis, configuration reading, dependency and history review. No exploit testing, no login attempts, no scanning, no requests that reached a production host. Secret values are never reproduced; where a credential-like value exists, only its location and category are given.
 
 **Status words:** *Confirmed* — the code or configuration does this as written (verified in the repository). *Reported* — recorded in repository documents from owner-run server output; not re-verified. *Suspected* — depends on server state or framework behaviour that could not be checked.

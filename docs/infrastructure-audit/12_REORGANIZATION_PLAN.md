@@ -1,6 +1,8 @@
 # 12 — Organization and Restructuring Plan
 
-**Status: proposal. Nothing here has been done.** Every change below needs the approval named in its row, and the server-side ones need the verification pack (`13_REMEDIATION_BACKLOG.md`, V-01 … V-12) first, because the server's real layout has not been inspected.
+**Status update, 2026-11-21:** at the owner's request a first, server-safe step was carried out after this plan was written — a website-by-website index under `sites/` and the move of eight folders that no running deploy depends on. It follows the owner's "one folder per website" wording rather than the `products/*` naming proposed below; the two map one-to-one. Old → new paths are in `sites/README.md`. Everything else in this plan is still a proposal.
+
+**Status of the rest: proposal. Nothing else here has been done.** Every change below needs the approval named in its row, and the server-side ones need the verification pack (`13_REMEDIATION_BACKLOG.md`, V-01 … V-12) first, because the server's real layout has not been inspected.
 
 ## 1. Conventions
 

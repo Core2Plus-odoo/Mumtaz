@@ -1,5 +1,7 @@
 # 07 — Repository Structure Audit
 
+> File paths in this document are as of 21 Nov 2026, before the `sites/` reorganization. Eight `apps/*` folders have since moved; see the mapping table in `sites/README.md`.
+
 All findings here are **V-repo** (verified in the repository this session) unless marked.
 
 ## 1. Shape of the repository today

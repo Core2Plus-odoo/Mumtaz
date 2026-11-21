@@ -4,7 +4,7 @@
 # Usage on VPS:
 #   cd /opt/Mumtaz
 #   git pull origin claude/odoo-architecture-review-ujm0W
-#   sudo bash apps/erp/deploy.sh
+#   sudo bash sites/erp.mumtaz.digital/legacy-spa/deploy.sh
 #
 # What this does:
 #   1. Creates PostgreSQL DB + user (idempotent)
@@ -17,7 +17,7 @@ set -euo pipefail
 
 DOMAIN="erp.mumtaz.digital"
 ERP_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$ERP_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$ERP_DIR/../../.." && pwd)"
 SERVER_DIR="$REPO_ROOT/apps/erp-server"
 STATIC_DIR="$ERP_DIR/static"
 DEST_DIR="/var/www/${DOMAIN}"

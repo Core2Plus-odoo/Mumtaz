@@ -54,17 +54,17 @@ echo "[5/6] Checking static site directory..."
 if [ ! -d "$STATIC_DIR" ]; then
     mkdir -p "$STATIC_DIR"
     # Copy from repo if not already deployed
-    if [ -d "$REPO_DIR/apps/website" ]; then
-        cp -r "$REPO_DIR/apps/website/." "$STATIC_DIR/"
+    if [ -d "$REPO_DIR/sites/mumtaz.digital/site" ]; then
+        cp -r "$REPO_DIR/sites/mumtaz.digital/site/." "$STATIC_DIR/"
         echo "      Copied website assets to $STATIC_DIR"
     else
-        echo "      WARNING: $REPO_DIR/apps/website not found."
+        echo "      WARNING: $REPO_DIR/sites/mumtaz.digital/site not found."
     fi
 else
     echo "      $STATIC_DIR already exists."
     # Sync latest assets
-    if [ -d "$REPO_DIR/apps/website" ]; then
-        rsync -a "$REPO_DIR/apps/website/." "$STATIC_DIR/"
+    if [ -d "$REPO_DIR/sites/mumtaz.digital/site" ]; then
+        rsync -a "$REPO_DIR/sites/mumtaz.digital/site/." "$STATIC_DIR/"
         echo "      Synced latest website assets."
     fi
 fi
