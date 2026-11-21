@@ -1,6 +1,6 @@
 {
     'name': 'Faizy AI Team',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Services',
     'summary': 'AI team layer for Faizy: draft-and-approve queue, inbound WhatsApp log, agent users, daily digest',
     'description': """
@@ -15,6 +15,7 @@ Adds the AI team to Faizy Core without changing it.
   (10am to 9pm Karachi); otherwise it is held until the hours open.
 * Inbound WhatsApp webhook and log (faizy_core only sends).
 * Read-only daily digest for the Insights and Chief of Staff agents.
+* Knowledge notes and recent rejection reasons that each agent reads before it drafts (get_brief).
 """,
     'author': 'C2P Consultants',
     'license': 'LGPL-3',
@@ -25,6 +26,7 @@ Adds the AI team to Faizy Core without changing it.
         'security/core_access.xml',
         'data/data.xml',
         'data/cron.xml',
+        'data/knowledge_data.xml',
         'views/ai_views.xml',
         'views/menus.xml',
     ],

@@ -166,3 +166,40 @@ class TestFaizyAI(TransactionCase):
         for key in ('open_orders', 'overdue_orders', 'completed_without_proof',
                     'pending_drafts', 'unhandled_inbound', 'failed_whatsapp_messages'):
             self.assertIn(key, digest)
+
+    # ------------------------------------------------------------------ brief
+    def test_brief_has_knowledge_instructions_and_lessons(self):
+        Note = self.env['faizy.ai.knowledge']
+        for_rabta = Note.create({'name': 'Rabta only', 'body': 'x', 'agent_ids': [Command.set(self.agent.ids)]})
+        other = self.env['faizy.ai.agent'].search([('code', '=', 'noor')])
+        for_noor = Note.create({'name': 'Noor only', 'body': 'y', 'agent_ids': [Command.set(other.ids)]})
+        draft = self._draft()
+        draft = draft.with_user(self.mashood)
+        draft.reject_reason = 'Too long for WhatsApp'
+        draft.action_reject()
+        brief = self.agent.with_user(self.ai_user).get_brief()
+        names = [n['name'] for n in brief['knowledge']]
+        self.assertIn(for_rabta.name, names)
+        self.assertNotIn(for_noor.name, names)
+        self.assertIn('Approved brand facts', names)    # seeded note, for every agent
+        self.assertEqual(brief['lessons'][0]['reason'], 'Too long for WhatsApp')
+        self.assertEqual(brief['agent'], 'rabta')
+
+    def test_approval_rate(self):
+        ok = self._draft(subject='ok')
+        ok.with_user(self.mashood).action_approve()
+        bad = self._draft(subject='bad')
+        bad = bad.with_user(self.mashood)
+        bad.reject_reason = 'Wrong tone'
+        bad.action_reject()
+        self.agent.invalidate_recordset()
+        self.assertEqual(self.agent.approved_30d, 1)
+        self.assertEqual(self.agent.rejected_30d, 1)
+        self.assertEqual(self.agent.approval_rate, 50.0)
+
+    def test_agent_cannot_edit_knowledge_but_approver_can(self):
+        note = self.env['faizy.ai.knowledge'].search([], limit=1)
+        with self.assertRaises(AccessError):
+            note.with_user(self.ai_user).write({'body': 'changed'})
+        note.with_user(self.mashood).write({'body': 'changed'})
+        self.assertEqual(note.body, 'changed')
