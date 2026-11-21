@@ -1,5 +1,7 @@
 from odoo.tests import tagged
 
+from odoo.addons.pharma_courier_cod.models.flow import PharmaCourierRemittanceFlow, PharmaCourierShipmentFlow
+
 from .common import CourierCase
 
 
@@ -7,8 +9,16 @@ from .common import CourierCase
 class TestCourierFlow(CourierCase):
     """Every parcel and every remittance says where it is on the one path and what comes next, and who owns it."""
 
+    # These tests assert the BASE process. Other add-ons (the accounting one) extend `_flow_compute` with their own
+    # steps, and they are installed in the same database when the whole suite runs, so the base rules are called
+    # directly instead of reading the stored result of the full chain. The accounting add-on tests the extension.
     def _at(self, s):
-        return (s.flow_stage, s.flow_next, s.flow_owner)
+        stage, nxt = PharmaCourierShipmentFlow._flow_compute(s)
+        return (stage, nxt, PharmaCourierShipmentFlow._flow_owner_map(s).get(nxt, "none"))
+
+    def _rem(self, r):
+        key = PharmaCourierRemittanceFlow._flow_next_key(r)
+        return key, PharmaCourierRemittanceFlow._flow_owner_map(r).get(key, "none")
 
     # ------------------------------------------------------------------ the parcel's path
     def test_before_delivery_the_parcel_is_just_awaited(self):
@@ -30,7 +40,7 @@ class TestCourierFlow(CourierCase):
     def test_a_draft_slip_changes_nothing_a_posted_one_asks_for_reconciliation(self):
         s = self._ship("F6")
         rem = self._remit("S-F6", [(s, 1000, {})], bank=1000, post=False)
-        self.assertEqual(s.flow_stage, "collected")
+        self.assertEqual(self._at(s)[0], "collected")
         rem.action_post()
         self.assertEqual(self._at(s), ("remitted", "reconcile", "finance"))
 
@@ -67,6 +77,7 @@ class TestCourierFlow(CourierCase):
         s = self._ship("F15", state="in_transit", days_ago=None, collected=0.0)
         self.assertEqual(s.flow_stage, "in_transit")
         s.write({"state": "delivered", "date_delivered": self.today, "cod_collected": 1000.0})
+        self.assertEqual(s.flow_stage, "collected")                    # the stored stage was recomputed by the write
         self.assertEqual(self._at(s), ("collected", "await_remittance", "finance"))
 
     # ------------------------------------------------------------------ queues
@@ -93,21 +104,21 @@ class TestCourierFlow(CourierCase):
     def test_a_remittance_walks_post_reconcile_resolve(self):
         s = self._ship("R1", declared=1000, collected=900)
         rem = self._remit("S-R1", [(s, 900, {})], bank=900, post=False)
-        self.assertEqual((rem.flow_next, rem.flow_owner), ("post_slip", "finance"))
+        self.assertEqual(self._rem(rem), ("post_slip", "finance"))
         rem.action_post()
-        self.assertEqual(rem.flow_next, "reconcile")
+        self.assertEqual(self._rem(rem), ("reconcile", "finance"))
         rem.with_user(self.fin).action_reconcile()
         self.assertTrue(rem.open_exceptions)                    # the customer paid 100 less than declared
-        self.assertEqual((rem.flow_next, rem.flow_next_text), ("resolve", "Resolve the open findings (Finance Controller)"))
+        self.assertEqual(self._rem(rem), ("resolve", "finance"))
 
     def test_a_clean_reconciled_remittance_has_nothing_further(self):
         s = self._ship("R2")
         rem = self._remit("S-R2", [(s, 1000, {})], bank=1000)
         rem.with_user(self.fin).action_reconcile()
-        self.assertEqual((rem.flow_next, rem.flow_owner), ("none", "none"))
+        self.assertEqual(self._rem(rem), ("none", "none"))
 
     def test_a_cancelled_remittance_has_nothing_further(self):
         s = self._ship("R3")
         rem = self._remit("S-R3", [(s, 1000, {})], bank=1000, post=False)
         rem.action_cancel()
-        self.assertEqual(rem.flow_next, "none")
+        self.assertEqual(self._rem(rem), ("none", "none"))
