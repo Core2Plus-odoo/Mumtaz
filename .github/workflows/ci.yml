@@ -75,6 +75,11 @@ jobs:
       - name: flake8
         run: flake8 addons/ tools/scrapers/   # config in .flake8 at repo root
 
+      # Every sudo() widens access past the signed-in user; each call site
+      # must say why (docs/erp/architecture/SECURITY_MATRIX.md).
+      - name: sudo() calls are justified
+        run: python3 scripts/check_sudo.py addons
+
   # ────────────────────────────────────────────────────────────────────
   # 3. Security scan
   # Checks for hardcoded secrets and known-vulnerable patterns.

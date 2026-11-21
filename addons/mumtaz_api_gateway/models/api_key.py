@@ -10,6 +10,7 @@ def _get_pepper(env) -> bytes:
     """Return the server-side pepper from system parameters.
     Falls back to a deterministic empty-pepper (less secure) if not set,
     so existing deployments don't break before the pepper is configured."""
+    # sudo: system parameter; only administrators may read ir.config_parameter
     pepper = env["ir.config_parameter"].sudo().get_param("mumtaz.api_key.pepper", "")
     return pepper.encode("utf-8") if pepper else b""
 

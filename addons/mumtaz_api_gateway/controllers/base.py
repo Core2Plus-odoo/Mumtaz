@@ -19,6 +19,7 @@ def api_endpoint(require_api_key=True, required_feature_code=None):
                     api_key = auth_service.resolve_api_key(request.env, raw_key)
                     rate_limiter.check_rate_limit(api_key)
                     if required_feature_code and api_key.tenant_id:
+                        # sudo: entitlement lookup on control-plane models tenant users may not read
                         access = request.env["mumtaz.feature.access.service"].sudo().resolve_feature_access_by_code(
                             tenant=api_key.tenant_id,
                             feature_code=required_feature_code,
@@ -56,6 +57,7 @@ def api_endpoint(require_api_key=True, required_feature_code=None):
 
 
 def _log_usage(api_key, status_code, duration_ms, endpoint, error=None):
+    # sudo: append-only audit/log row; the acting user has no create right on the log
     request.env["mumtaz.api.usage.log"].sudo().create({
         "api_key_id": api_key.id if api_key else False,
         "tenant_id": api_key.tenant_id.id if api_key else False,

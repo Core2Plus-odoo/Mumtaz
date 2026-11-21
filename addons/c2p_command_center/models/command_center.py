@@ -53,11 +53,13 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── helpers ──────────────────────────────────────────────────────────
     def _bd_partner(self):
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         user = self.env["res.users"].sudo().search([("login", "=", BD_AUTHOR_LOGIN)], limit=1)
         return user.partner_id
 
     def _own_partner_ids(self):
         """Partners of every C2P group company — their invoices are intercompany, not receivables."""
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         return self.env["res.company"].sudo().search([]).mapped("partner_id.commercial_partner_id").ids
 
     @staticmethod
@@ -67,7 +69,9 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── outreach (BD engine) ─────────────────────────────────────────────
     def _outreach(self, ctx):
+        # sudo: mail record written by the business action on the user's behalf
         Msg = self.env["mail.message"].sudo()
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Lead = self.env["crm.lead"].sudo().with_context(active_test=False)
         bd = self._bd_partner()
         now, day_start = ctx["now"], ctx["day_start"]
@@ -99,8 +103,10 @@ class C2pCommandCenter(models.AbstractModel):
         due = Lead.search_count([("x_bd_status", "=", "active"),
                                  ("x_bd_next", "<=", ctx["local_today"])]) if has_bd else 0
         in_seq = Lead.search_count([("x_bd_status", "=", "active")]) if has_bd else 0
+        # sudo: mail record written by the business action on the user's behalf
         fails = self.env["mail.mail"].sudo().search_count(
             [("state", "=", "exception"), ("create_date", ">=", now - timedelta(hours=24))])
+        # sudo: system parameter; only administrators may read ir.config_parameter
         P = self.env["ir.config_parameter"].sudo()
 
         recent_replies = []
@@ -132,7 +138,9 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── pipeline ─────────────────────────────────────────────────────────
     def _pipeline(self, ctx):
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Lead = self.env["crm.lead"].sudo()
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Stage = self.env["crm.stage"].sudo()
         stages = Stage.search([], order="sequence")
         early = stages.filtered(lambda s: s.sequence <= 1).ids          # New, Contacted
@@ -177,6 +185,7 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── money ────────────────────────────────────────────────────────────
     def _money(self, ctx):
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Move = self.env["account.move"].sudo()
         today = ctx["local_today"]
         own = self._own_partner_ids()
@@ -219,6 +228,7 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── my activities ────────────────────────────────────────────────────
     def _activities(self, ctx):
+        # sudo: mail record written by the business action on the user's behalf
         acts = self.env["mail.activity"].sudo().search(
             [("user_id", "=", self.env.uid)], order="date_deadline, id")
         today = ctx["local_today"]
@@ -241,10 +251,12 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── AI agents work board ─────────────────────────────────────────────
     def _agents(self, ctx):
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Project = self.env["project.project"].sudo()
         board = Project.search([("name", "ilike", AGENT_BOARD_NAME)], limit=1)
         if not board:
             return {"missing": True}
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Task = self.env["project.task"].sudo()
         tasks = Task.search([("project_id", "=", board.id)])
         now = ctx["now"]
@@ -281,12 +293,14 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── client delivery ──────────────────────────────────────────────────
     def _delivery(self, ctx):
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Project = self.env["project.project"].sudo().with_context(allowed_company_ids=self.env.user.company_ids.ids)
         # Client projects only: a customer is set and it is not one of our own companies
         # (excludes templates such as "Web & Digital Delivery" and internal projects).
         projects = Project.search([("partner_id", "!=", False),
                                    ("partner_id.commercial_partner_id", "not in", self._own_partner_ids())],
                                   order="name")
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Task = self.env["project.task"].sudo()
         now = ctx["now"]
         week = now + timedelta(days=7)
@@ -306,6 +320,7 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── content ──────────────────────────────────────────────────────────
     def _content(self, ctx):
+        # sudo: REVIEW-04: owner dashboard aggregates across companies with sudo; confirm the action is restricted to the owner group
         Post = self.env["blog.post"].sudo()
         since30 = ctx["now"] - timedelta(days=30)
         published = Post.search([("is_published", "=", True)], order="post_date desc", limit=5)
@@ -321,6 +336,7 @@ class C2pCommandCenter(models.AbstractModel):
 
     # ── system health ────────────────────────────────────────────────────
     def _health(self, ctx):
+        # sudo: cron health read for the dashboard; read-only
         Cron = self.env["ir.cron"].sudo().with_context(active_test=False)
         crons = Cron.search(["|", "|", ("name", "ilike", "C2P"), ("name", "ilike", "AI Agents"),
                              ("name", "ilike", "BD Engine")], order="name")

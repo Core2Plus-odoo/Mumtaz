@@ -14,6 +14,7 @@ class AgentsOutreach(models.AbstractModel):
 
     def _outreach_days(self):
         try:
+            # sudo: system parameter; only administrators may read ir.config_parameter
             return max(1, int(self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.outreach_days', 45)))
         except (TypeError, ValueError):
             return 45
@@ -35,6 +36,7 @@ class AgentsOutreach(models.AbstractModel):
             return False
 
     def _occasion_drafts(self, occ, year):
+        # sudo: outreach drafts and occasions prepared by the agent run (level C) and audited; a person approves and sends
         return self.env['jewellery.ai.draft'].sudo().search(
             [('occasion_id', '=', occ.id), ('occasion_year', '=', year), ('state', 'not in', ('dismissed', 'expired'))],
             order='id desc')
@@ -83,7 +85,9 @@ class AgentsOutreach(models.AbstractModel):
         if refused:
             return refused
         today = fields.Date.context_today(self)
+        # sudo: outreach drafts and occasions prepared by the agent run (level C) and audited; a person approves and sends
         Occ = self.env['jewellery.occasion'].sudo()
+        # sudo: outreach drafts and occasions prepared by the agent run (level C) and audited; a person approves and sends
         occasions = occasion.sudo() if occasion else Occ.search([])
         prepared, skipped = [], []
         for occ in occasions:
@@ -108,6 +112,7 @@ class AgentsOutreach(models.AbstractModel):
                 continue
             draft = out['draft']
             kind = dict(occ._fields['kind'].selection)[occ.kind]
+            # sudo: outreach drafts and occasions prepared by the agent run (level C) and audited; a person approves and sends
             draft.sudo().write({
                 'kind': 'outreach', 'occasion_id': occ.id, 'occasion_year': nxt.year,
                 'subject': _('%(kind)s · %(name)s · %(date)s', kind=kind, name=p.display_name, date=nxt),

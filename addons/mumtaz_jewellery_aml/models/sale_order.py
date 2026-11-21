@@ -37,6 +37,7 @@ class SaleOrder(models.Model):
             raise UserError(Event.reason_text(ev['reason'], partner))
         out = super().action_counter_commit(journal=journal, amount=amount)
         if ev['crosses']:
+            # sudo: append-only AML event; staff cannot create events directly
             Event.sudo().create({
                 'kind': 'threshold_crossed', 'partner_id': partner.id, 'order_id': self.id,
                 'invoice_id': out['invoice'].id, 'amount_cash': ev['cash_now'], 'cash_window_before': ev['cash_window'],
@@ -56,6 +57,7 @@ class SaleOrder(models.Model):
         try:
             with self.env.registry.cursor() as cr:
                 env = self.env(cr=cr)
+                # sudo: append-only audit/log row; the acting user has no create right on the log
                 env['jewellery.aml.event'].sudo().create({
                     'kind': 'refused', 'partner_id': self.partner_id.id, 'amount_cash': ev['cash_now'],
                     'cash_window_before': ev['cash_window'], 'threshold': ev['threshold'], 'window_days': ev['window_days'],

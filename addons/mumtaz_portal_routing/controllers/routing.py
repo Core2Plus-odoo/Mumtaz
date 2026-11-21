@@ -76,6 +76,7 @@ class MumtazHome(_BASE_HOME):
             return redirect
 
         try:
+            # sudo: login redirect reads the signed-in user's own portal preference
             user = request.env['res.users'].sudo().browse(uid)
             portal_url = user.get_mumtaz_portal_redirect_url()
             if portal_url and portal_url != '/web':
@@ -134,6 +135,7 @@ class MumtazPortalRouting(http.Controller):
         slug = get_current_slug()
         if not slug:
             return None
+        # sudo: tenant resolved from the host slug; read-only
         env = request.env.sudo()
         tenant = env["mumtaz.tenant"].search([("subdomain", "=", slug)], limit=1)
         if tenant and tenant.company_id:
@@ -200,6 +202,7 @@ class MumtazPortalRouting(http.Controller):
             return guard
 
         env = request.env
+        # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
         Tenant = env['mumtaz.tenant'].sudo()
 
         tenants_total = Tenant.search_count([])
@@ -210,6 +213,7 @@ class MumtazPortalRouting(http.Controller):
         tenants_archived = Tenant.search_count([('state', '=', 'archived')])
         recent_tenants = Tenant.search([], order='create_date desc', limit=10)
 
+        # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
         ModuleBundle = env['mumtaz.module.bundle'].sudo()
         bundle_count = ModuleBundle.search_count([])
         bundles = ModuleBundle.search([], order='name', limit=8)
@@ -218,6 +222,7 @@ class MumtazPortalRouting(http.Controller):
         sme_count = 0
         recent_smes = []
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             SmeProfile = env['mumtaz.sme.profile'].sudo()
             sme_count = SmeProfile.search_count([])
             recent_smes = SmeProfile.search([], order='create_date desc', limit=5)
@@ -229,6 +234,7 @@ class MumtazPortalRouting(http.Controller):
         active_subs = 0
         overdue_subs = 0
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Sub = env['mumtaz.subscription'].sudo()
             subscription_count = Sub.search_count([])
             active_subs = Sub.search_count([('status', '=', 'active')])
@@ -239,6 +245,7 @@ class MumtazPortalRouting(http.Controller):
         # Plans
         plan_count = 0
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             plan_count = env['mumtaz.plan'].sudo().search_count([])
         except Exception as exc:
             _logger.debug("Optional module data unavailable: %s", exc)
@@ -248,6 +255,7 @@ class MumtazPortalRouting(http.Controller):
         try:
             from datetime import datetime, timedelta
             cutoff = datetime.now() - timedelta(hours=24)
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             error_count = env['mumtaz.core.log'].sudo().search_count([
                 ('level', '=', 'error'),
                 ('create_date', '>=', cutoff.strftime('%Y-%m-%d %H:%M:%S')),
@@ -258,6 +266,7 @@ class MumtazPortalRouting(http.Controller):
         # Features & tenant features
         feature_count = 0
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             feature_count = env['mumtaz.feature'].sudo().search_count([])
         except Exception as exc:
             _logger.debug("Optional module data unavailable: %s", exc)
@@ -308,6 +317,7 @@ class MumtazPortalRouting(http.Controller):
         opps_won = 0
         recent_leads = []
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Lead = env['crm.lead'].sudo()
             leads_total = Lead.search_count([('type', '=', 'lead')])
             opps_open = Lead.search_count([('type', '=', 'opportunity'), ('probability', '<', 100)])
@@ -326,10 +336,13 @@ class MumtazPortalRouting(http.Controller):
         scraper_job_count = 0
         total_scraped_records = 0
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             ScraperJob = env['lead.scraper.job'].sudo()
             last_scraper_job = ScraperJob.search([], order='create_date desc', limit=1)
             scraper_job_count = ScraperJob.search_count([])
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             scraper_source_count = env['lead.scraper.source'].sudo().search_count([('active', '=', True)])
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             total_scraped_records = env['lead.scraper.record'].sudo().search_count([])
         except Exception as exc:
             _logger.debug("Optional module data unavailable: %s", exc)
@@ -341,9 +354,11 @@ class MumtazPortalRouting(http.Controller):
         qualified_leads = 0
         converted_leads = 0
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Campaign = env['lead.nurture.campaign'].sudo()
             campaign_count = Campaign.search_count([])
             active_campaigns = Campaign.search([('active', '=', True)], order='create_date desc', limit=5)
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             NurtureLead = env['crm.lead'].sudo()
             nurturing_leads = NurtureLead.search_count([('nurture_stage', '=', 'nurturing')])
             qualified_leads = NurtureLead.search_count([('nurture_stage', '=', 'qualified')])
@@ -354,6 +369,7 @@ class MumtazPortalRouting(http.Controller):
         # Marketplace listings
         listing_count = 0
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             listing_count = env['mumtaz.marketplace.listing'].sudo().search_count(
                 [('state', '=', 'published')]
             )
@@ -363,6 +379,7 @@ class MumtazPortalRouting(http.Controller):
         # Nurture logs (recent activity)
         recent_nurture_logs = []
         try:
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             recent_nurture_logs = env['lead.nurture.log'].sudo().search(
                 [], order='timestamp desc', limit=5
             )
@@ -409,6 +426,7 @@ class MumtazPortalRouting(http.Controller):
         company_id = env.company.id
 
         # CFO workspace
+        # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
         Workspace = env['mumtaz.cfo.workspace'].sudo()
         workspace = Workspace.search(
             [('company_id', '=', company_id)], limit=1
@@ -421,6 +439,7 @@ class MumtazPortalRouting(http.Controller):
         expense_total = 0.0
         recent_txs = []
         if workspace:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Tx = env['mumtaz.cfo.transaction'].sudo()
             tx_count = Tx.search_count([('workspace_id', '=', workspace.id)])
             review_count = Tx.search_count([
@@ -441,6 +460,7 @@ class MumtazPortalRouting(http.Controller):
         ai_session_count = 0
         recent_sessions = []
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Session = env['mumtaz.ai.session'].sudo()
             ai_session_count = Session.search_count([('company_id', '=', company_id)])
             recent_sessions = Session.search(
@@ -496,6 +516,7 @@ class MumtazPortalRouting(http.Controller):
         recent_inquiries = []
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Listing = env['mumtaz.marketplace.listing'].sudo()
             total_listings = Listing.search_count([('state', '=', 'published')])
             my_listings = Listing.search_count([
@@ -532,6 +553,7 @@ class MumtazPortalRouting(http.Controller):
             _logger.debug("Optional module data unavailable: %s", exc)
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Inquiry = env['mumtaz.marketplace.inquiry'].sudo()
             inquiry_count = Inquiry.search_count([('listing_id.company_id', '=', company_id)])
             new_inquiry_count = Inquiry.search_count([
@@ -547,6 +569,7 @@ class MumtazPortalRouting(http.Controller):
             _logger.debug("Optional module data unavailable: %s", exc)
 
         try:
+            # sudo: REVIEW-01: portal dashboard aggregates read with sudo for any auth=user session, portal users included; scope and role check to confirm
             Category = env['mumtaz.marketplace.category'].sudo()
             categories = Category.search([('active', '=', True)], order='sequence')
         except Exception as exc:

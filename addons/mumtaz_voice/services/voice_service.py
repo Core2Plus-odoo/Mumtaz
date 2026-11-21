@@ -81,6 +81,7 @@ class VoiceService(models.AbstractModel):
         if "mumtaz.feature.access.service" not in self.env:
             return {"effective_enabled": True, "quota": None}
 
+        # sudo: entitlement lookup on control-plane models tenant users may not read
         access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
             company,
             "ai_access",

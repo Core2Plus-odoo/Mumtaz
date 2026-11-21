@@ -26,5 +26,6 @@ def resolve_api_key(env, raw_key):
         raise AccessDenied("Invalid API key.")
 
     record.assert_not_expired()
+    # sudo: gateway bookkeeping (usage log, key last-used, pepper) under the API key's identity
     record.sudo().write({"last_used_at": fields.Datetime.now()})
     return record

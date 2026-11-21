@@ -16,6 +16,7 @@ class MumtazWebsite(http.Controller):
     def pricing(self, **kwargs):
         plans = []
         try:
+            # sudo: public pricing page lists the plans
             plans = request.env['mumtaz.plan'].sudo().search(
                 [('active', '=', True)], order='monthly_price asc'
             )

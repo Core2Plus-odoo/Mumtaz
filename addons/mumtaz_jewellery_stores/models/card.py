@@ -12,6 +12,7 @@ class OwnerCard(models.Model):
     def _desired(self):
         out = super()._desired()
         env = self.env
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for t in env['jewellery.transfer'].sudo().search([('state', 'in', ('in_transit', 'lost'))]):
             if t.state == 'lost' or t.overdue:
                 out.append(dict(kind='store', res_model=t._name, res_id=t.id, priority=10 if t.state == 'lost' else 8,
@@ -20,12 +21,14 @@ class OwnerCard(models.Model):
                                 detail=_('%(p)s pieces, %(g).3f g fine, dispatched %(d)s by %(u)s.', p=t.piece_count, g=t.fine_g,
                                          d=t.dispatched_at or '', u=t.dispatched_by_id.name or ''),
                                 recommendation=_('Call the receiving store; receive or report lost'), impact=''))
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for r in env['jewellery.gold.reconciliation'].sudo().search([('state', '=', 'open'), ('variance_fine_g', '!=', 0)]):
             out.append(dict(kind='store', res_model=r._name, res_id=r.id, priority=9,
                             title=_('%(s)s: %(g).3f g fine %(w)s on %(d)s', s=r.warehouse_id.name, g=abs(r.variance_fine_g),
                                     w=_('missing') if r.variance_fine_g < 0 else _('over'), d=r.date),
                             detail=_('%(m)s of %(e)s pieces not found.', m=r.missing_count, e=r.expected_count),
                             recommendation=_('Recount, then a manager closes with a note'), impact=''))
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for w in env['stock.warehouse'].sudo().search([('jewellery_store_limit_fine_g', '>', 0)]):
             s = w.jewellery_summary()
             if s['over_limit']:

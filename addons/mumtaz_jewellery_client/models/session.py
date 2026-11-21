@@ -66,15 +66,18 @@ class ClientSession(models.Model):
             raise UserError(_('Give the phone number the shop has for you.'))
         now = fields.Datetime.now()
         partner = self._partner_by_phone(phone)
+        # sudo: system parameter; only administrators may read ir.config_parameter
         echo = self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.client_code_echo') == '1'
         out = {'ok': True, 'message': _('If this phone is known to us, a code is on its way through your advisor.'),
                'minutes': CODE_MINUTES}
         if not partner:
             return out
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         recent = self.sudo().search_count([('phone', '=', phone), ('create_date', '>=', now - timedelta(hours=1))])
         if recent >= CODES_PER_HOUR:
             return out        # the same answer: no new code, no hint
         code = '%06d' % secrets.randbelow(1000000)
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         self.sudo().create({'partner_id': partner.id, 'phone': phone, 'lang': (lang or 'en')[:5],
                             'code': code, 'code_expires': now + timedelta(minutes=CODE_MINUTES)})
         if echo:
@@ -88,9 +91,11 @@ class ClientSession(models.Model):
         # Phones are stored as typed ("+971 50 123 4567"), so only the last
         # four digits are a safe contiguous match; the cleaned compare decides.
         tail = phone[-4:]
+        # sudo: client matched by phone for a one-time code; the same answer whether or not a client exists
         for p in self.env['res.partner'].sudo().search([('phone', 'ilike', tail), ('is_company', '=', False)], limit=500):
             if clean_phone(p.phone) == phone:
                 return p
+        # sudo: client matched by phone for a one-time code; the same answer whether or not a client exists
         return self.env['res.partner'].sudo().browse()
 
     @api.model
@@ -100,6 +105,7 @@ class ClientSession(models.Model):
         phone = clean_phone(phone)
         code = (code or '').strip()
         now = fields.Datetime.now()
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         sess = self.sudo().search([('phone', '=', phone), ('code', '!=', False), ('code_expires', '>', now),
                                    ('revoked', '=', False)], order='id desc', limit=1)
         if not sess or not code:
@@ -121,6 +127,7 @@ class ClientSession(models.Model):
         if not token:
             return self.browse()
         now = fields.Datetime.now()
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         sess = self.sudo().search([('token_digest', '=', _digest(token)), ('revoked', '=', False),
                                    ('token_expires', '>', now)], limit=1)
         if sess:
@@ -128,13 +135,16 @@ class ClientSession(models.Model):
         return sess
 
     def action_revoke(self):
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         self.sudo().write({'revoked': True, 'code': False, 'token_digest': False})
         return True
 
     @api.model
     def _cron_expire(self):
         now = fields.Datetime.now()
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         self.sudo().search([('code', '!=', False), ('code_expires', '<', now)]).write({'code': False})
+        # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
         self.sudo().search([('token_digest', '!=', False), ('token_expires', '<', now)]).write({'token_digest': False})
 
     @api.model
@@ -142,6 +152,7 @@ class ClientSession(models.Model):
         """What staff may read to her: the live code, for her record only."""
         now = fields.Datetime.now()
         return [{'code': s.code, 'expires': s.code_expires, 'requested_at': s.create_date}
+                # sudo: public sign-in state (codes, tokens, revocation) on a model the public user cannot touch
                 for s in self.sudo().search([('partner_id', '=', partner.id), ('code', '!=', False), ('code_expires', '>', now)])]
 
     # -- what she may read -----------------------------------------------
@@ -149,11 +160,13 @@ class ClientSession(models.Model):
         """The pieces she bought: lines of confirmed orders with a serial."""
         self.ensure_one()
         partner = self.partner_id
+        # sudo: the signed-in client's own pieces, trays and requests, scoped by her partner id
         lines = self.env['sale.order.line'].sudo().search([
             ('order_id.partner_id', 'child_of', partner.commercial_partner_id.id), ('order_id.state', 'in', ('sale', 'done')),
             ('jewellery_lot_id', '!=', False)], order='id desc')
         rate = None
         try:
+            # sudo: the signed-in client's own pieces, trays and requests, scoped by her partner id
             rate = self.env['jewellery.gold.rate'].sudo().get_current(self.env.company).rate_per_gram
         except UserError:
             rate = None
@@ -174,6 +187,7 @@ class ClientSession(models.Model):
 
     def trays(self):
         self.ensure_one()
+        # sudo: the signed-in client's own pieces, trays and requests, scoped by her partner id
         Tray = self.env['jewellery.tray'].sudo()
         out = []
         for t in Tray.search([('partner_id', '=', self.partner_id.id), ('state', 'in', ('shared', 'viewing', 'reserved'))], order='id desc', limit=10):
@@ -183,6 +197,7 @@ class ClientSession(models.Model):
 
     def requests(self):
         self.ensure_one()
+        # sudo: the signed-in client's own pieces, trays and requests, scoped by her partner id
         Req = self.env['jewellery.kiosk.request'].sudo()
         recs = Req.search(['|', ('partner_id', '=', self.partner_id.id), ('phone', '=', self.phone)], order='id desc', limit=10)
         return [{'id': r.id, 'name': r.name, 'kind': r.kind, 'state': r.state, 'serial': r.serial, 'design': r.lot_id.product_id.name,

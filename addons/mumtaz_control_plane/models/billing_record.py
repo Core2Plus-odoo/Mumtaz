@@ -46,6 +46,7 @@ class MumtazSubscriptionBillingRecord(models.Model):
 
     def _log_payment(self, from_value, to_value, summary):
         for rec in self:
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             self.env["mumtaz.commercial.event.log"].sudo().create(
                 {
                     "tenant_id": rec.tenant_id.id,

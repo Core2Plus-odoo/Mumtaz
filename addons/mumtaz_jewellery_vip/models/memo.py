@@ -51,6 +51,7 @@ class ApprovalMemo(models.Model):
 
     def _lot_current_location(self, lot):
         """Where the piece is now, by its quant. None if it is not in stock."""
+        # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
         quant = self.env['stock.quant'].sudo().search([
             ('lot_id', '=', lot.id),
             ('quantity', '>', 0),
@@ -76,6 +77,7 @@ class ApprovalMemo(models.Model):
                     continue
                 # stock.move in Odoo 19 has no 'name' field; the human
                 # label is description_picking.
+                # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
                 move = self.env['stock.move'].sudo().create({
                     'description_picking': '%s: %s' % (reference, lot.name),
                     'product_id': lot.product_id.id,
@@ -89,6 +91,7 @@ class ApprovalMemo(models.Model):
                 move._action_assign()
                 move.move_line_ids.write({'lot_id': lot.id, 'quantity': 1.0})
                 if not move.move_line_ids:
+                    # sudo: stock move or quant written by the business action for a user without stock rights; locations fixed by the action
                     self.env['stock.move.line'].sudo().create({
                         'move_id': move.id,
                         'product_id': lot.product_id.id,
@@ -118,6 +121,7 @@ class ApprovalMemo(models.Model):
                 raise UserError(_(
                     'Memo %(name)s is %(state)s, so there is nothing to '
                     'return.', name=memo.name, state=memo.state))
+        # sudo: the company warehouse's stock location for the move
         warehouse = self.env['stock.warehouse'].sudo().search(
             [('company_id', '=', self.env.company.id)], limit=1)
         if warehouse:
@@ -142,6 +146,7 @@ class ApprovalMemo(models.Model):
     @api.model
     def _cron_remind(self):
         today = fields.Date.context_today(self)
+        # sudo: daily reminder cron over memos due back
         for m in self.sudo().search([('state', '=', 'out'), ('return_by', '<=', today + timedelta(days=2))]):
             p = m.partner_id
             owner = p.relationship_manager_id or self.env.ref('base.user_admin')

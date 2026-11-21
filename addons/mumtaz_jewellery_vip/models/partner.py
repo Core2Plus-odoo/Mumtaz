@@ -41,6 +41,7 @@ class ResPartner(models.Model):
             p.ai_autonomy_cap = 2 if r else 3
 
     def _compute_ltv(self):
+        # sudo: client purchase history for the tier summary; staff cannot read other salespeople's orders
         Sale = self.env['sale.order'].sudo()
         for p in self:
             orders = Sale.search([('partner_id', '=', p.id), ('state', '=', 'sale')])
@@ -73,8 +74,10 @@ class ResPartner(models.Model):
 
     def web_read(self, specification):
         res = super().web_read(specification)
+        # sudo: tier read to decide whether to log; the row itself stays hidden by the record rule
         restricted = self.filtered(lambda p: p.sudo().jewellery_tier in RESTRICTED)
         if restricted:
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             self.env['jewellery.vip.access.log'].sudo().create([
                 {'partner_id': p.id, 'user_id': self.env.user.id, 'action': 'view'} for p in restricted])
         return res
@@ -85,8 +88,10 @@ class ResPartner(models.Model):
         the result."""
         if self.env.su or self.env.context.get('vip_access_logged') or not self:
             return
+        # sudo: tier read to decide whether to log; the row itself stays hidden by the record rule
         restricted = self.sudo().filtered(lambda p: p.jewellery_tier in RESTRICTED)
         if restricted:
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             self.env['jewellery.vip.access.log'].sudo().create({
                 'user_id': self.env.user.id, 'action': action, 'count': len(restricted),
                 'partner_ids': [(6, 0, restricted.ids)], 'note': note})

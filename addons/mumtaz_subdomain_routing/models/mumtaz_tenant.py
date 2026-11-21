@@ -19,6 +19,7 @@ class MumtazTenant(models.Model):
 
     @api.model
     def _erp_base_domain(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         return (self.env["ir.config_parameter"].sudo().get_param(
             "mumtaz.erp_base_domain") or "erp.mumtaz.digital").strip(".").lower()
 
@@ -108,11 +109,13 @@ class MumtazTenant(models.Model):
         h = (host or "").split(":")[0].lower().strip(".")
         sub = self._subdomain_from_host(host)
         if sub:
+            # sudo: tenant resolved from the request host before any session exists
             tenant = self.sudo().search(
                 [("state", "=", "active"), ("subdomain", "=", sub)], limit=1)
             if tenant:
                 return tenant
         if h:
+            # sudo: tenant resolved from the request host before any session exists
             return self.sudo().search(
                 [("state", "=", "active"), ("custom_domain", "=", h)], limit=1)
         return self.browse()

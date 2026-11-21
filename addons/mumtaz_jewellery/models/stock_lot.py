@@ -80,6 +80,7 @@ class StockLot(models.Model):
                     % lot.rfid_tag)
 
     def _vat_rate(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env['ir.config_parameter'].sudo().get_param(
             'mumtaz_jewellery.vat_rate')
         return float(param) if param else 0.0

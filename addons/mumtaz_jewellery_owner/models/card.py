@@ -47,6 +47,7 @@ class OwnerCard(models.Model):
             return '%s %s' % (cur.name, format(value, ',.0f'))
 
         today = fields.Date.context_today(self)
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         Rate = env['jewellery.gold.rate'].sudo()
 
         for r in Rate.search([('state', '=', 'draft'), ('company_id', '=', env.company.id)]):
@@ -57,6 +58,7 @@ class OwnerCard(models.Model):
 
         approved = Rate.search([('state', '=', 'approved'), ('company_id', '=', env.company.id)],
                                order='effective_at desc, id desc', limit=2)
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         quants = env['stock.quant'].sudo().search([
             ('location_id.usage', '=', 'internal'), ('quantity', '>', 0), ('lot_id', '!=', False),
             ('lot_id.product_id.product_tmpl_id.is_jewellery', '=', True)])
@@ -76,6 +78,7 @@ class OwnerCard(models.Model):
                             title=_('Stock value today'), detail=detail,
                             recommendation=_('No action unless the move is outside your limit'), impact=impact))
 
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for occ in env['jewellery.occasion'].sudo().search([]):
             nxt = occ._next_date(today)
             if today <= nxt <= today + timedelta(days=occ.lead_days):
@@ -88,6 +91,7 @@ class OwnerCard(models.Model):
                                 % (p.relationship_manager_id.name or _('none')),
                                 recommendation=_('Check the gift plan with the relationship manager'),
                                 impact=''))
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for m in env['jewellery.approval.memo'].sudo().search([('state', '=', 'out'),
                                                               ('return_by', '<=', today + timedelta(days=2))]):
             late = m.return_by < today
@@ -98,6 +102,7 @@ class OwnerCard(models.Model):
                                      c=m.partner_id.name, d=m.return_by),
                             recommendation=_('Contact the client personally'),
                             impact=_('Insured value %s') % fmt(m.insured_value)))
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         for og in env['jewellery.old.gold'].sudo().search([('state', '=', 'to_approve')]):
             out.append(dict(kind='exchange', res_model=og._name, res_id=og.id, priority=10,
                             title=_('Approve old-gold exchange %s') % og.name,
@@ -105,6 +110,7 @@ class OwnerCard(models.Model):
                                      g=og.gross_weight_g, k=og.karat),
                             recommendation=_('A different person from the one who took it in must approve'),
                             impact=fmt(og.value)))
+        # sudo: system parameter; only administrators may read ir.config_parameter
         days = int(env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.slow_days', 90))
         cutoff = fields.Datetime.now() - timedelta(days=days)
         old = lots.filtered(lambda l: l.create_date and l.create_date < cutoff)
@@ -121,6 +127,7 @@ class OwnerCard(models.Model):
     def refresh(self):
         """Rebuild the current company's deck; another company's cards are untouched."""
         company = self.env.company
+        # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
         cards = self.sudo().search([('company_id', '=', company.id)])
 
         def key(card):
@@ -134,6 +141,7 @@ class OwnerCard(models.Model):
                 if c.state != 'dismissed':
                     c.write({**d, 'state': 'open'})
             else:
+                # sudo: owner cards built across the company's records by the refresh; figures and names only; cards carry company_id and their own rule
                 self.sudo().create(d)
         for k, c in existing.items():
             if k not in desired and c.state == 'open':
