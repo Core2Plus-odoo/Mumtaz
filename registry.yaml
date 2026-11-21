@@ -811,13 +811,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_core
     title: "Faizy Core"
-    version: "19.0.1.7.0"
+    version: "19.0.1.7.1"
     license: "LGPL-3"
     application: true
     depends_local: []
     depends_standard: ["base", "mail", "contacts", "product", "account"]
-    python_lines: 3417
-    test_files: 0
+    python_lines: 3478
+    test_files: 1
     access_csv: true
     note: "Faizy is a separate venture."
   faizy_website:
