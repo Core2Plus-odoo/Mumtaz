@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_appt_type_user,c2p.appointment.type.user,model_c2p_appointment_type,base.group_user,1,0,0,0
+access_appt_type_manager,c2p.appointment.type.manager,model_c2p_appointment_type,sales_team.group_sale_manager,1,1,1,1
+access_appt_booking_user,c2p.appointment.booking.user,model_c2p_appointment_booking,base.group_user,1,1,1,0
+access_appt_booking_manager,c2p.appointment.booking.manager,model_c2p_appointment_booking,sales_team.group_sale_manager,1,1,1,1
+access_appt_type_public,c2p.appointment.type.public,model_c2p_appointment_type,base.group_public,1,0,0,0
+access_appt_type_portal,c2p.appointment.type.portal,model_c2p_appointment_type,base.group_portal,1,0,0,0

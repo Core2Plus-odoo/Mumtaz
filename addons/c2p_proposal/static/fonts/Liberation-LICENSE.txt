@@ -1,0 +1,8 @@
+Liberation(tm) Fonts are licensed under the SIL Open Font License, Version 1.1.
+
+The Liberation Sans font family is metric-compatible with Arial and is
+bundled here so the proposal PDF renders with a consistent, Arial-equivalent
+typeface on the wkhtmltopdf report engine (which cannot rely on system fonts).
+
+Full license text: https://github.com/liberationfonts/liberation-fonts/blob/main/LICENSE
+Copyright (c) Red Hat, Inc.

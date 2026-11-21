@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- shared styles -->
+  <template id="appointment_assets" name="C2P Appointment Styles">
+    <style>
+      .c2p-appt-wrap{max-width:1040px;margin:0 auto;padding:2.5rem 1rem 4rem;}
+      .c2p-appt-head h1{font-weight:700;color:#002F6C;letter-spacing:-.01em;}
+      .c2p-appt-head p{color:#5b6472;font-size:1.05rem;}
+      .c2p-type-card{display:block;border:1px solid #e3e7ee;border-radius:16px;padding:1.5rem;
+        text-decoration:none;color:inherit;transition:all .18s ease;height:100%;background:#fff;}
+      .c2p-type-card:hover{border-color:#002F6C;box-shadow:0 10px 28px rgba(0,47,108,.12);
+        transform:translateY(-2px);color:inherit;text-decoration:none;}
+      .c2p-type-card h4{color:#002F6C;font-weight:650;margin-bottom:.4rem;}
+      .c2p-badge{display:inline-block;background:rgba(0,47,108,.08);color:#002F6C;
+        border-radius:999px;padding:.25rem .7rem;font-size:.8rem;font-weight:600;}
+      .c2p-panel{border:1px solid #e3e7ee;border-radius:18px;background:#fff;padding:1.6rem;}
+      .c2p-panel h5{font-weight:650;color:#002F6C;margin-bottom:1rem;font-size:1rem;
+        text-transform:uppercase;letter-spacing:.06em;}
+      .c2p-slot{border:1px solid #dfe4ec;background:#fff;border-radius:10px;padding:.6rem .3rem;
+        font-weight:600;font-size:.95rem;color:#0B1B33;cursor:pointer;transition:all .14s ease;width:100%;}
+      .c2p-slot:hover{border-color:#002F6C;background:rgba(0,47,108,.05);}
+      .c2p-slot.selected{background:#002F6C;border-color:#002F6C;color:#fff;
+        box-shadow:0 3px 10px rgba(0,47,108,.28);}
+      .c2p-slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:.55rem;}
+      .c2p-form label{font-weight:600;font-size:.88rem;color:#39424e;margin-bottom:.3rem;}
+      .c2p-form .form-control{border-radius:10px;border-color:#dfe4ec;padding:.62rem .85rem;}
+      .c2p-form .form-control:focus{border-color:#002F6C;box-shadow:0 0 0 3px rgba(0,47,108,.12);}
+      .c2p-submit{background:#002F6C;border-color:#002F6C;border-radius:999px;font-weight:650;
+        padding:.7rem 1.8rem;transition:all .18s ease;}
+      .c2p-submit:hover{background:#00224f;border-color:#00224f;transform:translateY(-1px);
+        box-shadow:0 6px 18px rgba(0,47,108,.3);}
+      .c2p-submit:disabled{opacity:.45;transform:none;box-shadow:none;}
+      .c2p-summary{background:#f4f6fa;border-radius:14px;padding:1.1rem 1.25rem;
+        border-left:4px solid #FFD700;}
+      .c2p-empty{color:#78828f;font-size:.93rem;padding:1.4rem 0;text-align:center;}
+      .c2p-ok-icon{width:74px;height:74px;border-radius:50%;background:rgba(37,211,102,.13);
+        color:#25D366;display:flex;align-items:center;justify-content:center;
+        font-size:2.2rem;margin:0 auto 1.2rem;}
+    </style>
+  </template>
+
+  <!-- ── index: pick an appointment type ── -->
+  <template id="appointment_index" name="Book an Appointment">
+    <t t-call="website.layout">
+      <t t-call="c2p_appointment.appointment_assets"/>
+      <div id="wrap" class="oe_structure">
+        <div class="c2p-appt-wrap">
+          <div class="c2p-appt-head text-center mb-5">
+            <h1>Book a Meeting</h1>
+            <p class="mb-0">Choose the conversation that fits — we'll confirm by email straight away.</p>
+          </div>
+          <div class="row g-4">
+            <t t-foreach="appointment_types" t-as="atype">
+              <div class="col-md-6 col-lg-4">
+                <a t-attf-href="/appointment/#{atype.slug}" class="c2p-type-card">
+                  <span class="c2p-badge" t-esc="'%d min' % int(atype.duration * 60)"/>
+                  <h4 class="mt-3" t-esc="atype.name"/>
+                  <div t-field="atype.description" class="text-muted small"/>
+                </a>
+              </div>
+            </t>
+          </div>
+          <t t-if="not appointment_types">
+            <div class="c2p-empty">No appointment types are available for booking right now.</div>
+          </t>
+        </div>
+      </div>
+    </t>
+  </template>
+
+  <!-- ── booking form ── -->
+  <template id="appointment_form" name="Appointment Booking">
+    <t t-call="website.layout">
+      <t t-call="c2p_appointment.appointment_assets"/>
+      <div id="wrap" class="oe_structure">
+        <div class="c2p-appt-wrap">
+
+          <div class="c2p-appt-head mb-4">
+            <a href="/appointment" class="small text-decoration-none" style="color:#002F6C;">&#8592; All meeting types</a>
+            <h1 class="mt-2" t-esc="atype.name"/>
+            <p class="mb-2">
+              <span class="c2p-badge" t-esc="'%d minutes' % int(atype.duration * 60)"/>
+              <span class="ms-2 text-muted small" t-esc="atype.location"/>
+            </p>
+            <div t-field="atype.description" class="text-muted"/>
+          </div>
+
+          <t t-if="request.params.get('error') == 'taken'">
+            <div class="alert alert-warning">That slot was just booked by someone else. Please choose another time.</div>
+          </t>
+
+          <form action="/appointment/book" method="post" class="c2p-form">
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+            <input type="hidden" name="type_id" t-att-value="atype.id"/>
+            <input type="hidden" name="start_utc" id="start_utc"/>
+
+            <div class="row g-4">
+              <div class="col-lg-5">
+                <div class="c2p-panel">
+                  <h5>1 &#183; Pick a date</h5>
+                  <input type="date" id="appt_date" class="form-control"
+                         t-att-min="min_date" t-att-max="max_date" t-att-value="min_date"/>
+                  <p class="text-muted small mt-3 mb-0">
+                    Times shown in <strong t-esc="atype.tz"/>
+                  </p>
+                </div>
+              </div>
+
+              <div class="col-lg-7">
+                <div class="c2p-panel">
+                  <h5>2 &#183; Choose a time</h5>
+                  <div id="slot_area">
+                    <div class="c2p-empty">Select a date to see available times.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="c2p-panel mt-4">
+              <h5>3 &#183; Your details</h5>
+              <div id="chosen_summary" class="c2p-summary mb-4" style="display:none;">
+                <strong>Selected:</strong> <span id="chosen_text"></span>
+              </div>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="name">Full name <span class="text-danger">*</span></label>
+                  <input type="text" name="name" id="name" class="form-control" required="required"/>
+                </div>
+                <div class="col-md-6">
+                  <label for="email">Work email <span class="text-danger">*</span></label>
+                  <input type="email" name="email" id="email" class="form-control" required="required"/>
+                </div>
+                <div class="col-md-6">
+                  <label for="phone">Phone</label>
+                  <input type="text" name="phone" id="phone" class="form-control"/>
+                </div>
+                <div class="col-md-6">
+                  <label for="company_name">Company</label>
+                  <input type="text" name="company_name" id="company_name" class="form-control"/>
+                </div>
+                <div class="col-12">
+                  <label for="notes">What would you like to discuss?</label>
+                  <textarea name="notes" id="notes" rows="3" class="form-control"
+                            placeholder="A sentence or two helps us prepare."/>
+                </div>
+              </div>
+              <div class="mt-4">
+                <button type="submit" id="submit_btn" class="btn btn-primary c2p-submit" disabled="disabled">
+                  Confirm booking
+                </button>
+                <span class="text-muted small ms-3">You'll get a confirmation email with a calendar invite.</span>
+              </div>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+      <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            var typeId = <t t-esc="atype.id"/>;
+            var dateEl = document.getElementById('appt_date');
+            var area = document.getElementById('slot_area');
+            var hidden = document.getElementById('start_utc');
+            var btn = document.getElementById('submit_btn');
+            var summary = document.getElementById('chosen_summary');
+            var chosenText = document.getElementById('chosen_text');
+
+            function rpc(url, params) {
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: params})
+                }).then(function (r) { return r.json(); })
+                  .then(function (d) { return d.result || {}; });
+            }
+
+            function loadSlots() {
+                var d = dateEl.value;
+                if (!d) { return; }
+                area.innerHTML = '<div class="c2p-empty">Loading available times&#8230;</div>';
+                hidden.value = ''; btn.disabled = true; summary.style.display = 'none';
+                rpc('/appointment/slots', {type_id: typeId, date: d}).then(function (res) {
+                    var slots = res.slots || [];
+                    if (!slots.length) {
+                        area.innerHTML = '<div class="c2p-empty">No times available on this date. Try another day.</div>';
+                        return;
+                    }
+                    var grid = document.createElement('div');
+                    grid.className = 'c2p-slot-grid';
+                    slots.forEach(function (s) {
+                        var b = document.createElement('button');
+                        b.type = 'button';
+                        b.className = 'c2p-slot';
+                        b.textContent = s.label;
+                        b.addEventListener('click', function () {
+                            grid.querySelectorAll('.c2p-slot').forEach(function (x) {
+                                x.classList.remove('selected');
+                            });
+                            b.classList.add('selected');
+                            hidden.value = s.start_utc;
+                            btn.disabled = false;
+                            chosenText.textContent = new Date(dateEl.value + 'T00:00:00')
+                                .toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'})
+                                + ' at ' + s.label;
+                            summary.style.display = 'block';
+                        });
+                        grid.appendChild(b);
+                    });
+                    area.innerHTML = '';
+                    area.appendChild(grid);
+                });
+            }
+
+            dateEl.addEventListener('change', loadSlots);
+            loadSlots();
+        });
+      </script>
+    </t>
+  </template>
+
+  <!-- ── confirmation ── -->
+  <template id="appointment_confirmed" name="Appointment Confirmed">
+    <t t-call="website.layout">
+      <t t-call="c2p_appointment.appointment_assets"/>
+      <div id="wrap" class="oe_structure">
+        <div class="c2p-appt-wrap" style="max-width:640px;">
+          <div class="c2p-panel text-center">
+            <div class="c2p-ok-icon">&#10003;</div>
+            <h1 style="color:#002F6C;font-weight:700;">You're booked in</h1>
+            <p class="text-muted">A confirmation has been sent to <strong t-esc="booking.email"/>.</p>
+
+            <div class="c2p-summary text-start mt-4">
+              <div class="mb-2"><strong t-esc="booking.appointment_type_id.name"/></div>
+              <div class="mb-1" t-esc="booking.local_start_string()"/>
+              <div class="mb-1 text-muted small" t-esc="booking.appointment_type_id.location"/>
+              <t t-if="booking.staff_id">
+                <div class="text-muted small">With <span t-esc="booking.staff_id.name"/></div>
+              </t>
+            </div>
+
+            <div class="mt-4">
+              <a t-attf-href="/appointment/ics/#{booking.access_token}"
+                 class="btn btn-primary c2p-submit">Add to calendar</a>
+            </div>
+            <div class="mt-3">
+              <a t-attf-href="/appointment/cancel/#{booking.access_token}"
+                 class="small text-muted">Need to cancel?</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </t>
+  </template>
+
+  <!-- ── cancelled ── -->
+  <template id="appointment_cancelled" name="Appointment Cancelled">
+    <t t-call="website.layout">
+      <t t-call="c2p_appointment.appointment_assets"/>
+      <div id="wrap" class="oe_structure">
+        <div class="c2p-appt-wrap" style="max-width:640px;">
+          <div class="c2p-panel text-center">
+            <h1 style="color:#002F6C;font-weight:700;">Appointment cancelled</h1>
+            <p class="text-muted mb-4">
+              Your booking on <span t-esc="booking.local_start_string()"/> has been cancelled.
+            </p>
+            <a href="/appointment" class="btn btn-primary c2p-submit">Book another time</a>
+          </div>
+        </div>
+      </div>
+    </t>
+  </template>
+
+</odoo>

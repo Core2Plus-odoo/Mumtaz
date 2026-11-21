@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_c2p_proposal_wizard_sales,c2p.proposal.wizard salesman,model_c2p_proposal_wizard,sales_team.group_sale_salesman,1,1,1,1
+access_c2p_odoo_module_sales,c2p.odoo.module salesman,model_c2p_odoo_module,sales_team.group_sale_salesman,1,0,0,0
+access_c2p_odoo_module_mgr,c2p.odoo.module manager,model_c2p_odoo_module,sales_team.group_sale_manager,1,1,1,1
+access_c2p_integration_sales,c2p.integration salesman,model_c2p_integration,sales_team.group_sale_salesman,1,0,0,0
+access_c2p_integration_mgr,c2p.integration manager,model_c2p_integration,sales_team.group_sale_manager,1,1,1,1
