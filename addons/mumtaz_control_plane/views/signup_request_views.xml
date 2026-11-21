@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mumtaz_signup_request_list" model="ir.ui.view">
+            <field name="name">mumtaz.signup.request.list</field>
+            <field name="model">mumtaz.signup.request</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="create_date" string="Received"/>
+                    <field name="name"/>
+                    <field name="contact_name"/>
+                    <field name="email"/>
+                    <field name="product_id"/>
+                    <field name="plan_id"/>
+                    <field name="source"/>
+                    <field name="state" widget="badge"
+                           decoration-info="state in ('new', 'approved', 'provisioning')"
+                           decoration-success="state == 'ready'"
+                           decoration-danger="state == 'failed'"
+                           decoration-muted="state == 'rejected'"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_signup_request_search" model="ir.ui.view">
+            <field name="name">mumtaz.signup.request.search</field>
+            <field name="model">mumtaz.signup.request</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="email"/>
+                    <field name="product_id"/>
+                    <filter name="to_review" string="To Review" domain="[('state', '=', 'new')]"/>
+                    <filter name="in_progress" string="In Progress"
+                            domain="[('state', 'in', ('approved', 'provisioning'))]"/>
+                    <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]"/>
+                    <filter name="ready" string="Ready" domain="[('state', '=', 'ready')]"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_mumtaz_signup_request_form" model="ir.ui.view">
+            <field name="name">mumtaz.signup.request.form</field>
+            <field name="model">mumtaz.signup.request</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_approve" type="object" string="Approve"
+                                class="oe_highlight" invisible="state != 'new'"
+                                groups="mumtaz_control_plane.group_mumtaz_super_admin"
+                                confirm="This creates the organization, a staging tenant record and a trial subscription. No database is created yet. Continue?"/>
+                        <button name="action_provision" type="object" string="Provision Staging Tenant"
+                                class="oe_highlight" invisible="state not in ('approved', 'failed')"
+                                groups="mumtaz_control_plane.group_mumtaz_super_admin"
+                                confirm="This queues the creation of a new, separate database for this organization. Continue?"/>
+                        <button name="action_reject" type="object" string="Reject"
+                                invisible="state != 'new'"
+                                groups="mumtaz_control_plane.group_mumtaz_super_admin"/>
+                        <field name="state" widget="statusbar"
+                               statusbar_visible="new,approved,provisioning,ready"/>
+                    </header>
+                    <sheet>
+                        <div class="alert alert-info" role="status" invisible="state != 'provisioning'">
+                            Waiting for the provisioning worker. A general ERP database takes a few minutes.
+                        </div>
+                        <div class="alert alert-danger" role="alert" invisible="state != 'failed'">
+                            Provisioning failed. The reason is in the tenant's provisioning log.
+                        </div>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1><field name="name" readonly="state != 'new'"/></h1>
+                        </div>
+                        <group>
+                            <group string="Contact">
+                                <field name="contact_name" readonly="state != 'new'"/>
+                                <field name="email" readonly="state != 'new'"/>
+                                <field name="phone"/>
+                                <field name="country_id"/>
+                                <field name="source"/>
+                            </group>
+                            <group string="Request">
+                                <field name="product_id" readonly="state != 'new'"/>
+                                <field name="plan_id" readonly="state != 'new'"/>
+                                <field name="entitlement_granted" invisible="state == 'new'"/>
+                                <field name="entitlement_reason" invisible="state == 'new'"/>
+                            </group>
+                        </group>
+                        <group string="Outcome" invisible="state in ('new', 'rejected')">
+                            <group>
+                                <field name="partner_id"/>
+                                <field name="tenant_id"/>
+                                <field name="subscription_id"/>
+                            </group>
+                            <group>
+                                <field name="workspace_url" widget="url" invisible="state != 'ready'"/>
+                            </group>
+                        </group>
+                        <group string="Reason for Rejection" invisible="state != 'rejected'">
+                            <field name="reject_reason" nolabel="1" colspan="2"/>
+                        </group>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_mumtaz_signup_request" model="ir.actions.act_window">
+            <field name="name">Registration Requests</field>
+            <field name="res_model">mumtaz.signup.request</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_to_review': 1}</field>
+        </record>
+
+        <record id="view_mumtaz_tenant_form_organization" model="ir.ui.view">
+            <field name="name">mumtaz.tenant.form.organization</field>
+            <field name="model">mumtaz.tenant</field>
+            <field name="inherit_id" ref="mumtaz_tenant_manager.mumtaz_tenant_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="before">
+                    <field name="customer_partner_id"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

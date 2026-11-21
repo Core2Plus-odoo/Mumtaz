@@ -11,7 +11,7 @@ from Muhammad Umer and are not yet backed by repository evidence.
 | --- | --- | --- |
 | Jewel (Jawhar) | Product tenant | Staging documented at `jewel.mumtaz.digital`, database `jewel_demo` (`docs/erp/00-AUDIT.md`) |
 | Pharma | Product tenant | No pharma module exists in this repository |
-| IG2 | Client | Own database on the Hostinger VPS. Nothing in this repository names IG2 |
+| IG2 | Client | Own database on the Hostinger VPS. Two shared modules still carry IG2-specific values (see `docs/platform/MUMTAZ_MODULE_REGISTRY_REVIEW.md`) |
 | C2P | Client | Own database on the Hostinger VPS (`Mumtaz_C2P` per `docs/erp/00-AUDIT.md`) |
 
 To verify on the server: which modules each database has installed, and from
@@ -23,7 +23,7 @@ Eight `apps/*` folders moved on 21 Nov 2026 when the repository was organized by
 
 | Folder | What it is | Belongs to |
 | --- | --- | --- |
-| `addons/` | 57 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
+| `addons/` | 58 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
 | `apps/jawhar-web` | Jawhar React app | Jawhar |
 | `sites/` | One folder per website: an index for every site, plus the code of the static sites below (see `sites/README.md`) | All |
 | `sites/app.mumtaz.digital/portal` | Static customer portal pages (was `apps/portal`) | Mumtaz platform |
