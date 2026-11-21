@@ -30,8 +30,8 @@ for this product).
 | PUR-02 | Supplier invoices, settlement | **Closed** | A draft Vendor Bill is now created automatically on order completion (`faizy_vendor_billing.py`); see FIN-03 below |
 | INV-01/02/03 | Inventory, lots/serials, valuation | **Out of scope** | Faizy buys on the customer's behalf; it never holds stock. Confirmed by the absence of any `stock.*` dependency |
 | FIN-01 | General ledger | Standard | Native `account.move`/`l10n_pk` chart of accounts |
-| FIN-02 | AR, customer invoicing | Extend | `faizy.subscription._cron_recurring_invoice` creates real `account.move` invoices on schedule |
-| FIN-03 | AP, bank reconciliation | **Closed (drafted, not posted)** | `faizy.order.action_complete` now drafts a Vendor Bill (`move_type=in_invoice`) — a gross-procured line plus a negative commission-retained line, net payable = `purchase_value - vendor_commission`. Never auto-posted; an accountant reviews and posts, mirroring `faizy.subscription._generate_invoice`'s existing convention. A manual `action_create_vendor_bill` retry button covers the case where the automatic draft fails (e.g. a missing exchange rate — same guard as subscriptions). **New, bigger gap found while closing this one:** `faizy_product_data.xml`'s own comment on `product_platform_fee` states plainly "orders do not reach accounting at all today" on the *customer* side either — `purchase_value`/`platform_fee`/`service_fee` (the money the customer owes per order) are computed but never invoiced or debited anywhere, and `faizy.wallet.transaction` is a fully-built ledger model that is never populated by any code path. That is a materially bigger, separate piece of work (deciding per-order vs. wallet-funded billing) and is deliberately **not** bundled into this fix — flagged here for a future, explicitly-scoped decision |
+| FIN-02 | AR, customer invoicing | **Closed (drafted, not posted)** | `faizy.subscription._cron_recurring_invoice` already invoices the recurring plan fee. `faizy.order.action_complete` now additionally drafts a per-order customer Invoice (`move_type=out_invoice`) for `amount_total` — reimbursement + platform fee + service fee as separate lines, using the sale-side products `faizy_product_data.xml` had already prepared — plus a `faizy.wallet.transaction` debit (informational only, powers the portal's running-balance display; not an accounting fact, see ENTITY_RELATIONSHIPS.md). Never auto-posted; same convention and manual `action_create_customer_invoice` retry button as FIN-03 below. |
+| FIN-03 | AP, bank reconciliation | **Closed (drafted, not posted)** | `faizy.order.action_complete` now drafts a Vendor Bill (`move_type=in_invoice`) — a gross-procured line plus a negative commission-retained line, net payable = `purchase_value - vendor_commission`. Never auto-posted; an accountant reviews and posts, mirroring `faizy.subscription._generate_invoice`'s existing convention. A manual `action_create_vendor_bill` retry button covers the case where the automatic draft fails (e.g. a missing exchange rate — same guard as subscriptions). |
 | FIN-04 | Budgets, cash forecast, fixed assets | **Out of scope** | Not relevant at current scale; no budget/asset model exists or is implied |
 | FIN-05 | Intercompany, consolidation | N/A | Single company — not applicable (ADR-002) |
 | PRJ-01 | Projects, tasks, timesheets | **Out of scope** | Not a project business |
@@ -54,9 +54,12 @@ HR/payroll, POS/e-commerce, projects, fixed assets, intercompany). **Building an
 scope" rows without a real business reason would be over-engineering**, directly against the
 blueprint's own standard-first and no-fake-completion principles.
 
-The one row that was a genuine, concrete, worth-fixing gap rather than a correct exclusion —
-**FIN-03, vendor commission never becoming an AP bill** — is now closed (drafted, not posted; see
-above). Closing it surfaced a bigger sibling gap on the customer side: order-level charges
-(`purchase_value`/`platform_fee`/`service_fee`) and the `faizy.wallet.transaction` ledger are never
-invoiced or posted either. That is the most defensible next backlog item, and is deliberately left
-for a separate, explicitly-scoped decision rather than built as a drive-by addition here.
+Both rows that were genuine, concrete, worth-fixing gaps rather than correct exclusions — **FIN-03,
+vendor commission never becoming an AP bill**, and **FIN-02's per-order half, customer charges never
+becoming AR** — are now closed (drafted, not posted). Both the Vendor Bill and the Customer Invoice
+are real `account.move` records a person reviews and posts; the wallet debit alongside the invoice
+is explicitly *not* a second accounting record, by product-owner decision, only the figure the
+portal already displays. Remaining open items from this audit: no payment gateway collects the
+invoice once posted (ASM-04), and the company's own currency/country/TRN are still unset in code
+(ASM-01) — both already tracked in PROJECT_CHARTER.md and outside what either billing fix could
+close on its own.

@@ -90,6 +90,18 @@
             <field name="description_sale">Charge for carrying out a care activity.</field>
         </record>
 
+        <!-- The third line of a customer invoice: what Faizy actually spent on
+             their behalf, reimbursed at cost — not marked up, that's what
+             the platform fee above is for. -->
+        <record id="product_purchase_reimbursement" model="product.product">
+            <field name="name">Goods/services purchased on your behalf</field>
+            <field name="type">service</field>
+            <field name="list_price">0.00</field>
+            <field name="sale_ok" eval="True"/>
+            <field name="purchase_ok" eval="False"/>
+            <field name="description_sale">Reimbursement at cost for what was bought for the errand.</field>
+        </record>
+
         <!-- Vendor-bill side. We owe a fulfilling vendor the purchase value of
              what they supplied, minus the commission we retain — see
              faizy_vendor.py's own docstring: "vendor bills, payments and the

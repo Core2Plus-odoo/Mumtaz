@@ -723,3 +723,33 @@ group"). Narrowing it could break an agent workflow that relies on it, so it is 
 logs `Faizy ops alert failed for order N` with `ValueError: Expected singleton: faizy.order()` for
 each order created. It is caught by design and does not fail a test, and it is unrelated to this
 change; worth a look in case the same happens for real orders.
+
+## 15. Customer order billing (invoice + wallet) — and the ops alert was still silently dead
+
+Closed the sibling gap FIT_GAP_REGISTER's audit flagged on the customer side (part of FIN-02), per
+the product owner's explicit choice of "both: invoice is the real AR, wallet just tracks it." New
+`faizy_customer_billing.py` (`_inherit = "faizy.order"`): on `action_complete`, when
+`amount_total > 0`, drafts a customer Invoice (`account.move`, `out_invoice`) — reimbursement +
+platform fee + service fee as separate lines, using the sale-side products `faizy_product_data.xml`
+had already prepared — and logs a `faizy.wallet.transaction` debit referencing it. The invoice is
+the real accounting fact; the wallet row is deliberately *not* a second ledger of the same fact —
+it only exists so the portal's running-balance display (`res_partner.wallet_balance`, already built,
+never populated until now) finally shows something. Never auto-posts, same convention and the same
+exchange-rate guard as the vendor bill; a billing failure never blocks `action_complete`; a manual
+`action_create_customer_invoice` button covers retry. New `product_purchase_reimbursement` product
+carries the account/tax mapping for the reimbursement line.
+
+**While verifying this, found and fixed that the test note above (§14 postscript) was pointing at a
+real, currently-live bug, not test noise.** `faizy_order_alert.py`'s `create()` called
+`self._alert_ops_new_order(order)` — `self` there is the model's own empty recordset
+(`@api.model_create_multi`'s binding), not `order`, so `_alert_ops_new_order`'s `self.ensure_one()`
+raised `ValueError: Expected singleton: faizy.order()` on every single call, silently swallowed by
+the surrounding `except Exception`. **Every ops alert this build has ever tried to send has died on
+that line before reaching the WhatsApp/email `create()` calls at all** — the earlier fix to this
+same file's `message_type` Selection value (which this build log already covers, under the "ops
+alert never fired" entry) never actually took effect in production, because execution never got
+that far to begin with. Fixed by calling `order._alert_ops_new_order()`
+and dropping the redundant argument. Could not run this against a live Odoo instance from here (no
+Postgres in this environment) — verified by reasoning about `ensure_one()`'s exact semantics against
+the exact error text the other session's test run already logged, not by executing it myself; CI's
+real Odoo test run against Postgres is the actual proof once this lands.
