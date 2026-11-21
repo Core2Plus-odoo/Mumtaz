@@ -101,7 +101,7 @@
                                  ('blocked_reason', '=', False)]"/>
                 <filter name="blocked" string="Waiting on client"
                         domain="[('waiting_since', '!=', False)]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_assignee" string="Assignee"
                             context="{'group_by': 'user_ids'}"/>
                     <filter name="group_project" string="Project"

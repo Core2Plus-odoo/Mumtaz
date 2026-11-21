@@ -110,11 +110,20 @@ class ProjectTask(models.Model):
             # milestone.
             task.c2p_code = match.group(1).upper() if match else task.c2p_code
 
+    def _c2p_deadline_date(self):
+        """The deadline as a date. Odoo 19 made project.task.date_deadline a
+        Datetime; everything this module compares it with (baselines, the
+        delivery milestone's deadline, today) is a Date, so every comparison
+        goes through here."""
+        self.ensure_one()
+        return fields.Date.to_date(self.date_deadline) if self.date_deadline else False
+
     @api.depends("date_deadline", "baseline_deadline")
     def _compute_slippage_days(self):
         for task in self:
-            if task.date_deadline and task.baseline_deadline:
-                task.slippage_days = (task.date_deadline - task.baseline_deadline).days
+            deadline = task._c2p_deadline_date()
+            if deadline and task.baseline_deadline:
+                task.slippage_days = (deadline - task.baseline_deadline).days
             else:
                 task.slippage_days = 0
 
@@ -169,6 +178,23 @@ class ProjectTask(models.Model):
                     "Task %(task)s is Waiting on Client, so it needs a Blocked "
                     "Reason saying what the client owes.", task=task.name))
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """A task created straight into a stage counts like one moved there:
+        waiting_since starts, a milestone's first deadline becomes its
+        baseline, and the portfolio resyncs."""
+        tasks = super().create(vals_list)
+        for task in tasks:
+            if task._is_waiting_on_client() and not task.waiting_since:
+                task.waiting_since = fields.Date.context_today(task)
+            if task.c2p_is_milestone and task.date_deadline and not task.baseline_deadline:
+                task.baseline_deadline = task._c2p_deadline_date()
+        delivery = tasks.filtered(lambda t: t.project_id.c2p_layer == "delivery")
+        if delivery:
+            delivery.project_id._c2p_sync_portfolio_milestones()
+            delivery.project_id._c2p_touch_portfolio_health()
+        return tasks
+
     def write(self, vals):
         """Maintain waiting_since and the baseline, then resync the portfolio."""
         track_stage = "stage_id" in vals
@@ -193,13 +219,17 @@ class ProjectTask(models.Model):
             for task in self.filtered(
                     lambda t: t.c2p_is_milestone and t.date_deadline
                     and not t.baseline_deadline):
-                task.baseline_deadline = task.date_deadline
+                task.baseline_deadline = task._c2p_deadline_date()
 
-        if track_stage or {"milestone_id", "date_deadline"} & set(vals):
-            delivery = self.filtered(
-                lambda t: t.project_id.c2p_layer == "delivery")
-            if delivery:
-                delivery.project_id._c2p_sync_portfolio_milestones()
+        delivery = self.filtered(lambda t: t.project_id.c2p_layer == "delivery")
+        if delivery and (track_stage or {"milestone_id", "date_deadline"} & set(vals)):
+            delivery.project_id._c2p_sync_portfolio_milestones()
+        # The portfolio's health reads blocker ages and overdue counts across
+        # the company boundary, which no @api.depends can express; a change
+        # on the delivery side marks them for recomputation explicitly.
+        if delivery and (track_stage or {"waiting_since", "blocked_reason", "date_deadline",
+                                         "user_ids", "milestone_id"} & set(vals)):
+            delivery.project_id._c2p_touch_portfolio_health()
         return res
 
     def action_reset_baseline(self):

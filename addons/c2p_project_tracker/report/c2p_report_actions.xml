@@ -13,7 +13,7 @@
             <field name="paperformat_id" ref="paperformat_c2p_landscape"/>
             <field name="binding_model_id" ref="project.model_project_project"/>
             <field name="binding_type">report</field>
-            <field name="groups_id"
+            <field name="group_ids"
                    eval="[(4, ref('c2p_project_tracker.group_c2p_portfolio_manager'))]"/>
         </record>
 
@@ -28,7 +28,7 @@
             <field name="paperformat_id" ref="paperformat_c2p_portrait"/>
             <field name="binding_model_id" ref="project.model_project_project"/>
             <field name="binding_type">report</field>
-            <field name="groups_id"
+            <field name="group_ids"
                    eval="[(4, ref('c2p_project_tracker.group_c2p_delivery_lead'))]"/>
         </record>
 
