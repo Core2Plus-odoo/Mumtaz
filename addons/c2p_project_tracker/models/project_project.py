@@ -269,9 +269,9 @@ class ProjectProject(models.Model):
                 lambda m: (m.stage_id.name or "").strip().lower() != PORTFOLIO_DONE)
             project.current_milestone_id = open_ms[:1].id if open_ms else False
             dated = open_ms.filtered("date_deadline").sorted("date_deadline")
-            project.next_milestone_date = dated[:1].date_deadline if dated else False
+            project.next_milestone_date = dated[:1]._c2p_deadline_date() if dated else False
             project.overdue_milestones_count = len(dated.filtered(
-                lambda m: m.date_deadline < today))
+                lambda m: m._c2p_deadline_date() < today))
 
     @api.depends("c2p_counterpart_id")
     def _compute_delivery_activity(self):
@@ -296,7 +296,7 @@ class ProjectProject(models.Model):
             project.open_blockers_count = len(
                 tasks.filtered(lambda t: t._is_waiting_on_client()))
             project.overdue_tasks_count = len(tasks.filtered(
-                lambda t: t.date_deadline and t.date_deadline < today
+                lambda t: t.date_deadline and t._c2p_deadline_date() < today
                 and not t._is_done_stage()))
 
     def _c2p_thresholds(self):
@@ -330,7 +330,7 @@ class ProjectProject(models.Model):
 
             worst_overdue = 0
             for m in open_ms.filtered("date_deadline"):
-                worst_overdue = max(worst_overdue, (today - m.date_deadline).days)
+                worst_overdue = max(worst_overdue, (today - m._c2p_deadline_date()).days)
             if worst_overdue > th["red_milestone_overdue_days"]:
                 red.append(_("A milestone is %s days overdue.") % worst_overdue)
             elif worst_overdue >= 1:
@@ -385,6 +385,21 @@ class ProjectProject(models.Model):
                 "• No issues detected.")
             # Each red factor costs 20, each amber 8, floored at zero.
             project.health_score = max(0, 100 - 20 * len(red) - 8 * len(amber))
+
+    def _c2p_touch_portfolio_health(self):
+        """Mark the counterpart portfolio's delivery-derived fields for
+        recomputation. Called from the delivery side when a task changes in a
+        way the portfolio reports on (stage, blocker age, deadline)."""
+        portfolios = self.browse()
+        for project in self.sudo():
+            portfolio = project.c2p_counterpart_id if project.c2p_layer == "delivery" else project
+            if portfolio and portfolio.c2p_layer == "portfolio":
+                portfolios |= portfolio
+        if not portfolios:
+            return
+        for fname in ("last_activity_date", "days_since_activity", "open_blockers_count",
+                      "overdue_tasks_count", "rag_status", "rag_reasons", "health_score"):
+            self.env.add_to_compute(portfolios._fields[fname], portfolios)
 
     def _c2p_oldest_blocker_days(self):
         """Age in days of the longest-standing client blocker on the delivery
@@ -441,13 +456,13 @@ class ProjectProject(models.Model):
                 counts["open"] = len(tasks) - counts["done"]
 
                 old_stage = milestone.stage_id
-                old_deadline = milestone.date_deadline
+                old_deadline = milestone._c2p_deadline_date()
                 vals = {}
 
                 # Deadline: only propagate a real date. The delivery milestones
                 # currently carry no deadlines, and blanking the portfolio side
                 # would destroy the baseline comparison.
-                if dm.deadline and dm.deadline != milestone.date_deadline:
+                if dm.deadline and dm.deadline != milestone._c2p_deadline_date():
                     vals["date_deadline"] = dm.deadline
                     if not milestone.baseline_deadline:
                         vals["baseline_deadline"] = dm.deadline

@@ -139,7 +139,7 @@ class ProjectProjectReport(models.Model):
                     "code": m.c2p_code or "",
                     "name": m.name,
                     "stage": m.stage_id.name or "",
-                    "deadline": m.date_deadline or "",
+                    "deadline": m._c2p_deadline_date() or "",
                 }
                 for m in milestones
             ],

@@ -17,7 +17,7 @@ Community only — no Enterprise dependency.
     "license": "LGPL-3",
     # project brings project.milestone and project.update, both Community.
     # mail is needed for the chatter notes the sync engine posts.
-    "depends": ["project", "mail"],
+    "depends": ["project", "mail", "sale"],
     "data": [
         "security/c2p_project_tracker_groups.xml",
         "security/ir.model.access.csv",

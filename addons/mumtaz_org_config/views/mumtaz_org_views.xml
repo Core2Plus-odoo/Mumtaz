@@ -93,7 +93,7 @@
                 <filter string="Pending"   name="pending"   domain="[('state','=','pending')]"/>
                 <filter string="Suspended" name="suspended" domain="[('state','=','suspended')]"/>
                 <filter string="Trial"     name="trial"     domain="[('plan','=','trial')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Plan"    name="group_plan"    context="{'group_by':'plan'}"/>
                     <filter string="Country" name="group_country" context="{'group_by':'country_id'}"/>
                     <filter string="State"   name="group_state"   context="{'group_by':'state'}"/>
