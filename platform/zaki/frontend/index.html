@@ -6,21 +6,28 @@
 <title>ZAKI — AI CFO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#15120E; --panel:#1C1917; --panel2:#232019; --line:rgba(245,241,234,.10);
-    --gold:#D4A84C; --gold2:#B8862A; --gold-soft:rgba(212,168,76,.14);
-    --txt:#F5F1EA; --mut:rgba(245,241,234,.62); --mut2:rgba(245,241,234,.4);
-    --green:#3CC78D; --green-bg:rgba(60,199,141,.14); --red:#E06A5A; --red-bg:rgba(224,106,90,.14);
-    --amber:#E8B04B; --amber-bg:rgba(232,176,75,.14);
-    --r:12px; --r-sm:9px; --r-full:9999px; --font:'Inter',system-ui,sans-serif; --mono:'DM Mono',monospace;
+    /* Mumtaz palette (shared with the marketing site): ink field, saffron accent.
+       Token names are unchanged so the script below needs no edits. */
+    --bg:#0C1140; --panel:#141A55; --panel2:#1C2368; --line:rgba(199,207,255,.16);
+    --gold:#FFB61E; --gold2:#F09A00; --gold-soft:rgba(255,182,30,.14);
+    --txt:#F4F6FD; --mut:rgba(220,226,255,.72); --mut2:rgba(220,226,255,.48);
+    --green:#2FD6AC; --green-bg:rgba(47,214,172,.14); --red:#FF7A7A; --red-bg:rgba(255,122,122,.14);
+    --amber:#FFCB66; --amber-bg:rgba(255,203,102,.14);
+    --ink:#101548;
+    --r:14px; --r-sm:10px; --r-full:9999px;
+    --font:'IBM Plex Sans','IBM Plex Sans Arabic',system-ui,sans-serif; --mono:'IBM Plex Mono',monospace;
+    --display:'Bricolage Grotesque','IBM Plex Sans',system-ui,sans-serif;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{font-family:var(--font);background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased;font-size:15px}
   button{font-family:var(--font);cursor:pointer;border:none}
   input,select,textarea{font-family:var(--font);outline:none}
   .mono{font-family:var(--mono)}
+  :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .wz-card h2,.greet,.top .ttl,.kpi .v,.opp .impact,.brand .nm{font-family:var(--display);letter-spacing:-.01em}
   .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite;vertical-align:middle}
   @keyframes sp{to{transform:rotate(360deg)}}
 
@@ -28,17 +35,20 @@
   #wizard{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
   .wz-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:460px;width:100%;padding:34px}
   .wz-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-  .zmark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#15120E;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700}
-  .wz-step{font-size:.72rem;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin:18px 0 6px}
+  .zmark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);font-family:'IBM Plex Sans Arabic',var(--font);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700}
+  .wz-step{font-size:.82rem;color:var(--gold);font-weight:600;margin:18px 0 6px}
   .wz-card h2{font-size:1.4rem;font-weight:700;margin-bottom:18px}
   .fld{margin-bottom:14px}
-  .fld label{display:block;font-size:.72rem;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+  .fld label{display:block;font-size:.82rem;font-weight:500;color:var(--mut);margin-bottom:6px}
+  .fld input:focus,.fld select:focus,.fld textarea:focus,.chat-in input:focus{border-color:var(--gold)}
   .fld input,.fld select,.fld textarea{width:100%;padding:11px 13px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);color:var(--txt);font-size:.92rem}
   .ind-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .ind{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 8px;text-align:center;font-size:.78rem;cursor:pointer}
   .ind.sel{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
   .btn{padding:11px 20px;border-radius:var(--r-sm);font-weight:600;font-size:.9rem}
-  .btn-gold{background:var(--gold);color:#15120E}
+  .btn-gold{background:var(--gold);color:var(--ink)}
+  .btn-gold:hover{background:#FFC74D}
+  .btn{border-radius:var(--r-full)}
   .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
   .wz-foot{display:flex;justify-content:space-between;margin-top:22px}
 
@@ -65,7 +75,7 @@
   .panel{display:none}.panel.active{display:block}
   .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-  .kpi .l{font-size:.7rem;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+  .kpi .l{font-size:.82rem;color:var(--mut)}
   .kpi .v{font-size:1.35rem;font-weight:800;margin-top:6px}
   .v.green{color:var(--green)}.v.red{color:var(--red)}.v.amber{color:var(--amber)}.v.gold{color:var(--gold)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-top:18px}
@@ -77,13 +87,13 @@
   .cursor::after{content:'▋';color:var(--gold);animation:bl 1s steps(2) infinite}
   @keyframes bl{50%{opacity:0}}
   .date{font-size:.8rem;color:var(--mut)}
-  .greet{font-size:1.7rem;font-weight:700;margin:4px 0 6px}
+  .greet{font-size:2rem;font-weight:800;margin:4px 0 6px}
 
   /* chat */
   .chat{display:flex;flex-direction:column;height:calc(100vh - 220px);min-height:360px}
   .msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:6px 2px}
   .m{max-width:78%;padding:12px 15px;border-radius:14px;font-size:.92rem;line-height:1.6;white-space:pre-wrap}
-  .m.u{align-self:flex-end;background:var(--gold-soft);border:1px solid rgba(212,168,76,.3)}
+  .m.u{align-self:flex-end;background:var(--gold-soft);border:1px solid rgba(255,182,30,.35)}
   .m.z{align-self:flex-start;background:var(--panel2);border:1px solid var(--line)}
   .m .who{font-size:.66rem;color:var(--gold);font-weight:700;margin-bottom:3px}
   .qa{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -99,7 +109,7 @@
   .bar{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:5px}
   .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:6px}
   .opp,.alert{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:12px}
-  .tag{display:inline-block;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 9px;border-radius:var(--r-full);background:var(--gold-soft);color:var(--gold)}
+  .tag{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:var(--r-full);background:var(--gold-soft);color:var(--gold)}
   .tag.red{background:var(--red-bg);color:var(--red)}.tag.amber{background:var(--amber-bg);color:var(--amber)}
   .opp .impact{font-size:1.3rem;font-weight:800;color:var(--gold);margin:6px 0}
   .invest-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}

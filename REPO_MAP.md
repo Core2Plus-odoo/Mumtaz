@@ -63,6 +63,26 @@ Findings:
 - **Tests:** the Jawhar edition is tested; 30 of the 33 foundation, platform
   and product modules have no test file.
 
+## What is live (checked on the server, 21 Nov 2026)
+
+From the nginx site files and file checksums on the production server. The
+live front ends are folders inside the server checkout that are **not tracked
+in git**; they were copied there by hand, most in June 2026.
+
+| Site | Served from (server) | Matches in git |
+| --- | --- | --- |
+| mumtaz.digital | `/opt/mumtaz/marketing` | Identical to `platform/marketing/index.html` at the time of the check |
+| zaki.mumtaz.digital | `/opt/mumtaz/zaki/frontend`, API on port 8001 | Identical to `platform/zaki/frontend/index.html` at the time of the check |
+| app.mumtaz.digital | `/opt/mumtaz/platform/frontend`, API on port 8002 | No matching file on `main` (not `apps/portal`) |
+| jewel.mumtaz.digital | `/opt/mumtaz/jewel-landing` plus the Jawhar Odoo | Not compared |
+| marketplace.mumtaz.digital | `/var/www/marketplace.mumtaz.digital` | Not compared |
+| erp, pharma, ig2 subdomains | Odoo, by proxy | — |
+
+So `platform/marketing` and `platform/zaki` are the canonical sources.
+`apps/website`, `website/index.html`, `apps/zaki` and `apps/zaki-ai` are not
+deployed. Publishing a change means copying the file into the served folder;
+merging to `main` does not do it.
+
 ## Duplicates awaiting a decision
 
 Nothing here has been deleted or deprecated. Each row needs an owner decision,
@@ -70,8 +90,8 @@ then one pull request per row.
 
 | Area | Copies | Evidence so far |
 | --- | --- | --- |
-| Marketing site | `apps/website` (16 pages), `website/index.html`, `platform/marketing/index.html` | On 21 Nov the live page title at mumtaz.digital matched `platform/marketing` |
-| ZAKI application | `apps/zaki` (static), `apps/zaki-ai` (Node), `platform/zaki` (FastAPI + page) | Which one is served is not determinable from git |
+| Marketing site | `apps/website` (16 pages), `website/index.html`, `platform/marketing/index.html` | **Resolved:** `platform/marketing` is live (see above) |
+| ZAKI application | `apps/zaki` (static), `apps/zaki-ai` (Node), `platform/zaki` (FastAPI + page) | **Resolved:** `platform/zaki` is live (see above) |
 | AI and CFO modules | `mumtaz_ai`, `mumtaz_voice`, `mumtaz_zaki`, `mumtaz_cfo_*`, plus the Jawhar provider layer | Decision D-03 in the decision register covers part of this |
 | Foundation | `mumtaz_core`, `mumtaz_base` | `mumtaz_base` is 46 lines |
 | Brand source | `mumtaz_branding`, `mumtaz_theme`, `brand/tokens.css` | — |
