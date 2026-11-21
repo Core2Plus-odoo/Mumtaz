@@ -70,7 +70,12 @@ class TestMumtazWebsiteBuilder(HttpCase):
         m = re.search(r'(/web/assets/[^"]*web\.assets_frontend(?:\.min)?\.css)', html)
         self.assertTrue(m, 'frontend css bundle link not found')
         css = self.url_open(m.group(1)).text
-        self.assertNotIn("css2?family", css, 'a css2 Google Fonts import is split by the bundler at its first ;')
+        # every hoisted @import must be a complete rule: the bundler cuts them at the first ';',
+        # so a css2 Google Fonts URL (which contains ';') leaves an unterminated string behind
+        imports = [line.strip() for line in css.splitlines() if line.strip().startswith('@import')]
+        self.assertTrue(imports)
+        for rule in imports:
+            self.assertRegex(rule, r'''^@import\s+url\((["']?)[^"'()]*\1\)\s*;$''', 'truncated @import in the bundle: %s' % rule)
         self.assertIn('.o_mumtaz_site .mumtaz_button', css, 'our scoped rules must be in the bundle')
         # the bundle still ends with Odoo's own rules: nothing after our import was swallowed
         self.assertIn('.o_footer', css)
