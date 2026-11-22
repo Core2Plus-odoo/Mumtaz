@@ -11,3 +11,7 @@ access_inbound_ai,faizy.ai.inbound ai agent,model_faizy_ai_inbound,group_ai_agen
 access_inbound_comms,faizy.ai.inbound comms,model_faizy_ai_inbound,group_comms,1,1,0,0
 access_inbound_ops,faizy.ai.inbound ops,model_faizy_ai_inbound,faizy_core.group_faizy_ops,1,1,0,0
 access_inbound_manager,faizy.ai.inbound manager,model_faizy_ai_inbound,faizy_core.group_faizy_manager,1,1,1,1
+access_knowledge_ai,faizy.ai.knowledge ai agent,model_faizy_ai_knowledge,group_ai_agent,1,0,0,0
+access_knowledge_comms,faizy.ai.knowledge comms,model_faizy_ai_knowledge,group_comms,1,1,1,0
+access_knowledge_ops,faizy.ai.knowledge ops,model_faizy_ai_knowledge,faizy_core.group_faizy_ops,1,1,1,0
+access_knowledge_manager,faizy.ai.knowledge manager,model_faizy_ai_knowledge,faizy_core.group_faizy_manager,1,1,1,1
