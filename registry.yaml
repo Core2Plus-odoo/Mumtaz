@@ -833,7 +833,7 @@ modules:
     python_lines: 813
     test_files: 2
     access_csv: true
-    note: "Faizy is a separate venture."
+    note: "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
   faizy_core:
     layer: venture
     disposition: relocate-candidate
@@ -858,10 +858,10 @@ modules:
     application: false
     depends_local: ["faizy_core"]
     depends_standard: []
-    python_lines: 473
+    python_lines: 540
     test_files: 2
     access_csv: false
-    note: "Faizy is a separate venture."
+    note: "Faizy is a separate venture. Evidence gate on faizy.order; brought to main from the production branch 22 Nov 2026."
   faizy_website:
     layer: venture
     disposition: relocate-candidate
