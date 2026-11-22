@@ -30,9 +30,9 @@ re-checked by anyone else). Nothing was changed on the server.
 
 | Path on the server | Branch | Read by |
 | --- | --- | --- |
-| `/opt/mumtaz` | `claude/resume-help-95ne9v` — **not `main`** | nginx: the delivery console (`c2p-delivery-system/web`), the Jawhar copies (`jewel-landing`, `jewel-app`), and two folders that are not in git on `main` (`platform/frontend`, `zaki/frontend`) |
-| `/opt/mumtaz-main` | not readable by root's git ("dubious ownership"); UNKNOWN | `odoo2` (the ERP instance): `addons_path` = `/opt/mumtaz-main/addons` |
-| `/opt/custom_addons/Mumtaz` | UNKNOWN (not listed by the check) | `odoo`, `odoo3` and `odoo4`: all three use `/opt/custom_addons` and `/opt/custom_addons/Mumtaz/addons` |
+| `/opt/mumtaz` | `claude/resume-help-95ne9v` at `9590516` (19 Nov 2026; one commit behind the branch on GitHub), 30 uncommitted entries — **not `main`** | nginx: the delivery console (`c2p-delivery-system/web`), the Jawhar copies (`jewel-landing`, `jewel-app`), and two folders that are not in git on `main` (`platform/frontend`, `zaki/frontend`) |
+| `/opt/mumtaz-main` | `main` at `bf5251b` (21 Nov 2026), no uncommitted changes | `odoo2` on port 8070: `addons_path` = `/opt/mumtaz-main/addons`. nginx sends `erp.mumtaz.digital` **and the apex `mumtaz.digital`** to this instance |
+| `/opt/custom_addons/Mumtaz` | `claude/resume-help-95ne9v` at `9590516` (19 Nov 2026), 30 uncommitted entries — the same branch, commit and count as `/opt/mumtaz`, so very likely the same folder through a link (to confirm with `readlink -f`) | `odoo`, `odoo3` and `odoo4`: all three use `/opt/custom_addons` and `/opt/custom_addons/Mumtaz/addons` |
 | `/opt/mumtaz-pharma-staging` | `pharma-erp-v0.1` | `odoo-pharma`, with `/opt/thirdparty/cybroaddons` |
 | `/opt/Mumtaz` (capital M) | `claude/odoo-architecture-review-ujm0W` (last commit July 2026) | Nothing found. Probably a leftover |
 | `/opt/faizy` | not a git checkout at its top level | `faizy-odoo`: its own Odoo source and virtualenv; configuration `/opt/faizy/odoo.conf` (not shown) |
@@ -41,7 +41,7 @@ re-checked by anyone else). Nothing was changed on the server.
 
 | Finding | Consequence |
 | --- | --- |
-| No Odoo service reads `/opt/mumtaz/addons` | The statement "production pulls `main` at `/opt/mumtaz`" covers at most the delivery console, and even there the checkout is on another branch |
+| Only the ERP instance runs `main`, from its own clean checkout `/opt/mumtaz-main`. C2P, the external client and the base instance run the feature branch | "Production pulls `main` at `/opt/mumtaz`" is wrong: `/opt/mumtaz` is on the feature branch. A merge to `main` reaches the ERP instance and the public website when someone pulls `/opt/mumtaz-main` — and nothing else |
 | `odoo`, `odoo3` (the external client) and `odoo4` (C2P) share **one** addons checkout | A `git pull` there changes code for the external client and for C2P in the same moment. The rule "no automatic change to IG2" cannot be kept while they share it |
 | nginx serves `/opt/mumtaz/platform/frontend` and `/opt/mumtaz/zaki/frontend` | These are the targets of `platform/ops/install/05-cutover.sh`. **The "stalled rebuild" was cut over.** Its control panel and its ZAKI page are being served |
 | The control panel's source (`platform/control-panel/`, an 800-line FastAPI service: sign-up, tenants, Odoo provisioning, sign-on link, impersonation, billing) exists on the production branch. It was deleted from `main` in PR #124 as "abandoned" | A control plane other than the Odoo modules may be running. Whether its service is up and holds real tenants is UNKNOWN — the next check |
@@ -51,11 +51,35 @@ re-checked by anyone else). Nothing was changed on the server.
 | nginx is `1.24.0-2ubuntu7.21` | Patched for the November 2026 nginx flaws (CVE-2026-123007 and others) |
 | The host shows "System restart required" and 30 pending package updates | A reboot window is needed |
 
+### Second round, same day
+
+| Fact (SERVER) | Consequence |
+| --- | --- |
+| `mumtaz-platform` and `zaki` are both **active**, on loopback ports 8002 and 8001 | The FastAPI control panel and the FastAPI ZAKI back end are running |
+| nginx proxies `app.mumtaz.digital` and `marketplace.mumtaz.digital` to 8002, and `zaki.mumtaz.digital` (`/api/`, `/health`) to 8001, with no access control in the reviewed definition | Both are reachable from the internet |
+| The deployed ZAKI back end is byte-identical to the reviewed file (`platform/zaki/backend/main.py`): its finance, health-score, opportunities, knowledge-base and voice routes take a tenant number and check nothing | **Audit findings APP-01 and APP-02 are live**, subject to one confirmation: that the routes answer for the tenants on record |
+| The control panel's database `mumtaz_platform` holds **2** tenants | It is in use, at least minimally. Decision P-02 must treat it as a live system, not as dead code |
+| The control panel has an open public sign-up route, and its token-signing secret has a default written in the code on a public branch | If the server's settings file does not set its own secret, anyone can forge an administrator token. To check: that the setting exists (not its value) |
+| Ports 8069 (base Odoo) and 8071 (the external client's Odoo) listen on every interface; all other Odoo ports are loopback only | Audit finding F-01 confirmed at the listener level. Whether a firewall blocks them is the next check |
+| `mumtaz.digital` is proxied to the ERP instance on 8070 | The public website is already served by the ERP's Odoo and database. Decision P-10 is about moving it away, not about where to put it first |
+| Databases present: `Mumtaz_C2P`, `Mumtaz_C2P_staging`, `Mumtaz_ERP`, `Mumtaz_IG2`, `IG2`, `mumtaz_erp`, `mumtaz_pharma`, `mumtaz_platform`, `faizy_prod`, `scratch_pre`, and two demo databases not seen before (`C2P_DEMO_E2C`, `Mumtaz_Demo_E2C`) | Matches the audit's list of stray databases, plus two |
+| Also listening on loopback: an Ollama model server, Redis, MariaDB, and two Docker-published ports (3000, 8000) not accounted for in this repository | To identify |
+
+**Deploy caution that follows.** `/opt/mumtaz-main` is clean and on `main`,
+so the next pull there brings every change merged since 21 Nov, including the
+tenant-manager and control-plane changes of platform slice 1. Those add
+database columns. If the two modules are installed in `Mumtaz_ERP`, restart
+that instance only together with
+`-u mumtaz_tenant_manager,mumtaz_control_plane`, after a backup; new code on
+old columns would fail.
+
 ### Next read-only checks
 
-1. Are the services `mumtaz-platform` (port 8002) and `zaki` (port 8001) running, and how many rows are in the control panel's `tenants` table?
-2. Branch, last commit and uncommitted changes of `/opt/mumtaz-main` and `/opt/custom_addons/Mumtaz`.
-3. The full hostname → root or upstream table from `nginx -T`.
+1. Do the ZAKI finance routes answer without credentials (status code only), and which databases do the two tenants point at?
+2. Does the server's settings file set the control panel's token secret and `ZAKI_REQUIRE_JWT`? (presence only)
+3. Firewall state for ports 8069 and 8071.
+4. Is `/opt/custom_addons/Mumtaz` a link to `/opt/mumtaz`?
+5. Which Mumtaz modules are installed in `Mumtaz_ERP`.
 
 ## 1. The four categories
 

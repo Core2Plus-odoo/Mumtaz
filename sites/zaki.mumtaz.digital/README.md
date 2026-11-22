@@ -2,7 +2,7 @@
 
 ZAKI, the AI CFO assistant. Three rival implementations exist.
 
-**Server check, 22 Nov 2026:** nginx serves this hostname from `/opt/mumtaz/zaki/frontend`, which is the front end of the third implementation (`platform/zaki/`), copied there by `platform/ops/install/05-cutover.sh`. Neither `static/` nor `node-app/` in this folder is what visitors see. The matching back end (`platform/zaki/backend`, port 8001) is the one the security review found to have no authentication and one Odoo administrator for every tenant (audit APP-01, APP-02); whether that service is running is the next check.
+**Server check, 22 Nov 2026:** nginx serves this hostname from `/opt/mumtaz/zaki/frontend`, which is the front end of the third implementation (`platform/zaki/`), copied there by `platform/ops/install/05-cutover.sh`. Neither `static/` nor `node-app/` in this folder is what visitors see. The matching back end (`platform/zaki/backend`, port 8001) is the one the security review found to have no authentication and one Odoo administrator for every tenant (audit APP-01, APP-02); a second check the same day showed that service **is running** and that nginx passes `/api/` to it. Treat the finding as live until the service is stopped or put behind sign-in.
 
 | | |
 |---|---|

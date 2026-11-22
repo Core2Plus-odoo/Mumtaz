@@ -14,7 +14,7 @@ Customer portal: signup, onboarding, billing, admin pages. Static HTML that call
 
 ## What the server check of 22 Nov 2026 showed
 
-nginx does **not** serve this hostname from `/var/www/app.mumtaz.digital`. Its root is `/opt/mumtaz/platform/frontend`: the control-panel front end of the `platform/` rebuild, copied there by `platform/ops/install/05-cutover.sh`. The source of that control panel (`platform/control-panel/`) is on the production branch `claude/resume-help-95ne9v` and was deleted from `main`. Whether its back end on port 8002 is running, and whether it holds real tenants, is the next check. The 12 static pages in `portal/` are therefore not what visitors see.
+nginx does **not** serve this hostname from `/var/www/app.mumtaz.digital`. Its root is `/opt/mumtaz/platform/frontend`: the control-panel front end of the `platform/` rebuild, copied there by `platform/ops/install/05-cutover.sh`. The source of that control panel (`platform/control-panel/`) is on the production branch `claude/resume-help-95ne9v` and was deleted from `main`. A second check the same day showed its back end on port 8002 **is running** and its database holds 2 tenants. The 12 static pages in `portal/` are therefore not what visitors see.
 
 ## The control plane is not this folder
 

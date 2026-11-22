@@ -27,11 +27,12 @@ pulls main; feature branches never reach production.
 > **Checked on the server, 22 Nov 2026 — the paragraph above is not what the
 > server does.** `/opt/mumtaz` is on branch `claude/resume-help-95ne9v`, not
 > `main`, so `update.sh` (`git pull --ff-only origin main`) cannot
-> fast-forward it. The Odoo services do not read `/opt/mumtaz` at all: the ERP
-> reads `/opt/mumtaz-main/addons`; C2P, IG2 and the base instance share
-> `/opt/custom_addons/Mumtaz/addons`. A merge to `main` therefore does not
-> reach production by itself, and one pull in the shared checkout changes
-> three instances at once. Evidence and open checks:
+> fast-forward it. Only the ERP instance (and the public website it serves)
+> runs `main`, from a separate checkout, `/opt/mumtaz-main`. C2P, IG2 and the
+> base instance share `/opt/custom_addons/Mumtaz/addons`, which is on the same
+> feature branch. So a merge to `main` reaches the ERP and the website when
+> someone pulls `/opt/mumtaz-main`, and nothing else; and one pull in the
+> shared checkout changes three instances at once. Evidence and open checks:
 > `docs/platform/MUMTAZ_DEPLOYMENT_REGISTRY.md` §0.
 
 ## Deploying

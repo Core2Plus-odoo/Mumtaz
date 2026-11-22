@@ -24,8 +24,10 @@ Status words used below:
 > PR #124. So there may be **two** control planes: that service (possibly
 > running, on an unmerged branch, with no tests) and the Odoo modules
 > described here (on `main`, tested, never run on the server). Which one is
-> kept is decision P-02; until the server check says whether the FastAPI
-> service is running and holds real tenants, do not retire either. Details:
+> kept is decision P-02. A second check the same day showed the FastAPI
+> service **is running** and its database holds **2 tenants**, so it is a
+> live system: do not retire it without migrating or confirming those two.
+> Details:
 > `MUMTAZ_DEPLOYMENT_REGISTRY.md` §0.
 
 ## 1. What `app.mumtaz.digital` is today
