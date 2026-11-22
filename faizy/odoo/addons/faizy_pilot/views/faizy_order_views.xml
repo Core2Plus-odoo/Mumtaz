@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_faizy_order_form_evidence" model="ir.ui.view">
+        <field name="name">faizy.order.form.evidence</field>
+        <field name="model">faizy.order</field>
+        <field name="inherit_id" ref="faizy_core.view_faizy_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_complete']" position="after">
+                <button name="action_approve_evidence" type="object" string="Approve evidence"
+                        class="btn-primary" invisible="evidence_state != 'submitted'"
+                        groups="faizy_core.group_faizy_ops"/>
+                <button name="action_reject_evidence" type="object" string="Reject evidence"
+                        invisible="evidence_state not in ('submitted', 'approved')"
+                        groups="faizy_core.group_faizy_ops"
+                        help="Write the reason in the Evidence review box first."/>
+                <button name="action_complete_with_exception" type="object"
+                        string="Complete without evidence"
+                        invisible="state != 'in_progress' or evidence_state == 'approved'"
+                        groups="faizy_core.group_faizy_manager"
+                        confirm="Completes the order without approved evidence and bills the customer. A written exception reason is required and is logged."/>
+            </xpath>
+            <xpath expr="//page[@name='completion']/group" position="after">
+                <group string="Evidence review" name="evidence_review">
+                    <field name="evidence_state" widget="badge"
+                           decoration-success="evidence_state == 'approved'"
+                           decoration-danger="evidence_state == 'rejected'"
+                           decoration-warning="evidence_state == 'submitted'"/>
+                    <field name="evidence_reviewer_id"/>
+                    <field name="evidence_reviewed_on"/>
+                    <field name="evidence_reject_reason"
+                           placeholder="Why the evidence is not acceptable"/>
+                    <field name="evidence_exception_reason"
+                           groups="faizy_core.group_faizy_manager"
+                           placeholder="Manager only: why this order may complete without approved evidence"/>
+                    <field name="evidence_exception_by"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
