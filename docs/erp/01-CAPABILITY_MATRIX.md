@@ -15,7 +15,7 @@ before relying on any row** [ASSUMPTION].
 
 | ID | Capability | Status | Evidence | Disposition |
 | --- | --- | --- | --- | --- |
-| PLT-01 | Tenant, company, branch, department, cost centre | Partial | One DB per tenant (`docs/ARCHITECTURE.md`); `res.company` multi-company; C2P two companies; no branch model | Standard for company; **Configure** analytic plans for branch/cost centre; Extend only if a branch needs its own sequences [DECISION ADR-003] |
+| PLT-01 | Tenant, company, branch, department, cost centre | Partial | One DB per tenant (`docs/operations/ARCHITECTURE.md`); `res.company` multi-company; C2P two companies; no branch model | Standard for company; **Configure** analytic plans for branch/cost centre; Extend only if a branch needs its own sequences [DECISION ADR-003] |
 | PLT-02 | Identity, roles, approvals, delegation | Partial | Groups per module; Jawhar roles tested; SSO via HMAC from the control panel (`mumtaz_sso`); no delegation, no generic approval engine | Standard groups + record rules; **Build** a small approval model only after three products prove the same need (today each has its own) |
 | PLT-03 | Shared contacts and counterparties | Existing | `res.partner` with jewellery, media and CRM extensions | Standard |
 | PLT-04 | Item and service catalogue, UoM, pricelists | Existing | `product` with jewellery and marketplace extensions | Standard |
@@ -57,7 +57,7 @@ before relying on any row** [ASSUMPTION].
 
 | Capability | Status | Disposition |
 | --- | --- | --- |
-| Tenant provisioning, bundles, feature flags, plans, usage | Existing, untested | Keep; add install tests and a provisioning dry-run; server-side enforcement of a disabled app is a documented TODO (`docs/ARCHITECTURE.md` §4) → Build |
+| Tenant provisioning, bundles, feature flags, plans, usage | Existing, untested | Keep; add install tests and a provisioning dry-run; server-side enforcement of a disabled app is a documented TODO (`docs/operations/ARCHITECTURE.md` §4) → Build |
 | Stripe billing of tenants | Existing, untested | Keep; add webhook idempotency tests |
 | API gateway (keys, usage, async jobs) | Existing, untested | Keep; audit `sudo()` |
 | Subdomain routing (db per host) | Existing, raw SQL patch | Keep; review patch |

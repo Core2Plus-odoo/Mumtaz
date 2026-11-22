@@ -3,7 +3,7 @@
 Date: 20 Nov 2026. Scope: this repository (`Core2Plus-odoo/Mumtaz`, 252
 commits, first commit 30 Jun 2026) and what its documents say about the live
 servers. Nothing on a server was touched; server facts are quoted from
-`README.md`, `docs/ARCHITECTURE.md`, `docs/mumtaz-jewel/*` and
+`README.md`, `docs/operations/ARCHITECTURE.md`, `docs/mumtaz-jewel/*` and
 `c2p-delivery-system/docs/07-mumtaz-c2p-crm-findings.md` and tagged as such.
 
 ## 1.1 Platform determination
@@ -18,7 +18,7 @@ Enterprise code. The connected applications are:
 | --- | --- | --- | --- |
 | Jawhar (jewellery retail OS) | React 18 + TypeScript + Vite, `apps/jawhar-web` (26 pages) | Odoo, through `mumtaz_jewellery_api` (`/jawhar/v1/*`, runs as the signed-in Odoo user) | `docs/mumtaz-jewel/JAWHAR_INTERFACE.md`, 242 Odoo tests |
 | C2P Agency OS (delivery system) | FastAPI + single-file console, SQLite store | Odoo over XML-RPC (CRM lead → sale → project) | `c2p-delivery-system/delivery_api/store.py` (sqlite3), `docs/01-architecture.md` |
-| Mumtaz platform API (`zaki-server`) | FastAPI, SQLite user cache, JWT | Odoo (auth, tenants, control plane) | `README.md`, `docs/ARCHITECTURE.md` (ports differ between the two documents: 8001 vs 8002) |
+| Mumtaz platform API (`zaki-server`) | FastAPI, SQLite user cache, JWT | Odoo (auth, tenants, control plane) | `README.md`, `docs/operations/ARCHITECTURE.md` (ports differ between the two documents: 8001 vs 8002) |
 
 **[VERIFIED] Three distinct products share one `addons/` tree:**
 
@@ -38,7 +38,7 @@ Enterprise code. The connected applications are:
 | Company scoping | Jawhar: every custom model carries `company_id` (finding 3 closed 20 Nov). Platform: since 21 Nov every transactional model in marketplace, media buying, CFO and lead modules carries `company_id` with a per-company record rule (shared masters excepted); control plane models are tenant-level by design. The tenant model is **one Odoo database per tenant**, so cross-tenant leakage is prevented by the database boundary, not by rules | [VERIFIED] |
 | Migrations | 2 modules declare hooks; no `migrations/` folders anywhere. Schema changes so far rely on `-u` upgrades of additive fields | [VERIFIED] |
 | Audit trail | `mail.thread` tracking in 19 places across media buying, marketplace and control plane; Jawhar has its own audit models (`jewellery.api.audit`, `jewellery.vip.access.log`, `jewellery.ai.run`, AML events) | [VERIFIED] |
-| Documentation | Jawhar: complete (roadmap, reconciliation per slice, gap analysis, interface, protocol). Platform: `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md`. C2P delivery: eight numbered docs and a build log. **No project charter, decision register, data dictionary, posting catalogue, security matrix or traceability matrix existed before this audit** | [VERIFIED] |
+| Documentation | Jawhar: complete (roadmap, reconciliation per slice, gap analysis, interface, protocol). Platform: `docs/operations/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md`. C2P delivery: eight numbered docs and a build log. **No project charter, decision register, data dictionary, posting catalogue, security matrix or traceability matrix existed before this audit** | [VERIFIED] |
 | Business logic outside git | The live C2P CRM database carries 25 `ir.actions.server` records on `crm.lead` (qualification, scoring, assignment, archival), two addons untracked in the production working tree and one installed with no source on the addons path (inspection of 5 Oct 2026) | [VERIFIED, by document] |
 
 ## 1.3 Live environments (as documented; not inspected in this session)

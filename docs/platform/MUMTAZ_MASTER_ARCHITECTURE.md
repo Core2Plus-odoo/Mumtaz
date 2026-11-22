@@ -47,7 +47,7 @@ Built once, used by every product.
 | Billing | Stripe client, webhook, card page, daily charge job | `addons/mumtaz_billing_stripe` | VERIFIED exists; 0 tests; not connected to the registration journey |
 | Identity | Odoo sessions, one per database. `mumtaz_sso` bridges with one secret shared by all tenants | Odoo core; `addons/mumtaz_sso` | VERIFIED. SSO flaw is audit ODOO-01; module is in no install profile. Target is P-05 |
 | AI layer | No shared layer. The only governed implementation is Jawhar's | `addons/mumtaz_jewellery_ai` (reference) | VERIFIED. Shared layer PROPOSED in `MUMTAZ_AI_ARCHITECTURE.md` |
-| Design system | Several competing palettes; approved direction is navy / emerald / lime | `website/jewel/site/jawhar.css` (closest), `brand/`, `addons/mumtaz_theme` | VERIFIED sources; single token set PROPOSED (P-14) |
+| Design system | Several competing palettes; approved direction is navy / emerald / lime | `website/jewel/site/jawhar.css` (closest), `docs/design/brand-tokens-v3/`, `addons/mumtaz_theme` | VERIFIED sources; single token set PROPOSED (P-14) |
 | Module registry and CI | Layer classification, generated `registry.yaml`, install CI, `sudo()` check, tenant-journey check | `registry/`, `scripts/module_registry.py`, `scripts/platform_ci.sh`, `scripts/tenant_journey_ci.sh` | VERIFIED. Ownership and profile checks PROPOSED (P-16) |
 
 ### 3.2 Commercial Products

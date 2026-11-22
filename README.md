@@ -13,7 +13,7 @@ each folder is, which copy is which, and what is still undecided.
 
 | Area | Where | State |
 | --- | --- | --- |
-| Odoo modules (58, plus 2 Faizy modules under `faizy/`) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
+| Odoo modules (58, plus 4 Faizy modules under `faizy/`) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
 | Jawhar web app | `apps/jawhar-web` (React + TypeScript + Vite) | Talks to Odoo through `mumtaz_jewellery_api` |
 | Customer portal, marketplace, ZAKI front ends | `sites/<domain>/`, `platform/` | Several variants; see the duplicates table in `REPO_MAP.md` |
 | Marketing sites | `sites/mumtaz.digital/site`, `website/`, `platform/marketing` | Three variants; see `REPO_MAP.md` |
@@ -61,10 +61,11 @@ The scripts document their own prerequisites. Workflows are in
 
 ## Documentation
 
+- `docs/README.md` — index of every documentation set
 - `sites/README.md` — every website with its code, database, status and open points
 - `docs/platform/` — platform consolidation: architecture, product catalogue, control plane, AI, website, roadmap, handoff (start at its README)
 - `docs/infrastructure-audit/` — read-only infrastructure and security audit (21 Nov 2026)
 - `docs/erp/` — audit, capability matrix, roadmap, decision register, standards
 - `docs/mumtaz-jewel/` — Jawhar architecture, slices, test reports
-- `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` — platform operations
+- `docs/operations/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` — platform operations
 - `docs/archive/README-legacy-2026-11.md` — the previous README, kept for reference; parts of it are out of date

@@ -51,7 +51,7 @@ a small set of values a partner may change and everything else fixed. (§3–§6
 | `website/jewel/site/jawhar.css:7-33` | navy `#071A25` / `#0B2A33` / `#10363D`; emerald `#0F6B55` / `#168A6E` / `#0B4F3F`; lime `#C5F69C` / `#D8FFA8`; teal `#1ABC9C`; gold `#C4A464`; sapphire `#102C48`; aubergine `#482655`; paper `#F4F7F5`; ink `#0B1F2A`. Dark mode, spacing scale, radii, two shadows, focus ring | Space Grotesk, Inter; declares IBM Plex Sans Arabic (`:25`) but the page does not load it (`website/jewel/index.html:17`) | Yes — most complete | VERIFIED |
 | `docs/jawhar/DESIGN_SYSTEM.md` §2 | Same table, except ink `#14202B / #2D3B4A / #5E6B7A / #8A96A3` and dark ink `#F2EEE6`, which differ from the CSS (`#0B1F2A / #2A3B45 / #5C6E76 / #8A9AA2`, dark `#F2F6F3`). Also says control radius 10; CSS has 9 | Same | Document and CSS disagree | VERIFIED |
 | `apps/jawhar-web/src/styles.css:6-15` | ivory paper `#F7F3EC`; `--gold` is actually emerald `#0F6B55`; accent gold `#C4A464`; rail `#0B1B2B`; ink `#14202B` | Plus Jakarta Sans, Cormorant Garamond, IBM Plex Sans Arabic (loaded, `apps/jawhar-web/index.html:10`) | Partly | VERIFIED |
-| `brand/tokens.css:8-88` | gold `#B8862A` primary; teal `#0B7A64`; paper `#F5F3EF`; ink `#0C1118` | Instrument Serif, DM Sans, DM Mono | No (gold-first). Nothing imports it | VERIFIED |
+| `docs/design/brand-tokens-v3/tokens.css:8-88` | gold `#B8862A` primary; teal `#0B7A64`; paper `#F5F3EF`; ink `#0C1118` | Instrument Serif, DM Sans, DM Mono | No (gold-first). Nothing imports it | VERIFIED |
 | `addons/mumtaz_theme` | `--o-brand-primary #B8862A` (`static/src/css/mumtaz_backend.css:8,19`); logo and favicon SVGs use blue `#1a73e8` | DM Sans, Instrument Serif, DM Mono, forced with `!important` on `body` through `web.layout` (`views/webclient_templates.xml:14-22`) | No | VERIFIED |
 | `addons/mumtaz_branding/models/mumtaz_brand.py:32-39` | defaults `#0f3460` / `#16213e` | none | No. No reader of `primary_color` or `secondary_color` exists outside the module | VERIFIED |
 | `addons/mumtaz_website/static/src/css/website.css:7-14` | background `#060b14`; gold `#f0a500` / `#fbbf24`; blue `#3b82f6` | Inter | No | VERIFIED |
@@ -106,7 +106,7 @@ Jawhar keeps gold (`--gold #C4A464` and its ramp), sapphire and aubergine
 
 Semantic status colours (warning, information, success with background and
 border) are not complete in the Jawhar sheet. Take the families from
-`brand/tokens.css:43-66` (coral, blue, purple, amber, each with `-bg` and
+`docs/design/brand-tokens-v3/tokens.css:43-66` (coral, blue, purple, amber, each with `-bg` and
 `-border`) and re-check their contrast against `--mz-paper`. **PROPOSED**
 
 Contrast of the proposed pairs, computed for this document with the WCAG 2.x
@@ -239,7 +239,7 @@ How the website page looks in Arabic has not been rendered anywhere. **UNKNOWN**
 | --- | --- | --- | --- |
 | `website/jewel/site/jawhar.css` + `docs/jawhar/DESIGN_SYSTEM.md` | The base token set (§3), dark mode, spacing, radii, shadows, focus ring, tabular numerals, skip link, reduced-motion rule, readiness tags, imagery policy | Fix the ink and radius mismatch between the document and the CSS; keep gold, sapphire and aubergine as Jawhar edition accents | PROPOSED |
 | `addons/mumtaz_website_builder` | The marketing section patterns (hero with product frame, path cards, module tiles, edition band, AI panel, partner panel, form card, eyebrow and button styles) | Rewrite the stylesheet on `--mz-*`: remove the 104 hex literals and the four unused variables; add focus, RTL and logical properties | PROPOSED |
-| `brand/tokens.css`, `brand/components.css` | Semantic status families with background and border; transition scale; the application component inventory (buttons, input, card, badge, status dot, sidebar, top bar, KPI card, modal, toast, table wrapper) | Gold as primary; the serif pairing. Retire the files once their components are re-expressed on `--mz-*` | PROPOSED |
+| `docs/design/brand-tokens-v3/tokens.css`, `docs/design/brand-tokens-v3/components.css` | Semantic status families with background and border; transition scale; the application component inventory (buttons, input, card, badge, status dot, sidebar, top bar, KPI card, modal, toast, table wrapper) | Gold as primary; the serif pairing. Retire the files once their components are re-expressed on `--mz-*` | PROPOSED |
 | `apps/jawhar-web` | RTL through logical properties; loaded Arabic font; theme applied before first paint | Its ivory paper and the misnamed `--gold` (which holds emerald) once it adopts the shared names | PROPOSED |
 | `addons/mumtaz_theme` | The technique for rebranding the Odoo back office and login (`--o-brand-primary`, login layout) | Gold values, DM Sans / Instrument Serif, the blue logo and favicon, and the `!important` font rule injected through `web.layout` (it also reaches website pages on the same database) | PROPOSED |
 | `addons/mumtaz_branding` + `docs/jawhar/WHITE_LABEL_SPECIFICATION.md` | The partner brand record and the resolution path; the contrast check | Its default colours `#0f3460` / `#16213e` | PROPOSED |
@@ -260,7 +260,7 @@ Each step is reversible and ships on its own. None has been started.
 | 3 | **Re-token `mumtaz_theme`** (backlog UX-01): `--o-brand-primary` and the login page from `--mz-*`; remove the forced DM Sans; new logo and favicon | Back office is the largest audience; needs a staging database per instance first | Screens reviewed on staging for each instance that has the module installed (which instances: UNKNOWN) |
 | 4 | Brand renderer: `mumtaz.brand` → `--mz-*` overrides, with the contrast check | Makes the tokens white-label configurable; depends on 1 and 3 | The acceptance case in `docs/jawhar/WHITE_LABEL_SPECIFICATION.md` §6 passes |
 | 5 | **Apps:** `apps/jawhar-web`, the customer and vendor portals, `mumtaz_organization`, the app portal | Largest and most varied; do after the tokens are proven | Each app imports the token file; accessibility audit UX-03 done |
-| 6 | Retire `brand/tokens.css`, `brand/components.css`, the static sites' palettes and `mumtaz_website` | Only after nothing reads them | One pull request per retirement |
+| 6 | Retire `docs/design/brand-tokens-v3/tokens.css`, `docs/design/brand-tokens-v3/components.css`, the static sites' palettes and `mumtaz_website` | Only after nothing reads them | One pull request per retirement |
 
 ## 7. Could not determine
 

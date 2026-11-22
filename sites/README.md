@@ -37,7 +37,17 @@ Step 1 of the reorganization moved only code that is **not** wired into a runnin
 | `apps/platform/` | `ops/platform-routing/` |
 | `apps/addons/` | `ops/addons-deploy/` |
 
-Paths in `docs/infrastructure-audit/` describe the repository as it was on 21 Nov 2026, before this move; use the table above to translate.
+On 22 Nov 2026 the remaining loose folders were tidied (nothing a server reads):
+
+| Old path | New path |
+|---|---|
+| `brand/` | `docs/design/brand-tokens-v3/` |
+| `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `docs/MONITORING.md`, `docs/VPS_SETUP.md` | `docs/operations/` |
+| `docs/05-build-log.md` (a stray fragment) | appended to `c2p-delivery-system/docs/05-build-log.md` |
+
+Every top-level folder now has a `README.md`; the full folder table, grouped by category, is in [`REPO_MAP.md`](../REPO_MAP.md).
+
+Paths in `docs/infrastructure-audit/` describe the repository as it was on 21 Nov 2026, before these moves; use the tables above to translate.
 
 Left in place on purpose, and indexed from the site folders instead:
 

@@ -145,11 +145,12 @@ bus → hub v2 → new role prompts. Extend, never replace; new code goes in
   capability should respect and reinforce the ladder.
 - Every new stage/feature gets: LLM path + local fallback + `llm.log_local`,
   compile check (`python3 -m py_compile`, `pyflakes`), console JS check +
-  headless render, an entry in `docs/05-build-log.md`, then commit to `main`
+  headless render, an entry in `c2p-delivery-system/docs/05-build-log.md`, then commit to `main`
   with a descriptive message and push (retry w/ backoff).
 - Secrets never in git: `.env`, `*.db`, `web/` are gitignored; tokens/keys are
   encrypted at rest via `C2P_SECRET_KEY` (Fernet) and never echoed back.
-- `docs/05-build-log.md` is the chronological build record; keep appending.
+- `c2p-delivery-system/docs/05-build-log.md` is the chronological build record; keep appending.
+  (Not `docs/` at the repository root: every top-level folder is described in `REPO_MAP.md`.)
 
 ## ERP programme standard (added 20 Nov 2026)
 

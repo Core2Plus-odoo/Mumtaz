@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 60
+module_count: 62
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -35,7 +35,7 @@ modules:
     python_lines: 95
     test_files: 0
     access_csv: true
-    note: "One of three brand sources (with mumtaz_theme and brand/tokens.css)."
+    note: "One of three brand sources (with mumtaz_theme and docs/design/brand-tokens-v3/tokens.css)."
   mumtaz_core:
     layer: foundation
     disposition: keep
@@ -820,31 +820,59 @@ modules:
     test_files: 1
     access_csv: true
     note: "Media-agency vertical; either promote to an edition or keep as a customer extension."
+  faizy_ai:
+    layer: venture
+    disposition: relocate-candidate
+    path: faizy/odoo/addons/faizy_ai
+    title: "Faizy AI Team"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: true
+    depends_local: ["faizy_core"]
+    depends_standard: ["mail"]
+    python_lines: 813
+    test_files: 2
+    access_csv: true
+    note: "Faizy is a separate venture."
   faizy_core:
     layer: venture
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_core
     title: "Faizy Core"
-    version: "19.0.1.7.1"
+    version: "19.0.1.23.0"
     license: "LGPL-3"
     application: true
     depends_local: []
-    depends_standard: ["base", "mail", "contacts", "product", "account"]
-    python_lines: 3478
+    depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk"]
+    python_lines: 5075
     test_files: 1
     access_csv: true
+    note: "Faizy is a separate venture."
+  faizy_pilot:
+    layer: venture
+    disposition: relocate-candidate
+    path: faizy/odoo/addons/faizy_pilot
+    title: "Faizy Pilot: Evidence Gate"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: ["faizy_core"]
+    depends_standard: []
+    python_lines: 473
+    test_files: 2
+    access_csv: false
     note: "Faizy is a separate venture."
   faizy_website:
     layer: venture
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_website
     title: "Faizy Website & Portal"
-    version: "19.0.1.5.0"
+    version: "19.0.1.20.0"
     license: "LGPL-3"
     application: false
-    depends_local: ["faizy_core"]
+    depends_local: ["faizy_core", "faizy_pilot"]
     depends_standard: ["website", "portal"]
-    python_lines: 646
-    test_files: 0
+    python_lines: 1801
+    test_files: 2
     access_csv: false
     note: "Faizy is a separate venture."

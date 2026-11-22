@@ -19,41 +19,77 @@ which checkout. That mapping is the input for any consolidation.
 
 ## Top-level folders
 
-Eight `apps/*` folders moved on 21 Nov 2026 when the repository was organized by website. Nothing was deleted or merged; the old-to-new table is in `sites/README.md`.
+Every folder has a `README.md` that says what it is and whether it may be
+moved (except `addons/`, where a stray file would be read as a module by the
+CI scripts). Folders are grouped below by the four categories used in
+`docs/platform/`. "Fixed" means a running service or a deploy script reads
+that exact path: it moves only with a planned step on the server.
 
-| Folder | What it is | Belongs to |
+### Shared platform
+
+| Folder | What it is | Path |
 | --- | --- | --- |
-| `addons/` | 58 Odoo 19 modules | Mumtaz platform, Jawhar, C2P internal (see `registry.yaml`) |
-| `apps/jawhar-web` | Jawhar React app | Jawhar |
-| `sites/` | One folder per website: an index for every site, plus the code of the static sites below (see `sites/README.md`) | All |
-| `sites/app.mumtaz.digital/portal` | Static customer portal pages (was `apps/portal`) | Mumtaz platform |
-| `sites/marketplace.mumtaz.digital/storefront` | Static B2B storefront and vendor page (was `apps/marketplace`) | Mumtaz platform |
-| `sites/mumtaz.digital/site` | 14-page static marketing site (was `apps/website`) | Mumtaz (see duplicates) |
-| `sites/zaki.mumtaz.digital/static`, `sites/zaki.mumtaz.digital/node-app` | Two ZAKI front ends (were `apps/zaki`, `apps/zaki-ai`) | Mumtaz (see duplicates) |
-| `sites/erp.mumtaz.digital/legacy-spa`, `ops/platform-routing`, `ops/addons-deploy` | nginx configs and deploy scripts (were `apps/erp`, `apps/platform`, `apps/addons`) | Operations |
-| `platform/` | A later platform generation: FastAPI ZAKI back end, marketing page, SQL schema, ops | Mumtaz (see duplicates) |
-| `website/` | Landing page plus the Jawhar public site (`website/jewel`) | Mumtaz, Jawhar |
-| `brand/` | CSS design tokens and components | Mumtaz |
-| `deploy/jewel-staging` | Jawhar staging deployment | Jawhar |
-| `ops/`, `scripts/`, `config/` | Deployment, CI and maintenance scripts | Operations |
-| `docs/` | Programme documentation | All |
-| `c2p-delivery-system/` | C2P Agency OS (FastAPI + console) | C2P, separate product |
-| `tools/scrapers` | Lead scrapers | C2P business development |
-| `faizy/` | Faizy family-care venture (2 Odoo modules) | Separate venture |
-| `wordpress-sites/` | Two WordPress AdSense themes | Separate venture |
+| `addons/` | 58 Odoo 19 modules: the platform, the products, the Jawhar edition and C2P's internal modules. Classified in `registry.yaml` | Fixed |
+| `registry/`, `registry.yaml` | Module classification (hand-kept) and the generated registry | Free |
+| `scripts/` | Checks, test runs and older server scripts; grouped in `scripts/README.md` | Fixed (CI workflows call them by path) |
+| `config/` | `odoo.conf` for the root `Dockerfile` and `docker-compose*.yml` | Fixed (compose mounts it) |
+| `.github/` | CI workflows | Fixed |
+
+### Commercial products
+
+| Folder | What it is | Path |
+| --- | --- | --- |
+| `c2p-delivery-system/` | Delivery OS / C2P Agency OS: FastAPI back end and single-file console | **Fixed** — production pulls `main` at this path |
+| `apps/jawhar-web/` | Jawhar web app (React) | Fixed (Jawhar deploy kit) |
+| `website/jewel/` | Jawhar public site | Fixed (Jawhar deploy kit, CI link check) |
+| `deploy/jewel-staging/` | Jawhar staging stack and runbook | Fixed |
+| `sites/zaki.mumtaz.digital/`, `sites/marketplace.mumtaz.digital/`, `sites/erp.mumtaz.digital/`, `sites/app.mumtaz.digital/` | Per-website index plus the static code of each | Free |
+| `platform/` | A stalled rebuild: FastAPI ZAKI back end, a marketing page, an SQL schema, install scripts. **Do not run its cut-over script** (`docs/platform/MUMTAZ_AI_ARCHITECTURE.md`) | Fixed until the server inventory shows nothing reads it |
+
+Mumtaz ERP, the general ERP product, has no folder of its own: it is the
+install profile `mumtaz_erp` over modules in `addons/`.
+
+### Customer deployments and separate ventures
+
+| Folder | What it is | Path |
+| --- | --- | --- |
+| `sites/core2plus.com/`, `sites/ig2.mumtaz.digital/` | Index pages for C2P's internal ERP and the IG2 client instance. Their code is in `addons/` (C2P) and on a separate branch (IG2) | Free |
+| `faizy/` | Faizy, a separate venture: 4 Odoo modules, brand, docs. Production runs it from its own branch | Fixed; destination is its own repository (decision D-12) |
+| `sites/myfaizy.com/` | Index page for Faizy | Free |
+
+### Supporting websites and operations
+
+| Folder | What it is | Path |
+| --- | --- | --- |
+| `sites/mumtaz.digital/` | Index plus the 14-page static marketing site | Free |
+| `website/index.html`, `website/assets/` | A landing page for the delivery console | Fixed (a CI job checks the files; server use unknown) |
+| `wordpress-sites/`, `sites/odditytrend.com/`, `sites/youngcraze.com/` | Two WordPress themes and their index pages | Fixed; destination is their own repository (D-12) |
+| `ops/` | nginx definitions, Odoo config samples and older deploy scripts. None confirmed live | Free, but referenced by scripts |
+| `tools/scrapers/` | Internal lead scraper | Free (CI lints this path) |
+| `docs/` | All documentation; index in `docs/README.md` | Free |
+
+### What moved, and when
+
+| Date | Move |
+| --- | --- |
+| 21 Nov 2026 | Eight `apps/*` folders to `sites/<domain>/` and `ops/` (table in `sites/README.md`) |
+| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; a stray `docs/05-build-log.md` folded into `c2p-delivery-system/docs/05-build-log.md` |
+
+Nothing was deleted. The remaining "Fixed" folders are listed with the server
+step each one needs in `docs/platform/MUMTAZ_REPOSITORY_CONSOLIDATION.md`.
 
 ## Module layers
 
-Generated detail is in `registry.yaml`. Summary at this commit:
+Generated detail is in `registry.yaml`. Summary on 22 Nov 2026 (62 modules):
 
 | Layer | Modules | With a test file |
 | --- | --- | --- |
 | foundation | 4 | 0 |
-| platform | 17 | 2 |
-| product | 12 | 1 |
+| platform | 18 | 5 |
+| product | 12 | 2 |
 | edition (Jawhar) | 15 | 14 |
-| internal | 9 | 2 |
-| venture | 2 | 0 |
+| internal | 9 | 5 |
+| venture | 4 | 4 |
 
 Findings:
 
@@ -63,7 +99,7 @@ Findings:
   provisioned, branded and billed by the control plane.
 - **One layering violation:** `mumtaz_portal_routing` (platform) depends on
   `mumtaz_cfo_base` (product). It is recorded as known debt; CI blocks new ones.
-- **Tests:** the Jawhar edition is tested; 30 of the 33 foundation, platform
+- **Tests:** the Jawhar edition is tested; 27 of the 34 foundation, platform
   and product modules have no test file.
 
 ## Duplicates awaiting a decision
@@ -77,7 +113,7 @@ then one pull request per row.
 | ZAKI application | `sites/zaki.mumtaz.digital/static` (static), `sites/zaki.mumtaz.digital/node-app` (Node), `platform/zaki` (FastAPI + page) | Which one is served is not determinable from git |
 | AI and CFO modules | `mumtaz_ai`, `mumtaz_voice`, `mumtaz_zaki`, `mumtaz_cfo_*`, plus the Jawhar provider layer | Decision D-03 in the decision register covers part of this |
 | Foundation | `mumtaz_core`, `mumtaz_base` | `mumtaz_base` is 46 lines |
-| Brand source | `mumtaz_branding`, `mumtaz_theme`, `brand/tokens.css` | — |
+| Brand source | `mumtaz_branding`, `mumtaz_theme`, `docs/design/brand-tokens-v3/tokens.css` | — |
 | Organisation model | `mumtaz_org_config`, `mumtaz_organization` | — |
 | Portal shells | `mumtaz_portal` (12 lines), `mumtaz_customer_portal` (21 lines) | — |
 | Deploy scripts and nginx | `ops/deployment`, `platform/ops`, `deploy/`, `scripts/`, `sites/*/*/deploy.sh` | 15 distinct `server_name` patterns, including `mumtaz.io` |

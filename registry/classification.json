@@ -26,7 +26,7 @@
     "mumtaz_branding": {
       "layer": "foundation",
       "disposition": "review",
-      "note": "One of three brand sources (with mumtaz_theme and brand/tokens.css)."
+      "note": "One of three brand sources (with mumtaz_theme and docs/design/brand-tokens-v3/tokens.css)."
     },
     "mumtaz_theme": {
       "layer": "foundation",
@@ -298,6 +298,8 @@
       "disposition": "relocate-candidate",
       "note": "Faizy is a separate venture."
     },
+    "faizy_ai": {"layer": "venture", "disposition": "relocate-candidate", "note": "Faizy is a separate venture."},
+    "faizy_pilot": {"layer": "venture", "disposition": "relocate-candidate", "note": "Faizy is a separate venture."},
     "c2p_appointment": {
       "layer": "internal",
       "disposition": "keep",
