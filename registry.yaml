@@ -853,13 +853,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_pilot
     title: "Faizy Pilot: Evidence Gate"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core"]
     depends_standard: []
-    python_lines: 540
-    test_files: 2
+    python_lines: 589
+    test_files: 3
     access_csv: false
     note: "Faizy is a separate venture. Evidence gate on faizy.order; brought to main from the production branch 22 Nov 2026."
   faizy_website:
