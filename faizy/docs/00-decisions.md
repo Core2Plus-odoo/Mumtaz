@@ -931,9 +931,9 @@ after merging §16:
 deploys 1.21–1.23 and needs `faizy_pilot` installed for the completion gate (vendor bill, customer invoice + wallet debit, document portal rule). Routing,
 activities and desks are PR (b).
 
-## 20. HQ05 PR (b): work routing and role desks (faizy_ai 19.0.1.3.0)
+## 21. HQ05 PR (b): work routing and role desks (faizy_ai 19.0.1.3.0)
 
-Builds on §19 (and §16/§18 `faizy_pilot`). Goal (HQ05): Mashood and Raza open the ERP and land on their own list of what is
+Builds on §20 (and §16/§18 `faizy_pilot`). Goal (HQ05): Mashood and Raza open the ERP and land on their own list of what is
 waiting, for which record, by when, with the button to act. All of it is standard `mail.activity`
 on the real record. There is no second task system, and `base_automation` is not used, so
 production can be rebuilt from git.
@@ -981,16 +981,16 @@ production can be rebuilt from git.
   (`_inherit` without `_name`) when checking ACLs. It still fails on a defined model with no ACL
   (checked by removing `faizy.ai.inbound`'s rows).
 
-**Verified:** Odoo 19.0 + PostgreSQL 16, after merging `main` and §19:
+**Verified:** Odoo 19.0 + PostgreSQL 16, after merging `main` and §20:
 
-- All four addons (`faizy_core,faizy_website,faizy_ai,faizy_pilot`): `0 failed, 0 error(s) of 86
+- All four addons (`faizy_core,faizy_website,faizy_ai,faizy_pilot`): `0 failed, 0 error(s) of 90
   tests`. 15 of them are new in `faizy_ai/tests/test_routing.py`: T1 desk visibility and access per
   user, T9–T16 routing, escalation once, no escalation out of hours or before the window, Inbox-only
   summary, and the fallback chain.
 - Without `faizy_pilot`: `0 failed, 0 error(s) of 58 tests`.
 - With `faizy_pilot` installed, approving evidence (`evidence_state = approved`) closes the
   "Review proof & receipt" item.
-- Upgrade from a `main`-installed database (all four addons, via §19): `upgrade exit: 0`.
+- Upgrade from a `main`-installed database (all four addons, via §20): `upgrade exit: 0`.
 - flake8, `validate_modules`, `check_view_schemas`: pass.
 
 **Not done:** R9 (vendor bill draft → To-Do for Umer), R11 (document expiry → ops, the existing
