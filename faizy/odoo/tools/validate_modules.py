@@ -279,7 +279,9 @@ def field_definitions(module: Path) -> list[dict]:
     return out
 
 
-def check_field_definitions(module: Path, failures: list[str]) -> None:
+def check_field_definitions(
+    module: Path, failures: list[str], threaded_models: frozenset = frozenset()
+) -> None:
     """Two Odoo warnings that are quiet at load and wrong at runtime.
 
     Both showed up in the production upgrade log, buried in tracebacks that
@@ -295,6 +297,9 @@ def check_field_definitions(module: Path, failures: list[str]) -> None:
         tracked = (
             "mail.thread" in entry["inherits"]
             or entry["model"] in CORE_MAIL_THREAD_MODELS
+            # A later addon may extend a model that another addon made a
+            # mail.thread (faizy_pilot extends faizy.order from faizy_core).
+            or entry["model"] in threaded_models
         )
         if entry["kwargs"].get("tracking") and not tracked:
             failures.append(
@@ -330,12 +335,21 @@ def check_field_definitions(module: Path, failures: list[str]) -> None:
 
 def main() -> int:
     failures: list[str] = []
-    all_models: dict[str, set[str]] = {}
+    all_models: dict[str, dict] = {}
 
     modules = module_dirs()
     if not modules:
         print("No modules found — is the addons path right?")
         return 1
+
+    # Models that inherit mail.thread in ANY module, so an addon that only
+    # extends one of them is not told its tracking=True is ignored.
+    threaded_models = frozenset(
+        model
+        for module in modules
+        for model, info in collect_models(module).items()
+        if "mail.thread" in info["inherits"]
+    )
 
     for module in modules:
         name = module.name
@@ -365,14 +379,19 @@ def main() -> int:
         check_removed_core_fields(module, failures)
 
         # 3b. Field keywords that Odoo only warns about at load.
-        check_field_definitions(module, failures)
+        check_field_definitions(module, failures, threaded_models)
 
         # 3c. Kanban helpers Odoo 19 removed. Invisible until the view has a
         #     record to draw, then the whole screen goes blank.
         check_kanban_helpers(module, failures)
 
         models = collect_models(module)
-        all_models.update(models)
+        # Merge, never replace: several addons can extend the same model, and
+        # the later one must not hide the fields the earlier one declared.
+        for model_name, info in models.items():
+            merged = all_models.setdefault(model_name, {"fields": set(), "inherits": set()})
+            merged["fields"] |= info["fields"]
+            merged["inherits"] |= info["inherits"]
 
         # 4a. A declared field must not shadow one its mixins already define.
         for model_name, info in models.items():

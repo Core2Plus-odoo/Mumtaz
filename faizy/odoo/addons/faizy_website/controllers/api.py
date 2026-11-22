@@ -77,10 +77,11 @@ def _order_detail(order):
     `worker_name` is read via sudo() for the same reason the HTML route does
     it that way: the customer is entitled to know who is coming, not to the
     roster faizy.worker carries alongside it — cnic, phone, email, base_rate —
-    which has no portal ACL on purpose. Images are returned as the same
-    /web/image URL the browser uses, which the app's session cookie can fetch
-    directly; the truthiness check on the field mirrors the QWeb template's
-    `t-if`, which already accepts the cost of reading the image to know that.
+    which has no portal ACL on purpose. Evidence images are returned as
+    /faizy/evidence URLs (the session cookie fetches them directly) and only
+    once a reviewer has approved them; `proof_visible` / `receipt_visible`
+    come from faizy_pilot and are computed with sudo, because the customer
+    cannot read the image fields themselves.
     """
     data = _order_summary(order)
     data.update({
@@ -91,13 +92,13 @@ def _order_detail(order):
         "description": order.description or None,
         "completion_note": order.completion_note or None,
         "receipt_note": order.receipt_note or None,
+        # Only reviewed evidence. The raw /web/image URLs are staff-only now;
+        # this route is served by faizy_pilot after the record rule and approval.
         "proof_image_url": (
-            "/web/image/faizy.order/%s/proof_image" % order.id
-            if order.proof_image else None
+            "/faizy/evidence/%s/proof" % order.id if order.proof_visible else None
         ),
         "receipt_image_url": (
-            "/web/image/faizy.order/%s/receipt_image" % order.id
-            if order.receipt_image else None
+            "/faizy/evidence/%s/receipt" % order.id if order.receipt_visible else None
         ),
         "purchase_value": order.purchase_value,
         "service_fee": order.service_fee,

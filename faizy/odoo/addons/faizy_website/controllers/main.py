@@ -385,12 +385,10 @@ class FaizyWebsite(http.Controller):
             message_type="generic",
             body=env._(
                 "Welcome to Faizy, %(name)s. %(member)s is registered as "
-                "%(fmb)s. You have %(free)s free care activities — just reply "
-                "here and tell us what they need.",
+                "%(fmb)s. Just reply here and tell us what they need.",
                 name=partner.name,
                 member=member.name,
                 fmb=member.fmb_id,
-                free=partner.faizy_free_activities,
             ),
         )
         subscription.message_post(

@@ -745,3 +745,58 @@ and dropping the redundant argument. Could not run this against a live Odoo inst
 Postgres in this environment) — verified by reasoning about `ensure_one()`'s exact semantics against
 the exact error text the other session's test run already logged, not by executing it myself; CI's
 real Odoo test run against Postgres is the actual proof once this lands.
+
+## 16. Completion evidence gate (`faizy_pilot`) + removal of three unapproved public claims
+
+Branch `faizy/pilot-evidence-gate`, based on production commit `310a346`. DRAFT: not merged, not
+deployed, nothing run against `faizy_prod`. Every test below ran on a throwaway local Odoo 19.0 + Postgres 16
+database with synthetic records only.
+
+**What changed**
+- New addon `faizy_pilot` (depends on `faizy_core` only; no new models, no new groups). `faizy.order.state`
+  is unchanged. Adds `evidence_state` (none / submitted / approved / rejected), reviewer, review date,
+  reject reason, manager exception fields.
+- `action_complete` refuses unless the proof photo is approved and, when `purchase_value > 0`, the receipt
+  photo exists and is approved. The check sits in front of `faizy_customer_billing.action_complete`, so a
+  refused completion creates no draft invoice and no wallet debit. A direct `write({'state': 'completed'})`
+  (RPC or kanban drag) runs the same check. Manager-only `action_complete_with_exception(reason)` needs a
+  written reason and logs it in the chatter.
+- Review fields can only be changed by the action methods. The bypass markers are module-level objects, not
+  context strings, because an RPC client controls `context` and could otherwise send a string flag.
+  Changing an approved image sends the order back to review.
+- `proof_image` / `receipt_image` are now staff-only fields. A customer sees an image only after approval,
+  through `/faizy/evidence/<order>/<proof|receipt>`, which runs the order record rule first and then serves
+  the image with the addon's only `sudo()`. `faizy_website` (portal page + `/api/care/orders/<id>`) now uses
+  `proof_visible` / `receipt_visible` and that route; it therefore depends on `faizy_pilot` (website 19.0.1.20.0).
+- Removed from public site and portal copy, per the owner's decision: "Start free — 3 activities" /
+  "Three free activities", "From PKR 1,999 a month", "Platform fee 5%". Free-grant logic is untouched; the
+  grant is the company setting `faizy_free_activity_grant`, to be set to 0 on staging (Settings, not code).
+  The welcome WhatsApp text no longer states a free-activity count.
+- `validate_modules.py` now merges model fields and `mail.thread` across addons. It reported 73 false errors
+  once a second addon extended `faizy.order`.
+
+**Verified (commands run, synthetic data, local scratch DB only)**
+- `odoo-bin -u faizy_core,faizy_website,faizy_pilot --test-tags /faizy_core,/faizy_website,/faizy_pilot`:
+  27 tests, 0 failed. New: 14 gate/permission tests, 2 route tests (HttpCase), 2 portal-page/API tests.
+- The 2 portal tests fail against the old template/API (checked) and pass with the change.
+- `validate_modules.py`, `check_portal_access.py`, `check_view_schemas.py`, `check_core_fields.py`,
+  `check_plan_prices.py`: OK. `compileall` and `pyflakes`: clean (only unused-import notes in `__init__.py`).
+
+**Not verified / not done**
+- Nothing ran on staging or production; no staging exists yet. The XML-RPC acceptance script
+  (`staging_acceptance_tests_v2.py`) has not been run against a real server.
+- Not covered: worker upload path, quote object, family followers, request idempotency (gap list G5, G6, G9, G10).
+- The pricing page still shows plan prices (3 plans x 5 markets) and the sample receipt card still shows
+  illustrative PKR amounts. Removing or approving those is the owner's decision; only the three named claims were removed.
+
+**Found while testing (not fixed here)**
+- G12: when a user in `Faizy / Operations` completes an order, the automatic draft customer invoice fails with
+  `AccessError: You are not allowed to create 'Journal Entry'` and is only logged, because the billing code
+  does not run with accounting rights. If Raza completes orders on production, no invoice is drafted and the
+  manual retry button fails for him too. Needs an owner decision (give a billing helper, or an accounting group).
+  Check the production log for "Faizy customer invoice draft failed" before relying on invoicing.
+
+**Deploy order (when the owner and Shafat approve; see the staging checklist first)**
+`-u faizy_core,faizy_pilot,faizy_website` in one upgrade (website now depends on pilot, so pilot is installed
+as part of it). Chain with `&&` as in CLAUDE.md. Rollback: restore the pre-deploy backup; do not uninstall
+`faizy_pilot` while `faizy_website` is at 19.0.1.20.0 because the website depends on it.
