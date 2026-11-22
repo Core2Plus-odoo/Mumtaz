@@ -73,6 +73,24 @@ that instance only together with
 `-u mumtaz_tenant_manager,mumtaz_control_plane`, after a backup; new code on
 old columns would fail.
 
+### Third round, same day: modules installed in `Mumtaz_ERP`
+
+SERVER (list cut off after `mumtaz_theme` by the terminal pager; later names unknown):
+`mumtaz_api_gateway`, `mumtaz_app_portal`, `mumtaz_base`, `mumtaz_billing_stripe`,
+`mumtaz_branding`, `mumtaz_cfo_base`, `mumtaz_cfo_ingestion`, `mumtaz_cfo_toolkit`,
+`mumtaz_cfo_transactions`, `mumtaz_control_plane` (19.0.1.0.0), `mumtaz_core`,
+`mumtaz_crm_starter`, `mumtaz_einvoicing`, `mumtaz_lead_nurture`, `mumtaz_lead_scraper`,
+`mumtaz_marketplace`, `mumtaz_onboarding`, `mumtaz_portal`, `mumtaz_portal_routing`,
+`mumtaz_sme_profile`, `mumtaz_sso`, `mumtaz_super_toolkit`,
+`mumtaz_tenant_manager` (19.0.1.0.0), `mumtaz_theme`.
+
+| What it means | Consequence |
+| --- | --- |
+| `Mumtaz_ERP` is not only the ERP. It holds the Odoo control plane (tenant manager, control plane, Stripe billing), the portals, the marketplace, the CFO stack, the internal lead tooling and the public website | Three roles in one database: flagship ERP, control plane, website. Decisions P-02 and P-10 are about separating them |
+| `mumtaz_sso` is installed there | The shared-secret sign-on route (audit ODOO-01) exists on the instance that serves the public website |
+| `mumtaz_tenant_manager` and `mumtaz_control_plane` are installed at 19.0.1.0.0 | The deploy caution above applies for certain: after platform slice 1 merges, pull and restart only with a module upgrade and a backup |
+| On `main` since the server's commit only `mumtaz_website_builder` changed under `addons/`; slice 1 adds `mumtaz_tenant_manager` and `mumtaz_control_plane` | The upgrade list for that instance is those three modules |
+
 ### Next read-only checks
 
 1. Do the ZAKI finance routes answer without credentials (status code only), and which databases do the two tenants point at?
