@@ -63,14 +63,14 @@
                                     invisible="state == 'done' or not applicable"/>
                             <button name="action_undo" type="object" icon="fa-check-square-o" title="Take the tick back"
                                     invisible="state != 'done'"/>
-                            <field name="name" readonly="1" width="20%"/>
-                            <field name="mandatory" widget="boolean_toggle" readonly="1" string="Must" width="60px"/>
-                            <field name="sop" readonly="1" optional="show" string="How to do it" width="30%"/>
-                            <field name="auto_note" readonly="1" optional="show" string="From the ERP" width="14%"/>
-                            <field name="note" string="Note / evidence" width="16%"/>
-                            <field name="evidence_ref" optional="show"/>
+                            <field name="name" readonly="1" width="240px"/>
+                            <field name="mandatory" widget="boolean_toggle" readonly="1" string="Must" width="55px"/>
+                            <field name="sop" readonly="1" optional="show" string="How to do it" width="320px"/>
+                            <field name="auto_note" readonly="1" optional="show" string="From the ERP" width="110px"/>
+                            <field name="note" string="Note / evidence" width="150px"/>
+                            <field name="evidence_ref" optional="show" width="130px"/>
                             <field name="evidence_url" optional="hide"/>
-                            <field name="done_by" readonly="1" optional="show"/>
+                            <field name="done_by" readonly="1" optional="show" width="100px"/>
                             <field name="done_on" readonly="1" optional="hide"/>
                             <field name="state" readonly="1" widget="badge"
                                    decoration-success="state == 'done'" decoration-danger="state == 'blocked'"/>
