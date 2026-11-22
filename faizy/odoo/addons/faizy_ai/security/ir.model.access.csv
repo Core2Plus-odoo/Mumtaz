@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_draft_ai,faizy.ai.draft ai agent,model_faizy_ai_draft,group_ai_agent,1,1,1,0
+access_draft_comms,faizy.ai.draft comms,model_faizy_ai_draft,group_comms,1,1,1,0
+access_draft_ops,faizy.ai.draft ops,model_faizy_ai_draft,faizy_core.group_faizy_ops,1,1,1,0
+access_draft_manager,faizy.ai.draft manager,model_faizy_ai_draft,faizy_core.group_faizy_manager,1,1,1,1
+access_agent_ai,faizy.ai.agent ai agent,model_faizy_ai_agent,group_ai_agent,1,0,0,0
+access_agent_comms,faizy.ai.agent comms,model_faizy_ai_agent,group_comms,1,0,0,0
+access_agent_ops,faizy.ai.agent ops,model_faizy_ai_agent,faizy_core.group_faizy_ops,1,0,0,0
+access_agent_manager,faizy.ai.agent manager,model_faizy_ai_agent,faizy_core.group_faizy_manager,1,1,1,1
+access_inbound_ai,faizy.ai.inbound ai agent,model_faizy_ai_inbound,group_ai_agent,1,0,0,0
+access_inbound_comms,faizy.ai.inbound comms,model_faizy_ai_inbound,group_comms,1,1,0,0
+access_inbound_ops,faizy.ai.inbound ops,model_faizy_ai_inbound,faizy_core.group_faizy_ops,1,1,0,0
+access_inbound_manager,faizy.ai.inbound manager,model_faizy_ai_inbound,faizy_core.group_faizy_manager,1,1,1,1

@@ -127,6 +127,12 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     targets = {
         root / "addons/faizy_core/static/description/icon.png": 256,
+        # Home-screen icons for the web app manifest. 192 and 512 are what
+        # Android asks for; 180 is what iOS uses for apple-touch-icon. Generated
+        # rather than committed by hand so they cannot drift from the mark.
+        root / "addons/faizy_website/static/src/img/icon-192.png": 192,
+        root / "addons/faizy_website/static/src/img/icon-512.png": 512,
+        root / "addons/faizy_website/static/src/img/icon-180.png": 180,
     }
     for path, size in targets.items():
         path.parent.mkdir(parents=True, exist_ok=True)

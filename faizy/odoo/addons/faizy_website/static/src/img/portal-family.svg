@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Family">
+  <!-- Line art in the Faizy palette, to sit beside Odoo's own portal icons
+       rather than shout over them. Clay carries the form, orange the accent —
+       orange is never load-bearing for meaning, only for warmth. -->
+  <circle cx="18.5" cy="17" r="6.75" stroke="#8f4f08" stroke-width="2.5"/>
+  <path d="M6.5 40c0-6.63 5.37-12 12-12s12 5.37 12 12"
+        stroke="#8f4f08" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="33.5" cy="20.5" r="5" stroke="#f69e22" stroke-width="2.5"/>
+  <path d="M32 30.5c5.25 0 9.5 4.25 9.5 9.5"
+        stroke="#f69e22" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

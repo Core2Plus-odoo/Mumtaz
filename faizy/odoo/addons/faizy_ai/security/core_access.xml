@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Read access to faizy_core models for the AI agent group and the comms approver.
+         Kept in XML (not the CSV) because these models belong to faizy_core. -->
+    <record id="access_order_ai" model="ir.model.access">
+        <field name="name">faizy.order read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_order"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_msg_ai" model="ir.model.access">
+        <field name="name">faizy.whatsapp.message read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_whatsapp_message"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_msg_comms" model="ir.model.access">
+        <field name="name">faizy.whatsapp.message read comms</field>
+        <field name="model_id" ref="faizy_core.model_faizy_whatsapp_message"/>
+        <field name="group_id" ref="group_comms"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_worker_ai" model="ir.model.access">
+        <field name="name">faizy.worker read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_worker"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_sub_ai" model="ir.model.access">
+        <field name="name">faizy.subscription read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_subscription"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_service_ai" model="ir.model.access">
+        <field name="name">faizy.service read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_service"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_family_ai" model="ir.model.access">
+        <field name="name">faizy.family.member read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_family_member"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="access_bridge_ai" model="ir.model.access">
+        <field name="name">faizy.bridge.request read ai agent</field>
+        <field name="model_id" ref="faizy_core.model_faizy_bridge_request"/>
+        <field name="group_id" ref="group_ai_agent"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+</odoo>
