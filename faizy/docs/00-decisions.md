@@ -801,6 +801,15 @@ database with synthetic records only.
 as part of it). Chain with `&&` as in CLAUDE.md. Rollback: restore the pre-deploy backup; do not uninstall
 `faizy_pilot` while `faizy_website` is at 19.0.1.20.0 because the website depends on it.
 
+**16a. Install-time handling of orders that already hold evidence (follow-up to PR #191).** Without it,
+installing `faizy_pilot` on a database with existing orders leaves every old image at `evidence_state = none`:
+customers would lose sight of proof and receipts on orders that were already completed, and in-progress orders with
+a photo could not be approved. `faizy_pilot` now has a `post_init_hook` (first install only): completed orders with an
+image become `approved` (chatter note, no reviewer, they were already completed and visible); other orders with an image
+become `submitted` (human review); orders without images are untouched. Verified on a throwaway database: faizy_core
+installed, three synthetic orders created, then faizy_pilot installed: completed -> approved, in_progress with photo ->
+submitted, pending without photo -> none. Unit test added. Still not run on staging or production.
+
 ## 17. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.1.0)
 
 Scope approved by Umer on 22 Nov 2026 (FAIZY HQ05, "PR (a) security guards"). These close gaps S1–S6
@@ -854,7 +863,7 @@ after merging §16:
 
 - Base branch with all four addons installed (`faizy_core,faizy_website,faizy_ai,faizy_pilot`):
   `0 failed, 2 error(s) of 41 tests`. Both errors are the `faizy_ai` / `faizy_pilot` clash above.
-- This branch, all four addons: `0 failed, 0 error(s) of 59 tests`.
+- This branch, all four addons: `0 failed, 0 error(s) of 60 tests` (after also merging §16a).
 - This branch without `faizy_pilot`: `0 failed, 0 error(s) of 43 tests`.
 - Upgrade path: the base database with all four addons, then `-u faizy_core,faizy_ai,faizy_pilot`:
   `upgrade exit: 0`.

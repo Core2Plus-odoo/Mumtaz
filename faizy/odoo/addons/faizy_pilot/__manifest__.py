@@ -23,6 +23,7 @@ Additive to Faizy Core; nothing in faizy_core is edited and faizy.order.state is
     'data': [
         'views/faizy_order_views.xml',
     ],
+    'post_init_hook': 'post_init_hook',
     'installable': True,
     'application': False,
 }
