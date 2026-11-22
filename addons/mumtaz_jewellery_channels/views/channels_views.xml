@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_rate_feed_form" model="ir.ui.view">
+        <field name="name">jewellery.rate.feed.form</field>
+        <field name="model">jewellery.rate.feed</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_fetch" type="object" string="Fetch now (draft)" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group><field name="name"/><field name="active"/><field name="provider"/><field name="url" invisible="provider != 'json_url'"/>
+                               <field name="json_path" invisible="provider != 'json_url'"/><field name="fixture_value" invisible="provider != 'fixture'"/>
+                               <field name="unit"/><field name="min_change_pct"/></group>
+                        <group><field name="last_fetched_at"/><field name="last_value"/><field name="last_rate_id"/><field name="last_error"/></group>
+                    </group>
+                    <field name="log_ids" readonly="1"><list><field name="create_date"/><field name="raw_value"/><field name="rate_per_gram"/><field name="rate_id"/><field name="error"/></list></field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_rate_feed_list" model="ir.ui.view">
+        <field name="name">jewellery.rate.feed.list</field>
+        <field name="model">jewellery.rate.feed</field>
+        <field name="arch" type="xml">
+            <list><field name="name"/><field name="provider"/><field name="active"/><field name="last_fetched_at"/><field name="last_value"/><field name="last_error"/></list>
+        </field>
+    </record>
+    <record id="action_rate_feed" model="ir.actions.act_window">
+        <field name="name">Rate feeds</field>
+        <field name="res_model">jewellery.rate.feed</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_rate_feed" name="Rate feeds" parent="mumtaz_jewellery.menu_jewellery_root" action="action_rate_feed" sequence="12" groups="mumtaz_jewellery.group_jewellery_manager"/>
+    <record id="view_product_form_channel" model="ir.ui.view">
+        <field name="name">product.template.form.jewellery.channel</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="mumtaz_jewellery.view_product_form"/>
+        <field name="arch" type="xml">
+            <field name="jewellery_category" position="after">
+                <field name="jewellery_published"/>
+            </field>
+        </field>
+    </record>
+</odoo>

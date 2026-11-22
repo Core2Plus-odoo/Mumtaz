@@ -75,6 +75,11 @@ jobs:
       - name: flake8
         run: flake8 addons/ tools/scrapers/   # config in .flake8 at repo root
 
+      # Every sudo() widens access past the signed-in user; each call site
+      # must say why (docs/erp/architecture/SECURITY_MATRIX.md).
+      - name: sudo() calls are justified
+        run: python3 scripts/check_sudo.py addons
+
   # ────────────────────────────────────────────────────────────────────
   # 3. Security scan
   # Checks for hardcoded secrets and known-vulnerable patterns.
@@ -160,6 +165,7 @@ jobs:
               "base", "mail", "web", "website", "account", "crm", "sale",
               "sale_management", "purchase", "stock", "hr", "project",
               "contacts", "base_setup", "portal", "utm", "auth_signup",
+              "website_crm",  # standard Odoo CE: native website form -> crm.lead
           }
 
           errors = []
@@ -190,6 +196,24 @@ jobs:
 
           print("All dependencies look clean.")
         shell: python
+
+  # ────────────────────────────────────────────────────────────────────
+  # 5b. Module registry and layering
+  # Every module is classified into a layer (registry/classification.json);
+  # a lower layer may not depend on a higher one; registry.yaml is current.
+  # ────────────────────────────────────────────────────────────────────
+  module-registry:
+    name: Module Registry and Layering
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Registry is current and layering holds
+        run: python3 scripts/module_registry.py --check
 
   # ────────────────────────────────────────────────────────────────────
   # 6. Secrets scanning — TruffleHog
@@ -246,11 +270,11 @@ jobs:
           node-version: "20"
 
       - name: Install zaki-ai deps
-        working-directory: apps/zaki-ai
+        working-directory: sites/zaki.mumtaz.digital/node-app
         run: npm ci --ignore-scripts
 
       - name: npm audit
-        working-directory: apps/zaki-ai
+        working-directory: sites/zaki.mumtaz.digital/node-app
         run: npm audit --audit-level=high
 
   # ────────────────────────────────────────────────────────────────────
@@ -297,3 +321,10 @@ jobs:
             fi
           done
           if [ "$errors" -gt 0 ]; then exit 1; fi
+
+      # A broken link on this host does not 404: nginx answers any unknown
+      # path with the landing page, so a dead link silently shows the
+      # homepage and nobody notices. On-disk only here — the live pass needs
+      # the deployed host and runs from deploy/jewel-staging/.
+      - name: Check Jewel site links
+        run: python3 scripts/check_links.py --root website/jewel

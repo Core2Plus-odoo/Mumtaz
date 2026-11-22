@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="c2p_project_tracker.DeliveryDashboard">
+    <div class="o_c2p_dash viz-root">
+
+        <div t-if="state.loading" class="o_c2p_state">Loading delivery…</div>
+
+        <div t-elif="state.error" class="o_c2p_state o_c2p_error">
+            <h3>Delivery view unavailable</h3>
+            <p t-esc="state.error"/>
+        </div>
+
+        <t t-elif="state.data">
+
+            <div class="o_c2p_kpis">
+                <div class="o_c2p_kpi" t-att-class="{ o_c2p_kpi_bad: state.data.overdue }">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.overdue"/>
+                    <span class="o_c2p_kpi_l">Overdue tasks</span>
+                </div>
+                <div class="o_c2p_kpi">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.due_this_week"/>
+                    <span class="o_c2p_kpi_l">Due in 7 days</span>
+                </div>
+                <div class="o_c2p_kpi" t-att-class="{ o_c2p_kpi_bad: state.data.unassigned }">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.unassigned"/>
+                    <span class="o_c2p_kpi_l">Unassigned, open</span>
+                </div>
+                <div class="o_c2p_kpi"
+                     t-att-class="{ o_c2p_kpi_bad: state.data.milestones_without_deadline }">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.milestones_without_deadline"/>
+                    <span class="o_c2p_kpi_l">Milestones with no deadline</span>
+                </div>
+                <div class="o_c2p_kpi">
+                    <span class="o_c2p_kpi_v" t-esc="state.data.synced_at.slice(11, 16)"/>
+                    <span class="o_c2p_kpi_l">Last refreshed (UTC)</span>
+                </div>
+            </div>
+
+            <div class="o_c2p_card">
+                <h3>Team load — open tasks</h3>
+                <t t-if="load.length">
+                    <div class="o_c2p_seglegend">
+                        <span class="o_c2p_legend_item">
+                            <span class="o_c2p_swatch" style="background: var(--series-2)"/>
+                            On time
+                        </span>
+                        <span class="o_c2p_legend_item">
+                            <span class="o_c2p_swatch" style="background: var(--status-red)"/>
+                            Overdue
+                        </span>
+                    </div>
+                    <t t-foreach="load" t-as="row" t-key="row.name">
+                        <div class="o_c2p_load_row">
+                            <span class="o_c2p_load_name" t-esc="row.name"/>
+                            <div class="o_c2p_load_track">
+                                <div class="o_c2p_load_open"
+                                     t-attf-style="width: {{ row.openPct }}%"
+                                     t-attf-title="{{ row.open - row.overdue }} on time"/>
+                                <div class="o_c2p_load_overdue"
+                                     t-attf-style="width: {{ row.overduePct }}%"
+                                     t-attf-title="{{ row.overdue }} overdue"/>
+                            </div>
+                            <span class="o_c2p_load_num">
+                                <t t-esc="row.open"/>
+                                <t t-if="row.hours"> · <t t-esc="row.hours"/>h</t>
+                            </span>
+                        </div>
+                    </t>
+                </t>
+                <p t-else="" class="o_c2p_empty">No open delivery tasks are assigned.</p>
+            </div>
+
+            <div class="o_c2p_card">
+                <h3>Data hygiene</h3>
+                <ul class="o_c2p_attention">
+                    <t t-foreach="state.data.hygiene" t-as="entry" t-key="entry.label">
+                        <li t-att-class="entry.count ? 'o_c2p_att_blocker' : ''">
+                            <button class="o_c2p_att_link"
+                                    t-on-click="() => this.openHygiene(entry)">
+                                <strong t-esc="entry.count"/>
+                            </button>
+                            <span t-esc="entry.label"/>
+                        </li>
+                    </t>
+                </ul>
+                <p class="o_c2p_note">
+                    Every delivery task needs an assignee, a deadline and a milestone
+                    before it leaves Backlog, and a reason while it waits on the client.
+                </p>
+            </div>
+
+        </t>
+    </div>
+</t>
+
+</templates>

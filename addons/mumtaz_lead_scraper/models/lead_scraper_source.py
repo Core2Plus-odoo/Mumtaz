@@ -14,6 +14,9 @@ class LeadScraperSource(models.Model):
 
     # ── Identity ──────────────────────────────────────────────────────────
     name = fields.Char(required=True, tracking=True)
+    company_id = fields.Many2one(
+        "res.company", default=lambda self: self.env.company, index=True,
+        help="Leave empty to share this source with every company of the database.")
     url = fields.Char(string="Source URL", required=True, tracking=True)
     source_type = fields.Selection(
         [

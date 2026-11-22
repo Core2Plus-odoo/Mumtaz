@@ -1,0 +1,327 @@
+{
+  "_comment": "Hand-maintained. Layer and disposition per module. scripts/module_registry.py reads this and writes registry.yaml. Dispositions are PROPOSALS until the owner approves them in docs/erp/project/DECISION_REGISTER.md.",
+  "layers": [
+    "foundation",
+    "platform",
+    "product",
+    "edition",
+    "internal",
+    "venture"
+  ],
+  "rule": "A module may depend only on modules in its own layer or a lower one. 'internal' and 'venture' may depend on anything; nothing outside them may depend on them.",
+  "known_violations": [
+    "mumtaz_portal_routing -> mumtaz_cfo_base"
+  ],
+  "modules": {
+    "mumtaz_core": {
+      "layer": "foundation",
+      "disposition": "keep",
+      "note": "Canonical foundation candidate."
+    },
+    "mumtaz_base": {
+      "layer": "foundation",
+      "disposition": "merge-candidate",
+      "note": "Second foundation (46 lines). Candidate to fold into mumtaz_core."
+    },
+    "mumtaz_branding": {
+      "layer": "foundation",
+      "disposition": "review",
+      "note": "One of three brand sources (with mumtaz_theme and brand/tokens.css)."
+    },
+    "mumtaz_theme": {
+      "layer": "foundation",
+      "disposition": "review",
+      "note": "One of three brand sources."
+    },
+    "mumtaz_tenant_manager": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "mumtaz.tenant registry and provisioning service."
+    },
+    "mumtaz_control_plane": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "Plans, features, subscriptions, usage."
+    },
+    "mumtaz_billing_stripe": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "No tests."
+    },
+    "mumtaz_api_gateway": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "API keys and usage log."
+    },
+    "mumtaz_api": {
+      "layer": "platform",
+      "disposition": "review",
+      "note": "Overlaps mumtaz_api_gateway by name; ships no access CSV."
+    },
+    "mumtaz_sso": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "Ships no access CSV."
+    },
+    "mumtaz_subdomain_routing": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "Contains the only raw SQL in the tree."
+    },
+    "mumtaz_portal_routing": {
+      "layer": "platform",
+      "disposition": "review",
+      "note": "Depends on mumtaz_cfo_base (a product): routing should not depend on a product."
+    },
+    "mumtaz_app_portal": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": ""
+    },
+    "mumtaz_org_config": {
+      "layer": "platform",
+      "disposition": "review",
+      "note": "Overlaps mumtaz_organization."
+    },
+    "mumtaz_organization": {
+      "layer": "platform",
+      "disposition": "review",
+      "note": "Overlaps mumtaz_org_config."
+    },
+    "mumtaz_sme_profile": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": ""
+    },
+    "mumtaz_onboarding": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": ""
+    },
+    "mumtaz_portal": {
+      "layer": "platform",
+      "disposition": "merge-candidate",
+      "note": "12-line shell."
+    },
+    "mumtaz_customer_portal": {
+      "layer": "platform",
+      "disposition": "merge-candidate",
+      "note": "21-line shell."
+    },
+    "mumtaz_vendor_portal": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "No tests."
+    },
+    "mumtaz_website": {
+      "layer": "platform",
+      "disposition": "review",
+      "note": "Earlier marketing-site prototype with its own controllers and navbar; superseded by mumtaz_website_builder (21 Nov 2026). Keep until the production homepage is cut over, then retire."
+    },
+    "mumtaz_website_builder": {
+      "layer": "platform",
+      "disposition": "keep",
+      "note": "Mumtaz Digital homepage as native Website Builder blocks + CRM demo form; CSS scoped to .o_mumtaz_site."
+    },
+    "mumtaz_ai": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "One of four AI/CFO module families; no tests, no documented policy."
+    },
+    "mumtaz_voice": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "Depends on mumtaz_ai."
+    },
+    "mumtaz_zaki": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "Does not depend on mumtaz_ai or mumtaz_core."
+    },
+    "mumtaz_cfo_base": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "CFO toolkit family."
+    },
+    "mumtaz_cfo_ingestion": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "CFO toolkit family."
+    },
+    "mumtaz_cfo_transactions": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "CFO toolkit family."
+    },
+    "mumtaz_cfo_toolkit": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "Installer shell for the CFO family."
+    },
+    "mumtaz_super_toolkit": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "Installer shell."
+    },
+    "mumtaz_einvoicing": {
+      "layer": "product",
+      "disposition": "keep",
+      "note": "UAE QR, KSA ZATCA, Pakistan FBR. Statutory output with no tests."
+    },
+    "mumtaz_financial_reports": {
+      "layer": "product",
+      "disposition": "review",
+      "note": "No tests; decision D-02 (keep vs OCA mis_builder) is open."
+    },
+    "mumtaz_crm_starter": {
+      "layer": "product",
+      "disposition": "keep",
+      "note": ""
+    },
+    "mumtaz_marketplace": {
+      "layer": "product",
+      "disposition": "keep",
+      "note": "No tests."
+    },
+    "mumtaz_jewellery": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar. No dependency on any foundation or platform module."
+    },
+    "mumtaz_jewellery_ai": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_aml": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_api": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar. /jawhar/v1 door."
+    },
+    "mumtaz_jewellery_channels": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_client": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_crm": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_demo": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar synthetic demo data."
+    },
+    "mumtaz_jewellery_kiosk": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_outreach": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar. Ships no access CSV."
+    },
+    "mumtaz_jewellery_owner": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_sale": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_stores": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_vip": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar."
+    },
+    "mumtaz_jewellery_website": {
+      "layer": "edition",
+      "disposition": "keep",
+      "note": "Jawhar public-site door: demo requests into the CRM."
+    },
+    "c2p_command_center": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal."
+    },
+    "c2p_project_tracker": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal."
+    },
+    "mumtaz_lead_scraper": {
+      "layer": "internal",
+      "disposition": "relocate-candidate",
+      "note": "BD tooling, not ERP product."
+    },
+    "mumtaz_lead_nurture": {
+      "layer": "internal",
+      "disposition": "relocate-candidate",
+      "note": "BD tooling, not ERP product."
+    },
+    "mumtaz_media_buying": {
+      "layer": "internal",
+      "disposition": "review",
+      "note": "Media-agency vertical; either promote to an edition or keep as a customer extension."
+    },
+    "mumtaz_ceo_dashboard": {
+      "layer": "internal",
+      "disposition": "review",
+      "note": "Documented in docs/erp/00-AUDIT.md as the media-agency dashboard."
+    },
+    "faizy_core": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture."
+    },
+    "faizy_website": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture."
+    },
+    "faizy_ai": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
+    },
+    "faizy_pilot": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. Evidence gate on faizy.order; brought to main from the production branch 22 Nov 2026."
+    },
+    "c2p_appointment": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "Installed in Mumtaz_C2P. Brought from the production branch 21 Nov 2026. Three copies exist on the server."
+    },
+    "c2p_proposal": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "Installed in Mumtaz_C2P (19.0.17.0.0). Brought from the production branch 21 Nov 2026."
+    },
+    "c2p_master_agent": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "Installed in Mumtaz_C2P. Existed only in the server's system addons folder until 21 Nov 2026. REVIEW-05 open."
+    }
+  }
+}

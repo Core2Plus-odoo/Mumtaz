@@ -1,0 +1,511 @@
+"""Carry the approved-rate price onto a sale line, and freeze it on confirm.
+
+Gold moves every day. A quotation may legitimately be repriced while it is a
+draft, but the moment a client agrees to an order the figure they agreed to is
+history, not a live calculation. So the price and every component of it are
+snapshotted onto the line, and the snapshot is guarded in the ORM once the
+order leaves draft — not merely made readonly in a view, which a server action
+or an RPC call would walk straight past.
+
+VAT deliberately does NOT come from the pricing engine here. Odoo's own tax
+engine owns tax on a sale line, so ``price_unit`` carries the engine's
+pre-tax ``subtotal`` and its ``total`` is discarded. Taking VAT from both
+would charge it twice.
+
+(The engine is still *called* with the configured VAT rate, because
+``get_price_breakdown`` reads it from ``ir.config_parameter``. That is
+harmless: ``subtotal`` is the sum of metal, wastage, making and stones and
+does not depend on ``vat_rate`` at all. Only ``vat`` and ``total`` do, and
+neither is used here.)
+"""
+from datetime import timedelta
+
+import psycopg2
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError, ValidationError
+
+# Fields that record what was agreed. Once the order is confirmed these are
+# the client's copy of the truth and nothing may rewrite them.
+SNAPSHOT_FIELDS = (
+    'jewellery_lot_id',
+    'jewellery_rate_id',
+    'jewellery_rate_per_gram',
+    'jewellery_fine_weight_g',
+    'jewellery_metal_value',
+    'jewellery_wastage_value',
+    'jewellery_making_charge',
+    'jewellery_stones_value',
+    'jewellery_making_discount_pct',
+    'jewellery_priced_on',
+    'price_unit',
+)
+
+# Set by action_price_from_rate so the guard can tell a legitimate pricing run
+# from an arbitrary write. Everything else is refused once the order is out of
+# draft, including a write made with sudo.
+PRICING_CONTEXT = 'jewellery_pricing'
+
+LIVE_STATES = ('sale', 'done')
+
+
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    jewellery_lot_id = fields.Many2one(
+        'stock.lot', string='Piece', copy=False, index=True,
+        help='The serial-tracked piece this line sells. Setting it lets the '
+             'line be priced from the approved gold rate.')
+    jewellery_making_discount_pct = fields.Float(
+        string='Making discount %', copy=False,
+        help='Trade discount for dealer tiers. It applies to the making '
+             'charge only: the metal is never discounted.')
+
+    # --- the snapshot -----------------------------------------------------
+    jewellery_rate_id = fields.Many2one(
+        'jewellery.gold.rate', string='Rate used', readonly=True, copy=False,
+        help='The approved rate this line was priced from.')
+    jewellery_rate_per_gram = fields.Float(
+        string='Rate per gram', readonly=True, copy=False, digits=(16, 2))
+    jewellery_fine_weight_g = fields.Float(
+        string='Fine weight (g)', readonly=True, copy=False, digits=(16, 4))
+    jewellery_metal_value = fields.Float(
+        string='Metal', readonly=True, copy=False, digits=(16, 2))
+    jewellery_wastage_value = fields.Float(
+        string='Wastage', readonly=True, copy=False, digits=(16, 2))
+    jewellery_making_charge = fields.Float(
+        string='Making', readonly=True, copy=False, digits=(16, 2))
+    jewellery_stones_value = fields.Float(
+        string='Stones', readonly=True, copy=False, digits=(16, 2))
+    jewellery_priced_on = fields.Datetime(
+        string='Priced on', readonly=True, copy=False)
+
+    jewellery_margin = fields.Float(
+        string='Margin', digits=(16, 2), compute='_compute_jewellery_margin',
+        groups='mumtaz_jewellery.group_jewellery_manager',
+        help='Pre-tax price minus the piece\'s recorded cost basis. '
+             'Empty when no cost basis is recorded: an unknown cost is not '
+             'a zero cost.')
+    jewellery_has_cost = fields.Boolean(compute='_compute_jewellery_margin',
+                                        groups='mumtaz_jewellery.group_jewellery_manager')
+    jewellery_is_priced = fields.Boolean(
+        compute='_compute_jewellery_is_priced', store=True,
+        help='True once the line carries a rate snapshot.')
+
+    @api.depends('jewellery_rate_id', 'jewellery_priced_on')
+    def _compute_jewellery_is_priced(self):
+        for line in self:
+            line.jewellery_is_priced = bool(
+                line.jewellery_rate_id and line.jewellery_priced_on)
+
+    @api.depends('price_subtotal', 'jewellery_lot_id.jewellery_cost_value')
+    def _compute_jewellery_margin(self):
+        for line in self:
+            # sudo: cost basis is a restricted field; the margin is shown to managers only
+            cost = line.jewellery_lot_id.sudo().jewellery_cost_value if line.jewellery_lot_id else 0.0
+            line.jewellery_has_cost = bool(line.jewellery_lot_id and cost)
+            line.jewellery_margin = (line.price_subtotal - cost) if line.jewellery_has_cost else 0.0
+
+    def _jewellery_check_discount_allowed(self):
+        """A dealer discount above the staff limit needs a jewellery manager.
+
+        The limit is a setting (mumtaz_jewellery.staff_discount_limit_pct),
+        owner-set, so the control is 'who may give how much', not a number
+        in code. A manager is not limited by it.
+        """
+        self.ensure_one()
+        pct = self.jewellery_making_discount_pct or 0.0
+        if pct <= 0:
+            return
+        # A permission check on a person. System code (install hooks, scheduled
+        # actions) is not a person and holds no group; an agent is never run
+        # as superuser (it runs as the invoking user), so this exempts nothing
+        # that matters. The price itself stays the engine's either way.
+        if self.env.su or self.env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
+            return
+        # sudo: system parameter; only administrators may read ir.config_parameter
+        param = self.env['ir.config_parameter'].sudo().get_param(
+            'mumtaz_jewellery.staff_discount_limit_pct')
+        limit = float(param) if param else 0.0
+        if pct > limit:
+            raise UserError(_(
+                'A %(pct)s%% discount on making is above the %(limit)s%% a '
+                'non-manager may give. Ask a jewellery manager to price this '
+                'line.', pct=pct, limit=limit))
+
+    # --- pricing ----------------------------------------------------------
+    def action_price_from_rate(self):
+        """Price each jewellery line from the rate approved right now.
+
+        Refuses on a confirmed order: repricing something already agreed is
+        exactly what the snapshot exists to prevent.
+        """
+        for line in self:
+            if not line.jewellery_lot_id:
+                raise UserError(_(
+                    'Line "%s" has no piece, so there is nothing to price '
+                    'from the gold rate.') % (line.name or line.id))
+            if line.order_id.state in LIVE_STATES:
+                raise UserError(_(
+                    'Order %s is confirmed. Its prices are the ones the '
+                    'client agreed to and cannot be recalculated.')
+                    % line.order_id.name)
+
+            line._jewellery_check_discount_allowed()
+            # price_unit takes breakdown['subtotal'], which is pre-tax and
+            # independent of vat_rate. Odoo's tax engine owns the tax.
+            breakdown = line.jewellery_lot_id.get_price_breakdown(
+                making_discount_pct=line.jewellery_making_discount_pct)
+
+            values = {
+                'jewellery_rate_id': breakdown['rate_id'],
+                'jewellery_rate_per_gram': breakdown['rate_24k_per_g'],
+                'jewellery_fine_weight_g': breakdown['fine_weight_g'],
+                'jewellery_metal_value': breakdown['metal_value'],
+                'jewellery_wastage_value': breakdown['wastage_value'],
+                'jewellery_making_charge': breakdown['making_charge'],
+                'jewellery_stones_value': breakdown['stones_value'],
+                'jewellery_priced_on': fields.Datetime.now(),
+                'price_unit': breakdown['subtotal'],
+            }
+            line.with_context(**{PRICING_CONTEXT: True}).write(values)
+        return True
+
+    # --- the freeze -------------------------------------------------------
+    def write(self, values):
+        """Refuse to restate a price the client already agreed to.
+
+        Holds for sudo, so a rate feed or a server action cannot quietly
+        reprice history either.
+        """
+        if not self.env.context.get(PRICING_CONTEXT):
+            touched = [f for f in SNAPSHOT_FIELDS if f in values]
+            if touched:
+                for line in self:
+                    if (line.jewellery_is_priced
+                            and line.order_id.state in LIVE_STATES):
+                        raise UserError(_(
+                            'Order %(order)s is confirmed. %(fields)s cannot '
+                            'be changed: the price and the rate it came from '
+                            'are what the client agreed to.',
+                            order=line.order_id.name,
+                            fields=', '.join(sorted(touched))))
+        return super().write(values)
+
+    # --- onward to the invoice -------------------------------------------
+    def _prepare_invoice_line(self, **optional_values):
+        """Carry the rate snapshot onto the invoice line.
+
+        Standard Odoo already brings `price_unit` across, so the money is
+        right without this. What it does not bring is the derivation of that
+        money — the approved rate, the fine weight, the split between metal,
+        wastage, making and stones. An invoice that cannot show where its
+        figure came from is no use in a client query or a margin review.
+        """
+        values = super()._prepare_invoice_line(**optional_values)
+        if self.jewellery_lot_id:
+            values.update({
+                'jewellery_lot_id': self.jewellery_lot_id.id,
+                'jewellery_making_discount_pct':
+                    self.jewellery_making_discount_pct,
+                'jewellery_rate_id': self.jewellery_rate_id.id,
+                'jewellery_rate_per_gram': self.jewellery_rate_per_gram,
+                'jewellery_fine_weight_g': self.jewellery_fine_weight_g,
+                'jewellery_metal_value': self.jewellery_metal_value,
+                'jewellery_wastage_value': self.jewellery_wastage_value,
+                'jewellery_making_charge': self.jewellery_making_charge,
+                'jewellery_stones_value': self.jewellery_stones_value,
+                'jewellery_priced_on': self.jewellery_priced_on,
+            })
+        return values
+
+
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    def action_price_lines_from_rate(self):
+        """Price every jewellery line on the order. The form button."""
+        lines = self.order_line.filtered('jewellery_lot_id')
+        if not lines:
+            raise UserError(_('No line on this order carries a piece.'))
+        return lines.action_price_from_rate()
+
+    jewellery_quote_expired = fields.Boolean(
+        compute='_compute_jewellery_quote_expired',
+        help='The validity date has passed: renew (reprice) before confirming.')
+
+    @api.depends('validity_date', 'state')
+    def _compute_jewellery_quote_expired(self):
+        today = fields.Date.context_today(self)
+        for order in self:
+            order.jewellery_quote_expired = bool(
+                order.state in ('draft', 'sent')
+                and order.validity_date and order.validity_date < today)
+
+    def _jewellery_lines(self):
+        return self.order_line.filtered('jewellery_lot_id')
+
+    # --- quote validity and the rate lock ---------------------------------
+    #
+    # A quotation holds the rate it was priced at until its validity date:
+    # that is the rate lock the client is given. After the date the quote is
+    # stale, and gold has moved; it must be repriced at today's approved rate
+    # (renewed) before it can become an order. The number of days is the
+    # company's quotation_validity_days -- standard Odoo, set by the owner.
+    def action_renew_quote(self):
+        """Reprice every jewellery line at today's approved rate and start a
+        fresh validity period. Draft quotations only."""
+        for order in self:
+            if order.state not in ('draft', 'sent'):
+                raise UserError(_(
+                    'Order %s is confirmed; its prices are agreed and cannot '
+                    'be renewed.') % order.name)
+            lines = order._jewellery_lines()
+            if not lines:
+                raise UserError(_('No line on this quotation carries a piece.'))
+            lines.action_price_from_rate()
+            days = order.company_id.quotation_validity_days
+            order.validity_date = (
+                fields.Date.context_today(order) + timedelta(days=days)
+                if days > 0 else False)
+        return True
+
+    # --- the unique piece ----------------------------------------------
+    #
+    # A serial-tracked piece exists once. Two quotations may legitimately
+    # carry it (two clients considering the same bangle), but only one may
+    # become an order. The check is made under a row lock on the piece, so
+    # two sessions confirming at the same moment cannot both pass it: the
+    # second waits for the first to commit (or, with NOWAIT, is told to try
+    # again) and then sees the first order.
+    def _jewellery_lock_pieces(self, lots):
+        if not lots:
+            return
+        try:
+            self.env.cr.execute(
+                'SELECT id FROM stock_lot WHERE id IN %s FOR UPDATE NOWAIT',
+                (tuple(lots.ids),))
+        except psycopg2.errors.LockNotAvailable:
+            raise UserError(_(
+                'Another session is confirming a sale of %s right now. '
+                'Wait a moment and try again.')
+                % ', '.join(lots.mapped('name')))
+
+    def _jewellery_check_pieces_available(self):
+        Line = self.env['sale.order.line']
+        Memo = self.env['jewellery.approval.memo']
+        for order in self:
+            lines = order._jewellery_lines()
+            lots = lines.mapped('jewellery_lot_id')
+            order._jewellery_lock_pieces(lots)
+            for line in lines:
+                lot = line.jewellery_lot_id
+                if line.product_uom_qty != 1:
+                    raise ValidationError(_(
+                        'Piece %s is one physical item; the line quantity '
+                        'must be 1.') % lot.name)
+                other = Line.search([
+                    ('jewellery_lot_id', '=', lot.id),
+                    ('order_id.state', 'in', LIVE_STATES),
+                    ('order_id', '!=', order.id),
+                ], limit=1)
+                if other:
+                    raise ValidationError(_(
+                        'Piece %(piece)s is already sold on order %(order)s. '
+                        'A piece can be sold once.',
+                        piece=lot.name, order=other.order_id.name))
+                if lot.product_qty <= 0:
+                    raise ValidationError(_(
+                        'Piece %s is not in stock, so it cannot be sold.')
+                        % lot.name)
+                memo = Memo.search([
+                    ('lot_ids', 'in', lot.id), ('state', '=', 'out')], limit=1)
+                if memo:
+                    raise ValidationError(_(
+                        'Piece %(piece)s is out on approval with %(client)s '
+                        '(%(memo)s). Record its return or its sale from the '
+                        'memo first.',
+                        piece=lot.name, client=memo.partner_id.display_name,
+                        memo=memo.name))
+
+    # --- old gold taken in exchange ---------------------------------------
+    #
+    # The intake is its own record, valued by the engine at the approved rate
+    # and, above the threshold, approved by a second person. The sale only
+    # *references* it: one credit line, negative, for exactly the intake's
+    # value. The intake can be used once.
+    jewellery_old_gold_id = fields.Many2one(
+        'jewellery.old.gold', string='Old gold taken in exchange', copy=False,
+        readonly=True)
+
+    def action_apply_old_gold(self, intake):
+        self.ensure_one()
+        if self.state not in ('draft', 'sent'):
+            raise UserError(_('Order %s is confirmed; nothing can be added.') % self.name)
+        if self.jewellery_old_gold_id:
+            raise UserError(_('Order %s already carries an exchange (%s).')
+                            % (self.name, self.jewellery_old_gold_id.name))
+        if intake.state != 'confirmed':
+            raise UserError(_(
+                'Exchange %(name)s is %(state)s. Only a confirmed intake -- valued '
+                'at the approved rate and, above the threshold, approved by a '
+                'second person -- can be credited.',
+                name=intake.name, state=intake.state))
+        if intake.sale_order_id:
+            raise UserError(_('Exchange %s has already been credited on %s.')
+                            % (intake.name, intake.sale_order_id.name))
+        if intake.partner_id and intake.partner_id != self.partner_id:
+            raise UserError(_('Exchange %s belongs to %s, not to this client.')
+                            % (intake.name, intake.partner_id.display_name))
+        if intake.value <= 0:
+            raise UserError(_('Exchange %s has no value.') % intake.name)
+        product = self.env.ref('mumtaz_jewellery_sale.product_old_gold_credit')
+        description = _('Old gold exchange %(name)s: %(g).3f g %(k)sK, credited at %(rate).2f/g',
+                        name=intake.name, g=intake.gross_weight_g, k=intake.karat,
+                        rate=intake.applied_rate_per_g)
+        line = self.env['sale.order.line'].create({
+            'order_id': self.id,
+            'product_id': product.id,
+            'product_uom_qty': 1,
+            'price_unit': -intake.value,
+            'tax_ids': [(5, 0, 0)],
+        })
+        # Written after create: Odoo computes the line name from the product
+        # on create, and the receipt would read "Old gold exchange credit"
+        # with the intake's description tacked on.
+        line.name = description
+        self.jewellery_old_gold_id = intake.id
+        intake.sale_order_id = self.id
+        return True
+
+    # --- the counter: one call, one transaction ------------------------------
+    @api.model
+    def _counter_extra_checks(self, partner=None, lot=None, journal=None, amount=None, discount=0.0):
+        """Further readiness checks other modules add (compliance, for one):
+        a list of dicts with key, ok and detail. The commit enforces the same
+        rules itself; this only tells the screen what would stop it."""
+        return []
+
+    def action_counter_commit(self, journal=None, amount=None):
+        """Agree, invoice, take the money and hand the piece over, atomically.
+
+        Runs every Slice 1 guard (priced, valid, on the shelf, sold nowhere
+        else, not on approval), posts the invoice, registers the payment
+        (full, or a deposit when ``amount`` is less than the total) and
+        validates the delivery so the serial leaves stock. All in the calling
+        transaction: if any step refuses, nothing happened.
+        """
+        self.ensure_one()
+        if self.state not in ('draft', 'sent'):
+            raise UserError(_('Order %s is already %s.') % (self.name, self.state))
+        self.action_confirm()
+
+        invoice = self._create_invoices()
+        invoice.action_post()
+
+        payments = self.env['account.payment']
+        if invoice.amount_total > 0:
+            pay_amount = invoice.amount_total if amount is None else float(amount)
+            if pay_amount < 0 or pay_amount > invoice.amount_total + 0.005:
+                raise UserError(_('The amount taken must be between 0 and %s.')
+                                % invoice.amount_total)
+            if pay_amount > 0:
+                values = {}
+                if journal:
+                    values['journal_id'] = journal.id
+                values['amount'] = pay_amount
+                if pay_amount < invoice.amount_total:
+                    values['payment_difference_handling'] = 'open'
+                wizard = self.env['account.payment.register'].with_context(
+                    active_model='account.move', active_ids=invoice.ids).create(values)
+                payments = wizard._create_payments()
+
+        self._jewellery_deliver()
+        invoice.invalidate_recordset()
+        return {'order': self, 'invoice': invoice, 'payments': payments,
+                'pickings': self.picking_ids}
+
+    def _jewellery_deliver(self):
+        """Validate the delivery for the pieces on this order -- the exact pieces.
+
+        Standard reservation picks *a* serial of the product, which for a
+        jewellery product is any bangle of that design. The order names one
+        piece, so the move line is forced to that lot before validation:
+        found by the API test that put two serials on the shelf and watched
+        the other one leave. Standard Odoo then moves the quant to Customers,
+        so the piece stops counting as on hand.
+        """
+        MoveLine = self.env['stock.move.line']
+        for picking in self.picking_ids.filtered(lambda p: p.state not in ('done', 'cancel')):
+            if picking.state in ('draft', 'waiting', 'confirmed'):
+                picking.action_assign()
+            for move in picking.move_ids:
+                lot = move.sale_line_id.jewellery_lot_id
+                if not lot:
+                    continue
+                wrong = move.move_line_ids.filtered(lambda l, lot=lot: l.lot_id != lot)
+                if wrong:
+                    wrong.unlink()          # releases the reservation on the other serial
+                line = move.move_line_ids.filtered(lambda l, lot=lot: l.lot_id == lot)[:1]
+                if not line:
+                    line = MoveLine.create({
+                        'move_id': move.id,
+                        'picking_id': picking.id,
+                        'product_id': move.product_id.id,
+                        'product_uom_id': move.product_uom.id,
+                        'location_id': move.location_id.id,
+                        'location_dest_id': move.location_dest_id.id,
+                        'lot_id': lot.id,
+                        'quantity': 1.0,
+                    })
+                line.quantity = 1.0
+                line.picked = True
+            picking.with_context(skip_backorder=True, skip_sms=True).button_validate()
+            if picking.state != 'done':
+                raise UserError(_('Delivery %s did not complete (state %s).')
+                                % (picking.name, picking.state))
+            for move in picking.move_ids:
+                lot = move.sale_line_id.jewellery_lot_id
+                if lot and lot.product_qty > 0:
+                    raise UserError(_(
+                        'Delivery %s completed but piece %s is still on the shelf.')
+                        % (picking.name, lot.name))
+        return True
+
+    def action_confirm(self):
+        """Before a piece is agreed: priced from the rate, within validity,
+        in stock, not out on approval, and sold nowhere else.
+
+        Without the first a piece could be confirmed at whatever price
+        someone typed, which is the thing the whole rate discipline exists
+        to stop. Without the rest a unique item could be sold twice.
+        """
+        today = fields.Date.context_today(self)
+        for order in self:
+            unpriced = order.order_line.filtered(
+                lambda line: line.jewellery_lot_id
+                and not line.jewellery_is_priced)
+            if unpriced:
+                raise ValidationError(_(
+                    'These lines carry a piece but no approved rate: %s.\n'
+                    'Price them from the gold rate before confirming.')
+                    % ', '.join(
+                        line.jewellery_lot_id.name for line in unpriced))
+            if (order._jewellery_lines() and order.validity_date
+                    and order.validity_date < today):
+                raise ValidationError(_(
+                    'Quotation %(order)s expired on %(date)s. Gold has moved '
+                    'since it was priced: renew it at today\'s approved rate '
+                    'before confirming.',
+                    order=order.name, date=order.validity_date))
+        self._jewellery_check_pieces_available()
+        return super().action_confirm()
+
+
+class JewelleryOldGold(models.Model):
+    _inherit = 'jewellery.old.gold'
+
+    sale_order_id = fields.Many2one(
+        'sale.order', string='Credited on', readonly=True, copy=False,
+        help='The sale this exchange was credited against. An intake is '
+             'credited once.')

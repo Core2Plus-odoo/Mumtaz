@@ -668,6 +668,14 @@ code path. `faizy_product_data.xml`'s own comment already said as much ("orders 
 accounting at all today") about the sale-side products it pre-built for exactly this. Recorded in
 FIT_GAP_REGISTER.md as the next candidate, pending its own explicit scoping decision.
 
+## CRM lead fields captured from live (20 Nov 2026)
+
+While deploying `faizy_ai` on 3 Nov 2026 the server's working tree refused the checkout because of local, uncommitted changes in `faizy_core`: a dependency on the standard `crm` app, a `crm.lead` extension (`models/crm_lead.py`) and a "Faizy" tab on the lead form (`views/crm_lead_views.xml`). They had been added by hand on the server and existed in no branch. They were stashed (`server-local-before-ai-team-2026-11-03`), re-applied on top of the new code so the upgrade could run, and committed to the repo in PR #139 byte-for-byte, so the repository matches production.
+
+This contradicts FIT_GAP_REGISTER row CRM-01 ("Out of scope"). The register row is updated to say so; **whether CRM stays is the product owner's decision and is not made here.** Also open: the Plan interest field carries hard-coded AED amounts (Lite 26.50, Standard 66.20, Family Pro 119.20) that were not checked against the published plan prices; the owner said plan prices will change later, so those labels should be removed or made to read from the plan table.
+
+Process note: this is the second time a hand edit on the server blocked a deploy. Changes to `/opt/faizy/src` should be made in the repo and pulled, not edited in place.
+
 
 ## 15. Document vault: portal customers were able to read every family's documents — closed
 
@@ -810,7 +818,38 @@ become `submitted` (human review); orders without images are untouched. Verified
 installed, three synthetic orders created, then faizy_pilot installed: completed -> approved, in_progress with photo ->
 submitted, pending without photo -> none. Unit test added. Still not run on staging or production.
 
-## 17. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.1.0)
+## 17. FAIZY 2.0 public look (faizy_website 19.0.1.21.0)
+
+The rebrand in the approved design preview (navy `#1E2842`, orange `#F69E22` as a fill with navy text, soft grey
+`#F2F0F1`, Poppins; cream removed) is applied by changing the colour variables at the top of `faizy.scss`, so every
+public page and the customer portal take the new palette at once, plus a new `v10` layer for the new home hero and trust
+strip. The home hero is rewritten (Agent in an arch frame, labelled "illustrative character"). PWA `theme_color` and
+`background_color` and the portal `theme-color` meta now match the navy.
+
+Claims removed from public pages because nobody approved them (decision 3, extended): the trust bar (22+ families, 3
+cities, 24k following, 100% photographed), the sample order card with PKR amounts, "Your first three care activities are
+on us" / "free" in the plans block, pricing hero and signup pages, and the Facebook follower count (the contact block now
+shows the approved handle FaizyHaiNa). The plans block now says only that the plan is confirmed on WhatsApp before any
+billing starts. A new test (`test_home_2_0`) fails the build if any of these phrases returns to `/`, `/pricing`, `/start`,
+`/join`, `/privacy` or `/ai-team`.
+
+Deliberately not on the new home: "Customer messages go out 10:00 to 21:00 Karachi time" (no hour gate exists yet) and "agents
+see the task, not your family name" (not implemented). The footer text from the old site is untouched.
+
+Not done here: the structural portal redesign (side navigation, tiles, object-page header) and Roman Urdu toggle from the
+preview. Verified on a throwaway Odoo 19 database: install and 25 tests pass. Not run on production.
+
+## 18. Evidence review desk (faizy_pilot 19.0.1.1.0)
+
+A reviewer's working screen for the evidence gate: Faizy / Operations menu **Evidence review**, a standard list opened on
+"Waiting for review" (`evidence_state = submitted`), with filters for rejected, approved and "in progress, not approved", and
+group by evidence status or Faizy. Rows open the existing order form, where Approve / Reject already live. Visible to the
+Operations group only (menu `groups`), the list is read-only (`create="0" delete="0"`), no new model, no new group. Raza is the
+reviewer; Mashood does not see the menu. Verified on a throwaway Odoo 19 database: 20 faizy_pilot tests pass including three
+for this desk (default filter, menu visibility for ops vs agent, views load). Not run on production. Deploy:
+`-u faizy_pilot` (stacked on the website 2.0 PR; no data changes).
+
+## 19. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.2.0)
 
 Scope approved by Umer on 22 Nov 2026 (FAIZY HQ05, "PR (a) security guards"). These close gaps S1–S6
 found in the HQ05 audit, which had to be fixed **before** Mashood (care) and Raza (operations) get
@@ -863,7 +902,11 @@ after merging §16:
 
 - Base branch with all four addons installed (`faizy_core,faizy_website,faizy_ai,faizy_pilot`):
   `0 failed, 2 error(s) of 41 tests`. Both errors are the `faizy_ai` / `faizy_pilot` clash above.
-- This branch, all four addons: `0 failed, 0 error(s) of 60 tests` (after also merging §16a).
+- This branch, all four addons, after merging `main` (§16a, §17, §18, the AI brain #140): `0 failed,
+  0 error(s) of 71 tests`. `faizy_ai` is bumped to 19.0.1.2.0 because `main` already uses 1.1.0 for the
+  AI brain; drafts waiting in `to_send` count as approved in the agent's approval rate.
+- Upgrade path from `main`: database installed from `main` with all four addons, then
+  `-u faizy_core,faizy_ai,faizy_pilot,faizy_website`: `upgrade exit: 0`. `registry.yaml` regenerated.
 - This branch without `faizy_pilot`: `0 failed, 0 error(s) of 43 tests`.
 - Upgrade path: the base database with all four addons, then `-u faizy_core,faizy_ai,faizy_pilot`:
   `upgrade exit: 0`.

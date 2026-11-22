@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- The line that carries an old-gold exchange credit on a sale. One
+         service product, negative price, no tax of its own: how the credit is
+         taxed is a finance decision configured on this product, not in code
+         (docs/mumtaz-jewel/CLAUDE.md: compliance values are configuration). -->
+    <record id="product_old_gold_credit" model="product.product">
+        <field name="name">Old gold exchange credit</field>
+        <field name="type">service</field>
+        <field name="sale_ok" eval="True"/>
+        <field name="purchase_ok" eval="False"/>
+        <field name="list_price">0</field>
+        <field name="taxes_id" eval="[(5, 0, 0)]"/>
+    </record>
+
+    <!-- Making-charge discount a non-manager may give at the counter, in
+         percent. Above it a jewellery manager must price the line. Owner-set. -->
+    <record id="param_staff_discount_limit" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.staff_discount_limit_pct</field>
+        <field name="value">10</field>
+    </record>
+</odoo>

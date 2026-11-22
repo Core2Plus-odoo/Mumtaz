@@ -88,6 +88,7 @@ class MumtazCFOWorkspace(models.Model):
                 rec.erp_feature_enabled = True
                 rec.erp_feature_note = False
                 continue
+            # sudo: entitlement lookup on control-plane models tenant users may not read
             access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
                 rec.company_id,
                 "erp_core_access",
@@ -111,6 +112,7 @@ class MumtazCFOWorkspace(models.Model):
             if not rec.tenant_id or "mumtaz.subscription" not in self.env:
                 continue
 
+            # sudo: subscription and usage rows for the workspace limits; control-plane models
             subscription = self.env["mumtaz.subscription"].sudo().search(
                 [("tenant_id", "=", rec.tenant_id.id), ("is_current", "=", True)],
                 order="id desc",
@@ -125,6 +127,7 @@ class MumtazCFOWorkspace(models.Model):
             if subscription.grace_until:
                 rec.subscription_grace_days_remaining = (subscription.grace_until - today).days
 
+            # sudo: subscription and usage rows for the workspace limits; control-plane models
             metrics = self.env["mumtaz.usage.metric"].sudo().search(
                 [
                     ("tenant_id", "=", rec.tenant_id.id),
@@ -185,6 +188,7 @@ class MumtazCFOWorkspace(models.Model):
         """Clone system categories into this workspace if missing by code."""
         if "mumtaz.feature.access.service" in self.env:
             for workspace in self:
+                # sudo: entitlement lookup on control-plane models tenant users may not read
                 access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
                     workspace.company_id,
                     "erp_core_access",

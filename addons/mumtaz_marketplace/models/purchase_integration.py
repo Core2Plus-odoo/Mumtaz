@@ -11,6 +11,7 @@ class PurchaseOrder(models.Model):
 
     @api.depends("order_line", "order_line.product_id")
     def _compute_marketplace_alt_count(self):
+        # sudo: listing or inquiry looked up when an order is created from the marketplace; the buyer cannot read the seller's record
         Listing = self.env["mumtaz.marketplace.listing"].sudo()
         for order in self:
             order.marketplace_alt_count = Listing.search_count(
@@ -47,6 +48,7 @@ class PurchaseOrder(models.Model):
         highlight which lines benefit from this alternative.
         """
         self.ensure_one()
+        # sudo: listing or inquiry looked up when an order is created from the marketplace; the buyer cannot read the seller's record
         Listing = self.env["mumtaz.marketplace.listing"].sudo()
         listings = Listing.search(
             self._marketplace_alternatives_domain(),

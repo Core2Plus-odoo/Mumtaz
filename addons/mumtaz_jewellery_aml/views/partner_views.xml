@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_kyc" model="ir.ui.view">
+        <field name="name">res.partner.form.jewellery.kyc</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="mumtaz_jewellery_vip.view_partner_form_jewellery"/>
+        <field name="arch" type="xml">
+            <field name="no_marketing" position="after">
+                <field name="kyc_status" readonly="1"/>
+                <field name="kyc_id_type" readonly="1"/>
+                <field name="kyc_id_last4" readonly="1"/>
+                <field name="kyc_id_expiry" readonly="1"/>
+                <field name="kyc_verified_by_id" readonly="1"/>
+                <field name="aml_screening_status" readonly="1"/>
+                <field name="aml_risk_band" readonly="1"/>
+                <field name="aml_cash_window_total"/>
+            </field>
+        </field>
+    </record>
+</odoo>

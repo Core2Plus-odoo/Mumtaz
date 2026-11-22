@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Brand styling, inlined because an external asset is not guaranteed to
+         reach wkhtmltopdf's renderer. Charcoal #0F0F0F and red #BE1E2D, Arial.
+         Status fills carry a text label beside them, never colour alone, since
+         brand amber and grey fall below 3:1 against white. -->
+    <template id="c2p_report_styles">
+        <style type="text/css">
+            .c2p { font-family: Arial, Helvetica, sans-serif; color: #0F0F0F;
+                   font-size: 9pt; }
+            .c2p h1 { font-size: 16pt; margin: 0 0 2mm; }
+            .c2p h2 { font-size: 11pt; margin: 4mm 0 2mm;
+                      border-bottom: 1px solid #BE1E2D; padding-bottom: 1mm; }
+            .c2p .rule { height: 2px; background: #BE1E2D; margin: 0 0 3mm; }
+            .c2p .muted { color: #666666; font-size: 8pt; }
+            .c2p table { width: 100%; border-collapse: collapse; }
+            .c2p th { text-align: left; font-size: 7.5pt; text-transform: uppercase;
+                      letter-spacing: .03em; color: #666666; padding: 1.5mm 1mm;
+                      border-bottom: 1px solid #CCCCCC; }
+            .c2p td { padding: 1.5mm 1mm; border-bottom: 1px solid #EEEEEE;
+                      vertical-align: top; }
+            .c2p .num { text-align: right; }
+            .c2p .kpis { width: 100%; margin-bottom: 3mm; }
+            .c2p .kpis td { border: 1px solid #DDDDDD; padding: 2mm;
+                            width: 20%; }
+            .c2p .kpi-v { font-size: 13pt; font-weight: bold; display: block; }
+            .c2p .kpi-l { font-size: 7pt; text-transform: uppercase;
+                          color: #666666; }
+            .c2p .pill { display: inline-block; padding: 0.3mm 1.5mm;
+                         font-size: 7.5pt; font-weight: bold; color: #FFFFFF; }
+            .c2p .p-red { background: #BE1E2D; }
+            .c2p .p-amber { background: #F29900; color: #0F0F0F; }
+            .c2p .p-green { background: #1E8E3E; }
+            .c2p .p-grey { background: #9AA0A6; color: #0F0F0F; }
+            .c2p .bar { height: 2.5mm; background: #EEEEEE; width: 20mm;
+                        display: inline-block; }
+            .c2p .bar span { display: block; height: 100%; background: #0F0F0F; }
+            .c2p ul { margin: 0; padding-left: 4mm; }
+            .c2p li { margin-bottom: 0.8mm; }
+            /* Avoid splitting a row across pages — wkhtmltopdf honours this. */
+            .c2p tr { page-break-inside: avoid; }
+        </style>
+    </template>
+
+    <!-- Portfolio Executive Summary (A4 landscape, internal). -->
+    <template id="report_portfolio_summary">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <div class="page c2p">
+                    <t t-call="c2p_project_tracker.c2p_report_styles"/>
+                    <t t-set="d" t-value="docs._c2p_report_payload()"/>
+
+                    <h1>Portfolio Executive Summary</h1>
+                    <div class="muted">
+                        C2P Consultants · <t t-esc="d['as_of']"/>
+                        · <t t-esc="d['count']"/> engagements
+                    </div>
+                    <div class="rule"/>
+
+                    <table class="kpis">
+                        <tr>
+                            <td><span class="kpi-v" t-esc="d['count']"/>
+                                <span class="kpi-l">Engagements</span></td>
+                            <td><span class="kpi-v"><t t-esc="d['progress']"/>%</span>
+                                <span class="kpi-l">Weighted progress</span></td>
+                            <td><span class="kpi-v" t-esc="d['overdue']"/>
+                                <span class="kpi-l">Milestones overdue</span></td>
+                            <td><span class="kpi-v" t-esc="d['blockers']"/>
+                                <span class="kpi-l">Client blockers</span></td>
+                            <td><span class="kpi-v">
+                                    <t t-esc="d['rag']['red']"/> / <t t-esc="d['rag']['amber']"/> / <t t-esc="d['rag']['green']"/>
+                                </span>
+                                <span class="kpi-l">Red / Amber / Green</span></td>
+                        </tr>
+                        <tr t-if="d['money']">
+                            <td><span class="kpi-v" t-esc="d['money']['value']"/>
+                                <span class="kpi-l">Portfolio value</span></td>
+                            <td><span class="kpi-v" t-esc="d['money']['collected']"/>
+                                <span class="kpi-l">Collected</span></td>
+                            <td><span class="kpi-v" t-esc="d['money']['outstanding']"/>
+                                <span class="kpi-l">Outstanding</span></td>
+                            <td><span class="kpi-v" t-esc="d['money']['payable']"/>
+                                <span class="kpi-l">Payable to Solutions</span></td>
+                            <td><span class="kpi-v" t-esc="d['money']['margin']"/>
+                                <span class="kpi-l">Consultants margin</span></td>
+                        </tr>
+                    </table>
+
+                    <h2>Engagements</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Engagement</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                                <th class="num">Health</th>
+                                <th>Progress</th>
+                                <th>Current milestone</th>
+                                <th>Next</th>
+                                <th class="num">Slip</th>
+                                <th class="num">Idle</th>
+                                <t t-if="d['money']">
+                                    <th class="num">Contract</th>
+                                    <th class="num">Received</th>
+                                    <th class="num">Outstanding</th>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="d['rows']" t-as="r">
+                                <td t-esc="r['name']"/>
+                                <td t-esc="r['client']"/>
+                                <td>
+                                    <span t-attf-class="pill p-{{ r['rag'] }}"
+                                          t-esc="r['rag_label']"/>
+                                </td>
+                                <td class="num" t-esc="r['health']"/>
+                                <td>
+                                    <span class="bar">
+                                        <span t-attf-style="width: {{ r['progress'] }}%"/>
+                                    </span>
+                                    <span class="muted"><t t-esc="r['progress']"/>%</span>
+                                </td>
+                                <td t-esc="r['current'] or '—'"/>
+                                <td t-esc="r['next'] or '—'"/>
+                                <td class="num" t-esc="r['slip_label']"/>
+                                <td class="num"><t t-esc="r['idle']"/>d</td>
+                                <t t-if="d['money']">
+                                    <td class="num" t-esc="r['contract']"/>
+                                    <td class="num" t-esc="r['received']"/>
+                                    <td class="num" t-esc="r['outstanding']"/>
+                                </t>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Why each status</h2>
+                    <table>
+                        <tbody>
+                            <tr t-foreach="d['rows']" t-as="r">
+                                <td style="width: 28%">
+                                    <span t-attf-class="pill p-{{ r['rag'] }}"
+                                          t-esc="r['rag_label']"/>
+                                    <t t-esc="r['name']"/>
+                                </td>
+                                <td>
+                                    <ul>
+                                        <li t-foreach="r['reasons']" t-as="reason"
+                                            t-esc="reason"/>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Needs a decision</h2>
+                    <table t-if="d['attention']">
+                        <tbody>
+                            <tr t-foreach="d['attention']" t-as="item">
+                                <td style="width: 28%" t-esc="item['project']"/>
+                                <td t-esc="item['text']"/>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p t-else="" class="muted">Nothing is waiting on a decision.</p>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Client Status Report (A4 portrait, client-facing: no commercials). -->
+    <template id="report_client_status">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="project">
+                <t t-call="web.external_layout">
+                    <div class="page c2p">
+                        <t t-call="c2p_project_tracker.c2p_report_styles"/>
+                        <t t-set="s" t-value="project._c2p_client_status_payload()"/>
+
+                        <h1>Project Status Report</h1>
+                        <div class="muted">
+                            <t t-esc="s['client']"/> · <t t-esc="s['name']"/>
+                            · as at <t t-esc="s['as_of']"/>
+                        </div>
+                        <div class="rule"/>
+
+                        <table class="kpis">
+                            <tr>
+                                <td style="width: 33%">
+                                    <span class="kpi-v">
+                                        <span t-attf-class="pill p-{{ s['rag'] }}"
+                                              t-esc="s['rag_label']"/>
+                                    </span>
+                                    <span class="kpi-l">Overall status</span>
+                                </td>
+                                <td style="width: 33%">
+                                    <span class="kpi-v"><t t-esc="s['progress']"/>%</span>
+                                    <span class="kpi-l">Milestones complete</span>
+                                </td>
+                                <td style="width: 34%">
+                                    <span class="kpi-v" t-esc="s['next'] or '—'"/>
+                                    <span class="kpi-l">Next milestone due</span>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <h2>Milestones</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%">Code</th>
+                                    <th>Milestone</th>
+                                    <th style="width: 18%">Status</th>
+                                    <th style="width: 16%">Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="s['milestones']" t-as="m">
+                                    <td t-esc="m['code']"/>
+                                    <td t-esc="m['name']"/>
+                                    <td t-esc="m['stage']"/>
+                                    <td t-esc="m['deadline'] or 'To be agreed'"/>
+                                </tr>
+                                <tr t-if="not s['milestones']">
+                                    <td colspan="4">No milestones recorded.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h2>Actions required from you</h2>
+                        <table t-if="s['client_actions']">
+                            <tbody>
+                                <tr t-foreach="s['client_actions']" t-as="a">
+                                    <td style="width: 22%" t-esc="a['since'] or '—'"/>
+                                    <td t-esc="a['text']"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p t-else="" class="muted">
+                            Nothing is currently awaiting your input.
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
