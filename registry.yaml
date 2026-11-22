@@ -844,8 +844,8 @@ modules:
     application: true
     depends_local: []
     depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk", "crm"]
-    python_lines: 5555
-    test_files: 2
+    python_lines: 5746
+    test_files: 3
     access_csv: true
     note: "Faizy is a separate venture."
   faizy_pilot:
@@ -872,7 +872,7 @@ modules:
     application: false
     depends_local: ["faizy_core", "faizy_pilot"]
     depends_standard: ["website", "portal"]
-    python_lines: 2085
-    test_files: 5
+    python_lines: 2227
+    test_files: 6
     access_csv: false
     note: "Faizy is a separate venture."
