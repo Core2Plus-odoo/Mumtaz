@@ -848,3 +848,16 @@ Operations group only (menu `groups`), the list is read-only (`create="0" delete
 reviewer; Mashood does not see the menu. Verified on a throwaway Odoo 19 database: 20 faizy_pilot tests pass including three
 for this desk (default filter, menu visibility for ops vs agent, views load). Not run on production. Deploy:
 `-u faizy_pilot` (stacked on the website 2.0 PR; no data changes).
+
+## 19. Header menu repair (faizy_website 19.0.1.22.0)
+
+Found on production after the 22 Nov deploy: "Our AI team" never appeared under **About Us**. Odoo copies each top-level
+entry of a generic menu onto every website, but a copy of an entry inside a group keeps pointing at the generic group, not
+at the website's own one. On live, "Our AI team" hung under the generic About Us; on a fresh database all three entries
+(Become a Faizy, Our AI team, Privacy policy) end up there and the website's own About Us dropdown is empty. Fix in
+`menu_setup.fix_header_menu`: move those three entries under the website's own About Us, but only when they are still under
+the generic group, so anything marketing placed by hand stays. Blog tied with the Get started button for the last slot
+(both sequence 40); Blog now takes slot 36 when tied, so the button ends the row as `website_menu_data.xml` intends.
+Runs as a 19.0.1.22.0 migration (the data file is noupdate) and from `post_init_hook` for new installs. No menu is created
+or deleted and no label changes. Verified on a throwaway Odoo 19 database: 34 tests pass (4 new in `test_header_menu`),
+the migration moved the 3 detached entries, and desktop and mobile menus were checked in screenshots. Not run on production.
