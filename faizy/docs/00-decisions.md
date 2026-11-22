@@ -927,7 +927,7 @@ production can be rebuilt from git.
 
 **Verified:** Odoo 19.0 + PostgreSQL 16, after merging §16/§17:
 
-- All four addons (`faizy_core,faizy_website,faizy_ai,faizy_pilot`): `0 failed, 0 error(s) of 74
+- All four addons (`faizy_core,faizy_website,faizy_ai,faizy_pilot`): `0 failed, 0 error(s) of 75
   tests`. 15 of them are new in `faizy_ai/tests/test_routing.py`: T1 desk visibility and access per
   user, T9–T16 routing, escalation once, no escalation out of hours or before the window, Inbox-only
   summary, and the fallback chain.
