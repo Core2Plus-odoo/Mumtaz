@@ -1,0 +1,3 @@
+object_type,source_instance,source_model,source_id,target_instance,target_model,target_id,company,currency,status,source_count,target_count,source_total,target_total,source_balance,target_balance,source_quantity,target_quantity,field_checked,expected,actual,variance,variance_reason,resolution,approved_by,evidence_link
+sales_order,source_odoo,sale.order,123,destination_odoo,sale.order,,COMPANY-A,AED,sale,1,,,,,,,,order_number,SO123,,unmapped,target_missing,Map external ID and check dependencies,,
+customer_invoice,source_odoo,account.move,456,destination_odoo,account.move,,COMPANY-A,AED,posted,1,,,,,,,,source_invoice_id,456,,unmapped,missing_or_unmatched,Do not fabricate invoice; map then reconcile,,

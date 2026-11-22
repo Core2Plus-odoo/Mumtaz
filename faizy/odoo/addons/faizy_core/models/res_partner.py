@@ -43,6 +43,24 @@ class ResConfigSettings(models.TransientModel):
     faizy_free_activity_grant = fields.Integer(
         related="company_id.faizy_free_activity_grant", readonly=False
     )
+    faizy_whatsapp_provider = fields.Selection(
+        related="company_id.faizy_whatsapp_provider", readonly=False
+    )
+    faizy_whatsapp_meta_token = fields.Char(
+        related="company_id.faizy_whatsapp_meta_token", readonly=False
+    )
+    faizy_whatsapp_meta_phone_id = fields.Char(
+        related="company_id.faizy_whatsapp_meta_phone_id", readonly=False
+    )
+    faizy_whatsapp_twilio_sid = fields.Char(
+        related="company_id.faizy_whatsapp_twilio_sid", readonly=False
+    )
+    faizy_whatsapp_twilio_token = fields.Char(
+        related="company_id.faizy_whatsapp_twilio_token", readonly=False
+    )
+    faizy_whatsapp_twilio_from = fields.Char(
+        related="company_id.faizy_whatsapp_twilio_from", readonly=False
+    )
 
 
 class ResPartner(models.Model):

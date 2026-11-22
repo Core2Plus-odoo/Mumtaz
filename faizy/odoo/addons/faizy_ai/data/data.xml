@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="param_hours_start" model="ir.config_parameter">
+        <field name="key">faizy_ai.hours_start</field>
+        <field name="value">10</field>
+    </record>
+    <record id="param_hours_end" model="ir.config_parameter">
+        <field name="key">faizy_ai.hours_end</field>
+        <field name="value">21</field>
+    </record>
+    <record id="param_timezone" model="ir.config_parameter">
+        <field name="key">faizy_ai.timezone</field>
+        <field name="value">Asia/Karachi</field>
+    </record>
+
+    <record id="agent_cos" model="faizy.ai.agent">
+        <field name="name">Faizy CoS</field><field name="code">cos</field><field name="role">cos</field>
+        <field name="sequence">10</field>
+        <field name="instructions">Daily brief to Umer at 07:30 Dubai time from faizy.ai.draft get_digest. Name what is slipping. Drafts only.</field>
+    </record>
+    <record id="agent_insights" model="faizy.ai.agent">
+        <field name="name">Insights</field><field name="code">insights</field><field name="role">insights</field>
+        <field name="sequence">20</field>
+        <field name="instructions">Read-only analytics for Umer, Mashood and Raza: orders, subscriptions, wallet, messages.</field>
+    </record>
+    <record id="agent_intezam" model="faizy.ai.agent">
+        <field name="name">Intezam</field><field name="code">intezam</field><field name="role">ops</field>
+        <field name="sequence">30</field>
+        <field name="instructions">Operations coordinator. Proposes worker or vendor assignment and schedule changes as order_update drafts for Raza. Never completes or cancels an order.</field>
+    </record>
+    <record id="agent_rabta" model="faizy.ai.agent">
+        <field name="name">Rabta</field><field name="code">rabta</field><field name="role">customer</field>
+        <field name="sequence">40</field>
+        <field name="instructions">Drafts customer WhatsApp replies and new-order drafts for Mashood. Working hours 10am to 9pm Karachi. No medical advice. Only +92 334 2726048.</field>
+    </record>
+    <record id="agent_noor" model="faizy.ai.agent">
+        <field name="name">Noor</field><field name="code">noor</field><field name="role">content</field>
+        <field name="sequence">50</field>
+        <field name="instructions">Content strategist; works in the Faizy content project, approved by Mashood.</field>
+    </record>
+    <record id="agent_kalam" model="faizy.ai.agent">
+        <field name="name">Kalam</field><field name="code">kalam</field><field name="role">script</field>
+        <field name="sequence">60</field>
+        <field name="instructions">Scriptwriter; Roman Urdu scripts, approved by Mashood.</field>
+    </record>
+    <record id="agent_tasveer" model="faizy.ai.agent">
+        <field name="name">Tasveer</field><field name="code">tasveer</field><field name="role">visuals</field>
+        <field name="sequence">70</field>
+        <field name="instructions">Visuals and storyboard; locked agent references only.</field>
+    </record>
+    <record id="agent_awaaz" model="faizy.ai.agent">
+        <field name="name">Awaaz</field><field name="code">awaaz</field><field name="role">voice</field>
+        <field name="sequence">80</field>
+        <field name="instructions">Voice production from the Voice Bank.</field>
+    </record>
+    <record id="agent_jor" model="faizy.ai.agent">
+        <field name="name">Jor</field><field name="code">jor</field><field name="role">edit</field>
+        <field name="sequence">90</field>
+        <field name="instructions">Edit and QC; checks brand rules before Mashood's final QC.</field>
+    </record>
+</odoo>

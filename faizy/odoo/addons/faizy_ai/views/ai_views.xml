@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Drafts -->
+    <record id="view_faizy_ai_draft_list" model="ir.ui.view">
+        <field name="name">faizy.ai.draft.list</field>
+        <field name="model">faizy.ai.draft</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="state == 'approved'" decoration-muted="state in ('executed', 'rejected')">
+                <field name="create_date"/>
+                <field name="agent_id"/>
+                <field name="kind"/>
+                <field name="subject"/>
+                <field name="partner_id"/>
+                <field name="approver_group"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_ai_draft_form" model="ir.ui.view">
+        <field name="name">faizy.ai.draft.form</field>
+        <field name="model">faizy.ai.draft</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_reject" type="object" string="Reject"
+                            invisible="state not in ('draft', 'approved')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,executed"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-warning" role="alert" invisible="state != 'approved'">
+                        Approved. The customer message is held until working hours (10am to 9pm Karachi).
+                    </div>
+                    <group>
+                        <group>
+                            <field name="subject"/>
+                            <field name="kind"/>
+                            <field name="agent_id"/>
+                            <field name="partner_id"/>
+                            <field name="order_id"/>
+                        </group>
+                        <group>
+                            <field name="approver_group"/>
+                            <field name="approver_id"/>
+                            <field name="approved_date"/>
+                            <field name="executed_date"/>
+                            <field name="message_ref_id"/>
+                            <field name="result_order_id"/>
+                        </group>
+                    </group>
+                    <group string="Content">
+                        <field name="body" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Technical payload (JSON)">
+                        <field name="payload" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Rejection" invisible="state not in ('draft', 'approved', 'rejected')">
+                        <field name="reject_reason"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_faizy_ai_draft_search" model="ir.ui.view">
+        <field name="name">faizy.ai.draft.search</field>
+        <field name="model">faizy.ai.draft</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="subject"/>
+                <field name="partner_id"/>
+                <field name="agent_id"/>
+                <filter name="waiting" string="Waiting for approval" domain="[('state', '=', 'draft')]"/>
+                <filter name="held" string="Held until working hours" domain="[('state', '=', 'approved')]"/>
+                <separator/>
+                <filter name="customer" string="Customer messages" domain="[('kind', '=', 'customer_message')]"/>
+                <filter name="orders" string="Orders" domain="[('kind', 'in', ('order_create', 'order_update'))]"/>
+                <group>
+                    <filter name="group_agent" string="Agent" context="{'group_by': 'agent_id'}"/>
+                    <filter name="group_kind" string="Kind" context="{'group_by': 'kind'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_faizy_ai_draft" model="ir.actions.act_window">
+        <field name="name">Approval queue</field>
+        <field name="res_model">faizy.ai.draft</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_waiting': 1}</field>
+    </record>
+
+    <!-- Agents -->
+    <record id="view_faizy_ai_agent_list" model="ir.ui.view">
+        <field name="name">faizy.ai.agent.list</field>
+        <field name="model">faizy.ai.agent</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="role"/>
+                <field name="user_id"/>
+                <field name="supervisor_id"/>
+                <field name="pending_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_ai_agent_form" model="ir.ui.view">
+        <field name="name">faizy.ai.agent.form</field>
+        <field name="model">faizy.ai.agent</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="role"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="supervisor_id"/>
+                            <field name="draft_count"/>
+                            <field name="pending_count"/>
+                        </group>
+                    </group>
+                    <group string="Instructions">
+                        <field name="instructions" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_ai_agent" model="ir.actions.act_window">
+        <field name="name">AI team</field>
+        <field name="res_model">faizy.ai.agent</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Inbound -->
+    <record id="view_faizy_ai_inbound_list" model="ir.ui.view">
+        <field name="name">faizy.ai.inbound.list</field>
+        <field name="model">faizy.ai.inbound</field>
+        <field name="arch" type="xml">
+            <list decoration-bf="state == 'new'" decoration-muted="state != 'new'">
+                <field name="date"/>
+                <field name="phone"/>
+                <field name="partner_id"/>
+                <field name="body"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_ai_inbound_form" model="ir.ui.view">
+        <field name="name">faizy.ai.inbound.form</field>
+        <field name="model">faizy.ai.inbound</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_handled" type="object" string="Mark handled"
+                            class="btn-primary" invisible="state != 'new'"/>
+                    <button name="action_ignore" type="object" string="Ignore"
+                            invisible="state != 'new'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="phone"/>
+                            <field name="partner_id"/>
+                            <field name="order_id"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="wa_id"/>
+                            <field name="handled_by_id"/>
+                        </group>
+                    </group>
+                    <group string="Message">
+                        <field name="body" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_faizy_ai_inbound_search" model="ir.ui.view">
+        <field name="name">faizy.ai.inbound.search</field>
+        <field name="model">faizy.ai.inbound</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="phone"/>
+                <field name="partner_id"/>
+                <field name="body"/>
+                <filter name="new" string="New" domain="[('state', '=', 'new')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_faizy_ai_inbound" model="ir.actions.act_window">
+        <field name="name">Inbound WhatsApp</field>
+        <field name="res_model">faizy.ai.inbound</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_new': 1}</field>
+    </record>
+</odoo>

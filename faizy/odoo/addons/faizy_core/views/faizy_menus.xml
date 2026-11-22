@@ -44,6 +44,9 @@
     <menuitem id="menu_faizy_applications" name="Applications"
               parent="menu_faizy_network" action="action_faizy_application" sequence="20"
               groups="faizy_core.group_faizy_ops"/>
+    <!-- Vendors sit with the Faizies: both are the supply side of an order. -->
+    <menuitem id="menu_faizy_vendors" name="Vendors"
+              parent="menu_faizy_network" action="action_faizy_vendor" sequence="30"/>
 
     <menuitem id="menu_faizy_billing" name="Billing"
               parent="menu_faizy_root" sequence="40"

@@ -4,6 +4,20 @@ from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
 
+# Business-initiated transitions with no prior customer reply to ride inside —
+# Meta (and Twilio, once Content Templates exist there) will not deliver these
+# as free text outside a 24h session, so they default to a template named
+# after the message type. Each name must be registered and approved before
+# `faizy_whatsapp_provider` is turned on; see faizy/docs/00-decisions.md §2.
+# `otp` is excluded: Meta prices and structures authentication templates
+# differently (a code + button), not the single-body-variable shape here.
+# `generic` is excluded: its text is ad hoc per call, not reusable as a
+# template at all.
+TEMPLATE_DEFAULT_TYPES = {
+    "booking_confirmation", "faizy_assigned", "worker_assignment",
+    "status_update", "receipt",
+}
+
 
 class FaizyWhatsappMessage(models.Model):
     """Outbound WhatsApp queue.
@@ -148,7 +162,10 @@ class FaizyWhatsappMessage(models.Model):
         phone = None
         lang = "en"
         if partner:
-            phone = partner.mobile or partner.phone
+            # `phone` alone: Odoo 19 dropped res.partner.mobile, so the old
+            # `partner.mobile or partner.phone` raised AttributeError and took
+            # down every transition that notifies a customer.
+            phone = partner.phone
             lang = "ur" if (partner.lang or "").startswith("ur") else "en"
         elif worker:
             phone = worker.phone
@@ -164,7 +181,8 @@ class FaizyWhatsappMessage(models.Model):
                 "worker_id": worker.id if worker else False,
                 "phone": phone,
                 "message_type": message_type,
-                "template_name": template_name,
+                "template_name": template_name
+                or (message_type if message_type in TEMPLATE_DEFAULT_TYPES else False),
                 "order_id": order.id if order else False,
                 "lang": lang,
                 "body": body
@@ -220,9 +238,12 @@ class FaizyWhatsappMessage(models.Model):
                 )
 
     def _get_provider(self):
-        """Resolve the transport. Returns False until one is configured."""
+        """Resolve the transport: the company, once it holds working credentials
+        for the provider it names — see faizy_whatsapp_transport.py. False
+        until Settings → Faizy → WhatsApp is actually filled in."""
         self.ensure_one()
-        return False
+        company = self.env.company
+        return company if company._faizy_whatsapp_configured() else False
 
     def action_retry(self):
         self.write({"state": "queued", "error_message": False})
