@@ -849,7 +849,20 @@ reviewer; Mashood does not see the menu. Verified on a throwaway Odoo 19 databas
 for this desk (default filter, menu visibility for ops vs agent, views load). Not run on production. Deploy:
 `-u faizy_pilot` (stacked on the website 2.0 PR; no data changes).
 
-## 19. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.2.0)
+## 19. Header menu repair (faizy_website 19.0.1.22.0)
+
+Found on production after the 22 Nov deploy: "Our AI team" never appeared under **About Us**. Odoo copies each top-level
+entry of a generic menu onto every website, but a copy of an entry inside a group keeps pointing at the generic group, not
+at the website's own one. On live, "Our AI team" hung under the generic About Us; on a fresh database all three entries
+(Become a Faizy, Our AI team, Privacy policy) end up there and the website's own About Us dropdown is empty. Fix in
+`menu_setup.fix_header_menu`: move those three entries under the website's own About Us, but only when they are still under
+the generic group, so anything marketing placed by hand stays. Blog tied with the Get started button for the last slot
+(both sequence 40); Blog now takes slot 36 when tied, so the button ends the row as `website_menu_data.xml` intends.
+Runs as a 19.0.1.22.0 migration (the data file is noupdate) and from `post_init_hook` for new installs. No menu is created
+or deleted and no label changes. Verified on a throwaway Odoo 19 database: 34 tests pass (4 new in `test_header_menu`),
+the migration moved the 3 detached entries, and desktop and mobile menus were checked in screenshots. Not run on production.
+
+## 20. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.2.0)
 
 Scope approved by Umer on 22 Nov 2026 (FAIZY HQ05, "PR (a) security guards"). These close gaps S1–S6
 found in the HQ05 audit, which had to be fixed **before** Mashood (care) and Raza (operations) get
@@ -902,8 +915,8 @@ after merging §16:
 
 - Base branch with all four addons installed (`faizy_core,faizy_website,faizy_ai,faizy_pilot`):
   `0 failed, 2 error(s) of 41 tests`. Both errors are the `faizy_ai` / `faizy_pilot` clash above.
-- This branch, all four addons, after merging `main` (§16a, §17, §18, the AI brain #140): `0 failed,
-  0 error(s) of 71 tests`. `faizy_ai` is bumped to 19.0.1.2.0 because `main` already uses 1.1.0 for the
+- This branch, all four addons, after merging `main` (§16a–§19, the AI brain #140): `0 failed,
+  0 error(s) of 75 tests`. `faizy_ai` is bumped to 19.0.1.2.0 because `main` already uses 1.1.0 for the
   AI brain; drafts waiting in `to_send` count as approved in the agent's approval rate.
 - Upgrade path from `main`: database installed from `main` with all four addons, then
   `-u faizy_core,faizy_ai,faizy_pilot,faizy_website`: `upgrade exit: 0`. `registry.yaml` regenerated.
