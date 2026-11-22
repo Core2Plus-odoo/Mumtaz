@@ -800,3 +800,12 @@ database with synthetic records only.
 `-u faizy_core,faizy_pilot,faizy_website` in one upgrade (website now depends on pilot, so pilot is installed
 as part of it). Chain with `&&` as in CLAUDE.md. Rollback: restore the pre-deploy backup; do not uninstall
 `faizy_pilot` while `faizy_website` is at 19.0.1.20.0 because the website depends on it.
+
+**16a. Install-time handling of orders that already hold evidence (follow-up to PR #191).** Without it,
+installing `faizy_pilot` on a database with existing orders leaves every old image at `evidence_state = none`:
+customers would lose sight of proof and receipts on orders that were already completed, and in-progress orders with
+a photo could not be approved. `faizy_pilot` now has a `post_init_hook` (first install only): completed orders with an
+image become `approved` (chatter note, no reviewer, they were already completed and visible); other orders with an image
+become `submitted` (human review); orders without images are untouched. Verified on a throwaway database: faizy_core
+installed, three synthetic orders created, then faizy_pilot installed: completed -> approved, in_progress with photo ->
+submitted, pending without photo -> none. Unit test added. Still not run on staging or production.

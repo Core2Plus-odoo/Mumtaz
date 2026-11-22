@@ -298,6 +298,16 @@
       "disposition": "relocate-candidate",
       "note": "Faizy is a separate venture."
     },
+    "faizy_ai": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
+    },
+    "faizy_pilot": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. Evidence gate on faizy.order; brought to main from the production branch 22 Nov 2026."
+    },
     "c2p_appointment": {
       "layer": "internal",
       "disposition": "keep",
