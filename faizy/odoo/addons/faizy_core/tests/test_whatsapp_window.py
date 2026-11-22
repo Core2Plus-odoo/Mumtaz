@@ -2,6 +2,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from odoo.addons.mail.tests.common import mail_new_test_user
+from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 
 SEND = "odoo.addons.faizy_core.models.faizy_whatsapp_transport.ResCompanyWhatsApp._send_whatsapp"
@@ -28,6 +29,8 @@ class TestWhatsappSendWindow(TransactionCase):
         cls.worker = cls.env["faizy.worker"].create(
             {"name": "Window Worker", "phone": "+923001234567", "city": "Karachi"}
         )
+        # HQ05: sending is off unless this parameter says "on"; the window sits behind it.
+        cls.env["ir.config_parameter"].sudo().set_param("faizy.whatsapp_send_mode", "on")
         company = cls.env.company
         company.write({
             "faizy_whatsapp_provider": "meta",
@@ -101,3 +104,14 @@ class TestWhatsappSendWindow(TransactionCase):
             message.action_send()
         send.assert_not_called()
         self.assertEqual(message.state, "queued")
+
+    def test_send_switch_off_beats_the_window(self):
+        self.env["ir.config_parameter"].sudo().set_param("faizy.whatsapp_send_mode", "off")
+        message = self._msg(partner_id=self.partner.id)
+        self.assertEqual(message.state, "held")
+        with patch(NOW, return_value=INSIDE), patch(SEND, return_value={"message_id": "x"}) as send:
+            with self.assertRaises(UserError):
+                message.action_send()
+            self.Message._cron_send_queued()
+        send.assert_not_called()
+        self.assertEqual(message.state, "held")

@@ -3,6 +3,7 @@ from datetime import timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
@@ -28,6 +29,12 @@ TEMPLATE_DEFAULT_TYPES = {
 SEND_HOURS_START = 10.0
 SEND_HOURS_END = 21.0
 SEND_TIMEZONE = "Asia/Karachi"
+
+# Customer WhatsApp sending is switched off until the gateway project is
+# approved (FAIZY HQ05 §2, ERP D-08). Anything other than "on" — including the
+# parameter not existing at all — means off, so a fresh or neutralised
+# database can never start messaging customers by accident.
+SEND_MODE_PARAM = "faizy.whatsapp_send_mode"
 
 
 class FaizyWhatsappMessage(models.Model):
@@ -75,6 +82,10 @@ class FaizyWhatsappMessage(models.Model):
     state = fields.Selection(
         [
             ("queued", "Queued"),
+            # Written while sending is off (faizy.whatsapp_send_mode). Never
+            # picked up by the send cron, so these cannot go out later by
+            # surprise when the gateway is switched on.
+            ("held", "Not Sent (Sending Off)"),
             ("sent", "Sent"),
             ("delivered", "Delivered"),
             ("failed", "Failed"),
@@ -94,6 +105,30 @@ class FaizyWhatsappMessage(models.Model):
     error_message = fields.Text(readonly=True)
     attempts = fields.Integer(default=0, readonly=True)
     date_sent = fields.Datetime(readonly=True)
+
+    # ── Send mode ────────────────────────────────────────────────────────
+
+    @api.model
+    def _faizy_sending_enabled(self):
+        """True only when a Manager has explicitly set the send mode to "on"."""
+        mode = self.env["ir.config_parameter"].sudo().get_param(SEND_MODE_PARAM, "off")
+        return (mode or "").strip().lower() == "on"
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Safety net for every caller that writes the queue directly.
+
+        `queue_message` already refuses to create anything while sending is
+        off; this catches the paths that call create() themselves (the ops
+        alert, AI draft approval, future code). The row is kept as `held` so
+        there is still a record of what would have been sent, but it can never
+        reach the send cron.
+        """
+        if not self._faizy_sending_enabled():
+            for vals in vals_list:
+                if vals.get("state", "queued") == "queued":
+                    vals["state"] = "held"
+        return super().create(vals_list)
 
     # ── Composition ──────────────────────────────────────────────────────
 
@@ -169,7 +204,21 @@ class FaizyWhatsappMessage(models.Model):
         template_name=None,
     ):
         """Put one message on the queue. Returns the record, or an empty
-        recordset when there is no number to send to."""
+        recordset when there is no number to send to — or when customer
+        WhatsApp sending is switched off, in which case nothing is created and
+        the order (if any) gets an internal note instead."""
+        if not self._faizy_sending_enabled():
+            if order:
+                order.sudo().message_post(
+                    body=self.env._(
+                        "Customer WhatsApp message not sent (%(type)s): "
+                        "WhatsApp sending is switched off.",
+                        type=message_type,
+                    ),
+                    message_type="comment",
+                    subtype_xmlid="mail.mt_note",
+                )
+            return self.browse()
         phone = None
         lang = "en"
         if partner:
@@ -251,6 +300,12 @@ class FaizyWhatsappMessage(models.Model):
         than silently pretending success, an unconfigured provider leaves the
         message queued and records why.
         """
+        if not self._faizy_sending_enabled():
+            raise UserError(self.env._(
+                "WhatsApp sending is switched off for this database. Nothing "
+                "was sent. A Manager turns it on only after the WhatsApp "
+                "gateway is approved."
+            ))
         messages = self
         if not self._within_send_hours():
             held = self.filtered(lambda m: m._is_send_window_gated())
@@ -300,11 +355,22 @@ class FaizyWhatsappMessage(models.Model):
         return company if company._faizy_whatsapp_configured() else False
 
     def action_retry(self):
+        if not self._faizy_sending_enabled():
+            raise UserError(self.env._(
+                "WhatsApp sending is switched off, so a retry would only queue "
+                "the message for nothing. Nothing was changed."
+            ))
         self.write({"state": "queued", "error_message": False})
 
     @api.model
     def _cron_send_queued(self, limit=50):
-        """Drain the queue. Capped per run so a backlog cannot monopolise a worker."""
+        """Drain the queue. Capped per run so a backlog cannot monopolise a worker.
+
+        Does nothing at all while sending is off: the existing backlog stays
+        exactly as it is (not sent, not deleted) until a Manager decides.
+        """
+        if not self._faizy_sending_enabled():
+            return True
         domain = [("state", "=", "queued"), ("attempts", "<", 5)]
         if not self._within_send_hours():
             # Outside the window only messages that may go out are picked, so

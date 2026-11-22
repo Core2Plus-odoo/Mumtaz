@@ -49,7 +49,7 @@ class FaizyAIAgent(models.Model):
             since = fields.Datetime.now() - relativedelta(days=30)
             recent = agent.draft_ids.filtered(lambda d: d.create_date and d.create_date >= since)
             rejected = len(recent.filtered(lambda d: d.state == 'rejected'))
-            approved = len(recent.filtered(lambda d: d.state in ('approved', 'executed')))
+            approved = len(recent.filtered(lambda d: d.state in ('approved', 'to_send', 'executed')))
             agent.approved_30d = approved
             agent.rejected_30d = rejected
             decided = approved + rejected

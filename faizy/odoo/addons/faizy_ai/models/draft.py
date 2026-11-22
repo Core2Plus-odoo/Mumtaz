@@ -6,8 +6,8 @@ from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 from .utils import (
-    G_COMMS, G_OPS, can_approve, has_stale_number, is_approver, normalize_phone,
-    within_hours,
+    G_COMMS, G_MANAGER, G_OPS, can_approve, has_stale_number, is_approver,
+    normalize_phone, within_hours,
 )
 
 # What an AI agent may touch on a draft it owns while the draft is still a draft.
@@ -51,6 +51,9 @@ class FaizyAIDraft(models.Model):
     state = fields.Selection([
         ('draft', 'Waiting for approval'),
         ('approved', 'Approved, held until working hours'),
+        # Customer WhatsApp sending is off (HQ05 §2): the approved text is sent
+        # by a person from the official WhatsApp Business phone, then marked.
+        ('to_send', 'Approved, send manually'),
         ('executed', 'Done'),
         ('rejected', 'Rejected'),
     ], default='draft', required=True, tracking=True, index=True)
@@ -58,6 +61,8 @@ class FaizyAIDraft(models.Model):
     approved_date = fields.Datetime(readonly=True, copy=False)
     executed_date = fields.Datetime(readonly=True, copy=False)
     reject_reason = fields.Text(copy=False)
+    sent_manually_by = fields.Many2one('res.users', readonly=True, copy=False, tracking=True)
+    sent_manually_date = fields.Datetime(readonly=True, copy=False)
     approver_group = fields.Char(compute='_compute_approver_group')
 
     # ------------------------------------------------------------------ helpers
@@ -132,12 +137,12 @@ class FaizyAIDraft(models.Model):
     # ------------------------------------------------------------------ approval
     def _check_approver(self):
         self.ensure_one()
+        # "other" covers complaints, refunds, safety and new-service requests:
+        # escalations that only the Manager decides (HQ05 S5). Previously any
+        # approver could close them.
         group = {'customer_message': G_COMMS, 'order_create': G_OPS,
-                 'order_update': G_OPS}.get(self.kind)
-        if group:
-            ok = can_approve(self.env, group)
-        else:
-            ok = is_approver(self.env)
+                 'order_update': G_OPS, 'other': G_MANAGER}.get(self.kind, G_MANAGER)
+        ok = can_approve(self.env, group)
         if not ok:
             raise AccessError(_('You are not an approver for this kind of draft (%s).',
                                 self.approver_group))
@@ -153,15 +158,28 @@ class FaizyAIDraft(models.Model):
 
     def action_reject(self):
         for draft in self:
-            if draft.state not in ('draft', 'approved'):
+            if draft.state not in ('draft', 'approved', 'to_send'):
                 raise UserError(_('Only open drafts can be rejected.'))
             draft._check_approver()
             if not draft.reject_reason:
                 raise UserError(_('Write the reason in "Reject reason" first.'))
             draft.write({'state': 'rejected', 'approver_id': self.env.uid})
 
+    def _sending_enabled(self):
+        return self.env['faizy.whatsapp.message']._faizy_sending_enabled()
+
     def _execute_if_possible(self):
         self.ensure_one()
+        if self.kind == 'customer_message' and not self._sending_enabled():
+            # Manual mode: nothing is queued. Mashood sends the approved text
+            # from the official phone, whatever the hour, and marks it sent.
+            self._check_customer_message_ready()
+            self.write({'state': 'to_send'})
+            self.message_post(body=_(
+                'Approved. WhatsApp sending is switched off, so nothing was queued. '
+                'Send this text from the official FAIZY WhatsApp phone, then click '
+                '"Mark as sent manually".'))
+            return False
         if self.kind == 'customer_message' and not within_hours(self.env):
             self.message_post(body=_(
                 'Approved. The customer message is held until Faizy working hours '
@@ -171,8 +189,24 @@ class FaizyAIDraft(models.Model):
         self.write({'state': 'executed', 'executed_date': fields.Datetime.now()})
         return True
 
+    def action_mark_sent_manually(self):
+        """Record that a person sent the approved text by hand (manual mode)."""
+        for draft in self:
+            if draft.state != 'to_send':
+                raise UserError(_('Only approved messages waiting to be sent by hand '
+                                  'can be marked as sent.'))
+            if not can_approve(self.env, G_COMMS):
+                raise AccessError(_('Only customer communications can mark a message '
+                                    'as sent.'))
+            now = fields.Datetime.now()
+            draft.write({'state': 'executed', 'executed_date': now,
+                         'sent_manually_by': self.env.uid, 'sent_manually_date': now})
+            draft.message_post(body=_('Sent manually from the official WhatsApp phone by %s.',
+                                      self.env.user.display_name))
+
     # ------------------------------------------------------------------ executors
-    def _execute_customer_message(self):
+    def _check_customer_message_ready(self):
+        """Validate a customer message and return (digits, message_type, data)."""
         self.ensure_one()
         data = self._payload_dict()
         if not self.body or not self.body.strip():
@@ -188,6 +222,12 @@ class FaizyAIDraft(models.Model):
         message_type = data.get('message_type', 'generic')
         if message_type not in types or message_type == 'otp':
             raise UserError(_('Message type %s is not allowed in a draft.', message_type))
+        return digits, message_type, data
+
+    def _execute_customer_message(self):
+        self.ensure_one()
+        digits, message_type, data = self._check_customer_message_ready()
+        Message = self.env['faizy.whatsapp.message'].sudo()
         vals = {
             'phone': '+' + digits,
             'body': self.body,
@@ -289,10 +329,8 @@ class FaizyAIDraft(models.Model):
                 [('state', '=', 'pending'), ('worker_id', '=', False), ('vendor_id', '=', False)]),
             'overdue_orders': Order.search_count(
                 open_dom + [('scheduled_date', '!=', False), ('scheduled_date', '<', now)]),
-            # A count only, read with sudo: faizy_pilot made proof_image a
-            # staff-only field, so the AI user cannot filter on it directly and
-            # the whole digest used to fail with an AccessError. The agent still
-            # sees no image and no order, just how many completed without one.
+            # A count only, no image content: sudo because faizy_pilot makes
+            # proof_image staff-only and the AI agents are not staff.
             'completed_without_proof': Order.sudo().search_count(
                 [('state', '=', 'completed'), ('proof_image', '=', False)]),
             'completed_last_7_days': Order.search_count(
