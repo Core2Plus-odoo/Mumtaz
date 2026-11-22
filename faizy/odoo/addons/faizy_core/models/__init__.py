@@ -15,4 +15,5 @@ from . import res_partner
 from . import faizy_vendor
 from . import faizy_order_alert
 from . import faizy_vendor_billing
+from . import crm_lead
 from . import faizy_customer_billing
