@@ -91,9 +91,28 @@ SERVER (list cut off after `mumtaz_theme` by the terminal pager; later names unk
 | `mumtaz_tenant_manager` and `mumtaz_control_plane` are installed at 19.0.1.0.0 | The deploy caution above applies for certain: after platform slice 1 merges, pull and restart only with a module upgrade and a backup |
 | On `main` since the server's commit only `mumtaz_website_builder` changed under `addons/`; slice 1 adds `mumtaz_tenant_manager` and `mumtaz_control_plane` | The upgrade list for that instance is those three modules |
 
+### Fourth round, same day: the ZAKI exposure is confirmed
+
+| Fact (SERVER) | Consequence |
+| --- | --- |
+| `GET /api/v1/financials/1` on the ZAKI back end answers **HTTP 200 with a 546-byte body, with no credentials**. Tenant 1 is `active` and points at the database `Mumtaz_ERP`. An id with no tenant behind it answers 200 with a 288-byte body of zeros | **Audit findings APP-01 and APP-02 are confirmed live.** Anyone who can reach `zaki.mumtaz.digital` can read a finance summary of `Mumtaz_ERP`, and can write to and delete from the assistant's knowledge base, and can use the voice and chat routes at the owner's cost |
+| `ZAKI_REQUIRE_JWT` is not set. (Setting it would not close this: the finance, health-score, opportunities and knowledge-base routes never call the check, and the check only looks for the presence of a header) | The fix is to stop the service or block `/api/` at nginx, not a setting |
+| The second tenant (id 5, `trial`, database name `corp_acme`) looks like a test sign-up | Only one real tenant in the FastAPI control panel: `Mumtaz_ERP` itself |
+| The control panel's token secret is set in the server's settings file | The forged-administrator-token risk from the default in code does not apply |
+| Firewall (`ufw`) is active. Open to anywhere: 22, 80, 443, 8080 and **8071**. Port 8069 is not open | The base Odoo instance is not reachable from outside on 8069. The external client's Odoo on 8071 is deliberately open on a raw port (audit F-01 stands for that instance). What nginx serves on 8080 is to be identified |
+| `/opt/custom_addons/Mumtaz` is a link to `/opt/mumtaz` | Confirmed: C2P, the external client and the base instance load their modules from the same feature-branch checkout that serves the delivery console |
+| Faizy: `faizy_core` 19.0.1.23.0, `faizy_website` 19.0.1.20.0, `faizy_ai` and `faizy_pilot` installed; the last restart loaded all modules with no error line | The document-access fix shipped in `faizy_core` 19.0.1.22.1 is deployed |
+
+**Recommended first action, awaiting the owner's approval:** stop and disable
+the `zaki` service (`systemctl disable --now zaki`; undo with
+`systemctl enable --now zaki`). The page at `zaki.mumtaz.digital` keeps
+loading; its data calls return an error. Then: check the nginx access log
+for past calls to those routes, and change the Odoo administrator password
+that service was given, since one account was used for every tenant.
+
 ### Next read-only checks
 
-1. Do the ZAKI finance routes answer without credentials (status code only), and which databases do the two tenants point at?
+1. ~~Do the ZAKI finance routes answer~~ (answered above) Do the ZAKI finance routes answer without credentials (status code only), and which databases do the two tenants point at?
 2. Does the server's settings file set the control panel's token secret and `ZAKI_REQUIRE_JWT`? (presence only)
 3. Firewall state for ports 8069 and 8071.
 4. Is `/opt/custom_addons/Mumtaz` a link to `/opt/mumtaz`?
