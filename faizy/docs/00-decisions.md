@@ -1042,3 +1042,59 @@ showed them.
 
 Verified on a throwaway Odoo 19 database: all four Faizy modules, 111 tests, 0 failed after merging #200 (5 new in
 `test_plan_prices_hidden`). Not run on production.
+
+## 24. Leads are work, checklists on every item, My desk KPIs (faizy_ai 19.0.1.4.0)
+
+Asked by Umer on 22 Nov 2026: Mashood and Raza log in and see their assigned daily work, qualified
+lead-generation assignments, checklists, follow-ups, deadlines and KPIs, on their existing roles, with
+nothing duplicated. §21 already gives the daily work, follow-ups and deadlines (one `mail.activity`
+per piece of work, on the record, with an escalation window). Three things were missing and are added
+here, all inside `faizy_ai`, all on standard models. No new module, no second task system, no
+`base_automation`.
+
+- **R13, leads are work.** Standard `crm.lead` is already on `faizy_prod` with the Faizy tab (§"CRM
+  lead fields captured from live"). Assignment stays the standard Salesperson field, nothing else. A
+  new lead gets a "FAIZY · Qualify lead" item on its salesperson's desk, due today, escalating after
+  4 h. A lead with no salesperson, or one owned by an AI agent or a portal user, goes to the customer
+  care role holder. Leaving the first stage closes that item and opens "FAIZY · Follow up lead", due
+  tomorrow, escalating after 24 h. Won or lost closes both. Reassigning the lead moves its open items.
+  The standard "Rule-Based Assignment" of `crm.team` was considered and not used: it runs on a daily
+  cron and spreads by capacity, where HQ05 routes immediately to a named role holder.
+- **CRM rights follow the desks.** `Faizy AI / Customer communications approver` (Mashood) and
+  `Faizy / Operations` (Raza) now imply the standard "own documents" CRM group, so a lead assigned to
+  them opens from their desk and nothing else; `Faizy / Manager` implies "all documents". `Faizy /
+  Agent` and the AI agents get no CRM right (tested). The standard CRM app therefore appears in the
+  menu for care and operations; that is the standard app, not a copy.
+- **Checklists.** Each of the eleven FAIZY activity types carries its checklist in the standard
+  Default Note (`CHECKLISTS` in `routing.py`, one place), and every routed item appends it to its
+  note, so the steps are on the item the person opens. The types are `noupdate`, so the
+  19.0.1.4.0 migration and the first-install hook fill the note only where it is empty; a note Umer
+  edits in Settings → Activity Types is never overwritten (tested).
+- **My desk (KPIs).** `faizy.my.desk`, a TransientModel on a form, same pattern as `faizy.dashboard`
+  (BI-01): waiting, due today, overdue, escalated, done today, done this week by type; my open leads,
+  leads waiting on me, leads I qualified this week, my leads won this month; replies I approved,
+  completion messages I sent, orders completed this week (team). "Done" is read from the standard
+  activity-done message (`mail.message.mail_activity_type_id`, by author), so it counts exactly
+  what the person closed. The manager's copy adds a team table per role holder. Every tile opens
+  the real list. Menus: Care Desk and Operations Desk get "My leads" and "My desk (KPIs)"; the
+  Command Centre gets "Lead pipeline" (the standard CRM pipeline action) and "My desk & team KPIs".
+- **Morning summary** adds "Leads waiting on you: N".
+
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases:
+
+- Baseline, `main` before this change, all four addons with tests: `0 failed, 0 error(s) of 111 tests`,
+  no ERROR line.
+- Fresh install, all four addons with tests: FRESH_RESULT_PENDING (filled in the follow-up commit).
+- Upgrade path: the baseline database (all four addons from `main`), then `-u faizy_ai` with tests:
+  migration `19.0.1.4.0 post-checklists` ran, `0 failed, 0 error(s) of 44 tests`, no ERROR line.
+- `validate_modules.py`, `check_self_fields.py`, `check_view_schemas.py`, `check_portal_access.py`,
+  flake8 and the module registry check: pass.
+- Staging demonstration: STAGING_RESULT_PENDING (filled in the follow-up commit).
+
+**Not done / blocked:** there is still no staging instance (HQ05 §8 step 1), so "implemented in
+staging" means a throwaway database here with synthetic `stg.*` users, not a server. Nothing has run
+on `faizy_prod`. Real Mashood and Raza logins wait on Umer's separate written approval (D10 in the
+staging checklist). Open questions for Umer: whether leads default to customer care (this change) or
+to operations; whether the AI agents may create leads at all (today they can only reach the CRM
+through a draft, since they have no CRM right); and the plan-price rule applies to lead follow-ups
+too (no prices until approved, §23), which the follow-up checklist says.

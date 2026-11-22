@@ -68,6 +68,24 @@
             <field name="faizy_route" eval="True"/>
             <field name="faizy_escalation_hours">168</field>
         </record>
+        <!-- Leads (§24): qualification is customer care's window; the follow-up
+             runs on the lead's own pace, so it escalates only after a day. -->
+        <record id="act_qualify_lead" model="mail.activity.type">
+            <field name="name">FAIZY · Qualify lead</field>
+            <field name="icon">fa-filter</field>
+            <field name="sequence">59</field>
+            <field name="res_model">crm.lead</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">4</field>
+        </record>
+        <record id="act_follow_up_lead" model="mail.activity.type">
+            <field name="name">FAIZY · Follow up lead</field>
+            <field name="icon">fa-handshake-o</field>
+            <field name="sequence">60</field>
+            <field name="res_model">crm.lead</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">24</field>
+        </record>
     </data>
 
     <record id="cron_routing_escalate" model="ir.cron">

@@ -37,6 +37,83 @@ T_COMPLETION_MSG = 'faizy_ai.act_completion_message'
 T_INBOUND = 'faizy_ai.act_handle_inbound'
 T_ESCALATION = 'faizy_ai.act_approve_escalation'
 T_APPLICATION = 'faizy_ai.act_review_application'
+T_LEAD_QUALIFY = 'faizy_ai.act_qualify_lead'
+T_LEAD_FOLLOW_UP = 'faizy_ai.act_follow_up_lead'
+
+# What "done" means for each kind of work item. Written once here, applied to
+# the activity type's Default Note by _apply_checklists (first install and the
+# 19.0.1.4.0 migration) and appended to every routed activity, so the person
+# sees the steps on the item itself. Umer can edit a checklist in Settings →
+# Activity Types; an edited note is never overwritten.
+CHECKLISTS = {
+    T_REPLY: (
+        'Facts match the order and the knowledge notes',
+        'Reads naturally in the customer\'s language; no stale phone number',
+        'Inside 10:00–21:00 Karachi, or it will be held',
+        'Approve, or reject with the reason the agent should learn from',
+    ),
+    T_ORDER_DRAFT: (
+        'Service, family member and address are right',
+        'Date and slot are possible for a Faizy in that city',
+        'Plan allowance or a confirmed price covers it',
+        'Approve, or reject with the reason',
+    ),
+    T_ASSIGN: (
+        'Pick a Faizy or vendor active in the order\'s city and service',
+        'Confirm the slot with them on WhatsApp',
+        'Click Assign; the customer gets the confirmation from care',
+    ),
+    T_FOLLOW_UP: (
+        'Call the Faizy: started, delayed or not coming?',
+        'Reschedule the slot or reassign the job',
+        'Tell care if the customer must be informed',
+    ),
+    T_PROOF: (
+        'Photo shows the job done for the right family member',
+        'Receipt matches the purchase value on the order',
+        'Approve the evidence, or reject with what to redo',
+    ),
+    T_COMPLETION_MSG: (
+        'Proof and receipt are approved',
+        'Message names what was done and when',
+        'Send through a reply draft, or by hand from the official phone, then mark sent',
+    ),
+    T_INBOUND: (
+        'Identify the customer and the family member',
+        'Reply through a draft, or create an order draft for Operations',
+        'Mark handled; ignore only spam',
+    ),
+    T_ESCALATION: (
+        'Read the item and the reason it was escalated',
+        'Decide, and write the decision on the record',
+        'Care or Operations act after your decision',
+    ),
+    T_APPLICATION: (
+        'CNIC and photo are legible and match',
+        'References called',
+        'City and services set; approve or reject',
+    ),
+    T_LEAD_QUALIFY: (
+        'Contact on WhatsApp inside 10:00–21:00 Karachi',
+        'Confirm family city, expat country and the service they need',
+        'Fill the Faizy tab on the lead',
+        'Move to Qualified, or mark Lost with the reason',
+    ),
+    T_LEAD_FOLLOW_UP: (
+        'Send the plan options that fit; no prices until approved',
+        'Agree the next step and the date',
+        'Won: create the customer and the first order; Lost: give the reason',
+    ),
+}
+LEAD_TYPES = (T_LEAD_QUALIFY, T_LEAD_FOLLOW_UP)
+
+
+def checklist_html(xmlid):
+    items = CHECKLISTS.get(xmlid) or ()
+    if not items:
+        return ''
+    return Markup('<p><b>Checklist</b></p><ul>%s</ul>') % Markup('').join(
+        Markup('<li>%s</li>') % escape(item) for item in items)
 
 
 class MailActivityType(models.Model):
@@ -106,20 +183,28 @@ class FaizyRouting(models.AbstractModel):
 
     # ------------------------------------------------------------------ route / close
     @api.model
-    def _route(self, record, role, act_xmlid, summary, note='', urgent=False):
+    def _route(self, record, role, act_xmlid, summary, note='', urgent=False,
+               user=None, deadline=None):
         """Create one open activity of this type on the record, unless one is
-        already open. Returns the activity (new or existing)."""
+        already open. Returns the activity (new or existing).
+
+        ``user`` overrides the role holder (a lead follows its salesperson);
+        ``deadline`` defaults to today. The type's checklist (Default Note) is
+        appended to the note so the steps travel with the item."""
         record = record.sudo()
         act_type = self.env.ref(act_xmlid)
         existing = record.activity_ids.filtered(lambda a: a.activity_type_id == act_type)
         if existing:
             return existing[:1]
-        user = self._role_user(role)
+        user = user or self._role_user(role)
+        body = Markup('<p>%s</p>') % note if note else Markup('')
+        if act_type.default_note:
+            body += Markup(act_type.default_note)
         activity = record.activity_schedule(
             act_xmlid,
-            date_deadline=fields.Date.context_today(self),
+            date_deadline=deadline or fields.Date.context_today(self),
             summary=summary,
-            note=note,
+            note=body,
             user_id=user.id,
         )
         if urgent:
@@ -133,6 +218,19 @@ class FaizyRouting(models.AbstractModel):
         todo = record.sudo().activity_ids.filtered(lambda a: a.activity_type_id in types)
         if todo:
             todo.action_feedback(feedback=feedback or self.env._('Done in FAIZY.'))
+
+    @api.model
+    def _apply_checklists(self):
+        """Put each checklist on its activity type's Default Note, only where
+        the note is still empty. Run at first install and by the 19.0.1.4.0
+        migration; safe to run again."""
+        done = 0
+        for xmlid in CHECKLISTS:
+            act_type = self.env.ref(xmlid, raise_if_not_found=False)
+            if act_type and not act_type.default_note:
+                act_type.sudo().default_note = checklist_html(xmlid)
+                done += 1
+        return done
 
     # ------------------------------------------------------------------ crons
     @api.model
@@ -216,6 +314,11 @@ class FaizyRouting(models.AbstractModel):
             self.env._('Overdue or escalated: %s', len(overdue)),
             self.env._('Oldest waiting: %s h', oldest),
         ]
+        leads = self.env['crm.lead'].sudo().search_count([
+            ('user_id', '=', user.id),
+            ('activity_ids.activity_type_id', 'in', [self.env.ref(x).id for x in LEAD_TYPES])])
+        if leads:
+            lines.append(self.env._('Leads waiting on you: %s', leads))
         if user == self._role_user('ops'):
             unassigned = self.env['faizy.order'].sudo().search_count([
                 ('state', '=', 'pending'), ('worker_id', '=', False),

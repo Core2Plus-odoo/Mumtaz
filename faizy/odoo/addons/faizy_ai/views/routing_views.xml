@@ -139,6 +139,136 @@
         <field name="domain">[('state', '=', 'in_progress')]</field>
     </record>
 
+    <!-- ── Leads (§24): standard CRM, filtered to the signed-in salesperson ── -->
+    <record id="action_faizy_my_leads" model="ir.actions.act_window">
+        <field name="name">My leads</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('user_id', '=', uid)]</field>
+        <field name="context">{'search_default_stage': 1, 'default_user_id': uid}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No leads assigned to you.</p>
+            <p>A lead's Salesperson is who works it. Each new lead gets a "Qualify lead"
+               item on that person's desk, and a "Follow up lead" item once it is qualified.</p>
+        </field>
+    </record>
+    <record id="action_faizy_leads_waiting" model="ir.actions.act_window">
+        <field name="name">Leads waiting on me</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('user_id', '=', uid), ('activity_ids.activity_type_id.faizy_route', '=', True)]</field>
+        <field name="context">{'default_user_id': uid}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No lead is waiting on you.</p>
+        </field>
+    </record>
+
+    <!-- ── My desk: the numbers behind one person's day ──────────────────── -->
+    <record id="view_faizy_my_desk_form" model="ir.ui.view">
+        <field name="name">faizy.my.desk.form</field>
+        <field name="model">faizy.my.desk</field>
+        <field name="arch" type="xml">
+            <form string="My desk" create="false" edit="false" class="o_faizy_dashboard">
+                <field name="user_id" invisible="1"/>
+                <field name="is_manager" invisible="1"/>
+                <sheet>
+                    <h1 class="fzb-title">My desk</h1>
+                    <p class="fzb-sub">Your work today and this week. Every number opens the list behind it.</p>
+
+                    <p class="fzb-band-title">Work items</p>
+                    <div class="fzb-grid">
+                        <button name="action_open_work" type="object" class="fzb-kpi fzb-attention">
+                            <field name="work_open" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Open items on your desk</span>
+                            <span class="fzb-kpi-label">Waiting for me</span>
+                        </button>
+                        <button name="action_open_work" type="object" class="fzb-kpi">
+                            <field name="work_due_today" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Deadline is today</span>
+                            <span class="fzb-kpi-label">Due today</span>
+                        </button>
+                        <button name="action_open_overdue" type="object" class="fzb-kpi fzb-attention">
+                            <field name="work_overdue" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Past their deadline</span>
+                            <span class="fzb-kpi-label">Overdue</span>
+                        </button>
+                        <button name="action_open_escalated" type="object" class="fzb-kpi fzb-attention">
+                            <field name="work_escalated" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Already with the escalation owner</span>
+                            <span class="fzb-kpi-label">Escalated</span>
+                        </button>
+                        <div class="fzb-kpi">
+                            <field name="done_today" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Items you closed today</span>
+                            <span class="fzb-kpi-label">Done today</span>
+                        </div>
+                        <div class="fzb-kpi">
+                            <field name="done_week" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Items you closed since Monday</span>
+                            <span class="fzb-kpi-label">Done this week</span>
+                        </div>
+                    </div>
+                    <group string="Done this week, by type">
+                        <field name="done_week_html" nolabel="1" colspan="2"/>
+                    </group>
+
+                    <p class="fzb-band-title">Leads</p>
+                    <div class="fzb-grid">
+                        <button name="action_open_leads" type="object" class="fzb-kpi">
+                            <field name="leads_mine" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Not yet won</span>
+                            <span class="fzb-kpi-label">My open leads</span>
+                        </button>
+                        <button name="action_open_leads_waiting" type="object" class="fzb-kpi fzb-attention">
+                            <field name="leads_waiting" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Qualify or follow up</span>
+                            <span class="fzb-kpi-label">Leads waiting on me</span>
+                        </button>
+                        <div class="fzb-kpi">
+                            <field name="leads_qualified_week" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Since Monday</span>
+                            <span class="fzb-kpi-label">Leads I qualified</span>
+                        </div>
+                        <div class="fzb-kpi">
+                            <field name="leads_won_month" nolabel="1"/>
+                            <span class="fzb-kpi-sub">This month</span>
+                            <span class="fzb-kpi-label">My leads won</span>
+                        </div>
+                    </div>
+
+                    <p class="fzb-band-title">Outcomes</p>
+                    <div class="fzb-grid">
+                        <div class="fzb-kpi">
+                            <field name="replies_week" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Since Monday</span>
+                            <span class="fzb-kpi-label">Replies I approved</span>
+                        </div>
+                        <div class="fzb-kpi">
+                            <field name="completion_msgs_week" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Since Monday</span>
+                            <span class="fzb-kpi-label">Completion messages I sent</span>
+                        </div>
+                        <button name="action_open_orders_week" type="object" class="fzb-kpi">
+                            <field name="orders_completed_week" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Whole team, since Monday</span>
+                            <span class="fzb-kpi-label">Orders completed</span>
+                        </button>
+                    </div>
+
+                    <group string="Team" invisible="not is_manager">
+                        <field name="team_html" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_faizy_my_desk" model="ir.actions.act_window">
+        <field name="name">My desk</field>
+        <field name="res_model">faizy.my.desk</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
     <!-- ── Command Centre (Umer) ───────────────────────────────────────── -->
     <record id="action_cc_escalations" model="ir.actions.act_window">
         <field name="name">Escalations &amp; decisions</field>
@@ -159,6 +289,12 @@
               action="action_care_to_send" sequence="3"/>
     <menuitem id="menu_care_inbound" name="Inbound to handle" parent="menu_care_desk"
               action="action_care_inbound" sequence="4"/>
+    <menuitem id="menu_care_leads" name="My leads" parent="menu_care_desk"
+              action="action_faizy_my_leads" sequence="5"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_care_kpis" name="My desk (KPIs)" parent="menu_care_desk"
+              action="action_faizy_my_desk" sequence="9"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
 
     <menuitem id="menu_ops_desk" name="Operations Desk" sequence="11"
               web_icon="faizy_core,static/description/icon.png"
@@ -177,6 +313,10 @@
               action="faizy_core.action_faizy_worker" sequence="6"/>
     <menuitem id="menu_ops_applications" name="Applications" parent="menu_ops_desk"
               action="faizy_core.action_faizy_application" sequence="7"/>
+    <menuitem id="menu_ops_leads" name="My leads" parent="menu_ops_desk"
+              action="action_faizy_my_leads" sequence="8" groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_ops_kpis" name="My desk (KPIs)" parent="menu_ops_desk"
+              action="action_faizy_my_desk" sequence="9" groups="faizy_core.group_faizy_ops"/>
 
     <menuitem id="menu_command_centre" name="Command Centre" sequence="12"
               web_icon="faizy_core,static/description/icon.png"
@@ -191,4 +331,8 @@
               action="faizy_core.action_faizy_dashboard" sequence="4"/>
     <menuitem id="menu_cc_queue" name="All approvals" parent="menu_command_centre"
               action="action_faizy_ai_draft" sequence="5"/>
+    <menuitem id="menu_cc_pipeline" name="Lead pipeline" parent="menu_command_centre"
+              action="crm.crm_lead_action_pipeline" sequence="6" groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_cc_kpis" name="My desk &amp; team KPIs" parent="menu_command_centre"
+              action="action_faizy_my_desk" sequence="7" groups="faizy_core.group_faizy_manager"/>
 </odoo>
