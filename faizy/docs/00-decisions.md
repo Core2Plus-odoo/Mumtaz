@@ -1084,12 +1084,25 @@ here, all inside `faizy_ai`, all on standard models. No new module, no second ta
 
 - Baseline, `main` before this change, all four addons with tests: `0 failed, 0 error(s) of 111 tests`,
   no ERROR line.
-- Fresh install, all four addons with tests: FRESH_RESULT_PENDING (filled in the follow-up commit).
+- Fresh install, all four addons with tests: `0 failed, 0 error(s) of 120 tests` (52 in `faizy_ai`, 9 of them
+  new), no ERROR line. After the last edit (the breadcrumb name on `faizy.my.desk`) the `faizy_ai` suite was
+  run again on the clean upgrade database: `0 failed, 0 error(s) of 44 tests`.
 - Upgrade path: the baseline database (all four addons from `main`), then `-u faizy_ai` with tests:
   migration `19.0.1.4.0 post-checklists` ran, `0 failed, 0 error(s) of 44 tests`, no ERROR line.
 - `validate_modules.py`, `check_self_fields.py`, `check_view_schemas.py`, `check_portal_access.py`,
   flake8 and the module registry check: pass.
-- Staging demonstration: STAGING_RESULT_PENDING (filled in the follow-up commit).
+- Staging demonstration, on the fresh database with synthetic users only (`stg.mashood` comms, `stg.raza`
+  operations, `stg.umer` manager, set as the three role holders; SYNTHETIC-prefixed customer, worker, two
+  orders, an inbound message, a reply draft and three leads). Over XML-RPC and in a headless browser logged
+  in as each user: Mashood's "My work today" held Approve reply, Handle inbound, Qualify lead (the lead
+  created with no salesperson) and Follow up lead (the lead moved to Qualified, due tomorrow); Raza's held
+  two Assign Faizy items and the Qualify lead for the lead assigned to him; "My desk" showed 4 waiting /
+  3 due today / 2 leads waiting for Mashood and the team table for Umer; the lead form showed the
+  checklist on the planned activity. Screenshots were handed to Umer with the PR; they are not in git.
+  Three pre-existing routing tests (`test_archived_role_holder_falls_back_to_group_then_umer`,
+  `test_not_escalated_before_window`, `test_overdue_activity_escalates_once`) fail when run on that seeded
+  database because they assume no other comms user and no overdue items exist; they pass on a clean
+  database, so the seeded database is a demonstration, not a test environment.
 
 **Not done / blocked:** there is still no staging instance (HQ05 §8 step 1), so "implemented in
 staging" means a throwaway database here with synthetic `stg.*` users, not a server. Nothing has run

@@ -20,6 +20,7 @@ class FaizyMyDesk(models.TransientModel):
     _name = 'faizy.my.desk'
     _description = 'FAIZY my desk: today and this week'
 
+    name = fields.Char(default='My desk', readonly=True)  # the breadcrumb, nothing else
     user_id = fields.Many2one('res.users', default=lambda self: self.env.user, readonly=True)
     is_manager = fields.Boolean(compute='_compute_kpis')
 
