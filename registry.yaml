@@ -825,12 +825,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_ai
     title: "Faizy AI Team"
-    version: "19.0.1.1.0"
+    version: "19.0.1.1.1"
     license: "LGPL-3"
     application: true
     depends_local: ["faizy_core"]
     depends_standard: ["mail"]
-    python_lines: 919
+    python_lines: 926
     test_files: 2
     access_csv: true
     note: "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
@@ -839,13 +839,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_core
     title: "Faizy Core"
-    version: "19.0.1.23.0"
+    version: "19.0.1.24.0"
     license: "LGPL-3"
     application: true
     depends_local: []
     depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk", "crm"]
-    python_lines: 5128
-    test_files: 1
+    python_lines: 5303
+    test_files: 2
     access_csv: true
     note: "Faizy is a separate venture."
   faizy_pilot:
@@ -867,12 +867,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_website
     title: "Faizy Website & Portal"
-    version: "19.0.1.22.0"
+    version: "19.0.1.23.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core", "faizy_pilot"]
     depends_standard: ["website", "portal"]
-    python_lines: 2021
-    test_files: 4
+    python_lines: 2163
+    test_files: 5
     access_csv: false
     note: "Faizy is a separate venture."

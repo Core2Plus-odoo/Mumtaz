@@ -1,3 +1,8 @@
+import uuid
+from datetime import timedelta
+
+from psycopg2 import IntegrityError
+
 from odoo import fields, http
 from odoo.addons.portal.controllers.portal import CustomerPortal
 from odoo.exceptions import AccessError, MissingError
@@ -271,6 +276,9 @@ class FaizyCustomerPortal(CustomerPortal):
             "errors": errors or {},
             "needs_plan": self._needs_plan(partner),
             "wa_new_task": whatsapp_url(WA_NEW_TASK),
+            # One token per form view, kept across a re-render after an error,
+            # so submitting twice files one request. See _find_duplicate_request.
+            "client_request_id": post.get("client_request_id") or uuid.uuid4().hex,
         }
 
     @http.route(["/care/request"], type="http", auth="user", website=True)
@@ -315,6 +323,13 @@ class FaizyCustomerPortal(CustomerPortal):
         than a permission.
         """
         errors = {}
+
+        # Before any validation: a retry must get the order it already made, not
+        # an "open tasks" error caused by that very order.
+        request_id = (post.get("client_request_id") or "").strip()[:64]
+        duplicate = self._find_duplicate_request(partner, post, request_id)
+        if duplicate:
+            return duplicate, {}
 
         service = (
             request.env["faizy.service"]
@@ -367,34 +382,72 @@ class FaizyCustomerPortal(CustomerPortal):
         if errors:
             return None, errors
 
-        order = (
-            request.env["faizy.order"]
-            .sudo()
-            .create(
-                {
-                    "title": service.name,
-                    "description": (post.get("description") or "").strip(),
-                    "partner_id": partner.id,
-                    "family_member_id": member.id or False,
-                    "service_id": service.id,
-                    "city": city,
-                    "street": (post.get("street") or "").strip(),
-                    "priority": "1" if post.get("urgent") else "0",
-                    # The member's name, phone and notes are withheld from the
-                    # assigned Faizy. Not the same thing as hiding the cost
-                    # from the family, which nothing implements yet.
-                    "privacy_mode": bool(post.get("privacy_mode")),
-                    # What the customer would like, not an agreed slot — the
-                    # order stays pending until ops confirms it.
-                    "scheduled_date": preferred or False,
-                    # Never trusted from the form: a customer cannot file an
-                    # order that is already assigned, already completed, or
-                    # carries a purchase value.
-                    "state": "pending",
-                }
-            )
-        )
+        values = {
+            "title": service.name,
+            "description": (post.get("description") or "").strip(),
+            "partner_id": partner.id,
+            "family_member_id": member.id or False,
+            "service_id": service.id,
+            "city": city,
+            "street": (post.get("street") or "").strip(),
+            "priority": "1" if post.get("urgent") else "0",
+            # The member's name, phone and notes are withheld from the
+            # assigned Faizy. Not the same thing as hiding the cost
+            # from the family, which nothing implements yet.
+            "privacy_mode": bool(post.get("privacy_mode")),
+            # What the customer would like, not an agreed slot — the
+            # order stays pending until ops confirms it.
+            "scheduled_date": preferred or False,
+            # Never trusted from the form: a customer cannot file an
+            # order that is already assigned, already completed, or
+            # carries a purchase value.
+            "state": "pending",
+            "client_request_id": request_id or False,
+        }
+        try:
+            # A savepoint, so losing a race to the unique constraint rolls back
+            # only this insert and the request can return the winner.
+            with request.env.cr.savepoint():
+                order = request.env["faizy.order"].sudo().create(values)
+        except IntegrityError:
+            order = self._find_duplicate_request(partner, post, request_id)
+            if not order:
+                raise
         return order, {}
+
+    def _find_duplicate_request(self, partner, post, request_id):
+        """The order this submission already created, if any.
+
+        With a request id the match is exact. Without one (a page loaded before
+        this existed, or a client that does not send it) the same customer
+        sending the same service, city and description within a minute is a
+        double tap, not two errands.
+        """
+        Order = request.env["faizy.order"].sudo()
+        if request_id:
+            return Order.search(
+                [("partner_id", "=", partner.id), ("client_request_id", "=", request_id)],
+                limit=1,
+            )
+        try:
+            service_id = int(post.get("service_id") or 0)
+        except (TypeError, ValueError):
+            return Order.browse()
+        if not service_id:
+            return Order.browse()
+        since = fields.Datetime.now() - timedelta(seconds=60)
+        return Order.search(
+            [
+                ("partner_id", "=", partner.id),
+                ("service_id", "=", service_id),
+                ("city", "=", (post.get("city") or "").strip()),
+                ("description", "=", (post.get("description") or "").strip() or False),
+                ("state", "=", "pending"),
+                ("client_request_id", "=", False),
+                ("create_date", ">=", since),
+            ],
+            limit=1,
+        )
 
     @http.route(
         ["/care/request/submit"],

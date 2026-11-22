@@ -861,3 +861,31 @@ the generic group, so anything marketing placed by hand stays. Blog tied with th
 Runs as a 19.0.1.22.0 migration (the data file is noupdate) and from `post_init_hook` for new installs. No menu is created
 or deleted and no label changes. Verified on a throwaway Odoo 19 database: 34 tests pass (4 new in `test_header_menu`),
 the migration moved the 3 detached entries, and desktop and mobile menus were checked in screenshots. Not run on production.
+
+## 20. Customer send window and idempotent care requests (faizy_core 19.0.1.24.0, faizy_website 19.0.1.23.0)
+
+**Send window.** `faizy.whatsapp.message` now holds customer-facing messages outside 10:00 to 21:00 Karachi time (the
+window the AI-team page and `faizy_ai` already promise). The gate sits in `action_send` and in the queue cron, so a manual
+"send" button obeys it too. Held rows stay `queued`, are not counted as an attempt, carry a note ("Held until the customer
+send window opens"), and go out on the first run inside the window. Not gated: a login code (`otp`, requested seconds ago)
+and messages to ground staff (`worker_id`). Hours and zone come from `faizy.send_hours_start`, `faizy.send_hours_end`,
+`faizy.send_timezone` (defaults 10, 21, Asia/Karachi). `faizy_ai` keeps its own `faizy_ai.hours_*` parameters with the same
+defaults; unifying the two is a follow-up. Sending is still off (`faizy_whatsapp_provider = none`) and the gate does not turn
+it on. The legacy queue is not touched: when a provider is first configured, the backlog would go out inside the window, so
+that backlog still needs the quarantine step (R02) before sending is enabled.
+
+**Idempotent intake.** `faizy.order.client_request_id` (unique per customer) is filled by a hidden token on the request form
+and by an optional `client_request_id` in the JSON API. The same token returns the first order instead of creating another,
+before the open-tasks limit is checked, so a retry is not refused because of its own order. Without a token (an old page or
+client) the same customer sending the same service, city and description within 60 seconds gets the pending order they
+just made. Losing a race to the unique constraint returns the winner. Additive field, no data rewritten.
+
+Verified on a throwaway Odoo 19 database: 15 new tests (8 window, 7 intake); the three intake tests fail with the controller
+change removed. Not run on production.
+
+Found on the way (faizy_ai 19.0.1.1.1): since `faizy_pilot` made `proof_image` staff-only, the AI user could no longer run
+`faizy.ai.draft.get_digest()`, because the "completed without proof" count filters on that field, so the Insights and Chief of
+Staff digest failed with an AccessError on production. The count is now read with `sudo()`: the agent still sees no image and no
+order, only the number. `test_ai_cannot_touch_orders` now accepts the evidence gate's ValidationError as a refusal, which is
+what runs first when `faizy_pilot` is installed. Both failed on plain `main` before this change; CI does not run Odoo tests,
+so nothing had caught them. All four Faizy modules together: 72 tests, 0 failed.

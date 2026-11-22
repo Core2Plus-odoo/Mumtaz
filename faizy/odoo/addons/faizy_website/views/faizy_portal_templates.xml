@@ -421,6 +421,8 @@
                     <form t-if="not needs_plan" action="/care/request/submit" method="post">
                         <input type="hidden" name="csrf_token"
                                t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="client_request_id"
+                               t-att-value="client_request_id"/>
 
                         <!-- 1 · The person -->
                         <div class="fzp-step">

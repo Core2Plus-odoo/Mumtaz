@@ -1,4 +1,6 @@
 import logging
+from datetime import timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from odoo import api, fields, models
 
@@ -17,6 +19,15 @@ TEMPLATE_DEFAULT_TYPES = {
     "booking_confirmation", "faizy_assigned", "worker_assignment",
     "status_update", "receipt",
 }
+
+# Customer messages leave between these hours, Karachi time. A confirmation that
+# lands at 3 a.m. is a worse experience than one that lands at 10, and the
+# public AI-team page already promises "10am to 9pm". Overridable with
+# `faizy.send_hours_start`, `faizy.send_hours_end` and `faizy.send_timezone`
+# (ir.config_parameter); the defaults are the approved window.
+SEND_HOURS_START = 10.0
+SEND_HOURS_END = 21.0
+SEND_TIMEZONE = "Asia/Karachi"
 
 
 class FaizyWhatsappMessage(models.Model):
@@ -192,6 +203,44 @@ class FaizyWhatsappMessage(models.Model):
             }
         )
 
+    # ── Send window ──────────────────────────────────────────────────────
+
+    @api.model
+    def _within_send_hours(self, dt=None):
+        """True when `dt` (naive UTC, default now) is inside the customer send window."""
+        get = self.env["ir.config_parameter"].sudo().get_param
+
+        def number(key, default):
+            try:
+                return float(get(key, default))
+            except (TypeError, ValueError):
+                return default
+
+        try:
+            tz = ZoneInfo(get("faizy.send_timezone", SEND_TIMEZONE))
+        except (ZoneInfoNotFoundError, ValueError):
+            tz = ZoneInfo(SEND_TIMEZONE)
+        start = number("faizy.send_hours_start", SEND_HOURS_START)
+        end = number("faizy.send_hours_end", SEND_HOURS_END)
+        local = (dt or fields.Datetime.now()).replace(tzinfo=timezone.utc).astimezone(tz)
+        return start <= local.hour + local.minute / 60.0 < end
+
+    def _is_send_window_gated(self):
+        """Customer-facing messages wait for the window.
+
+        Not gated: a login code (`otp`), because the person asked for it a
+        second ago and a code that arrives next morning is useless, and
+        messages to ground staff (`worker_id`), who work their own hours.
+        """
+        self.ensure_one()
+        return bool(self.partner_id and not self.worker_id and self.message_type != "otp")
+
+    def _hold_until_window(self):
+        """Leave the rows queued and say why, without counting an attempt."""
+        note = self.env._("Held until the customer send window opens (Karachi time).")
+        for message in self.filtered(lambda m: m.error_message != note):
+            message.error_message = note
+
     # ── Sending ──────────────────────────────────────────────────────────
 
     def action_send(self):
@@ -202,7 +251,12 @@ class FaizyWhatsappMessage(models.Model):
         than silently pretending success, an unconfigured provider leaves the
         message queued and records why.
         """
-        for message in self:
+        messages = self
+        if not self._within_send_hours():
+            held = self.filtered(lambda m: m._is_send_window_gated())
+            held._hold_until_window()
+            messages = self - held
+        for message in messages:
             provider = message._get_provider()
             if not provider:
                 message.write(
@@ -251,8 +305,17 @@ class FaizyWhatsappMessage(models.Model):
     @api.model
     def _cron_send_queued(self, limit=50):
         """Drain the queue. Capped per run so a backlog cannot monopolise a worker."""
-        queued = self.search(
-            [("state", "=", "queued"), ("attempts", "<", 5)], limit=limit
-        )
+        domain = [("state", "=", "queued"), ("attempts", "<", 5)]
+        if not self._within_send_hours():
+            # Outside the window only messages that may go out are picked, so
+            # held customer rows neither use up the batch nor get rewritten
+            # every 15 minutes all night.
+            domain += [
+                "|", "|",
+                ("message_type", "=", "otp"),
+                ("partner_id", "=", False),
+                ("worker_id", "!=", False),
+            ]
+        queued = self.search(domain, limit=limit)
         queued.action_send()
         return True
