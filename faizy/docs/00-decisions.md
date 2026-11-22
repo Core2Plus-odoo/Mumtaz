@@ -997,3 +997,27 @@ production can be rebuilt from git.
 customer reminder cron is unchanged), R12 (content QA, waits on the Phase B Project-app decision),
 the counters strip (spreadsheet dashboard) and the emergency toggle (D-10 pending). Nothing has
 run on staging or production.
+
+## 23. No public plan prices until Umer approves them (faizy_core 19.0.1.26.0, faizy_website 19.0.1.24.0)
+
+Decision by Umer, 23 Nov 2026: **no figures** on the public site or the sample receipt until he approves numbers in
+writing. The plan prices in `faizy_plan_data.xml` (PKR 1,999 and the others), the extra-activity price and the
+activity counts were guesses and were never approved, yet the home page, `/pricing` and the `/start` plan picker still
+showed them.
+
+- New `faizy.plan.prices_public()`: true only when the system parameter `faizy.show_plan_prices` is `on`. A missing
+  parameter, or any other value, means hidden. When Umer approves numbers, a Manager sets the parameter and the site
+  shows them again with no code change.
+- While hidden: the plan cards show "Price confirmed with you on WhatsApp" instead of a price; the currency switcher, the
+  "extra activities" price and the "N activities a month" line in the picker are gone; plan feature lines that carry a
+  number ("10 activities a month", "Up to 2 family members") are hidden by `plan.public_features()`. Plan names,
+  descriptions and the other feature lines stay.
+- Product Finder service description no longer says "plus the 5% platform fee" (data file plus a 19.0.1.26.0 migration
+  that replaces only the exact old text, so a hand-edited description stays).
+- Not changed on purpose: what a signed-in customer sees about their own subscription, invoices and wallet (real billed
+  amounts, not a public claim), and the free-activities balance in the portal (a separate decision, G4).
+- The sample receipt (D3) is not part of this change: no sample receipt amounts were found in the website or core
+  templates, so nothing to remove there. To be confirmed on the live site.
+
+Verified on a throwaway Odoo 19 database: all four Faizy modules, 95 tests, 0 failed (5 new in
+`test_plan_prices_hidden`). Not run on production.

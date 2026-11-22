@@ -294,7 +294,7 @@
         <field name="code">product_request</field>
         <field name="category_id" ref="cat_other"/>
         <field name="icon">🔎</field>
-        <field name="description">Describe any product. We source, quote and deliver, plus the 5% platform fee.</field>
+        <field name="description">Describe any product. We source, quote and deliver.</field>
         <field name="sequence">62</field>
     </record>
 

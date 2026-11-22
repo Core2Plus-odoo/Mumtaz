@@ -1,4 +1,8 @@
+import re
+
 from odoo import api, fields, models
+
+SHOW_PRICES_PARAM = "faizy.show_plan_prices"
 
 
 class FaizyPlan(models.Model):
@@ -166,6 +170,28 @@ class FaizyPlan(models.Model):
         """
         amount = float(amount or 0.0)
         return f"{amount:,.0f}" if amount.is_integer() else f"{amount:,.2f}"
+
+    @api.model
+    def prices_public(self):
+        """May plan prices and plan numbers be shown to the public?
+
+        No, until Umer approves them in writing (decision of 23 Nov 2026; the
+        figures in the plan data are guesses, never approved). A Manager sets
+        the system parameter `faizy.show_plan_prices` to "on" once he has, and
+        the website shows prices again without a code change. Anything other
+        than "on", including a missing parameter, means hidden.
+        """
+        value = self.env["ir.config_parameter"].sudo().get_param(SHOW_PRICES_PARAM)
+        return value == "on"
+
+    def public_features(self):
+        """The feature lines that may be shown. While prices are hidden, lines
+        that carry a number ("10 activities a month", "Up to 2 family members")
+        are hidden with them, because they come from the same unapproved plan."""
+        self.ensure_one()
+        if self.prices_public():
+            return self.feature_ids
+        return self.feature_ids.filtered(lambda f: not re.search(r"\d", f.name or ""))
 
     def price_display(self, currency):
         """The monthly price, formatted for the website."""
