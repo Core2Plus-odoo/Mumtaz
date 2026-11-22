@@ -866,9 +866,9 @@ after merging §16:
 deploys 1.21–1.23 and needs `faizy_pilot` installed for the completion gate (vendor bill, customer invoice + wallet debit, document portal rule). Routing,
 activities and desks are PR (b).
 
-## 17. HQ05 PR (b): work routing and role desks (faizy_ai 19.0.1.2.0)
+## 18. HQ05 PR (b): work routing and role desks (faizy_ai 19.0.1.2.0)
 
-Builds on §16. Goal (HQ05): Mashood and Raza open the ERP and land on their own list of what is
+Builds on §17 (and §16 `faizy_pilot`). Goal (HQ05): Mashood and Raza open the ERP and land on their own list of what is
 waiting, for which record, by when, with the button to act. All of it is standard `mail.activity`
 on the real record. There is no second task system, and `base_automation` is not used, so
 production can be rebuilt from git.
@@ -916,12 +916,17 @@ production can be rebuilt from git.
   (`_inherit` without `_name`) when checking ACLs. It still fails on a defined model with no ACL
   (checked by removing `faizy.ai.inbound`'s rows).
 
-**Verified:** Odoo 19.0 + PostgreSQL 16, fresh install of all three addons with tests:
-`0 failed, 0 error(s) of 58 tests` (15 new in `faizy_ai/tests/test_routing.py`: T1 desk visibility
-and access per user, T9–T16 routing, escalation once, no escalation out of hours or before the window,
-Inbox-only summary, fallback chain). Upgrade from the §16 database: `upgrade exit: 0`, 9 FAIZY
-activity types, 3 routing crons. flake8, `validate_modules`, `check_view_schemas`, `check_self_fields`,
-`check_portal_access`, `check_core_fields`: pass.
+**Verified:** Odoo 19.0 + PostgreSQL 16, after merging §16/§17:
+
+- All four addons (`faizy_core,faizy_website,faizy_ai,faizy_pilot`): `0 failed, 0 error(s) of 74
+  tests`. 15 of them are new in `faizy_ai/tests/test_routing.py`: T1 desk visibility and access per
+  user, T9–T16 routing, escalation once, no escalation out of hours or before the window, Inbox-only
+  summary, and the fallback chain.
+- Without `faizy_pilot`: `0 failed, 0 error(s) of 58 tests`.
+- With `faizy_pilot` installed, approving evidence (`evidence_state = approved`) closes the
+  "Review proof & receipt" item.
+- Upgrade from the base database (all four addons): `upgrade exit: 0`.
+- flake8, `validate_modules`, `check_view_schemas`: pass.
 
 **Not done:** R9 (vendor bill draft → To-Do for Umer), R11 (document expiry → ops, the existing
 customer reminder cron is unchanged), R12 (content QA, waits on the Phase B Project-app decision),

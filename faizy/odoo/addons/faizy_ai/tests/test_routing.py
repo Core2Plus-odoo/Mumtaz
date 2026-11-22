@@ -111,6 +111,10 @@ class TestRouting(TransactionCase):
         order.action_start()
         order.write({'proof_image': PNG})
         self.assertEqual(self._acts(order, 'faizy_ai.act_review_proof').user_id, self.raza)
+        if 'evidence_state' in order._fields:
+            # faizy_pilot installed: approving the evidence ends the review item.
+            order.action_approve_evidence()
+            self.assertFalse(self._acts(order, 'faizy_ai.act_review_proof'))
         order.action_complete()
         self.assertFalse(self._acts(order, 'faizy_ai.act_review_proof'))
         self.assertEqual(self._acts(order, 'faizy_ai.act_completion_message').user_id,

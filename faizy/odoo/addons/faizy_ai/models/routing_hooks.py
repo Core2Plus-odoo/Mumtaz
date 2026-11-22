@@ -130,6 +130,12 @@ class FaizyOrderRouting(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
+        # faizy_pilot (when installed) records its review in evidence_state;
+        # approval is the end of the "Review proof & receipt" work item.
+        if vals.get('evidence_state') == 'approved':
+            for order in self:
+                _safe(lambda: self.env['faizy.routing']._close(
+                    order, (T_PROOF,), self.env._('Evidence approved.')), 'evidence approved', order)
         if vals.get('proof_image'):
             Routing = self.env['faizy.routing']
             for order in self.filtered(lambda o: o.state == 'in_progress' and not o.is_sample):
