@@ -5,38 +5,53 @@ Faizy: a family-care service for Pakistanis abroad. A **separate product** on it
 | | |
 |---|---|
 | **Status** | **Production** (reported) |
-| **Code on `main`** | [`faizy/`](../../faizy/) — `faizy_core`, `faizy_website`, `faizy_ai`, `faizy_pilot`, docs, deploy scripts. **Since 22 Nov 2026 `main` is the source of truth**: PR #194 merged the production branch into it, so `faizy/` is identical on both |
-| **Production branch** | `claude/repo-audit-faizy-instance-fck6o3`. The VPS still tracks it. 0 commits ahead of `main`, 167 behind; it should be fast-forwarded to `main` or the VPS repointed to `main`, after which it can be deleted |
+| **Code on `main`** | [`faizy/`](../../faizy/) — `faizy_core`, `faizy_website`, `faizy_ai`, `faizy_pilot`, docs, deploy scripts. **`main` is the source of truth and is what the VPS runs** (since 22 Nov 2026: PR #194 merged the old production branch, PR #195 the CRM-lead work, and the server checkout was switched to `main` at `200951f`) |
+| **Production branch** | None any more. `claude/repo-audit-faizy-instance-fck6o3` was the production branch until 22 Nov 2026; it is fully contained in `main`, nothing tracks it, and it is to be deleted |
 | **Database** | `faizy_prod` (PostgreSQL, its own login) |
 | **Service** | `faizy-odoo`, own OS user, loopback ports |
-| **Deploy** | `faizy/CLAUDE.md` on `main` (stop service → `git pull` → `odoo-bin -u <modules>` → start, chained with `&&`) |
+| **Deploy** | `faizy/CLAUDE.md` (stop service → `git pull` on `main` → `odoo-bin -u <modules>` → start, chained with `&&`). Last deploy: 22 Nov 2026 19:39 UTC, `-u faizy_core,faizy_pilot`, exit 0, log clean |
 | **CI** | `faizy-ci.yml`; the four modules are classified as `venture` in `registry/classification.json` since PR #194 |
 
-## Branch state (22 Nov 2026)
+## Branch state (22 Nov 2026, evening)
 
-What `main` holds is what production runs, with one known difference. The server working tree at
-`/opt/faizy/src` carries uncommitted hand edits in `faizy_core` (a `crm` dependency, `models/crm_lead.py`,
-`views/crm_lead_views.xml`). Those were captured into git on 3 Nov 2026 on branch `claude/faizy-crm-lead-fields`
-and are being merged to `main` in PR #195. Until that merges, `git pull` on the server will refuse because
-`__manifest__.py` and `models/__init__.py` are locally modified. After it merges, reset the server tree to the
-repository state rather than keeping the local edits: the repo version removed hard-coded AED prices from the
-plan-interest labels that the on-disk copy probably still has.
+`main` is deployed and verified from the server (owner-run output, 22 Nov 2026 19:40 UTC). `/opt/faizy/src` is on
+`main` at `200951f` (the merge of PR #195). The upgrade `-u faizy_core,faizy_pilot` exited 0 and
+`/var/log/faizy/odoo.log` shows all four modules loading with no ERROR, CRITICAL or Traceback lines; the service
+came back and loaded modules twice more (workers). `ir_module_module` after the upgrade:
+
+| Module | State | Version |
+|---|---|---|
+| `faizy_core` | installed | 19.0.1.23.0 |
+| `faizy_website` | installed | 19.0.1.20.0 |
+| `faizy_ai` | installed | 19.0.1.0.0 |
+| `faizy_pilot` | installed | 19.0.1.0.0 |
+
+`faizy_pilot`'s first-install hook ran: of the two completed orders, the one with an image is `approved` and the
+one without stays `none`, which is the documented behaviour (decision 16a).
+
+The hand edits that used to sit uncommitted on the server (`crm` dependency, `models/crm_lead.py`,
+`views/crm_lead_views.xml`) are in `main` via PR #195. The repository copy differs from the old on-disk copy in
+one known way: no hard-coded AED prices in the plan-interest labels. Confirm `git status --short` on the server
+is empty, so nothing from the old tree is layered on top of `main`.
 
 Open work that edits `faizy/` and has not reached `main`:
 
 | Branch | PR | Base | Note |
 |---|---|---|---|
-| `claude/faizy-crm-lead-fields` | #195 (via `claude/nifty-archimedes-oj6nmn`) | `main` | CRM lead fields from live; supersedes #139 |
-| `claude/faizy-crm-lead-fields` | #139 | production branch | Same content as #195; close once #195 merges |
-| `claude/faizy-ai-brain` | #140 | production branch | `faizy_ai` 1.1.0 knowledge notes; retarget to `main` |
-| `feat/faizy-hq05-security-guards` | #189 (draft) | production branch | HQ05 PR (a); retarget to `main` |
+| `claude/faizy-ai-brain` | #140 | `main` | `faizy_ai` 1.1.0 knowledge notes; retargeted from the old production branch on 22 Nov |
+| `feat/faizy-hq05-security-guards` | #189 (draft) | `main` | HQ05 PR (a); retargeted on 22 Nov |
 | `feat/faizy-hq05-routing-desks` | #190 (draft) | `feat/faizy-hq05-security-guards` | HQ05 PR (b), stacked on #189 |
 | `claude/faizy-core-baseline-tests` | none | — | Adds `faizy_core/tests/test_order_baseline.py` (not on `main`); needs a PR against `main` |
-| `claude/faizy-document-access` | none | — | Content already on `main` (ODOO-06 fix); branch can be deleted |
 
-**Not moved.** Six open branches and five open pull requests edit `faizy/`; moving it now would conflict with all of them. Recommended home: its own private repository.
+Merged and safe to delete (ref deletion is refused from cloud sessions; run `git push origin --delete …` from a checkout, e.g. `/opt/faizy/src` or a workstation clone):
+`claude/repo-audit-faizy-instance-fck6o3`, `claude/faizy-crm-lead-fields` (#139 closed as a duplicate of #195),
+`faizy/pilot-evidence-gate`, `faizy/pilot-grandfather-existing-evidence`, `claude/faizy-ai-addon`,
+`claude/faizy-ai-team-page`. `claude/faizy-document-access` has its Faizy content on `main` but also carries
+stale copies of root files; delete it knowingly or leave it.
 
-> Server facts (database, service, working-tree state) are **reported** (from owner-run output recorded in this repo, Oct–Nov 2026) and have not been re-verified from here. See the [audit pack](../../docs/infrastructure-audit/16_AUDIT_EXECUTIVE_SUMMARY.md). Branch facts above were read from the remote on 22 Nov 2026.
+**Not moved.** Four open branches and three open pull requests edit `faizy/`; moving it now would conflict with all of them. Recommended home: its own private repository.
+
+> Server facts (database, service, checkout commit, upgrade exit code) are **reported** (from owner-run output, Oct–Nov 2026, the latest on 22 Nov 2026) and have not been re-verified from here. See the [audit pack](../../docs/infrastructure-audit/16_AUDIT_EXECUTIVE_SUMMARY.md). Branch facts above were read from the remote on 22 Nov 2026.
 
 ## Open points
 
