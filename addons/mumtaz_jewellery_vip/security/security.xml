@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_vip_manager" model="res.groups">
+        <field name="name">Jewellery VIP Manager</field>
+        <field name="implied_ids" eval="[(4, ref('mumtaz_jewellery.group_jewellery_user'))]"/>
+    </record>
+
+    <!-- Counter staff must be able to create and edit client contacts. -->
+    <record id="mumtaz_jewellery.group_jewellery_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('base.group_partner_manager'))]"/>
+    </record>
+
+    <!-- Private and Royal client records: only the named manager, the deputy and VIP managers. -->
+    <record id="rule_partner_restricted_tier" model="ir.rule">
+        <field name="name">Jewellery: Private and Royal clients restricted</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[(1, '=', 1)] if user.has_group('mumtaz_jewellery_vip.group_vip_manager') else ['|', '|', '|', ('jewellery_tier', 'not in', ['private', 'royal']), ('relationship_manager_id', '=', user.id), ('deputy_id', '=', user.id), ('id', '=', user.partner_id.id)]</field>
+    </record>
+</odoo>

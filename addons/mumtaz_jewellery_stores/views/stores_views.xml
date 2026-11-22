@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_warehouse_form_store" model="ir.ui.view">
+        <field name="name">stock.warehouse.form.jewellery.store</field>
+        <field name="model">stock.warehouse</field>
+        <field name="inherit_id" ref="stock.view_warehouse"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="jewellery_store_limit_fine_g"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_users_form_store" model="ir.ui.view">
+        <field name="name">res.users.form.jewellery.store</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='access_rights']" position="inside">
+                <group string="Jewellery store">
+                    <field name="jewellery_store_id"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_transfer_list" model="ir.ui.view">
+        <field name="name">jewellery.transfer.list</field>
+        <field name="model">jewellery.transfer</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/><field name="from_warehouse_id"/><field name="to_warehouse_id"/>
+                <field name="piece_count"/><field name="fine_g"/><field name="state"/>
+                <field name="dispatched_at"/><field name="received_at"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_transfer_form" model="ir.ui.view">
+        <field name="name">jewellery.transfer.form</field>
+        <field name="model">jewellery.transfer</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_dispatch" type="object" string="Dispatch" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_receive" type="object" string="Receive" class="btn-primary" invisible="state != 'in_transit'"/>
+                    <button name="action_report_lost" type="object" string="Report lost" invisible="state != 'in_transit'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group><field name="name"/><field name="from_warehouse_id"/><field name="to_warehouse_id"/><field name="note"/></group>
+                        <group><field name="piece_count"/><field name="fine_g"/><field name="dispatched_by_id"/><field name="dispatched_at"/><field name="received_by_id"/><field name="received_at"/></group>
+                    </group>
+                    <field name="lot_ids"><list><field name="name"/><field name="product_id"/><field name="karat"/><field name="net_weight_g"/></list></field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_transfer" model="ir.actions.act_window">
+        <field name="name">Transfers</field>
+        <field name="res_model">jewellery.transfer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="view_recon_list" model="ir.ui.view">
+        <field name="name">jewellery.gold.reconciliation.list</field>
+        <field name="model">jewellery.gold.reconciliation</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/><field name="warehouse_id"/><field name="date"/>
+                <field name="expected_fine_g"/><field name="counted_fine_g"/><field name="variance_fine_g"/>
+                <field name="missing_count"/><field name="state"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_recon_form" model="ir.ui.view">
+        <field name="name">jewellery.gold.reconciliation.form</field>
+        <field name="model">jewellery.gold.reconciliation</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_close" type="object" string="Close" class="btn-primary" invisible="state != 'open'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group><field name="name"/><field name="warehouse_id"/><field name="date"/><field name="note"/></group>
+                        <group><field name="expected_count"/><field name="expected_fine_g"/><field name="counted_count"/><field name="counted_fine_g"/><field name="variance_fine_g"/><field name="missing_count"/><field name="extra_serials"/><field name="closed_by_id"/></group>
+                    </group>
+                    <field name="line_ids"><list editable="bottom"><field name="lot_id"/><field name="fine_g"/><field name="found"/></list></field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_reconciliation" model="ir.actions.act_window">
+        <field name="name">Gold reconciliations</field>
+        <field name="res_model">jewellery.gold.reconciliation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_transfer" name="Transfers" parent="mumtaz_jewellery.menu_jewellery_root" action="action_transfer" sequence="40"/>
+    <menuitem id="menu_reconciliation" name="Gold reconciliations" parent="mumtaz_jewellery.menu_jewellery_root" action="action_reconciliation" sequence="41"/>
+</odoo>

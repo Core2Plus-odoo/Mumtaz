@@ -4,10 +4,10 @@
 #   branch — git branch to pull from (default: main)
 #
 # What it deploys:
-#   apps/website/       → /var/www/mumtaz.digital/
-#   apps/portal/        → /var/www/app.mumtaz.digital/
-#   apps/marketplace/   → /var/www/marketplace.mumtaz.digital/
-#   apps/zaki/static/   → /var/www/zaki.mumtaz.digital/
+#   sites/mumtaz.digital/site/       → /var/www/mumtaz.digital/
+#   sites/app.mumtaz.digital/portal/        → /var/www/app.mumtaz.digital/
+#   sites/marketplace.mumtaz.digital/storefront/   → /var/www/marketplace.mumtaz.digital/
+#   sites/zaki.mumtaz.digital/static/   → /var/www/zaki.mumtaz.digital/
 set -euo pipefail
 
 BRANCH="${1:-main}"
@@ -33,10 +33,10 @@ cd "$REPO"
 git fetch origin "$BRANCH" \
   || die "git fetch failed. Check network and branch name."
 git checkout "origin/$BRANCH" -- \
-  apps/website/ \
-  apps/portal/ \
-  apps/marketplace/ \
-  apps/zaki/ \
+  sites/mumtaz.digital/site/ \
+  sites/app.mumtaz.digital/portal/ \
+  sites/marketplace.mumtaz.digital/storefront/ \
+  sites/zaki.mumtaz.digital/static/ \
   || die "git checkout failed — branch '$BRANCH' may not have these paths."
 ok "Code pulled from '$BRANCH'"
 
@@ -54,10 +54,10 @@ sync_site() {
   fi
 }
 
-sync_site "$REPO/apps/website/"     /var/www/mumtaz.digital        "mumtaz.digital"
-sync_site "$REPO/apps/portal/"      /var/www/app.mumtaz.digital    "app.mumtaz.digital"
-sync_site "$REPO/apps/marketplace/" /var/www/marketplace.mumtaz.digital "marketplace.mumtaz.digital"
-sync_site "$REPO/apps/zaki/static/" /var/www/zaki.mumtaz.digital   "zaki.mumtaz.digital"
+sync_site "$REPO/sites/mumtaz.digital/site/"     /var/www/mumtaz.digital        "mumtaz.digital"
+sync_site "$REPO/sites/app.mumtaz.digital/portal/"      /var/www/app.mumtaz.digital    "app.mumtaz.digital"
+sync_site "$REPO/sites/marketplace.mumtaz.digital/storefront/" /var/www/marketplace.mumtaz.digital "marketplace.mumtaz.digital"
+sync_site "$REPO/sites/zaki.mumtaz.digital/static/" /var/www/zaki.mumtaz.digital   "zaki.mumtaz.digital"
 
 # ── 3. Reload nginx ───────────────────────────────────────
 log "Reloading nginx..."

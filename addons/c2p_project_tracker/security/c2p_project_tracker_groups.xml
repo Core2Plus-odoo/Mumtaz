@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Odoo 19 groups a set of application groups under a privilege.
+             Verify with: inspect_odoo_db.py Mumtaz_C2P - -schema res.groups -->
+        <record id="privilege_c2p_project_tracker" model="res.groups.privilege">
+            <field name="name">Project Tracker</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <!-- Delivery Member: works tasks in their own company. No portfolio
+             commercials, no Portfolio dashboard. -->
+        <record id="group_c2p_delivery_member" model="res.groups">
+            <field name="name">Delivery Member</field>
+            <field name="privilege_id" ref="privilege_c2p_project_tracker"/>
+            <field name="implied_ids" eval="[(4, ref('project.group_project_user'))]"/>
+        </record>
+
+        <!-- Delivery Lead: full delivery control plus read-only portfolio
+             milestones. Still no commercials. -->
+        <record id="group_c2p_delivery_lead" model="res.groups">
+            <field name="name">Delivery Lead</field>
+            <field name="privilege_id" ref="privilege_c2p_project_tracker"/>
+            <field name="implied_ids"
+                   eval="[(4, ref('group_c2p_delivery_member')),
+                          (4, ref('project.group_project_manager'))]"/>
+        </record>
+
+        <!-- Portfolio Manager: everything, commercials included. -->
+        <record id="group_c2p_portfolio_manager" model="res.groups">
+            <field name="name">Portfolio Manager</field>
+            <field name="privilege_id" ref="privilege_c2p_project_tracker"/>
+            <field name="implied_ids" eval="[(4, ref('group_c2p_delivery_lead'))]"/>
+        </record>
+
+    </data>
+</odoo>

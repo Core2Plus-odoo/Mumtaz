@@ -70,95 +70,49 @@
 
             <div id="wrap" class="faizy-page">
 
-                <!-- ── Hero ──────────────────────────────────────────── -->
-                <section class="fz-hero">
+                <!-- ── Hero (FAIZY 2.0) ───────────────────────────────── -->
+                <section class="fz2-hero">
                     <div class="container position-relative">
                         <div class="row align-items-center g-5">
-                            <div class="col-12 col-lg-7 fz-rise">
-                                <p class="fz-hero-tagline mb-2">Faizy Hai Na!</p>
-                                <h1 class="fz-display mb-3">
-                                    Ammi's medicines,<br/>
-                                    <span class="fz-accent">collected on Tuesday.</span>
-                                </h1>
-                                <p class="fz-hero-sub fz-lead mb-4">
-                                    You are far away. Someone still has to queue at the pharmacy,
-                                    sit with your father at the doctor's, chase the NADRA office.
-                                    Faizy is that someone — family care in Pakistan for Pakistanis
-                                    living abroad, asked for on WhatsApp and finished with a photo.
+                            <div class="col-12 col-lg-7">
+                                <span class="fz2-kick"><i/>Karachi · WhatsApp-first</span>
+                                <h1 class="fz2-h1 mt-3 mb-3">You are far away.<br/>Worry does not have to be alone.</h1>
+                                <p class="fz2-lead mb-4">
+                                    FAIZY is the on-the-ground support for your family and everyday
+                                    needs in Karachi. Ask on WhatsApp, a person does it, and you see
+                                    the proof.
                                 </p>
                                 <div class="d-flex gap-2 flex-wrap mb-4">
                                     <a href="/start" class="btn btn-faizy btn-lg">Get started</a>
-                                    <a href="#how" class="btn btn-faizy-ghost btn-lg">How it works</a>
+                                    <a href="#how" class="fz2-btn-onnavy btn btn-lg">How it works</a>
                                 </div>
-
-                                <div class="fz-trustbar">
-                                    <div class="fz-trustbar-item">
-                                        <span class="fz-trustbar-value">22+</span>
-                                        <span class="fz-trustbar-label">families cared for</span>
-                                    </div>
-                                    <div class="fz-trustbar-item">
-                                        <span class="fz-trustbar-value">3</span>
-                                        <span class="fz-trustbar-label">cities on the ground</span>
-                                    </div>
-                                    <div class="fz-trustbar-item">
-                                        <span class="fz-trustbar-value">24k</span>
-                                        <span class="fz-trustbar-label">following our story</span>
-                                    </div>
-                                    <div class="fz-trustbar-item">
-                                        <span class="fz-trustbar-value">100%</span>
-                                        <span class="fz-trustbar-label">tasks photographed</span>
-                                    </div>
-                                </div>
+                                <ul class="fz2-ticks">
+                                    <li><i class="fa fa-check" aria-hidden="true"/><span>Photo and receipt are reviewed by a person before you see them</span></li>
+                                    <li><i class="fa fa-check" aria-hidden="true"/><span>Requests, receipts and history in one place in your portal</span></li>
+                                </ul>
                             </div>
-
-                            <div class="col-12 col-lg-5 fz-rise fz-rise-2">
-                                <!-- A live-looking proof card. The product's whole
-                                     promise is "you can see it happened", so the
-                                     hero shows exactly that rather than a stock photo. -->
-                                <div class="fz-card" style="background:#fff;">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <p class="text-muted small mb-1">Order FZO-100248</p>
-                                            <h3 class="h5 mb-0">Monthly medicines</h3>
-                                        </div>
-                                        <span class="faizy-status is-completed">Completed</span>
+                            <div class="col-12 col-lg-5">
+                                <div class="fz2-arch">
+                                    <div class="fz2-frame">
+                                        <img src="/faizy_website/static/src/img/agent-hero.jpg"
+                                             alt="FAIZY Agent in a navy polo with the gold F emblem"
+                                             width="360" height="540" fetchpriority="high"/>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2 mb-3">
-                                        <span class="faizy-fmb">FMB-000014</span>
-                                        <span class="text-muted small">Ammi · Lahore</span>
-                                    </div>
-                                    <!-- Receipts are in PKR because that is where the
-                                         money is spent, whatever currency you subscribe
-                                         in. Illustrative example only; the fee wording
-                                         is held back until the owner approves it. -->
-                                    <div class="rounded-3 p-3 mb-3" style="background:#FAF6EF;">
-                                        <div class="d-flex justify-content-between small mb-1">
-                                            <span class="text-muted">Pharmacy</span>
-                                            <span>PKR 2,400</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between small mb-1">
-                                            <span class="text-muted">Service</span>
-                                            <span>PKR 850</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between small">
-                                            <span class="text-muted">Platform fee</span>
-                                            <span>PKR 120</span>
-                                        </div>
-                                        <hr class="my-2"/>
-                                        <div class="d-flex justify-content-between fw-bold">
-                                            <span>Total</span>
-                                            <span>PKR 3,370</span>
-                                        </div>
-                                    </div>
-                                    <p class="text-muted small mb-0">
-                                        <i class="fa fa-camera me-1" style="color:#F69E22;" aria-hidden="true"/>
-                                        Photo proof attached · delivered 6:42 PM
-                                    </p>
+                                    <span class="fz2-tag">FAIZY Agent · illustrative character</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
+
+                <div class="container">
+                    <div class="fz2-strip">
+                        <div class="fz2-it"><span class="fz2-ico"><i class="fa fa-whatsapp" aria-hidden="true"/></span><div><b>WhatsApp-first</b><span>Ask the way you already talk to home</span></div></div>
+                        <div class="fz2-it"><span class="fz2-ico"><i class="fa fa-camera" aria-hidden="true"/></span><div><b>Proof you can see</b><span>Photo and itemised receipt, reviewed</span></div></div>
+                        <div class="fz2-it"><span class="fz2-ico"><i class="fa fa-map-marker" aria-hidden="true"/></span><div><b>Karachi on the ground</b><span>People who know the city</span></div></div>
+                        <div class="fz2-it"><span class="fz2-ico"><i class="fa fa-users" aria-hidden="true"/></span><div><b>One place for family</b><span>Requests and history in your portal</span></div></div>
+                    </div>
+                </div>
 
                 <!-- Marketing can drop snippets here without touching code. -->
                 <div class="oe_structure" id="oe_structure_faizy_after_hero"/>
@@ -303,7 +257,7 @@
                             <h2 class="mb-2" style="font-size: clamp(1.75rem, 4vw, 2.75rem);">
                                 Straightforward monthly care
                             </h2>
-                            <p class="fz-lead mb-0">Your first three care activities are on us.</p>
+                            <p class="fz-lead mb-0">We confirm your plan with you on WhatsApp before any billing starts.</p>
                         </div>
                         <t t-call="faizy_website.plan_cards"/>
                     </div>
@@ -424,7 +378,7 @@
                                 <span class="fz-contact-icon" aria-hidden="true">👍</span>
                                 <span>
                                     <span class="fz-contact-label">Facebook</span>
-                                    <span class="fz-contact-value">24k following our story</span>
+                                    <span class="fz-contact-value">FaizyHaiNa</span>
                                 </span>
                             </a>
                         </div>
@@ -534,8 +488,7 @@
                             Care that fits your family
                         </h1>
                         <p class="fz-hero-sub fz-lead mx-auto mb-0">
-                            Pay monthly, cancel whenever. Your first three care activities are free —
-                            no card needed to start.
+                            We confirm your plan with you on WhatsApp before any billing starts.
                         </p>
                     </div>
                 </section>
@@ -581,7 +534,7 @@
                             <p class="fz-lead mb-4">
                                 Tell us who you're caring for and we'll tell you honestly.
                             </p>
-                            <a href="/start" class="btn btn-faizy btn-lg">Start free</a>
+                            <a href="/start" class="btn btn-faizy btn-lg">Get started</a>
                         </div>
                     </div>
                 </section>
@@ -1049,7 +1002,7 @@
                             <ul class="fz-footer-links">
                                 <li><a href="/">Home</a></li>
                                 <li><a href="/pricing">Plans</a></li>
-                                <li><a href="/start">Start free</a></li>
+                                <li><a href="/start">Get started</a></li>
                                 <li><a href="/join">Become a Faizy</a></li>
                                 <li><a href="/contactus">Contact us</a></li>
                                 <li><a href="/privacy">Privacy policy</a></li>
@@ -1237,9 +1190,8 @@
                                 </t>
                             </div>
                             <p class="text-muted small mt-3 mb-4">
-                                Nothing is charged today. Your first three activities are free,
-                                and we'll confirm the plan with you on WhatsApp before any
-                                billing starts.
+                                Nothing is charged today. We'll confirm the plan with you on
+                                WhatsApp before any billing starts.
                             </p>
 
                             <button type="submit" class="btn btn-faizy btn-lg w-100">
@@ -1301,7 +1253,7 @@
                             </p>
                         </div>
                         <p class="text-muted small mt-4 mb-0">
-                            Nothing has been charged. Your first three activities are free.
+                            Nothing has been charged.
                         </p>
                     </div>
                 </section>

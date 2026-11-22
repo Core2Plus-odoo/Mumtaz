@@ -23,6 +23,7 @@ class MumtazSubscription(models.Model):
         """Charge every current subscription whose renewal is due and whose
         payment is still outstanding. Runs before the lifecycle cron so that
         successful charges reactivate and failures flow into grace→suspend."""
+        # sudo: control-plane billing state written by the payment flow
         settings = self.env["mumtaz.stripe.settings"].sudo().get_singleton()
         if not settings.auto_charge_enabled:
             return
@@ -96,6 +97,7 @@ class MumtazSubscription(models.Model):
             "last_charge_error": False,
             "renewal_date": self._stripe_next_renewal_date(),
         })
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         self.env["mumtaz.subscription.billing.record"].sudo().create({
             "subscription_id": self.id,
             "record_type": "renewal",

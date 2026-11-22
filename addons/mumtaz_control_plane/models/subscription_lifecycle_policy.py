@@ -9,6 +9,7 @@ class MumtazSubscriptionLifecyclePolicy(models.AbstractModel):
 
     @api.model
     def _get_param_int(self, key, default):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         value = self.env["ir.config_parameter"].sudo().get_param(key)
         if value in (None, ""):
             return default
@@ -19,6 +20,7 @@ class MumtazSubscriptionLifecyclePolicy(models.AbstractModel):
 
     @api.model
     def _get_param_bool(self, key, default):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         value = self.env["ir.config_parameter"].sudo().get_param(key)
         if value in (None, ""):
             return default
@@ -26,6 +28,7 @@ class MumtazSubscriptionLifecyclePolicy(models.AbstractModel):
 
     @api.model
     def _get_param_choice(self, key, default, allowed):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         value = self.env["ir.config_parameter"].sudo().get_param(key)
         if not value:
             return default

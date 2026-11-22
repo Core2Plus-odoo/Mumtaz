@@ -38,6 +38,7 @@ class OrgSignupController(http.Controller):
             return {"available": False, "reason": "reserved"}
         if not _SLUG_RE.match(slug):
             return {"available": False, "reason": "invalid"}
+        # sudo: public SME signup: slug check and organisation creation after validation
         exists = request.env["mumtaz.org"].sudo().search_count(
             [("slug", "=", slug)]
         )
@@ -68,6 +69,7 @@ class OrgSignupController(http.Controller):
             errors["slug"] = "URL slug is required."
         elif slug in _RESERVED or not _SLUG_RE.match(slug):
             errors["slug"] = "Invalid or reserved slug."
+        # sudo: public SME signup: slug check and organisation creation after validation
         elif request.env["mumtaz.org"].sudo().search_count([("slug", "=", slug)]):
             errors["slug"] = "This slug is already taken."
         if not admin_email or "@" not in admin_email:
@@ -77,11 +79,13 @@ class OrgSignupController(http.Controller):
 
         country = None
         if country_code:
+            # sudo: country list for a public form; reference data
             country = request.env["res.country"].sudo().search(
                 [("code", "=", country_code)], limit=1
             )
 
         try:
+            # sudo: public SME signup: slug check and organisation creation after validation
             org = request.env["mumtaz.org"].sudo().create({
                 "name":        name,
                 "slug":        slug,

@@ -290,6 +290,7 @@ class RealProvisioner(BaseProvisioner):
             company = env.ref("base.main_company", raise_if_not_found=False)
             if company and tenant.name:
                 company.name = tenant.name
+            # sudo: system parameter; only administrators may read ir.config_parameter
             icp = env["ir.config_parameter"].sudo()
             # Plant the SSO shared secret so the control-panel bridge works.
             sso_secret = os.environ.get("ODOO_SSO_SECRET")

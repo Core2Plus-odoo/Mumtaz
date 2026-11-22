@@ -591,8 +591,8 @@ class FaizyWebsite(http.Controller):
             "scope": "/",
             "display": "standalone",
             "orientation": "portrait",
-            "background_color": "#f7f1e7",   # $fz-sand, so the splash matches
-            "theme_color": "#fdf8f0",        # the header, so the status bar does
+            "background_color": "#f2f0f1",   # $fz-sand, so the splash matches
+            "theme_color": "#1e2842",        # FAIZY navy, so the status bar matches
             "lang": "en",
             "dir": "ltr",
             "icons": icons,

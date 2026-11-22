@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_transfer" model="ir.sequence">
+        <field name="name">Jewellery transfer</field>
+        <field name="code">jewellery.transfer</field>
+        <field name="prefix">TRF/</field>
+        <field name="padding">5</field>
+    </record>
+    <record id="seq_reconciliation" model="ir.sequence">
+        <field name="name">Jewellery gold reconciliation</field>
+        <field name="code">jewellery.gold.reconciliation</field>
+        <field name="prefix">REC/</field>
+        <field name="padding">5</field>
+    </record>
+    <!-- Days a transfer may stay in transit before it is an exception. -->
+    <record id="param_transfer_days" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.transfer_days</field>
+        <field name="value">2</field>
+    </record>
+    <!-- Pieces between stores: an internal root location, like "On approval",
+         so they stay owned and valued while on no store's shelf. -->
+    <record id="location_in_transit" model="stock.location">
+        <field name="name">Between stores</field>
+        <field name="usage">internal</field>
+    </record>
+</odoo>

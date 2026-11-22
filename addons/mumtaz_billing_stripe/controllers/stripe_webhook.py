@@ -14,6 +14,7 @@ class MumtazStripeWebhook(http.Controller):
     def stripe_webhook(self, **kwargs):
         raw = request.httprequest.get_data(as_text=True)
         sig = request.httprequest.headers.get("Stripe-Signature", "")
+        # sudo: Stripe webhook: public route verified by signature; writes control-plane billing state
         client = request.env["mumtaz.stripe.client"].sudo()
 
         if not client.verify_webhook(raw, sig):
@@ -30,6 +31,7 @@ class MumtazStripeWebhook(http.Controller):
         if not event_id:
             return Response("missing id", status=400)
 
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         Event = request.env["mumtaz.stripe.event"].sudo()
         # Idempotency: a duplicate delivery is acknowledged but not reprocessed.
         if Event.search_count([("stripe_event_id", "=", event_id)]):
@@ -63,6 +65,7 @@ class MumtazStripeWebhook(http.Controller):
     def _tenant_from_customer(self, customer_id):
         if not customer_id:
             return request.env["mumtaz.tenant"]
+        # sudo: Stripe webhook: public route verified by signature; writes control-plane billing state
         return request.env["mumtaz.tenant"].sudo().search(
             [("stripe_customer_id", "=", customer_id)], limit=1
         )
@@ -71,6 +74,7 @@ class MumtazStripeWebhook(http.Controller):
         meta = obj.get("metadata") or {}
         sub_id = meta.get("subscription_id")
         customer_id = obj.get("customer")
+        # sudo: Stripe webhook: public route verified by signature; writes control-plane billing state
         Sub = request.env["mumtaz.subscription"].sudo()
         if sub_id:
             sub = Sub.browse(int(sub_id))
@@ -95,6 +99,7 @@ class MumtazStripeWebhook(http.Controller):
             return
         card = None
         try:
+            # sudo: Stripe webhook: public route verified by signature; writes control-plane billing state
             pm = request.env["mumtaz.stripe.client"].sudo()._request(
                 "GET", f"payment_methods/{pm_id}"
             )
@@ -114,6 +119,7 @@ class MumtazStripeWebhook(http.Controller):
         log.subscription_id = sub.id
         log.tenant_id = sub.tenant_id.id
         # Idempotency: skip if this intent already produced a billing record.
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         already = request.env["mumtaz.subscription.billing.record"].sudo().search_count(
             [("external_reference", "=", intent_id)]
         )

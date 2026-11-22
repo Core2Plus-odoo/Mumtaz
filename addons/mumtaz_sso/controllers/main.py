@@ -63,6 +63,7 @@ class MumtazSSO(http.Controller):
 
         with registry.cursor() as cr:
             env = api.Environment(cr, SUPERUSER_ID, {})
+            # sudo: system parameter; only administrators may read ir.config_parameter
             secret = env["ir.config_parameter"].sudo().get_param("mumtaz.sso_secret") or ""
             if not secret:
                 _logger.warning("Mumtaz SSO: no mumtaz.sso_secret set in %s", db)

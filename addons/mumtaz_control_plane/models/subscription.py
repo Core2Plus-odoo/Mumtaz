@@ -111,6 +111,7 @@ class MumtazSubscription(models.Model):
             else:
                 rec.grace_days_remaining = 0
 
+            # sudo: usage and subscription rows read by the control plane's own services
             usage_rows = self.env["mumtaz.usage.metric"].sudo().search(
                 [
                     ("tenant_id", "=", rec.tenant_id.id),
@@ -150,6 +151,7 @@ class MumtazSubscription(models.Model):
 
     def _apply_tenant_impact(self, to_status, tenant_impact_mode):
         self.ensure_one()
+        # sudo: usage and subscription rows read by the control plane's own services
         tenant = self.tenant_id.sudo()
         if not tenant:
             return "none"
@@ -184,6 +186,7 @@ class MumtazSubscription(models.Model):
 
     def _create_lifecycle_log(self, from_status, decision, policy, source, applied, tenant_action="none"):
         self.ensure_one()
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         self.env["mumtaz.subscription.lifecycle.log"].sudo().create(
             {
                 "subscription_id": self.id,

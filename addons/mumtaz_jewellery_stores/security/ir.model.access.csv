@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_transfer_user,transfer user,model_jewellery_transfer,mumtaz_jewellery.group_jewellery_user,1,1,1,0
+access_transfer_mgr,transfer manager,model_jewellery_transfer,mumtaz_jewellery.group_jewellery_manager,1,1,1,1
+access_recon_user,reconciliation user,model_jewellery_gold_reconciliation,mumtaz_jewellery.group_jewellery_user,1,1,1,0
+access_recon_mgr,reconciliation manager,model_jewellery_gold_reconciliation,mumtaz_jewellery.group_jewellery_manager,1,1,1,1
+access_recon_line_user,reconciliation line user,model_jewellery_gold_reconciliation_line,mumtaz_jewellery.group_jewellery_user,1,1,1,0
+access_recon_line_mgr,reconciliation line manager,model_jewellery_gold_reconciliation_line,mumtaz_jewellery.group_jewellery_manager,1,1,1,1

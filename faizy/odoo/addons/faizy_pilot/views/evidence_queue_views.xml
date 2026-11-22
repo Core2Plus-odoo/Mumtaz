@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The reviewer's desk: every order whose proof or receipt is waiting for a
+         person to look at it. Standard list, search and menu only; no new model. -->
+
+    <record id="view_faizy_order_evidence_search" model="ir.ui.view">
+        <field name="name">faizy.order.evidence.search</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="title"/>
+                <field name="partner_id"/>
+                <field name="worker_id"/>
+                <filter name="to_review" string="Waiting for review"
+                        domain="[('evidence_state', '=', 'submitted')]"/>
+                <filter name="rejected" string="Rejected"
+                        domain="[('evidence_state', '=', 'rejected')]"/>
+                <filter name="approved" string="Approved"
+                        domain="[('evidence_state', '=', 'approved')]"/>
+                <separator/>
+                <filter name="blocked" string="In progress, not approved"
+                        domain="[('state', '=', 'in_progress'), ('evidence_state', '!=', 'approved')]"/>
+                <separator/>
+                <filter name="group_evidence" string="Evidence status"
+                        context="{'group_by': 'evidence_state'}"/>
+                <filter name="group_worker" string="Faizy" context="{'group_by': 'worker_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_faizy_order_evidence_list" model="ir.ui.view">
+        <field name="name">faizy.order.evidence.list</field>
+        <field name="model">faizy.order</field>
+        <field name="arch" type="xml">
+            <list create="0" delete="0"
+                  decoration-warning="evidence_state == 'submitted'"
+                  decoration-danger="evidence_state == 'rejected'"
+                  decoration-success="evidence_state == 'approved'">
+                <field name="name"/>
+                <field name="title"/>
+                <field name="partner_id"/>
+                <field name="worker_id"/>
+                <field name="purchase_value" optional="show"/>
+                <field name="state" widget="badge"/>
+                <field name="evidence_state" widget="badge"
+                       decoration-success="evidence_state == 'approved'"
+                       decoration-danger="evidence_state == 'rejected'"
+                       decoration-warning="evidence_state == 'submitted'"/>
+                <field name="evidence_reviewer_id" optional="show"/>
+                <field name="evidence_reviewed_on" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_faizy_order_evidence" model="ir.actions.act_window">
+        <field name="name">Evidence review</field>
+        <field name="res_model">faizy.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_faizy_order_evidence_search"/>
+        <field name="context">{'search_default_to_review': 1}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_faizy_order_evidence_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('faizy_core.view_faizy_order_form')})]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">Nothing is waiting for review.</p>
+            <p>Open an order, check the photo and receipt, then approve or reject with a reason.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_faizy_evidence_review" name="Evidence review"
+              parent="faizy_core.menu_faizy_operations" action="action_faizy_order_evidence"
+              sequence="6" groups="faizy_core.group_faizy_ops"/>
+</odoo>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_aml_event_list" model="ir.ui.view">
+        <field name="name">jewellery.aml.event.list</field>
+        <field name="model">jewellery.aml.event</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="create_date"/>
+                <field name="kind"/>
+                <field name="partner_id"/>
+                <field name="order_id"/>
+                <field name="amount_cash"/>
+                <field name="cash_window_before"/>
+                <field name="threshold"/>
+                <field name="user_id"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_aml_event" model="ir.actions.act_window">
+        <field name="name">AML events</field>
+        <field name="res_model">jewellery.aml.event</field>
+        <field name="view_mode">list</field>
+    </record>
+    <menuitem id="menu_aml_event" name="AML events" parent="mumtaz_jewellery.menu_jewellery_root"
+              action="action_aml_event" sequence="90" groups="mumtaz_jewellery.group_jewellery_manager"/>
+</odoo>

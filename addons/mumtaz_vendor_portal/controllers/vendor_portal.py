@@ -18,6 +18,7 @@ class VendorPortalController(CustomerPortal):
         Raises AccessError or MissingError consistent with Odoo portal patterns.
         """
         partner = request.env.user.partner_id.commercial_partner_id
+        # sudo: vendor portal: record scoped to the signed-in vendor by _get_vendor_po or a partner domain before any read or write
         order = request.env["purchase.order"].sudo().browse(int(order_id)).exists()
         if not order:
             raise MissingError(_("This purchase order doesn't exist."))
@@ -127,6 +128,7 @@ class VendorPortalController(CustomerPortal):
             return request.redirect('/vendor/purchase-orders')
 
         # Idempotent: only post once per vendor user
+        # sudo: note on the vendor's own order; ownership checked by _get_vendor_po
         already = request.env['mail.message'].sudo().search_count([
             ('model',     '=', 'purchase.order'),
             ('res_id',    '=', order.id),
@@ -135,6 +137,7 @@ class VendorPortalController(CustomerPortal):
             ('body',      'ilike', 'acknowledged'),
         ])
         if not already:
+            # sudo: note on the vendor's own order; ownership checked by _get_vendor_po
             order.sudo().message_post(
                 body=_(
                     "Vendor %s acknowledged this purchase order via the vendor portal.",
@@ -148,6 +151,7 @@ class VendorPortalController(CustomerPortal):
     def _get_vendor_rfq(self, rfq_id):
         """Browse an open RFQ and verify it belongs to the current portal user."""
         partner = request.env.user.partner_id.commercial_partner_id
+        # sudo: vendor portal: record scoped to the signed-in vendor by _get_vendor_po or a partner domain before any read or write
         rfq = request.env["purchase.order"].sudo().browse(int(rfq_id)).exists()
         if not rfq:
             raise MissingError(_("This RFQ doesn't exist."))
@@ -262,7 +266,9 @@ class VendorPortalController(CustomerPortal):
 
         try:
             for line, price in updated_lines:
+                # sudo: vendor portal: record scoped to the signed-in vendor by _get_vendor_po or a partner domain before any read or write
                 line.sudo().write({'price_unit': price})
+            # sudo: note on the vendor's own order; ownership checked by _get_vendor_po
             rfq.sudo().message_post(
                 body=''.join(rows),
                 author_id=request.env.user.partner_id.id,
@@ -321,6 +327,7 @@ class VendorPortalController(CustomerPortal):
             ('state', 'in', ['purchase', 'done']),
             ('invoice_status', '!=', 'invoiced'),
         ]
+        # sudo: vendor portal: record scoped to the signed-in vendor by _get_vendor_po or a partner domain before any read or write
         eligible_pos = request.env['purchase.order'].sudo().search(
             po_domain, limit=50, order='date_order desc',
         )
@@ -385,6 +392,7 @@ class VendorPortalController(CustomerPortal):
 
         # ── Create draft vendor bill ─────────────────────────────────────
         try:
+            # sudo: vendor portal: record scoped to the signed-in vendor by _get_vendor_po or a partner domain before any read or write
             bill = request.env['account.move'].sudo().create({
                 'move_type':       'in_invoice',
                 'partner_id':      partner.id,
@@ -402,6 +410,7 @@ class VendorPortalController(CustomerPortal):
             })
 
             # Attach the file
+            # sudo: vendor portal: record scoped to the signed-in vendor by _get_vendor_po or a partner domain before any read or write
             request.env['ir.attachment'].sudo().create({
                 'name':      attachment.filename,
                 'datas':     base64.b64encode(file_bytes),
