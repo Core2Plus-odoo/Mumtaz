@@ -53,8 +53,18 @@ class FaizyDocument(models.Model):
         help="CNIC or passport number. Visible to Operations only.",
         groups="faizy_core.group_faizy_ops",
     )
-    attachment = fields.Binary(string="File", attachment=True)
-    attachment_name = fields.Char()
+    # The scan itself and its notes are Operations-only (FAIZY HQ05 S4).
+    # Customer care (Faizy / Agent) still sees that a document exists, its
+    # type and its expiry, which is what a reminder conversation needs, but
+    # not the CNIC, passport or medical file. Portal stays in the list so a
+    # customer can still reach their own file; the portal record rule above
+    # keeps that to their own documents only.
+    attachment = fields.Binary(
+        string="File",
+        attachment=True,
+        groups="faizy_core.group_faizy_ops,base.group_portal",
+    )
+    attachment_name = fields.Char(groups="faizy_core.group_faizy_ops,base.group_portal")
 
     issue_date = fields.Date()
     expiry_date = fields.Date(
@@ -73,7 +83,7 @@ class FaizyDocument(models.Model):
         compute="_compute_expiry",
         store=True,
     )
-    notes = fields.Text()
+    notes = fields.Text(groups="faizy_core.group_faizy_ops")
     active = fields.Boolean(default=True)
 
     @api.depends("expiry_date")

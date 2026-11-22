@@ -165,7 +165,13 @@ class FaizySampleData(models.TransientModel):
                 "vendor_id": vendor.id if vendor else False,
                 "is_sample": True,
             }
-            rec = env["faizy.order"].create(vals)
+            # Demo records are written straight into their final state; the
+            # context marks that as deliberate so the completion guard in
+            # faizy_order.write() lets it through (sample orders carry no
+            # proof photo by design).
+            rec = env["faizy.order"].create(vals).with_context(
+                faizy_completion_checked=True
+            )
             when = fields.Datetime.now() - relativedelta(days=days_ago)
             if state in ("assigned", "in_progress", "completed"):
                 rec.write({"state": state, "date_assigned": when})

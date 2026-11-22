@@ -745,3 +745,58 @@ and dropping the redundant argument. Could not run this against a live Odoo inst
 Postgres in this environment) — verified by reasoning about `ensure_one()`'s exact semantics against
 the exact error text the other session's test run already logged, not by executing it myself; CI's
 real Odoo test run against Postgres is the actual proof once this lands.
+
+## 16. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.1.0)
+
+Scope approved by Umer on 22 Nov 2026 (FAIZY HQ05, "PR (a) security guards"). These close gaps S1–S6
+found in the HQ05 audit, which had to be fixed **before** Mashood (care) and Raza (operations) get
+their own logins. No user, group membership or production setting is changed by this code.
+
+- **S1, order actions are Operations-only.** `action_confirm/assign/start/complete/cancel/reset_to_pending`
+  raise `AccessError` unless the user is in Faizy / Operations (or the call is `sudo`, as approved AI
+  drafts, crons and portal bookings are). A Faizy / Agent may only write `description`,
+  `completion_note`, `receipt_note` (plus mail bookkeeping) and can no longer create orders directly
+  (ACL `faizy.order.user` create 0); bookings go through a draft. The state buttons carry
+  `groups="faizy_core.group_faizy_ops"`.
+- **S2, completion gate.** `action_complete` refuses without a proof photo, and without the receipt
+  image whenever `purchase_value > 0`. A direct `write({'state': 'completed'})` is refused too, so the
+  button is the only path. Sample orders are exempt (the loader sets a context flag).
+  *Choice made:* receipt is required only when money was spent; a doctor visit with no purchase has
+  nothing to receipt. HQ05 T13 said "photo and receipt"; revisit if Raza wants a receipt always.
+- **S3, WhatsApp containment.** New system parameter `faizy.whatsapp_send_mode`, **off unless set to
+  "on"** (a missing parameter means off). While off: `queue_message` creates nothing and posts an
+  internal note on the order; any direct `create()` is stored in a new state `held` ("Not Sent
+  (Sending Off)") that the cron never picks up; the send cron returns immediately; Send Now and Retry
+  refuse. Existing `queued` rows (105 on `faizy_prod`) are not touched: not sent, not deleted. The ops
+  new-order alert note now says the WhatsApp alert was not sent.
+  In `faizy_ai`, approving a customer message while sending is off moves the draft to the new state
+  `to_send`; the approver sends the text from the official WhatsApp phone and clicks **Mark as sent
+  manually**, which records `sent_manually_by` / `sent_manually_date`. No queue record is made.
+- **S4, document files.** `faizy.document.attachment` / `attachment_name` are limited to Operations and
+  portal (portal is still limited to the customer's own documents by the existing record rule);
+  `notes` is Operations-only. A Faizy / Agent sees that a document exists, its type and expiry, and
+  cannot read the file, including the stored `ir.attachment` (tested).
+- **S5, escalations.** AI drafts of kind `other` (complaints, refunds, safety, new services) can only be
+  approved by Faizy / Manager.
+- **S6, money and deletion.** Operations loses create/write on `faizy.wallet.transaction` and `unlink`
+  on orders, documents, applications, areas, family members, bridge and product requests. Manager rows
+  added so Umer keeps full rights. Archiving (`active`) remains the way to retire records.
+- **Found while testing, fixed:** a customer invoice / vendor bill draft created on completion failed
+  silently (`AccessError` on `account.move`, caught and logged) for any user without Accounting rights,
+  i.e. for Raza on every completed order. The drafts are now created with `sudo()`; they stay drafts
+  and posting stays with someone who has Accounting access.
+
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases:
+
+- Baseline, this branch before the change: `0 failed, 0 error(s) of 23 tests`.
+- After: fresh install of `faizy_core,faizy_website,faizy_ai` with tests: `0 failed, 0 error(s) of 43
+  tests` (17 new in `test_hq05_guards.py`, 3 new in `faizy_ai`, 2 existing `faizy_ai` tests now set the
+  send mode to "on" because they test the sending path).
+- Upgrade path: database installed from the old code, then `-u faizy_core,faizy_ai`: `upgrade exit: 0`.
+- `validate_modules.py`, `check_portal_access.py`, `check_self_fields.py`, `check_plan_prices.py`,
+  `check_view_schemas.py`, `check_core_fields.py`, `flake8`, `compileall`: all pass.
+
+**Not verified / not done:** nothing has run on staging or `faizy_prod`. Staging does not exist yet
+(HQ05 §8 step 1, Shafat). Production is still on faizy_core 19.0.1.20.0, so deploying this branch also
+deploys 1.21–1.23 (vendor bill, customer invoice + wallet debit, document portal rule). Routing,
+activities and desks are PR (b).

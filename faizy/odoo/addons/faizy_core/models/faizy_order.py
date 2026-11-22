@@ -1,7 +1,18 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
+
+# Fields a Faizy / Agent (customer care, without Operations) may still edit on
+# an order: the description and the notes. Everything that moves the job or
+# its money is Operations' call (FAIZY HQ05 S1). The mail.thread bookkeeping
+# field is included because posting an attachment in the chatter writes it.
+AGENT_WRITABLE_ORDER_FIELDS = {
+    "description",
+    "completion_note",
+    "receipt_note",
+    "message_main_attachment_id",
+}
 
 
 class FaizyOrder(models.Model):
@@ -264,10 +275,81 @@ class FaizyOrder(models.Model):
         "res.company", default=lambda self: self.env.company, required=True
     )
 
+    # ── Access guards (FAIZY HQ05 S1/S2) ─────────────────────────────────
+
+    def _faizy_is_ops(self):
+        """Operations (and Manager, which implies it), or a superuser call.
+
+        sudo() calls are trusted on purpose: approved AI drafts, crons and the
+        portal booking flow run as superuser after their own checks.
+        """
+        return self.env.su or self.env.user.has_group("faizy_core.group_faizy_ops")
+
+    def _check_order_action_rights(self):
+        if not self._faizy_is_ops():
+            raise AccessError(
+                self.env._(
+                    "Only Faizy Operations can move an order along (confirm, "
+                    "assign, start, complete, cancel or reset). Ask Operations, "
+                    "or note what is needed in the order's description."
+                )
+            )
+
+    def write(self, vals):
+        if not self._faizy_is_ops():
+            blocked = set(vals) - AGENT_WRITABLE_ORDER_FIELDS
+            if blocked:
+                raise AccessError(
+                    self.env._(
+                        "You can only edit the description and notes of an order. "
+                        "These fields are for Operations: %(fields)s",
+                        fields=", ".join(sorted(blocked)),
+                    )
+                )
+        if (
+            vals.get("state") == "completed"
+            and not self.env.su
+            and not self.env.context.get("faizy_completion_checked")
+        ):
+            # Completion has exactly one path: action_complete, which checks
+            # the proof first. A direct write would skip that check.
+            raise UserError(
+                self.env._(
+                    "Use the Complete button to complete an order: it checks the "
+                    "proof photo and receipt first."
+                )
+            )
+        return super().write(vals)
+
+    def _check_completion_evidence(self):
+        """No order closes without evidence (HQ05 S2, ERP B05).
+
+        A proof photo always; an itemised receipt whenever money was spent on
+        the customer's behalf (purchase_value > 0), because that is the figure
+        the customer is charged for. Sample orders are demo data and exempt.
+        """
+        for order in self:
+            if order.is_sample:
+                continue
+            missing = []
+            if not order.proof_image:
+                missing.append(self.env._("a proof photo"))
+            if order.purchase_value > 0 and not order.receipt_image:
+                missing.append(self.env._("the itemised receipt"))
+            if missing:
+                raise UserError(
+                    self.env._(
+                        "%(ref)s cannot be completed yet: add %(missing)s first.",
+                        ref=order.name,
+                        missing=self.env._(" and ").join(missing),
+                    )
+                )
+
     # ── Workflow ─────────────────────────────────────────────────────────
 
     def action_assign(self):
         """Assign to a Faizy and notify both sides."""
+        self._check_order_action_rights()
         for order in self:
             if not order.worker_id:
                 raise UserError(
@@ -279,22 +361,27 @@ class FaizyOrder(models.Model):
             order._notify_whatsapp("faizy_assigned")
 
     def action_start(self):
+        self._check_order_action_rights()
         self.write({"state": "in_progress", "date_started": fields.Datetime.now()})
         self._notify_whatsapp("status_update")
 
     def action_complete(self):
+        self._check_order_action_rights()
+        self._check_completion_evidence()
         for order in self:
-            order.write(
+            order.with_context(faizy_completion_checked=True).write(
                 {"state": "completed", "date_completed": fields.Datetime.now()}
             )
             order._notify_whatsapp("status_update")
             order._notify_whatsapp("receipt")
 
     def action_cancel(self):
+        self._check_order_action_rights()
         self.write({"state": "cancelled"})
         self._notify_whatsapp("status_update")
 
     def action_reset_to_pending(self):
+        self._check_order_action_rights()
         self.write({"state": "pending", "worker_id": False, "date_assigned": False})
 
     def action_confirm(self):
@@ -304,6 +391,7 @@ class FaizyOrder(models.Model):
         live subscription, the booking is refused here rather than silently
         delivered for nothing.
         """
+        self._check_order_action_rights()
         for order in self:
             if order.consumed_activity or not order.service_id.consumes_activity:
                 order._notify_whatsapp("booking_confirmation")

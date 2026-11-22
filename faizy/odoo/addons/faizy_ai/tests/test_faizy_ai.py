@@ -79,7 +79,11 @@ class TestFaizyAI(TransactionCase):
                         payload=json.dumps({'write': {'state': 'completed'}}))
 
     # ---------------------------------------------------------------- approval routing
+    def _sending_on(self):
+        self.env['ir.config_parameter'].sudo().set_param('faizy.whatsapp_send_mode', 'on')
+
     def test_customer_message_needs_comms_not_ops(self):
+        self._sending_on()
         draft = self._draft()
         with self.assertRaises(AccessError):
             draft.with_user(self.raza).action_approve()
@@ -92,6 +96,7 @@ class TestFaizyAI(TransactionCase):
         self.assertEqual(draft.approver_id, self.mashood)
 
     def test_held_outside_hours_then_released(self):
+        self._sending_on()
         draft = self._draft()
         with patch(NOW_PATH, return_value=OUT_HOURS):
             draft.with_user(self.mashood).action_approve()
@@ -166,3 +171,45 @@ class TestFaizyAI(TransactionCase):
         for key in ('open_orders', 'overdue_orders', 'completed_without_proof',
                     'pending_drafts', 'unhandled_inbound', 'failed_whatsapp_messages'):
             self.assertIn(key, digest)
+
+    # ---------------------------------------------------------------- HQ05 PR (a)
+    def test_manual_mode_when_sending_off(self):
+        """T18: with sending off, approval queues nothing and waits for a person."""
+        Msg = self.env['faizy.whatsapp.message']
+        before = Msg.search_count([])
+        draft = self._draft()
+        with patch(NOW_PATH, return_value=OUT_HOURS):
+            # Manual mode does not wait for working hours: a person sends it.
+            draft.with_user(self.mashood).action_approve()
+        self.assertEqual(draft.state, 'to_send')
+        self.assertFalse(draft.message_ref_id)
+        self.assertEqual(Msg.search_count([]), before)
+        with self.assertRaises(AccessError):
+            draft.with_user(self.raza).action_mark_sent_manually()
+        draft.with_user(self.mashood).action_mark_sent_manually()
+        self.assertEqual(draft.state, 'executed')
+        self.assertEqual(draft.sent_manually_by, self.mashood)
+        self.assertTrue(draft.sent_manually_date)
+        self.assertEqual(Msg.search_count([]), before)
+
+    def test_held_draft_released_into_manual_mode(self):
+        self._sending_on()
+        draft = self._draft()
+        with patch(NOW_PATH, return_value=OUT_HOURS):
+            draft.with_user(self.mashood).action_approve()
+        self.assertEqual(draft.state, 'approved')
+        self.env['ir.config_parameter'].sudo().set_param('faizy.whatsapp_send_mode', 'off')
+        with patch(NOW_PATH, return_value=IN_HOURS):
+            self.env['faizy.ai.draft']._cron_release_held()
+        self.assertEqual(draft.state, 'to_send')
+        self.assertFalse(draft.message_ref_id)
+
+    def test_escalation_is_manager_only(self):
+        """T12: a draft of kind "other" is approved only by the Manager."""
+        draft = self._draft(kind='other', subject='Refund request')
+        for user in (self.mashood, self.raza):
+            with self.assertRaises(AccessError):
+                draft.with_user(user).action_approve()
+        draft.with_user(self.umer).action_approve()
+        self.assertEqual(draft.state, 'executed')
+        self.assertEqual(draft.approver_id, self.umer)
