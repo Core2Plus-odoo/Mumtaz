@@ -164,3 +164,32 @@ class TestEvidenceGate(TransactionCase):
         order.with_user(self.ops).action_approve_evidence()
         found = self.env["faizy.order"].with_user(self.cust_b).search([("id", "=", order.id)])
         self.assertFalse(found)
+
+
+@tagged("post_install", "-at_install", "faizy")
+class TestExistingEvidenceMigration(TransactionCase):
+    """Orders that already held images before the addon existed keep working."""
+
+    def test_post_init_hook_grandfathers_existing_orders(self):
+        from odoo.addons.faizy_pilot.hooks import post_init_hook
+        from odoo.addons.faizy_pilot.models.faizy_order import _TOKEN
+
+        customer = mail_new_test_user(
+            self.env, login="mig_cust", name="mig_cust", groups="base.group_portal")
+        service = self.env["faizy.service"].search([], limit=1) or self.env["faizy.service"].create(
+            {"name": "Migration test service"})
+        base = {"title": "SYNTHETIC", "partner_id": customer.partner_id.id,
+                "service_id": service.id, "city": "Karachi"}
+        done = self.env["faizy.order"].create(dict(base, state="completed", proof_image=PNG))
+        running = self.env["faizy.order"].create(dict(base, state="in_progress", receipt_image=PNG))
+        empty = self.env["faizy.order"].create(dict(base, state="in_progress"))
+        # Put them in the pre-install condition: images present, state 'none'.
+        (done | running).with_context(faizy_evidence_internal=_TOKEN).write({"evidence_state": "none"})
+        self.env.flush_all()
+
+        post_init_hook(self.env)
+
+        self.assertEqual(done.evidence_state, "approved")
+        self.assertTrue(done.with_user(customer).proof_visible)
+        self.assertEqual(running.evidence_state, "submitted")
+        self.assertEqual(empty.evidence_state, "none")
