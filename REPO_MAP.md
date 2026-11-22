@@ -62,7 +62,7 @@ install profile `mumtaz_erp` over modules in `addons/`.
 | Folder | What it is | Path |
 | --- | --- | --- |
 | `sites/mumtaz.digital/` | Index plus the 14-page static marketing site | Free |
-| `website/index.html`, `website/assets/` | A landing page for the delivery console | Fixed (a CI job checks the files; server use unknown) |
+| `sites/delivery.mumtaz.digital/landing/` | A landing page for the delivery console (was `website/index.html` and `website/assets/`) | Free: the server check of 22 Nov 2026 showed no nginx root reads it |
 | `wordpress-sites/`, `sites/odditytrend.com/`, `sites/youngcraze.com/` | Two WordPress themes and their index pages | Fixed; destination is their own repository (D-12) |
 | `ops/` | nginx definitions, Odoo config samples and older deploy scripts. None confirmed live | Free, but referenced by scripts |
 | `tools/scrapers/` | Internal lead scraper | Free (CI lints this path) |
@@ -73,7 +73,7 @@ install profile `mumtaz_erp` over modules in `addons/`.
 | Date | Move |
 | --- | --- |
 | 21 Nov 2026 | Eight `apps/*` folders to `sites/<domain>/` and `ops/` (table in `sites/README.md`) |
-| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; a stray `docs/05-build-log.md` folded into `c2p-delivery-system/docs/05-build-log.md` |
+| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; a stray `docs/05-build-log.md` folded into `c2p-delivery-system/docs/05-build-log.md`; `website/index.html` and `website/assets/` → `sites/delivery.mumtaz.digital/landing/` |
 
 Nothing was deleted. The remaining "Fixed" folders are listed with the server
 step each one needs in `docs/platform/MUMTAZ_REPOSITORY_CONSOLIDATION.md`.
@@ -109,7 +109,7 @@ then one pull request per row.
 
 | Area | Copies | Evidence so far |
 | --- | --- | --- |
-| Marketing site | `sites/mumtaz.digital/site` (14 pages), `website/index.html`, `platform/marketing/index.html` | On 21 Nov the live page title at mumtaz.digital matched `platform/marketing` |
+| Marketing site | `sites/mumtaz.digital/site` (14 pages), `sites/delivery.mumtaz.digital/landing/index.html`, `platform/marketing/index.html` | On 21 Nov the live page title at mumtaz.digital matched `platform/marketing` |
 | ZAKI application | `sites/zaki.mumtaz.digital/static` (static), `sites/zaki.mumtaz.digital/node-app` (Node), `platform/zaki` (FastAPI + page) | Which one is served is not determinable from git |
 | AI and CFO modules | `mumtaz_ai`, `mumtaz_voice`, `mumtaz_zaki`, `mumtaz_cfo_*`, plus the Jawhar provider layer | Decision D-03 in the decision register covers part of this |
 | Foundation | `mumtaz_core`, `mumtaz_base` | `mumtaz_base` is 46 lines |

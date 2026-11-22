@@ -12,6 +12,10 @@ Customer portal: signup, onboarding, billing, admin pages. Static HTML that call
 
 > Server facts below are **reported** (from owner-run output recorded in this repo, Oct–Nov 2026) and have not been re-verified. See the [audit pack](../../docs/infrastructure-audit/16_AUDIT_EXECUTIVE_SUMMARY.md).
 
+## What the server check of 22 Nov 2026 showed
+
+nginx does **not** serve this hostname from `/var/www/app.mumtaz.digital`. Its root is `/opt/mumtaz/platform/frontend`: the control-panel front end of the `platform/` rebuild, copied there by `platform/ops/install/05-cutover.sh`. The source of that control panel (`platform/control-panel/`) is on the production branch `claude/resume-help-95ne9v` and was deleted from `main`. Whether its back end on port 8002 is running, and whether it holds real tenants, is the next check. The 12 static pages in `portal/` are therefore not what visitors see.
+
 ## The control plane is not this folder
 
 The SaaS control plane (tenants, products, plans, subscriptions, entitlements,

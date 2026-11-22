@@ -307,9 +307,9 @@ jobs:
         run: |
           set -e
           required=(
-            "website/index.html"
-            "website/assets/css/style.css"
-            "website/assets/js/main.js"
+            "sites/delivery.mumtaz.digital/landing/index.html"
+            "sites/delivery.mumtaz.digital/landing/assets/css/style.css"
+            "sites/delivery.mumtaz.digital/landing/assets/js/main.js"
           )
           errors=0
           for f in "${required[@]}"; do

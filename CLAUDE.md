@@ -24,6 +24,16 @@ Production: Hostinger VPS `187.77.128.199`, repo checked out at `/opt/mumtaz`,
 console at `https://delivery.mumtaz.digital`. **Deploys go to `main`** — the VPS
 pulls main; feature branches never reach production.
 
+> **Checked on the server, 22 Nov 2026 — the paragraph above is not what the
+> server does.** `/opt/mumtaz` is on branch `claude/resume-help-95ne9v`, not
+> `main`, so `update.sh` (`git pull --ff-only origin main`) cannot
+> fast-forward it. The Odoo services do not read `/opt/mumtaz` at all: the ERP
+> reads `/opt/mumtaz-main/addons`; C2P, IG2 and the base instance share
+> `/opt/custom_addons/Mumtaz/addons`. A merge to `main` therefore does not
+> reach production by itself, and one pull in the shared checkout changes
+> three instances at once. Evidence and open checks:
+> `docs/platform/MUMTAZ_DEPLOYMENT_REGISTRY.md` §0.
+
 ## Deploying
 
 One command on the VPS (pull → relink console → restart API → health):

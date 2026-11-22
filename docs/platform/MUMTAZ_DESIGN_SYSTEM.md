@@ -57,7 +57,7 @@ a small set of values a partner may change and everything else fixed. (§3–§6
 | `addons/mumtaz_website/static/src/css/website.css:7-14` | background `#060b14`; gold `#f0a500` / `#fbbf24`; blue `#3b82f6` | Inter | No | VERIFIED |
 | `sites/mumtaz.digital/site/assets/css/tokens.css` | gold `#B8862A`; teal `#0B7A64`; paper `#FAF8F4`; ink `#1C1917` | Inter, DM Mono | No | REPORTED |
 | `sites/mumtaz.digital/site/index.html` (inline) | background `#05050D`; gold `#F59E0B` / `#FCD34D` / `#D97706`; teal `#14B8A6` | Inter, DM Mono | No | REPORTED |
-| `website/assets/css/style.css` | paper `#F5F3EF`; ink `#0C1118`; gold `#B8862A`; teal `#0B7A64` | Fraunces, Plus Jakarta Sans | No | REPORTED |
+| `sites/delivery.mumtaz.digital/landing/assets/css/style.css` | paper `#F5F3EF`; ink `#0C1118`; gold `#B8862A`; teal `#0B7A64` | Fraunces, Plus Jakarta Sans | No | REPORTED |
 | `platform/marketing/index.html` | paper `#FAF8F4`; ink `#1C1917`; gold `#B8862A`; green `#0B7A64`; mark "م" | Inter, DM Mono | No. `platform/README.md:7-8` records this as an owner decision ("ivory/gold/Inter, not teal/navy") | VERIFIED (README), REPORTED (values) |
 | `mumtaz_organization`, `mumtaz_customer_portal`, `mumtaz_vendor_portal`, `sites/app.mumtaz.digital/portal` | gold-first | Instrument Serif, DM Sans | No | REPORTED |
 | `faizy/brand/README.md` | orange `#F69E22`; black `#0A0A0A` | Poppins, Noto Nastaliq Urdu | Separate product; out of scope | REPORTED |

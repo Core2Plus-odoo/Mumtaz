@@ -19,6 +19,44 @@ Written 21 Nov 2026. One row per system that is deployed or can be deployed from
 
 Sources for REPORTED rows: [`docs/infrastructure-audit/01_ENVIRONMENT_INVENTORY.md`](../infrastructure-audit/01_ENVIRONMENT_INVENTORY.md), [`06_ODOO_INSTANCES_AUDIT.md`](../infrastructure-audit/06_ODOO_INSTANCES_AUDIT.md), [`08_DEPLOYMENT_AND_CICD_AUDIT.md`](../infrastructure-audit/08_DEPLOYMENT_AND_CICD_AUDIT.md), [`09_BACKUP_AND_RECOVERY_AUDIT.md`](../infrastructure-audit/09_BACKUP_AND_RECOVERY_AUDIT.md) and the per-site pages under [`sites/`](../../sites/README.md). This registry does not repeat their detail.
 
+## 0. Server evidence, 22 Nov 2026
+
+The first direct evidence from the server: the owner ran read-only commands
+and pasted the output. It supersedes any REPORTED row below that disagrees.
+Tag used for these facts: **SERVER** (owner-run command output, not
+re-checked by anyone else). Nothing was changed on the server.
+
+### Checkouts of this repository
+
+| Path on the server | Branch | Read by |
+| --- | --- | --- |
+| `/opt/mumtaz` | `claude/resume-help-95ne9v` — **not `main`** | nginx: the delivery console (`c2p-delivery-system/web`), the Jawhar copies (`jewel-landing`, `jewel-app`), and two folders that are not in git on `main` (`platform/frontend`, `zaki/frontend`) |
+| `/opt/mumtaz-main` | not readable by root's git ("dubious ownership"); UNKNOWN | `odoo2` (the ERP instance): `addons_path` = `/opt/mumtaz-main/addons` |
+| `/opt/custom_addons/Mumtaz` | UNKNOWN (not listed by the check) | `odoo`, `odoo3` and `odoo4`: all three use `/opt/custom_addons` and `/opt/custom_addons/Mumtaz/addons` |
+| `/opt/mumtaz-pharma-staging` | `pharma-erp-v0.1` | `odoo-pharma`, with `/opt/thirdparty/cybroaddons` |
+| `/opt/Mumtaz` (capital M) | `claude/odoo-architecture-review-ujm0W` (last commit July 2026) | Nothing found. Probably a leftover |
+| `/opt/faizy` | not a git checkout at its top level | `faizy-odoo`: its own Odoo source and virtualenv; configuration `/opt/faizy/odoo.conf` (not shown) |
+
+### What follows from it
+
+| Finding | Consequence |
+| --- | --- |
+| No Odoo service reads `/opt/mumtaz/addons` | The statement "production pulls `main` at `/opt/mumtaz`" covers at most the delivery console, and even there the checkout is on another branch |
+| `odoo`, `odoo3` (the external client) and `odoo4` (C2P) share **one** addons checkout | A `git pull` there changes code for the external client and for C2P in the same moment. The rule "no automatic change to IG2" cannot be kept while they share it |
+| nginx serves `/opt/mumtaz/platform/frontend` and `/opt/mumtaz/zaki/frontend` | These are the targets of `platform/ops/install/05-cutover.sh`. **The "stalled rebuild" was cut over.** Its control panel and its ZAKI page are being served |
+| The control panel's source (`platform/control-panel/`, an 800-line FastAPI service: sign-up, tenants, Odoo provisioning, sign-on link, impersonation, billing) exists on the production branch. It was deleted from `main` in PR #124 as "abandoned" | A control plane other than the Odoo modules may be running. Whether its service is up and holds real tenants is UNKNOWN — the next check |
+| The ZAKI back end in `platform/zaki/backend` is the one the security review found unauthenticated, with one Odoo administrator for every tenant (audit APP-01, APP-02) | If its service is running, that finding is live, not theoretical. UNKNOWN until the next check |
+| No nginx root points at `website/`, `sites/`, `ops/` or `tools/` | Those folders are free to reorganize. The apex site and `app.` and `zaki.` hostnames are not served from the paths the old deploy scripts write to (`/var/www/…`), except the marketplace and the two WordPress sites |
+| nginx reports `conflicting server name "www.mumtaz.digital"` | Two definitions claim the apex; one is ignored |
+| nginx is `1.24.0-2ubuntu7.21` | Patched for the November 2026 nginx flaws (CVE-2026-123007 and others) |
+| The host shows "System restart required" and 30 pending package updates | A reboot window is needed |
+
+### Next read-only checks
+
+1. Are the services `mumtaz-platform` (port 8002) and `zaki` (port 8001) running, and how many rows are in the control panel's `tenants` table?
+2. Branch, last commit and uncommitted changes of `/opt/mumtaz-main` and `/opt/custom_addons/Mumtaz`.
+3. The full hostname → root or upstream table from `nginx -T`.
+
 ## 1. The four categories
 
 | Category | Meaning | Systems |

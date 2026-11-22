@@ -17,6 +17,27 @@ Status words: **VERIFIED** (read in code or run on the local Odoo 19 +
 PostgreSQL 16 rig) · **REPORTED** (repository documents; includes everything
 about the live server) · **PROPOSED** · **UNKNOWN**.
 
+## 0. Update, 22 Nov 2026 — first server evidence
+
+The owner ran read-only commands on the server. Three statements in this
+folder were written from `main` and are now known to be incomplete; each is
+corrected where it stands.
+
+| Written on 21 Nov | What the server shows | Where corrected |
+| --- | --- | --- |
+| The control panel behind `app.mumtaz.digital` is gone; the Odoo modules are the only control plane | nginx serves a control-panel front end; its FastAPI source is on the production branch, deleted from `main`. Two control planes may exist | `MUMTAZ_SAAS_CONTROL_PLANE.md` (correction note), decision P-02 |
+| Which ZAKI is live is unknown | The `platform/zaki` front end is served. Its back end is the unauthenticated one. Whether it is running is the next check | `sites/zaki.mumtaz.digital/README.md` |
+| Production pulls `main` at `/opt/mumtaz` | That checkout is on a feature branch; no Odoo service reads it; three Odoo instances, including the external client's, share one other checkout | `MUMTAZ_DEPLOYMENT_REGISTRY.md` §0, `CLAUDE.md` |
+
+Also on 22 Nov: `main` merged in; the remaining loose folders organized (a
+README in every folder, `REPO_MAP.md` by category); nginx confirmed patched
+for the November 2026 flaws.
+
+The milestone below stands as built and tested. What changes is the order of
+work: **finding out whether the FastAPI control panel and the ZAKI back end
+are running comes before anything else**, because one decides P-02 and the
+other is a possible live exposure.
+
 ## 1. What was inspected
 
 | Area | How | Result in |

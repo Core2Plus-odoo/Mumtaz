@@ -15,11 +15,24 @@ Status words used below:
 **PROPOSED** — designed, not built ·
 **UNKNOWN** — needs server evidence or an owner answer.
 
+> **Correction, 22 Nov 2026 (server evidence).** The conclusion above was
+> drawn from `main`. The server shows more: nginx serves a control-panel
+> front end from `/opt/mumtaz/platform/frontend`, and the production branch
+> `claude/resume-help-95ne9v` carries `platform/control-panel/`, an
+> 800-line FastAPI service with sign-up, tenants, Odoo provisioning, a
+> sign-on link, impersonation and billing. It was deleted from `main` in
+> PR #124. So there may be **two** control planes: that service (possibly
+> running, on an unmerged branch, with no tests) and the Odoo modules
+> described here (on `main`, tested, never run on the server). Which one is
+> kept is decision P-02; until the server check says whether the FastAPI
+> service is running and holds real tenants, do not retire either. Details:
+> `MUMTAZ_DEPLOYMENT_REGISTRY.md` §0.
+
 ## 1. What `app.mumtaz.digital` is today
 
 | Item | State |
 | --- | --- |
-| The site served at `app.mumtaz.digital` | REPORTED: a static portal (`sites/app.mumtaz.digital/portal`). Its `/api` backend (`zaki-server`) was deleted from the repository in PR #124. Whether anything answers on the server is UNKNOWN |
+| The site served at `app.mumtaz.digital` | SERVER (22 Nov 2026): nginx has a root at `/opt/mumtaz/platform/frontend`, the control-panel front end of the `platform/` rebuild — not the static portal in `sites/app.mumtaz.digital/portal`. Whether its back end (port 8002) is running is UNKNOWN |
 | The control-plane code | VERIFIED: Odoo modules in `addons/`, listed in §2 |
 | Which Odoo database holds the control plane | UNKNOWN (decision P-02). No document names one |
 | Whether any tenant was ever provisioned through `mumtaz.tenant` | UNKNOWN |
