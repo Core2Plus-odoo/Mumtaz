@@ -49,11 +49,13 @@
                             <field name="is_sample" readonly="1" invisible="not is_sample"/>
                         </group>
                     </group>
-                    <group string="File">
+                    <!-- The scan and its notes: Operations only (HQ05 S4). -->
+                    <group string="File" groups="faizy_core.group_faizy_ops">
                         <field name="attachment" filename="attachment_name"/>
                         <field name="attachment_name" invisible="1"/>
                     </group>
-                    <field name="notes" placeholder="Anything a Faizy would need to know."/>
+                    <field name="notes" placeholder="Anything a Faizy would need to know."
+                           groups="faizy_core.group_faizy_ops"/>
                 </sheet>
                 <chatter/>
             </form>

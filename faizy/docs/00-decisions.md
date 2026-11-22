@@ -861,3 +861,72 @@ the generic group, so anything marketing placed by hand stays. Blog tied with th
 Runs as a 19.0.1.22.0 migration (the data file is noupdate) and from `post_init_hook` for new installs. No menu is created
 or deleted and no label changes. Verified on a throwaway Odoo 19 database: 34 tests pass (4 new in `test_header_menu`),
 the migration moved the 3 detached entries, and desktop and mobile menus were checked in screenshots. Not run on production.
+
+## 20. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.2.0)
+
+Scope approved by Umer on 22 Nov 2026 (FAIZY HQ05, "PR (a) security guards"). These close gaps S1–S6
+found in the HQ05 audit, which had to be fixed **before** Mashood (care) and Raza (operations) get
+their own logins. No user, group membership or production setting is changed by this code.
+
+- **S1, order actions are Operations-only.** `action_confirm/assign/start/complete/cancel/reset_to_pending`
+  raise `AccessError` unless the user is in Faizy / Operations (or the call is `sudo`, as approved AI
+  drafts, crons and portal bookings are). A Faizy / Agent may only write `description`,
+  `completion_note`, `receipt_note`, the proof and receipt photos (care receives them on WhatsApp;
+  `faizy_pilot` sends any new photo back to Operations for review) and mail bookkeeping, and can no longer create orders directly
+  (ACL `faizy.order.user` create 0); bookings go through a draft. The state buttons carry
+  `groups="faizy_core.group_faizy_ops"`.
+- **S2, completion gate: superseded by §16 (`faizy_pilot`).** This PR first carried its own gate in
+  `faizy_core` (proof always, receipt when money was spent, a context flag for the direct-write path).
+  §16 landed on the base branch first with a stricter gate: approved evidence, a Manager-only
+  exception with a written reason, and an unforgeable in-process token instead of a context flag
+  that an RPC caller could send. Keeping both would have broken the Manager exception path, because
+  both define `_check_completion_evidence`. The faizy_core gate was removed in the merge, so
+  **`faizy_pilot` must be installed with this PR** for completion to require evidence.
+- **S3, WhatsApp containment.** New system parameter `faizy.whatsapp_send_mode`, **off unless set to
+  "on"** (a missing parameter means off). While off: `queue_message` creates nothing and posts an
+  internal note on the order; any direct `create()` is stored in a new state `held` ("Not Sent
+  (Sending Off)") that the cron never picks up; the send cron returns immediately; Send Now and Retry
+  refuse. Existing `queued` rows (105 on `faizy_prod`) are not touched: not sent, not deleted. The ops
+  new-order alert note now says the WhatsApp alert was not sent.
+  In `faizy_ai`, approving a customer message while sending is off moves the draft to the new state
+  `to_send`; the approver sends the text from the official WhatsApp phone and clicks **Mark as sent
+  manually**, which records `sent_manually_by` / `sent_manually_date`. No queue record is made.
+- **S4, document files.** `faizy.document.attachment` / `attachment_name` are limited to Operations and
+  portal (portal is still limited to the customer's own documents by the existing record rule);
+  `notes` is Operations-only. A Faizy / Agent sees that a document exists, its type and expiry, and
+  cannot read the file, including the stored `ir.attachment` (tested).
+- **S5, escalations.** AI drafts of kind `other` (complaints, refunds, safety, new services) can only be
+  approved by Faizy / Manager.
+- **S6, money and deletion.** Operations loses create/write on `faizy.wallet.transaction` and `unlink`
+  on orders, documents, applications, areas, family members, bridge and product requests. Manager rows
+  added so Umer keeps full rights. Archiving (`active`) remains the way to retire records.
+- **Found when merging §16, fixed:** with `faizy_pilot` and `faizy_ai` installed together, the AI
+  digest failed (`AccessError` on `proof_image`, which §16 made staff-only), and so did two
+  `faizy_ai` tests on the base branch itself. The digest's "completed without proof" count now runs
+  with `sudo()`, since it is a count only and no image is read. The AI test accepts either refusal
+  (ACL or evidence gate) when the AI user tries to complete an order.
+- **Found while testing, fixed:** a customer invoice / vendor bill draft created on completion failed
+  silently (`AccessError` on `account.move`, caught and logged) for any user without Accounting rights,
+  i.e. for Raza on every completed order. The drafts are now created with `sudo()`; they stay drafts
+  and posting stays with someone who has Accounting access.
+
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases,
+after merging §16:
+
+- Base branch with all four addons installed (`faizy_core,faizy_website,faizy_ai,faizy_pilot`):
+  `0 failed, 2 error(s) of 41 tests`. Both errors are the `faizy_ai` / `faizy_pilot` clash above.
+- This branch, all four addons, after merging `main` (§16a–§19, the AI brain #140): `0 failed,
+  0 error(s) of 75 tests`. `faizy_ai` is bumped to 19.0.1.2.0 because `main` already uses 1.1.0 for the
+  AI brain; drafts waiting in `to_send` count as approved in the agent's approval rate.
+- Upgrade path from `main`: database installed from `main` with all four addons, then
+  `-u faizy_core,faizy_ai,faizy_pilot,faizy_website`: `upgrade exit: 0`. `registry.yaml` regenerated.
+- This branch without `faizy_pilot`: `0 failed, 0 error(s) of 43 tests`.
+- Upgrade path: the base database with all four addons, then `-u faizy_core,faizy_ai,faizy_pilot`:
+  `upgrade exit: 0`.
+- `validate_modules.py`, `check_portal_access.py`, `check_self_fields.py`, `check_view_schemas.py`,
+  `flake8`: all pass.
+
+**Not verified / not done:** nothing has run on staging or `faizy_prod`. Staging does not exist yet
+(HQ05 §8 step 1, Shafat). Production is still on faizy_core 19.0.1.20.0, so deploying this branch also
+deploys 1.21–1.23 and needs `faizy_pilot` installed for the completion gate (vendor bill, customer invoice + wallet debit, document portal rule). Routing,
+activities and desks are PR (b).

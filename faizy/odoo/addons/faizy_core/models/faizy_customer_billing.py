@@ -151,7 +151,12 @@ class FaizyOrderCustomerBilling(models.Model):
         self.ensure_one()
         self._check_customer_invoice_exchange_rate()
 
-        invoice = self.env["account.move"].create({
+        # sudo(): completion is done by Operations (HQ05: Raza), who has no
+        # Accounting rights and must not get them. The draft is a system side
+        # effect of the completion; posting it stays with a person who has
+        # Accounting access. Without this the draft silently failed for every
+        # non-accountant who completed an order.
+        invoice = self.env["account.move"].sudo().create({
             "move_type": "out_invoice",
             "partner_id": self.partner_id.id,
             "invoice_date": fields.Date.context_today(self),
