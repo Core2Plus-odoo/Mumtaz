@@ -16,7 +16,10 @@ class TestOrderEvidencePortal(HttpCase):
 
     def setUp(self):
         super().setUp()
-        mk = lambda login, groups: mail_new_test_user(self.env, login=login, name=login, groups=groups)
+
+        def mk(login, groups):
+            return mail_new_test_user(self.env, login=login, name=login, groups=groups)
+
         self.ops = mk("web_ops", "faizy_core.group_faizy_ops")
         self.cust = mk("web_cust", "base.group_portal")
         service = self.env["faizy.service"].search([], limit=1) or self.env["faizy.service"].create(

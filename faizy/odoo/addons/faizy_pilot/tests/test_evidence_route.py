@@ -15,7 +15,10 @@ class TestEvidenceRoute(HttpCase):
 
     def setUp(self):
         super().setUp()
-        mk = lambda login, groups: mail_new_test_user(self.env, login=login, name=login, groups=groups)
+
+        def mk(login, groups):
+            return mail_new_test_user(self.env, login=login, name=login, groups=groups)
+
         self.ops = mk("route_ops", "faizy_core.group_faizy_ops")
         self.cust_a = mk("route_cust_a", "base.group_portal")
         self.cust_b = mk("route_cust_b", "base.group_portal")

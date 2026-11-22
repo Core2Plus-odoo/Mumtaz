@@ -2,7 +2,7 @@
     'name': 'Faizy Pilot: Evidence Gate',
     'version': '19.0.1.0.0',
     'category': 'Services',
-    'summary': 'Completion evidence gate for Faizy orders: reviewed proof and receipt before an order can complete or be billed',
+    'summary': 'Completion evidence gate: reviewed proof and receipt before an order completes or is billed',
     'description': """
 Faizy Pilot: Evidence Gate
 ==========================

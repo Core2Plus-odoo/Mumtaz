@@ -17,7 +17,10 @@ class TestEvidenceGate(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        mk = lambda login, groups: mail_new_test_user(cls.env, login=login, name=login, groups=groups)
+
+        def mk(login, groups):
+            return mail_new_test_user(cls.env, login=login, name=login, groups=groups)
+
         cls.agent = mk("pilot_agent", "faizy_core.group_faizy_user")
         cls.ops = mk("pilot_ops", "faizy_core.group_faizy_ops")
         cls.manager = mk("pilot_manager", "faizy_core.group_faizy_manager")
