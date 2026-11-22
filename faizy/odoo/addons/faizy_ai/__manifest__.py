@@ -1,6 +1,6 @@
 {
     'name': 'Faizy AI Team',
-    'version': '19.0.1.2.0',
+    'version': '19.0.1.3.0',
     'category': 'Services',
     'summary': 'AI team layer for Faizy: draft-and-approve queue, inbound WhatsApp log, agent users, daily digest',
     'description': """
@@ -29,6 +29,8 @@ Adds the AI team to Faizy Core without changing it.
         'data/knowledge_data.xml',
         'views/ai_views.xml',
         'views/menus.xml',
+        'data/routing_data.xml',
+        'views/routing_views.xml',
     ],
     'installable': True,
     'application': True,

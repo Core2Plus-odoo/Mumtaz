@@ -200,9 +200,20 @@ def collect_models(module: Path) -> dict[str, dict]:
                 continue
 
             fields = set(re.findall(r"^\s{4}(\w+)\s*=\s*fields\.", block, re.MULTILINE))
-            entry = models.setdefault(model, {"fields": set(), "inherits": set()})
+            entry = models.setdefault(
+                model,
+                {"fields": set(), "inherits": set(), "abstract": False, "defined": False},
+            )
+            # Defined here (has its own _name) rather than only extended by an
+            # `_inherit` of a model another module owns, which needs no ACL here.
+            if name_match:
+                entry["defined"] = True
             entry["fields"].update(fields)
             entry["inherits"].update(inherits)
+            # The split above consumed "class X(", so the block starts with the
+            # base class. Abstract models have no table and need no ACL.
+            if block.startswith("models.AbstractModel"):
+                entry["abstract"] = True
     return models
 
 
@@ -407,7 +418,11 @@ def main() -> int:
         acl_path = module / "security" / "ir.model.access.csv"
         if acl_path.exists():
             rows = list(csv.DictReader(acl_path.open()))
-            own = {f"model_{m.replace('.', '_')}" for m in models if "." in m}
+            own = {
+                f"model_{m.replace('.', '_')}"
+                for m, info in models.items()
+                if "." in m and info.get("defined") and not info.get("abstract")
+            }
             referenced = {r["model_id:id"].split(".")[-1] for r in rows}
             for ref in referenced:
                 if ref.startswith("model_faizy") and ref not in own:

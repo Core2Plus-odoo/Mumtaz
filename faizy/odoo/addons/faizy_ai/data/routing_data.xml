@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- FAIZY work items (HQ05 §4). noupdate: the escalation windows are
+         meant to be tuned by Umer in Settings → Activity Types without an
+         upgrade putting the defaults back. -->
+    <data noupdate="1">
+        <record id="act_approve_reply" model="mail.activity.type">
+            <field name="name">FAIZY · Approve reply</field>
+            <field name="icon">fa-commenting</field>
+            <field name="sequence">50</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">2</field>
+        </record>
+        <record id="act_approve_order" model="mail.activity.type">
+            <field name="name">FAIZY · Approve order</field>
+            <field name="icon">fa-check-square-o</field>
+            <field name="sequence">51</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">2</field>
+        </record>
+        <record id="act_assign_faizy" model="mail.activity.type">
+            <field name="name">FAIZY · Assign Faizy</field>
+            <field name="icon">fa-user-plus</field>
+            <field name="sequence">52</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">4</field>
+            <field name="faizy_urgent_escalation_hours">1</field>
+        </record>
+        <record id="act_follow_up_job" model="mail.activity.type">
+            <field name="name">FAIZY · Follow up overdue job</field>
+            <field name="icon">fa-clock-o</field>
+            <field name="sequence">53</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">3</field>
+        </record>
+        <record id="act_review_proof" model="mail.activity.type">
+            <field name="name">FAIZY · Review proof &amp; receipt</field>
+            <field name="icon">fa-camera</field>
+            <field name="sequence">54</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">24</field>
+        </record>
+        <record id="act_completion_message" model="mail.activity.type">
+            <field name="name">FAIZY · Completion message</field>
+            <field name="icon">fa-paper-plane</field>
+            <field name="sequence">55</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">2</field>
+        </record>
+        <record id="act_handle_inbound" model="mail.activity.type">
+            <field name="name">FAIZY · Handle inbound</field>
+            <field name="icon">fa-whatsapp</field>
+            <field name="sequence">56</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">2</field>
+        </record>
+        <record id="act_approve_escalation" model="mail.activity.type">
+            <field name="name">FAIZY · Approve escalation</field>
+            <field name="icon">fa-exclamation-triangle</field>
+            <field name="sequence">57</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">0</field>
+        </record>
+        <record id="act_review_application" model="mail.activity.type">
+            <field name="name">FAIZY · Review application</field>
+            <field name="icon">fa-id-card</field>
+            <field name="sequence">58</field>
+            <field name="faizy_route" eval="True"/>
+            <field name="faizy_escalation_hours">168</field>
+        </record>
+    </data>
+
+    <record id="cron_routing_escalate" model="ir.cron">
+        <field name="name">FAIZY routing: escalate overdue work to the escalation owner</field>
+        <field name="model_id" ref="model_faizy_routing"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_escalate()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">30</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+    <record id="cron_routing_overdue_jobs" model="ir.cron">
+        <field name="name">FAIZY routing: flag jobs not started after their slot</field>
+        <field name="model_id" ref="model_faizy_routing"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_overdue_jobs()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">30</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+    <!-- 04:30 UTC = 09:30 Karachi. -->
+    <record id="cron_routing_morning_summary" model="ir.cron">
+        <field name="name">FAIZY routing: morning summary in each role holder's Inbox</field>
+        <field name="model_id" ref="model_faizy_routing"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_morning_summary()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 04:30:00')"/>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>
