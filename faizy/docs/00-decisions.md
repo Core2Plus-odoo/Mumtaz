@@ -838,3 +838,13 @@ see the task, not your family name" (not implemented). The footer text from the 
 
 Not done here: the structural portal redesign (side navigation, tiles, object-page header) and Roman Urdu toggle from the
 preview. Verified on a throwaway Odoo 19 database: install and 25 tests pass. Not run on production.
+
+## 18. Evidence review desk (faizy_pilot 19.0.1.1.0)
+
+A reviewer's working screen for the evidence gate: Faizy / Operations menu **Evidence review**, a standard list opened on
+"Waiting for review" (`evidence_state = submitted`), with filters for rejected, approved and "in progress, not approved", and
+group by evidence status or Faizy. Rows open the existing order form, where Approve / Reject already live. Visible to the
+Operations group only (menu `groups`), the list is read-only (`create="0" delete="0"`), no new model, no new group. Raza is the
+reviewer; Mashood does not see the menu. Verified on a throwaway Odoo 19 database: 20 faizy_pilot tests pass including three
+for this desk (default filter, menu visibility for ops vs agent, views load). Not run on production. Deploy:
+`-u faizy_pilot` (stacked on the website 2.0 PR; no data changes).

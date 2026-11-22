@@ -1,6 +1,6 @@
 {
     'name': 'Faizy Pilot: Evidence Gate',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Services',
     'summary': 'Completion evidence gate: reviewed proof and receipt before an order completes or is billed',
     'description': """
@@ -22,6 +22,7 @@ Additive to Faizy Core; nothing in faizy_core is edited and faizy.order.state is
     'depends': ['faizy_core'],
     'data': [
         'views/faizy_order_views.xml',
+        'views/evidence_queue_views.xml',
     ],
     'post_init_hook': 'post_init_hook',
     'installable': True,
