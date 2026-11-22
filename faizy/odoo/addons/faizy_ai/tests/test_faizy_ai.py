@@ -57,7 +57,16 @@ class TestFaizyAI(TransactionCase):
         order = self.env['faizy.order'].create({
             'title': 'T', 'city': 'Karachi', 'partner_id': self.customer.id, 'service_id': self.service.id})
         with self.assertRaises(AccessError):
+            order.with_user(self.ai_user).write({'title': 'Changed'})
+        # Completing is refused either by the ACL or, when faizy_pilot is
+        # installed, first by its evidence gate.
+        try:
             order.with_user(self.ai_user).write({'state': 'completed'})
+        except (AccessError, ValidationError):
+            pass
+        else:
+            self.fail('The AI user completed an order')
+        self.assertEqual(order.state, 'pending')
         with self.assertRaises(AccessError):
             self.env['faizy.whatsapp.message'].with_user(self.ai_user).create({
                 'phone': '+923001234567', 'body': 'x'})

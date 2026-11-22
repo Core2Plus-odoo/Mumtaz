@@ -66,7 +66,7 @@
                  Canonical, hreflang and the sitemap it handles by itself once
                  website.domain is set, which setup-domain.sh does. -->
             <t t-set="additional_title">Family care in Pakistan for overseas Pakistanis</t>
-            <t t-set="website_meta_description">Faizy looks after your family in Pakistan while you work abroad. Groceries, medicines, doctor visits, eldercare and NADRA paperwork, booked on WhatsApp and finished with a photo. From PKR 1,999 a month.</t>
+            <t t-set="website_meta_description">Faizy looks after your family in Pakistan while you work abroad. Groceries, medicines, doctor visits, eldercare and NADRA paperwork, booked on WhatsApp and finished with a photo.</t>
 
             <div id="wrap" class="faizy-page">
 
@@ -87,7 +87,7 @@
                                     living abroad, asked for on WhatsApp and finished with a photo.
                                 </p>
                                 <div class="d-flex gap-2 flex-wrap mb-4">
-                                    <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
+                                    <a href="/start" class="btn btn-faizy btn-lg">Get started</a>
                                     <a href="#how" class="btn btn-faizy-ghost btn-lg">How it works</a>
                                 </div>
 
@@ -129,9 +129,8 @@
                                     </div>
                                     <!-- Receipts are in PKR because that is where the
                                          money is spent, whatever currency you subscribe
-                                         in. The figures are the real ones: PKR 850 is
-                                         the pharmacy service charge from our catalogue,
-                                         and the platform fee is 5% of purchases. -->
+                                         in. Illustrative example only; the fee wording
+                                         is held back until the owner approves it. -->
                                     <div class="rounded-3 p-3 mb-3" style="background:#FAF6EF;">
                                         <div class="d-flex justify-content-between small mb-1">
                                             <span class="text-muted">Pharmacy</span>
@@ -142,7 +141,7 @@
                                             <span>PKR 850</span>
                                         </div>
                                         <div class="d-flex justify-content-between small">
-                                            <span class="text-muted">Platform fee (5%)</span>
+                                            <span class="text-muted">Platform fee</span>
                                             <span>PKR 120</span>
                                         </div>
                                         <hr class="my-2"/>
@@ -439,14 +438,14 @@
                             <p class="faizy-urdu mb-2" lang="ur" dir="rtl"
                                style="color:#F69E22; font-size:1.75rem;">حاضر ہیں۔</p>
                             <h2 class="mb-3" style="font-size: clamp(1.75rem, 4.5vw, 3rem);">
-                                Start with three free activities
+                                Tell us who to look after
                             </h2>
                             <p class="fz-lead mb-4 mx-auto" style="max-width:34rem;">
-                                No card needed to begin. Tell us who to look after, and we'll
-                                take it from there.
+                                Tell us what your family needs, and we'll take it
+                                from there.
                             </p>
                             <div class="d-flex gap-2 justify-content-center flex-wrap">
-                                <a href="/start" class="btn btn-faizy btn-lg">Start free — 3 activities</a>
+                                <a href="/start" class="btn btn-faizy btn-lg">Get started</a>
                                 <a href="/join" class="btn btn-faizy-ghost btn-lg">Work with us</a>
                             </div>
                         </div>
@@ -525,7 +524,7 @@
     <template id="pricing" name="Faizy — Pricing">
         <t t-call="website.layout">
             <t t-set="additional_title">Pricing</t>
-            <t t-set="website_meta_description">Faizy plans from PKR 1,999 a month, with published prices in AED, SAR, USD and GBP. Three free care activities, no card needed, cancel any time.</t>
+            <t t-set="website_meta_description">How Faizy plans and charges work.</t>
 
             <div id="wrap" class="faizy-page">
                 <section class="fz-hero" style="padding-bottom: clamp(2rem, 5vw, 3rem);">
@@ -563,7 +562,7 @@
                                             <span class="text-muted">For the Faizy's time running the errand.</span>
                                         </div>
                                         <div class="col-12 col-md-4">
-                                            <strong class="d-block">Platform fee — 5%</strong>
+                                            <strong class="d-block">Platform fee</strong>
                                             <span class="text-muted">On purchase value. Keeps the network running.</span>
                                         </div>
                                     </div>
@@ -1099,8 +1098,8 @@
          ════════════════════════════════════════════════════════════════ -->
     <template id="signup" name="Faizy — Start">
         <t t-call="website.layout">
-            <t t-set="additional_title">Start free</t>
-            <t t-set="website_meta_description">Sign up in one minute and get three free care activities for your family in Pakistan. No card needed. Tell us who to look after and we reply on WhatsApp.</t>
+            <t t-set="additional_title">Get started</t>
+            <t t-set="website_meta_description">Sign up in one minute for your family in Pakistan. Tell us who to look after and we reply on WhatsApp.</t>
 
             <div id="wrap" class="faizy-page">
                 <section class="fz-hero" style="padding-bottom: clamp(1.5rem, 4vw, 2.5rem);">
@@ -1108,7 +1107,7 @@
                         <p class="faizy-urdu mb-2" lang="ur" dir="rtl"
                            style="color:#F69E22; font-size:1.5rem;">حاضر ہیں۔</p>
                         <h1 class="fz-display mb-3" style="font-size: clamp(1.9rem, 5vw, 3rem);">
-                            Three free activities.<br/>No card needed.
+                            Tell us who to look after.
                         </h1>
                         <p class="fz-hero-sub fz-lead mx-auto mb-0" style="max-width:34rem;">
                             Tell us who to look after. We'll message you on WhatsApp

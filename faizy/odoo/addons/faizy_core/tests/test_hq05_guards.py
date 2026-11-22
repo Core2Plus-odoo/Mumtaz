@@ -1,7 +1,7 @@
 import base64
 
 from odoo.addons.mail.tests.common import mail_new_test_user
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 
 # 1x1 PNG, enough to satisfy an Image field.
@@ -55,6 +55,14 @@ class TestHQ05Guards(TransactionCase):
         vals.update(kw)
         return self.env["faizy.order"].create(vals)
 
+    def _complete(self, order, user):
+        """Complete through the evidence gate. When faizy_pilot is installed
+        (HQ05 S2 lives there) the evidence must be approved first."""
+        order = order.with_user(user)
+        if "evidence_state" in order._fields:
+            order.action_approve_evidence()
+        order.action_complete()
+
     def _queued(self):
         return self.Queue.search_count([("state", "=", "queued")])
 
@@ -66,8 +74,14 @@ class TestHQ05Guards(TransactionCase):
             "action_confirm", "action_assign", "action_start",
             "action_complete", "action_cancel", "action_reset_to_pending",
         ):
-            with self.assertRaises(AccessError, msg=action):
+            # With faizy_pilot installed its evidence gate runs first on
+            # Complete and refuses with ValidationError; either way, refused.
+            try:
                 getattr(order.with_user(self.agent), action)()
+            except (AccessError, ValidationError):
+                pass
+            else:
+                self.fail("%s was not refused for customer care" % action)
         self.assertEqual(order.state, "pending")
 
     def test_agent_cannot_write_state_or_assignment(self):
@@ -100,33 +114,19 @@ class TestHQ05Guards(TransactionCase):
         order.action_assign()
         order.action_start()
         order.write({"proof_image": PNG})
-        order.action_complete()
+        self._complete(order, self.ops)
         self.assertEqual(order.state, "completed")
 
-    # ── S2 / T13: completion needs evidence ─────────────────────────────
+    # ── Billing draft on completion by a non-accountant ────────────────
 
-    def test_completion_refused_without_proof(self):
-        order = self._order(state="in_progress")
-        with self.assertRaises(UserError):
-            order.with_user(self.ops).action_complete()
-        self.assertEqual(order.state, "in_progress")
-
-    def test_completion_refused_without_receipt_when_money_spent(self):
-        order = self._order(state="in_progress", purchase_value=4200, proof_image=PNG)
-        with self.assertRaises(UserError):
-            order.with_user(self.ops).action_complete()
-        order.write({"receipt_image": PNG})
-        order.with_user(self.ops).action_complete()
+    def test_ops_completion_creates_invoice_draft(self):
+        order = self._order(state="in_progress", purchase_value=4200,
+                            proof_image=PNG, receipt_image=PNG)
+        self._complete(order, self.ops)
         self.assertEqual(order.state, "completed")
         # Operations has no Accounting rights, yet the draft invoice is made.
         self.assertTrue(order.customer_invoice_id)
         self.assertEqual(order.customer_invoice_id.state, "draft")
-
-    def test_completion_cannot_bypass_the_button(self):
-        order = self._order(state="in_progress")
-        with self.assertRaises(UserError):
-            order.with_user(self.ops).write({"state": "completed"})
-        self.assertEqual(order.state, "in_progress")
 
     # ── S3 / T17, T19: WhatsApp containment ─────────────────────────────
 
@@ -140,7 +140,7 @@ class TestHQ05Guards(TransactionCase):
         order.action_assign()
         order.action_start()
         order.write({"proof_image": PNG})
-        order.action_complete()
+        self._complete(order, self.ops)
         self.assertEqual(self._queued(), before)
         notes = order.message_ids.mapped("body")
         self.assertTrue(any("WhatsApp sending is switched off" in (b or "") for b in notes))
