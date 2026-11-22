@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Settings: who holds each role ───────────────────────────────── -->
+    <record id="res_config_settings_view_form_faizy_routing" model="ir.ui.view">
+        <field name="name">res.config.settings.faizy.routing</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="FAIZY" string="FAIZY" name="faizy_ai"
+                     logo="/faizy_core/static/description/icon.png"
+                     groups="faizy_core.group_faizy_manager">
+                    <block title="Work routing" name="faizy_routing">
+                        <setting string="Customer care approver"
+                                 help="Reply approvals, inbound messages, completion messages.">
+                            <field name="faizy_care_user_id" options="{'no_create': True}"/>
+                        </setting>
+                        <setting string="Operations approver"
+                                 help="New orders, order drafts, overdue jobs, proof review, applications.">
+                            <field name="faizy_ops_user_id" options="{'no_create': True}"/>
+                        </setting>
+                        <setting string="Escalation owner"
+                                 help="Escalations, and anything left overdue.">
+                            <field name="faizy_escalation_user_id" options="{'no_create': True}"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Activity type form: the escalation windows ─────────────────── -->
+    <record id="mail_activity_type_view_form_faizy" model="ir.ui.view">
+        <field name="name">mail.activity.type.form.faizy</field>
+        <field name="model">mail.activity.type</field>
+        <field name="inherit_id" ref="mail.mail_activity_type_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="FAIZY routing" groups="faizy_core.group_faizy_manager">
+                    <field name="faizy_route"/>
+                    <field name="faizy_escalation_hours" invisible="not faizy_route"/>
+                    <field name="faizy_urgent_escalation_hours" invisible="not faizy_route"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Shared: FAIZY work items ──────────────────────────────────────
+         Standard activity list and kanban; clicking a row opens the record
+         itself (open_target views), where the approve/assign button is.    -->
+    <record id="mail_activity_view_search_faizy" model="ir.ui.view">
+        <field name="name">mail.activity.search.faizy</field>
+        <field name="model">mail.activity</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="summary"/>
+                <field name="activity_type_id"/>
+                <field name="user_id"/>
+                <filter name="mine" string="Mine" domain="[('user_id', '=', uid)]"/>
+                <filter name="escalated" string="Escalated" domain="[('faizy_escalated', '=', True)]"/>
+                <filter name="late" string="Overdue"
+                        domain="[('date_deadline', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <group>
+                    <filter name="group_type" string="Type" context="{'group_by': 'activity_type_id'}"/>
+                    <filter name="group_user" string="Owner" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_faizy_my_work" model="ir.actions.act_window">
+        <field name="name">My work today</field>
+        <field name="res_model">mail.activity</field>
+        <field name="view_mode">list,kanban</field>
+        <field name="view_id" ref="mail.mail_activity_view_tree_open_target"/>
+        <field name="search_view_id" ref="mail_activity_view_search_faizy"/>
+        <field name="domain">[('user_id', '=', uid), ('activity_type_id.faizy_route', '=', True)]</field>
+        <field name="context">{'search_default_group_type': 1, 'force_search_count': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing waiting for you.</p>
+        </field>
+    </record>
+
+    <record id="action_faizy_all_work" model="ir.actions.act_window">
+        <field name="name">Cross-team board</field>
+        <field name="res_model">mail.activity</field>
+        <field name="view_mode">list,kanban</field>
+        <field name="view_id" ref="mail.mail_activity_view_tree_open_target"/>
+        <field name="search_view_id" ref="mail_activity_view_search_faizy"/>
+        <field name="domain">[('activity_type_id.faizy_route', '=', True)]</field>
+        <field name="context">{'search_default_group_user': 1, 'force_search_count': 1}</field>
+    </record>
+
+    <!-- ── Care Desk (Mashood) ─────────────────────────────────────────── -->
+    <record id="action_care_replies_waiting" model="ir.actions.act_window">
+        <field name="name">Replies awaiting approval</field>
+        <field name="res_model">faizy.ai.draft</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('kind', '=', 'customer_message'), ('state', '=', 'draft')]</field>
+        <field name="context">{'default_kind': 'customer_message'}</field>
+    </record>
+    <record id="action_care_to_send" model="ir.actions.act_window">
+        <field name="name">Approved, to send by hand</field>
+        <field name="res_model">faizy.ai.draft</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'to_send')]</field>
+    </record>
+    <record id="action_care_inbound" model="ir.actions.act_window">
+        <field name="name">Inbound to handle</field>
+        <field name="res_model">faizy.ai.inbound</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'new')]</field>
+    </record>
+
+    <!-- ── Operations Desk (Raza) ──────────────────────────────────────── -->
+    <record id="action_ops_unassigned" model="ir.actions.act_window">
+        <field name="name">Unassigned orders</field>
+        <field name="res_model">faizy.order</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="domain">[('state', '=', 'pending'), ('worker_id', '=', False), ('vendor_id', '=', False)]</field>
+        <field name="context">{'order': 'priority desc, create_date asc'}</field>
+    </record>
+    <record id="action_ops_order_drafts" model="ir.actions.act_window">
+        <field name="name">Order drafts awaiting approval</field>
+        <field name="res_model">faizy.ai.draft</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('kind', 'in', ('order_create', 'order_update')), ('state', '=', 'draft')]</field>
+    </record>
+    <record id="action_ops_not_started" model="ir.actions.act_window">
+        <field name="name">Jobs not started</field>
+        <field name="res_model">faizy.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ('assigned', 'scheduled')), ('scheduled_date', '!=', False), ('scheduled_date', '&lt;', context_today().strftime('%Y-%m-%d 23:59:59'))]</field>
+    </record>
+    <record id="action_ops_proof_review" model="ir.actions.act_window">
+        <field name="name">Proof &amp; receipt review</field>
+        <field name="res_model">faizy.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'in_progress')]</field>
+    </record>
+
+    <!-- ── Command Centre (Umer) ───────────────────────────────────────── -->
+    <record id="action_cc_escalations" model="ir.actions.act_window">
+        <field name="name">Escalations &amp; decisions</field>
+        <field name="res_model">faizy.ai.draft</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('kind', '=', 'other'), ('state', '=', 'draft')]</field>
+    </record>
+
+    <!-- ── Menus ───────────────────────────────────────────────────────── -->
+    <menuitem id="menu_care_desk" name="Care Desk" sequence="10"
+              web_icon="faizy_core,static/description/icon.png"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_care_my_work" name="My work today" parent="menu_care_desk"
+              action="action_faizy_my_work" sequence="1"/>
+    <menuitem id="menu_care_replies" name="Replies awaiting approval" parent="menu_care_desk"
+              action="action_care_replies_waiting" sequence="2"/>
+    <menuitem id="menu_care_to_send" name="To send by hand" parent="menu_care_desk"
+              action="action_care_to_send" sequence="3"/>
+    <menuitem id="menu_care_inbound" name="Inbound to handle" parent="menu_care_desk"
+              action="action_care_inbound" sequence="4"/>
+
+    <menuitem id="menu_ops_desk" name="Operations Desk" sequence="11"
+              web_icon="faizy_core,static/description/icon.png"
+              groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_ops_my_work" name="My work today" parent="menu_ops_desk"
+              action="action_faizy_my_work" sequence="1"/>
+    <menuitem id="menu_ops_unassigned" name="Unassigned orders" parent="menu_ops_desk"
+              action="action_ops_unassigned" sequence="2"/>
+    <menuitem id="menu_ops_drafts" name="Order drafts" parent="menu_ops_desk"
+              action="action_ops_order_drafts" sequence="3"/>
+    <menuitem id="menu_ops_not_started" name="Jobs not started" parent="menu_ops_desk"
+              action="action_ops_not_started" sequence="4"/>
+    <menuitem id="menu_ops_proof" name="Proof &amp; receipt review" parent="menu_ops_desk"
+              action="action_ops_proof_review" sequence="5"/>
+    <menuitem id="menu_ops_workers" name="Faizies" parent="menu_ops_desk"
+              action="faizy_core.action_faizy_worker" sequence="6"/>
+    <menuitem id="menu_ops_applications" name="Applications" parent="menu_ops_desk"
+              action="faizy_core.action_faizy_application" sequence="7"/>
+
+    <menuitem id="menu_command_centre" name="Command Centre" sequence="12"
+              web_icon="faizy_core,static/description/icon.png"
+              groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_cc_escalations" name="Escalations &amp; decisions" parent="menu_command_centre"
+              action="action_cc_escalations" sequence="1"/>
+    <menuitem id="menu_cc_my_work" name="My work today" parent="menu_command_centre"
+              action="action_faizy_my_work" sequence="2"/>
+    <menuitem id="menu_cc_board" name="Cross-team board" parent="menu_command_centre"
+              action="action_faizy_all_work" sequence="3"/>
+    <menuitem id="menu_cc_health" name="Operations health" parent="menu_command_centre"
+              action="faizy_core.action_faizy_dashboard" sequence="4"/>
+    <menuitem id="menu_cc_queue" name="All approvals" parent="menu_command_centre"
+              action="action_faizy_ai_draft" sequence="5"/>
+</odoo>
