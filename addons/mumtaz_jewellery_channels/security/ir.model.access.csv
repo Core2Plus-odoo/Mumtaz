@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_rate_feed_user,rate feed user,model_jewellery_rate_feed,mumtaz_jewellery.group_jewellery_user,1,0,0,0
+access_rate_feed_mgr,rate feed manager,model_jewellery_rate_feed,mumtaz_jewellery.group_jewellery_manager,1,1,1,1
+access_rate_feed_log_user,rate feed log user,model_jewellery_rate_feed_log,mumtaz_jewellery.group_jewellery_user,1,0,0,0
+access_rate_feed_log_mgr,rate feed log manager,model_jewellery_rate_feed_log,mumtaz_jewellery.group_jewellery_manager,1,0,0,0

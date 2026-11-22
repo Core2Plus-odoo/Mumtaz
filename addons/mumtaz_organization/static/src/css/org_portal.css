@@ -3,7 +3,8 @@
    Gold-First Design System v3
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+/* v1 Google Fonts URL on purpose: Odoo's asset bundler cuts @import rules at the first ';', and the css2 form carries ';' inside the URL, which left the whole web.assets_frontend bundle unparsable (21 Nov 2026). */
+@import url('https://fonts.googleapis.com/css?family=Instrument+Serif:400,400i|DM+Sans:400,500,600&display=swap');
 
 :root {
   --paper:        #F5F3EF;

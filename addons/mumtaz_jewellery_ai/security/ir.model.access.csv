@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_run_user,ai run user,model_jewellery_ai_run,mumtaz_jewellery.group_jewellery_user,1,0,0,0
+access_ai_run_mgr,ai run manager,model_jewellery_ai_run,mumtaz_jewellery.group_jewellery_manager,1,0,0,0
+access_ai_draft_user,ai draft user,model_jewellery_ai_draft,mumtaz_jewellery.group_jewellery_user,1,1,1,0
+access_ai_draft_mgr,ai draft manager,model_jewellery_ai_draft,mumtaz_jewellery.group_jewellery_manager,1,1,1,1

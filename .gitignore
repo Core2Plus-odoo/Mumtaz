@@ -35,6 +35,8 @@ yarn-error.log*
 .env.*.local
 # Explicitly keep the template
 !.env.example
+wordpress-sites/deploy/setup-lemp.env
+!wordpress-sites/deploy/setup-lemp.env.example
 
 # ── Odoo ──────────────────────────────────────────────────────────────
 *.pot
@@ -70,3 +72,10 @@ certs/
 # ── Logs ──────────────────────────────────────────────────────────────
 *.log
 logs/
+.env.production.save
+
+# ── Jawhar staging ──────────────────────────────────────────────
+# Rendered by deploy/jewel-staging/deploy.sh from odoo.conf.tmpl; holds the
+# staging Postgres and Odoo master passwords in plain text.
+deploy/jewel-staging/odoo.rendered.conf
+deploy/jewel-staging/.htpasswd*

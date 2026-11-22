@@ -20,6 +20,7 @@ class MumtazMarketplaceAccess(models.AbstractModel):
         )
         if not group:
             return False
+        # sudo: group membership maintained by the control plane's feature flags, not by the user
         users = self.env["res.users"].sudo().search(
             [("share", "=", False), ("active", "=", True)]
         )
@@ -28,8 +29,10 @@ class MumtazMarketplaceAccess(models.AbstractModel):
         # Odoo 19 renamed res.groups.users -> user_ids; stay version-robust.
         ufield = "user_ids" if "user_ids" in group._fields else "users"
         if enabled:
+            # sudo: group membership maintained by the control plane's feature flags, not by the user
             group.sudo()[ufield] |= users
         else:
+            # sudo: group membership maintained by the control plane's feature flags, not by the user
             group.sudo()[ufield] -= users
         return True
 
@@ -40,10 +43,12 @@ class MumtazMarketplaceAccess(models.AbstractModel):
         Called on install/upgrade so the group always matches the toggle."""
         enabled = True
         if "mumtaz.feature" in self.env and "mumtaz.tenant.feature" in self.env:
+            # sudo: entitlement lookup on control-plane models tenant users may not read
             feat = self.env["mumtaz.feature"].sudo().search(
                 [("code", "=", "marketplace_access")], limit=1
             )
             if feat:
+                # sudo: entitlement lookup on control-plane models tenant users may not read
                 override = self.env["mumtaz.tenant.feature"].sudo().search(
                     [("feature_id", "=", feat.id)], limit=1
                 )

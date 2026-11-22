@@ -10,7 +10,7 @@ DOMAINS="-d mumtaz.digital -d www.mumtaz.digital -d app.mumtaz.digital -d erp.mu
 EMAIL="admin@mumtaz.digital"
 REPO="/opt/Mumtaz"
 NGINX_CONF="$REPO/ops/deployment/nginx-mumtaz-platform.conf"
-ZAKI_FRONTEND="$REPO/apps/zaki/frontend"
+ZAKI_FRONTEND="$REPO/sites/zaki.mumtaz.digital/frontend"
 
 echo ""
 echo "=============================================="
@@ -45,17 +45,17 @@ mkdir -p /var/www/app.mumtaz.digital
 mkdir -p /var/www/zaki.mumtaz.digital
 mkdir -p /var/www/marketplace.mumtaz.digital
 
-cp $REPO/apps/portal/index.html       /var/www/app.mumtaz.digital/index.html
-cp $REPO/apps/marketplace/index.html  /var/www/marketplace.mumtaz.digital/index.html
-cp $REPO/apps/marketplace/vendor.html /var/www/marketplace.mumtaz.digital/vendor.html
+cp $REPO/sites/app.mumtaz.digital/portal/index.html       /var/www/app.mumtaz.digital/index.html
+cp $REPO/sites/marketplace.mumtaz.digital/storefront/index.html  /var/www/marketplace.mumtaz.digital/index.html
+cp $REPO/sites/marketplace.mumtaz.digital/storefront/vendor.html /var/www/marketplace.mumtaz.digital/vendor.html
 
 # Deploy website
-if [ -d "$REPO/apps/website" ]; then
-  cp -r $REPO/apps/website/. /var/www/mumtaz.digital/
+if [ -d "$REPO/sites/mumtaz.digital/site" ]; then
+  cp -r $REPO/sites/mumtaz.digital/site/. /var/www/mumtaz.digital/
 fi
 
 # Deploy ZAKI standalone HTML (no build step needed)
-cp $REPO/apps/zaki/static/index.html /var/www/zaki.mumtaz.digital/index.html
+cp $REPO/sites/zaki.mumtaz.digital/static/index.html /var/www/zaki.mumtaz.digital/index.html
 echo "      ✓ ZAKI standalone HTML deployed"
 
 echo "      ✓ Static files deployed"

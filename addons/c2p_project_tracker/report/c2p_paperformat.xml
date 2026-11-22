@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- wkhtmltopdf 0.12.x miscalculates a percentage bottom margin and
+             emits a trailing blank page. Every margin here is millimetres. -->
+        <record id="paperformat_c2p_landscape" model="report.paperformat">
+            <field name="name">C2P A4 Landscape</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="orientation">Landscape</field>
+            <field name="margin_top">12</field>
+            <field name="margin_bottom">14</field>
+            <field name="margin_left">8</field>
+            <field name="margin_right">8</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">8</field>
+            <field name="dpi">90</field>
+        </record>
+
+        <record id="paperformat_c2p_portrait" model="report.paperformat">
+            <field name="name">C2P A4 Portrait</field>
+            <field name="default" eval="False"/>
+            <field name="format">A4</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">14</field>
+            <field name="margin_bottom">16</field>
+            <field name="margin_left">12</field>
+            <field name="margin_right">12</field>
+            <field name="header_line" eval="False"/>
+            <field name="header_spacing">8</field>
+            <field name="dpi">90</field>
+        </record>
+
+    </data>
+</odoo>

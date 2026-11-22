@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- How a client gets her code: "staff" (default) shows it on her record
+         for a person to give her; the server never sends a message. -->
+    <record id="param_client_code_delivery" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.client_code_delivery</field>
+        <field name="value">staff</field>
+    </record>
+    <!-- Demo only: when "1", the code is echoed in the API answer so a demo
+         can sign in without a person in the loop. Never on a real tenant. -->
+    <record id="param_client_code_echo" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.client_code_echo</field>
+        <field name="value">0</field>
+    </record>
+    <record id="cron_client_sessions" model="ir.cron">
+        <field name="name">Jawhar: expire client sign-in codes and sessions</field>
+        <field name="model_id" ref="model_jewellery_client_session"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_expire()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

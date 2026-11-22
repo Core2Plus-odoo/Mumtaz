@@ -7,6 +7,7 @@ class MumtazSubscriptionNotificationService(models.AbstractModel):
 
     @api.model
     def _notification_policy(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         params = self.env["ir.config_parameter"].sudo()
         trial_days = int(params.get_param("mumtaz_control_plane.notifications.trial_ending_days", 3))
         grace_days = int(params.get_param("mumtaz_control_plane.notifications.grace_ending_days", 2))
@@ -80,6 +81,7 @@ class MumtazSubscriptionNotificationService(models.AbstractModel):
 
     @api.model
     def _send(self, subscription, event_code, dedupe_key, source="manual"):
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         NotificationLog = self.env["mumtaz.subscription.notification.log"].sudo()
         existing = NotificationLog.search(
             [
@@ -107,6 +109,7 @@ class MumtazSubscriptionNotificationService(models.AbstractModel):
         if policy["send_email"]:
             emails = [p.email for p in partners if p.email]
             if emails:
+                # sudo: mail record written by the business action on the user's behalf
                 self.env["mail.mail"].sudo().create(
                     {
                         "subject": title,

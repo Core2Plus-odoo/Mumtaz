@@ -29,6 +29,7 @@ class MumtazCoreLog(models.Model):
         response_payload=None,
         level="info",
     ):
+        # sudo: append-only platform log row; any user may trigger a log line
         return self.sudo().create(
             {
                 "company_id": company.id,

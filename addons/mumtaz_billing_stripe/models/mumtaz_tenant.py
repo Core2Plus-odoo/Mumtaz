@@ -42,6 +42,7 @@ class MumtazTenant(models.Model):
             name=self.name, email=email,
             metadata={"tenant_code": self.code or "", "tenant_id": str(self.id)},
         )
+        # sudo: control-plane billing state written by the payment flow
         self.sudo().stripe_customer_id = customer.get("id")
         return self.stripe_customer_id
 
@@ -53,6 +54,7 @@ class MumtazTenant(models.Model):
             raise UserError(
                 "Stripe is not configured. Set STRIPE_SECRET_KEY in /opt/mumtaz/.env."
             )
+        # sudo: control-plane billing state written by the payment flow
         settings = self.env["mumtaz.stripe.settings"].sudo().get_singleton()
         if not settings.publishable_key:
             raise UserError(
@@ -71,4 +73,5 @@ class MumtazTenant(models.Model):
         if card:
             vals["stripe_card_brand"] = card.get("brand")
             vals["stripe_card_last4"] = card.get("last4")
+        # sudo: control-plane billing state written by the payment flow
         self.sudo().write(vals)

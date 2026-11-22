@@ -128,13 +128,16 @@ class MumtazOrg(models.Model):
         self.ensure_one()
         if self.company_id:
             return self.company_id
+        # sudo: organisation to company binding written by the provisioning action
         company = self.env["res.company"].sudo().create({
             "name": self.name,
             "email": self.admin_email,
             "country_id": self.country_id.id if self.country_id else False,
         })
+        # sudo: organisation to company binding written by the provisioning action
         self.sudo().write({"company_id": company.id})
         # Store the slug on the company for portal routing lookups
+        # sudo: organisation to company binding written by the provisioning action
         company.sudo().write({"mumtaz_org_slug": self.slug})
         return company
 

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- The jewellery pipeline: five stages, global (every team). The stage
+         *meaning* is what is ours; the mechanics are standard crm. -->
+    <record id="stage_enquiry" model="crm.stage">
+        <field name="name">Enquiry</field>
+        <field name="sequence">1</field>
+    </record>
+    <record id="stage_tray" model="crm.stage">
+        <field name="name">Tray shared</field>
+        <field name="sequence">2</field>
+    </record>
+    <record id="stage_viewing" model="crm.stage">
+        <field name="name">Viewing booked</field>
+        <field name="sequence">3</field>
+    </record>
+    <record id="stage_reserved" model="crm.stage">
+        <field name="name">Reserved</field>
+        <field name="sequence">4</field>
+    </record>
+    <record id="stage_won" model="crm.stage">
+        <field name="name">Won</field>
+        <field name="sequence">5</field>
+        <field name="is_won">True</field>
+    </record>
+
+    <record id="seq_tray" model="ir.sequence">
+        <field name="name">Private tray</field>
+        <field name="code">jewellery.tray</field>
+        <field name="prefix">TRAY/</field>
+        <field name="padding">5</field>
+    </record>
+
+    <!-- How long a shared tray link stays open. Owner-set. -->
+    <record id="param_tray_link_days" model="ir.config_parameter">
+        <field name="key">mumtaz_jewellery.tray_link_days</field>
+        <field name="value">7</field>
+    </record>
+</odoo>

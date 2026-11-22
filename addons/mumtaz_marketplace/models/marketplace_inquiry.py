@@ -49,6 +49,7 @@ class MumtazMarketplaceInquiry(models.Model):
             for vals in vals_list:
                 company_id = vals.get("company_id") or self.env.company.id
                 company = self.env["res.company"].browse(company_id)
+                # sudo: entitlement lookup on control-plane models tenant users may not read
                 access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
                     company,
                     "marketplace_access",

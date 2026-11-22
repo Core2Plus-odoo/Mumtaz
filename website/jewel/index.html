@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jawhar — Jewellery retail OS for Gulf boutiques and chains</title>
+<meta name="description" content="Jawhar runs the boutique's whole day on Odoo 19 Community: the counter priced from one approved gold rate, a private client book, multi-store stock by the gram, and AI agents that draft while people decide.">
+<meta property="og:title" content="Jawhar — the jewellery retail OS">
+<meta property="og:description" content="Counter, client book, stores and intelligence for gold and jewellery chains — every price from one approved rate, never from a model.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="site/img/hero-bangle.webp">
+<!-- Staging domain: kept out of search until the production domain is approved (DECISION_REGISTER J-03). -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#071A25">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site/jawhar.css?v=20261121b">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Jawhar","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Jewellery retail operating system for Gulf boutiques and chains, built on Odoo 19 Community.","author":{"@type":"Organization","name":"Mumtaz Digital"}}
+</script>
+<style>
+/* page-only styles; everything reusable lives in site/jawhar.css */
+.hero{padding:var(--s7) 0 var(--s8);position:relative;overflow:hidden;background-color:#071A25;background-image:radial-gradient(circle at 83% 36%,rgba(23,77,80,.55),transparent 43%);color:#F4F7F5}
+.hero::before{content:"";position:absolute;inset:4% 0 auto 55%;width:46vw;height:46vw;max-width:620px;max-height:620px;border:1px solid rgba(88,215,171,.12);border-radius:50%;pointer-events:none}
+.hero h1,.hero .lead{color:#fff}
+.hero .lead{color:var(--on-dark-2)}
+.hero .note{color:var(--ink-4)}
+.hero .eyebrow{color:var(--lime)}
+.hero .eyebrow::before{background:var(--lime);box-shadow:0 0 0 5px rgba(197,246,156,.14)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:var(--s7);align-items:center;position:relative}
+@media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:var(--s6)}}
+.hero h1 em{font-style:normal;color:var(--lime)}
+.hero .lead{font-size:1.12rem;color:var(--on-dark-2);max-width:34em}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:var(--s5)}
+.hero .note{font-size:.86rem;color:var(--on-dark-2);opacity:.85;margin-top:var(--s4);max-width:36em}
+.hero-visual{position:relative}
+.hero-visual img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:16px;border:6px solid rgba(255,255,255,.14);box-shadow:0 35px 80px rgba(0,0,0,.45),0 0 70px rgba(181,245,140,.08);transform:rotate(-1.2deg)}
+.hero-visual .frame{display:none}
+.pricecard{position:absolute;left:-22px;bottom:-30px;width:min(262px,78%);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:12px 14px}
+@media (max-width:980px){.pricecard{position:static;width:100%;margin-top:var(--s4)}}
+.pricecard .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.pricecard .top b{font-family:var(--display);font-size:1.2rem;font-weight:700;letter-spacing:-.04em;color:var(--emerald-deep);white-space:nowrap}
+.pricecard .top span{font-size:.82rem;color:var(--ink-2)}
+.pricecard .kv{font-size:.8rem;padding:4px 0;color:var(--ink)}
+.pricecard .kv span{color:var(--ink-3)}
+.pricecard .kv b{color:var(--ink)}
+.pricecard .src{font-size:.7rem;color:var(--ink-4);margin-top:6px;line-height:1.4}
+.credit{font-size:.74rem;color:var(--ink-4);margin-top:var(--s6);text-align:right;position:relative}
+.trust{display:flex;flex-wrap:wrap;gap:10px;margin-top:var(--s6)}
+.pillars .card{min-height:100%;position:relative;overflow:hidden}
+.pillars .card::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:var(--emerald-soft);opacity:.5;z-index:0}
+.pillars .card.gold::after{background:var(--gold-soft)} .pillars .card.aub::after{background:var(--aubergine-soft)} .pillars .card.sap::after{background:var(--sapphire-soft)}
+.pillars .card>*{position:relative;z-index:1}
+.pillars ul{margin:12px 0 0;padding:0;list-style:none;font-size:.9rem;color:var(--ink-2)}
+.pillars li{padding:5px 0;border-top:1px dashed var(--line);display:flex;justify-content:space-between;gap:10px}
+.pillars li .tag{flex:none}
+.day{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s4);counter-reset:step}
+@media (max-width:1000px){.day{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.day{grid-template-columns:1fr}}
+.day .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s5);position:relative}
+.day .step::before{counter-increment:step;content:counter(step,decimal-leading-zero);font-family:var(--display);font-size:.8rem;font-weight:800;letter-spacing:.08em;color:var(--lime);background:var(--navy);padding:6px 10px;border-radius:8px;display:inline-block;margin-bottom:12px}
+.day .step p{font-size:.92rem;color:var(--ink-2);margin:.3em 0 0}
+.gallery{display:grid;grid-template-columns:1.3fr 1fr;grid-auto-rows:auto;gap:var(--s4)}
+@media (max-width:900px){.gallery{grid-template-columns:1fr}}
+.gallery .shot img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top}
+.gallery .shot.tall img{aspect-ratio:16/12}
+.agents{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--s4)}
+@media (max-width:1000px){.agents{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:620px){.agents{grid-template-columns:repeat(2,1fr)}}
+.agent{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r);padding:var(--s4);text-align:center}
+.agent img{width:84px;height:84px;border-radius:50%;object-fit:cover;margin:0 auto 10px;border:2px solid var(--lime)}
+.agent b{display:block;font-family:var(--display);font-size:1.3rem}
+.agent span{display:block;font-size:.8rem;color:var(--on-dark-2);margin:4px 0 8px;min-height:2.4em}
+.band-dark .tag-built{background:rgba(197,246,156,.16);color:var(--lime);border-color:rgba(197,246,156,.4)}
+.band-dark .tag-device{background:rgba(196,164,100,.18);color:#E3CD98;border-color:rgba(196,164,100,.4)}
+.band-dark .tag-proto{background:rgba(185,139,204,.18);color:#D9B8E6;border-color:rgba(185,139,204,.4)}
+.band-dark .card{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+.band-dark .card p,.band-dark .card h3{color:var(--on-dark)}
+.band-dark .card p{color:var(--on-dark-2)}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s4)}
+@media (max-width:900px){.rules{grid-template-columns:1fr}}
+.rule{padding:var(--s5);border-radius:var(--r);background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--emerald)}
+.rule.gold{border-top-color:var(--gold)} .rule.aub{border-top-color:var(--teal)}
+.rule p{font-size:.92rem;color:var(--ink-2)}
+.demo-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:var(--s7);align-items:start}
+@media (max-width:900px){.demo-grid{grid-template-columns:1fr}}
+.demo-form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:var(--s6);box-shadow:0 30px 70px rgba(0,0,0,.35)}
+.demo-form .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4);margin-bottom:var(--s4)}
+@media (max-width:560px){.demo-form .row{grid-template-columns:1fr}}
+.demo-form .field{margin-bottom:0}
+.demo-form .one{margin-bottom:var(--s4)}
+.demo-aside ul{padding-left:1.2em;color:var(--on-dark-2);font-size:.95rem}
+#demo .muted,#demo .tiny{color:var(--on-dark-2)}
+#demo a{color:var(--lime)}
+.demo-form{color:var(--ink)}
+.demo-form .muted{color:var(--ink-3)}
+.demo-aside li{margin:6px 0}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js')</script>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="head">
+  <div class="wrap nav" id="nav">
+    <a class="brand" href="./" aria-label="Jawhar home">
+      <span class="mk">ج</span>
+      <span><b>Jawhar</b><small>by Mumtaz Digital</small></span>
+    </a>
+    <nav class="links" aria-label="Primary">
+      <a href="apps/">Apps</a>
+      <a href="modules/sales-hub/">Sales Hub</a>
+      <a href="intelligence/">Intelligence</a>
+      <a href="preview/">Preview</a>
+      <a href="pricing/">Pricing</a>
+      <a href="signup/">Setup</a>
+      <a href="#status">What's built</a>
+    </nav>
+    <span class="spacer"></span>
+    <div class="nav-actions">
+      <a class="btn btn-ghost btn-sm" href="/app/">Sign in</a>
+      <a class="btn btn-primary btn-sm" href="#demo">Request a demo</a>
+      <button class="burger" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu" id="burger"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="hero hero-dark">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <div class="eyebrow">Jewellery retail OS · Odoo 19 Community</div>
+      <h1>The boutique's whole day, <em>priced from one approved rate.</em></h1>
+      <p class="lead">
+        Jawhar runs the counter, the client book, the stores and the back
+        office of gold and jewellery chains in the Gulf — in Arabic and
+        English — with AI agents that draft while your people decide.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#demo">Request a demo</a>
+        <a class="btn btn-ghost" href="preview/">Explore the product</a>
+      </div>
+      <p class="note">
+        Every figure comes from the pricing engine at the approved gold rate.
+        No price is produced by a model, and no price is a guess.
+      </p>
+      <div class="trust" aria-label="Facts about the build">
+        <span class="chip"><b>266</b> automated tests</span>
+        <span class="chip"><b>13</b> Odoo modules</span>
+        <span class="chip"><b>26</b> screens, EN · AR</span>
+        <span class="chip">Community edition, no Enterprise code</span>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <img src="site/img/hero-bangle.webp" srcset="site/img/hero-bangle-sm.webp 800w, site/img/hero-bangle.webp 1600w" sizes="(max-width:980px) 100vw, 560px" width="1600" height="900" alt="A 22-karat engraved gold bangle on emerald velvet" fetchpriority="high">
+      <span class="frame" aria-hidden="true"></span>
+      <div class="pricecard" aria-label="Example price from the demo database">
+        <div class="top"><span>22K engraved bangle · 24.5 g</span><b class="num">AED 6,404.88</b></div>
+        <div class="kv"><span>Approved rate</span><b class="num">AED 245.80 / g</b></div>
+        <div class="kv"><span>Making &amp; wastage</span><b>Included</b></div>
+        <div class="kv"><span>VAT 5%</span><b>Included</b></div>
+        <div class="src">Demo database, synthetic figures. The rate was approved by a second person before it priced anything.</div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap credit">Hero photograph: AI-generated illustration, labelled as such. Every other image on this site is a screenshot of the product.</div>
+</section>
+
+<section class="pillars" id="apps">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Four pillars, one system</div>
+      <h2>Built for how a jewellery business actually runs</h2>
+      <p>Not a generic retail suite with a gold-rate field bolted on. Each pillar below is a set of Odoo modules written for this trade, with its readiness stated plainly.</p>
+    </div>
+    <div class="grid g4">
+      <article class="card lift reveal">
+        <div class="icon" aria-hidden="true">◈</div>
+        <h3>Counter &amp; pricing</h3>
+        <p>One approved rate, maker and checker. Karat, wastage, making and stones priced by the engine and frozen on the invoice.</p>
+        <ul>
+          <li>Gold rate, maker ≠ checker <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Counter, one-transaction sale <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Old-gold exchange <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Card terminal link <span class="tag tag-plan">Planned</span></li>
+        </ul>
+      </article>
+      <article class="card lift gold reveal">
+        <div class="icon gold" aria-hidden="true">✦</div>
+        <h3>Client book</h3>
+        <p>Tiers, occasions, preferences, a private tray she opens from a link, and outreach a person sends from her own phone.</p>
+        <ul>
+          <li>Private &amp; Royal records, access log <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Private tray &amp; client link <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Consent &amp; outreach drafts <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>WhatsApp Business API <span class="tag tag-plan">Planned</span></li>
+        </ul>
+      </article>
+      <article class="card lift sap reveal">
+        <div class="icon sap" aria-hidden="true">▣</div>
+        <h3>Stores &amp; stock</h3>
+        <p>Every piece a serial with its weights, certificate and cost. Transfers through transit, and the fine grams reconciled per store.</p>
+        <ul>
+          <li>Serial pieces, RFID, certificates <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Transfers &amp; gram reconciliation <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Stock-book import <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Repairs &amp; workshop <span class="tag tag-plan">Planned</span></li>
+        </ul>
+      </article>
+      <article class="card lift aub reveal">
+        <div class="icon aub" aria-hidden="true">✺</div>
+        <h3>Intelligence</h3>
+        <p>Agents that read, recommend and draft under five autonomy levels. A person approves anything that touches a client or money.</p>
+        <ul>
+          <li>Zayan &amp; Layla (staff agents) <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Noor kiosk &amp; try-on <span class="tag tag-device">Device test pending</span></li>
+          <li>Owner decision cards <span class="tag tag-built">Built &amp; tested</span></li>
+          <li>Rayan, Amara <span class="tag tag-proto">Specified only</span></li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="day">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">A day in the boutique</div>
+      <h2>From the morning rate to the evening reconciliation</h2>
+    </div>
+    <div class="day">
+      <div class="step reveal"><h3>The rate is approved</h3><p>The manager enters today's rate; a second person approves it. Until then, nothing prices.</p></div>
+      <div class="step reveal"><h3>The client is recognised</h3><p>Her file opens on the counter: preferences, usual spend, the wedding in 21 days, and what suits her — with reasons.</p></div>
+      <div class="step reveal"><h3>The sale is one transaction</h3><p>Piece, old-gold credit, discount within limit, AML check, payment, invoice: committed together or not at all.</p></div>
+      <div class="step reveal"><h3>The grams are reconciled</h3><p>Each store closes on fine grams, transfers are two-sided, and the owner's cards say what needs a decision tomorrow.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">The interface</div>
+      <h2>Jawhar is its own product, not the Odoo back office</h2>
+      <p>A React front end over an API that runs as the signed-in user, so the screen can never show more than the person is allowed to see. Right-to-left Arabic with Arabic numerals is the same code, not a translation layer.</p>
+    </div>
+    <div class="gallery">
+      <figure class="shot tall reveal"><a href="preview/#dash"><img src="site/img/ui-dash.webp" width="1600" height="1000" alt="Today screen: worklist, approvals and owner cards" loading="lazy"></a><figcaption>Today — worklist, approvals, the owner's cards</figcaption></figure>
+      <figure class="shot reveal"><a href="preview/#clients"><img src="site/img/vip-client.webp" width="1600" height="956" alt="A private client file with preferences and the next suggested piece" loading="lazy"></a><figcaption>Client file — preferences, moments, the next piece and why</figcaption></figure>
+      <figure class="shot reveal"><a href="preview/#pos"><img src="site/img/ui-pos.webp" width="1600" height="1000" alt="The counter screen with a piece priced from the approved rate" loading="lazy"></a><figcaption>Counter — priced from the approved rate, committed once</figcaption></figure>
+      <figure class="shot reveal"><a href="preview/#ops"><img src="site/img/pieces.webp" width="1600" height="956" alt="Pieces list with serials, karat, weights and photos" loading="lazy"></a><figcaption>Pieces — serial, karat, weights, certificate, photo</figcaption></figure>
+      <figure class="shot reveal"><a href="preview/#agents"><img src="site/img/owner-cards.webp" width="1600" height="956" alt="Owner decision cards" loading="lazy"></a><figcaption>Owner cards — decisions with their evidence</figcaption></figure>
+    </div>
+    <p class="tiny muted" style="margin-top:var(--s4)">Screenshots from the demo database with synthetic clients and pieces. <a href="preview/">Walk through every screen →</a></p>
+  </div>
+</section>
+
+<section class="band-dark" id="agents">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Intelligence</div>
+      <h2>Agents that work under rules, not instead of people</h2>
+      <p class="muted">Five autonomy levels — read, recommend, draft, execute with named approval, prohibited — enforced in code. Restricted client data never enters a model request. Numbers never come from a model.</p>
+    </div>
+    <div class="agents">
+      <div class="agent reveal"><img src="site/img/agents/zayan.webp" alt="" loading="lazy"><b>Zayan</b><span>Product guide and owner's analyst</span><span class="tag tag-built">Built &amp; tested</span></div>
+      <div class="agent reveal"><img src="site/img/agents/layla.webp" alt="" loading="lazy"><b>Layla</b><span>Clienteling: trays, drafts, occasions</span><span class="tag tag-built">Built &amp; tested</span></div>
+      <div class="agent reveal"><img src="site/img/agents/noor.webp" alt="" loading="lazy"><b>Noor</b><span>Kiosk sales officer, voice and try-on</span><span class="tag tag-device">Device test pending</span></div>
+      <div class="agent reveal"><img src="site/img/agents/rayan.webp" alt="" loading="lazy"><b>Rayan</b><span>Stock and procurement</span><span class="tag tag-proto">Specified only</span></div>
+      <div class="agent reveal"><img src="site/img/agents/amara.webp" alt="" loading="lazy"><b>Amara</b><span>Finance and compliance</span><span class="tag tag-proto">Specified only</span></div>
+    </div>
+    <p class="tiny muted" style="margin-top:var(--s5)">Portraits are illustrations. "Specified only" means a role description exists and no code does. <a href="intelligence/" style="color:var(--gold-2)">How the agents are governed →</a></p>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">What never changes</div>
+      <h2>Three rules the software enforces, whatever anyone types</h2>
+    </div>
+    <div class="rules">
+      <div class="rule reveal"><h3>One approved rate</h3><p>The rate that prices a piece was entered by one person and approved by another. The rate used is written on every quote, order and invoice.</p></div>
+      <div class="rule gold reveal"><h3>A person sends, a person approves</h3><p>Agents draft messages and recommendations. Sending to a client, moving money or changing a price is a human action with a name on it.</p></div>
+      <div class="rule aub reveal"><h3>Private means private</h3><p>Restricted client records are invisible to staff who are not named on them — not greyed out, absent — and every opening is logged.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="status">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">What's built</div>
+      <h2>Readiness, stated the same way everywhere</h2>
+      <p><b>Built &amp; tested</b> means automated tests pass on a fresh database. <b>Device test pending</b> means it works with simulated hardware and has not yet been proven on a real tablet or microphone. <b>Specified only</b> means a design exists and no code. <b>Planned</b> means neither yet.</p>
+    </div>
+    <table class="status reveal">
+      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><b>Gold rate maker-checker, pricing engine, serial pieces, old-gold exchange</b><br><span class="muted tiny">The ground everything stands on.</span></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Client book: tiers, restricted records, access log, occasions, memos, ranking</b></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Quote → order → invoice with the rate frozen on the line; the counter</b><br><span class="muted tiny">Online only, by decision: the counter never sells against a rate it cannot verify.</span></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Private tray, client link, viewing, reservation; outreach drafts with consent</b></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Multi-store transfers and fine-gram reconciliation; stock-book import</b></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>AML &amp; KYC fields, screening, cash-threshold gate</b><br><span class="muted tiny">Thresholds are configuration the finance manager confirms; none are invented.</span></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Client app by one-time code; rate feed (draft for approval); web shelf publication</b></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Arabic and English, right to left</b></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Zayan and Layla: tools, drafts, approvals inbox, audit</b></td><td><span class="tag tag-built">Built &amp; tested</span></td></tr>
+        <tr><td><b>Noor kiosk: voice, shelf, viewing and delivery requests, camera try-on with fit estimate</b></td><td><span class="tag tag-device">Device test pending</span></td></tr>
+        <tr><td><b>White-label tenancy for groups and resellers</b><br><span class="muted tiny">Branding and tenant tooling exist on the platform; Jawhar as a provisionable bundle is the next phase.</span></td><td><span class="tag tag-proto">In progress</span></td></tr>
+        <tr><td><b>Rayan and Amara; WhatsApp Business; card terminals; e-invoicing; marketplaces</b><br><span class="muted tiny">Each integration is validated per country and provider before it is switched on.</span></td><td><span class="tag tag-plan">Planned</span></td></tr>
+      </tbody>
+    </table>
+    <p class="tiny muted" style="margin-top:var(--s4)">247 Odoo tests and 19 engine tests ran green on a fresh database on 21 November 2026. Pricing on this site is a placeholder until approved; see the <a href="pricing/">pricing page</a>.</p>
+  </div>
+</section>
+
+<section id="demo" class="band-dark">
+  <div class="wrap demo-grid">
+    <div class="demo-aside reveal">
+      <div class="eyebrow">Request a demo</div>
+      <h2>See it on your own kind of pieces</h2>
+      <p class="muted">Tell us about the business and a person from Mumtaz Digital writes back within two working days to set up a walkthrough on the demo database — or, with a stock book, on your pieces.</p>
+      <ul>
+        <li>Forty-five minutes, on a call or in your boutique in the UAE.</li>
+        <li>Your gold rate, your karats, your making charges.</li>
+        <li>No automated e-mails: a named person replies.</li>
+      </ul>
+      <p class="tiny muted">Prefer e-mail? <a href="mailto:umer@mumtaz.digital?subject=Jawhar%20demo">umer@mumtaz.digital</a></p>
+    </div>
+    <form class="demo-form reveal" id="demo-form" novalidate>
+      <div class="row">
+        <div class="field"><label for="f-company">Business name</label><input id="f-company" name="company" required autocomplete="organization" maxlength="120"></div>
+        <div class="field"><label for="f-name">Your name</label><input id="f-name" name="name" required autocomplete="name" maxlength="120"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="f-email">E-mail</label><input id="f-email" name="email" type="email" required autocomplete="email" maxlength="120"></div>
+        <div class="field"><label for="f-phone">Phone <span class="muted">(optional)</span></label><input id="f-phone" name="phone" type="tel" autocomplete="tel" maxlength="32"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="f-country">Country</label>
+          <select id="f-country" name="country">
+            <option value="ae">United Arab Emirates</option><option value="sa">Saudi Arabia</option><option value="qa">Qatar</option>
+            <option value="kw">Kuwait</option><option value="bh">Bahrain</option><option value="om">Oman</option><option value="pk">Pakistan</option><option value="other">Other</option>
+          </select></div>
+        <div class="field"><label for="f-stores">Stores</label>
+          <select id="f-stores" name="stores">
+            <option value="1">1 store</option><option value="2-5">2 to 5</option><option value="6-20">6 to 20</option><option value="20+">More than 20</option>
+          </select></div>
+      </div>
+      <div class="field one"><label for="f-message">What should the demo focus on? <span class="muted">(optional)</span></label><textarea id="f-message" name="message" maxlength="2000"></textarea></div>
+      <div class="hp" aria-hidden="true"><label for="f-website">Website</label><input id="f-website" name="website" tabindex="-1" autocomplete="off"></div>
+      <label class="check one"><input type="checkbox" name="consent" id="f-consent" required><span>I agree that Mumtaz Digital contacts me about Jawhar using the details above, and keeps them for that purpose until I ask otherwise.</span></label>
+      <button class="btn btn-primary" type="submit" id="f-submit">Send the request</button>
+      <div class="form-msg" id="f-msg" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="./"><span class="mk">ج</span><span><b>Jawhar</b><small>by Mumtaz Digital</small></span></a>
+        <p class="tiny" style="margin-top:12px;max-width:30em">A jewellery retail operating system for the Gulf, built on Odoo 19 Community. The demo runs on synthetic data; no real client appears anywhere on this site.</p>
+      </div>
+      <div><h4>Product</h4><a href="apps/">Apps</a><a href="modules/sales-hub/">Sales Hub</a><a href="intelligence/">Intelligence</a><a href="preview/">Preview</a></div>
+      <div><h4>Commercial</h4><a href="pricing/">Pricing</a><a href="signup/">Setup</a><a href="#demo">Request a demo</a><a href="/app/">Sign in</a></div>
+      <div><h4>Trust</h4><a href="#status">What's built</a><a href="#rules">The three rules</a><a href="mailto:umer@mumtaz.digital">Contact</a></div>
+    </div>
+    <div class="legal">
+      <span>© 2026 Mumtaz Digital. Odoo is a trademark of Odoo S.A.; Jawhar is an independent product on the Community edition.</span>
+      <span>Hero image AI-generated · screenshots from the demo database · <a href="#" id="theme-toggle">Dark / light</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // mobile nav
+  var nav=document.getElementById('nav'),b=document.getElementById('burger');
+  b.addEventListener('click',function(){var o=nav.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false');});
+  nav.querySelectorAll('.links a').forEach(function(a){a.addEventListener('click',function(){nav.classList.remove('open');b.setAttribute('aria-expanded','false');});});
+  // theme toggle (per-viewer convenience)
+  var t=document.getElementById('theme-toggle');
+  try{var saved=localStorage.getItem('jawhar_theme');if(saved)document.documentElement.setAttribute('data-theme',saved);}catch(e){}
+  t.addEventListener('click',function(e){e.preventDefault();var cur=document.documentElement.getAttribute('data-theme');
+    var next=cur==='dark'?'light':(cur==='light'?'dark':(matchMedia('(prefers-color-scheme:dark)').matches?'light':'dark'));
+    document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('jawhar_theme',next);}catch(e2){}});
+  // reveal on scroll
+  var els=document.querySelectorAll('.reveal');
+  function showAll(){els.forEach(function(el){el.classList.add('in');});}
+  if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion:reduce)').matches){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});},{rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(el){io.observe(el);});
+    // safety net: whatever the observer does, nothing stays hidden (print, capture tools, odd viewports)
+    setTimeout(showAll,1500); window.addEventListener('beforeprint',showAll);
+  }else{showAll();}
+  // demo request → /jawhar/public/site/demo-request (mumtaz_jewellery_website)
+  var f=document.getElementById('demo-form'),msg=document.getElementById('f-msg'),btn=document.getElementById('f-submit');
+  function say(kind,text){msg.className='form-msg '+kind;msg.innerHTML=text;}
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(!f.checkValidity()){f.reportValidity();return;}
+    var d={};new FormData(f).forEach(function(v,k){d[k]=v;});
+    d.consent=document.getElementById('f-consent').checked;d.lang=document.documentElement.lang||'en';d.page=location.pathname;
+    btn.disabled=true;btn.textContent='Sending…';
+    var fallback='We could not reach the server from this page. Please e-mail <a href="mailto:umer@mumtaz.digital?subject=Jawhar%20demo&body='+encodeURIComponent((d.company||'')+' — '+(d.name||'')+' — '+(d.phone||'')+'\n'+(d.message||''))+'">umer@mumtaz.digital</a> and a person will reply.';
+    fetch('/jawhar/public/site/demo-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+      .then(function(r){return r.json().then(function(j){return {s:r.status,j:j};});})
+      .then(function(x){
+        if(x.j&&x.j.ok){say('ok','Thank you. Your reference is <b>'+x.j.data.reference+'</b>. A person from Mumtaz Digital will write to you within two working days.');f.reset();}
+        else if(x.j&&x.j.error){say('err',x.j.error.message);}
+        else{say('err',fallback);}
+      })
+      .catch(function(){say('err',fallback);})
+      .finally(function(){btn.disabled=false;btn.textContent='Send the request';});
+  });
+})();
+</script>
+</body>
+</html>

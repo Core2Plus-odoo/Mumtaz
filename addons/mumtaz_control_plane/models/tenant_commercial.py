@@ -34,6 +34,7 @@ class MumtazTenantCommercial(models.Model):
 
     def _current_subscription(self):
         self.ensure_one()
+        # sudo: usage and subscription rows read by the control plane's own services
         return self.env["mumtaz.subscription"].sudo().search(
             [
                 ("tenant_id", "=", self.id),
@@ -88,6 +89,7 @@ class MumtazTenantCommercial(models.Model):
             if subscription.grace_until:
                 rec.cp_grace_days_remaining = (subscription.grace_until - today).days
 
+            # sudo: usage and subscription rows read by the control plane's own services
             usage_rows = self.env["mumtaz.usage.metric"].sudo().search(
                 [
                     ("tenant_id", "=", rec.id),

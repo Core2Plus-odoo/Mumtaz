@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_owner_card_mgr,owner card manager,model_jewellery_owner_card,mumtaz_jewellery.group_jewellery_manager,1,1,0,0
+access_owner_card_vip,owner card vip manager,model_jewellery_owner_card,mumtaz_jewellery_vip.group_vip_manager,1,1,0,0

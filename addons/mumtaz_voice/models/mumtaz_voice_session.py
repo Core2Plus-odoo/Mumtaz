@@ -48,6 +48,7 @@ class MumtazVoiceSession(models.Model):
                 rec.ai_feature_enabled = True
                 rec.ai_feature_note = False
                 continue
+            # sudo: entitlement lookup on control-plane models tenant users may not read
             access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
                 rec.company_id,
                 "ai_access",
