@@ -41,6 +41,7 @@ customer, and 10% vendor commission retained from vendor-fulfilled orders.
         # hand, because without a chart of accounts Invoicing is present but
         # cannot post anything, which is the state this database was in.
         "l10n_pk",
+        "crm",
     ],
     "data": [
         "security/faizy_security.xml",
@@ -64,6 +65,7 @@ customer, and 10% vendor commission retained from vendor-fulfilled orders.
         "views/faizy_vendor_views.xml",
         "views/faizy_sample_data_views.xml",
         "views/faizy_dashboard_views.xml",
+        "views/crm_lead_views.xml",
         "views/faizy_menus.xml",
     ],
     "assets": {

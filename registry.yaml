@@ -843,8 +843,8 @@ modules:
     license: "LGPL-3"
     application: true
     depends_local: []
-    depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk"]
-    python_lines: 5075
+    depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk", "crm"]
+    python_lines: 5128
     test_files: 1
     access_csv: true
     note: "Faizy is a separate venture."
