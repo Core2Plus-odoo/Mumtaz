@@ -830,7 +830,7 @@ modules:
     application: true
     depends_local: ["faizy_core"]
     depends_standard: ["mail", "crm"]
-    python_lines: 2223
+    python_lines: 2228
     test_files: 4
     access_csv: true
     note: "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
