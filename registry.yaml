@@ -867,12 +867,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_website
     title: "Faizy Website & Portal"
-    version: "19.0.1.20.0"
+    version: "19.0.1.21.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core", "faizy_pilot"]
     depends_standard: ["website", "portal"]
-    python_lines: 1801
-    test_files: 2
+    python_lines: 1896
+    test_files: 3
     access_csv: false
     note: "Faizy is a separate venture."
