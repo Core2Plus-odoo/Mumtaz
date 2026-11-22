@@ -17,14 +17,14 @@ $fz-orange:        #f69e22;
 $fz-orange-600:    #e08410;
 $fz-orange-700:    #b9670d;
 $fz-orange-100:    #fdeacc;
-$fz-orange-50:     #fef6ea;
-$fz-black:         #0a0a0a;
-$fz-ink-900:       #1a1a1a;
-$fz-ink-600:       #515151;
+$fz-orange-50:     #fff6e3;
+$fz-black:         #1e2842;
+$fz-ink-900:       #131a2e;
+$fz-ink-600:       #5a6175;
 $fz-ink-400:       #818181;
-$fz-cream:         #fdfbf7;
-$fz-cream-100:     #faf6ef;
-$fz-cream-200:     #f4ede0;
+$fz-cream:         #ffffff;
+$fz-cream-100:     #f7f6f8;
+$fz-cream-200:     #f2f0f1;
 
 // Accent hues for service tiles. Deliberately warm-leaning so they sit beside
 // the orange instead of fighting it.
@@ -786,14 +786,14 @@ $fz-accent-amber:  #f7b209;
 // Later layer, so it overrides by cascade order rather than by editing what is
 // above — same convention the rest of this sheet follows.
 
-$fz-sand:      #f7f1e7;   // page ground, warmer than the old cream
-$fz-sand-deep: #efe5d6;   // banded sections
+$fz-sand:      #f2f0f1;   // page ground: FAIZY 2.0 soft grey
+$fz-sand-deep: #e7e4e6;   // banded sections
 $fz-clay:      #8f4f08;   // 5.68:1 on sand, 5.12:1 on sand-deep.
                           // Measured, not eyeballed: the first value I
                           // picked here (#b9670d) looked right and came
                           // out at 3.73:1 — fine for a heading, a fail
                           // for the 13px eyebrow labels that use it.
-$fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
+$fz-ink:       #1e2842;   // FAIZY 2.0 navy
 
 .faizy-page {
   background: $fz-sand;
@@ -815,7 +815,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 
 .fz-accent { color: $fz-clay; }
 
-.fz-lead { color: rgba(43, 38, 34, 0.72); }
+.fz-lead { color: rgba(30, 40, 66, 0.72); }
 
 .fz-eyebrow {
   color: $fz-clay;
@@ -830,7 +830,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 // Same room as the rest of the page now. The warmth comes from one soft
 // sunrise wash behind the copy instead of two saturated blooms on black.
 .fz-hero {
-  background: linear-gradient(180deg, #fdf8f0 0%, $fz-sand 100%);
+  background: linear-gradient(180deg, #ffffff 0%, $fz-sand 100%);
   color: $fz-ink;
   padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(2.5rem, 6vw, 4.5rem);
 
@@ -843,19 +843,19 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   &::after { display: none; }   // the violet bloom belonged to the dark hero
 
   .fz-hero-tagline { color: $fz-clay; }
-  .fz-hero-sub { color: rgba(43, 38, 34, 0.72); }
+  .fz-hero-sub { color: rgba(30, 40, 66, 0.72); }
 }
 
 .fz-trustbar {
   .fz-trustbar-value { color: $fz-clay; font-weight: 600; }
-  .fz-trustbar-label { color: rgba(43, 38, 34, 0.55); }
+  .fz-trustbar-label { color: rgba(30, 40, 66, 0.55); }
 }
 
 // Ghost buttons sat on a dark hero before, so they were drawn in cream.
 .fz-hero .btn-faizy-ghost {
-  border-color: rgba(43, 38, 34, 0.2);
+  border-color: rgba(30, 40, 66, 0.2);
   color: $fz-ink;
-  &:hover { background: rgba(43, 38, 34, 0.05); color: $fz-ink; }
+  &:hover { background: rgba(30, 40, 66, 0.05); color: $fz-ink; }
 }
 
 // ── The quiet section ───────────────────────────────────────────────────
@@ -867,7 +867,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   line-height: 2;
   // 0.6 alpha measured 3.65:1 — below AA, and this text is 18px, which
   // is not "large" by WCAG's definition (24px regular / 18.66px bold).
-  color: rgba(43, 38, 34, 0.72);
+  color: rgba(30, 40, 66, 0.72);
 
   p { margin-bottom: 0; }
 
@@ -881,9 +881,9 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 // ── Cards and tiles ─────────────────────────────────────────────────────
 .fz-card {
   background: #fffdfa;
-  border: 1px solid rgba(43, 38, 34, 0.08);
+  border: 1px solid rgba(30, 40, 66, 0.08);
   border-radius: 1.5rem;
-  box-shadow: 0 2px 3px rgba(43, 38, 34, 0.03);
+  box-shadow: 0 2px 3px rgba(30, 40, 66, 0.03);
   color: $fz-ink;
 }
 
@@ -892,7 +892,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 .fz-tile {
   background: #fffdfa;
   border-radius: 1.5rem;
-  border: 1px solid rgba(43, 38, 34, 0.08);
+  border: 1px solid rgba(30, 40, 66, 0.08);
 
   .fz-tile-icon {
     background: color-mix(in srgb, var(--fz-tile) 14%, transparent);
@@ -913,7 +913,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 
   &.is-featured {
     background: $fz-ink;
-    box-shadow: 0 20px 50px -28px rgba(43, 38, 34, 0.6);
+    box-shadow: 0 20px 50px -28px rgba(30, 40, 66, 0.6);
   }
 }
 
@@ -934,8 +934,8 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
 // ── Header ──────────────────────────────────────────────────────────────
 
 #wrapwrap > header {
-  background: #fdf8f0;
-  border-bottom-color: rgba(43, 38, 34, 0.07);
+  background: #ffffff;
+  border-bottom-color: rgba(30, 40, 66, 0.07);
   box-shadow: none;
 
   .nav-link:hover, .navbar-nav > li > a:hover { color: $fz-clay; }
@@ -1015,9 +1015,9 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   .dropdown-toggle::after { opacity: 0.55; }
 
   .dropdown-menu {
-    border: 1px solid rgba(43, 38, 34, 0.1);
+    border: 1px solid rgba(30, 40, 66, 0.1);
     border-radius: var(--fz-r-md, 1rem);
-    box-shadow: 0 18px 40px -24px rgba(43, 38, 34, 0.45);
+    box-shadow: 0 18px 40px -24px rgba(30, 40, 66, 0.45);
     padding: 0.4rem;
 
     .dropdown-item {
@@ -1209,15 +1209,15 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   .btn-primary:not([href="/start"]),
   a.btn-primary:not([href="/start"]) {
     background: transparent !important;
-    border: 1.5px solid rgba(43, 38, 34, 0.18) !important;
+    border: 1.5px solid rgba(30, 40, 66, 0.18) !important;
     color: $fz-ink !important;
     border-radius: 999px;
     font-weight: 500;
     box-shadow: none !important;
 
     &:hover {
-      background: rgba(43, 38, 34, 0.05) !important;
-      border-color: rgba(43, 38, 34, 0.28) !important;
+      background: rgba(30, 40, 66, 0.05) !important;
+      border-color: rgba(30, 40, 66, 0.28) !important;
       color: $fz-ink !important;
     }
   }
@@ -1261,7 +1261,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   .fz-footer-blurb {
     font-size: 0.875rem;
     line-height: 1.65;
-    color: rgba(43, 38, 34, 0.7);
+    color: rgba(30, 40, 66, 0.7);
     max-width: 26rem;
   }
 
@@ -1270,7 +1270,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: rgba(43, 38, 34, 0.5);
+    color: rgba(30, 40, 66, 0.5);
     margin-bottom: 0.6rem;
     // Uppercase tracking leaves a gap after the last letter, which pushes the
     // heading visually left of the list beneath it.
@@ -1286,7 +1286,7 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
     li { margin-bottom: 0.4rem; }
 
     a {
-      color: rgba(43, 38, 34, 0.78);
+      color: rgba(30, 40, 66, 0.78);
       text-decoration: none;
       &:hover { color: #8f4f08; text-decoration: underline; text-underline-offset: 2px; }
       &:focus-visible { outline: 2px solid #8f4f08; outline-offset: 3px; border-radius: 3px; }
@@ -1296,9 +1296,9 @@ $fz-ink:       #2b2622;   // warm near-black; pure #0A0A0A reads cold on sand
   .fz-footer-legal {
     margin-top: clamp(1.5rem, 4vw, 2.25rem);
     padding-top: 1rem;
-    border-top: 1px solid rgba(43, 38, 34, 0.1);
+    border-top: 1px solid rgba(30, 40, 66, 0.1);
     font-size: 0.8125rem;
-    color: rgba(43, 38, 34, 0.55);
+    color: rgba(30, 40, 66, 0.55);
   }
 }
 
@@ -1508,7 +1508,7 @@ $fz-whatsapp-deep: #075e54;
 
     th, td {
       padding: 0.6rem 0.75rem;
-      border-bottom: 1px solid rgba(43, 38, 34, 0.1);
+      border-bottom: 1px solid rgba(30, 40, 66, 0.1);
       text-align: left;
       vertical-align: top;
     }
@@ -1571,7 +1571,7 @@ $fz-whatsapp-deep: #075e54;
       display: flex;
       gap: 0.75rem;
       padding: 0.65rem 0;
-      border-bottom: 1px solid rgba(43, 38, 34, 0.08);
+      border-bottom: 1px solid rgba(30, 40, 66, 0.08);
       font-size: 0.9375rem;
     }
     li:last-child { border-bottom: 0; }
@@ -1587,7 +1587,7 @@ $fz-whatsapp-deep: #075e54;
   .s_website_form {
     .form-control, .form-select {
       border-radius: var(--fz-r-sm, 0.75rem);
-      border: 1px solid rgba(43, 38, 34, 0.16);
+      border: 1px solid rgba(30, 40, 66, 0.16);
       padding: 0.6rem 0.85rem;
       background: #fffdfa;
     }
@@ -1623,8 +1623,8 @@ $fz-whatsapp-deep: #075e54;
 // Two colours the earlier layers use as literals. Named here so the portal
 // does not scatter more hex around, and so check_contrast.py has something
 // to hold to a threshold.
-$fz-card:     #fffdfa;   // the card white used by .fz-card in the v4 layer
-$fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
+$fz-card:     #ffffff;   // the card white used by .fz-card in the v4 layer
+$fz-ink-soft: #5a6175;   // $fz-ink at 72%, flattened — secondary copy
 
 .fzp {
   background: $fz-sand;
@@ -1647,7 +1647,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
   flex-wrap: wrap;
   padding-bottom: 1.5rem;
   margin-bottom: 1.75rem;
-  border-bottom: 1px solid rgba(43, 38, 34, 0.10);
+  border-bottom: 1px solid rgba(30, 40, 66, 0.10);
 }
 
 .fzp-eyebrow {
@@ -1697,7 +1697,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
 
 .fzp-stat {
   background: $fz-card;
-  border: 1px solid rgba(43, 38, 34, 0.07);
+  border: 1px solid rgba(30, 40, 66, 0.07);
   border-radius: 16px;
   padding: 1.1rem 1.25rem;
 
@@ -1717,7 +1717,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
 // ── Cards & section headings ────────────────────────────────────────────
 .fzp-card {
   background: $fz-card;
-  border: 1px solid rgba(43, 38, 34, 0.07);
+  border: 1px solid rgba(30, 40, 66, 0.07);
   border-radius: 18px;
   padding: 1.4rem 1.5rem;
   height: auto;      // not .fz-card's 100% — that is what stretched the box
@@ -1780,7 +1780,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
 
 .fzp-meter {
   height: 0.6rem;
-  background: rgba(43, 38, 34, 0.09);
+  background: rgba(30, 40, 66, 0.09);
   border-radius: 999px;
   overflow: hidden;
 
@@ -1798,7 +1798,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
   gap: 0.9rem;
   padding: 0.85rem 1.25rem;
   background: $fz-card;
-  border: 1px solid rgba(43, 38, 34, 0.07);
+  border: 1px solid rgba(30, 40, 66, 0.07);
   border-radius: 14px;
 
   + .fzp-member { margin-top: 0.55rem; }
@@ -1829,7 +1829,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
 // ── Orders table ────────────────────────────────────────────────────────
 .fzp-table-wrap {
   background: $fz-card;
-  border: 1px solid rgba(43, 38, 34, 0.07);
+  border: 1px solid rgba(30, 40, 66, 0.07);
   border-radius: 18px;
   overflow: hidden;
 }
@@ -1847,14 +1847,14 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
     text-transform: uppercase;
     color: $fz-ink-soft;
     padding: 0.8rem 1.25rem;
-    background: rgba(43, 38, 34, 0.025);
-    border-bottom: 1px solid rgba(43, 38, 34, 0.07);
+    background: rgba(30, 40, 66, 0.025);
+    border-bottom: 1px solid rgba(30, 40, 66, 0.07);
     white-space: nowrap;
   }
 
   td {
     padding: 0.9rem 1.25rem;
-    border-bottom: 1px solid rgba(43, 38, 34, 0.055);
+    border-bottom: 1px solid rgba(30, 40, 66, 0.055);
     color: $fz-ink;
     vertical-align: middle;
   }
@@ -1973,7 +1973,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
     gap: 0.3rem 0.5rem;
     align-items: center;
     padding: 1rem 1.1rem;
-    border-bottom: 1px solid rgba(43, 38, 34, 0.055);
+    border-bottom: 1px solid rgba(30, 40, 66, 0.055);
 
     &:last-child { border-bottom: 0; }
   }
@@ -2013,7 +2013,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
     z-index: 1030;          // above Odoo's sticky header, below its modals
     background: rgba(253, 248, 240, 0.94);
     backdrop-filter: saturate(160%) blur(12px);
-    border-top: 1px solid rgba(43, 38, 34, 0.10);
+    border-top: 1px solid rgba(30, 40, 66, 0.10);
     // The home indicator on a notched iPhone sits over the bottom ~34px.
     // Without this the last row of tabs is under it and unpressable.
     padding-bottom: env(safe-area-inset-bottom, 0);
@@ -2040,7 +2040,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
     &.is-on { color: $fz-clay; }
     &.is-wa { color: $fz-whatsapp; }
     &:hover, &:focus { color: $fz-clay; }
-    &:active { background: rgba(43, 38, 34, 0.05); }
+    &:active { background: rgba(30, 40, 66, 0.05); }
   }
 
   // Clear the bar, or the last order row sits permanently underneath it.
@@ -2161,7 +2161,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
   &-body {
     display: block;
     background: $fz-card;
-    border: 1.5px solid rgba(43, 38, 34, 0.10);
+    border: 1.5px solid rgba(30, 40, 66, 0.10);
     border-radius: 14px;
     padding: 0.8rem 0.95rem;
     // Comfortably over the 44px touch minimum even with a one-line label.
@@ -2194,7 +2194,7 @@ $fz-ink-soft: #6b625b;   // $fz-ink at 72%, flattened — secondary copy
   display: block;
   width: 100%;
   background: $fz-card;
-  border: 1.5px solid rgba(43, 38, 34, 0.14);
+  border: 1.5px solid rgba(30, 40, 66, 0.14);
   border-radius: 12px;
   padding: 0.7rem 0.9rem;
   // 16px exactly. Anything smaller and iOS Safari zooms the page on focus,
@@ -2301,7 +2301,7 @@ button.fzp-btn {
 
 .fzp-step {
   background: $fz-card;
-  border: 1px solid rgba(43, 38, 34, 0.07);
+  border: 1px solid rgba(30, 40, 66, 0.07);
   border-radius: 18px;
   padding: 1.25rem 1.35rem 1.4rem;
   margin-bottom: 1rem;
@@ -2358,7 +2358,7 @@ button.fzp-btn {
   padding: 0.2rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 600;
-  background: rgba(43, 38, 34, 0.06);
+  background: rgba(30, 40, 66, 0.06);
   color: $fz-ink-soft;
 
   &.is-due  { background: $fz-orange-100; color: $fz-clay; }
@@ -2396,7 +2396,7 @@ button.fzp-btn {
 .fzp-foot-links {
   margin: 1.75rem 0 0;
   padding-top: 1.25rem;
-  border-top: 1px solid rgba(43, 38, 34, 0.10);
+  border-top: 1px solid rgba(30, 40, 66, 0.10);
 }
 
 // ── The end of the free grant ───────────────────────────────────────────
@@ -2407,7 +2407,7 @@ button.fzp-btn {
 
 .fzp-promo.is-spent {
   background: $fz-card;
-  border-color: rgba(43, 38, 34, 0.10);
+  border-color: rgba(30, 40, 66, 0.10);
 }
 
 .fzp-gate {
@@ -2567,5 +2567,89 @@ button.fzp-btn {
       line-height: 2.3;
       color: $fz-ink-900;
     }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  v10 — FAIZY 2.0: navy hero, trust strip
+//  Palette is carried by the variables at the top of this file (navy ink,
+//  soft-grey ground, orange fills). Orange stays a fill, never text on white.
+// ════════════════════════════════════════════════════════════════════════
+
+$fz2-navy:  #1e2842;
+$fz2-deep:  #131a2e;
+
+.faizy-page {
+  .fz2-hero {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    padding: clamp(3rem, 8vw, 6rem) 0 clamp(5rem, 10vw, 8rem);
+    background:
+      radial-gradient(760px 460px at 88% -8%, rgba(246, 158, 34, .38), transparent 60%),
+      radial-gradient(640px 420px at -6% 105%, rgba(107, 70, 229, .30), transparent 62%),
+      linear-gradient(180deg, $fz2-navy, $fz2-deep);
+
+    &::after {
+      content: "";
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+    > .container { z-index: 1; }
+  }
+
+  .fz2-kick {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .15);
+    color: #ffd08a;                 // 11:1 on navy
+    border-radius: 999px;
+    padding: .35rem .9rem;
+    font-size: .75rem; font-weight: 600; letter-spacing: .04em;
+    i { width: 7px; height: 7px; border-radius: 50%; background: $fz-orange; box-shadow: 0 0 0 4px rgba(246, 158, 34, .2); }
+  }
+  .fz2-h1 { color: #fff; font-size: clamp(2.1rem, 5.2vw, 3.6rem); line-height: 1.08; font-weight: 800; }
+  .fz2-lead { color: #c9cfe2; font-size: clamp(1rem, 1.6vw, 1.15rem); max-width: 52ch; }   // 9.7:1 on navy
+  .fz2-btn-onnavy { background: transparent; color: #fff; border: 2px solid rgba(255, 255, 255, .4); border-radius: 999px;
+    &:hover { background: rgba(255, 255, 255, .08); color: #fff; } }
+  .fz2-ticks {
+    list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; color: #e4e8f4; font-size: .9rem;
+    li { display: flex; gap: .6rem; align-items: flex-start; }
+    .fa { color: $fz-orange; margin-top: .25rem; }
+  }
+
+  .fz2-arch {
+    position: relative; max-width: 360px; width: 100%; margin: 0 auto;
+    .fz2-frame {
+      border-radius: 999px 999px 28px 28px;
+      background: linear-gradient(180deg, #fff4e1, #f2f0f1 55%, #e8eaf2);
+      overflow: hidden; display: flex; justify-content: center; align-items: flex-end;
+      aspect-ratio: 4 / 5;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, .4), inset 0 0 0 6px rgba(255, 255, 255, .12);
+      img { height: 96%; width: auto; object-fit: contain; mix-blend-mode: multiply; }
+    }
+    .fz2-tag {
+      position: absolute; left: 50%; transform: translateX(-50%); bottom: -14px;
+      background: #fff; color: $fz2-navy; border-radius: 999px;
+      padding: .3rem .9rem; font-size: .72rem; font-weight: 600; white-space: nowrap;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .2);
+    }
+  }
+
+  .fz2-strip {
+    position: relative; z-index: 2;
+    margin-top: -3.2rem; margin-bottom: 1rem;
+    background: #fff; border-radius: 22px;
+    box-shadow: 0 2px 4px rgba(30, 40, 66, .05), 0 18px 44px rgba(30, 40, 66, .12);
+    padding: 1.1rem 1.25rem;
+    display: grid; gap: 1rem; grid-template-columns: 1fr 1fr;
+    @media (min-width: 992px) { grid-template-columns: repeat(4, 1fr); padding: 1.5rem 1.75rem; gap: 1.25rem; }
+    .fz2-it { display: flex; gap: .65rem; align-items: flex-start; font-size: .8rem; line-height: 1.35; min-width: 0;
+      b { display: block; font-size: .86rem; color: $fz2-navy; }
+      span:not(.fz2-ico) { color: #5a6175; } }
+    .fz2-ico { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex: none;
+      background: #fde7c6; color: $fz2-navy; }
   }
 }

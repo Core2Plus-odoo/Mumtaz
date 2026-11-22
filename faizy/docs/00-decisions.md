@@ -817,3 +817,24 @@ image become `approved` (chatter note, no reviewer, they were already completed 
 become `submitted` (human review); orders without images are untouched. Verified on a throwaway database: faizy_core
 installed, three synthetic orders created, then faizy_pilot installed: completed -> approved, in_progress with photo ->
 submitted, pending without photo -> none. Unit test added. Still not run on staging or production.
+
+## 17. FAIZY 2.0 public look (faizy_website 19.0.1.21.0)
+
+The rebrand in the approved design preview (navy `#1E2842`, orange `#F69E22` as a fill with navy text, soft grey
+`#F2F0F1`, Poppins; cream removed) is applied by changing the colour variables at the top of `faizy.scss`, so every
+public page and the customer portal take the new palette at once, plus a new `v10` layer for the new home hero and trust
+strip. The home hero is rewritten (Agent in an arch frame, labelled "illustrative character"). PWA `theme_color` and
+`background_color` and the portal `theme-color` meta now match the navy.
+
+Claims removed from public pages because nobody approved them (decision 3, extended): the trust bar (22+ families, 3
+cities, 24k following, 100% photographed), the sample order card with PKR amounts, "Your first three care activities are
+on us" / "free" in the plans block, pricing hero and signup pages, and the Facebook follower count (the contact block now
+shows the approved handle FaizyHaiNa). The plans block now says only that the plan is confirmed on WhatsApp before any
+billing starts. A new test (`test_home_2_0`) fails the build if any of these phrases returns to `/`, `/pricing`, `/start`,
+`/join`, `/privacy` or `/ai-team`.
+
+Deliberately not on the new home: "Customer messages go out 10:00 to 21:00 Karachi time" (no hour gate exists yet) and "agents
+see the task, not your family name" (not implemented). The footer text from the old site is untouched.
+
+Not done here: the structural portal redesign (side navigation, tiles, object-page header) and Roman Urdu toggle from the
+preview. Verified on a throwaway Odoo 19 database: install and 25 tests pass. Not run on production.
