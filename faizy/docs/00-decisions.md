@@ -1042,3 +1042,19 @@ showed them.
 
 Verified on a throwaway Odoo 19 database: all four Faizy modules, 111 tests, 0 failed after merging #200 (5 new in
 `test_plan_prices_hidden`). Not run on production.
+
+## 24. Staff work: checklists, My Work desks, scorecards (faizy_work 19.0.1.0.0, faizy_work_project 19.0.1.0.0)
+
+Brief by Umer, 23 Nov 2026. One reusable checklist mechanism (none exists in Odoo 19 CRM or Project) attached to the existing
+CRM lead, FAIZY order, vendor, AI draft or project task. Standard-first: no second CRM, task or approval app; existing
+modules are extended with `_inherit`, never edited.
+
+- Gates are enforced on the server through `ValidationError`, with a switch `faizy.checklist_enforce` (shipped on).
+- Prospect status maps onto the standard CRM stages; stages are not renamed. Originator and owner are separate.
+- Scorecards count real records, show "Insufficient data" instead of guessing, and wait for a two-week baseline.
+- Shipped off or unset: `faizy.checklist_orders`, `faizy.work_route_leads`, `faizy.kpi_start`. Conversion target 0.20 is provisional.
+- Faizy Agent now implies the CRM salesman group (no net change on production).
+- Open decisions: Mashood's CRM rights (All vs Own Documents), the 30-day start date (assumed Mon 30 Nov 2026), who is assigned to recurring checklists.
+
+Verified on a clean throwaway Odoo 19 database: faizy_core, faizy_ai, faizy_pilot, faizy_website, faizy_work and the bridge,
+143 tests, 0 failed. Not run on production. Details and handoff list: `docs/work/README.md`.

@@ -63,11 +63,11 @@
                                     invisible="state == 'done' or not applicable"/>
                             <button name="action_undo" type="object" icon="fa-check-square-o" title="Take the tick back"
                                     invisible="state != 'done'"/>
-                            <field name="name" readonly="1"/>
-                            <field name="mandatory" widget="boolean_toggle" readonly="1" string="Must"/>
-                            <field name="sop" readonly="1" optional="show" string="How to do it"/>
-                            <field name="auto_note" readonly="1" optional="show" string="From the ERP"/>
-                            <field name="note" string="Note / evidence"/>
+                            <field name="name" readonly="1" width="20%"/>
+                            <field name="mandatory" widget="boolean_toggle" readonly="1" string="Must" width="60px"/>
+                            <field name="sop" readonly="1" optional="show" string="How to do it" width="30%"/>
+                            <field name="auto_note" readonly="1" optional="show" string="From the ERP" width="14%"/>
+                            <field name="note" string="Note / evidence" width="16%"/>
                             <field name="evidence_ref" optional="show"/>
                             <field name="evidence_url" optional="hide"/>
                             <field name="done_by" readonly="1" optional="show"/>

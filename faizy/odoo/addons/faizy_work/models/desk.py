@@ -30,6 +30,7 @@ class FaizyWorkDesk(models.TransientModel):
     _name = 'faizy.work.desk'
     _description = 'FAIZY My Work desk'
 
+    name = fields.Char(default='My Work')
     user_id = fields.Many2one('res.users', default=lambda self: self.env.user, readonly=True)
     summary = fields.Html(compute='_compute_summary', sanitize=False)
 
@@ -88,6 +89,7 @@ class FaizyWorkCommand(models.TransientModel):
     _name = 'faizy.work.command'
     _description = 'FAIZY founder command centre'
 
+    name = fields.Char(default='Founder command centre')
     summary = fields.Html(compute='_compute_summary', sanitize=False)
 
     @api.depends_context('uid')

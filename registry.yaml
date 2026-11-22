@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 63
+module_count: 64
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -886,7 +886,21 @@ modules:
     application: false
     depends_local: ["faizy_core", "faizy_ai", "faizy_pilot"]
     depends_standard: ["crm", "mail"]
-    python_lines: 1817
+    python_lines: 1824
     test_files: 1
     access_csv: true
     note: "Faizy is a separate venture. Checklist engine, CRM discipline gates, staff desks and KPI scorecards on top of faizy_core, faizy_ai and faizy_pilot; added 23 Nov 2026, not yet installed on production."
+  faizy_work_project:
+    layer: venture
+    disposition: relocate-candidate
+    path: faizy/odoo/addons/faizy_work_project
+    title: "Faizy Work: Project task checklists"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: ["faizy_work"]
+    depends_standard: ["project"]
+    python_lines: 54
+    test_files: 1
+    access_csv: false
+    note: "Faizy is a separate venture. Auto-install bridge that lets a faizy_work checklist attach to a standard Project task; inert until Project is installed."

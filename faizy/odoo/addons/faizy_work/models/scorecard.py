@@ -35,6 +35,7 @@ class FaizyWorkScorecard(models.TransientModel):
     _name = 'faizy.work.scorecard'
     _description = 'FAIZY staff scorecard (computed from real records)'
 
+    name = fields.Char(default='Scorecard')
     user_id = fields.Many2one('res.users', string='Employee', required=True,
                               default=lambda self: self.env.user)
     profile = fields.Selection([('cx', 'Digital Marketing & CX'), ('ops', 'BD & Operations')],

@@ -1,4 +1,5 @@
 import base64
+import random
 from datetime import timedelta
 
 from odoo import fields
@@ -307,7 +308,8 @@ class TestFaizyWork(TransactionCase):
         order = self._order(state='pending')
         ck = order.with_user(self.raza)._checklist_start('order_assignment_execution')
         worker = self.env['faizy.worker'].create(
-            {'name': 'SYNTHETIC worker', 'phone': '+920000000000', 'city': 'karachi'}) \
+            {'name': 'SYNTHETIC worker', 'phone': '+92300%07d' % random.randint(0, 9999999),
+             'city': 'karachi'}) \
             if 'faizy.worker' in self.env else False
         if worker:
             order.write({'worker_id': worker.id})
