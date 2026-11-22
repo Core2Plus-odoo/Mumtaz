@@ -169,8 +169,8 @@
                                 You have <t t-out="partner.faizy_free_activities"/> free care activities
                             </h2>
                             <p>
-                                Use them whenever you like — no card needed. Choose a plan
-                                when you are ready for something regular.
+                                Use them whenever you like. Choose a plan when you are
+                                ready for something regular.
                             </p>
                         </div>
                         <a href="/pricing" class="fzp-btn">See plans</a>
@@ -184,11 +184,10 @@
                     <div t-if="not subscription and partner.faizy_free_activities &lt;= 0"
                          class="fzp-promo is-spent">
                         <div>
-                            <h2>Your free activities are used up</h2>
+                            <h2>You do not have an active plan yet</h2>
                             <p>
-                                We hope they were useful. Choose a plan to keep us
-                                looking after your family — from PKR 1,999 a month,
-                                cancel any time.
+                                Choose a plan to start asking us to look after your
+                                family.
                             </p>
                         </div>
                         <a href="/pricing" class="fzp-btn">Choose a plan</a>
@@ -405,11 +404,10 @@
                          about it. -->
                     <div t-if="needs_plan" class="fzp-gate">
                         <div class="fzp-gate-icon" aria-hidden="true">🌙</div>
-                        <h2>You have used your free activities</h2>
+                        <h2>You need an active plan to book</h2>
                         <p>
-                            We hope they helped. To keep asking us for medicines,
-                            bills, visits and errands, choose a plan — from
-                            PKR 1,999 a month, cancel any time.
+                            To ask us for medicines, bills, visits and errands,
+                            choose a plan.
                         </p>
                         <a href="/pricing" class="fzp-btn">Choose a plan</a>
                         <p t-if="wa_new_task" class="fzp-gate-alt">
@@ -637,21 +635,20 @@
                                 </div>
                             </div>
 
-                            <div t-if="order.proof_image" class="fzp-card">
+                            <div t-if="order.proof_visible" class="fzp-card">
                                 <h2 class="fzp-meta mb-3">Proof of delivery</h2>
-                                <img t-attf-src="/web/image/faizy.order/#{order.id}/proof_image"
+                                <img t-attf-src="/faizy/evidence/#{order.id}/proof"
                                      class="img-fluid rounded" alt="Proof of delivery"/>
                                 <p t-if="order.completion_note" class="fzp-meta mt-2 mb-0"
                                    t-out="order.completion_note"/>
                             </div>
 
-                            <!-- The paper behind what they were charged. Shown
-                                 whenever it exists, not only once completed —
-                                 a customer who has been billed for purchases
-                                 should not have to wait to see why. -->
-                            <div t-if="order.receipt_image" class="fzp-card">
+                            <!-- The paper behind what they were charged. Shown as
+                                 soon as a reviewer has approved it, not only once
+                                 completed. Unreviewed images are never shown. -->
+                            <div t-if="order.receipt_visible" class="fzp-card">
                                 <h2 class="fzp-meta mb-3">Receipt</h2>
-                                <img t-attf-src="/web/image/faizy.order/#{order.id}/receipt_image"
+                                <img t-attf-src="/faizy/evidence/#{order.id}/receipt"
                                      class="img-fluid rounded" alt="Receipt"/>
                                 <p t-if="order.receipt_note" class="fzp-meta mt-2 mb-0"
                                    t-out="order.receipt_note"/>

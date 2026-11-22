@@ -4,13 +4,18 @@ from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError, ValidationError
 
 # Fields a Faizy / Agent (customer care, without Operations) may still edit on
-# an order: the description and the notes. Everything that moves the job or
-# its money is Operations' call (FAIZY HQ05 S1). The mail.thread bookkeeping
-# field is included because posting an attachment in the chatter writes it.
+# an order: the description, the notes, and the proof / receipt photos (care
+# often receives them on WhatsApp; faizy_pilot sends any new photo back to
+# Operations for review, so uploading one cannot complete or bill anything).
+# Everything that moves the job or its money is Operations' call (FAIZY HQ05
+# S1). The mail.thread bookkeeping field is included because posting an
+# attachment in the chatter writes it.
 AGENT_WRITABLE_ORDER_FIELDS = {
     "description",
     "completion_note",
     "receipt_note",
+    "proof_image",
+    "receipt_image",
     "message_main_attachment_id",
 }
 
@@ -306,44 +311,7 @@ class FaizyOrder(models.Model):
                         fields=", ".join(sorted(blocked)),
                     )
                 )
-        if (
-            vals.get("state") == "completed"
-            and not self.env.su
-            and not self.env.context.get("faizy_completion_checked")
-        ):
-            # Completion has exactly one path: action_complete, which checks
-            # the proof first. A direct write would skip that check.
-            raise UserError(
-                self.env._(
-                    "Use the Complete button to complete an order: it checks the "
-                    "proof photo and receipt first."
-                )
-            )
         return super().write(vals)
-
-    def _check_completion_evidence(self):
-        """No order closes without evidence (HQ05 S2, ERP B05).
-
-        A proof photo always; an itemised receipt whenever money was spent on
-        the customer's behalf (purchase_value > 0), because that is the figure
-        the customer is charged for. Sample orders are demo data and exempt.
-        """
-        for order in self:
-            if order.is_sample:
-                continue
-            missing = []
-            if not order.proof_image:
-                missing.append(self.env._("a proof photo"))
-            if order.purchase_value > 0 and not order.receipt_image:
-                missing.append(self.env._("the itemised receipt"))
-            if missing:
-                raise UserError(
-                    self.env._(
-                        "%(ref)s cannot be completed yet: add %(missing)s first.",
-                        ref=order.name,
-                        missing=self.env._(" and ").join(missing),
-                    )
-                )
 
     # ── Workflow ─────────────────────────────────────────────────────────
 
@@ -366,10 +334,11 @@ class FaizyOrder(models.Model):
         self._notify_whatsapp("status_update")
 
     def action_complete(self):
+        # Evidence is checked by faizy_pilot's override, which runs before
+        # this one (HQ05 S2 is delivered there, see docs/00-decisions.md §16).
         self._check_order_action_rights()
-        self._check_completion_evidence()
         for order in self:
-            order.with_context(faizy_completion_checked=True).write(
+            order.write(
                 {"state": "completed", "date_completed": fields.Datetime.now()}
             )
             order._notify_whatsapp("status_update")

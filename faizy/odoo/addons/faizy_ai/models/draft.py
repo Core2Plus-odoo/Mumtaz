@@ -329,7 +329,9 @@ class FaizyAIDraft(models.Model):
                 [('state', '=', 'pending'), ('worker_id', '=', False), ('vendor_id', '=', False)]),
             'overdue_orders': Order.search_count(
                 open_dom + [('scheduled_date', '!=', False), ('scheduled_date', '<', now)]),
-            'completed_without_proof': Order.search_count(
+            # A count only, no image content: sudo because faizy_pilot makes
+            # proof_image staff-only and the AI agents are not staff.
+            'completed_without_proof': Order.sudo().search_count(
                 [('state', '=', 'completed'), ('proof_image', '=', False)]),
             'completed_last_7_days': Order.search_count(
                 [('state', '=', 'completed'), ('write_date', '>=', now - relativedelta(days=7))]),
