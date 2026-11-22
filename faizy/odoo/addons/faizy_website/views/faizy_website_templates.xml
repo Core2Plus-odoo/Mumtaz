@@ -416,13 +416,16 @@
          PLAN CARDS — shared so home and /pricing cannot drift apart
          ════════════════════════════════════════════════════════════════ -->
     <template id="plan_cards" name="Faizy Plan Cards">
+        <!-- Prices and plan numbers stay hidden until Umer approves them in
+             writing (system parameter faizy.show_plan_prices = "on"). -->
+        <t t-set="show_prices" t-value="request.env['faizy.plan'].sudo().prices_public()"/>
 
         <!-- Customers are anywhere, so let them see the price we actually
              publish in their market. The switcher only offers currencies with
              a published price — nothing here is converted at today's rate.
              ISO codes rather than symbols: "AED 26.50" is unambiguous to an
              international audience in a way that mixed glyphs are not. -->
-        <div class="fz-currency-switch mb-4" t-if="len(currencies) &gt; 1">
+        <div class="fz-currency-switch mb-4" t-if="show_prices and len(currencies) &gt; 1">
             <span class="fz-currency-label">Show prices in</span>
             <t t-foreach="currencies" t-as="currency">
                 <a t-attf-href="?currency=#{currency.name}#plans"
@@ -440,14 +443,19 @@
                         <h3 class="h4 mb-1" t-out="plan.name"/>
                         <p class="text-muted small mb-3" t-out="plan.description"/>
 
-                        <div class="fz-plan-price mb-1">
-                            <span class="fz-plan-cur" t-out="display_currency.name"/><!--
-                            --><span t-out="plan.price_display(display_currency)"/>
-                        </div>
-                        <p class="text-muted small mb-4">per month</p>
+                        <t t-if="show_prices">
+                            <div class="fz-plan-price mb-1">
+                                <span class="fz-plan-cur" t-out="display_currency.name"/><!--
+                                --><span t-out="plan.price_display(display_currency)"/>
+                            </div>
+                            <p class="text-muted small mb-4">per month</p>
+                        </t>
+                        <p t-else="" class="fz-plan-price-note text-muted mb-4">
+                            Price confirmed with you on WhatsApp.
+                        </p>
 
                         <div class="mb-4">
-                            <t t-foreach="plan.feature_ids" t-as="feature">
+                            <t t-foreach="plan.public_features()" t-as="feature">
                                 <div class="fz-plan-feature">
                                     <i class="fa fa-check mt-1" style="color:#F69E22;" aria-hidden="true"/>
                                     <span t-out="feature.name"/>
@@ -460,7 +468,7 @@
                                t-attf-class="btn w-100 #{plan.code == 'standard' and 'btn-faizy' or 'btn-faizy-ghost'}">
                                 Get started
                             </a>
-                            <p class="text-muted small text-center mt-3 mb-0">
+                            <p t-if="show_prices" class="text-muted small text-center mt-3 mb-0">
                                 Extra activities
                                 <span t-out="display_currency.name"/>
                                 <span t-out="plan.overage_display(display_currency)"/> each
@@ -1170,6 +1178,7 @@
                             </div>
 
                             <h2 class="h5 mb-3 mt-4">Your plan</h2>
+                            <t t-set="show_prices" t-value="request.env['faizy.plan'].sudo().prices_public()"/>
                             <div class="fz-planpick">
                                 <t t-foreach="plans" t-as="plan">
                                     <label class="fz-planpick-opt">
@@ -1177,14 +1186,17 @@
                                                t-att-checked="'checked' if plan.code == plan_code else None"/>
                                         <span class="fz-planpick-body">
                                             <span class="fz-planpick-name" t-out="plan.name"/>
-                                            <span class="fz-planpick-price">
-                                                <t t-out="plan.currency_id.name"/>
-                                                <t t-out="plan.price_display(plan.currency_id)"/>
-                                                <span class="text-muted">/mo</span>
-                                            </span>
-                                            <span class="fz-planpick-meta">
-                                                <t t-out="plan.activities_included"/> activities a month
-                                            </span>
+                                            <t t-if="show_prices">
+                                                <span class="fz-planpick-price">
+                                                    <t t-out="plan.currency_id.name"/>
+                                                    <t t-out="plan.price_display(plan.currency_id)"/>
+                                                    <span class="text-muted">/mo</span>
+                                                </span>
+                                                <span class="fz-planpick-meta">
+                                                    <t t-out="plan.activities_included"/> activities a month
+                                                </span>
+                                            </t>
+                                            <span t-else="" class="fz-planpick-meta" t-out="plan.description"/>
                                         </span>
                                     </label>
                                 </t>

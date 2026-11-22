@@ -839,12 +839,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_core
     title: "Faizy Core"
-    version: "19.0.1.25.0"
+    version: "19.0.1.26.0"
     license: "LGPL-3"
     application: true
     depends_local: []
     depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk", "crm"]
-    python_lines: 5703
+    python_lines: 5746
     test_files: 3
     access_csv: true
     note: "Faizy is a separate venture."
@@ -867,12 +867,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_website
     title: "Faizy Website & Portal"
-    version: "19.0.1.23.0"
+    version: "19.0.1.24.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core", "faizy_pilot"]
     depends_standard: ["website", "portal"]
-    python_lines: 2163
-    test_files: 5
+    python_lines: 2227
+    test_files: 6
     access_csv: false
     note: "Faizy is a separate venture."
