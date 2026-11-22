@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_work_desk_form" model="ir.ui.view">
+        <field name="name">faizy.work.desk.form</field>
+        <field name="model">faizy.work.desk</field>
+        <field name="arch" type="xml">
+            <form string="My Work" create="0" edit="0">
+                <sheet>
+                    <h1>My Work</h1>
+                    <field name="user_id" invisible="1"/>
+                    <field name="summary" nolabel="1"/>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button name="action_my_activities" type="object" string="My activities" class="btn-primary"/>
+                        <button name="action_my_leads" type="object" string="My leads" class="btn-primary"/>
+                        <button name="action_my_checklists" type="object" string="My checklists" class="btn-primary"/>
+                        <button name="action_my_scorecard" type="object" string="My scorecard" class="btn-secondary"/>
+                    </div>
+                    <p class="text-muted small mt-3">Everything here is a count of, or a link to, the real record.
+                        There is nothing to report separately: do the work in the record and tick its checklist.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_work_command_form" model="ir.ui.view">
+        <field name="name">faizy.work.command.form</field>
+        <field name="model">faizy.work.command</field>
+        <field name="arch" type="xml">
+            <form string="Founder command centre" create="0" edit="0">
+                <sheet>
+                    <h1>Founder command centre</h1>
+                    <field name="summary" nolabel="1"/>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button name="action_overdue" type="object" string="Overdue by person" class="btn-primary"/>
+                        <button name="action_pipeline" type="object" string="Pipeline by owner" class="btn-primary"/>
+                        <button name="action_checklists" type="object" string="Checklists to review" class="btn-primary"/>
+                        <button name="action_scorecards" type="object" string="Scorecards" class="btn-secondary"/>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_work_scorecard_form" model="ir.ui.view">
+        <field name="name">faizy.work.scorecard.form</field>
+        <field name="model">faizy.work.scorecard</field>
+        <field name="arch" type="xml">
+            <form string="Scorecard" create="0">
+                <sheet>
+                    <h1>Scorecard</h1>
+                    <group>
+                        <group>
+                            <field name="user_id" groups="faizy_core.group_faizy_manager"/>
+                            <field name="user_id" readonly="1" groups="!faizy_core.group_faizy_manager"/>
+                            <field name="profile"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert"><field name="status" readonly="1"/></div>
+                    <h2><field name="total_display"/></h2>
+                    <field name="report" nolabel="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_work_desk" model="ir.actions.server">
+        <field name="name">My Work</field>
+        <field name="model_id" ref="model_faizy_work_desk"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+    <record id="action_work_command" model="ir.actions.server">
+        <field name="name">Founder command centre</field>
+        <field name="model_id" ref="model_faizy_work_command"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+    <record id="action_work_scorecard" model="ir.actions.server">
+        <field name="name">My scorecard</field>
+        <field name="model_id" ref="model_faizy_work_scorecard"/>
+        <field name="state">code</field>
+        <field name="code">
+card = env['faizy.work.scorecard'].create({'user_id': env.uid})
+action = {'type': 'ir.actions.act_window', 'res_model': 'faizy.work.scorecard',
+          'res_id': card.id, 'view_mode': 'form'}
+        </field>
+    </record>
+</odoo>
