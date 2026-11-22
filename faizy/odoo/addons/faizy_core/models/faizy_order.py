@@ -49,6 +49,16 @@ class FaizyOrder(models.Model):
     title = fields.Char(required=True, tracking=True)
     description = fields.Text()
 
+    # Sent by the request form (a hidden token) and by the mobile API. Submitting
+    # the same id twice returns the first order instead of creating a second one,
+    # so a double tap, a slow connection and a retry cannot file the same errand
+    # twice. Empty for orders created in the back office.
+    client_request_id = fields.Char(copy=False, index=True, readonly=True)
+    _client_request_unique = models.Constraint(
+        "UNIQUE(partner_id, client_request_id)",
+        "This request was already submitted.",
+    )
+
     partner_id = fields.Many2one(
         "res.partner", string="Customer", required=True, index=True, tracking=True
     )
