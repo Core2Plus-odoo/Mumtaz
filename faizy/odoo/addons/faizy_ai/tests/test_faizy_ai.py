@@ -56,8 +56,12 @@ class TestFaizyAI(TransactionCase):
     def test_ai_cannot_touch_orders(self):
         order = self.env['faizy.order'].create({
             'title': 'T', 'city': 'Karachi', 'partner_id': self.customer.id, 'service_id': self.service.id})
-        with self.assertRaises(AccessError):
+        # Refused either by the access rules or, with faizy_pilot installed, by
+        # the evidence gate that runs before them.
+        with self.assertRaises(Exception) as refused:
             order.with_user(self.ai_user).write({'state': 'completed'})
+        self.assertIsInstance(refused.exception, (AccessError, ValidationError))
+        self.assertNotEqual(order.state, 'completed')
         with self.assertRaises(AccessError):
             self.env['faizy.whatsapp.message'].with_user(self.ai_user).create({
                 'phone': '+923001234567', 'body': 'x'})

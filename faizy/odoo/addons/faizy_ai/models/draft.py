@@ -289,7 +289,11 @@ class FaizyAIDraft(models.Model):
                 [('state', '=', 'pending'), ('worker_id', '=', False), ('vendor_id', '=', False)]),
             'overdue_orders': Order.search_count(
                 open_dom + [('scheduled_date', '!=', False), ('scheduled_date', '<', now)]),
-            'completed_without_proof': Order.search_count(
+            # A count only, read with sudo: faizy_pilot made proof_image a
+            # staff-only field, so the AI user cannot filter on it directly and
+            # the whole digest used to fail with an AccessError. The agent still
+            # sees no image and no order, just how many completed without one.
+            'completed_without_proof': Order.sudo().search_count(
                 [('state', '=', 'completed'), ('proof_image', '=', False)]),
             'completed_last_7_days': Order.search_count(
                 [('state', '=', 'completed'), ('write_date', '>=', now - relativedelta(days=7))]),
