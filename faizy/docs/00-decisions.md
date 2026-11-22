@@ -800,3 +800,65 @@ their own logins. No user, group membership or production setting is changed by 
 (HQ05 §8 step 1, Shafat). Production is still on faizy_core 19.0.1.20.0, so deploying this branch also
 deploys 1.21–1.23 (vendor bill, customer invoice + wallet debit, document portal rule). Routing,
 activities and desks are PR (b).
+
+## 17. HQ05 PR (b): work routing and role desks (faizy_ai 19.0.1.2.0)
+
+Builds on §16. Goal (HQ05): Mashood and Raza open the ERP and land on their own list of what is
+waiting, for which record, by when, with the button to act. All of it is standard `mail.activity`
+on the real record. There is no second task system, and `base_automation` is not used, so
+production can be rebuilt from git.
+
+- **Role holders** are set in Settings → FAIZY → Work routing (`faizy_ai.care_user_id`,
+  `faizy_ai.ops_user_id`, `faizy_ai.escalation_user_id`). An empty or archived holder falls back to
+  the role's group (first active member), then to the escalation owner, then to the administrator.
+  This replaces the old "first two members of the group" routing in the stale-draft and inbound code.
+- **Nine activity types** (`FAIZY · …`), each with an escalation window kept on the type
+  (`noupdate`, so Umer can tune it in Activity Types): Approve reply 2 h, Approve order 2 h, Assign
+  Faizy 4 h (urgent 1 h), Follow up overdue job 3 h, Review proof & receipt 24 h, Completion message
+  2 h, Handle inbound 2 h, Review application 168 h, Approve escalation (never escalates).
+- **Routing (HQ05 §4.1):**
+  - R1: customer-message drafts go to care.
+  - R2: inbound messages go to care.
+  - R3: new orders go to ops, flagged urgent when the order is.
+  - R4: order drafts go to ops.
+  - R5: a job not started 1 h after its slot goes to ops (cron every 30 min, one item per order).
+  - R6: a proof photo on an in-progress order goes to ops.
+  - R7: a completed order goes to care, to send the completion message.
+  - R8: drafts of kind "other" go to the escalation owner.
+  - R10: worker applications go to ops.
+
+  Activities close themselves when the work is done: approve, reject, mark sent, assign, start,
+  complete, cancel, handled or ignored. A customer message waiting to be sent by hand keeps its
+  activity open until it is marked sent. Routing errors are logged and never block the business
+  action.
+- **Escalation:** every 30 min, only inside working hours, any FAIZY item open longer than its window
+  gets one "Approve escalation" activity for the escalation owner plus a chatter note, then is marked
+  `faizy_escalated` so it never escalates twice. Windows are clock hours from creation, not working
+  hours. Overnight items escalate when the hours open.
+- **Morning summary:** at 04:30 UTC (09:30 Karachi), one `message_notify` to each role holder with
+  their counts: waiting, overdue or escalated, oldest age, plus unassigned orders (ops) or replies to
+  approve and to send by hand (care). It goes to the Inbox for users set to "Handle in Odoo" and
+  never goes to WhatsApp.
+- **Desks (menus):**
+  - Care Desk: My work today, Replies awaiting approval, To send by hand, Inbound to handle.
+  - Operations Desk: My work today, Unassigned orders, Order drafts, Jobs not started, Proof &
+    receipt review, Faizies, Applications.
+  - Command Centre: Escalations & decisions, My work today, Cross-team board, Operations health
+    (the existing dashboard), All approvals.
+
+  Each user's Home Action is set at provisioning, not in code.
+- **Tooling:** `validate_modules.py` now ignores `AbstractModel`s and models a module only extends
+  (`_inherit` without `_name`) when checking ACLs. It still fails on a defined model with no ACL
+  (checked by removing `faizy.ai.inbound`'s rows).
+
+**Verified:** Odoo 19.0 + PostgreSQL 16, fresh install of all three addons with tests:
+`0 failed, 0 error(s) of 58 tests` (15 new in `faizy_ai/tests/test_routing.py`: T1 desk visibility
+and access per user, T9–T16 routing, escalation once, no escalation out of hours or before the window,
+Inbox-only summary, fallback chain). Upgrade from the §16 database: `upgrade exit: 0`, 9 FAIZY
+activity types, 3 routing crons. flake8, `validate_modules`, `check_view_schemas`, `check_self_fields`,
+`check_portal_access`, `check_core_fields`: pass.
+
+**Not done:** R9 (vendor bill draft → To-Do for Umer), R11 (document expiry → ops, the existing
+customer reminder cron is unchanged), R12 (content QA, waits on the Phase B Project-app decision),
+the counters strip (spreadsheet dashboard) and the emergency toggle (D-10 pending). Nothing has
+run on staging or production.
