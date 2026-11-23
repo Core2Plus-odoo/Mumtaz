@@ -55,6 +55,10 @@ class ProjectTask(models.Model):
                     raise UserError(self.env._(
                         '"%s" needs evidence before it is Done: log a note with what you did, '
                         'or attach the photo, screenshot or file.', task.display_name))
+        if vals.get('state') in CLOSED_STATES and 'date_end' not in vals:
+            # Project stamps date_end only on a move to a folded stage; the
+            # Done button must count on "done this week" too.
+            vals = dict(vals, date_end=fields.Datetime.now())
         res = super().write(vals)
         if vals.get('state') in CLOSED_STATES:
             Routing = self.env['faizy.routing']

@@ -236,9 +236,11 @@ class CrmLeadRouting(models.Model):
         the customer-care role holder."""
         if self._faizy_eligible(user):
             return user
-        team = self.env['crm.team']._faizy_team_for_source(self.faizy_lead_source) if self else None
-        if not team and self:
-            team = self.team_id
+        team = self.env['crm.team'].browse()
+        if self:
+            team = self.env['crm.team']._faizy_team_for_source(self.faizy_lead_source)
+            if not team and self.team_id.faizy_lead_sources:
+                team = self.team_id
         if team and self._faizy_eligible(team.user_id):
             return team.user_id
         return self.env['faizy.routing']._role_user('care')
