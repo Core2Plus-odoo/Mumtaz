@@ -34,7 +34,7 @@ for this product).
 | FIN-03 | AP, bank reconciliation | **Closed (drafted, not posted)** | `faizy.order.action_complete` now drafts a Vendor Bill (`move_type=in_invoice`) — a gross-procured line plus a negative commission-retained line, net payable = `purchase_value - vendor_commission`. Never auto-posted; an accountant reviews and posts, mirroring `faizy.subscription._generate_invoice`'s existing convention. A manual `action_create_vendor_bill` retry button covers the case where the automatic draft fails (e.g. a missing exchange rate — same guard as subscriptions). |
 | FIN-04 | Budgets, cash forecast, fixed assets | **Out of scope** | Not relevant at current scale; no budget/asset model exists or is implied |
 | FIN-05 | Intercompany, consolidation | N/A | Single company — not applicable (ADR-002) |
-| PRJ-01 | Projects, tasks, timesheets | **Out of scope** | Not a project business |
+| PRJ-01 | Projects, tasks, timesheets | **Standard (internal staff work only)** | Not a project business for customers. Since `faizy_ai` 19.0.1.5.0 (decisions §25) the standard Project app holds the two executives' work plans (one project per desk, evidence before Done, overdue escalation). No timesheets, no customer projects |
 | SRV-01 | Helpdesk, field service, SLA | Extend (this *is* the product) | `faizy.order` + `faizy.worker` is a lightweight field-service model; no formal SLA tracking (no response/resolution-time fields) |
 | SRV-02 | Equipment, maintenance, rental | **Out of scope** | No equipment/asset tracking — Faizy workers use their own means, not company equipment |
 | MFG-01 | Manufacturing, BOM, quality | **Out of scope** | Not a manufacturing business |

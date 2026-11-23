@@ -1,6 +1,6 @@
 {
     'name': 'Faizy AI Team',
-    'version': '19.0.1.4.0',
+    'version': '19.0.1.5.0',
     'category': 'Services',
     'summary': 'AI team layer for Faizy: draft-and-approve queue, inbound WhatsApp log, agent users, daily digest',
     'description': """
@@ -19,10 +19,12 @@ Adds the AI team to Faizy Core without changing it.
 * Work routing: every piece of work is a standard activity on the real record, on the right
   person's desk, with a checklist and an escalation window. Leads route to their salesperson.
 * My desk: each person's waiting, overdue, done and lead numbers; the manager sees the team.
+* Planned work: standard Project per desk (30-day plan, daily routine) with 'no Done without
+  evidence', overdue escalation and a place on the desk; one lead pipeline per executive.
 """,
     'author': 'C2P Consultants',
     'license': 'LGPL-3',
-    'depends': ['faizy_core', 'mail', 'crm'],
+    'depends': ['faizy_core', 'mail', 'crm', 'project'],
     'data': [
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -34,6 +36,7 @@ Adds the AI team to Faizy Core without changing it.
         'views/menus.xml',
         'data/routing_data.xml',
         'views/routing_views.xml',
+        'views/work_plan_views.xml',
     ],
     'post_init_hook': 'post_init_hook',
     'installable': True,

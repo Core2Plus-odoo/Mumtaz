@@ -212,6 +212,35 @@
                         <field name="done_week_html" nolabel="1" colspan="2"/>
                     </group>
 
+                    <p class="fzb-band-title">Planned work</p>
+                    <div class="fzb-grid">
+                        <button name="action_open_plan_today" type="object" class="fzb-kpi fzb-attention">
+                            <field name="plan_due_today" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Tasks with today's deadline</span>
+                            <span class="fzb-kpi-label">Plan: due today</span>
+                        </button>
+                        <button name="action_open_plan_today" type="object" class="fzb-kpi">
+                            <field name="plan_hours_today" nolabel="1" widget="float_time"/>
+                            <span class="fzb-kpi-sub">Allocated hours, today</span>
+                            <span class="fzb-kpi-label">Plan: hours today</span>
+                        </button>
+                        <button name="action_open_plan_overdue" type="object" class="fzb-kpi fzb-attention">
+                            <field name="plan_overdue" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Past their deadline, not done</span>
+                            <span class="fzb-kpi-label">Plan: overdue</span>
+                        </button>
+                        <div class="fzb-kpi">
+                            <field name="plan_done_week" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Since Monday, with evidence</span>
+                            <span class="fzb-kpi-label">Plan: done this week</span>
+                        </div>
+                        <button name="action_open_plan" type="object" class="fzb-kpi">
+                            <field name="plan_open" nolabel="1"/>
+                            <span class="fzb-kpi-sub">Whole plan, still open</span>
+                            <span class="fzb-kpi-label">Plan: open tasks</span>
+                        </button>
+                    </div>
+
                     <p class="fzb-band-title">Leads</p>
                     <div class="fzb-grid">
                         <button name="action_open_leads" type="object" class="fzb-kpi">

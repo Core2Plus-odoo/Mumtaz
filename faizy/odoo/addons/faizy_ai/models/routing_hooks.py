@@ -224,10 +224,23 @@ class CrmLeadRouting(models.Model):
     """
     _inherit = 'crm.lead'
 
+    @api.model
+    def _faizy_eligible(self, user):
+        return bool(user and user.active and not user.share
+                    and not user.has_group('faizy_ai.group_ai_agent'))
+
     def _faizy_lead_owner(self, user):
-        """The staff member who should hold this lead's work."""
-        if user and user.active and not user.share and not user.has_group('faizy_ai.group_ai_agent'):
+        """The staff member who should hold this lead's work: the salesperson
+        if it is a real staff account; otherwise the leader of the sales team
+        that owns the lead's source (§25, one pipeline per executive); otherwise
+        the customer-care role holder."""
+        if self._faizy_eligible(user):
             return user
+        team = self.env['crm.team']._faizy_team_for_source(self.faizy_lead_source) if self else None
+        if not team and self:
+            team = self.team_id
+        if team and self._faizy_eligible(team.user_id):
+            return team.user_id
         return self.env['faizy.routing']._role_user('care')
 
     @api.model
@@ -241,8 +254,14 @@ class CrmLeadRouting(models.Model):
         Routing = self.env['faizy.routing']
         for lead in leads:
             owner = lead._faizy_lead_owner(lead.user_id)
+            vals = {}
             if owner != lead.user_id:
-                lead.sudo().write({'user_id': owner.id})
+                vals['user_id'] = owner.id
+            team = self.env['crm.team']._faizy_team_for_source(lead.faizy_lead_source)
+            if team and lead.team_id != team and (not lead.team_id or owner == team.user_id):
+                vals['team_id'] = team.id
+            if vals:
+                lead.sudo().write(vals)
             if lead.active and not lead.stage_id.is_won:
                 _safe(lambda: Routing._route(
                     lead, 'care', T_LEAD_QUALIFY, self.env._('Qualify lead: %s', lead.name),

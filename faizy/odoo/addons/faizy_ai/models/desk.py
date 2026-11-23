@@ -12,6 +12,8 @@ from markupsafe import Markup, escape
 
 from odoo import api, fields, models
 
+from odoo.addons.project.models.project_task import CLOSED_STATES
+
 from .routing import LEAD_TYPES, T_COMPLETION_MSG, T_LEAD_QUALIFY, T_REPLY
 from .utils import G_MANAGER
 
@@ -32,6 +34,13 @@ class FaizyMyDesk(models.TransientModel):
     done_today = fields.Integer(string='Done today', compute='_compute_kpis')
     done_week = fields.Integer(string='Done this week', compute='_compute_kpis')
     done_week_html = fields.Html(compute='_compute_kpis', sanitize=False)
+
+    # ── Planned work (standard project.task on a FAIZY desk project) ────
+    plan_due_today = fields.Integer(string='Plan: due today', compute='_compute_kpis')
+    plan_hours_today = fields.Float(string='Plan: hours today', compute='_compute_kpis')
+    plan_overdue = fields.Integer(string='Plan: overdue', compute='_compute_kpis')
+    plan_done_week = fields.Integer(string='Plan: done this week', compute='_compute_kpis')
+    plan_open = fields.Integer(string='Plan: open tasks', compute='_compute_kpis')
 
     # ── Leads (standard crm.lead, my salesperson) ──────────────────────
     leads_mine = fields.Integer(string='My open leads', compute='_compute_kpis')
@@ -75,9 +84,22 @@ class FaizyMyDesk(models.TransientModel):
             ('state', '=', 'completed'), ('is_sample', '=', False),
             ('date_completed', '>=', week_start)])
 
+        Task = self.env['project.task'].sudo()
+        day_end = day_start + timedelta(days=1)
+
         for desk in self:
             user = desk.user_id
             partner = user.partner_id
+            plan_domain = [('user_ids', 'in', user.id), ('project_id.faizy_role', '!=', False)]
+            open_plan = Task.search(plan_domain + [('state', 'not in', list(CLOSED_STATES))])
+            due_today = open_plan.filtered(
+                lambda t: t.date_deadline and day_start <= t.date_deadline < day_end)
+            desk.plan_open = len(open_plan)
+            desk.plan_due_today = len(due_today)
+            desk.plan_hours_today = sum(due_today.mapped('allocated_hours'))
+            desk.plan_overdue = len(open_plan.filtered(lambda t: t.date_deadline and t.date_deadline < day_start))
+            desk.plan_done_week = Task.search_count(plan_domain + [
+                ('state', '=', '1_done'), ('date_end', '>=', week_start)])
             mine = Activity.search([('user_id', '=', user.id), ('activity_type_id', 'in', types.ids)])
             desk.is_manager = user.has_group(G_MANAGER)
             desk.work_open = len(mine)
@@ -114,12 +136,20 @@ class FaizyMyDesk(models.TransientModel):
         for role, label in (('care', 'Customer care'), ('ops', 'Operations'), ('escalation', 'Escalation')):
             user = Routing._role_user(role)
             mine = Activity.search([('user_id', '=', user.id), ('activity_type_id', 'in', types.ids)])
-            rows.append(Markup('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>') % (
+            plan_open = self.env['project.task'].sudo().search([
+                ('user_ids', 'in', user.id), ('project_id.faizy_role', '!=', False),
+                ('state', 'not in', list(CLOSED_STATES))])
+            plan_late = plan_open.filtered(
+                lambda t: t.date_deadline and t.date_deadline < fields.Datetime.to_datetime(today))
+            rows.append(Markup('<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>'
+                               '<td>%s</td><td>%s</td></tr>') % (
                 escape(label), escape(user.name), len(mine),
                 len(mine.filtered(lambda a: a.date_deadline < today or a.faizy_escalated)),
-                self._done_count(user.partner_id, week_start, types)))
+                self._done_count(user.partner_id, week_start, types),
+                len(plan_open), len(plan_late)))
         return Markup('<table class="table table-sm"><thead><tr><th>Role</th><th>Holder</th>'
                       '<th>Waiting</th><th>Overdue or escalated</th><th>Done this week</th>'
+                      '<th>Plan: open</th><th>Plan: overdue</th>'
                       '</tr></thead><tbody>%s</tbody></table>') % Markup('').join(rows)
 
     # ------------------------------------------------------------------ drill-through
@@ -144,6 +174,18 @@ class FaizyMyDesk(models.TransientModel):
     def action_open_escalated(self):
         return self._open(self.env._('Escalated'), 'mail.activity',
                           self._my_work_domain() + [('faizy_escalated', '=', True)], view_mode='list')
+
+    def action_open_plan_today(self):
+        return self.env.ref('faizy_ai.action_faizy_my_plan_today').sudo().read()[0]
+
+    def action_open_plan(self):
+        return self.env.ref('faizy_ai.action_faizy_my_plan').sudo().read()[0]
+
+    def action_open_plan_overdue(self):
+        return self._open(self.env._('Plan: overdue'), 'project.task', [
+            ('user_ids', 'in', self.env.user.id), ('project_id.faizy_role', '!=', False),
+            ('state', 'not in', list(CLOSED_STATES)),
+            ('date_deadline', '<', fields.Datetime.to_datetime(fields.Date.context_today(self)))])
 
     def action_open_leads(self):
         return self.env.ref('faizy_ai.action_faizy_my_leads').sudo().read()[0]

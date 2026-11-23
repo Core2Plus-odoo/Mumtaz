@@ -1111,3 +1111,61 @@ staging checklist). Open questions for Umer: whether leads default to customer c
 to operations; whether the AI agents may create leads at all (today they can only reach the CRM
 through a draft, since they have no CRM right); and the plan-price rule applies to lead follow-ups
 too (no prices until approved, §23), which the follow-up checklist says.
+
+## 25. Staff work execution: planned work on the desks, evidence before Done, one pipeline each (faizy_ai 19.0.1.5.0)
+
+Directive from Umer, 23 Nov 2026: real development in the existing ERP for the two executives, Raza
+(Business Development & Operations Executive) and Mashood (Digital Marketing & Customer Experience
+Executive): individual workspaces, a 30-day plan with daily assignments, checklists, SOPs and completion
+evidence, independent qualified-lead pipelines, recurring activities, overdue escalation, separate KPI
+dashboards, tested on staging with each one's own permissions. Production data, approvals, accounts and
+outbound messaging untouched.
+
+**Audit first (what already existed, reused as is):** §20 security guards; §21 role holders, nine work-item
+activity types, routing R1–R10, escalation and morning-summary crons, Care Desk / Operations Desk /
+Command Centre; §24 leads as work, checklists on work items, My desk KPIs; standard `crm` with the Faizy
+lead fields; `faizy.ai.knowledge` notes (category Procedure) for SOPs; `faizy.dashboard` for the business
+view. Mashood's role is `Faizy AI / Customer communications approver` + care role holder; Raza's is
+`Faizy / Operations` + operations role holder. Nothing of this is duplicated.
+
+**Decision: the standard Project app is installed, for internal staff work plans only.** FIT_GAP row PRJ-01
+said "Out of scope: not a project business"; this directive asks for exactly what Project gives (planned
+tasks with deadlines, assignees, stages, recurrence), so the row changes to "Standard, internal staff work
+only", recorded here. Reactive work stays a `mail.activity` on the real record (§21); planned work is a
+`project.task` in a project that belongs to a desk. Two guards are added on top, nothing else:
+
+- `project.project.faizy_role` (care / ops) and `faizy_evidence_required`. Tasks in a desk project show on
+  "My plan today" and "My plan (30 days)" on that desk, count on My desk (due today, hours today, overdue,
+  done this week, open), appear in the manager's team table and in the morning summary.
+- **Evidence before Done:** with the flag on, a task cannot go to Done until a person's note or an
+  attachment is on it (the automatic "created" and activity messages do not count). Cancel needs none.
+  Tested, including the attachment path.
+- **Overdue planned tasks escalate once** to the escalation owner after `faizy_ai.task_escalation_hours`
+  (default 2) past the deadline, inside working hours, through the same cron and activity type as work
+  items; closing the task closes the escalation item. Tested.
+- **One pipeline per executive:** `crm.team.faizy_lead_sources` lists the lead sources a team owns. A
+  new lead with no real salesperson goes to the leader of the team that owns its source, and into that
+  team; "Digital & customer leads (Mashood)" owns facebook, instagram, website, whatsapp; "Partners &
+  referrals (Raza)" owns embassy, walk_in, other. An explicit salesperson is always kept. Tested.
+- Groups: care and operations imply the standard Project user group; manager implies Project
+  administrator. Plans are followers-only projects, so each executive sees their own and the manager sees
+  both (tested).
+
+**The 30-day plan itself is data, not code:** `faizy/odoo/tools/staff_plan_30d.py` (eleven SOPs, the daily
+routine per role, the project blocks per week, the two teams and projects) and
+`faizy/odoo/tools/provision_staff.py`, an idempotent XML-RPC tool that creates what is missing: role
+holders and home action, recurring tasks switched on, SOP notes, teams, projects with stages Planned / In
+progress / Blocked / Done, and one task per working day per routine plus the week's project block and a
+recurring Saturday review. Six working days a week, 8 h a day (6.5 h routine + 1.5 h project block),
+deadlines at 18:00 Karachi. Rendered for review in `faizy/docs/plans/STAFF_30_DAY_PLAN.md`. Real logins
+are never created by the tool; staging `stg.*` users only, with `--create-stg-users`.
+
+**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway databases: VERIFY_25
+
+**Not done / blocked / needs Umer:** no staging server exists, so staging means a throwaway database here
+with `stg.*` users; nothing has run on `faizy_prod`; real Mashood and Raza accounts, the home action and
+the role holders on production are set by Umer after written approval (D10); outbound messaging stays off
+(§20). The Saturday review recurs only when the previous one is marked Done (standard recurrence). The
+plan's content (targets such as "five contacts a day", the week themes) is a proposal for Umer to edit in
+`staff_plan_30d.py` before it is provisioned on production. Timesheets (actual hours) are not installed;
+"hours today" is the allocated time of the day's tasks.

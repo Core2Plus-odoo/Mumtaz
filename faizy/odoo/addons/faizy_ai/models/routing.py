@@ -16,7 +16,9 @@ from markupsafe import Markup, escape
 
 from odoo import api, fields, models
 
-from .utils import G_COMMS, G_MANAGER, G_OPS, within_hours
+from odoo.addons.project.models.project_task import CLOSED_STATES
+
+from .utils import G_COMMS, G_MANAGER, G_OPS, get_float, within_hours
 
 _logger = logging.getLogger(__name__)
 
@@ -278,7 +280,35 @@ class FaizyRouting(models.AbstractModel):
                                 owner=owner.name, reason=reason),
                 message_type='comment', subtype_xmlid='mail.mt_note')
             count += 1
+        count += self._escalate_planned_tasks(now, owner)
         return count
+
+    @api.model
+    def _escalate_planned_tasks(self, now, owner):
+        """§25: a planned task on a FAIZY desk still open this long after its
+        deadline escalates once, the same way a work item does."""
+        grace = get_float(self.env, 'faizy_ai.task_escalation_hours', 2)
+        late = self.env['project.task'].sudo().search([
+            ('project_id.faizy_role', '!=', False),
+            ('state', 'not in', list(CLOSED_STATES)),
+            ('faizy_escalated', '=', False),
+            ('date_deadline', '!=', False),
+            ('date_deadline', '<', now - timedelta(hours=grace)),
+        ])
+        for task in late:
+            task.faizy_escalated = True
+            who = ', '.join(task.user_ids.mapped('name')) or self.env._('nobody')
+            reason = self.env._(
+                'Planned task for %(user)s past its deadline by more than %(hours)s h: %(name)s',
+                user=who, hours=grace, name=task.name)
+            if owner not in task.user_ids:
+                task.activity_schedule(
+                    T_ESCALATION, date_deadline=fields.Date.context_today(self),
+                    summary=self.env._('Escalated: %s', task.name), note=reason, user_id=owner.id)
+            task.message_post(
+                body=self.env._('Escalated to %(owner)s: %(reason)s', owner=owner.name, reason=reason),
+                message_type='comment', subtype_xmlid='mail.mt_note')
+        return len(late)
 
     @api.model
     def _cron_overdue_jobs(self):
@@ -314,6 +344,12 @@ class FaizyRouting(models.AbstractModel):
             self.env._('Overdue or escalated: %s', len(overdue)),
             self.env._('Oldest waiting: %s h', oldest),
         ]
+        plan = self.env['project.task'].sudo().search_count([
+            ('user_ids', 'in', user.id), ('project_id.faizy_role', '!=', False),
+            ('state', 'not in', list(CLOSED_STATES)),
+            ('date_deadline', '<', fields.Datetime.to_datetime(today) + timedelta(days=1))])
+        if plan:
+            lines.append(self.env._('Planned tasks due today or earlier: %s', plan))
         leads = self.env['crm.lead'].sudo().search_count([
             ('user_id', '=', user.id),
             ('activity_ids.activity_type_id', 'in', [self.env.ref(x).id for x in LEAD_TYPES])])
