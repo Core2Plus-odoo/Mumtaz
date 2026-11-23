@@ -10,7 +10,7 @@ What it does, in order, creating only what is missing:
      puts care in "Customer communications approver", ops in "Faizy / Operations",
      manager in "Faizy / Manager"; sets the three role holders; sets each user's
      home action to "My desk".
-  2. turns on recurring tasks in Project settings.
+  2. recurring tasks are switched on through the projects.
   3. SOPs as knowledge notes (category Procedure).
   4. two sales teams with their lead sources and leaders.
   5. two projects ("Evidence before Done", followers-only, the executive and the
@@ -182,10 +182,8 @@ def main():
         o.call('ir.config_parameter', 'set_param', ROLE_PARAM[role], str(ids[0]))
     print('users:', users)
 
-    # 2. recurring tasks on
-    if not a.dry_run:
-        sid = o.call('res.config.settings', 'create', {'group_project_recurring_tasks': True})
-        o.call('res.config.settings', 'execute', [sid])
+    # 2. recurring tasks: switched on per project below (allow_recurring_tasks turns the
+    #    standard "Use Recurring Tasks" feature group on for everyone).
 
     # 3. SOPs
     for name, steps in P.SOPS.items():

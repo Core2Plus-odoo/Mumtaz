@@ -1160,7 +1160,32 @@ recurring Saturday review. Six working days a week, 8 h a day (6.5 h routine + 1
 deadlines at 18:00 Karachi. Rendered for review in `faizy/docs/plans/STAFF_30_DAY_PLAN.md`. Real logins
 are never created by the tool; staging `stg.*` users only, with `--create-stg-users`.
 
-**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway databases: VERIFY_25
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases:
+
+- Fresh install, all four addons with tests: `0 failed, 0 error(s) of 127 tests` (61 in `faizy_ai`, 7 new),
+  no ERROR line.
+- Upgrade path: a database at `faizy_ai` 19.0.1.4.0, then `-u faizy_ai` (installs `project`), tests:
+  `0 failed, 0 error(s) of 51 tests`, no ERROR line. The first run of that path found two defects, both
+  fixed before merge: a lead handed to an AI agent fell back to Odoo's default "Sales" team (led by the
+  administrator), and the Done button did not stamp `date_end`, so "done this week" missed it.
+- `validate_modules.py`, `check_self_fields.py`, `check_view_schemas.py`, `check_portal_access.py`, the
+  Faizy CI flake8 command and the module registry check: pass.
+- Staging demonstration on the fresh database with `provision_staff.py --create-stg-users` (users
+  `stg.mashood`, `stg.raza`, `stg.umer`; 11 SOP notes; 2 teams; 2 projects; 178 + 204 tasks from
+  23 Nov 2026) plus the SYNTHETIC reactive work of §24, all over XML-RPC as each user and in a headless
+  browser logged in as each user:
+  - visibility: Mashood sees only his project (178 tasks), Raza only his (204), Umer both (382);
+  - day 1: Mashood 7 tasks / 8.0 h, Raza 8 tasks / 8.0 h, each with steps, checklist and evidence line;
+  - evidence gate: Done refused as Mashood with "needs evidence before it is Done"; after one note,
+    state Done, evidence count 1, `date_end` stamped;
+  - escalation: a Raza task backdated 6 h past its deadline; the real scheduled action run twice:
+    escalated once, one "Escalated: …" item on Umer's desk;
+  - recurrence: the Saturday review marked Done (with a note) created the next occurrence a week later;
+  - pipelines: an Instagram lead with no salesperson landed on Mashood in "Digital & customer leads",
+    a walk-in partner enquiry on Raza in "Partners & referrals";
+  - My desk as each user showed the expected numbers; the manager's copy showed the team table.
+  Screenshots handed to Umer with the PR; not in git. The seeded database is a demonstration, not a
+  test environment (three pre-existing routing tests assume an empty database, see §24).
 
 **Not done / blocked / needs Umer:** no staging server exists, so staging means a throwaway database here
 with `stg.*` users; nothing has run on `faizy_prod`; real Mashood and Raza accounts, the home action and
