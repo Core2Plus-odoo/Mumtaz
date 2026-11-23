@@ -50,7 +50,8 @@ class Odoo:
 
     def ref(self, xmlid):
         mod, name = xmlid.split('.')
-        rows = self.call('ir.model.data', 'search_read', [['module', '=', mod], ['name', '=', name]], fields=['res_id'])
+        rows = self.call('ir.model.data', 'search_read', [['module', '=', mod], ['name', '=', name]],
+                         fields=['res_id'])
         if not rows:
             sys.exit('missing xmlid %s (is faizy_ai 19.0.1.5.0 installed?)' % xmlid)
         return rows[0]['res_id']
@@ -100,7 +101,8 @@ def plan_for(role, start):
         if d.weekday() == 5:   # Saturday: the recurring review
             if day_no <= 6:
                 name, checklist, evidence = P.WEEKLY_REVIEW
-                yield d, '%s · %s' % (tag, name), 'SOP-X1 End-of-day log and evidence rule', 1.5, checklist, evidence, True
+                yield (d, '%s · %s' % (tag, name), 'SOP-X1 End-of-day log and evidence rule', 1.5,
+                       checklist, evidence, True)
             continue
         items = blocks.get(week) or blocks.get(max(blocks))
         idx = week_cursor.setdefault(week, 0)
@@ -132,7 +134,8 @@ def write_doc(path, start):
         for d, name, _sop, hours, *_rest in plan_for(role, start):
             by_day.setdefault(d, []).append((name.split(' · ', 2)[-1], hours))
         for d, items in sorted(by_day.items()):
-            lines.append('| %s | %s | %s |' % (d.strftime('%a %d %b'), '; '.join(n for n, _h in items), sum(h for _n, h in items)))
+            names = '; '.join(n for n, _h in items)
+            lines.append('| %s | %s | %s |' % (d.strftime('%a %d %b'), names, sum(h for _n, h in items)))
         lines.append('')
     open(path, 'w').write('\n'.join(lines))
     print('wrote', path)
@@ -140,14 +143,24 @@ def write_doc(path, start):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--url', required=True); ap.add_argument('--db', required=True)
-    ap.add_argument('--login', default='admin'); ap.add_argument('--password', required=True)
+    ap.add_argument('--url', required=True)
+    ap.add_argument('--db', required=True)
+    ap.add_argument('--login', default='admin')
+    ap.add_argument('--password', required=True)
     ap.add_argument('--start', help='first day of the plan (YYYY-MM-DD), default next Monday')
-    ap.add_argument('--care', required=True); ap.add_argument('--ops', required=True); ap.add_argument('--manager', required=True)
-    ap.add_argument('--create-stg-users', metavar='PASSWORD', help='create missing stg.* users with this password (staging only)')
-    ap.add_argument('--write-doc'); ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--care', required=True)
+    ap.add_argument('--ops', required=True)
+    ap.add_argument('--manager', required=True)
+    ap.add_argument('--create-stg-users', metavar='PASSWORD',
+                    help='create missing stg.* users with this password (staging only)')
+    ap.add_argument('--write-doc')
+    ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
-    start = dt.date.fromisoformat(a.start) if a.start else (dt.date.today() + dt.timedelta(days=(7 - dt.date.today().weekday()) % 7 or 7))
+    if a.start:
+        start = dt.date.fromisoformat(a.start)
+    else:
+        today = dt.date.today()
+        start = today + dt.timedelta(days=(7 - today.weekday()) % 7 or 7)
     if a.write_doc:
         write_doc(a.write_doc, start)
     o = Odoo(a.url, a.db, a.login, a.password, a.dry_run)
@@ -159,8 +172,9 @@ def main():
         if not ids:
             if not (a.create_stg_users and login.startswith('stg.')):
                 sys.exit('user %s does not exist; real logins are created by Umer, not by this tool' % login)
-            ids = [o.call('res.users', 'create', {'name': '%s (%s)' % (login, role), 'login': login,
-                                                   'password': a.create_stg_users, 'notification_type': 'inbox'})]
+            vals = {'name': '%s (%s)' % (login, role), 'login': login,
+                    'password': a.create_stg_users, 'notification_type': 'inbox'}
+            ids = [o.call('res.users', 'create', vals)]
             print('  created staging user', login)
         users[role] = ids[0]
         o.call('res.users', 'write', [ids[0]], {'group_ids': [[4, o.ref(ROLE_GROUP[role])]],
@@ -176,7 +190,8 @@ def main():
     # 3. SOPs
     for name, steps in P.SOPS.items():
         o.ensure('faizy.ai.knowledge', [['name', '=', name]],
-                 {'name': name, 'category': 'procedure', 'body': '\n'.join('%d. %s' % (i + 1, s) for i, s in enumerate(steps))}, name)
+                 {'name': name, 'category': 'procedure',
+                  'body': '\n'.join('%d. %s' % (i + 1, s) for i, s in enumerate(steps))}, name)
 
     # 4. teams
     teams = {}
@@ -203,8 +218,8 @@ def main():
             for seq, sname in enumerate(P.STAGES):
                 sid = o.call('project.task.type', 'search', [['name', '=', sname], ['project_ids', 'in', [pid]]])
                 if not sid:
-                    sid = [o.call('project.task.type', 'create', {'name': sname, 'sequence': seq, 'fold': sname == 'Done',
-                                                                 'project_ids': [[4, pid]]})]
+                    sid = [o.call('project.task.type', 'create', {
+                        'name': sname, 'sequence': seq, 'fold': sname == 'Done', 'project_ids': [[4, pid]]})]
                 stage_ids.append(sid[0])
             o.call('project.project', 'write', [pid], {'type_ids': [[6, 0, stage_ids]]})
             projects[role] = (pid, stage_ids[0])
@@ -218,12 +233,14 @@ def main():
         for d, name, sop, hours, checklist, evidence, recurring in plan_for(role, start):
             steps = P.SOPS.get(sop, [])
             deadline = dt.datetime.combine(d, dt.time(P.DEADLINE_HOUR_KARACHI - 5, 0))   # Karachi is UTC+5
-            vals = {'name': name, 'project_id': pid, 'stage_id': planned, 'user_ids': [[6, 0, [users[role]]]],
-                    'allocated_hours': hours, 'date_deadline': deadline.strftime('%Y-%m-%d %H:%M:%S'),
+            vals = {'name': name, 'project_id': pid, 'stage_id': planned,
+                    'user_ids': [[6, 0, [users[role]]]], 'allocated_hours': hours,
+                    'date_deadline': deadline.strftime('%Y-%m-%d %H:%M:%S'),
                     'description': task_html(sop, steps, checklist, evidence, hours)}
             if recurring:
-                vals.update({'recurring_task': True, 'repeat_interval': 1, 'repeat_unit': 'week', 'repeat_type': 'forever'})
-            _, created = o.ensure('project.task', [['name', '=', name], ['project_id', '=', pid]], vals, name if created or True else name)
+                vals.update({'recurring_task': True, 'repeat_interval': 1, 'repeat_unit': 'week',
+                             'repeat_type': 'forever'})
+            _, created = o.ensure('project.task', [['name', '=', name], ['project_id', '=', pid]], vals, name)
             n_new += created
         print('%s: %s tasks created' % (role, n_new))
 
