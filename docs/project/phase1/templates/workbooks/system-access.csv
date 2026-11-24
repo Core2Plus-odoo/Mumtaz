@@ -1,0 +1,6 @@
+"Purpose: the systems we need to reach, and how access will be granted. NEVER enter a password in this workbook."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+System,Purpose,URL or host,Access method,Account owner,Granted to,Access period,Notes
+MANDATORY,MANDATORY,MANDATORY,MANDATORY,MANDATORY,Optional,Optional,Optional
+Text,Text,Text,"Named account / SSO / API key / VPN",Text,Text,"YYYY-MM-DD to YYYY-MM-DD",Text
+"Example ERP","Read current configuration","erp.example.com","Named account","IT Manager","<C2P USER>","2026-02-01 to 2026-05-31","Read-only is sufficient"

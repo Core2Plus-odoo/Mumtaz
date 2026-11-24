@@ -1,0 +1,6 @@
+"Purpose: existing pages and content, so nothing is lost and nothing is rewritten unnecessarily."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Page or asset,Current URL,Action,New location,Owner,Language,Notes
+MANDATORY,Optional,MANDATORY,Optional,MANDATORY,Optional,Optional
+Text,Text,"Keep / Rewrite / Retire / Redirect",Text,Text,"e.g. EN, AR",Text
+"About us","/about","Rewrite","/about","Marketing Lead","EN, AR","Arabic version needed at launch"

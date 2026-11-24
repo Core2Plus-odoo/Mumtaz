@@ -1,0 +1,6 @@
+"Purpose: the assets we need so what we build looks like you."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Asset,Format,Provided,Location or link,Usage restrictions,Notes
+MANDATORY,Optional,MANDATORY,Optional,Optional,Optional
+Text,"SVG / PNG / PDF / TTF / HEX","Yes / No / To follow",Text,Text,Text
+"Primary logo","SVG","No","","Do not alter proportions","Also need a reversed version for dark backgrounds"

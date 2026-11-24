@@ -1,0 +1,6 @@
+"Purpose: your supplier master."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Supplier code,Legal name,Tax registration,Country,Email,Phone,Payment terms,Currency,Bank account reference,Active
+Optional,MANDATORY,Optional,MANDATORY,Optional,Optional,Optional,Optional,Optional,Optional
+Text,Text,Text,Text,Email,Text,"e.g. 45 days","ISO 4217","Reference only, not full details","Yes / No"
+"S-0001","Example Supplies FZE","100987654300003","United Arab Emirates","sales@example.com","+971...","45 days","AED","REF-01","Yes"
