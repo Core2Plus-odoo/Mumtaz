@@ -25,13 +25,18 @@ class TestMeetingActions(TransactionCase):
             "c2p_meeting_actions.group_c2p_meeting_approver")
         cls.user_group = cls.env.ref("project.group_project_user")
 
-        cls.chair = cls.env["res.users"].create({
+        # Odoo 19 renamed res.users.groups_id to group_ids; resolve it rather
+        # than hardcode either spelling.
+        Users = cls.env["res.users"].with_context(no_reset_password=True)
+        cls.Users = Users
+        cls.group_field = "group_ids" if "group_ids" in Users._fields else "groups_id"
+        cls.chair = Users.create({
             "name": "Chair Person", "login": "chair.mom@example.com",
-            "groups_id": [(6, 0, [cls.user_group.id, cls.approver_group.id])],
+            cls.group_field: [(6, 0, [cls.user_group.id, cls.approver_group.id])],
         })
-        cls.member = cls.env["res.users"].create({
+        cls.member = Users.create({
             "name": "Team Member", "login": "member.mom@example.com",
-            "groups_id": [(6, 0, [cls.user_group.id])],
+            cls.group_field: [(6, 0, [cls.user_group.id])],
         })
         cls.project = cls.env["project.project"].create(
             {"name": "MoM Test Project", "allow_milestones": True})
@@ -328,9 +333,9 @@ class TestMeetingActions(TransactionCase):
 
     # ── visibility ──────────────────────────────────────────────────────
     def test_an_unrelated_user_cannot_see_the_minutes(self):
-        outsider = self.env["res.users"].create({
+        outsider = self.Users.create({
             "name": "Outsider", "login": "outsider.mom@example.com",
-            "groups_id": [(6, 0, [self.user_group.id])],
+            self.group_field: [(6, 0, [self.user_group.id])],
         })
         meeting = self._meeting()
         visible = self.Meeting.with_user(outsider).search(

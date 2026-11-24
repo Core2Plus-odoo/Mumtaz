@@ -16,7 +16,7 @@ class C2pWorkHub(models.AbstractModel):
     One RPC returns every section, so the page renders in a single round trip.
     There is no stored aggregate anywhere: every number is read from
     project.task at request time, by the requesting user, under that user's own
-    access rights. No sudo() appears in this file, and that is deliberate — a
+    access rights. Nothing in this file elevates privileges, and that is deliberate — a
     personal work list must show exactly what its owner is allowed to see, so
     Odoo's record rules are the feature rather than an obstacle.
     """

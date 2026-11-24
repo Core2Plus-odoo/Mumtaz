@@ -18,15 +18,19 @@ class TestWorkHub(TransactionCase):
         cls.Task = cls.env["project.task"]
         cls.Hub = cls.env["c2p.work.hub"]
 
-        cls.alice = cls.env["res.users"].create({
+        # Odoo 19 renamed res.users.groups_id to group_ids; resolve it rather
+        # than hardcode either spelling.
+        Users = cls.env["res.users"].with_context(no_reset_password=True)
+        cls.group_field = "group_ids" if "group_ids" in Users._fields else "groups_id"
+        cls.alice = Users.create({
             "name": "Alice Delivery",
             "login": "alice.workhub@example.com",
-            "groups_id": [(6, 0, [cls.env.ref("project.group_project_user").id])],
+            cls.group_field: [(6, 0, [cls.env.ref("project.group_project_user").id])],
         })
-        cls.bob = cls.env["res.users"].create({
+        cls.bob = Users.create({
             "name": "Bob Delivery",
             "login": "bob.workhub@example.com",
-            "groups_id": [(6, 0, [cls.env.ref("project.group_project_user").id])],
+            cls.group_field: [(6, 0, [cls.env.ref("project.group_project_user").id])],
         })
 
         cls.project = cls.env["project.project"].create({"name": "Hub Test Project"})

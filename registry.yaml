@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 62
+module_count: 64
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -727,15 +727,29 @@ modules:
     disposition: keep
     path: addons/c2p_master_agent
     title: "C2P Master Agent"
-    version: "19.0.1.0.0"
+    version: "19.0.1.0.1"
     license: "LGPL-3"
     application: true
     depends_local: []
     depends_standard: ["base", "crm", "project", "hr", "account", "sale", "utm"]
-    python_lines: 272
-    test_files: 0
+    python_lines: 346
+    test_files: 1
     access_csv: true
     note: "Installed in Mumtaz_C2P. Existed only in the server's system addons folder until 21 Nov 2026. REVIEW-05 open."
+  c2p_meeting_actions:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_meeting_actions
+    title: "C2P Meeting Actions"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: []
+    depends_standard: ["project", "mail"]
+    python_lines: 924
+    test_files: 1
+    access_csv: true
+    note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
   c2p_project_tracker:
     layer: internal
     disposition: keep
@@ -764,6 +778,20 @@ modules:
     test_files: 0
     access_csv: true
     note: "Installed in Mumtaz_C2P (19.0.17.0.0). Brought from the production branch 21 Nov 2026."
+  c2p_work_hub:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_work_hub
+    title: "C2P Work Hub"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: []
+    depends_standard: ["project", "web", "mail"]
+    python_lines: 815
+    test_files: 1
+    access_csv: false
+    note: "C2P group internal. My Work Today and quick task updates. Not installed anywhere yet."
   mumtaz_ceo_dashboard:
     layer: internal
     disposition: review
