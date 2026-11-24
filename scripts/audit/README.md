@@ -1,13 +1,13 @@
 # Static audit scripts
 
-Read-only inventory tools used to produce `docs/project/01-AS-IS-AUDIT.md`. They
+Read-only inventory tools for the addons tree. They
 parse source with `ast` and regex and never import the code they inspect, so
 nothing in `addons/` executes.
 
 ```bash
 python3 -I scripts/audit/inspect_addons.py addons > /tmp/addons.json   # module inventory + risk flags
 python3 -I scripts/audit/acl_coverage.py   addons > /tmp/acl.json      # per-model ACL / ir.rule coverage
-python3 -I scripts/audit/fields.py         addons docs/architecture/DATA_DICTIONARY_AS_IS.csv
+python3 -I scripts/audit/fields.py         addons /tmp/fields.csv
 ```
 
 `acl_coverage.py` is deliberately v2: the first version matched `_rec_name`,

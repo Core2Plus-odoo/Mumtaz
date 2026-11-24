@@ -1,3 +1,14 @@
+### 20 Nov audit documents withdrawn ✅ (24 Nov 2026)
+- Removed `docs/project/00-INDEX` … `ROADMAP`, `docs/architecture/`,
+  `docs/quality/TEST_MIGRATION_DEPLOY_STRATEGY.md` and `docs/erp-standard/`.
+  They were written from a checkout 169 commits behind `main`, so their figures
+  (38 modules, 57 tests) were wrong the day they were committed, and
+  `docs/erp/` on `main` is the programme's real instance of the same standard.
+- Kept: `docs/project/phase1/` (fit-gap, workflow, plan, 15 templates), written
+  against the merged tree, and the read-only scripts in `scripts/audit/`.
+- The entry below describes the withdrawn pack and is left as the record of
+  what was done and why it was undone.
+
 ### ERP Master Blueprint adopted; Wave 0 audit and design pack ✅ (no app code changed)
 - **Installed the C2P ERP Master Blueprint v1.0** unmodified at
   `docs/erp-standard/` (blueprint, 8 document templates, 4 architecture
