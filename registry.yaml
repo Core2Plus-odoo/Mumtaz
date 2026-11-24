@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 62
+module_count: 64
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -727,15 +727,29 @@ modules:
     disposition: keep
     path: addons/c2p_master_agent
     title: "C2P Master Agent"
-    version: "19.0.1.0.0"
+    version: "19.0.1.0.1"
     license: "LGPL-3"
     application: true
     depends_local: []
     depends_standard: ["base", "crm", "project", "hr", "account", "sale", "utm"]
-    python_lines: 272
-    test_files: 0
+    python_lines: 346
+    test_files: 1
     access_csv: true
     note: "Installed in Mumtaz_C2P. Existed only in the server's system addons folder until 21 Nov 2026. REVIEW-05 open."
+  c2p_meeting_actions:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_meeting_actions
+    title: "C2P Meeting Actions"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: []
+    depends_standard: ["project", "mail"]
+    python_lines: 941
+    test_files: 1
+    access_csv: true
+    note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
   c2p_project_tracker:
     layer: internal
     disposition: keep
@@ -764,6 +778,20 @@ modules:
     test_files: 0
     access_csv: true
     note: "Installed in Mumtaz_C2P (19.0.17.0.0). Brought from the production branch 21 Nov 2026."
+  c2p_work_hub:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_work_hub
+    title: "C2P Work Hub"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: []
+    depends_standard: ["project", "web", "mail"]
+    python_lines: 884
+    test_files: 1
+    access_csv: false
+    note: "C2P group internal. My Work Today and quick task updates. Not installed anywhere yet."
   mumtaz_ceo_dashboard:
     layer: internal
     disposition: review
@@ -825,13 +853,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_ai
     title: "Faizy AI Team"
-    version: "19.0.1.0.0"
+    version: "19.0.1.3.0"
     license: "LGPL-3"
     application: true
     depends_local: ["faizy_core"]
     depends_standard: ["mail"]
-    python_lines: 813
-    test_files: 2
+    python_lines: 1704
+    test_files: 3
     access_csv: true
     note: "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
   faizy_core:
@@ -839,13 +867,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_core
     title: "Faizy Core"
-    version: "19.0.1.23.0"
+    version: "19.0.1.26.0"
     license: "LGPL-3"
     application: true
     depends_local: []
-    depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk"]
-    python_lines: 5075
-    test_files: 1
+    depends_standard: ["base", "mail", "contacts", "product", "account", "l10n_pk", "crm"]
+    python_lines: 5746
+    test_files: 3
     access_csv: true
     note: "Faizy is a separate venture."
   faizy_pilot:
@@ -853,13 +881,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_pilot
     title: "Faizy Pilot: Evidence Gate"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core"]
     depends_standard: []
-    python_lines: 540
-    test_files: 2
+    python_lines: 589
+    test_files: 3
     access_csv: false
     note: "Faizy is a separate venture. Evidence gate on faizy.order; brought to main from the production branch 22 Nov 2026."
   faizy_website:
@@ -867,12 +895,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_website
     title: "Faizy Website & Portal"
-    version: "19.0.1.20.0"
+    version: "19.0.1.24.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core", "faizy_pilot"]
     depends_standard: ["website", "portal"]
-    python_lines: 1801
-    test_files: 2
+    python_lines: 2227
+    test_files: 6
     access_csv: false
     note: "Faizy is a separate venture."

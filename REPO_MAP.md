@@ -29,7 +29,7 @@ that exact path: it moves only with a planned step on the server.
 
 | Folder | What it is | Path |
 | --- | --- | --- |
-| `addons/` | 58 Odoo 19 modules: the platform, the products, the Jawhar edition and C2P's internal modules. Classified in `registry.yaml` | Fixed |
+| `addons/` | 60 Odoo 19 modules: the platform, the products, the Jawhar edition and C2P's internal modules. Classified in `registry.yaml` | Fixed |
 | `registry/`, `registry.yaml` | Module classification (hand-kept) and the generated registry | Free |
 | `scripts/` | Checks, test runs and older server scripts; grouped in `scripts/README.md` | Fixed (CI workflows call them by path) |
 | `config/` | `odoo.conf` for the root `Dockerfile` and `docker-compose*.yml` | Fixed (compose mounts it) |
@@ -73,14 +73,14 @@ install profile `mumtaz_erp` over modules in `addons/`.
 | Date | Move |
 | --- | --- |
 | 21 Nov 2026 | Eight `apps/*` folders to `sites/<domain>/` and `ops/` (table in `sites/README.md`) |
-| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; a stray `docs/05-build-log.md` folded into `c2p-delivery-system/docs/05-build-log.md`; `website/index.html` and `website/assets/` → `sites/delivery.mumtaz.digital/landing/` |
+| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; a stray `docs/05-build-log.md` folded into `c2p-delivery-system/docs/05-build-log.md` (two more entries written to it on `main` on 24 Nov were carried over the same way); `website/index.html` and `website/assets/` → `sites/delivery.mumtaz.digital/landing/` |
 
 Nothing was deleted. The remaining "Fixed" folders are listed with the server
 step each one needs in `docs/platform/MUMTAZ_REPOSITORY_CONSOLIDATION.md`.
 
 ## Module layers
 
-Generated detail is in `registry.yaml`. Summary on 22 Nov 2026 (62 modules):
+Generated detail is in `registry.yaml`. Summary on 24 Nov 2026 (64 modules):
 
 | Layer | Modules | With a test file |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ Generated detail is in `registry.yaml`. Summary on 22 Nov 2026 (62 modules):
 | platform | 18 | 5 |
 | product | 12 | 2 |
 | edition (Jawhar) | 15 | 14 |
-| internal | 9 | 5 |
+| internal | 11 | 8 |
 | venture | 4 | 4 |
 
 Findings:

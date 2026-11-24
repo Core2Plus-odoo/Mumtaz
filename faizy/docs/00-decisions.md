@@ -668,6 +668,14 @@ code path. `faizy_product_data.xml`'s own comment already said as much ("orders 
 accounting at all today") about the sale-side products it pre-built for exactly this. Recorded in
 FIT_GAP_REGISTER.md as the next candidate, pending its own explicit scoping decision.
 
+## CRM lead fields captured from live (20 Nov 2026)
+
+While deploying `faizy_ai` on 3 Nov 2026 the server's working tree refused the checkout because of local, uncommitted changes in `faizy_core`: a dependency on the standard `crm` app, a `crm.lead` extension (`models/crm_lead.py`) and a "Faizy" tab on the lead form (`views/crm_lead_views.xml`). They had been added by hand on the server and existed in no branch. They were stashed (`server-local-before-ai-team-2026-11-03`), re-applied on top of the new code so the upgrade could run, and committed to the repo in PR #139 byte-for-byte, so the repository matches production.
+
+This contradicts FIT_GAP_REGISTER row CRM-01 ("Out of scope"). The register row is updated to say so; **whether CRM stays is the product owner's decision and is not made here.** Also open: the Plan interest field carries hard-coded AED amounts (Lite 26.50, Standard 66.20, Family Pro 119.20) that were not checked against the published plan prices; the owner said plan prices will change later, so those labels should be removed or made to read from the plan table.
+
+Process note: this is the second time a hand edit on the server blocked a deploy. Changes to `/opt/faizy/src` should be made in the repo and pulled, not edited in place.
+
 
 ## 15. Document vault: portal customers were able to read every family's documents — closed
 
@@ -809,3 +817,228 @@ image become `approved` (chatter note, no reviewer, they were already completed 
 become `submitted` (human review); orders without images are untouched. Verified on a throwaway database: faizy_core
 installed, three synthetic orders created, then faizy_pilot installed: completed -> approved, in_progress with photo ->
 submitted, pending without photo -> none. Unit test added. Still not run on staging or production.
+
+## 17. FAIZY 2.0 public look (faizy_website 19.0.1.21.0)
+
+The rebrand in the approved design preview (navy `#1E2842`, orange `#F69E22` as a fill with navy text, soft grey
+`#F2F0F1`, Poppins; cream removed) is applied by changing the colour variables at the top of `faizy.scss`, so every
+public page and the customer portal take the new palette at once, plus a new `v10` layer for the new home hero and trust
+strip. The home hero is rewritten (Agent in an arch frame, labelled "illustrative character"). PWA `theme_color` and
+`background_color` and the portal `theme-color` meta now match the navy.
+
+Claims removed from public pages because nobody approved them (decision 3, extended): the trust bar (22+ families, 3
+cities, 24k following, 100% photographed), the sample order card with PKR amounts, "Your first three care activities are
+on us" / "free" in the plans block, pricing hero and signup pages, and the Facebook follower count (the contact block now
+shows the approved handle FaizyHaiNa). The plans block now says only that the plan is confirmed on WhatsApp before any
+billing starts. A new test (`test_home_2_0`) fails the build if any of these phrases returns to `/`, `/pricing`, `/start`,
+`/join`, `/privacy` or `/ai-team`.
+
+Deliberately not on the new home: "Customer messages go out 10:00 to 21:00 Karachi time" (no hour gate exists yet) and "agents
+see the task, not your family name" (not implemented). The footer text from the old site is untouched.
+
+Not done here: the structural portal redesign (side navigation, tiles, object-page header) and Roman Urdu toggle from the
+preview. Verified on a throwaway Odoo 19 database: install and 25 tests pass. Not run on production.
+
+## 18. Evidence review desk (faizy_pilot 19.0.1.1.0)
+
+A reviewer's working screen for the evidence gate: Faizy / Operations menu **Evidence review**, a standard list opened on
+"Waiting for review" (`evidence_state = submitted`), with filters for rejected, approved and "in progress, not approved", and
+group by evidence status or Faizy. Rows open the existing order form, where Approve / Reject already live. Visible to the
+Operations group only (menu `groups`), the list is read-only (`create="0" delete="0"`), no new model, no new group. Raza is the
+reviewer; Mashood does not see the menu. Verified on a throwaway Odoo 19 database: 20 faizy_pilot tests pass including three
+for this desk (default filter, menu visibility for ops vs agent, views load). Not run on production. Deploy:
+`-u faizy_pilot` (stacked on the website 2.0 PR; no data changes).
+
+## 19. Header menu repair (faizy_website 19.0.1.22.0)
+
+Found on production after the 22 Nov deploy: "Our AI team" never appeared under **About Us**. Odoo copies each top-level
+entry of a generic menu onto every website, but a copy of an entry inside a group keeps pointing at the generic group, not
+at the website's own one. On live, "Our AI team" hung under the generic About Us; on a fresh database all three entries
+(Become a Faizy, Our AI team, Privacy policy) end up there and the website's own About Us dropdown is empty. Fix in
+`menu_setup.fix_header_menu`: move those three entries under the website's own About Us, but only when they are still under
+the generic group, so anything marketing placed by hand stays. Blog tied with the Get started button for the last slot
+(both sequence 40); Blog now takes slot 36 when tied, so the button ends the row as `website_menu_data.xml` intends.
+Runs as a 19.0.1.22.0 migration (the data file is noupdate) and from `post_init_hook` for new installs. No menu is created
+or deleted and no label changes. Verified on a throwaway Odoo 19 database: 34 tests pass (4 new in `test_header_menu`),
+the migration moved the 3 detached entries, and desktop and mobile menus were checked in screenshots. Not run on production.
+
+## 20. HQ05 PR (a): security guards before staff logins (faizy_core 19.0.1.24.0, faizy_ai 19.0.1.2.0)
+
+Scope approved by Umer on 22 Nov 2026 (FAIZY HQ05, "PR (a) security guards"). These close gaps S1–S6
+found in the HQ05 audit, which had to be fixed **before** Mashood (care) and Raza (operations) get
+their own logins. No user, group membership or production setting is changed by this code.
+
+- **S1, order actions are Operations-only.** `action_confirm/assign/start/complete/cancel/reset_to_pending`
+  raise `AccessError` unless the user is in Faizy / Operations (or the call is `sudo`, as approved AI
+  drafts, crons and portal bookings are). A Faizy / Agent may only write `description`,
+  `completion_note`, `receipt_note`, the proof and receipt photos (care receives them on WhatsApp;
+  `faizy_pilot` sends any new photo back to Operations for review) and mail bookkeeping, and can no longer create orders directly
+  (ACL `faizy.order.user` create 0); bookings go through a draft. The state buttons carry
+  `groups="faizy_core.group_faizy_ops"`.
+- **S2, completion gate: superseded by §16 (`faizy_pilot`).** This PR first carried its own gate in
+  `faizy_core` (proof always, receipt when money was spent, a context flag for the direct-write path).
+  §16 landed on the base branch first with a stricter gate: approved evidence, a Manager-only
+  exception with a written reason, and an unforgeable in-process token instead of a context flag
+  that an RPC caller could send. Keeping both would have broken the Manager exception path, because
+  both define `_check_completion_evidence`. The faizy_core gate was removed in the merge, so
+  **`faizy_pilot` must be installed with this PR** for completion to require evidence.
+- **S3, WhatsApp containment.** New system parameter `faizy.whatsapp_send_mode`, **off unless set to
+  "on"** (a missing parameter means off). While off: `queue_message` creates nothing and posts an
+  internal note on the order; any direct `create()` is stored in a new state `held` ("Not Sent
+  (Sending Off)") that the cron never picks up; the send cron returns immediately; Send Now and Retry
+  refuse. Existing `queued` rows (105 on `faizy_prod`) are not touched: not sent, not deleted. The ops
+  new-order alert note now says the WhatsApp alert was not sent.
+  In `faizy_ai`, approving a customer message while sending is off moves the draft to the new state
+  `to_send`; the approver sends the text from the official WhatsApp phone and clicks **Mark as sent
+  manually**, which records `sent_manually_by` / `sent_manually_date`. No queue record is made.
+- **S4, document files.** `faizy.document.attachment` / `attachment_name` are limited to Operations and
+  portal (portal is still limited to the customer's own documents by the existing record rule);
+  `notes` is Operations-only. A Faizy / Agent sees that a document exists, its type and expiry, and
+  cannot read the file, including the stored `ir.attachment` (tested).
+- **S5, escalations.** AI drafts of kind `other` (complaints, refunds, safety, new services) can only be
+  approved by Faizy / Manager.
+- **S6, money and deletion.** Operations loses create/write on `faizy.wallet.transaction` and `unlink`
+  on orders, documents, applications, areas, family members, bridge and product requests. Manager rows
+  added so Umer keeps full rights. Archiving (`active`) remains the way to retire records.
+- **Found when merging §16, fixed:** with `faizy_pilot` and `faizy_ai` installed together, the AI
+  digest failed (`AccessError` on `proof_image`, which §16 made staff-only), and so did two
+  `faizy_ai` tests on the base branch itself. The digest's "completed without proof" count now runs
+  with `sudo()`, since it is a count only and no image is read. The AI test accepts either refusal
+  (ACL or evidence gate) when the AI user tries to complete an order.
+- **Found while testing, fixed:** a customer invoice / vendor bill draft created on completion failed
+  silently (`AccessError` on `account.move`, caught and logged) for any user without Accounting rights,
+  i.e. for Raza on every completed order. The drafts are now created with `sudo()`; they stay drafts
+  and posting stays with someone who has Accounting access.
+
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases,
+after merging §16:
+
+- Base branch with all four addons installed (`faizy_core,faizy_website,faizy_ai,faizy_pilot`):
+  `0 failed, 2 error(s) of 41 tests`. Both errors are the `faizy_ai` / `faizy_pilot` clash above.
+- This branch, all four addons, after merging `main` (§16a–§19, the AI brain #140): `0 failed,
+  0 error(s) of 75 tests`. `faizy_ai` is bumped to 19.0.1.2.0 because `main` already uses 1.1.0 for the
+  AI brain; drafts waiting in `to_send` count as approved in the agent's approval rate.
+- Upgrade path from `main`: database installed from `main` with all four addons, then
+  `-u faizy_core,faizy_ai,faizy_pilot,faizy_website`: `upgrade exit: 0`. `registry.yaml` regenerated.
+- This branch without `faizy_pilot`: `0 failed, 0 error(s) of 43 tests`.
+- Upgrade path: the base database with all four addons, then `-u faizy_core,faizy_ai,faizy_pilot`:
+  `upgrade exit: 0`.
+- `validate_modules.py`, `check_portal_access.py`, `check_self_fields.py`, `check_view_schemas.py`,
+  `flake8`: all pass.
+
+**Not verified / not done:** nothing has run on staging or `faizy_prod`. Staging does not exist yet
+(HQ05 §8 step 1, Shafat). Production is still on faizy_core 19.0.1.20.0, so deploying this branch also
+deploys 1.21–1.23 and needs `faizy_pilot` installed for the completion gate (vendor bill, customer invoice + wallet debit, document portal rule). Routing,
+activities and desks are PR (b).
+
+## 21. HQ05 PR (b): work routing and role desks (faizy_ai 19.0.1.3.0)
+
+Builds on §20 (and §16/§18 `faizy_pilot`). Goal (HQ05): Mashood and Raza open the ERP and land on their own list of what is
+waiting, for which record, by when, with the button to act. All of it is standard `mail.activity`
+on the real record. There is no second task system, and `base_automation` is not used, so
+production can be rebuilt from git.
+
+- **Role holders** are set in Settings → FAIZY → Work routing (`faizy_ai.care_user_id`,
+  `faizy_ai.ops_user_id`, `faizy_ai.escalation_user_id`). An empty or archived holder falls back to
+  the role's group (first active member), then to the escalation owner, then to the administrator.
+  This replaces the old "first two members of the group" routing in the stale-draft and inbound code.
+- **Nine activity types** (`FAIZY · …`), each with an escalation window kept on the type
+  (`noupdate`, so Umer can tune it in Activity Types): Approve reply 2 h, Approve order 2 h, Assign
+  Faizy 4 h (urgent 1 h), Follow up overdue job 3 h, Review proof & receipt 24 h, Completion message
+  2 h, Handle inbound 2 h, Review application 168 h, Approve escalation (never escalates).
+- **Routing (HQ05 §4.1):**
+  - R1: customer-message drafts go to care.
+  - R2: inbound messages go to care.
+  - R3: new orders go to ops, flagged urgent when the order is.
+  - R4: order drafts go to ops.
+  - R5: a job not started 1 h after its slot goes to ops (cron every 30 min, one item per order).
+  - R6: a proof photo on an in-progress order goes to ops.
+  - R7: a completed order goes to care, to send the completion message.
+  - R8: drafts of kind "other" go to the escalation owner.
+  - R10: worker applications go to ops.
+
+  Activities close themselves when the work is done: approve, reject, mark sent, assign, start,
+  complete, cancel, handled or ignored. A customer message waiting to be sent by hand keeps its
+  activity open until it is marked sent. Routing errors are logged and never block the business
+  action.
+- **Escalation:** every 30 min, only inside working hours, any FAIZY item open longer than its window
+  gets one "Approve escalation" activity for the escalation owner plus a chatter note, then is marked
+  `faizy_escalated` so it never escalates twice. Windows are clock hours from creation, not working
+  hours. Overnight items escalate when the hours open.
+- **Morning summary:** at 04:30 UTC (09:30 Karachi), one `message_notify` to each role holder with
+  their counts: waiting, overdue or escalated, oldest age, plus unassigned orders (ops) or replies to
+  approve and to send by hand (care). It goes to the Inbox for users set to "Handle in Odoo" and
+  never goes to WhatsApp.
+- **Desks (menus):**
+  - Care Desk: My work today, Replies awaiting approval, To send by hand, Inbound to handle.
+  - Operations Desk: My work today, Unassigned orders, Order drafts, Jobs not started, Proof &
+    receipt review, Faizies, Applications.
+  - Command Centre: Escalations & decisions, My work today, Cross-team board, Operations health
+    (the existing dashboard), All approvals.
+
+  Each user's Home Action is set at provisioning, not in code.
+- **Tooling:** `validate_modules.py` now ignores `AbstractModel`s and models a module only extends
+  (`_inherit` without `_name`) when checking ACLs. It still fails on a defined model with no ACL
+  (checked by removing `faizy.ai.inbound`'s rows).
+
+**Verified:** Odoo 19.0 + PostgreSQL 16, after merging `main` and §20:
+
+- All four addons (`faizy_core,faizy_website,faizy_ai,faizy_pilot`): `0 failed, 0 error(s) of 90
+  tests`. 15 of them are new in `faizy_ai/tests/test_routing.py`: T1 desk visibility and access per
+  user, T9–T16 routing, escalation once, no escalation out of hours or before the window, Inbox-only
+  summary, and the fallback chain.
+- Without `faizy_pilot`: `0 failed, 0 error(s) of 58 tests`.
+- With `faizy_pilot` installed, approving evidence (`evidence_state = approved`) closes the
+  "Review proof & receipt" item.
+- Upgrade from a `main`-installed database (all four addons, via §20): `upgrade exit: 0`.
+- flake8, `validate_modules`, `check_view_schemas`: pass.
+
+**Not done:** R9 (vendor bill draft → To-Do for Umer), R11 (document expiry → ops, the existing
+customer reminder cron is unchanged), R12 (content QA, waits on the Phase B Project-app decision),
+the counters strip (spreadsheet dashboard) and the emergency toggle (D-10 pending). Nothing has
+run on staging or production.
+
+## 22. Customer send window and idempotent care requests (faizy_core 19.0.1.25.0, faizy_website 19.0.1.23.0)
+
+**Send window.** `faizy.whatsapp.message` now holds customer-facing messages outside 10:00 to 21:00 Karachi time (the
+window the AI-team page and `faizy_ai` already promise). The gate sits in `action_send` and in the queue cron, so a manual
+"send" button obeys it too. Held rows stay `queued`, are not counted as an attempt, carry a note ("Held until the customer
+send window opens"), and go out on the first run inside the window. Not gated: a login code (`otp`, requested seconds ago)
+and messages to ground staff (`worker_id`). Hours and zone come from `faizy.send_hours_start`, `faizy.send_hours_end`,
+`faizy.send_timezone` (defaults 10, 21, Asia/Karachi). `faizy_ai` keeps its own `faizy_ai.hours_*` parameters with the same
+defaults; unifying the two is a follow-up. The gate sits behind the HQ05 send switch (§20, `faizy.whatsapp_send_mode`): while sending is off nothing is queued or sent at
+all and the window is never reached; the window only matters once a Manager turns sending on. The gate does not turn it on. The legacy queue is not touched: when a provider is first configured, the backlog would go out inside the window, so
+that backlog still needs the quarantine step (R02) before sending is enabled.
+
+**Idempotent intake.** `faizy.order.client_request_id` (unique per customer) is filled by a hidden token on the request form
+and by an optional `client_request_id` in the JSON API. The same token returns the first order instead of creating another,
+before the open-tasks limit is checked, so a retry is not refused because of its own order. Without a token (an old page or
+client) the same customer sending the same service, city and description within 60 seconds gets the pending order they
+just made. Losing a race to the unique constraint returns the winner. Additive field, no data rewritten.
+
+Verified on a throwaway Odoo 19 database after merging §20: 15 new tests (8 window, 7 intake; the window tests switch sending on
+in `setUp`); the three intake tests fail with the controller change removed. Not run on production.
+
+## 23. No public plan prices until Umer approves them (faizy_core 19.0.1.26.0, faizy_website 19.0.1.24.0)
+
+Decision by Umer, 23 Nov 2026: **no figures** on the public site or the sample receipt until he approves numbers in
+writing. The plan prices in `faizy_plan_data.xml` (PKR 1,999 and the others), the extra-activity price and the
+activity counts were guesses and were never approved, yet the home page, `/pricing` and the `/start` plan picker still
+showed them.
+
+- New `faizy.plan.prices_public()`: true only when the system parameter `faizy.show_plan_prices` is `on`. A missing
+  parameter, or any other value, means hidden. When Umer approves numbers, a Manager sets the parameter and the site
+  shows them again with no code change.
+- While hidden: the plan cards show "Price confirmed with you on WhatsApp" instead of a price; the currency switcher, the
+  "extra activities" price and the "N activities a month" line in the picker are gone; plan feature lines that carry a
+  number ("10 activities a month", "Up to 2 family members") are hidden by `plan.public_features()`. Plan names,
+  descriptions and the other feature lines stay.
+- Product Finder service description no longer says "plus the 5% platform fee" (data file plus a 19.0.1.26.0 migration
+  that replaces only the exact old text, so a hand-edited description stays).
+- Not changed on purpose: what a signed-in customer sees about their own subscription, invoices and wallet (real billed
+  amounts, not a public claim), and the free-activities balance in the portal (a separate decision, G4).
+- The sample receipt (D3) is not part of this change: no sample receipt amounts were found in the website or core
+  templates, so nothing to remove there. To be confirmed on the live site.
+
+Verified on a throwaway Odoo 19 database: all four Faizy modules, 111 tests, 0 failed after merging #200 (5 new in
+`test_plan_prices_hidden`). Not run on production.

@@ -12,6 +12,7 @@ third touches a server.
 | `check_sudo.py` | Every `sudo()` in `addons/` carries a `# sudo: <reason>` comment | `ci.yml` |
 | `check_links.py` | Every link in the Jawhar public site resolves | `ci.yml` |
 | `validate-deployment.py` | Key files exist before a deploy | by hand |
+| `audit/` | Read-only inventory of the addons tree (module list with risk flags, access-rule coverage, field list). Parses source; runs nothing from `addons/`. Its own `README.md` has the commands | by hand |
 
 ## Test runs (create and drop their own databases)
 

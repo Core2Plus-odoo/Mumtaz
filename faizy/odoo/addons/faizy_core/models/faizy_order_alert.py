@@ -81,6 +81,9 @@ class FaizyOrderAlert(models.Model):
         # here because none of the specific ones describe an ops-facing
         # assignment alert, and the ORM raises ValueError on anything outside
         # that list rather than silently accepting a new one.
+        # While customer WhatsApp sending is off (HQ05 §2) this row is
+        # written as "held" by faizy.whatsapp.message.create(), never queued.
+        sending_on = self.env["faizy.whatsapp.message"]._faizy_sending_enabled()
         self.env["faizy.whatsapp.message"].sudo().create({
             "phone": "+923343043970",
             "message_type": "generic",
@@ -103,7 +106,12 @@ class FaizyOrderAlert(models.Model):
         }).send()
 
         order.message_post(
-            body="Ops alerted — WhatsApp queued, email sent.",
+            body=(
+                "Ops alerted — WhatsApp queued, email sent."
+                if sending_on
+                else "Ops alerted by email. WhatsApp alert not sent: "
+                "WhatsApp sending is switched off."
+            ),
             message_type="comment",
             subtype_xmlid="mail.mt_note",
         )

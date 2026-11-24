@@ -136,7 +136,12 @@ class FaizyOrderVendorBilling(models.Model):
                 "price_unit": -self.vendor_commission,
             }))
 
-        bill = self.env["account.move"].create({
+        # sudo(): completion is done by Operations (HQ05: Raza), who has no
+        # Accounting rights and must not get them. The draft is a system side
+        # effect of the completion; posting it stays with a person who has
+        # Accounting access. Without this the draft silently failed for every
+        # non-accountant who completed an order.
+        bill = self.env["account.move"].sudo().create({
             "move_type": "in_invoice",
             "partner_id": self.vendor_id.id,
             "invoice_date": fields.Date.context_today(self),

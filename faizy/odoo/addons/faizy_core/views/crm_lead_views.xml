@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="crm_lead_faizy_form" model="ir.ui.view">
+    <field name="name">crm.lead.form.faizy</field>
+    <field name="model">crm.lead</field>
+    <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+    <field name="arch" type="xml">
+      <notebook position="inside">
+        <page string="Faizy" name="faizy_page">
+          <group col="2">
+            <group string="Location">
+              <field name="faizy_expat_country"/>
+              <field name="faizy_family_city"/>
+            </group>
+            <group string="Service Interest">
+              <field name="faizy_service_interest"/>
+              <field name="faizy_lead_source"/>
+              <field name="faizy_family_size"/>
+              <field name="faizy_plan_interest"/>
+            </group>
+          </group>
+          <group string="WhatsApp Notes">
+            <field name="faizy_whatsapp_notes" nolabel="1"
+                   placeholder="WhatsApp conversation notes..."/>
+          </group>
+        </page>
+      </notebook>
+    </field>
+  </record>
+</odoo>

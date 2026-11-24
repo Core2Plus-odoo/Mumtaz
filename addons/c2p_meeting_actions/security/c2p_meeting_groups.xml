@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Approval authority is a group of its own rather than reusing
+         project manager: the people who sign off an action item are not
+         necessarily the people who administer projects, and 10.1 asks for
+         requester and approver to be separable. -->
+    <record id="group_c2p_meeting_approver" model="res.groups">
+        <field name="name">C2P Meetings / Approver</field>
+        <field name="comment">Can approve or reject meeting action items, and reopen confirmed minutes.</field>
+        <field name="implied_ids" eval="[(4, ref('project.group_project_user'))]"/>
+    </record>
+</odoo>

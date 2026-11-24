@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_c2p_meeting_user,c2p.meeting user,model_c2p_meeting,project.group_project_user,1,1,1,0
+access_c2p_meeting_manager,c2p.meeting manager,model_c2p_meeting,project.group_project_manager,1,1,1,1
+access_c2p_meeting_action_user,c2p.meeting.action user,model_c2p_meeting_action,project.group_project_user,1,1,1,0
+access_c2p_meeting_action_manager,c2p.meeting.action manager,model_c2p_meeting_action,project.group_project_manager,1,1,1,1

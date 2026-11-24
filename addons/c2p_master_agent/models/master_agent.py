@@ -1,8 +1,10 @@
 import json, logging, urllib.request
 from datetime import datetime, timedelta
 from odoo import fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 _logger = logging.getLogger(__name__)
+
+GROUP = "c2p_master_agent.group_c2p_master_agent_user"
 
 C2P_KNOWLEDGE = """
 COMPANY: C2P Consultants FZC LLC — Official Odoo Ready Partner, UAE (Ajman Free Zone)
@@ -80,6 +82,17 @@ class C2PMasterAgent(models.TransientModel):
     command = fields.Text(string="Command")
     conversation = fields.Text(string="Conversation", readonly=True, default="")
     thinking = fields.Boolean(string="Thinking", default=False)
+
+    def _check_agent_access(self):
+        """Refuse anyone outside the agent's group, whichever way they arrive.
+
+        The access list already restricts the model, but that is one line of
+        CSV away from being reopened. The agent ships business data to a
+        language model and writes from its reply, so the entry point checks
+        for itself as well.
+        """
+        if not self.env.user.has_group(GROUP):
+            raise AccessError("You do not have access to the C2P Master Agent.")
 
     def _get_system_context(self):
         env = self.env
@@ -209,6 +222,7 @@ class C2PMasterAgent(models.TransientModel):
         return __import__('re').sub(r'```action.*?```',"",result,flags=__import__('re').S).strip()
 
     def action_send(self):
+        self._check_agent_access()
         self.ensure_one()
         cmd=(self.command or "").strip()
         if not cmd: raise UserError("Please type a command.")

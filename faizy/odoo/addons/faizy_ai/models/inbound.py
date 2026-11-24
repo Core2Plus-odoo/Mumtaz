@@ -1,7 +1,7 @@
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from .utils import G_COMMS, is_approver, normalize_phone
+from .utils import is_approver, normalize_phone
 
 
 class FaizyAIInbound(models.Model):
@@ -59,8 +59,6 @@ class FaizyAIInbound(models.Model):
         Returns the created records. Runs with sudo: the webhook has no user.
         """
         created = self.sudo().browse()
-        group = self.env.ref(G_COMMS, raise_if_not_found=False)
-        notify = group.sudo().user_ids[:2] if group else self.env['res.users']
         for entry in payload.get('entry', []):
             for change in entry.get('changes', []):
                 value = change.get('value', {})
@@ -77,9 +75,7 @@ class FaizyAIInbound(models.Model):
                         'body': text,
                         'partner_id': partner.id,
                     })
-                    summary = _('Reply needed: %s', partner.display_name or rec.phone)
-                    for user in notify:
-                        rec.activity_schedule('mail.mail_activity_data_todo',
-                                              user_id=user.id, summary=summary)
+                    # The "Handle inbound" activity for customer care is
+                    # created by the routing hook on create (routing_hooks.py).
                     created |= rec
         return created

@@ -25,13 +25,21 @@
                 <header>
                     <button name="action_approve" type="object" string="Approve" class="btn-primary"
                             invisible="state != 'draft'"/>
+                    <button name="action_mark_sent_manually" type="object"
+                            string="Mark as sent manually" class="btn-primary"
+                            invisible="state != 'to_send'"
+                            groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
                     <button name="action_reject" type="object" string="Reject"
-                            invisible="state not in ('draft', 'approved')"/>
+                            invisible="state not in ('draft', 'approved', 'to_send')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,executed"/>
                 </header>
                 <sheet>
                     <div class="alert alert-warning" role="alert" invisible="state != 'approved'">
                         Approved. The customer message is held until working hours (10am to 9pm Karachi).
+                    </div>
+                    <div class="alert alert-info" role="alert" invisible="state != 'to_send'">
+                        WhatsApp sending is switched off. Copy the message below, send it from the
+                        official FAIZY WhatsApp phone, then click "Mark as sent manually".
                     </div>
                     <group>
                         <group>
@@ -46,6 +54,8 @@
                             <field name="approver_id"/>
                             <field name="approved_date"/>
                             <field name="executed_date"/>
+                            <field name="sent_manually_by" invisible="not sent_manually_by"/>
+                            <field name="sent_manually_date" invisible="not sent_manually_date"/>
                             <field name="message_ref_id"/>
                             <field name="result_order_id"/>
                         </group>
@@ -75,6 +85,7 @@
                 <field name="agent_id"/>
                 <filter name="waiting" string="Waiting for approval" domain="[('state', '=', 'draft')]"/>
                 <filter name="held" string="Held until working hours" domain="[('state', '=', 'approved')]"/>
+                <filter name="to_send" string="Approved, send manually" domain="[('state', '=', 'to_send')]"/>
                 <separator/>
                 <filter name="customer" string="Customer messages" domain="[('kind', '=', 'customer_message')]"/>
                 <filter name="orders" string="Orders" domain="[('kind', 'in', ('order_create', 'order_update'))]"/>
@@ -130,12 +141,60 @@
                             <field name="pending_count"/>
                         </group>
                     </group>
+                    <group string="Last 30 days">
+                        <field name="approved_30d"/>
+                        <field name="rejected_30d"/>
+                        <field name="approval_rate" widget="percentage" digits="[16, 1]"/>
+                    </group>
                     <group string="Instructions">
                         <field name="instructions" nolabel="1" colspan="2"/>
                     </group>
                 </sheet>
             </form>
         </field>
+    </record>
+
+    <record id="view_faizy_ai_knowledge_list" model="ir.ui.view">
+        <field name="name">faizy.ai.knowledge.list</field>
+        <field name="model">faizy.ai.knowledge</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="agent_ids" widget="many2many_tags"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_faizy_ai_knowledge_form" model="ir.ui.view">
+        <field name="name">faizy.ai.knowledge.form</field>
+        <field name="model">faizy.ai.knowledge</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="category"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="agent_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <group string="Note">
+                        <field name="body" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_faizy_ai_knowledge" model="ir.actions.act_window">
+        <field name="name">Knowledge</field>
+        <field name="res_model">faizy.ai.knowledge</field>
+        <field name="view_mode">list,form</field>
     </record>
 
     <record id="action_faizy_ai_agent" model="ir.actions.act_window">

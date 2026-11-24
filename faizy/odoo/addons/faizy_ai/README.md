@@ -31,3 +31,11 @@ Tested on Odoo 19.0 against a stub of faizy_core built from the live faizy_prod 
   (paywall). That is the same as the approver pressing the button; it does not go through the
   10am-9pm hold, which applies to free-text customer message drafts only.
 - Install order: faizy_core, faizy_website, then faizy_ai. Uninstalling faizy_ai leaves them intact.
+
+## Knowledge and lessons (19.0.1.1.0)
+
+- **Faizy AI > Knowledge**: notes the agents read before they draft (brand facts, procedures, templates, house rules). Mashood (comms), Raza (ops) and managers can edit them; agent users can only read. Leave "Only for these agents" empty to show a note to every agent. Notes are guidance; the hard rules (send window, blocked numbers, approvers, what a draft may change) stay in code and cannot be edited here.
+- `faizy.ai.agent.get_brief()` returns the agent's instructions, its knowledge notes, and its rejected drafts from the last 30 days with the reject reason, so an agent can stop repeating a mistake. Read-only.
+- Each agent form shows approved, rejected and approval rate for the last 30 days.
+- Two seeded notes (approved brand facts, house rules) are loaded once (`noupdate`); edits made in the UI are kept on upgrade.
+- Upgrade: `-u faizy_ai`.

@@ -322,6 +322,16 @@
       "layer": "internal",
       "disposition": "keep",
       "note": "Installed in Mumtaz_C2P. Existed only in the server's system addons folder until 21 Nov 2026. REVIEW-05 open."
+    },
+    "c2p_work_hub": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. My Work Today and quick task updates. Not installed anywhere yet."
+    },
+    "c2p_meeting_actions": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
     }
   }
 }
