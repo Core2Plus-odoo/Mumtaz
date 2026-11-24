@@ -1,0 +1,6 @@
+"Purpose: the systems that must exchange data, and in which direction."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+System,Direction,Data objects,Protocol,Endpoint,Auth method,Volume per day,Owner,Notes
+MANDATORY,MANDATORY,MANDATORY,MANDATORY,Optional,MANDATORY,Optional,MANDATORY,Optional
+Text,"Inbound / Outbound / Both",Text,"REST / SOAP / SFTP / Webhook / File",Text,"API key / OAuth / Basic / mTLS",Number,Text,Text
+"Example Payment Gateway","Inbound","Payment confirmations","Webhook","","API key","~200","IT Manager","Sandbox first"

@@ -1,0 +1,6 @@
+"Purpose: realistic but non-production data for testing. Please do not send live personal or financial records."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Scenario,Object,Sample values,Expected result,Priority,Notes
+MANDATORY,MANDATORY,MANDATORY,MANDATORY,Optional,Optional
+Text,Text,Text,Text,"High / Medium / Low",Text
+"Order with partial delivery","Sales order","10 units ordered, 6 delivered","Invoice for 6, backorder for 4","High","Anonymised data only"

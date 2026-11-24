@@ -1,0 +1,6 @@
+"Purpose: your account structure, so reports match what your accountants already read."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Account code,Account name,Account type,Parent code,Currency,Active,Notes
+MANDATORY,MANDATORY,MANDATORY,Optional,Optional,Optional,Optional
+Text,Text,"Asset / Liability / Equity / Income / Expense",Text,"ISO 4217","Yes / No",Text
+"1100","Trade Receivables","Asset","1000","AED","Yes","Control account"
