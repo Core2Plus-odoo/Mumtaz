@@ -121,9 +121,9 @@
                 <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
                 <separator/>
                 <filter name="open_actions" string="Has open actions"
-                        domain="[('action_open_count','&gt;',0)]"/>
+                        domain="[('action_ids.state','in',('draft','proposed'))]"/>
                 <filter name="mine" string="I chaired" domain="[('organiser_id','=',uid)]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="by_project" string="Project" context="{'group_by':'project_id'}"/>
                     <filter name="by_state" string="Status" context="{'group_by':'state'}"/>
                     <filter name="by_month" string="Month" context="{'group_by':'meeting_date:month'}"/>

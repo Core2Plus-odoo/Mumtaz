@@ -1,3 +1,7 @@
+from datetime import datetime, time, timedelta
+
+import pytz
+
 from odoo import api, fields, models
 
 # Days ahead that counts as "due soon", and days of silence that counts as
@@ -38,7 +42,14 @@ class C2pWorkHub(models.AbstractModel):
         open_only = [("state", "not in", closed)]
         base = mine + open_only
 
-        soon = fields.Date.to_string(fields.Date.add(today, days=DUE_SOON_DAYS))
+        # project.task.date_deadline is a Datetime in Odoo 19, stored in UTC. A
+        # task due "today at 17:00" is not equal to today's date, so the day
+        # sections are half-open ranges between local midnights, converted to
+        # UTC. Comparing against a bare date only ever matched midnight exactly.
+        day_start = self._utc_start_of_local_day(today)
+        next_day = self._utc_start_of_local_day(today + timedelta(days=1))
+        soon_end = self._utc_start_of_local_day(
+            today + timedelta(days=DUE_SOON_DAYS + 1))
         stale_before = fields.Datetime.to_string(
             fields.Datetime.subtract(fields.Datetime.now(), days=STALE_DAYS))
         recent_after = fields.Datetime.to_string(
@@ -52,16 +63,17 @@ class C2pWorkHub(models.AbstractModel):
         sections = {
             "today": {
                 "label": "Due today",
-                "domain": base + [("date_deadline", "=", today)],
+                "domain": base + [("date_deadline", ">=", day_start),
+                                  ("date_deadline", "<", next_day)],
             },
             "overdue": {
                 "label": "Overdue",
-                "domain": base + [("date_deadline", "<", today)],
+                "domain": base + [("date_deadline", "<", day_start)],
             },
             "due_soon": {
                 "label": "Due soon",
-                "domain": base + [("date_deadline", ">", today),
-                                  ("date_deadline", "<=", soon)],
+                "domain": base + [("date_deadline", ">=", next_day),
+                                  ("date_deadline", "<", soon_end)],
             },
             "no_deadline": {
                 "label": "No deadline set",
@@ -120,6 +132,30 @@ class C2pWorkHub(models.AbstractModel):
         }
         return out
 
+    def _user_tz(self):
+        name = self.env.user.tz or self.env.context.get("tz") or "UTC"
+        try:
+            return pytz.timezone(name)
+        except pytz.UnknownTimeZoneError:
+            return pytz.utc
+
+    def _utc_start_of_local_day(self, day):
+        """Midnight at the start of `day` in the user's timezone, as the naive
+        UTC string the ORM compares Datetime fields against."""
+        local = self._user_tz().localize(datetime.combine(day, time.min))
+        return fields.Datetime.to_string(
+            local.astimezone(pytz.utc).replace(tzinfo=None))
+
+    def _local_date(self, value):
+        """A stored deadline as the date the user would call it."""
+        if not value:
+            return ""
+        if isinstance(value, str):
+            value = fields.Datetime.to_datetime(value)
+        if isinstance(value, datetime):
+            value = pytz.utc.localize(value).astimezone(self._user_tz()).date()
+        return fields.Date.to_string(value)
+
     # ── reading ─────────────────────────────────────────────────────────
     def _read_section(self, label, domain, task_fields, blocker_field):
         Task = self.env["project.task"]
@@ -161,7 +197,7 @@ class C2pWorkHub(models.AbstractModel):
             "project_id": (record.get("project_id") or [False])[0]
             if isinstance(record.get("project_id"), (list, tuple)) else False,
             "stage": name_of(record.get("stage_id")),
-            "deadline": record.get("date_deadline") or "",
+            "deadline": self._local_date(record.get("date_deadline")),
             "priority": record.get("priority") or "0",
             "state": record.get("state") or "",
             "last_update": record.get("c2p_last_update") or "",

@@ -190,6 +190,39 @@ class TestWorkHub(TransactionCase):
         self.assertIn(due.id, [t["id"] for t in data["today"]["tasks"]])
         self.assertNotIn(due.id, [t["id"] for t in data["overdue"]["tasks"]])
 
+    def test_a_deadline_later_today_is_due_today(self):
+        """Deadlines carry a time in Odoo 19. A task due this afternoon is due
+        today — not overdue, not merely due soon. The first version compared
+        against a bare date and only ever matched midnight."""
+        from datetime import datetime, time, timedelta
+        import pytz
+        self.alice.tz = "Asia/Dubai"
+        tz = pytz.timezone("Asia/Dubai")
+        local_today = datetime.now(tz).date()
+
+        def utc(day, hh, mm):
+            local = tz.localize(datetime.combine(day, time(hh, mm)))
+            return local.astimezone(pytz.utc).replace(tzinfo=None)
+
+        afternoon = self._task("Due this afternoon", self.alice,
+                               date_deadline=utc(local_today, 17, 30))
+        last_night = self._task("Due late yesterday", self.alice,
+                                date_deadline=utc(local_today - timedelta(days=1), 23, 30))
+        tomorrow = self._task("Due early tomorrow", self.alice,
+                              date_deadline=utc(local_today + timedelta(days=1), 0, 30))
+
+        data = self.Hub.with_user(self.alice).get_data()
+        ids = lambda key: [t["id"] for t in data[key]["tasks"]]  # noqa: E731
+        self.assertIn(afternoon.id, ids("today"))
+        self.assertNotIn(afternoon.id, ids("overdue"))
+        self.assertNotIn(afternoon.id, ids("due_soon"))
+        self.assertIn(last_night.id, ids("overdue"))
+        self.assertIn(tomorrow.id, ids("due_soon"))
+        self.assertNotIn(tomorrow.id, ids("today"))
+        row = next(t for t in data["today"]["tasks"] if t["id"] == afternoon.id)
+        self.assertEqual(row["deadline"], str(local_today),
+                         "the deadline is shown as the user's local date")
+
     def test_a_task_with_no_update_counts_as_stale(self):
         task = self._task("Never updated", self.alice)
         data = self.Hub.with_user(self.alice).get_data()

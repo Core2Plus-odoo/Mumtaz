@@ -78,7 +78,8 @@ class TestMeetingActions(TransactionCase):
         self._action(meeting)
         a2 = self._action(meeting, name="Second")
         a3 = self._action(meeting, name="Third")
-        a2.unlink()
+        # Deleting is a manager's right, not the chair's, so remove it as one.
+        a2.sudo().unlink()
         a4 = self._action(meeting, name="Fourth")
         self.assertEqual(a3.reference, f"{meeting.reference}-A3")
         self.assertEqual(a4.reference, f"{meeting.reference}-A2",
@@ -180,7 +181,8 @@ class TestMeetingActions(TransactionCase):
         self.assertEqual(task.name, action.name)
         self.assertEqual(task.project_id, self.project)
         self.assertEqual(task.user_ids, self.member)
-        self.assertEqual(str(task.date_deadline), "2030-01-15")
+        # A Datetime in Odoo 19; what matters is the calendar day.
+        self.assertEqual(str(task.date_deadline.date()), "2030-01-15")
         self.assertEqual(task.milestone_id, milestone)
         self.assertEqual(task.c2p_meeting_action_ref, action.reference)
 

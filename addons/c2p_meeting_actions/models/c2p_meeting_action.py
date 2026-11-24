@@ -1,3 +1,5 @@
+from datetime import datetime, time
+
 from markupsafe import Markup
 from psycopg2 import IntegrityError, errorcodes
 
@@ -254,7 +256,7 @@ class C2pMeetingAction(models.Model):
             "name": self.name,
             "project_id": project.id,
             "user_ids": [(6, 0, [self.user_id.id])] if self.user_id else False,
-            "date_deadline": self.date_deadline or False,
+            "date_deadline": self._task_deadline(),
             "description": self._task_description(),
             "c2p_meeting_action_ref": self.reference,
         }
@@ -263,6 +265,19 @@ class C2pMeetingAction(models.Model):
         if self.parent_task_id:
             vals["parent_id"] = self.parent_task_id.id
         return vals
+
+    def _task_deadline(self):
+        """The action's target date as a task deadline.
+
+        project.task.date_deadline is a Datetime in Odoo 19. A bare date is
+        stored as midnight UTC, which is the previous day for anyone west of
+        Greenwich. Noon UTC is the same calendar date in every timezone from
+        UTC-11 to UTC+11, so the task is due on the day the minutes say.
+        """
+        self.ensure_one()
+        if not self.date_deadline:
+            return False
+        return datetime.combine(self.date_deadline, time(12, 0))
 
     def _task_description(self):
         """Keep the provenance on the task itself.
