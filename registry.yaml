@@ -746,7 +746,7 @@ modules:
     application: false
     depends_local: []
     depends_standard: ["project", "mail"]
-    python_lines: 924
+    python_lines: 941
     test_files: 1
     access_csv: true
     note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
@@ -788,7 +788,7 @@ modules:
     application: false
     depends_local: []
     depends_standard: ["project", "web", "mail"]
-    python_lines: 815
+    python_lines: 884
     test_files: 1
     access_csv: false
     note: "C2P group internal. My Work Today and quick task updates. Not installed anywhere yet."
