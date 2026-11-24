@@ -41,6 +41,13 @@ class FaizyFamilyMember(models.Model):
     )
     relationship = fields.Selection(
         [
+            # First, because for a good share of customers it is the reason
+            # they signed up. Half the catalogue — NADRA renewal, passport,
+            # attestation, FBR filing, property visits, court appearances — is
+            # the subscriber's OWN business, sitting in Pakistan while they are
+            # abroad. Until this existed they had to file themselves as
+            # "Other", which read like an error and made the segmentation lie.
+            ("self", "Myself"),
             ("mother", "Mother"),
             ("father", "Father"),
             ("sibling", "Sibling"),

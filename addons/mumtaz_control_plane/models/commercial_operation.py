@@ -54,6 +54,7 @@ class MumtazCommercialOperation(models.Model):
 
     def _log(self, event_type, summary, from_value=False, to_value=False, details=False):
         for rec in self:
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             self.env["mumtaz.commercial.event.log"].sudo().create(
                 {
                     "tenant_id": rec.tenant_id.id,

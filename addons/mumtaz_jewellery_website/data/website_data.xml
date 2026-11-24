@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_demo_request" model="ir.sequence">
+        <field name="name">Jawhar demo request</field>
+        <field name="code">jewellery.demo.request</field>
+        <field name="prefix">DEMO/%(year)s/</field>
+        <field name="padding">4</field>
+    </record>
+    <record id="tag_jawhar_demo" model="crm.tag">
+        <field name="name">Jawhar demo</field>
+    </record>
+</odoo>

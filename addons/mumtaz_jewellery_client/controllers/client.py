@@ -116,6 +116,7 @@ class JawharClientApp(Controller):
         if status not in ('given', 'withdrawn'):
             return _fail(400, 'validation', 'status is given or withdrawn.')
         try:
+            # sudo: consent recorded by the client herself through her verified session
             s.partner_id.sudo().action_record_consent(status, source='client_message', note='From the client app')
         except UserError as e:
             return _fail(400, 'invalid', str(e.args[0]))

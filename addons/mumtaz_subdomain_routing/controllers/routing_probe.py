@@ -17,6 +17,7 @@ class MumtazRoutingProbe(http.Controller):
         # Use only the actual Host header; never trust client-supplied
         # X-Forwarded-Host as it can be spoofed to enumerate tenants.
         host = request.httprequest.host or ""
+        # sudo: tenant resolved from the request host before any session exists
         tenant = request.env["mumtaz.tenant"].sudo()._resolve_for_host(host)
         if not tenant:
             return Response(

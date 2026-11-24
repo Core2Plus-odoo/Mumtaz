@@ -42,6 +42,7 @@ class AmlEvent(models.Model):
     # -- the configuration ---------------------------------------------------
     @api.model
     def config(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         P = self.env['ir.config_parameter'].sudo()
         raw = P.get_param(P_THRESHOLD)
         try:
@@ -52,6 +53,7 @@ class AmlEvent(models.Model):
             window = int(P.get_param(P_WINDOW) or 0) or 365
         except ValueError:
             window = 365
+        # sudo: the confirming manager's name for the config card; a user read staff may not have
         by = self.env['res.users'].sudo().browse(int(P.get_param(P_BY) or 0)).exists()
         return {
             'configured': threshold > 0, 'threshold': threshold, 'window_days': window,
@@ -81,12 +83,14 @@ class AmlEvent(models.Model):
         window = int(window_days) if window_days not in (None, '') else self.config()['window_days']
         if window < 1 or window > 3660:
             raise UserError(_('The window is a number of days between 1 and 3660.'))
+        # sudo: system parameter; only administrators may read ir.config_parameter
         P = self.env['ir.config_parameter'].sudo()
         P.set_param(P_THRESHOLD, repr(threshold) if threshold else '')
         P.set_param(P_WINDOW, str(window))
         P.set_param(P_BY, str(self.env.user.id))
         P.set_param(P_AT, fields.Datetime.now().isoformat(timespec='seconds'))
         P.set_param(P_NOTE, (note or '')[:200])
+        # sudo: append-only audit row recording who confirmed the threshold
         self.sudo().create({'kind': 'config', 'threshold': threshold, 'window_days': window,
                             'note': (note or '')[:200] or False})
         return self.config()

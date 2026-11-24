@@ -42,6 +42,13 @@ LOGO_STAMP = "faizy_core.logo_source_sha"
 # is what a customer recognises at the top of an invoice.
 COMPANY_NAME = "Faizy"
 
+# Mirrors res.company.faizy_free_activity_grant's own default. Needed here too
+# because a field default applies when a RECORD is created, not when a COLUMN
+# is added: installing onto an existing database leaves the company row at 0,
+# and every customer then signs up with no free activities while /start
+# promises three.
+DEFAULT_FREE_GRANT = 3
+
 # The entity that actually bills. Still needed, because "Faizy" is a brand and
 # the money is taken by a registered company — a customer disputing a charge,
 # or a bank tracing one, needs a legal name to find. Keeping it in
@@ -55,9 +62,71 @@ PROFILE = {
     "report_footer": f"Faizy is a service of {LEGAL_ENTITY}.",
 }
 
+# ── How invoices look ────────────────────────────────────────────────────
+#
+# An invoice is the one document a customer keeps, forwards to a spouse and
+# occasionally shows a bank. It is worth as much care as the home page, and it
+# is a different rendering path — a PDF, with no internet and no webfonts.
+#
+# **The brand orange is not here, and cannot be.** Odoo paints `primary_color`
+# onto the invoice heading, the total and the tagline as TEXT (see
+# web.styles_company_report). #F69E22 as text on white measures 2.14:1. That is
+# the same rule the whole design system is built on — orange is a background
+# colour, never a text colour — so the report primary is the clay already used
+# for headings on the site, at 6.38:1. Orange still appears, in the logo.
+#
+# `font` is a Selection with eight options and Poppins is not one of them.
+# Montserrat is the nearest geometric sans Odoo will actually embed; asking for
+# Poppins would either fail validation or render as a fallback nobody chose.
+REPORT_STYLE = {
+    # Boxed puts the total in a filled band, which is the number the reader is
+    # looking for. Odoo computes the text colour against the fill, and picks
+    # white over clay.
+    "layout_key": "web.external_layout_boxed",
+    "font": "Montserrat",
+    "primary_color": "#8f4f08",     # 6.38:1 on white
+    "secondary_color": "#2b2622",   # 14.97:1 on white, for the field labels
+    # Muhammad's tagline, in the one place on a document where a tagline
+    # belongs. Roman Urdu deliberately, not the Urdu script: the PDF engine has
+    # no Nastaliq font and would render it as empty boxes.
+    "report_header": "Faizy Hai Na!",
+}
+
 # The name this module set before the rename. Used by the 19.0.1.4.0 migration
 # to correct only what we wrote, and leave alone anything set by hand.
 PREVIOUS_COMPANY_NAME = LEGAL_ENTITY
+
+
+def _report_style_values(env, company):
+    """Brand the printed documents, without overruling a deliberate choice.
+
+    Each key is set only while it is still Odoo's default or empty. Someone who
+    has opened Settings → Document Layout and picked a colour has made a
+    decision, and a module upgrade quietly reverting it is the behaviour that
+    makes people stop upgrading.
+    """
+    values = {}
+
+    if not company.external_report_layout_id:
+        layout = env.ref(REPORT_STYLE["layout_key"], raise_if_not_found=False)
+        if layout:
+            values["external_report_layout_id"] = layout.id
+        else:
+            _logger.warning(
+                "faizy_core: report layout %s not found, leaving the default",
+                REPORT_STYLE["layout_key"],
+            )
+
+    # "Lato" is Odoo's default, so it means "nobody chose", not "somebody chose
+    # Lato". Any other value is a choice and stays.
+    if not company.font or company.font == "Lato":
+        values["font"] = REPORT_STYLE["font"]
+
+    for field in ("primary_color", "secondary_color", "report_header"):
+        if not company[field]:
+            values[field] = REPORT_STYLE[field]
+
+    return values
 
 
 def apply_company_profile(env, overwrite_name=True):
@@ -98,8 +167,19 @@ def apply_company_profile(env, overwrite_name=True):
     if company.report_footer and LEGAL_ENTITY not in (company.report_footer or ""):
         values.pop("report_footer", None)
 
-    if not company.country_id:
-        values["country_id"] = env.ref("base.ae", raise_if_not_found=False).id or False
+    # Country is not set here any more. accounting_setup owns it, and it runs
+    # first — this used to default to base.ae, which now contradicts the
+    # decision that the books are Pakistani.
+
+    if not company.faizy_free_activity_grant:
+        values["faizy_free_activity_grant"] = DEFAULT_FREE_GRANT
+        _logger.warning(
+            "faizy_core: company had no free-activity grant; setting %s. "
+            "Anyone who signed up before this got none.",
+            DEFAULT_FREE_GRANT,
+        )
+
+    values.update(_report_style_values(env, company))
 
     # `not company.logo` was wrong and shipped as "Your Logo" on the live
     # header. Odoo gives every new company a placeholder logo, so the field is

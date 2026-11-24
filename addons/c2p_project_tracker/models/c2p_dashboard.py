@@ -191,7 +191,7 @@ class C2pDashboard(models.AbstractModel):
                 }
                 if m.date_deadline:
                     placed.append(entry)
-                    dates.append(m.date_deadline)
+                    dates.append(m._c2p_deadline_date())
                     if m.baseline_deadline:
                         dates.append(m.baseline_deadline)
                 else:
@@ -230,12 +230,12 @@ class C2pDashboard(models.AbstractModel):
 
         for project in projects:
             for m in project._c2p_milestones():
-                if m.date_deadline and m.date_deadline < today and \
+                if m.date_deadline and m._c2p_deadline_date() < today and \
                         (m.stage_id.name or "").strip().lower() != "done":
                     add("overdue_milestone", project,
                         _("%(code)s is %(days)s days overdue",
                           code=m.c2p_code or m.name,
-                          days=(today - m.date_deadline).days),
+                          days=(today - m._c2p_deadline_date()).days),
                         action="milestones")
             blocker_age = project._c2p_oldest_blocker_days()
             if blocker_age >= 10:
@@ -344,7 +344,7 @@ class C2pDashboard(models.AbstractModel):
                 entry["open"] += 1
                 entry["hours"] += (getattr(task, hours_field, 0.0) or 0.0
                                    if hours_field else 0.0)
-                if task.date_deadline and task.date_deadline < today:
+                if task.date_deadline and task._c2p_deadline_date() < today:
                     entry["overdue"] += 1
         unassigned = len(open_tasks.filtered(lambda t: not t.user_ids))
 

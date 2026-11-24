@@ -44,12 +44,14 @@ class Agents(models.AbstractModel):
     # -- status and the pause ------------------------------------------
     @api.model
     def paused(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         return self.env['ir.config_parameter'].sudo().get_param(PAUSE_PARAM) == '1'
 
     @api.model
     def set_paused(self, value):
         if not self.env.user.has_group('mumtaz_jewellery.group_jewellery_manager'):
             raise UserError(_('Only a jewellery manager can pause or resume the agents.'))
+        # sudo: system parameter; only administrators may read ir.config_parameter
         self.env['ir.config_parameter'].sudo().set_param(PAUSE_PARAM, '1' if value else '0')
         return self.paused()
 
@@ -82,6 +84,7 @@ class Agents(models.AbstractModel):
         """The ElevenLabs conversational agents the drawer connects to, by
         agent key. Agent ids are public (they sit in the widget embed); the
         workspace key never enters the browser. Empty when not configured."""
+        # sudo: system parameter; only administrators may read ir.config_parameter
         P = self.env['ir.config_parameter'].sudo()
         out = {}
         for key in policy.AGENTS:
@@ -94,6 +97,7 @@ class Agents(models.AbstractModel):
     def _log(self, agent, tool, started, status='done', reason=None, partner=None,
              draft=None, model_used='local', usage=None, digest=None, sources=None, text=None):
         usage = usage or {}
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         return self.env['jewellery.ai.run'].sudo().create(self._run_vals(
             agent, tool, started, status, reason, partner, draft, model_used, usage, digest, sources, text))
 

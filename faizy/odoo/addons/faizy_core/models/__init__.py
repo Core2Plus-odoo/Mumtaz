@@ -7,7 +7,13 @@ from . import faizy_order
 from . import faizy_request
 from . import faizy_wallet
 from . import faizy_whatsapp
+from . import faizy_whatsapp_transport
 from . import faizy_document
 from . import faizy_sample_data
 from . import faizy_dashboard
 from . import res_partner
+from . import faizy_vendor
+from . import faizy_order_alert
+from . import faizy_vendor_billing
+from . import crm_lead
+from . import faizy_customer_billing

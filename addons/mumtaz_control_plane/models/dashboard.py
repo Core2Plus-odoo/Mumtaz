@@ -41,6 +41,7 @@ class MumtazControlPlaneDashboard(models.TransientModel):
         return self.action_open_dashboard()
 
     def _count_unique_tenants(self, model_name, domain):
+        # sudo: control-plane dashboard aggregates; menu restricted to platform administrators
         groups = self.env[model_name].sudo().read_group(domain, ["tenant_id"], ["tenant_id"], lazy=False)
         return len([group for group in groups if group.get("tenant_id")])
 
@@ -50,7 +51,9 @@ class MumtazControlPlaneDashboard(models.TransientModel):
         now = fields.Datetime.now()
         renewal_deadline = today + timedelta(days=30)
 
+        # sudo: control-plane dashboard aggregates; menu restricted to platform administrators
         Tenant = self.env["mumtaz.tenant"].sudo()
+        # sudo: control-plane dashboard aggregates; menu restricted to platform administrators
         Subscription = self.env["mumtaz.subscription"].sudo()
 
         active_subscription_domain = [

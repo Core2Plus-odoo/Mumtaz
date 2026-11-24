@@ -53,6 +53,7 @@ class ResPartner(models.Model):
         if not self.id:
             return 0.0
         since = fields.Date.context_today(self) - timedelta(days=max(1, int(window_days)))
+        # sudo: cash payments in the AML window; counter staff cannot read payments
         payments = self.env['account.payment'].sudo().search([
             ('partner_id', 'child_of', self.commercial_partner_id.id or self.id),
             ('payment_type', '=', 'inbound'), ('journal_id.type', '=', 'cash'),
@@ -81,6 +82,7 @@ class ResPartner(models.Model):
         self.message_post(body=_('Identity verified by %(user)s: %(doc)s ending %(last4)s, expires %(exp)s.',
                                  user=self.env.user.name, doc=dict(ID_TYPES)[id_type], last4=last4.upper(), exp=expiry),
                           message_type='comment', subtype_xmlid='mail.mt_note')
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         self.env['jewellery.aml.event'].sudo().create({
             'kind': 'kyc_verified', 'partner_id': self.id, 'user_id': self.env.user.id,
             'kyc_status': 'verified', 'kyc_id_type': id_type, 'kyc_id_last4': last4.upper(), 'kyc_id_expiry': expiry,
@@ -107,6 +109,7 @@ class ResPartner(models.Model):
                                  risk=(', risk %s' % dict(RISK)[risk_band]) if risk_band else '',
                                  note=(' ' + note) if note else ''),
                           message_type='comment', subtype_xmlid='mail.mt_note')
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         self.env['jewellery.aml.event'].sudo().create({
             'kind': 'screening', 'partner_id': self.id, 'user_id': self.env.user.id,
             'screening': status, 'risk_band': risk_band or False, 'note': (note or '')[:200] or False})

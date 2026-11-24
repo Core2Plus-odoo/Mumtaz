@@ -27,6 +27,7 @@ class MumtazErpModuleAccess(models.AbstractModel):
         xmlids = _MODULE_GROUPS.get(module_key) or []
         if not xmlids:
             return False
+        # sudo: group membership maintained by the control plane's feature flags, not by the user
         users = self.env["res.users"].sudo().search(
             [("share", "=", False), ("active", "=", True)]
         )
@@ -44,8 +45,10 @@ class MumtazErpModuleAccess(models.AbstractModel):
                 # Odoo 19 renamed res.groups.users -> user_ids; use set ops.
                 ufield = "user_ids" if "user_ids" in group._fields else "users"
                 if enabled:
+                    # sudo: group membership maintained by the control plane's feature flags, not by the user
                     group.sudo()[ufield] |= users
                 else:
+                    # sudo: group membership maintained by the control plane's feature flags, not by the user
                     group.sudo()[ufield] -= users
                 done = True
         return done

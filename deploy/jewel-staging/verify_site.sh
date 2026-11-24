@@ -103,11 +103,13 @@ for p in "${pages[@]}"; do
   src="$SITE_SRC/${p}index.html"
   note=""
   if [ -f "$src" ]; then
-    if cmp -s "$out" "$src"; then note="matches repo"; else note="DIFFERS from repo"; fi
+    # deploy.sh stamps the commit into site/jawhar.css?v=... on the published copy; compare without it
+    norm() { sed -E 's#(site/jawhar\.css)\?v=[A-Za-z0-9]*#\1#g' "$1"; }
+    if cmp -s <(norm "$out") <(norm "$src"); then note="matches repo"; else note="DIFFERS from repo"; fi
   fi
   # And against what is actually on the web root, if we can see it.
   if [ -n "$SITE_ROOT" ] && [ -f "$SITE_ROOT/${p}index.html" ]; then
-    if cmp -s "$out" "$SITE_ROOT/${p}index.html"; then note="$note; matches web root"
+    if cmp -s <(norm "$out") <(norm "$SITE_ROOT/${p}index.html"); then note="$note; matches web root"
     else note="$note; DIFFERS from web root"; fi
   fi
 

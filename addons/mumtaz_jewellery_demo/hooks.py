@@ -268,6 +268,7 @@ def _align_demo_vat(env, products):
     manager would catch. The demo sets both to 5%; a real tenant's finance
     manager confirms the rate and the tax (docs/mumtaz-jewel/CLAUDE.md).
     """
+    # sudo: system parameter; only administrators may read ir.config_parameter
     params = env['ir.config_parameter'].sudo()
     params.set_param('mumtaz_jewellery.vat_rate', '5')
     Tax = env['account.tax']
@@ -575,6 +576,7 @@ def _seed_stores(env):
         second = W.create({'name': 'Boutique 2 (Abu Dhabi)', 'code': 'BTQ2', 'company_id': env.company.id})
         second.jewellery_store_limit_fine_g = 400.0
     out = {}
+    # sudo: demo seed hook at install time; synthetic data
     Transfer = env['jewellery.transfer'].sudo()
     presenter = env.ref('base.user_admin', raise_if_not_found=False)
     Transfer = Transfer.with_user(presenter) if presenter else Transfer
@@ -588,9 +590,11 @@ def _seed_stores(env):
             t2 = Transfer.create({'from_warehouse_id': first.id, 'to_warehouse_id': second.id,
                                   'lot_ids': [(6, 0, shelf[8:10].ids)], 'note': 'DEMO: on the road.'})
             t2.action_dispatch()
+            # sudo: demo seed hook at install time; synthetic data
             t2.sudo().write({'dispatched_at': fields.Datetime.now() - timedelta(days=3)})
             out['received'] = t1.name
             out['in_transit'] = t2.name
+    # sudo: demo seed hook at install time; synthetic data
     Recon = env['jewellery.gold.reconciliation'].sudo()
     today = fields.Date.context_today(env['res.partner'])
     if not Recon.search_count([('warehouse_id', '=', first.id), ('date', '=', today)]):
@@ -628,6 +632,7 @@ def _seed_client_app(env):
     parameter at 0 and a person gives the client her code."""
     if 'jewellery.client.session' not in env:
         return False
+    # sudo: system parameter; only administrators may read ir.config_parameter
     env['ir.config_parameter'].sudo().set_param('mumtaz_jewellery.client_code_echo', '1')
     # The first demo clients predate phones on the record; the app signs in
     # by phone, so give the one with purchases a synthetic number.
@@ -711,6 +716,7 @@ def _seed_kiosk(env):
 
 def post_init_hook(env):
     """Create the DEMO dataset once."""
+    # sudo: system parameter; only administrators may read ir.config_parameter
     parameters = env['ir.config_parameter'].sudo()
     if parameters.get_param(MARKER) == '1':
         top_up(env)

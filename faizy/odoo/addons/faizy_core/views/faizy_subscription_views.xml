@@ -40,6 +40,13 @@
                             invisible="state != 'paused'"/>
                     <button name="action_cancel" type="object" string="Cancel"
                             invisible="state in ('cancelled', 'draft')"/>
+                    <!-- Same code path as the nightly cron, so it advances the
+                         period exactly as a scheduled run would. That is a real
+                         consequence mid-month, hence the confirmation. -->
+                    <button name="action_bill_now" type="object" string="Bill Now"
+                            groups="faizy_core.group_faizy_ops"
+                            invisible="state not in ('trial', 'active', 'past_due')"
+                            confirm="This raises the invoice for the current period now and moves the billing period forward, exactly as the nightly run would. Continue?"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,trial,active"/>
                 </header>

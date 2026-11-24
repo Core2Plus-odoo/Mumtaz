@@ -93,6 +93,8 @@ class MediaRateCardLine(models.Model):
     rate_card_id = fields.Many2one(
         "media.rate.card", required=True, ondelete="cascade", index=True
     )
+    # Lines belong to their rate card's company; stored so record rules can read it.
+    company_id = fields.Many2one(related="rate_card_id.company_id", store=True, index=True)
     outlet_id = fields.Many2one("media.outlet", required=True)
     channel = fields.Selection(
         MEDIA_CHANNELS, related="outlet_id.channel", store=True

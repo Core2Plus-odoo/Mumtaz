@@ -11,8 +11,10 @@
           name="Mumtaz Portal Home Branding"
           priority="20">
 
-    <!-- ── Inject fonts (head may or may not exist depending on Odoo version) ── -->
-    <xpath expr="//link[last()]" position="after">
+    <!-- ── Fonts: portal_my_home has no <head> of its own (Odoo 19), so the
+         stylesheet link goes just above the branded header; a <link> in the
+         body is valid HTML5 and loads the same way. ── -->
+    <xpath expr="//div[hasclass('o_portal_my_home')]" position="before">
         <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&amp;display=swap" rel="stylesheet"/>
     </xpath>
 
@@ -32,8 +34,9 @@
         </div>
     </xpath>
 
-    <!-- ── Replace generic page-header title ── -->
-    <xpath expr="//h2[hasclass('page-header-title')]" position="replace">
+    <!-- ── Section title above the document cards (Odoo 19's portal home
+         has no page-header h2 to replace, so the heading is inserted) ── -->
+    <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
         <div class="mcp-section-header">
             <h2 class="page-header-title mcp-page-title">My Documents</h2>
             <p class="mcp-subtitle">Access your orders, invoices, and account information.</p>

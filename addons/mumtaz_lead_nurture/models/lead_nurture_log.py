@@ -10,6 +10,7 @@ class LeadNurtureLog(models.Model):
     _rec_name = "subject"
 
     lead_id = fields.Many2one("crm.lead", required=True, ondelete="cascade", index=True)
+    company_id = fields.Many2one(related="lead_id.company_id", store=True, index=True)
     campaign_id = fields.Many2one("lead.nurture.campaign", ondelete="set null")
     step_id = fields.Many2one("lead.nurture.step", ondelete="set null")
 

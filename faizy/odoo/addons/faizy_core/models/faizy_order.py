@@ -1,7 +1,23 @@
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
+
+# Fields a Faizy / Agent (customer care, without Operations) may still edit on
+# an order: the description, the notes, and the proof / receipt photos (care
+# often receives them on WhatsApp; faizy_pilot sends any new photo back to
+# Operations for review, so uploading one cannot complete or bill anything).
+# Everything that moves the job or its money is Operations' call (FAIZY HQ05
+# S1). The mail.thread bookkeeping field is included because posting an
+# attachment in the chatter writes it.
+AGENT_WRITABLE_ORDER_FIELDS = {
+    "description",
+    "completion_note",
+    "receipt_note",
+    "proof_image",
+    "receipt_image",
+    "message_main_attachment_id",
+}
 
 
 class FaizyOrder(models.Model):
@@ -32,6 +48,16 @@ class FaizyOrder(models.Model):
     )
     title = fields.Char(required=True, tracking=True)
     description = fields.Text()
+
+    # Sent by the request form (a hidden token) and by the mobile API. Submitting
+    # the same id twice returns the first order instead of creating a second one,
+    # so a double tap, a slow connection and a retry cannot file the same errand
+    # twice. Empty for orders created in the back office.
+    client_request_id = fields.Char(copy=False, index=True, readonly=True)
+    _client_request_unique = models.Constraint(
+        "UNIQUE(partner_id, client_request_id)",
+        "This request was already submitted.",
+    )
 
     partner_id = fields.Many2one(
         "res.partner", string="Customer", required=True, index=True, tracking=True
@@ -140,9 +166,38 @@ class FaizyOrder(models.Model):
     vendor_id = fields.Many2one(
         "res.partner",
         string="Vendor",
-        domain=[("supplier_rank", ">", 0)],
-        help="Set when a third party fulfils the order. Triggers commission.",
+        # Approved vendors only. The domain filters the dropdown; the
+        # constraint below is what actually enforces it, because a domain is
+        # advisory — it does nothing against an import, an automation or a
+        # write from code.
+        domain=[("is_faizy_vendor", "=", True), ("faizy_vendor_state", "=", "active")],
+        help="Set when a third party fulfils the order. Triggers commission. "
+        "Only approved vendors can be assigned.",
     )
+
+    @api.constrains("vendor_id")
+    def _check_vendor_approved(self):
+        """A customer's purchase value may only flow through an approved vendor.
+
+        Vendors arrive as prospects — a bulk import can create twenty of them
+        from a research list in one click. Without this, any of those could be
+        attached to a live order and start earning commission on a relationship
+        nobody had agreed to.
+        """
+        for order in self:
+            vendor = order.vendor_id
+            if vendor and vendor.faizy_vendor_state != "active":
+                raise ValidationError(
+                    self.env._(
+                        "%(vendor)s has not been approved as a Faizy vendor yet "
+                        "(currently %(state)s). Approve them under Network → "
+                        "Vendors before routing an order through them.",
+                        vendor=vendor.display_name,
+                        state=dict(
+                            vendor._fields["faizy_vendor_state"].selection
+                        ).get(vendor.faizy_vendor_state, vendor.faizy_vendor_state),
+                    )
+                )
     vendor_commission = fields.Monetary(
         compute="_compute_amounts",
         store=True,
@@ -171,6 +226,20 @@ class FaizyOrder(models.Model):
         max_height=1920,
         help="Photo captured by the Faizy on completion.",
     )
+    # The evidence behind purchase_value. The customer is charged what the
+    # shop charged plus a platform fee, so "we spent PKR 4,200 on her
+    # medicines" is a number they are entitled to see the paper for. Separate
+    # from proof_image: one shows the task was done, the other what it cost.
+    receipt_image = fields.Image(
+        string="Receipt",
+        max_width=1920,
+        max_height=1920,
+        help="Photo of the shop receipt or bill behind the purchase value.",
+    )
+    receipt_note = fields.Char(
+        string="Receipt Note",
+        help="What the receipt covers, when a task has more than one purchase.",
+    )
     completion_note = fields.Text()
     rating = fields.Selection(
         [("1", "1"), ("2", "2"), ("3", "3"), ("4", "4"), ("5", "5")],
@@ -189,7 +258,19 @@ class FaizyOrder(models.Model):
         for order in self:
             company = order.company_id or self.env.company
             platform_rate = company.faizy_platform_fee_rate
-            commission_rate = company.faizy_vendor_commission_rate
+
+            # A vendor may be on a negotiated rate — a partner clinic we take
+            # nothing from, a pharmacy that gives us more. The rate itself is
+            # deliberately NOT in @api.depends: changing a vendor's terms must
+            # not silently rewrite the commission on orders already delivered
+            # and reconciled. New orders pick up the new rate; old ones keep
+            # the figure they were actually computed with.
+            vendor = order.vendor_id
+            commission_rate = (
+                vendor.faizy_vendor_commission_rate
+                if vendor.faizy_vendor_custom_commission
+                else company.faizy_vendor_commission_rate
+            )
 
             order.platform_fee = order.currency_id.round(
                 order.purchase_value * platform_rate
@@ -209,10 +290,44 @@ class FaizyOrder(models.Model):
         "res.company", default=lambda self: self.env.company, required=True
     )
 
+    # ── Access guards (FAIZY HQ05 S1/S2) ─────────────────────────────────
+
+    def _faizy_is_ops(self):
+        """Operations (and Manager, which implies it), or a superuser call.
+
+        sudo() calls are trusted on purpose: approved AI drafts, crons and the
+        portal booking flow run as superuser after their own checks.
+        """
+        return self.env.su or self.env.user.has_group("faizy_core.group_faizy_ops")
+
+    def _check_order_action_rights(self):
+        if not self._faizy_is_ops():
+            raise AccessError(
+                self.env._(
+                    "Only Faizy Operations can move an order along (confirm, "
+                    "assign, start, complete, cancel or reset). Ask Operations, "
+                    "or note what is needed in the order's description."
+                )
+            )
+
+    def write(self, vals):
+        if not self._faizy_is_ops():
+            blocked = set(vals) - AGENT_WRITABLE_ORDER_FIELDS
+            if blocked:
+                raise AccessError(
+                    self.env._(
+                        "You can only edit the description and notes of an order. "
+                        "These fields are for Operations: %(fields)s",
+                        fields=", ".join(sorted(blocked)),
+                    )
+                )
+        return super().write(vals)
+
     # ── Workflow ─────────────────────────────────────────────────────────
 
     def action_assign(self):
         """Assign to a Faizy and notify both sides."""
+        self._check_order_action_rights()
         for order in self:
             if not order.worker_id:
                 raise UserError(
@@ -224,10 +339,14 @@ class FaizyOrder(models.Model):
             order._notify_whatsapp("faizy_assigned")
 
     def action_start(self):
+        self._check_order_action_rights()
         self.write({"state": "in_progress", "date_started": fields.Datetime.now()})
         self._notify_whatsapp("status_update")
 
     def action_complete(self):
+        # Evidence is checked by faizy_pilot's override, which runs before
+        # this one (HQ05 S2 is delivered there, see docs/00-decisions.md §16).
+        self._check_order_action_rights()
         for order in self:
             order.write(
                 {"state": "completed", "date_completed": fields.Datetime.now()}
@@ -236,10 +355,12 @@ class FaizyOrder(models.Model):
             order._notify_whatsapp("receipt")
 
     def action_cancel(self):
+        self._check_order_action_rights()
         self.write({"state": "cancelled"})
         self._notify_whatsapp("status_update")
 
     def action_reset_to_pending(self):
+        self._check_order_action_rights()
         self.write({"state": "pending", "worker_id": False, "date_assigned": False})
 
     def action_confirm(self):
@@ -249,6 +370,7 @@ class FaizyOrder(models.Model):
         live subscription, the booking is refused here rather than silently
         delivered for nothing.
         """
+        self._check_order_action_rights()
         for order in self:
             if order.consumed_activity or not order.service_id.consumes_activity:
                 order._notify_whatsapp("booking_confirmation")
@@ -297,7 +419,8 @@ class FaizyOrder(models.Model):
         """
         Queue = self.env["faizy.whatsapp.message"].sudo()
         for order in self:
-            if order.partner_id.mobile or order.partner_id.phone:
+            # res.partner.mobile does not exist in Odoo 19.
+            if order.partner_id.phone:
                 Queue.queue_message(
                     partner=order.partner_id,
                     message_type=message_type,

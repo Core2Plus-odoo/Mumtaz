@@ -9,11 +9,11 @@
 
 | Domain | Serves | Source | Web root / upstream |
 |---|---|---|---|
-| `mumtaz.digital` | Marketing website | `apps/website/` | `/var/www/mumtaz.digital` |
-| `app.mumtaz.digital` | Portal hub (login, dashboard, app toggles) | `apps/portal/` | `/var/www/app.mumtaz.digital` |
-| `marketplace.mumtaz.digital` | B2B marketplace + vendor portal | `apps/marketplace/` | `/var/www/marketplace.mumtaz.digital` |
+| `mumtaz.digital` | Marketing website | `sites/mumtaz.digital/site/` | `/var/www/mumtaz.digital` |
+| `app.mumtaz.digital` | Portal hub (login, dashboard, app toggles) | `sites/app.mumtaz.digital/portal/` | `/var/www/app.mumtaz.digital` |
+| `marketplace.mumtaz.digital` | B2B marketplace + vendor portal | `sites/marketplace.mumtaz.digital/storefront/` | `/var/www/marketplace.mumtaz.digital` |
 | `erp.mumtaz.digital` | Odoo ERP (per-tenant) | Odoo Community + `addons/` | proxy → `127.0.0.1:8069` (web), `:8072` (longpoll) |
-| `zaki.mumtaz.digital` | ZAKI AI landing | `apps/zaki/static/` | `/var/www/zaki.mumtaz.digital` |
+| `zaki.mumtaz.digital` | ZAKI AI landing | `sites/zaki.mumtaz.digital/static/` | `/var/www/zaki.mumtaz.digital` |
 | `admin.mumtaz.digital` | Control-plane (restricted) | Odoo backend | proxy → Odoo, customer routes blocked |
 
 The static sites are plain HTML/CSS/JS. The **platform API** is `zaki-server`

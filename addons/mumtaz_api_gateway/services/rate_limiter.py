@@ -4,6 +4,7 @@ from odoo.exceptions import AccessDenied
 
 def check_rate_limit(api_key):
     window_start = fields.Datetime.subtract(fields.Datetime.now(), minutes=1)
+    # sudo: append-only audit/log row; the acting user has no create right on the log
     count = api_key.env["mumtaz.api.usage.log"].sudo().search_count([
         ("api_key_id", "=", api_key.id),
         ("request_time", ">=", window_start),

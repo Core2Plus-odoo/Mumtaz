@@ -27,6 +27,9 @@ class LeadNurtureRule(models.Model):
 
     name = fields.Char(required=True)
     sequence = fields.Integer(default=10)
+    company_id = fields.Many2one(
+        "res.company", default=lambda self: self.env.company, index=True,
+        help="Leave empty to share this rule with every company of the database.")
     active = fields.Boolean(default=True)
 
     trigger_event = fields.Selection(TRIGGER_EVENTS, required=True)

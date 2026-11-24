@@ -12,5 +12,6 @@ class JawharClientStaffApi(Controller):
     def client_app(self, client_id, **kw):
         p = _get('res.partner', client_id)
         Session = request.env['jewellery.client.session']
+        # sudo: count of the client's open app sessions for the staff card
         open_sessions = Session.sudo().search_count([('partner_id', '=', p.id), ('token_digest', '!=', False), ('revoked', '=', False)])
         return {'codes': Session.pending_codes(p), 'open_sessions': open_sessions, 'phone': p.phone or None}

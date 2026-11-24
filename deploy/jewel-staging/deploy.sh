@@ -35,7 +35,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 PROJECT="mumtaz-jewel-staging"
-MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale,mumtaz_jewellery_crm,mumtaz_jewellery_ai,mumtaz_jewellery_kiosk,mumtaz_jewellery_api,mumtaz_jewellery_outreach,mumtaz_jewellery_aml,mumtaz_jewellery_stores,mumtaz_jewellery_channels,mumtaz_jewellery_client"
+MODULES="mumtaz_jewellery,mumtaz_jewellery_vip,mumtaz_jewellery_owner,mumtaz_jewellery_sale,mumtaz_jewellery_crm,mumtaz_jewellery_ai,mumtaz_jewellery_kiosk,mumtaz_jewellery_api,mumtaz_jewellery_outreach,mumtaz_jewellery_aml,mumtaz_jewellery_stores,mumtaz_jewellery_channels,mumtaz_jewellery_client,mumtaz_jewellery_website"
 SEED_MODULE="mumtaz_jewellery_demo"
 DEMO_DB="${DEMO_DB:-jewel_demo}"
 LANDING_SRC="$REPO_ROOT/website/jewel"
@@ -160,6 +160,10 @@ if [ -d "$LANDING_SRC" ]; then
     mkdir -p "$LANDING_DIR"
     if command -v rsync >/dev/null 2>&1; then
       rsync -a --delete "$LANDING_SRC/." "$LANDING_DIR/"
+      # /site/ is served with a 30-day immutable cache, so the stylesheet link carries
+      # the commit: a new deploy can never leave a browser on last week's CSS.
+      stamp="$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || date +%Y%m%d%H%M)"
+      find "$LANDING_DIR" -name index.html -exec sed -i "s#site/jawhar.css?v=[A-Za-z0-9]*#site/jawhar.css?v=$stamp#g" {} +
     else
       # No rsync: rebuild the directory so removed files do not linger.
       tmp="$(mktemp -d "${LANDING_DIR%/}.new.XXXXXX")"

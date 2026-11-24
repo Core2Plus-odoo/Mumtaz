@@ -1,4 +1,8 @@
+import re
+
 from odoo import api, fields, models
+
+SHOW_PRICES_PARAM = "faizy.show_plan_prices"
 
 
 class FaizyPlan(models.Model):
@@ -167,6 +171,28 @@ class FaizyPlan(models.Model):
         amount = float(amount or 0.0)
         return f"{amount:,.0f}" if amount.is_integer() else f"{amount:,.2f}"
 
+    @api.model
+    def prices_public(self):
+        """May plan prices and plan numbers be shown to the public?
+
+        No, until Umer approves them in writing (decision of 23 Nov 2026; the
+        figures in the plan data are guesses, never approved). A Manager sets
+        the system parameter `faizy.show_plan_prices` to "on" once he has, and
+        the website shows prices again without a code change. Anything other
+        than "on", including a missing parameter, means hidden.
+        """
+        value = self.env["ir.config_parameter"].sudo().get_param(SHOW_PRICES_PARAM)
+        return value == "on"
+
+    def public_features(self):
+        """The feature lines that may be shown. While prices are hidden, lines
+        that carry a number ("10 activities a month", "Up to 2 family members")
+        are hidden with them, because they come from the same unapproved plan."""
+        self.ensure_one()
+        if self.prices_public():
+            return self.feature_ids
+        return self.feature_ids.filtered(lambda f: not re.search(r"\d", f.name or ""))
+
     def price_display(self, currency):
         """The monthly price, formatted for the website."""
         self.ensure_one()
@@ -177,19 +203,35 @@ class FaizyPlan(models.Model):
         self.ensure_one()
         return self._money(self.overage_for(currency))
 
+    def default_currency(self):
+        """PKR — the currency Faizy prices in when nothing else applies.
+
+        Muhammad's call. The work is done in Pakistan and costed in rupees;
+        every other market price is a commercial decision made on top of that
+        one, not a conversion of it. So PKR is the base, and a visitor or a
+        customer we cannot place sees the rupee price rather than a Gulf price
+        that happens to be the company's reporting currency.
+
+        Falls back to the company currency only if PKR is somehow not on the
+        database — an empty recordset here would render prices as blanks.
+        """
+        self.ensure_one()
+        pkr = self.env.ref("base.PKR", raise_if_not_found=False)
+        return pkr or self.env.company.currency_id
+
     def market_currency(self, partner):
         """The currency to bill `partner` in.
 
-        Their country's currency when we publish a price in it, the company's
-        otherwise. A customer in a market we have not priced is billed in the
-        company currency rather than being quoted a converted number — and that
-        is the signal to go and publish a price for that market.
+        Their country's currency when we publish a price in it, PKR otherwise.
+        A customer in a market we have not priced is billed in rupees rather
+        than being quoted a converted number — and that is the signal to go and
+        publish a price for that market.
         """
         self.ensure_one()
         country_currency = partner.country_id.currency_id if partner else False
         if country_currency and self._published(country_currency):
             return country_currency
-        return self.env.company.currency_id
+        return self.default_currency()
 
     def action_view_subscriptions(self):
         self.ensure_one()

@@ -69,6 +69,7 @@ class ZakiBriefingLog(models.Model):
             emails = [e for e in emails if e]
             if not emails:
                 return
+            # sudo: mail record written by the business action on the user's behalf
             mail = self.env["mail.mail"].sudo().create({
                 "subject": f"ZAKI Morning Briefing — {fields.Date.today().strftime('%d %b %Y')}",
                 "body_html": body,
@@ -76,12 +77,14 @@ class ZakiBriefingLog(models.Model):
                 "auto_delete": True,
             })
             mail.send()
+            # sudo: append-only briefing log row
             self.sudo().create({
                 "company_id": cfg.company_id.id,
                 "recipient_count": len(emails),
                 "status": "sent",
             })
         except Exception as exc:
+            # sudo: append-only briefing log row
             self.sudo().create({
                 "company_id": cfg.company_id.id,
                 "recipient_count": 0,

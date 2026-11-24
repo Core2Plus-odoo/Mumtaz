@@ -135,4 +135,5 @@ class ResConfigSettings(models.TransientModel):
                 s.write(vals)
             else:
                 vals["company_id"] = self.env.company.id
+                # sudo: platform settings singleton owned by the administrator
                 self.env["mumtaz.core.settings"].sudo().create(vals)

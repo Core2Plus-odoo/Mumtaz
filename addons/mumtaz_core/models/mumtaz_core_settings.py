@@ -188,6 +188,7 @@ class MumtazCoreSettings(models.Model):
         from datetime import datetime, timedelta
         cutoff = fields.Datetime.to_string(datetime.now() - timedelta(days=30))
         for rec in self:
+            # sudo: append-only audit/log row; the acting user has no create right on the log
             logs = self.env["mumtaz.core.log"].sudo().search(
                 [("company_id", "=", rec.company_id.id)]
             )
@@ -237,6 +238,7 @@ class MumtazCoreSettings(models.Model):
             )
             resp.raise_for_status()
             payload = resp.json()
+            # sudo: platform settings singleton owned by the administrator
             self.sudo()._apply_platform_credentials(payload)
             return {
                 "type": "ir.actions.client",
@@ -249,18 +251,21 @@ class MumtazCoreSettings(models.Model):
                 },
             }
         except requests.exceptions.Timeout:
+            # sudo: platform settings singleton owned by the administrator
             self.sudo().write({
                 "platform_sync_status": "error",
                 "platform_last_sync": fields.Datetime.now(),
             })
             raise UserError("Platform sync timed out. Check that app.mumtaz.digital is reachable.")
         except requests.exceptions.HTTPError as exc:
+            # sudo: platform settings singleton owned by the administrator
             self.sudo().write({
                 "platform_sync_status": "error",
                 "platform_last_sync": fields.Datetime.now(),
             })
             raise UserError(f"Platform returned HTTP {exc.response.status_code}. Check your Platform Token.")
         except Exception:
+            # sudo: platform settings singleton owned by the administrator
             self.sudo().write({
                 "platform_sync_status": "error",
                 "platform_last_sync": fields.Datetime.now(),

@@ -25,11 +25,17 @@ const ICONS = {
   channels: 'M4 12a8 8 0 0116 0M8 12a4 4 0 018 0M12 12v8M9 20h6',
 };
 
+type Theme = 'light' | 'dark';
+function readTheme(): Theme { try { return localStorage.getItem('jawhar_theme') === 'dark' ? 'dark' : 'light'; } catch { return 'light'; } }
+export function applyTheme(theme: Theme) { document.documentElement.setAttribute('data-theme', theme); }
 function readCollapsed() { try { return localStorage.getItem('jawhar_nav') === 'collapsed'; } catch { return false; } }
 
 export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rate | null; onSignOut: () => void }) {
   const { t, lang, setLang } = useT();
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  useEffect(() => { applyTheme(theme); }, [theme]);
+  const toggleTheme = () => { const n: Theme = theme === 'dark' ? 'light' : 'dark'; setTheme(n); try { localStorage.setItem('jawhar_theme', n); } catch { /* fine */ } };
   const [chatOpen, setChatOpen] = useState(false);
   const [agent, setAgent] = useState<AgentKey>('zayan');
   const [voiceIds, setVoiceIds] = useState<Record<string, string>>({});
@@ -76,6 +82,7 @@ export default function Shell({ user, rate, onSignOut }: { user: User; rate: Rat
         <div className="railfoot">
           <div className="navl">{user.name}<br /><span style={{ color: '#4B5A6C' }}>{user.roles.join(' · ') || '—'}</span></div>
           <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}>{collapsed ? (lang === 'en' ? 'ع' : 'EN') : t('language')}</button>
+          <button onClick={toggleTheme} aria-pressed={theme === 'dark'} title={theme === 'dark' ? t('theme_light') : t('theme_dark')}>{collapsed ? (theme === 'dark' ? '☀' : '☾') : (theme === 'dark' ? t('theme_light') : t('theme_dark'))}</button>
           <button onClick={onSignOut} className="navl">{t('sign_out')}</button>
         </div>
       </nav>

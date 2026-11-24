@@ -11,6 +11,7 @@ class SaleOrder(models.Model):
 
     @api.depends("order_line", "order_line.product_id")
     def _compute_marketplace_demand_count(self):
+        # sudo: listing or inquiry looked up when an order is created from the marketplace; the buyer cannot read the seller's record
         Inquiry = self.env["mumtaz.marketplace.inquiry"].sudo()
         for order in self:
             order.marketplace_demand_count = Inquiry.search_count(
@@ -30,6 +31,7 @@ class SaleOrder(models.Model):
                 ("category_id", "in", mkt_categ_ids),
             ]
 
+        # sudo: listing or inquiry looked up when an order is created from the marketplace; the buyer cannot read the seller's record
         matching_listings = self.env["mumtaz.marketplace.listing"].sudo().search(listing_domain)
         return [
             ("listing_id", "in", matching_listings.ids),

@@ -54,6 +54,7 @@ def _build_crm_lead(vals: dict, lead_type: str) -> dict:
         'description': "\n".join(description_lines),
         'type': 'lead',
         'tag_ids': [],
+        # sudo: public website form creates a lead, as website_crm does; fixed fields only
         'source_id': request.env['utm.source'].sudo().search([('name', '=', 'Website')], limit=1).id or False,
     }
 
@@ -85,8 +86,10 @@ class MumtazApiV1(http.Controller):
             vals = _build_crm_lead(kw, 'Demo Request')
 
             # Tag the lead as a demo request
+            # sudo: public website form creates a lead, as website_crm does; fixed fields only
             tag = request.env['crm.tag'].sudo().search([('name', 'ilike', 'Demo')], limit=1)
             if not tag:
+                # sudo: public website form creates a lead, as website_crm does; fixed fields only
                 tag = request.env['crm.tag'].sudo().create({'name': 'Demo Request'})
             vals['tag_ids'] = [(4, tag.id)]
 
@@ -98,15 +101,18 @@ class MumtazApiV1(http.Controller):
             else:
                 vals['priority'] = '1'   # normal
 
+            # sudo: public website form creates a lead, as website_crm does; fixed fields only
             lead = request.env['crm.lead'].sudo().create(vals)
             _logger.info("Demo request lead created: %s (id=%s)", lead.name, lead.id)
 
             # Enroll in nurture campaign if available
             try:
+                # sudo: public website form creates a lead, as website_crm does; fixed fields only
                 campaign = request.env['lead.nurture.campaign'].sudo().search(
                     [('active', '=', True)], limit=1
                 )
                 if campaign and hasattr(lead, 'nurture_campaign_id'):
+                    # sudo: public website form creates a lead, as website_crm does; fixed fields only
                     lead.sudo().write({
                         'nurture_campaign_id': campaign.id,
                         'nurture_stage': 'enrolled',
@@ -127,11 +133,14 @@ class MumtazApiV1(http.Controller):
             vals = _build_crm_lead(kw, 'Contact Form')
             vals['priority'] = '0'
 
+            # sudo: public website form creates a lead, as website_crm does; fixed fields only
             tag = request.env['crm.tag'].sudo().search([('name', 'ilike', 'Website Contact')], limit=1)
             if not tag:
+                # sudo: public website form creates a lead, as website_crm does; fixed fields only
                 tag = request.env['crm.tag'].sudo().create({'name': 'Website Contact'})
             vals['tag_ids'] = [(4, tag.id)]
 
+            # sudo: public website form creates a lead, as website_crm does; fixed fields only
             lead = request.env['crm.lead'].sudo().create(vals)
             _logger.info("Contact lead created: %s (id=%s)", lead.name, lead.id)
             return _cors_response({'success': True, 'lead_id': lead.id, 'message': 'Message received.'})

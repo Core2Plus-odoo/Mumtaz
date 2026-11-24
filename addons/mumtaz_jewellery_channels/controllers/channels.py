@@ -88,6 +88,7 @@ class JawharChannelsApi(Controller):
         t = _get('product.template', tmpl_id)
         # A jewellery manager decides what is on the web shelf; the product
         # model's own create/write groups are not the question here.
+        # sudo: publication flag on the design; manager checked just above
         t.sudo().jewellery_published = bool(_body().get('published'))
         return {'id': t.id, 'published': t.jewellery_published}
 

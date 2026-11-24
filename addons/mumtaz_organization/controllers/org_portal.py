@@ -10,6 +10,7 @@ class OrgPortalController(http.Controller):
     # ── Public org profile ─────────────────────────────────────────
     @http.route("/org/<slug>", auth="public", website=True, methods=["GET"])
     def org_profile(self, slug, **kwargs):
+        # sudo: public organisation page and signup keyed by slug; signup row created after validation
         org = request.env["mumtaz.organization"].sudo().search(
             [("slug", "=", slug), ("is_public", "=", True), ("state", "=", "active")],
             limit=1,
@@ -21,12 +22,14 @@ class OrgPortalController(http.Controller):
     # ── SME signup form (GET) ──────────────────────────────────────
     @http.route("/org/<slug>/join", auth="public", website=True, methods=["GET"])
     def org_join(self, slug, **kwargs):
+        # sudo: public organisation page and signup keyed by slug; signup row created after validation
         org = request.env["mumtaz.organization"].sudo().search(
             [("slug", "=", slug), ("is_public", "=", True), ("state", "=", "active")],
             limit=1,
         )
         if not org:
             return request.not_found()
+        # sudo: country list for a public form; reference data
         countries = request.env["res.country"].sudo().search([])
         return request.render("mumtaz_organization.org_join", {
             "org": org,
@@ -37,6 +40,7 @@ class OrgPortalController(http.Controller):
     # ── SME signup form (POST) ─────────────────────────────────────
     @http.route("/org/<slug>/join", auth="public", website=True, methods=["POST"], csrf=True)
     def org_join_submit(self, slug, **kwargs):
+        # sudo: public organisation page and signup keyed by slug; signup row created after validation
         org = request.env["mumtaz.organization"].sudo().search(
             [("slug", "=", slug), ("is_public", "=", True), ("state", "=", "active")],
             limit=1,
@@ -54,6 +58,7 @@ class OrgPortalController(http.Controller):
         message      = (kwargs.get("message") or "").strip()
 
         if not company_name or not contact_name or not email:
+            # sudo: country list for a public form; reference data
             countries = request.env["res.country"].sudo().search([])
             return request.render("mumtaz_organization.org_join", {
                 "org": org,
@@ -63,6 +68,7 @@ class OrgPortalController(http.Controller):
             })
 
         try:
+            # sudo: public organisation page and signup keyed by slug; signup row created after validation
             request.env["mumtaz.sme.signup"].sudo().create({
                 "org_id": org.id,
                 "company_name": company_name,
@@ -76,6 +82,7 @@ class OrgPortalController(http.Controller):
             })
         except Exception:
             _log.exception("SME signup failed for org=%s email=%s", slug, email)
+            # sudo: country list for a public form; reference data
             countries = request.env["res.country"].sudo().search([])
             return request.render("mumtaz_organization.org_join", {
                 "org": org,
@@ -89,6 +96,7 @@ class OrgPortalController(http.Controller):
     # ── General SME registration landing ──────────────────────────
     @http.route("/org/register", auth="public", website=True, methods=["GET"])
     def org_register(self, **kwargs):
+        # sudo: public organisation page and signup keyed by slug; signup row created after validation
         orgs = request.env["mumtaz.organization"].sudo().search(
             [("is_public", "=", True), ("state", "=", "active")],
             order="name",

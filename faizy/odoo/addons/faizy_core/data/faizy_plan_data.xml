@@ -43,14 +43,16 @@
     <record id="plan_lite" model="faizy.plan">
         <field name="name">Lite</field>
         <field name="code">lite</field>
-        <field name="currency_id" ref="base.AED"/>
+        <field name="currency_id" ref="base.PKR"/>
         <field name="sequence">10</field>
-        <field name="price">26.50</field>
+        <field name="price">1999</field>
         <field name="activities_included">10</field>
-        <field name="overage_price">4.00</field>
+        <field name="overage_price">300</field>
         <field name="overage_price_pkr">300</field>
         <field name="max_family_members">2</field>
         <field name="description">Essential support for one or two people back home.</field>
+        <field name="product_id" ref="product_plan_lite"/>
+        <field name="overage_product_id" ref="product_overage_activity"/>
     </record>
 
     <record id="plan_lite_f1" model="faizy.plan.feature">
@@ -77,14 +79,16 @@
     <record id="plan_standard" model="faizy.plan">
         <field name="name">Standard</field>
         <field name="code">standard</field>
-        <field name="currency_id" ref="base.AED"/>
+        <field name="currency_id" ref="base.PKR"/>
         <field name="sequence">20</field>
-        <field name="price">66.20</field>
+        <field name="price">4999</field>
         <field name="activities_included">30</field>
-        <field name="overage_price">3.50</field>
+        <field name="overage_price">250</field>
         <field name="overage_price_pkr">250</field>
         <field name="max_family_members">5</field>
         <field name="description">Everything your family needs — every month.</field>
+        <field name="product_id" ref="product_plan_standard"/>
+        <field name="overage_product_id" ref="product_overage_activity"/>
     </record>
 
     <record id="plan_standard_f1" model="faizy.plan.feature">
@@ -111,14 +115,16 @@
     <record id="plan_family_pro" model="faizy.plan">
         <field name="name">Family Pro</field>
         <field name="code">family_pro</field>
-        <field name="currency_id" ref="base.AED"/>
+        <field name="currency_id" ref="base.PKR"/>
         <field name="sequence">30</field>
-        <field name="price">119.20</field>
+        <field name="price">8999</field>
         <field name="activities_included">60</field>
-        <field name="overage_price">2.75</field>
+        <field name="overage_price">200</field>
         <field name="overage_price_pkr">200</field>
         <field name="max_family_members">10</field>
         <field name="description">Peace of mind for large families.</field>
+        <field name="product_id" ref="product_plan_family_pro"/>
+        <field name="overage_product_id" ref="product_overage_activity"/>
     </record>
 
     <record id="plan_family_pro_f1" model="faizy.plan.feature">

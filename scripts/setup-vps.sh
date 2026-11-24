@@ -166,13 +166,13 @@ echo "→ PM2 ecosystem written to /opt/mumtaz-pm2.config.js"
 echo "→ Deploying portal static files…"
 rsync -a --delete \
     --exclude='nginx.conf' --exclude='deploy.sh' --exclude='*.sh' \
-    "$REPO_DIR/apps/portal/" "$PORTAL_DIR/"
+    "$REPO_DIR/sites/app.mumtaz.digital/portal/" "$PORTAL_DIR/"
 chown -R www-data:www-data "$PORTAL_DIR"
 
 # ── 11. Nginx ─────────────────────────────────────────────────────────
 echo "→ Installing nginx config…"
 NGINX_CONF="/etc/nginx/sites-available/app.mumtaz.digital"
-cp "$REPO_DIR/apps/portal/nginx.conf" "$NGINX_CONF"
+cp "$REPO_DIR/sites/app.mumtaz.digital/portal/nginx.conf" "$NGINX_CONF"
 ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/app.mumtaz.digital"
 nginx -t && systemctl reload nginx
 
@@ -187,7 +187,7 @@ echo "*/10 * * * * root DB_PATH=/opt/zaki-server/users.db bash $REPO_DIR/scripts
 
 # ── 14. Odoo addons path ─────────────────────────────────────────────
 echo "→ Deploying addons & patching odoo.conf…"
-bash "$REPO_DIR/apps/addons/deploy.sh"
+bash "$REPO_DIR/ops/addons-deploy/deploy.sh"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

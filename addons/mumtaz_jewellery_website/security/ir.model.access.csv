@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_demo_request_sales,demo request salesperson,model_jewellery_demo_request,sales_team.group_sale_salesman,1,1,0,0
+access_demo_request_mgr,demo request manager,model_jewellery_demo_request,sales_team.group_sale_manager,1,1,1,1

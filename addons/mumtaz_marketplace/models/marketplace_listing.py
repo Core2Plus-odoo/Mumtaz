@@ -95,6 +95,7 @@ class MumtazMarketplaceListing(models.Model):
                 rec.marketplace_feature_enabled = True
                 rec.marketplace_feature_note = False
                 continue
+            # sudo: entitlement lookup on control-plane models tenant users may not read
             access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
                 rec.company_id,
                 "marketplace_access",
@@ -109,6 +110,7 @@ class MumtazMarketplaceListing(models.Model):
         if "mumtaz.feature.access.service" not in self.env:
             return
         for rec in self:
+            # sudo: entitlement lookup on control-plane models tenant users may not read
             access = self.env["mumtaz.feature.access.service"].sudo().resolve_company_feature_access(
                 rec.company_id,
                 "marketplace_access",

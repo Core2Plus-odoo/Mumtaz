@@ -20,6 +20,7 @@ class ResCompany(models.Model):
 
     def _compute_mumtaz_org_id(self):
         for company in self:
+            # sudo: organisation to company binding written by the provisioning action
             org = self.env["mumtaz.org"].sudo().search(
                 [("company_id", "=", company.id)], limit=1
             )

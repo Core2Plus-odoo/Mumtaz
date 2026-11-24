@@ -67,7 +67,9 @@ class RateFeed(models.Model):
         """Read the provider and enter a draft, or log why not. Never
         approves, never raises out of a cron."""
         self.ensure_one()
+        # sudo: append-only audit/log row; the acting user has no create right on the log
         Log = self.env['jewellery.rate.feed.log'].sudo()
+        # sudo: hourly feed cron: writes its log and a draft rate that a person approves
         Rate = self.env['jewellery.gold.rate'].sudo()
         now = fields.Datetime.now()
         try:
@@ -75,6 +77,7 @@ class RateFeed(models.Model):
             per_g = round(self._to_per_gram(raw), 4)
         except (UserError, requests.RequestException, ValueError, KeyError, IndexError, TypeError) as exc:
             msg = str(exc)[:200]
+            # sudo: hourly feed cron: writes its log and a draft rate that a person approves
             self.sudo().write({'last_fetched_at': now, 'last_error': msg})
             Log.create({'feed_id': self.id, 'error': msg})
             return {'ok': False, 'error': msg, 'rate': None}
@@ -95,6 +98,7 @@ class RateFeed(models.Model):
                 'rate_per_gram': per_g, 'source': 'feed', 'company_id': self.company_id.id,
                 'currency_id': self.company_id.currency_id.id, 'effective_at': now,
             })
+        # sudo: hourly feed cron: writes its log and a draft rate that a person approves
         self.sudo().write({'last_fetched_at': now, 'last_value': per_g, 'last_error': False,
                            'last_rate_id': rate.id if rate else self.last_rate_id.id})
         Log.create({'feed_id': self.id, 'raw_value': raw, 'rate_per_gram': per_g, 'rate_id': rate.id if rate else False, 'note': reason})
@@ -102,6 +106,7 @@ class RateFeed(models.Model):
 
     @api.model
     def _cron_fetch(self):
+        # sudo: hourly feed cron: writes its log and a draft rate that a person approves
         for feed in self.sudo().search([('active', '=', True)]):
             try:
                 feed.with_company(feed.company_id).action_fetch()

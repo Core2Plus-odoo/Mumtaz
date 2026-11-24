@@ -194,6 +194,7 @@ class ProjectProject(models.Model):
         self.ensure_one()
         if self.c2p_layer != "portfolio":
             return self.browse()
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         return self.sudo().c2p_counterpart_id
 
     def _c2p_milestones(self):
@@ -269,15 +270,16 @@ class ProjectProject(models.Model):
                 lambda m: (m.stage_id.name or "").strip().lower() != PORTFOLIO_DONE)
             project.current_milestone_id = open_ms[:1].id if open_ms else False
             dated = open_ms.filtered("date_deadline").sorted("date_deadline")
-            project.next_milestone_date = dated[:1].date_deadline if dated else False
+            project.next_milestone_date = dated[:1]._c2p_deadline_date() if dated else False
             project.overdue_milestones_count = len(dated.filtered(
-                lambda m: m.date_deadline < today))
+                lambda m: m._c2p_deadline_date() < today))
 
     @api.depends("c2p_counterpart_id")
     def _compute_delivery_activity(self):
         """Aggregate the delivery side. Reads with sudo because delivery is in
         another company, and returns only counts and a timestamp."""
         today = fields.Date.context_today(self)
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         Task = self.env["project.task"].sudo()
         for project in self:
             delivery = project._c2p_delivery_project() if project.id else project.browse()
@@ -296,11 +298,12 @@ class ProjectProject(models.Model):
             project.open_blockers_count = len(
                 tasks.filtered(lambda t: t._is_waiting_on_client()))
             project.overdue_tasks_count = len(tasks.filtered(
-                lambda t: t.date_deadline and t.date_deadline < today
+                lambda t: t.date_deadline and t._c2p_deadline_date() < today
                 and not t._is_done_stage()))
 
     def _c2p_thresholds(self):
         """Health thresholds from Settings, falling back to the defaults."""
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env["ir.config_parameter"].sudo()
         out = {}
         for key, default in DEFAULT_THRESHOLDS.items():
@@ -330,7 +333,7 @@ class ProjectProject(models.Model):
 
             worst_overdue = 0
             for m in open_ms.filtered("date_deadline"):
-                worst_overdue = max(worst_overdue, (today - m.date_deadline).days)
+                worst_overdue = max(worst_overdue, (today - m._c2p_deadline_date()).days)
             if worst_overdue > th["red_milestone_overdue_days"]:
                 red.append(_("A milestone is %s days overdue.") % worst_overdue)
             elif worst_overdue >= 1:
@@ -363,6 +366,7 @@ class ProjectProject(models.Model):
             # Read commercials with sudo: the health of a project is visible to
             # the Delivery Lead even though the figures behind it are not, so
             # the reason text deliberately states no amounts.
+            # sudo: commercials read for the stored margin; the fields themselves carry groups=
             money = project.sudo()
             if money.commercials_missing:
                 amber.append(_("Commercials are missing."))
@@ -386,6 +390,22 @@ class ProjectProject(models.Model):
             # Each red factor costs 20, each amber 8, floored at zero.
             project.health_score = max(0, 100 - 20 * len(red) - 8 * len(amber))
 
+    def _c2p_touch_portfolio_health(self):
+        """Mark the counterpart portfolio's delivery-derived fields for
+        recomputation. Called from the delivery side when a task changes in a
+        way the portfolio reports on (stage, blocker age, deadline)."""
+        portfolios = self.browse()
+        # sudo: delivery company read across the counterpart link; only marks fields for recomputation
+        for project in self.sudo():
+            portfolio = project.c2p_counterpart_id if project.c2p_layer == "delivery" else project
+            if portfolio and portfolio.c2p_layer == "portfolio":
+                portfolios |= portfolio
+        if not portfolios:
+            return
+        for fname in ("last_activity_date", "days_since_activity", "open_blockers_count",
+                      "overdue_tasks_count", "rag_status", "rag_reasons", "health_score"):
+            self.env.add_to_compute(portfolios._fields[fname], portfolios)
+
     def _c2p_oldest_blocker_days(self):
         """Age in days of the longest-standing client blocker on the delivery
         side, or 0. Sudo read, count only."""
@@ -394,6 +414,7 @@ class ProjectProject(models.Model):
         if not delivery:
             return 0
         today = fields.Date.context_today(self)
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         tasks = self.env["project.task"].sudo().search(
             [("project_id", "=", delivery.id), ("waiting_since", "!=", False)])
         ages = [(today - t.waiting_since).days for t in tasks
@@ -420,11 +441,13 @@ class ProjectProject(models.Model):
         """
         changed = 0
         History = self.env["c2p.milestone.history"]
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         Task = self.env["project.task"].sudo()
 
         for project in self:
             portfolio = project
             if project.c2p_layer == "delivery":
+                # sudo: delivery company read across the counterpart link; counts, dates and stage names only
                 portfolio = project.sudo().c2p_counterpart_id
             if not portfolio or portfolio.c2p_layer != "portfolio":
                 continue
@@ -432,6 +455,7 @@ class ProjectProject(models.Model):
             for milestone in portfolio._c2p_milestones():
                 if milestone.sync_locked or not milestone.delivery_milestone_id:
                     continue
+                # sudo: delivery company read across the counterpart link; counts, dates and stage names only
                 dm = milestone.delivery_milestone_id.sudo()
                 tasks = Task.search([("milestone_id", "=", dm.id)])
                 counts = {
@@ -441,13 +465,13 @@ class ProjectProject(models.Model):
                 counts["open"] = len(tasks) - counts["done"]
 
                 old_stage = milestone.stage_id
-                old_deadline = milestone.date_deadline
+                old_deadline = milestone._c2p_deadline_date()
                 vals = {}
 
                 # Deadline: only propagate a real date. The delivery milestones
                 # currently carry no deadlines, and blanking the portfolio side
                 # would destroy the baseline comparison.
-                if dm.deadline and dm.deadline != milestone.date_deadline:
+                if dm.deadline and dm.deadline != milestone._c2p_deadline_date():
                     vals["date_deadline"] = dm.deadline
                     if not milestone.baseline_deadline:
                         vals["baseline_deadline"] = dm.deadline
@@ -514,6 +538,7 @@ class ProjectProject(models.Model):
         error — the count on the button is the aggregate they are entitled to.
         """
         self.ensure_one()
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         delivery = self.sudo().c2p_counterpart_id
         return {
             "type": "ir.actions.act_window",
@@ -548,6 +573,7 @@ class ProjectProject(models.Model):
 
     def action_c2p_open_counterpart(self):
         self.ensure_one()
+        # sudo: delivery company read across the counterpart link; counts, dates and stage names only
         counterpart = self.sudo().c2p_counterpart_id
         if not counterpart:
             raise UserError(_("This project has no counterpart linked."))

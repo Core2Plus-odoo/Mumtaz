@@ -31,6 +31,7 @@ class MumtazStripeCard(http.Controller):
             return Response("Tenant not found", status=404)
 
         client = request.env["mumtaz.stripe.client"]
+        # sudo: card page gated by _user_allowed(); tenant customer state
         settings = request.env["mumtaz.stripe.settings"].sudo().get_singleton()
         pk = settings.publishable_key or ""
         if not client._is_configured() or not pk:
@@ -39,6 +40,7 @@ class MumtazStripeCard(http.Controller):
             ), headers=[("Content-Type", "text/html")])
 
         try:
+            # sudo: card page gated by _user_allowed(); tenant customer state
             customer_id = tenant.sudo()._ensure_stripe_customer()
             intent = client.create_setup_intent(customer_id)
         except StripeError as exc:
@@ -64,10 +66,12 @@ class MumtazStripeCard(http.Controller):
         if not tenant.exists() or not setup_intent_id:
             return Response(json.dumps({"error": "bad request"}), status=400,
                             content_type="application/json")
+        # sudo: card page gated by _user_allowed(); tenant customer state
         client = request.env["mumtaz.stripe.client"].sudo()
         try:
             si = client._request("GET", f"setup_intents/{setup_intent_id}")
             # Verify the setup intent belongs to this tenant's Stripe customer.
+            # sudo: card page gated by _user_allowed(); tenant customer state
             tenant_customer = tenant.sudo().stripe_customer_id
             if not tenant_customer or si.get("customer") != tenant_customer:
                 _logger.warning(
@@ -86,6 +90,7 @@ class MumtazStripeCard(http.Controller):
                 card = pm.get("card")
             except Exception:  # noqa: BLE001 - card detail is best-effort
                 card = None
+            # sudo: card page gated by _user_allowed(); tenant customer state
             tenant.sudo()._set_default_payment_method(pm_id, card=card)
         except StripeError as exc:
             _logger.warning("Card confirm failed for tenant %s: %s",

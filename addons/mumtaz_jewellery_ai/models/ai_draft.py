@@ -67,6 +67,7 @@ class AiDraft(models.Model):
             d.expired = d.state == 'pending' and bool(d.expires_at) and d.expires_at < now
 
     def _days(self):
+        # sudo: system parameter; only administrators may read ir.config_parameter
         param = self.env['ir.config_parameter'].sudo().get_param('mumtaz_jewellery.ai_draft_days')
         try:
             return max(1, int(param))
