@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_c2p_plan_change" model="ir.sequence">
+            <field name="name">C2P Plan Change</field>
+            <field name="code">c2p.plan.change</field>
+            <field name="prefix">PC-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

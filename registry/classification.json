@@ -332,6 +332,16 @@
       "layer": "internal",
       "disposition": "keep",
       "note": "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
+    },
+    "c2p_client_onboarding": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Not installed anywhere yet."
+    },
+    "c2p_plan_control": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. Plan-change proposals and audit on delivery tasks and milestones; scope changes route to c2p.change.request. Not installed anywhere yet."
     }
   }
 }

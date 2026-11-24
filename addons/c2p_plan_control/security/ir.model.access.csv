@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_plan_change_contributor,c2p.plan.change contributor,model_c2p_plan_change,project.group_project_user,1,0,1,0
+access_plan_change_lead,c2p.plan.change lead,model_c2p_plan_change,c2p_project_tracker.group_c2p_delivery_lead,1,1,1,0
+access_plan_change_manager,c2p.plan.change manager,model_c2p_plan_change,c2p_project_tracker.group_c2p_portfolio_manager,1,1,1,0

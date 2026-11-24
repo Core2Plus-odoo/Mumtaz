@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_c2p_clients" name="Clients"
+              parent="c2p_project_tracker.menu_c2p_root" sequence="15"
+              groups="c2p_project_tracker.group_c2p_delivery_member"/>
+    <menuitem id="menu_c2p_client_master" name="Client Overview"
+              parent="menu_c2p_clients" action="action_c2p_client_master" sequence="10"/>
+    <menuitem id="menu_c2p_onboarding_check" name="Onboarding Checklist"
+              parent="menu_c2p_clients" action="action_c2p_onboarding_check" sequence="20"/>
+    <menuitem id="menu_c2p_missing_client_data" name="Missing Client Data"
+              parent="menu_c2p_clients" action="action_c2p_missing_client_data" sequence="25"/>
+    <menuitem id="menu_c2p_client_instance" name="Instance Inventory"
+              parent="menu_c2p_clients" action="action_c2p_client_instance" sequence="30"/>
+    <menuitem id="menu_c2p_client_document" name="Required Documents"
+              parent="menu_c2p_clients" action="action_c2p_client_document" sequence="40"/>
+    <menuitem id="menu_c2p_client_access" name="Access Register"
+              parent="menu_c2p_clients" action="action_c2p_client_access" sequence="50"/>
+</odoo>

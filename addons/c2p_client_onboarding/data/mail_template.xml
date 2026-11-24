@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- A draft. It is only ever opened in the composer for a person to
+             review; no automation sends it. -->
+        <record id="mail_template_c2p_welcome" model="mail.template">
+            <field name="name">C2P: Client welcome (draft for review)</field>
+            <field name="model_id" ref="project.model_project_project"/>
+            <field name="subject">Welcome — {{ object.partner_id.commercial_partner_id.name }} and C2P: getting started</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+<div>
+    <p>Dear <t t-out="object.partner_id.commercial_partner_id.c2p_legal_name or object.partner_id.commercial_partner_id.name"/> team,</p>
+    <p>Thank you for choosing C2P. This note confirms how we will start work together on
+       <strong t-out="object.name"/>.</p>
+    <p><strong>Your C2P contacts</strong><br/>
+       Account manager: <t t-out="object.account_manager_id.name or ''"/><br/>
+       Delivery project manager: <t t-out="object.c2p_delivery_lead_id.name or ''"/></p>
+    <p><strong>Agreed scope</strong> (reference <t t-out="object.c2p_scope_reference or ''"/><t t-if="object.c2p_scope_version">, version <t t-out="object.c2p_scope_version"/></t>)<br/>
+       <t t-out="object.c2p_scope_summary or ''"/></p>
+    <p><strong>Not included</strong><br/><t t-out="object.c2p_scope_exclusions or ''"/></p>
+    <p>We will be in touch to arrange the kickoff meeting and to share the list of information we need from you.</p>
+    <p>Kind regards,<br/><t t-out="user.name"/></p>
+</div>
+            </field>
+        </record>
+    </data>
+</odoo>

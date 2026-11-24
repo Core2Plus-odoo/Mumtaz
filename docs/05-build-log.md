@@ -86,3 +86,30 @@ was failing because `website/` was missing — now green).
 - Verified: JS syntax; all three CI-required files present; Playwright headless
   render (hero, both products, four segments, all sections visible) — no page
   errors.
+
+### Client master record, onboarding checklist and plan control (24 Nov 2026) — built, not installed
+Two new addons on top of the existing partner and the Consultants–Solutions
+project pair. No client, engagement or project model; no project-creation
+automation.
+- **`c2p_client_onboarding`** — Client Overview page on `res.partner`
+  (contacts with roles, engagements with scope/staff/onboarding, milestones,
+  instance inventory, required documents, access register, a "next required
+  action" line). Scope fields and a nine-item onboarding checklist on the
+  portfolio project, each item with owner, due date, evidence and what a gap
+  blocks. Access register stores `vault://collection/item` references only;
+  text that looks like a secret is refused. Welcome email is drafted into the
+  standard composer and sent by a person.
+- **`c2p_plan_control`** — contributors propose plan changes; the delivery owner
+  approves in-scope ones (previous value, new value, baseline, reason, actor,
+  time kept); milestone date moves keep the baseline and notify the account
+  owner; scope changes become one `c2p.change.request` for Consultants.
+- **Fixes to code already on main**, found by the demonstration:
+  `c2p_work_hub` hid all tasks when a milestone was upcoming;
+  `c2p_project_tracker` delivery dashboard never opened (getter/method name
+  clash).
+- Verified: `0 failed, 0 error(s) of 160 tests` for the six C2P modules on a
+  fresh Odoo 19 database; flake8, sudo-label check and module registry clean;
+  27-screen walkthrough with fictional data in
+  `docs/project/demo-client-onboarding/`.
+- Not done: nothing installed or deployed; live security audit still denied,
+  so group membership and record-rule questions are listed in the PR.

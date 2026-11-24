@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Contributors: under the Project app they already use. -->
+    <menuitem id="menu_c2p_plan_change_mine" name="My Proposed Changes"
+              parent="project.menu_main_pm" action="action_c2p_plan_change_mine"
+              sequence="6" groups="project.group_project_user"/>
+    <!-- Delivery owner. -->
+    <menuitem id="menu_c2p_plan_change_awaiting" name="Proposed changes"
+              parent="c2p_project_tracker.menu_c2p_delivery"
+              action="action_c2p_plan_change_awaiting" sequence="6"
+              groups="c2p_project_tracker.group_c2p_delivery_lead"/>
+    <menuitem id="menu_c2p_plan_change_history" name="Plan change history"
+              parent="c2p_project_tracker.menu_c2p_governance"
+              action="action_c2p_plan_change_history" sequence="15"/>
+    <!-- Portfolio owner. -->
+    <menuitem id="menu_c2p_decisions_awaiting" name="Decisions awaiting me"
+              parent="c2p_project_tracker.menu_c2p_portfolio"
+              action="action_c2p_decisions_awaiting" sequence="7"/>
+</odoo>

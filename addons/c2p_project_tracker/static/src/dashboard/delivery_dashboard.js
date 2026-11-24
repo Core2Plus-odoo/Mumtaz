@@ -34,7 +34,10 @@ export class C2pDeliveryDashboard extends Component {
     }
 
     /** Bar widths as a share of the busiest person, so the comparison is fair. */
-    get load() {
+    // Named teamLoad, not load: a getter called load replaced the load()
+    // method above, so the dashboard threw "this.load is not a function"
+    // and never opened.
+    get teamLoad() {
         const rows = this.state.data?.team_load || [];
         const max = Math.max(1, ...rows.map((r) => r.open));
         return rows.map((r) => ({

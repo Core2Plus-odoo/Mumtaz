@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 64
+module_count: 66
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -708,6 +708,20 @@ modules:
     test_files: 0
     access_csv: true
     note: "Installed in Mumtaz_C2P. Brought from the production branch 21 Nov 2026. Three copies exist on the server."
+  c2p_client_onboarding:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_client_onboarding
+    title: "C2P Client Onboarding"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: ["c2p_project_tracker"]
+    depends_standard: []
+    python_lines: 1264
+    test_files: 1
+    access_csv: true
+    note: "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Not installed anywhere yet."
   c2p_command_center:
     layer: internal
     disposition: keep
@@ -750,12 +764,26 @@ modules:
     test_files: 1
     access_csv: true
     note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
+  c2p_plan_control:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_plan_control
+    title: "C2P Plan Control"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: ["c2p_project_tracker"]
+    depends_standard: []
+    python_lines: 752
+    test_files: 1
+    access_csv: true
+    note: "C2P group internal. Plan-change proposals and audit on delivery tasks and milestones; scope changes route to c2p.change.request. Not installed anywhere yet."
   c2p_project_tracker:
     layer: internal
     disposition: keep
     path: addons/c2p_project_tracker
     title: "C2P Project Tracker"
-    version: "19.0.1.0.0"
+    version: "19.0.1.0.1"
     license: "LGPL-3"
     application: false
     depends_local: []
@@ -783,7 +811,7 @@ modules:
     disposition: keep
     path: addons/c2p_work_hub
     title: "C2P Work Hub"
-    version: "19.0.1.0.0"
+    version: "19.0.1.0.1"
     license: "LGPL-3"
     application: false
     depends_local: []

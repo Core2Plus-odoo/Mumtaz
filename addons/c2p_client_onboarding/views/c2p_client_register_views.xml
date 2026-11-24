@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Instance inventory -->
+    <record id="view_c2p_client_instance_list" model="ir.ui.view">
+        <field name="name">c2p.client.instance.list</field>
+        <field name="model">c2p.client.instance</field>
+        <field name="arch" type="xml">
+            <list string="Instance Inventory" editable="bottom"
+                  decoration-muted="state == 'retired'">
+                <field name="partner_id" column_invisible="context.get('c2p_in_client')"/>
+                <field name="name"/>
+                <field name="system"/>
+                <field name="environment"/>
+                <field name="version"/>
+                <field name="hosting"/>
+                <field name="url"/>
+                <field name="database_name" optional="show"/>
+                <field name="project_id" optional="show" options="{'no_create': True}"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'"/>
+                <field name="notes" optional="hide"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_c2p_client_instance" model="ir.actions.act_window">
+        <field name="name">Instance Inventory</field>
+        <field name="res_model">c2p.client.instance</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- Required documents -->
+    <record id="view_c2p_client_document_list" model="ir.ui.view">
+        <field name="name">c2p.client.document.list</field>
+        <field name="model">c2p.client.document</field>
+        <field name="arch" type="xml">
+            <list string="Required Documents" editable="bottom"
+                  decoration-success="state == 'verified'" decoration-muted="state == 'na'">
+                <field name="sequence" widget="handle"/>
+                <field name="partner_id" column_invisible="context.get('c2p_in_client')"/>
+                <field name="name"/>
+                <field name="state" widget="badge"
+                       decoration-success="state in ('received', 'verified')"
+                       decoration-warning="state in ('required', 'requested')"/>
+                <field name="received_on"/>
+                <field name="location"/>
+                <field name="na_reason" optional="show"/>
+                <field name="owner_id" optional="show"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_c2p_client_document" model="ir.actions.act_window">
+        <field name="name">Required Documents</field>
+        <field name="res_model">c2p.client.document</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- Access register -->
+    <record id="view_c2p_client_access_list" model="ir.ui.view">
+        <field name="name">c2p.client.access.list</field>
+        <field name="model">c2p.client.access</field>
+        <field name="arch" type="xml">
+            <list string="Access Register" editable="bottom"
+                  decoration-danger="is_expired" decoration-muted="state == 'revoked'">
+                <field name="partner_id" column_invisible="context.get('c2p_in_client')"/>
+                <field name="name"/>
+                <field name="instance_id" options="{'no_create': True}"/>
+                <field name="holder_id"/>
+                <field name="access_level"/>
+                <field name="credential_kind"/>
+                <field name="vault_ref" placeholder="vault://collection/item"/>
+                <field name="purpose" optional="show"/>
+                <field name="expires_on"/>
+                <field name="state" widget="badge" readonly="1"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'requested'"/>
+                <field name="granted_by_id" optional="show"/>
+                <field name="revoked_by_id" optional="hide"/>
+                <field name="is_expired" column_invisible="True"/>
+                <field name="company_id" column_invisible="True"/>
+                <button name="action_grant" type="object" string="Grant"
+                        class="btn-primary" invisible="state != 'requested'"
+                        groups="c2p_project_tracker.group_c2p_delivery_lead"/>
+                <button name="action_revoke" type="object" string="Revoke"
+                        invisible="state == 'revoked'"
+                        groups="c2p_project_tracker.group_c2p_delivery_lead"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_c2p_client_access_search" model="ir.ui.view">
+        <field name="name">c2p.client.access.search</field>
+        <field name="model">c2p.client.access</field>
+        <field name="arch" type="xml">
+            <search string="Access Register">
+                <field name="partner_id"/>
+                <field name="holder_id"/>
+                <field name="name"/>
+                <filter name="active" string="Active" domain="[('state', '=', 'active')]"/>
+                <filter name="expired" string="Expired, not revoked"
+                        domain="[('state', '=', 'active'), ('expires_on', '&lt;', 'today')]"/>
+                <group>
+                    <filter name="by_client" string="Client" context="{'group_by': 'partner_id'}"/>
+                    <filter name="by_holder" string="Held by" context="{'group_by': 'holder_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_c2p_client_access" model="ir.actions.act_window">
+        <field name="name">Access Register</field>
+        <field name="res_model">c2p.client.access</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No client access recorded</p>
+            <p>Record who holds which access, and the vault reference for any
+               shared credential. Passwords and keys are never entered here.</p>
+        </field>
+    </record>
+</odoo>
