@@ -62,6 +62,16 @@ class ProjectMilestone(models.Model):
             else:
                 ms.c2p_days_late = 0
 
+    @api.onchange("deadline", "c2p_forecast_date")
+    def _onchange_c2p_preview_health(self):
+        """Show the colour the dates being typed will give, before saving.
+
+        Display only: the field is read-only, so the form never sends it, and
+        the stored value is still set by the save itself.
+        """
+        if not self.is_reached:
+            self.c2p_health = health_for(self.deadline, self.c2p_forecast_date)
+
     # ── health is calculated, never typed ────────────────────────────────
     def _c2p_refresh_health(self):
         """Recalculate the colour of milestones that are not reached.
