@@ -1,0 +1,6 @@
+"Purpose: the tax treatments you must apply. We will confirm these against current local rules before configuring."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Tax name,Rate percent,Applies to,Scope,Reporting code,Effective from,Notes
+MANDATORY,MANDATORY,MANDATORY,MANDATORY,Optional,Optional,Optional
+Text,Number,"Sales / Purchase / Both","Domestic / Export / Import / Exempt / Zero-rated",Text,YYYY-MM-DD,Text
+"VAT 5%","5","Both","Domestic","","2018-01-01","Standard rate"

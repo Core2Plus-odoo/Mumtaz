@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_c2p_client" model="ir.ui.view">
+        <field name="name">res.partner.form.c2p.client</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="c2p_client" string="Client Overview"
+                      invisible="not is_company"
+                      groups="c2p_project_tracker.group_c2p_delivery_member">
+                    <div class="alert alert-info" role="status" invisible="not c2p_is_client">
+                        <strong>Next required action: </strong>
+                        <field name="c2p_next_action" class="d-inline"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="c2p_is_client"/>
+                            <field name="c2p_legal_name"/>
+                        </group>
+                        <group>
+                            <field name="c2p_onboarding_state" widget="badge"
+                                   decoration-success="c2p_onboarding_state == 'onboarded'"
+                                   decoration-info="c2p_onboarding_state == 'ready'"
+                                   decoration-warning="c2p_onboarding_state in ('not_started', 'in_progress')"/>
+                        </group>
+                    </group>
+
+                    <separator string="Client contacts"/>
+                    <field name="c2p_contact_ids" nolabel="1" context="{'default_type': 'contact'}">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="c2p_contact_role"/>
+                            <field name="function" string="Job title"/>
+                            <field name="email"/>
+                            <field name="phone"/>
+                            <field name="type" column_invisible="True"/>
+                        </list>
+                    </field>
+
+                    <separator string="Engagements: scope, responsible staff and onboarding"/>
+                    <field name="c2p_engagement_ids" nolabel="1" readonly="1">
+                        <list create="0" delete="0">
+                            <field name="name" string="Consultants Engagement"/>
+                            <field name="engagement_type" optional="show"/>
+                            <field name="account_manager_id"/>
+                            <field name="c2p_counterpart_id" string="Solutions Project"/>
+                            <field name="c2p_delivery_lead_id"/>
+                            <field name="c2p_scope_reference" string="Scope Ref"/>
+                            <field name="c2p_scope_version" string="Ver." optional="show"/>
+                            <field name="c2p_scope_state" widget="badge"
+                                   decoration-success="c2p_scope_state == 'approved'"
+                                   decoration-warning="c2p_scope_state == 'draft'"/>
+                            <field name="c2p_onboarding_progress" widget="progressbar" string="Checklist"/>
+                            <field name="c2p_onboarding_state" widget="badge"
+                                   decoration-success="c2p_onboarding_state == 'onboarded'"
+                                   decoration-info="c2p_onboarding_state == 'ready'"
+                                   decoration-warning="c2p_onboarding_state in ('not_started', 'in_progress')"/>
+                        </list>
+                    </field>
+
+                    <separator string="Milestones"/>
+                    <field name="c2p_milestone_ids" nolabel="1" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="project_id"/>
+                            <field name="deadline"/>
+                            <field name="is_reached" string="Reached"/>
+                        </list>
+                    </field>
+
+                    <separator string="Instance inventory"/>
+                    <field name="c2p_instance_ids" nolabel="1" context="{'c2p_in_client': True}"/>
+
+                    <separator string="Required documents"/>
+                    <button name="action_c2p_add_standard_documents" type="object"
+                            string="Add Standard Documents" class="btn-secondary mb-2"
+                            groups="c2p_project_tracker.group_c2p_delivery_lead"/>
+                    <field name="c2p_document_ids" nolabel="1" context="{'c2p_in_client': True}"/>
+
+                    <separator string="Access register (vault references only)"/>
+                    <div class="alert alert-warning" role="alert">
+                        Never enter a password, key or token here. Record who holds the access and
+                        the vault reference (vault://collection/item) for any shared credential.
+                    </div>
+                    <field name="c2p_access_ids" nolabel="1" context="{'c2p_in_client': True}"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_partner_list_c2p_client" model="ir.ui.view">
+        <field name="name">res.partner.list.c2p.client</field>
+        <field name="model">res.partner</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Client Master Records">
+                <field name="name"/>
+                <field name="c2p_legal_name"/>
+                <field name="country_id" optional="show"/>
+                <field name="c2p_onboarding_state" widget="badge"
+                       decoration-success="c2p_onboarding_state == 'onboarded'"
+                       decoration-info="c2p_onboarding_state == 'ready'"
+                       decoration-warning="c2p_onboarding_state in ('not_started', 'in_progress')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_c2p_client_master" model="ir.actions.act_window">
+        <field name="name">Clients</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_partner_list_c2p_client"/>
+        <field name="domain">[('c2p_is_client', '=', True)]</field>
+        <field name="context">{'default_c2p_is_client': True, 'default_is_company': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No client master records yet</p>
+            <p>Tick "C2P Client" on an existing customer company to list it here.</p>
+        </field>
+    </record>
+</odoo>

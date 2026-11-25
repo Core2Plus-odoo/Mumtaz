@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_milestone_view_form_c2p_forecast" model="ir.ui.view">
+        <field name="name">project.milestone.form.c2p.forecast</field>
+        <field name="model">project.milestone</field>
+        <field name="inherit_id" ref="project.project_milestone_view_form"/>
+        <field name="arch" type="xml">
+            <field name="deadline" position="attributes">
+                <attribute name="string">Commitment Date</attribute>
+            </field>
+            <field name="deadline" position="after">
+                <field name="c2p_forecast_date"/>
+                <field name="c2p_health" widget="badge"
+                       decoration-success="c2p_health == 'green'"
+                       decoration-warning="c2p_health == 'amber'"
+                       decoration-danger="c2p_health == 'red'"
+                       decoration-muted="c2p_health == 'grey'"/>
+                <field name="c2p_days_late" invisible="c2p_days_late == 0"/>
+                <field name="c2p_change_reason"
+                       placeholder="Required when a commitment or forecast date changes"/>
+            </field>
+            <xpath expr="//sheet" position="after">
+                <chatter/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_milestone_view_tree_c2p_forecast" model="ir.ui.view">
+        <field name="name">project.milestone.list.c2p.forecast</field>
+        <field name="model">project.milestone</field>
+        <field name="inherit_id" ref="project.project_milestone_view_tree"/>
+        <field name="arch" type="xml">
+            <field name="deadline" position="attributes">
+                <attribute name="string">Commitment Date</attribute>
+            </field>
+            <field name="deadline" position="after">
+                <field name="c2p_forecast_date"/>
+                <field name="c2p_health" widget="badge"
+                       decoration-success="c2p_health == 'green'"
+                       decoration-warning="c2p_health == 'amber'"
+                       decoration-danger="c2p_health == 'red'"
+                       decoration-muted="c2p_health == 'grey'"/>
+                <field name="c2p_change_reason" optional="show"/>
+            </field>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The agent sends pipeline, receivables and staffing data to a language
+         model and writes task assignments from the reply. That is an owner's
+         tool, not an every-employee tool, so access is a named group. Only the
+         administrator is seeded: adding anyone else is a deliberate act. -->
+    <record id="group_c2p_master_agent_user" model="res.groups">
+        <field name="name">C2P Master Agent</field>
+        <field name="comment">Can use the C2P Master Agent: sends CRM, project, staffing and finance summaries to the configured language model and lets its replies create and assign project tasks.</field>
+        <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>

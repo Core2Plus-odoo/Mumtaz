@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="c2p_work_hub.WorkHub">
+    <div class="c2p-hub">
+        <div class="c2p-hub__head">
+            <div>
+                <h1 class="c2p-hub__title">My Work Today</h1>
+                <p class="c2p-hub__sub" t-if="state.data">
+                    <t t-esc="state.data.meta.user_name"/> ·
+                    <t t-esc="state.data.meta.today"/>
+                </p>
+            </div>
+            <button class="btn btn-secondary" t-on-click="() => this.load()">Refresh</button>
+        </div>
+
+        <div t-if="state.loading" class="c2p-hub__note">Loading your work…</div>
+
+        <div t-elif="state.error" class="c2p-hub__error" role="alert">
+            <strong>Could not load your work.</strong>
+            <div t-esc="state.error"/>
+        </div>
+
+        <div t-elif="!sections.length" class="c2p-hub__empty">
+            <h2>Nothing needs you right now.</h2>
+            <p>No open tasks are assigned to you.</p>
+        </div>
+
+        <!-- Milestones and task sections are independent of each other: each has
+             its own condition. Chaining them with t-else hid every task whenever
+             the user had an upcoming milestone. -->
+        <section t-if="!state.loading and !state.error and milestones.length"
+                 class="c2p-hub__section c2p-hub__section--milestones">
+            <header class="c2p-hub__sectionhead">
+                <h2>
+                    My upcoming milestones
+                    <span class="c2p-hub__count" t-esc="milestones.length"/>
+                </h2>
+            </header>
+            <ul class="c2p-hub__list">
+                <li t-foreach="milestones" t-as="ms" t-key="ms.id" class="c2p-hub__milestone">
+                    <span class="c2p-hub__msflag" t-att-class="ms.overdue ? 'c2p-hub__msflag c2p-hub__msflag--late' : 'c2p-hub__msflag'">
+                        <t t-if="ms.overdue">▲ Late</t>
+                        <t t-else="">◆ Due</t>
+                    </span>
+                    <button class="c2p-hub__name" t-on-click="() => this.openProject(ms.project_id)">
+                        <t t-esc="ms.name"/>
+                    </button>
+                    <span class="c2p-hub__chip" t-if="ms.project" t-esc="ms.project"/>
+                    <span class="c2p-hub__chip" t-esc="ms.deadline"/>
+                </li>
+            </ul>
+        </section>
+
+        <div t-if="!state.loading and !state.error and sections.length" class="c2p-hub__sections">
+            <t t-foreach="sections" t-as="entry" t-key="entry[0]">
+                <section class="c2p-hub__section" t-att-data-section="entry[0]">
+                    <header class="c2p-hub__sectionhead">
+                        <h2>
+                            <t t-esc="entry[1].label"/>
+                            <span class="c2p-hub__count" t-esc="entry[1].count"/>
+                        </h2>
+                        <button class="btn btn-link btn-sm"
+                                t-on-click="() => this.openSection(entry[1])">
+                            Open list
+                        </button>
+                    </header>
+
+                    <ul class="c2p-hub__list">
+                        <li t-foreach="entry[1].tasks" t-as="task" t-key="task.id"
+                            class="c2p-hub__task">
+                            <div class="c2p-hub__taskmain">
+                                <button class="c2p-hub__name"
+                                        t-on-click="() => this.openTaskForm(task.id)">
+                                    <t t-esc="task.name"/>
+                                </button>
+                                <div class="c2p-hub__meta">
+                                    <span t-if="task.project" class="c2p-hub__chip"
+                                          t-esc="task.project"/>
+                                    <span t-if="task.stage" class="c2p-hub__chip c2p-hub__chip--stage"
+                                          t-esc="task.stage"/>
+                                    <span t-if="task.deadline" class="c2p-hub__chip">
+                                        due <t t-esc="task.deadline"/>
+                                    </span>
+                                    <span t-if="task.priority === '1'"
+                                          class="c2p-hub__chip c2p-hub__chip--pri">★ Important</span>
+                                </div>
+                                <div t-if="task.blocker" class="c2p-hub__blocker">
+                                    <span aria-hidden="true">⛔</span>
+                                    <span>Blocked: <t t-esc="task.blocker"/></span>
+                                </div>
+                                <div t-if="task.next_action" class="c2p-hub__next">
+                                    <span aria-hidden="true">→</span>
+                                    <span>Next: <t t-esc="task.next_action"/></span>
+                                </div>
+                            </div>
+
+                            <div class="c2p-hub__actions">
+                                <button class="btn btn-primary btn-sm"
+                                        t-on-click="() => this.togglePanel(task.id)">
+                                    <t t-if="state.openTask === task.id">Close</t>
+                                    <t t-else="">Update</t>
+                                </button>
+                                <button class="btn btn-secondary btn-sm"
+                                        t-on-click="() => this.submitForReview(task.id)">
+                                    Submit for review
+                                </button>
+                            </div>
+
+                            <div t-if="state.openTask === task.id" class="c2p-hub__panel">
+                                <label class="c2p-hub__label">
+                                    What happened
+                                    <input type="text" class="form-control"
+                                           t-model="state.draft.progress"
+                                           placeholder="One line is enough"/>
+                                </label>
+                                <label class="c2p-hub__label">
+                                    Next action
+                                    <input type="text" class="form-control"
+                                           t-model="state.draft.next_action"
+                                           placeholder="The one next step"/>
+                                </label>
+                                <label class="c2p-hub__label">
+                                    Blocked by
+                                    <input type="text" class="form-control"
+                                           t-model="state.draft.blocker"
+                                           placeholder="Leave empty if not blocked"/>
+                                </label>
+                                <label class="c2p-hub__label">
+                                    Status
+                                    <select class="form-select" t-model="state.draft.state">
+                                        <option value="">Leave unchanged</option>
+                                        <t t-foreach="state.data.states" t-as="st" t-key="st.value">
+                                            <option t-att-value="st.value" t-esc="st.label"/>
+                                        </t>
+                                    </select>
+                                </label>
+                                <div class="c2p-hub__panelactions">
+                                    <button class="btn btn-primary"
+                                            t-att-disabled="state.saving"
+                                            t-on-click="() => this.submitUpdate(task.id)">
+                                        <t t-if="state.saving">Saving…</t>
+                                        <t t-else="">Save update</t>
+                                    </button>
+                                    <button class="btn btn-link"
+                                            t-on-click="() => this.togglePanel(task.id)">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <p t-if="entry[1].truncated" class="c2p-hub__note">
+                        Showing the first <t t-esc="entry[1].tasks.length"/> of
+                        <t t-esc="entry[1].count"/>. Use “Open list” for the rest.
+                    </p>
+                </section>
+            </t>
+        </div>
+    </div>
+</t>
+
+</templates>

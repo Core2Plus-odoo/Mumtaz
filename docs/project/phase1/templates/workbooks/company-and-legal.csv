@@ -1,0 +1,15 @@
+"Purpose: the legal identity we must use on contracts, invoices and statutory filings."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Field,Value,Notes
+MANDATORY,MANDATORY,Optional
+"Text","Text","Text"
+"Registered legal name","<EXACTLY AS ON THE TRADE LICENCE>","Must match the contract"
+"Trading name","","If different from legal name"
+"Registration / licence number","",""
+"Tax registration number","","VAT / TRN / NTN as applicable"
+"Registered address","",""
+"Country of registration","","ISO country name"
+"Financial year end","","MM-DD"
+"Reporting currency","","ISO 4217, e.g. AED"
+"Additional currencies used","","Comma separated ISO 4217"
+"Authorised signatory","","Name and role"

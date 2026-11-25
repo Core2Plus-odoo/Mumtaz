@@ -1,0 +1,6 @@
+"Purpose: what you sell. Mark whether each line is a stocked item or a service."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Code,Name,Type,Category,Unit of measure,Sales price,Currency,Cost,Tax code,Tracking,Active
+Optional,MANDATORY,MANDATORY,Optional,MANDATORY,Optional,Optional,Optional,Optional,Optional,Optional
+Text,Text,"Stocked / Service / Consumable",Text,"e.g. Units, Hours",Number,"ISO 4217",Number,Text,"None / Lot / Serial","Yes / No"
+"P-0001","Annual Support Plan","Service","Support","Units","12000.00","AED","","VAT 5%","None","Yes"

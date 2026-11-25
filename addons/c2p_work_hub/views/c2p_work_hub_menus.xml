@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Under Project rather than a new top-level app: this is a view of work
+         that already lives in Project, not a second product. -->
+    <menuitem id="menu_c2p_work_hub"
+              name="My Work Today"
+              parent="project.menu_main_pm"
+              action="action_c2p_work_hub"
+              sequence="1"/>
+</odoo>

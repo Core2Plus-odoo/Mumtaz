@@ -1,0 +1,6 @@
+"Purpose: who needs access, and what each person should be able to do."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Full name,Email,Job title,Department,Access level needed,Approval rights,Start date
+MANDATORY,MANDATORY,MANDATORY,Optional,MANDATORY,Optional,Optional
+Text,Email,Text,Text,"View / Edit / Approve / Administer","What they may approve, and any limit",YYYY-MM-DD
+"Jane Example","jane@example.com","Finance Manager","Finance","Approve","Invoices up to 50,000","2026-01-15"
