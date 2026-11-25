@@ -135,7 +135,8 @@ Owner's decision after the founder answers of 25 Nov (X2, R3, forecast rule).
 ### c2p_milestone_forecast installed on core2plus.com (25 Nov 2026, about 08:47 UTC)
 First live install from this work. Run by the owner as root on the VPS, one
 step at a time, after his explicit "yes, install on live".
-- **Backups** (the first real ones of `Mumtaz_C2P` on the server), in
+- **Backups** (taken by hand before the install; nightly ones already
+  existed, see the correction in the next entry), in
   `/var/backups/pg/`: `Mumtaz_C2P_pre-forecast-2026-11-25.dump` (08:35) and
   `Mumtaz_C2P_pre-forecast-live-2026-11-25-0846.dump` (immediately before the
   install). Database only; the filestore was not backed up.
@@ -152,8 +153,8 @@ step at a time, after his explicit "yes, install on live".
 - **Found on the server, not changed:** `odoo2` and one other Odoo service
   open every database owned by the `odoo` role, including `Mumtaz_C2P`, so
   scheduled jobs on live data may run from more than one service; `odoo2`
-  reads a different add-on folder; the nightly backup job only dumps an empty
-  `scratch_pre` database; the live checkout is on a feature branch with
+  reads a different add-on folder; (the nightly backup claim that stood here was wrong; see the
+  correction in the next entry); the live checkout is on a feature branch with
   uncommitted files; `c2p_master_agent` is installed but its source is in
   neither add-on folder listed; the server reports a pending restart and
   security updates.
@@ -162,3 +163,26 @@ step at a time, after his explicit "yes, install on live".
   `c2p_meeting_actions`, `c2p_task_change_reason`.
 - Shafat's Q1-Q3 had not been received; the owner proceeded for this module,
   which does not touch tasks.
+
+### Server housekeeping after the forecast install, and a correction (25 Nov 2026, 08:55-09:01 UTC)
+Run by the owner as root on the VPS, one block at a time.
+- **Correction.** The previous entry said the nightly backup only dumped an
+  empty `scratch_pre` database. That was wrong: it came from reading the last
+  few files of an alphabetical listing. `/usr/local/bin/pg-backup.sh` runs at
+  01:30, dumps every database including `Mumtaz_C2P`, and keeps 14 days. What
+  was true: no restore had been tested before today, uploaded files were not
+  backed up, and every copy is on the same disk as the live system.
+- **Uploaded files are now backed up.** New `/usr/local/bin/filestore-backup.sh`
+  and `/etc/cron.d/c2p-filestore-backup` (01:45 nightly, 14 days, one archive
+  per database in `/var/backups/filestore/`). First run archived seven
+  databases; the `Mumtaz_C2P` archive holds 894 files, matching the live
+  folder. `pg-backup.sh` was not edited.
+- **`Mumtaz_C2P_staging` switched off.** It had 42 active scheduled jobs and
+  11 active mail servers, last run 11 Aug 2026. All set inactive; the list of
+  what was active is in `/root/Mumtaz_C2P_staging_was_active_2026-11-25.txt`.
+- **Removed** two leftover filestore folders from the morning's test runs.
+- **Found, not changed:** the 03:00 job `/opt/mumtaz/scripts/backup.sh` fails
+  every night (it targets a Docker stack that no longer runs); there is no
+  off-server copy of any backup; `odoo2` and `odoo3` still open every database.
+- `PR 205` was merged to `main` at about 08:55 UTC. The server does not pull
+  `main`; the live forecast module is the hand-installed copy.
