@@ -215,3 +215,21 @@ Run by the owner as root on the VPS after choosing "Yes, all four".
   only its own database. `odoo3` is still unpinned.
 - **Not verified:** nobody has yet opened the new screens in a browser on
   live; Shafat's Q1-Q3 were not received; no access review with real users.
+
+### File uploads on required documents and scope (25 Nov 2026) — built, not yet on live
+Asked for by the owner after the live install: "we need upload document".
+- `c2p_client_onboarding` 19.0.1.1.0. Each Required Documents row now takes a
+  file; uploading one moves a waiting row to Received and dates it, and leaves
+  a Verified or Not-applicable row as its owner set it. The engagement's Scope
+  & Onboarding tab takes the signed scope or contract file, locked with the
+  rest of the scope once approved.
+- Files are stored as Odoo attachments in the filestore, which the nightly
+  uploaded-files backup added today already covers. Whoever can read the row
+  can download the file; a Delivery Member cannot upload; a user with no
+  tracker role cannot reach it.
+- Verified on stock Odoo 19: `0 failed, 0 error(s) of 88 tests` for
+  `c2p_project_tracker` and `c2p_client_onboarding`; both uploads driven in a
+  browser with fictional files (screens `U3`, `U4` in
+  `docs/project/demo-client-onboarding/screens/`).
+- Not done: one file per row, not several; no preview; not yet upgraded on
+  core2plus.com.

@@ -38,6 +38,10 @@ class C2pClientDocument(models.Model):
     location = fields.Char(
         string="Where it is kept",
         help="A document reference or folder path. Not the document's content.")
+    # Stored as an Odoo attachment (in the filestore, not in the table), and
+    # readable by whoever may read the row.
+    file = fields.Binary(string="File", attachment=True, copy=False)
+    file_name = fields.Char(string="File Name", copy=False)
     received_on = fields.Date()
     na_reason = fields.Char(string="Reason not applicable")
     owner_id = fields.Many2one(
@@ -47,6 +51,31 @@ class C2pClientDocument(models.Model):
         "UNIQUE(partner_id, code)",
         "This client already has that standard document.")
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            self._c2p_mark_received(vals, current_state=vals.get("state", "required"))
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get("file") and "state" not in vals:
+            # Uploading the file is the document arriving. Rows still waiting
+            # move to Received; rows already verified or marked not applicable
+            # are left as their owner set them.
+            waiting = self.filtered(lambda d: d.state in ("required", "requested"))
+            if waiting:
+                extra = dict(vals)
+                self._c2p_mark_received(extra, current_state="required")
+                super(C2pClientDocument, waiting).write(extra)
+                return super(C2pClientDocument, self - waiting).write(vals)
+        return super().write(vals)
+
+    @api.model
+    def _c2p_mark_received(self, vals, current_state):
+        if vals.get("file") and current_state in ("required", "requested"):
+            vals["state"] = "received"
+            vals.setdefault("received_on", fields.Date.context_today(self))
+
     @api.constrains("state", "na_reason")
     def _check_na_reason(self):
         for doc in self:
@@ -55,8 +84,8 @@ class C2pClientDocument(models.Model):
                     "'%s' needs a reason to be marked not applicable.",
                     doc.name))
 
-    @api.constrains("name", "location", "na_reason")
+    @api.constrains("name", "location", "na_reason", "file_name")
     def _check_no_secret(self):
         for doc in self:
-            for fname in ("name", "location", "na_reason"):
+            for fname in ("name", "location", "na_reason", "file_name"):
                 refuse_secret(doc._fields[fname].string, doc[fname])

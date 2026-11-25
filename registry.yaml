@@ -713,12 +713,12 @@ modules:
     disposition: keep
     path: addons/c2p_client_onboarding
     title: "C2P Client Onboarding"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: false
     depends_local: ["c2p_project_tracker"]
     depends_standard: []
-    python_lines: 1264
+    python_lines: 1358
     test_files: 1
     access_csv: true
     note: "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
