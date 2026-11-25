@@ -113,3 +113,21 @@ automation.
   `docs/project/demo-client-onboarding/`.
 - Not done: nothing installed or deployed; live security audit still denied,
   so group membership and record-rule questions are listed in the PR.
+
+### Plan control withdrawn, milestone forecast added (25 Nov 2026) — built, not installed
+Owner's decision after the founder answers of 25 Nov (X2, R3, forecast rule).
+- **Removed `c2p_plan_control`** before it was ever merged or installed. It
+  conflicted with `c2p_task_change_reason` and with the forecast rule: it wrote
+  task and milestone dates without a reason, and treated the milestone deadline
+  as a moving forecast rather than a locked commitment.
+- **Added `c2p_milestone_forecast`** — commitment date (the standard milestone
+  deadline), forecast date, calculated health (green / amber 1-5 days / red
+  over 5 / grey "No forecast"), project shows its worst milestone, reached
+  milestones keep their colour, a reason is required to change an existing
+  commitment or forecast date and is stored with the tracked change.
+- `c2p_client_onboarding` is unchanged.
+- Verified on **stock Odoo 19 only, not Mumtaz_C2P**. Test counts are in the
+  pull request.
+- Not done: `c2p_task_change_reason` is not in this repository (its files never
+  reached the build session); no approval step for commitment changes; nothing
+  installed or deployed.

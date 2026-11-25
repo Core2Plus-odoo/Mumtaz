@@ -764,20 +764,20 @@ modules:
     test_files: 1
     access_csv: true
     note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
-  c2p_plan_control:
+  c2p_milestone_forecast:
     layer: internal
     disposition: keep
-    path: addons/c2p_plan_control
-    title: "C2P Plan Control"
+    path: addons/c2p_milestone_forecast
+    title: "C2P Milestone Forecast"
     version: "19.0.1.0.0"
     license: "LGPL-3"
     application: false
-    depends_local: ["c2p_project_tracker"]
-    depends_standard: []
-    python_lines: 752
+    depends_local: []
+    depends_standard: ["project"]
+    python_lines: 421
     test_files: 1
-    access_csv: true
-    note: "C2P group internal. Plan-change proposals and audit on delivery tasks and milestones; scope changes route to c2p.change.request. Not installed anywhere yet."
+    access_csv: false
+    note: "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Tested on stock Odoo 19 only. Not installed anywhere yet."
   c2p_project_tracker:
     layer: internal
     disposition: keep
