@@ -131,3 +131,34 @@ Owner's decision after the founder answers of 25 Nov (X2, R3, forecast rule).
 - Not done: `c2p_task_change_reason` is not in this repository (its files never
   reached the build session); no approval step for commitment changes; nothing
   installed or deployed.
+
+### c2p_milestone_forecast installed on core2plus.com (25 Nov 2026, about 08:47 UTC)
+First live install from this work. Run by the owner as root on the VPS, one
+step at a time, after his explicit "yes, install on live".
+- **Backups** (the first real ones of `Mumtaz_C2P` on the server), in
+  `/var/backups/pg/`: `Mumtaz_C2P_pre-forecast-2026-11-25.dump` (08:35) and
+  `Mumtaz_C2P_pre-forecast-live-2026-11-25-0846.dump` (immediately before the
+  install). Database only; the filestore was not backed up.
+- **Restore test:** the 08:35 dump was restored into a locked copy and matched
+  live exactly (684 tasks, 54 milestones, 1,172 contacts). Scheduled jobs and
+  mail servers were switched off on the copy before any Odoo service could
+  open it. The module installed there and passed 17 of 17 tests. The copy was
+  deleted afterwards.
+- **Live:** module copied to `/opt/custom_addons/c2p_milestone_forecast`
+  (outside the git checkout, which was not touched), installed on
+  `Mumtaz_C2P`, `odoo4.service` restarted. Site answered 200, 0 errors logged,
+  record counts unchanged, all 54 milestones grey "No forecast".
+- **Rollback:** uninstall from Apps; or restore the 08:46 dump.
+- **Found on the server, not changed:** `odoo2` and one other Odoo service
+  open every database owned by the `odoo` role, including `Mumtaz_C2P`, so
+  scheduled jobs on live data may run from more than one service; `odoo2`
+  reads a different add-on folder; the nightly backup job only dumps an empty
+  `scratch_pre` database; the live checkout is on a feature branch with
+  uncommitted files; `c2p_master_agent` is installed but its source is in
+  neither add-on folder listed; the server reports a pending restart and
+  security updates.
+- **Not installed on live:** `c2p_client_onboarding` (needs
+  `c2p_project_tracker`, which is not installed there), `c2p_work_hub`,
+  `c2p_meeting_actions`, `c2p_task_change_reason`.
+- Shafat's Q1-Q3 had not been received; the owner proceeded for this module,
+  which does not touch tasks.
