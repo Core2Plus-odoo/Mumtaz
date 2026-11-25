@@ -26,7 +26,11 @@
             <p>No open tasks are assigned to you.</p>
         </div>
 
-        <section t-if="milestones.length" class="c2p-hub__section c2p-hub__section--milestones">
+        <!-- Milestones and task sections are independent of each other: each has
+             its own condition. Chaining them with t-else hid every task whenever
+             the user had an upcoming milestone. -->
+        <section t-if="!state.loading and !state.error and milestones.length"
+                 class="c2p-hub__section c2p-hub__section--milestones">
             <header class="c2p-hub__sectionhead">
                 <h2>
                     My upcoming milestones
@@ -48,7 +52,7 @@
             </ul>
         </section>
 
-        <div t-else="" class="c2p-hub__sections">
+        <div t-if="!state.loading and !state.error and sections.length" class="c2p-hub__sections">
             <t t-foreach="sections" t-as="entry" t-key="entry[0]">
                 <section class="c2p-hub__section" t-att-data-section="entry[0]">
                     <header class="c2p-hub__sectionhead">

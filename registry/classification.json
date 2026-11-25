@@ -332,6 +332,16 @@
       "layer": "internal",
       "disposition": "keep",
       "note": "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
+    },
+    "c2p_client_onboarding": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Not installed anywhere yet."
+    },
+    "c2p_milestone_forecast": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Tested on stock Odoo 19 only. Not installed anywhere yet."
     }
   }
 }

@@ -15,7 +15,7 @@ rather than declaring its own.
 
 Community only — no Enterprise dependency.
 """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Services/Project",
     "author": "Core2Plus (C2P Consultants)",
     "website": "https://www.core2plus.com",
