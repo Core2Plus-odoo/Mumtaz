@@ -1,6 +1,8 @@
 # Documentation index
 
-One folder per subject. Nothing sits loose at this level.
+One folder per subject. One file sits at this level: `05-build-log.md`, the
+running build log for ERP and C2P addon work (module builds, installs on the
+server). The Agency OS keeps its own log in `c2p-delivery-system/docs/`.
 
 | Folder | What it covers | Start with |
 | --- | --- | --- |

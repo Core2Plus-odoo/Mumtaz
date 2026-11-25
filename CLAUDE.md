@@ -160,8 +160,9 @@ bus → hub v2 → new role prompts. Extend, never replace; new code goes in
   with a descriptive message and push (retry w/ backoff).
 - Secrets never in git: `.env`, `*.db`, `web/` are gitignored; tokens/keys are
   encrypted at rest via `C2P_SECRET_KEY` (Fernet) and never echoed back.
-- `c2p-delivery-system/docs/05-build-log.md` is the chronological build record; keep appending.
-  (Not `docs/` at the repository root: every top-level folder is described in `REPO_MAP.md`.)
+- Two build logs, keep appending to the right one: `c2p-delivery-system/docs/05-build-log.md`
+  for the Agency OS (this section), and `docs/05-build-log.md` at the repository root for
+  ERP and C2P addon work, including installs on the server.
 
 ## ERP programme standard (added 20 Nov 2026)
 

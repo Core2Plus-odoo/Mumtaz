@@ -73,7 +73,7 @@ install profile `mumtaz_erp` over modules in `addons/`.
 | Date | Move |
 | --- | --- |
 | 21 Nov 2026 | Eight `apps/*` folders to `sites/<domain>/` and `ops/` (table in `sites/README.md`) |
-| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; a stray `docs/05-build-log.md` folded into `c2p-delivery-system/docs/05-build-log.md` (entries written to it on `main` on 24 and 25 Nov were carried over the same way); `website/index.html` and `website/assets/` → `sites/delivery.mumtaz.digital/landing/` |
+| 22 Nov 2026 | `brand/` → `docs/design/brand-tokens-v3/`; `docs/ARCHITECTURE.md`, `DEPLOYMENT.md`, `MONITORING.md`, `VPS_SETUP.md` → `docs/operations/`; `website/index.html` and `website/assets/` → `sites/delivery.mumtaz.digital/landing/` |
 
 Nothing was deleted. The remaining "Fixed" folders are listed with the server
 step each one needs in `docs/platform/MUMTAZ_REPOSITORY_CONSOLIDATION.md`.

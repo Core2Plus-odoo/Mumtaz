@@ -43,7 +43,6 @@ On 22 Nov 2026 the remaining loose folders were tidied (nothing a server reads):
 |---|---|
 | `brand/` | `docs/design/brand-tokens-v3/` |
 | `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `docs/MONITORING.md`, `docs/VPS_SETUP.md` | `docs/operations/` |
-| `docs/05-build-log.md` (a stray fragment) | appended to `c2p-delivery-system/docs/05-build-log.md` |
 | `website/index.html`, `website/assets/` | `sites/delivery.mumtaz.digital/landing/` |
 
 Every top-level folder now has a `README.md`; the full folder table, grouped by category, is in [`REPO_MAP.md`](../REPO_MAP.md).
