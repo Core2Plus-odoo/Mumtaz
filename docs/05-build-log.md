@@ -186,3 +186,58 @@ Run by the owner as root on the VPS, one block at a time.
   off-server copy of any backup; `odoo2` and `odoo3` still open every database.
 - `PR 205` was merged to `main` at about 08:55 UTC. The server does not pull
   `main`; the live forecast module is the hand-installed copy.
+
+### Tracker, My Work Today, Minutes and Client Overview installed on core2plus.com (25 Nov 2026, about 09:33 UTC)
+Run by the owner as root on the VPS after choosing "Yes, all four".
+- **Installed on `Mumtaz_C2P`:** `c2p_project_tracker`, `c2p_work_hub`,
+  `c2p_meeting_actions`, `c2p_client_onboarding`, from `main`, copied to
+  `/opt/custom_addons/` (the git checkout was not touched). `odoo4.service`
+  restarted; site answered 200; 0 errors logged; record counts unchanged
+  (684 tasks, 54 milestones, 1,172 contacts); 43 active scheduled jobs
+  (42 plus the tracker's hourly sync).
+- **Rehearsal first:** a locked copy of that morning's data, scheduled jobs and
+  mail switched off before any Odoo service could open it; all five modules
+  installed; `0 failed, 0 error(s) of 139 tests`. Copy deleted afterwards.
+- **What the tracker's install hook did on live:** paired 2 of 4 engagements
+  (TUV Austria, 8 milestones linked; Medicslab, 6 linked); Aaban and Ghandhara
+  were skipped because no project with those names exists; classified 8
+  template and 3 internal projects, 18 left unclassified; assigned roles to
+  1 Portfolio Manager, 1 Delivery Lead and 8 Delivery Members; seeded the
+  contract figures recorded on 5 Oct, which the owner should check.
+- **Effect on existing work, measured on the copy:** 2 open delivery tasks
+  lack an assignee, deadline or milestone, and 2 "Waiting on Client" tasks
+  have no reason; each will ask for the missing detail when next edited.
+- **Backups before the install:** database
+  `Mumtaz_C2P_pre-tracker-live-2026-11-25-0932.dump` and uploaded files
+  `Mumtaz_C2P_pre-tracker-live-2026-11-25-0932.tar.gz`.
+- **Also that hour:** `odoo2` pinned to `Mumtaz_ERP` (`db_name` added to
+  `/etc/odoo2.conf`, previous config saved in `/var/backups/`); it now opens
+  only its own database. `odoo3` is still unpinned.
+- **Not verified:** nobody has yet opened the new screens in a browser on
+  live; Shafat's Q1-Q3 were not received; no access review with real users.
+
+### File uploads on required documents and scope (25 Nov 2026) — live on core2plus.com since about 09:57 UTC
+Asked for by the owner after the live install: "we need upload document".
+- `c2p_client_onboarding` 19.0.1.1.0. Each Required Documents row now takes a
+  file; uploading one moves a waiting row to Received and dates it, and leaves
+  a Verified or Not-applicable row as its owner set it. The engagement's Scope
+  & Onboarding tab takes the signed scope or contract file, locked with the
+  rest of the scope once approved.
+- Files are stored as Odoo attachments in the filestore, which the nightly
+  uploaded-files backup added today already covers. Whoever can read the row
+  can download the file; a Delivery Member cannot upload; a user with no
+  tracker role cannot reach it.
+- Verified on stock Odoo 19: `0 failed, 0 error(s) of 88 tests` for
+  `c2p_project_tracker` and `c2p_client_onboarding`; both uploads driven in a
+  browser with fictional files (screens `U3`, `U4` in
+  `docs/project/demo-client-onboarding/screens/`).
+- **Live upgrade (about 09:57 UTC, run by the owner):** rehearsed first on a
+  locked copy of that hour's data (`0 failed, 0 error(s) of 31 tests`, the one
+  marked client preserved), then `c2p_client_onboarding` upgraded to
+  19.0.1.1.0 on `Mumtaz_C2P` and `odoo4.service` restarted. Site answered 200,
+  0 errors logged, 684 tasks and 1,173 contacts unchanged, 43 active scheduled
+  jobs. Backups before it: `Mumtaz_C2P_pre-uploads-live-2026-11-25-0956.dump`
+  and the matching filestore archive. The previous module version is kept at
+  `/root/c2p_module_backups/c2p_client_onboarding-before-2026-11-25-0956`.
+- Not done: one file per row, not several; no preview; the upload has not yet
+  been tried in a browser on live.

@@ -713,15 +713,15 @@ modules:
     disposition: keep
     path: addons/c2p_client_onboarding
     title: "C2P Client Onboarding"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: false
     depends_local: ["c2p_project_tracker"]
     depends_standard: []
-    python_lines: 1264
+    python_lines: 1358
     test_files: 1
     access_csv: true
-    note: "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Not installed anywhere yet."
+    note: "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
   c2p_command_center:
     layer: internal
     disposition: keep
@@ -763,7 +763,7 @@ modules:
     python_lines: 941
     test_files: 1
     access_csv: true
-    note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
+    note: "C2P group internal. Minutes of meeting; action items convert to tasks once. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
   c2p_milestone_forecast:
     layer: internal
     disposition: keep
@@ -777,7 +777,7 @@ modules:
     python_lines: 431
     test_files: 1
     access_csv: false
-    note: "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Tested on stock Odoo 19 only. Not installed anywhere yet."
+    note: "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
   c2p_project_tracker:
     layer: internal
     disposition: keep
@@ -791,7 +791,7 @@ modules:
     python_lines: 2492
     test_files: 6
     access_csv: true
-    note: "C2P group internal."
+    note: "C2P group internal. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
   c2p_proposal:
     layer: internal
     disposition: keep
@@ -819,7 +819,7 @@ modules:
     python_lines: 884
     test_files: 1
     access_csv: false
-    note: "C2P group internal. My Work Today and quick task updates. Not installed anywhere yet."
+    note: "C2P group internal. My Work Today and quick task updates. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
   mumtaz_ceo_dashboard:
     layer: internal
     disposition: review
