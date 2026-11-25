@@ -216,7 +216,7 @@ Run by the owner as root on the VPS after choosing "Yes, all four".
 - **Not verified:** nobody has yet opened the new screens in a browser on
   live; Shafat's Q1-Q3 were not received; no access review with real users.
 
-### File uploads on required documents and scope (25 Nov 2026) — built, not yet on live
+### File uploads on required documents and scope (25 Nov 2026) — live on core2plus.com since about 09:57 UTC
 Asked for by the owner after the live install: "we need upload document".
 - `c2p_client_onboarding` 19.0.1.1.0. Each Required Documents row now takes a
   file; uploading one moves a waiting row to Received and dates it, and leaves
@@ -231,5 +231,13 @@ Asked for by the owner after the live install: "we need upload document".
   `c2p_project_tracker` and `c2p_client_onboarding`; both uploads driven in a
   browser with fictional files (screens `U3`, `U4` in
   `docs/project/demo-client-onboarding/screens/`).
-- Not done: one file per row, not several; no preview; not yet upgraded on
-  core2plus.com.
+- **Live upgrade (about 09:57 UTC, run by the owner):** rehearsed first on a
+  locked copy of that hour's data (`0 failed, 0 error(s) of 31 tests`, the one
+  marked client preserved), then `c2p_client_onboarding` upgraded to
+  19.0.1.1.0 on `Mumtaz_C2P` and `odoo4.service` restarted. Site answered 200,
+  0 errors logged, 684 tasks and 1,173 contacts unchanged, 43 active scheduled
+  jobs. Backups before it: `Mumtaz_C2P_pre-uploads-live-2026-11-25-0956.dump`
+  and the matching filestore archive. The previous module version is kept at
+  `/root/c2p_module_backups/c2p_client_onboarding-before-2026-11-25-0956`.
+- Not done: one file per row, not several; no preview; the upload has not yet
+  been tried in a browser on live.
