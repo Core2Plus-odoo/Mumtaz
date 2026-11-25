@@ -774,7 +774,7 @@ modules:
     application: false
     depends_local: []
     depends_standard: ["project"]
-    python_lines: 421
+    python_lines: 431
     test_files: 1
     access_csv: false
     note: "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Tested on stock Odoo 19 only. Not installed anywhere yet."
