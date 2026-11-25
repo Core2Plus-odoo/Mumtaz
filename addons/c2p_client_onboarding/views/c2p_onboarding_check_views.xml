@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_c2p_onboarding_check_list" model="ir.ui.view">
+        <field name="name">c2p.onboarding.check.list</field>
+        <field name="model">c2p.onboarding.check</field>
+        <field name="arch" type="xml">
+            <list string="Onboarding Checklist" create="0" editable="bottom"
+                  decoration-success="state == 'done'" decoration-muted="state == 'na'">
+                <field name="partner_id" optional="show" readonly="1"/>
+                <field name="project_id" optional="show" readonly="1"/>
+                <field name="name" readonly="1"/>
+                <field name="why" optional="hide" readonly="1"/>
+                <field name="owner_id" readonly="state != 'open'"/>
+                <field name="due_date" readonly="state != 'open'"
+                       decoration-danger="is_overdue"/>
+                <field name="blocks" widget="badge" readonly="1"
+                       decoration-danger="blocks == 'kickoff' and state == 'open'"
+                       decoration-warning="blocks == 'delivery' and state == 'open'"/>
+                <field name="note" readonly="state != 'open'"/>
+                <field name="na_reason" optional="show" readonly="state != 'open'"/>
+                <field name="is_overdue" column_invisible="True"/>
+                <field name="state" widget="badge" readonly="1"
+                       decoration-success="state == 'done'"
+                       decoration-warning="state == 'open'"/>
+                <field name="done_by_id" optional="show"/>
+                <field name="done_on" optional="hide"/>
+                <button name="action_done" type="object" string="Done"
+                        class="btn-primary" invisible="state != 'open'"/>
+                <button name="action_not_applicable" type="object" string="Not applicable"
+                        invisible="state != 'open'"/>
+                <button name="action_reopen" type="object" string="Reopen"
+                        invisible="state == 'open'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_c2p_onboarding_check_search" model="ir.ui.view">
+        <field name="name">c2p.onboarding.check.search</field>
+        <field name="model">c2p.onboarding.check</field>
+        <field name="arch" type="xml">
+            <search string="Onboarding Checklist">
+                <field name="partner_id"/>
+                <field name="project_id"/>
+                <field name="name"/>
+                <filter name="open" string="Open" domain="[('state', '=', 'open')]"/>
+                <filter name="mine" string="Mine" domain="[('owner_id', '=', uid)]"/>
+                <filter name="blocking" string="Blocking kickoff or delivery"
+                        domain="[('state', '=', 'open'), ('blocks', '!=', 'none')]"/>
+                <filter name="overdue" string="Overdue"
+                        domain="[('state', '=', 'open'), ('due_date', '&lt;', 'today')]"/>
+                <group>
+                    <filter name="by_client" string="Client" context="{'group_by': 'partner_id'}"/>
+                    <filter name="by_project" string="Engagement" context="{'group_by': 'project_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_c2p_onboarding_check" model="ir.actions.act_window">
+        <field name="name">Onboarding Checklist</field>
+        <field name="res_model">c2p.onboarding.check</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_open': 1, 'search_default_by_project': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No open onboarding checks</p>
+            <p>Start a checklist from the Onboarding page of a Consultants engagement.</p>
+        </field>
+    </record>
+
+    <record id="action_c2p_missing_client_data" model="ir.actions.act_window">
+        <field name="name">Missing Client Data</field>
+        <field name="res_model">c2p.onboarding.check</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_blocking': 1, 'search_default_by_client': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing is blocking kickoff or delivery</p>
+            <p>Open onboarding items that block kickoff or delivery appear here, by client.</p>
+        </field>
+    </record>
+</odoo>

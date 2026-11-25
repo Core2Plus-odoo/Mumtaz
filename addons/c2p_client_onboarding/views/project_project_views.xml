@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_project_form_c2p_onboarding" model="ir.ui.view">
+        <field name="name">project.project.form.c2p.onboarding</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="c2p_project_tracker.view_project_form_c2p"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='c2p_engagement']" position="after">
+                <page name="c2p_onboarding" string="Scope &amp; Onboarding"
+                      invisible="c2p_layer != 'portfolio'">
+                    <group>
+                        <group string="Approved scope">
+                            <field name="c2p_scope_reference" readonly="c2p_scope_state == 'approved'"/>
+                            <field name="c2p_scope_version" readonly="c2p_scope_state == 'approved'"/>
+                            <field name="c2p_scope_state" readonly="1" widget="badge"
+                                   decoration-success="c2p_scope_state == 'approved'"
+                                   decoration-warning="c2p_scope_state == 'draft'"/>
+                            <field name="c2p_scope_approved_by_id" invisible="c2p_scope_state != 'approved'"/>
+                            <field name="c2p_scope_approved_on" invisible="c2p_scope_state != 'approved'"/>
+                        </group>
+                        <group string="Responsible C2P staff">
+                            <field name="account_manager_id"/>
+                            <field name="c2p_counterpart_id" string="Solutions Project" readonly="1"/>
+                            <field name="c2p_delivery_lead_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="c2p_scope_summary" readonly="c2p_scope_state == 'approved'"
+                               placeholder="What is in scope"/>
+                        <field name="c2p_scope_exclusions" readonly="c2p_scope_state == 'approved'"
+                               placeholder="What is explicitly not in scope"/>
+                    </group>
+                    <div class="mb-3">
+                        <button name="action_c2p_approve_scope" type="object" string="Approve Scope"
+                                class="btn-primary me-2" invisible="c2p_scope_state == 'approved'"
+                                groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                        <button name="action_c2p_reopen_scope" type="object" string="Reopen Scope"
+                                class="btn-secondary me-2" invisible="c2p_scope_state != 'approved'"
+                                groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                    </div>
+                    <separator string="Onboarding checklist"/>
+                    <group>
+                        <group>
+                            <field name="c2p_onboarding_state" widget="badge"
+                                   decoration-success="c2p_onboarding_state == 'onboarded'"
+                                   decoration-info="c2p_onboarding_state == 'ready'"
+                                   decoration-warning="c2p_onboarding_state == 'in_progress'"/>
+                            <field name="c2p_onboarding_progress" widget="progressbar"/>
+                        </group>
+                        <group>
+                            <field name="c2p_onboarded_by_id" invisible="not c2p_onboarded_on"/>
+                            <field name="c2p_onboarded_on" invisible="not c2p_onboarded_on"/>
+                        </group>
+                    </group>
+                    <div class="mb-3">
+                        <button name="action_c2p_start_onboarding_checklist" type="object"
+                                string="Start Checklist" class="btn-primary me-2"
+                                invisible="c2p_onboarding_state != 'not_started'"/>
+                        <button name="action_c2p_confirm_onboarding" type="object"
+                                string="Confirm Onboarding" class="btn-primary me-2"
+                                invisible="c2p_onboarding_state != 'ready'"
+                                groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                        <button name="action_c2p_draft_welcome_email" type="object"
+                                string="Draft Welcome Email" class="btn-secondary me-2"
+                                groups="c2p_project_tracker.group_c2p_delivery_lead"/>
+                        <button name="action_c2p_reopen_onboarding" type="object"
+                                string="Reopen Onboarding" class="btn-secondary"
+                                invisible="c2p_onboarding_state != 'onboarded'"
+                                groups="c2p_project_tracker.group_c2p_portfolio_manager"/>
+                    </div>
+                    <field name="c2p_onboarding_check_ids" nolabel="1">
+                        <list create="0" delete="0" editable="bottom"
+                              decoration-success="state == 'done'" decoration-muted="state == 'na'">
+                            <field name="name" readonly="1"/>
+                            <field name="why" optional="hide" readonly="1"/>
+                            <field name="owner_id" readonly="state != 'open'"/>
+                            <field name="due_date" readonly="state != 'open'"
+                                   decoration-danger="is_overdue"/>
+                            <field name="blocks" widget="badge" readonly="1"
+                                   decoration-danger="blocks == 'kickoff' and state == 'open'"
+                                   decoration-warning="blocks == 'delivery' and state == 'open'"/>
+                            <field name="note" readonly="state != 'open'"/>
+                            <field name="na_reason" optional="show" readonly="state != 'open'"/>
+                            <field name="is_overdue" column_invisible="True"/>
+                            <field name="state" widget="badge" readonly="1"
+                                   decoration-success="state == 'done'"
+                                   decoration-warning="state == 'open'"/>
+                            <field name="done_by_id" optional="show"/>
+                            <button name="action_done" type="object" string="Done"
+                                    class="btn-primary" invisible="state != 'open'"/>
+                            <button name="action_not_applicable" type="object" string="N/A"
+                                    invisible="state != 'open'"/>
+                            <button name="action_reopen" type="object" string="Reopen"
+                                    invisible="state == 'open'"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

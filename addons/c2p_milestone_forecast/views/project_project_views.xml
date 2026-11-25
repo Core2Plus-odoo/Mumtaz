@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="edit_project_c2p_forecast" model="ir.ui.view">
+        <field name="name">project.project.form.c2p.forecast</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="c2p_milestone_health" widget="badge"
+                       invisible="not allow_milestones"
+                       decoration-success="c2p_milestone_health == 'green'"
+                       decoration-warning="c2p_milestone_health == 'amber'"
+                       decoration-danger="c2p_milestone_health == 'red'"
+                       decoration-muted="c2p_milestone_health == 'grey'"/>
+            </field>
+        </field>
+    </record>
+</odoo>
