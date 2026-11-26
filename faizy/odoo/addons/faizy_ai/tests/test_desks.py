@@ -31,6 +31,9 @@ class TestDesks(TransactionCase):
         Param.set_param('faizy_ai.care_user_id', cls.mashood.id)
         Param.set_param('faizy_ai.ops_user_id', cls.raza.id)
         Param.set_param('faizy_ai.escalation_user_id', cls.umer.id)
+        Param.set_param('faizy_ai.route_leads', 'on')
+        if 'faizy.checklist' in env:   # faizy_work installed: its CRM gates are tested there
+            Param.set_param('faizy.checklist_enforce', 'off')
         cls.customer = env['res.partner'].create({'name': 'Hamza', 'phone': '+971 50 123 4567'})
         cls.agent = env['faizy.ai.agent'].search([('code', '=', 'rabta')])
         cls.agent.user_id = cls.ai_user
@@ -83,6 +86,14 @@ class TestDesks(TransactionCase):
         lead = self._lead(user_id=self.mashood.id)
         lead.with_user(self.mashood).action_set_lost()
         self.assertFalse(lead.activity_ids.filtered(lambda a: a.activity_type_id.faizy_route))
+
+    def test_routing_off_leaves_an_unowned_lead_alone(self):
+        self.env['ir.config_parameter'].sudo().set_param('faizy_ai.route_leads', 'off')
+        lead = self._lead(user_id=False)
+        self.assertFalse(lead.user_id)
+        self.assertFalse(lead.activity_ids.filtered(lambda a: a.activity_type_id.faizy_route))
+        owned = self._lead(user_id=self.raza.id)   # a real salesperson still gets the item
+        self.assertEqual(self._acts(owned, T_LEAD_QUALIFY).user_id, self.raza)
 
     # ---------------------------------------------------------------- CRM rights follow the desks
     def test_care_and_ops_open_their_own_leads_only_and_the_manager_sees_all(self):

@@ -1167,6 +1167,11 @@ only", recorded here. Reactive work stays a `mail.activity` on the real record (
   new lead with no real salesperson goes to the leader of the team that owns its source, and into that
   team; "Digital & customer leads (Mashood)" owns facebook, instagram, website, whatsapp; "Partners &
   referrals (Raza)" owns embassy, walk_in, other. An explicit salesperson is always kept. Tested.
+  **Switch:** assigning an unowned lead to a desk is `faizy_ai.route_leads`, **off** unless set to `on`
+  (added on 26 Nov when §24 landed with the same rule behind `faizy.work_route_leads`, off). With it off,
+  a lead with no real salesperson is left to the standard CRM and gets no work item; a lead with a real
+  salesperson still gets its Qualify and Follow-up items. `provision_staff.py` turns it on for the staging
+  workspace; production needs Umer's word. Tested both ways.
 - Groups: care and operations imply the standard Project user group; manager implies Project
   administrator. Plans are followers-only projects, so each executive sees their own and the manager sees
   both (tested).

@@ -33,6 +33,9 @@ class TestWorkPlan(TransactionCase):
         Param.set_param('faizy_ai.care_user_id', cls.mashood.id)
         Param.set_param('faizy_ai.ops_user_id', cls.raza.id)
         Param.set_param('faizy_ai.escalation_user_id', cls.umer.id)
+        Param.set_param('faizy_ai.route_leads', 'on')
+        if 'faizy.checklist' in env:   # faizy_work installed: its CRM gates are tested there
+            Param.set_param('faizy.checklist_enforce', 'off')
 
         def project(name, role, owner):
             return env['project.project'].sudo().create({

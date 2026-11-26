@@ -17,6 +17,7 @@ from .routing import (
 
 _logger = logging.getLogger(__name__)
 
+ROUTE_LEADS_PARAM = 'faizy_ai.route_leads'
 ALL_ORDER_TYPES = (T_ASSIGN, T_FOLLOW_UP, T_PROOF, T_ESCALATION)
 
 
@@ -229,13 +230,23 @@ class CrmLeadRouting(models.Model):
         return bool(user and user.active and not user.share
                     and not user.has_group('faizy_ai.group_ai_agent'))
 
+    @api.model
+    def _faizy_routing_on(self):
+        """Assigning unowned leads to a desk is a business decision (§26):
+        off until the switch faizy_ai.route_leads is 'on' (the provisioning
+        tool turns it on for staging; production needs Umer's word)."""
+        return self.env['ir.config_parameter'].sudo().get_param(ROUTE_LEADS_PARAM) == 'on'
+
     def _faizy_lead_owner(self, user):
         """The staff member who should hold this lead's work: the salesperson
-        if it is a real staff account; otherwise the leader of the sales team
-        that owns the lead's source (§26, one pipeline per executive); otherwise
-        the customer-care role holder."""
+        if it is a real staff account; otherwise, with routing on, the leader
+        of the sales team that owns the lead's source (§26, one pipeline per
+        executive), else the customer-care role holder; with routing off,
+        nobody (the lead is left as it is)."""
         if self._faizy_eligible(user):
             return user
+        if not self._faizy_routing_on():
+            return self.env['res.users'].browse()
         team = self.env['crm.team'].browse()
         if self:
             team = self.env['crm.team']._faizy_team_for_source(self.faizy_lead_source)
@@ -257,13 +268,15 @@ class CrmLeadRouting(models.Model):
         for lead in leads:
             owner = lead._faizy_lead_owner(lead.user_id)
             vals = {}
-            if owner != lead.user_id:
+            if owner and owner != lead.user_id:
                 vals['user_id'] = owner.id
             team = self.env['crm.team']._faizy_team_for_source(lead.faizy_lead_source)
-            if team and lead.team_id != team and (not lead.team_id or owner == team.user_id):
+            if owner and team and lead.team_id != team and (not lead.team_id or owner == team.user_id):
                 vals['team_id'] = team.id
             if vals:
                 lead.sudo().write(vals)
+            if not owner:
+                continue   # nobody to work it: left to the standard CRM, no item is made
             if lead.active and not lead.stage_id.is_won:
                 _safe(lambda: Routing._route(
                     lead, 'care', T_LEAD_QUALIFY, self.env._('Qualify lead: %s', lead.name),
@@ -292,6 +305,8 @@ class CrmLeadRouting(models.Model):
     def _faizy_follow_owner(self):
         self.ensure_one()
         owner = self._faizy_lead_owner(self.user_id)
+        if not owner:
+            return
         if owner != self.user_id:
             self.sudo().write({'user_id': owner.id})
             return
@@ -305,8 +320,10 @@ class CrmLeadRouting(models.Model):
         self.ensure_one()
         Routing = self.env['faizy.routing']
         Routing._close(self, (T_LEAD_QUALIFY,), self.env._('Qualified.'))
+        owner = self._faizy_lead_owner(self.user_id)
+        if not owner:
+            return
         Routing._route(
             self, 'care', T_LEAD_FOLLOW_UP, self.env._('Follow up lead: %s', self.name),
             self.env._('Agree the plan and the next step with the customer.'),
-            user=self._faizy_lead_owner(self.user_id),
-            deadline=fields.Date.context_today(self) + timedelta(days=1))
+            user=owner, deadline=fields.Date.context_today(self) + timedelta(days=1))

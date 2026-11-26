@@ -181,6 +181,8 @@ def main():
                                                 'action_id': o.ref('faizy_ai.action_faizy_my_desk')})
         o.call('ir.config_parameter', 'set_param', ROLE_PARAM[role], str(ids[0]))
     print('users:', users)
+    # Unowned leads go to the desk that owns their source (§26). Off by default; on for this workspace.
+    o.call('ir.config_parameter', 'set_param', 'faizy_ai.route_leads', 'on')
 
     # 2. recurring tasks: switched on per project below (allow_recurring_tasks turns the
     #    standard "Use Recurring Tasks" feature group on for everyone).
