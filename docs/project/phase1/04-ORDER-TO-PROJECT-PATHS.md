@@ -200,7 +200,7 @@ Nothing is switched off until the new path passes the staging plan. At no point 
 | 2 | In action 766 remove the call to 919 (L14) and the no-quotation branch (L24-44). Keep the "won → confirm the single quotation" step (decision D4). | After this, 919 has no caller |
 | 3 | Product 97 and any T0x product: unchanged (Option A chosen) | Not needed |
 | 4 | Switch the new path **on** | Single creator from here |
-| 5 | Rules 2 and 12 (kickoff and portal to-dos): skip delivery projects | Four to-dos per deal become two |
+| 5 | Rules 2 and 12 (kickoff and portal to-dos): skip delivery projects. Action 751 (weekly status task): skip delivery projects (decision D6). | Four to-dos per deal become two; one weekly task per deal |
 | 6 | Duplicate Cleanup 753 **off** once the unique key is live | It is destructive and redundant after the key |
 | 7 | Rule 30 / action 920: keep until milestone linkage moves into the module | It depends on the `x_` links |
 
@@ -224,7 +224,7 @@ Same safe copy as `T01-staging-runbook`: locked copy, scheduled jobs and mail of
 | 10. Out of scope, confirmed untouched | Intercompany 60% rule, posted accounting, user permissions | Unchanged |
 | 11. Non-proposal order (decision D3) | Confirm an order not made through the Proposal Maker that contains a project product; then one with no project product | The first gets one pair; the second creates nothing |
 | 12. Archived project (decision D2) | As test 3, for both the Consultants and the Solutions project | Never a replacement |
-| 13. Weekly job | Run the logic of action 751 as a count on the new pair | One task per project per week; no duplicates |
+| 13. Weekly job (decision D6) | Run the logic of action 751 as a count on the new pair | One task per week, on the oversight project only; none on the delivery project; no duplicates |
 
 ## J. Decisions
 
@@ -233,8 +233,8 @@ Same safe copy as `T01-staging-runbook`: locked copy, scheduled jobs and mail of
 - D3: **decided**, any order with a project-creating product qualifies.
 - D4: **decided**, keep the CRM "won, confirm the single quotation" step.
 - D5: **done**, the Appendix A queries were run on 26 Nov (results above).
-- D6: **open**, should the Weekly Status Update task (job 38) keep covering every active project, or only the oversight project? On a paired deal it now creates two tasks a week for the same client.
-- Approval to build: **open**.
+- D6: **decided (26 Nov 2026)**, the Weekly Status Update task (job 38, action 751) covers the **oversight project only**. The delivery project gets none, so a paired deal gets one task a week for the client, not two.
+- - Approval to build: **open**. All six decisions are made.
 
 ## Appendix A. Read-only queries (run by the owner on 26 Nov 2026, 10:36 UTC; kept for repeat use)
 
