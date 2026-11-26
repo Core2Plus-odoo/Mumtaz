@@ -2,7 +2,7 @@
 
 Read-only report, 26 Nov 2026. Repository `Core2Plus-odoo/Mumtaz`, `main` at `2af0185`.
 Status: **draft for approval. Nothing was built, installed, deployed or changed.**
-Decisions D1 to D4 were made by the owner on 26 Nov 2026 and are recorded in sections G, H, I and J. The read-only queries of Appendix A were run by the owner on 26 Nov 2026 at 10:36 UTC; their results are folded into this report and tagged **[REPORTED 26 Nov]**. Approval to build is still open.
+Decisions D1 to D4 and D6 were made by the owner on 26 Nov 2026 and are recorded in sections G, H, I and J. The read-only queries of Appendix A were run by the owner on 26 Nov 2026 at 10:36 UTC; their results are folded into this report and tagged **[REPORTED 26 Nov]**. Approval to build is still open.
 
 ## How to read this report
 
@@ -234,7 +234,7 @@ Same safe copy as `T01-staging-runbook`: locked copy, scheduled jobs and mail of
 - D4: **decided**, keep the CRM "won, confirm the single quotation" step.
 - D5: **done**, the Appendix A queries were run on 26 Nov (results above).
 - D6: **decided (26 Nov 2026)**, the Weekly Status Update task (job 38, action 751) covers the **oversight project only**. The delivery project gets none, so a paired deal gets one task a week for the client, not two.
-- - Approval to build: **open**. All six decisions are made.
+- Approval to build: **open**. All six decisions are made.
 
 ## Appendix A. Read-only queries (run by the owner on 26 Nov 2026, 10:36 UTC; kept for repeat use)
 
