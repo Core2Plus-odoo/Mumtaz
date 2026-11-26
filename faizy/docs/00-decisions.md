@@ -1214,3 +1214,29 @@ the role holders on production are set by Umer after written approval (D10); out
 plan's content (targets such as "five contacts a day", the week themes) is a proposal for Umer to edit in
 `staff_plan_30d.py` before it is provisioned on production. Timesheets (actual hours) are not installed;
 "hours today" is the allocated time of the day's tasks.
+
+**Reconciliation with §24 (`faizy_work`, PR #204), for Umer to decide.** Two sessions built from the same
+23 Nov brief without seeing each other. Both are on standard models and both keep the rule "no outbound
+messaging, nothing on production". Where they overlap:
+
+| Need in the brief | §24 `faizy_work` | §25–§26 `faizy_ai` | Overlap |
+|---|---|---|---|
+| Per-person screen | `faizy.work.desk` ("My Work › My desk", badges) + `faizy.work.scorecard` (weighted KPIs, baseline, "Insufficient data") | `faizy.my.desk` ("My desk (KPIs)" on each desk: work items, planned work, leads, outcomes, manager team table) | Two desks. Scorecard weights are only in §24; planned-work tiles only in §25–§26 |
+| Checklists and SOPs | Checklist engine: versioned templates (14, 100 steps), lines with evidence, Ready for review, Blocked, server gates on CRM status, drafts and orders; SOP text inline | Checklist in the activity type's Default Note on every routed work item (11 types); SOP notes in Knowledge (11); steps + checklist + evidence line in every planned task | Two mechanisms. §24 enforces steps; §25 shows them |
+| Lead discipline | Prospect status, originator, verification evidence, duplicate guard, gates on stage moves; routing by source **off** (`faizy.work_route_leads`) | Lead = work item (Qualify, Follow up) on the salesperson's desk, escalation windows; routing by source **on** through `crm.team.faizy_lead_sources`; CRM rights for care, ops, manager | Same source→person mapping, implemented twice; §24's gates may refuse stage moves that §25's tests make directly |
+| 30-day plan | Two CSV registers (10 deliverables each), `load_30day_plan.py` into one project | Daily routine + weekly project blocks per desk (178 + 204 tasks, 8 h/day), `provision_staff.py`, projects per desk with "Evidence before Done", overdue escalation, "My plan today" | Two plans at different grain: deliverables vs daily work |
+| Project app | Bridge `faizy_work_project` (auto-install): checklist page on the task | `faizy_ai` depends on `project`; desk projects, evidence gate, plan menus | Compatible; installing §26 makes the bridge install too |
+
+Options:
+
+1. **Keep both as shipped** (fastest, most duplication): two desks and two checklist mechanisms side by side;
+   staff would need to be told which screen to open. Not recommended.
+2. **`faizy_work` owns checklists, gates and scorecards; `faizy_ai` owns the desks, routing and planned work**
+   (recommended): drop `faizy.work.desk` in favour of `faizy.my.desk` (add a scorecard tile), keep the
+   checklist engine and attach its templates to the planned tasks through the bridge, keep §26's team-by-source
+   routing and retire `faizy.work_route_leads`, keep §26's daily plan and load §24's ten deliverables per
+   person as milestone tasks in the same desk projects. One follow-up PR, mostly deletions and one data file.
+3. **`faizy_work` owns everything**: drop §25–§26's desk tiles, lead routing and planned-work guards; keep only
+   the Project dependency. Loses the daily plan, evidence-before-Done and overdue-task escalation unless rebuilt.
+
+Co-installation result (all six modules, one database): run in progress at the time of this commit; recorded in the follow-up commit.
