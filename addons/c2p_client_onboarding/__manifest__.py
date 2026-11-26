@@ -17,7 +17,7 @@ for a password or key, and refuses text that looks like one.
 
 Community only — no Enterprise dependency.
 """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Services/Project",
     "author": "Core2Plus (C2P Consultants)",
     "website": "https://www.core2plus.com",
