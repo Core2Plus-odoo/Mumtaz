@@ -2,6 +2,7 @@
 
 Read-only report, 26 Nov 2026. Repository `Core2Plus-odoo/Mumtaz`, `main` at `2af0185`.
 Status: **draft for approval. Nothing was built, installed, deployed or changed.**
+Decisions D1 to D4 were made by the owner on 26 Nov 2026 and are recorded in sections G, H, I and J. D5 is still open.
 
 ## How to read this report
 
@@ -154,18 +155,22 @@ So the engagement key can be **the `sale.order` id**, with `c2p_is_proposal` as 
 
 **Where.** A small addon in this repository (for example `c2p_order_projects`, depending on `sale_project` and `c2p_project_tracker`), replacing the three live database actions with versioned, tested code. It overrides `sale.order._action_confirm` after the standard step, so manual confirmation, CRM won, portal acceptance and the API all pass through one place.
 
-**What it does on confirmation**, in one transaction, only for orders that carry the proposal marker or an engagement-type product (a setting):
+**What it does on confirmation**, in one transaction, for **any confirmed order that contains a product whose service tracking creates a project** (`project_only` or `task_in_project`), proposal-flagged or not (decision D3):
 1. Finds the oversight and delivery projects for this order by the unique key. If both exist (archived or not), it does nothing.
 2. Creates the missing one from its template with the standard template mechanism (`action_create_from_template`), in the correct company looked up by setting, not by id 1 or 4.
 3. Sets the customer, the order line link, the tracker layers (portfolio and delivery) and `c2p_counterpart_id`.
 4. Also fills `x_billing_project_id`, `x_delivery_project_id` and mirrors milestones with `x_billing_milestone_id`, so rule 30 / action 920 keeps working during the transition.
 5. Posts one chatter note on the order.
 
-**Decision D1 (needs you).** Who creates the Consultants oversight project?
-- **Option A, recommended:** the standard `sale_project` keeps creating it, because it also carries the order-line link that milestone invoicing needs; the new code adds the Solutions project and the pairing in the same confirmation. For the user it is one path (confirm the order) and one transaction.
+**Decision D1: DECIDED, Option A (26 Nov 2026).** Who creates the Consultants oversight project?
+- **Option A, chosen:** the standard `sale_project` keeps creating it, because it also carries the order-line link that milestone invoicing needs; the new code adds the Solutions project and the pairing in the same confirmation. For the user it is one path (confirm the order) and one transaction.
 - **Option B:** the new code creates both and product tracking is set to "no". One creator, but milestone invoicing must be re-tested before any product is switched.
 
-**Decision D2 (needs you).** Archived project: I propose it still blocks creation (the order already has one; an administrator unarchives it). The alternative, ignoring archived projects, would create a second project.
+**Decision D2: DECIDED (26 Nov 2026).** An archived project still blocks creation: the order already has one, and an administrator unarchives it. Ignoring archived projects would have created a second project.
+
+**Decision D3: DECIDED (26 Nov 2026).** Any confirmed order with a project-creating product qualifies, not only Proposal Maker orders. The unique key stays the order, so one order still gives exactly one pair. Consequence: small or one-off orders with such a product are paired too, so test 11 below covers a non-proposal order.
+
+**Decision D4: DECIDED (26 Nov 2026).** The CRM "won, confirm the single quotation" step stays. Project creation moves out of it: rule 19 only confirms, and confirming runs the new path.
 
 ## H. Which existing paths to switch off, and in what order
 
@@ -175,8 +180,8 @@ Nothing is switched off until the new path passes the staging plan. At no point 
 |---|---|---|
 | 0 | Install the new addon on live with its setting **off** | No behaviour change |
 | 1 | Rule 11 / action 747 **off** | Keyword clones; evidence it adds anything is missing; independent of the others |
-| 2 | In action 766 remove the call to 919 (L14) and the no-quotation branch (L24-44). Keep the "won → confirm the single quotation" step if the business still wants it. | After this, 919 has no caller |
-| 3 | Product 97 and any T0x product: unchanged under Option A; tracking "no" under Option B | Only under Option B |
+| 2 | In action 766 remove the call to 919 (L14) and the no-quotation branch (L24-44). Keep the "won → confirm the single quotation" step (decision D4). | After this, 919 has no caller |
+| 3 | Product 97 and any T0x product: unchanged (Option A chosen) | Not needed |
 | 4 | Switch the new path **on** | Single creator from here |
 | 5 | Rules 2 and 12 (kickoff and portal to-dos): add "not a template" and "one per project" conditions | Stops duplicate to-dos |
 | 6 | Duplicate Cleanup 753 **off** once the unique key is live | It is destructive and redundant after the key |
@@ -200,14 +205,16 @@ Same safe copy as `T01-staging-runbook`: locked copy, scheduled jobs and mail of
 | 8. Access | A Consultants-only salesperson confirms the order | Works; the pair appears for the right companies |
 | 9. Tracker | Hourly sync and the pairing | No error; engagement visible |
 | 10. Out of scope, confirmed untouched | Intercompany 60% rule, posted accounting, user permissions | Unchanged |
+| 11. Non-proposal order (decision D3) | Confirm an order not made through the Proposal Maker that contains a project product; then one with no project product | The first gets one pair; the second creates nothing |
+| 12. Archived project (decision D2) | As test 3, for both the Consultants and the Solutions project | Never a replacement |
 
-## J. Decisions needed before any build
+## J. Decisions
 
-- D1: Option A or B (section G).
-- D2: archived project blocks creation, or is ignored.
-- D3: which orders qualify: proposal-flagged only, or any order with an engagement-type product.
-- D4: keep the CRM "won → confirm the single quotation" behaviour, or retire it.
-- D5: approval for the read-only queries in Appendix A.
+- D1: **decided**, Option A (the standard `sale_project` keeps creating the Consultants project).
+- D2: **decided**, an archived project still blocks creation.
+- D3: **decided**, any order with a project-creating product qualifies.
+- D4: **decided**, keep the CRM "won, confirm the single quotation" step.
+- D5: **open**, approval for the read-only queries in Appendix A, and then approval to build.
 
 ## Appendix A. Read-only queries to settle the UNKNOWN items
 
