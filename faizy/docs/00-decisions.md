@@ -1244,4 +1244,10 @@ Options:
 3. **`faizy_work` owns everything**: drop §25–§26's desk tiles, lead routing and planned-work guards; keep only
    the Project dependency. Loses the daily plan, evidence-before-Done and overdue-task escalation unless rebuilt.
 
-Co-installation result (all six modules, one database): run in progress at the time of this commit; recorded in the follow-up commit.
+Co-installation result (all six modules, one database, 26 Nov 2026): the first run found exactly the two
+interactions above, `1 failed, 1 error(s) of 159 tests`: §24's CRM gate refused §25's direct move to Qualified,
+and §25's always-on lead assignment broke §24's "routing off by default" test. After the `faizy_ai.route_leads`
+switch (off by default) and the test adjustments: **`0 failed, 0 error(s) of 160 tests`**, no ERROR line
+(`faizy_ai` 62, `faizy_work` 33, `faizy_work_project` 3, the rest unchanged). The four original modules alone on
+the merged tree: `0 failed, 0 error(s) of 128 tests`. So the two implementations install and test together;
+what remains is the duplication above, which is a product decision, not a defect.
