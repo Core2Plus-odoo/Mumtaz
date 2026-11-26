@@ -104,9 +104,9 @@ Steps 2 to 5 are in this order so that at no moment two creators are on.
 
 The test plan is section I of `04-ORDER-TO-PROJECT-PATHS.md` (new order, re-confirmed order,
 archived project, duplicate confirmation, plus the checks added by decisions D2, D3 and D6).
-A second runbook, written for the module instead of the old actions, is **not yet written**; it
-follows the first one (`T01-staging-runbook`): a locked copy of live with scheduled jobs and mail off,
-fictional customers only, scripts that refuse any other database, and deals that roll back.
+The runbook for this module is `06-ORDER-PROJECTS-STAGING-RUNBOOK.md`: a locked copy of live with scheduled jobs and mail off,
+fictional customers only, scripts that refuse any other database, deals that roll back, and the phases baseline, install,
+off, on (old automations still active), edited (the proposed text changes applied to the copy) and a two-process race.
 
 ## 6. What is verified, what is not
 

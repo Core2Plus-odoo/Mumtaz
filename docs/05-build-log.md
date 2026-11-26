@@ -269,4 +269,8 @@ Built after the owner's decisions D1 to D4 and D6 in
   them and mirrored the milestone.
 - **Not done:** not run on a copy of live data; not installed; no live
   automation changed. The proposed changes to the live automations are in
-  `docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md`, as text only.
+  `docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md`, as text only. The staging
+  runbook is `docs/project/phase1/06-ORDER-PROJECTS-STAGING-RUNBOOK.md`; its scripts
+  were rehearsed on a local stand-in that holds the pasted live actions (baseline,
+  install, off, on, edited and a two-process race all as expected) and have not run
+  against live data.
