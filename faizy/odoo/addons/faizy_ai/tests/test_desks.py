@@ -1,4 +1,4 @@
-"""§24: leads are work, checklists travel with the item, My desk shows the numbers."""
+"""§25: leads are work, checklists travel with the item, My desk shows the numbers."""
 from datetime import timedelta
 
 from odoo import Command, fields

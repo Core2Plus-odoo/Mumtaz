@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_c2p_master_agent,c2p.master.agent,model_c2p_master_agent,base.group_user,1,1,1,1
+access_c2p_master_agent,c2p.master.agent,model_c2p_master_agent,c2p_master_agent.group_c2p_master_agent_user,1,1,1,1

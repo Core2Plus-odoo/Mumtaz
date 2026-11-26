@@ -1,4 +1,4 @@
-"""The 30-day work plan for the two FAIZY executives (§25). Data, not code.
+"""The 30-day work plan for the two FAIZY executives (§26). Data, not code.
 
 Read by provision_staff.py, which turns it into standard Odoo records: SOP
 notes (faizy.ai.knowledge, category Procedure), one project per desk with

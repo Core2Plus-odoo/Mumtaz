@@ -1,4 +1,4 @@
-"""§25: planned work on the desks, evidence before Done, task escalation,
+"""§26: planned work on the desks, evidence before Done, task escalation,
 one lead pipeline per executive."""
 from datetime import timedelta
 from unittest.mock import patch

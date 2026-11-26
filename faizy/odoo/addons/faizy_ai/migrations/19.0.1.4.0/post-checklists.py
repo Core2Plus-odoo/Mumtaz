@@ -1,4 +1,4 @@
-"""19.0.1.4.0: checklists on the FAIZY activity types (§24).
+"""19.0.1.4.0: checklists on the FAIZY activity types (§25).
 
 The types are noupdate data (Umer tunes the escalation windows), so an
 upgrade does not touch them; this fills the Default Note where it is still

@@ -39,7 +39,7 @@
 
             <div class="o_c2p_card">
                 <h3>Team load — open tasks</h3>
-                <t t-if="load.length">
+                <t t-if="teamLoad.length">
                     <div class="o_c2p_seglegend">
                         <span class="o_c2p_legend_item">
                             <span class="o_c2p_swatch" style="background: var(--series-2)"/>
@@ -50,7 +50,7 @@
                             Overdue
                         </span>
                     </div>
-                    <t t-foreach="load" t-as="row" t-key="row.name">
+                    <t t-foreach="teamLoad" t-as="row" t-key="row.name">
                         <div class="o_c2p_load_row">
                             <span class="o_c2p_load_name" t-esc="row.name"/>
                             <div class="o_c2p_load_track">

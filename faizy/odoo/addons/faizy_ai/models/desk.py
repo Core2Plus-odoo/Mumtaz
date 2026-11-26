@@ -1,4 +1,4 @@
-"""My desk: the numbers behind one person's day (HQ05 §24).
+"""My desk: the numbers behind one person's day (HQ05 §25).
 
 Same pattern as faizy.dashboard (BI-01): a TransientModel with computed
 fields on an ordinary form, every tile opening the real list. Nothing is

@@ -1043,7 +1043,27 @@ showed them.
 Verified on a throwaway Odoo 19 database: all four Faizy modules, 111 tests, 0 failed after merging #200 (5 new in
 `test_plan_prices_hidden`). Not run on production.
 
-## 24. Leads are work, checklists on every item, My desk KPIs (faizy_ai 19.0.1.4.0)
+## 24. Staff work: checklists, My Work desks, scorecards (faizy_work 19.0.1.0.0, faizy_work_project 19.0.1.0.0)
+
+Brief by Umer, 23 Nov 2026. One reusable checklist mechanism (none exists in Odoo 19 CRM or Project) attached to the existing
+CRM lead, FAIZY order, vendor, AI draft or project task. Standard-first: no second CRM, task or approval app; existing
+modules are extended with `_inherit`, never edited.
+
+- Gates are enforced on the server through `ValidationError`, with a switch `faizy.checklist_enforce` (shipped on).
+- Prospect status maps onto the standard CRM stages; stages are not renamed. Originator and owner are separate.
+- Scorecards count real records, show "Insufficient data" instead of guessing, and wait for a two-week baseline.
+- Shipped off or unset: `faizy.checklist_orders`, `faizy.work_route_leads`, `faizy.kpi_start`. Conversion target 0.20 is provisional.
+- Faizy Agent now implies the CRM salesman group (no net change on production).
+- Open decisions: Mashood's CRM rights (All vs Own Documents), the 30-day start date (assumed Mon 30 Nov 2026), who is assigned to recurring checklists.
+
+Verified on a clean throwaway Odoo 19 database: faizy_core, faizy_ai, faizy_pilot, faizy_website, faizy_work and the bridge,
+143 tests, 0 failed. Not run on production. Details and handoff list: `docs/work/README.md`.
+
+## 25. Leads are work, checklists on every item, My desk KPIs (faizy_ai 19.0.1.4.0)
+
+> Built in parallel with §24 (`faizy_work`, PR #204) from the same brief, in a different session. The two overlap
+> (desks and KPIs, checklists, lead routing, the 30-day plan); the reconciliation is Umer's decision and is
+> listed at the end of §26.
 
 Asked by Umer on 22 Nov 2026: Mashood and Raza log in and see their assigned daily work, qualified
 lead-generation assignments, checklists, follow-ups, deadlines and KPIs, on their existing roles, with
@@ -1112,7 +1132,7 @@ to operations; whether the AI agents may create leads at all (today they can onl
 through a draft, since they have no CRM right); and the plan-price rule applies to lead follow-ups
 too (no prices until approved, §23), which the follow-up checklist says.
 
-## 25. Staff work execution: planned work on the desks, evidence before Done, one pipeline each (faizy_ai 19.0.1.5.0)
+## 26. Staff work execution: planned work on the desks, evidence before Done, one pipeline each (faizy_ai 19.0.1.5.0)
 
 Directive from Umer, 23 Nov 2026: real development in the existing ERP for the two executives, Raza
 (Business Development & Operations Executive) and Mashood (Digital Marketing & Customer Experience
@@ -1123,7 +1143,7 @@ outbound messaging untouched.
 
 **Audit first (what already existed, reused as is):** §20 security guards; §21 role holders, nine work-item
 activity types, routing R1–R10, escalation and morning-summary crons, Care Desk / Operations Desk /
-Command Centre; §24 leads as work, checklists on work items, My desk KPIs; standard `crm` with the Faizy
+Command Centre; §25 leads as work, checklists on work items, My desk KPIs; standard `crm` with the Faizy
 lead fields; `faizy.ai.knowledge` notes (category Procedure) for SOPs; `faizy.dashboard` for the business
 view. Mashood's role is `Faizy AI / Customer communications approver` + care role holder; Raza's is
 `Faizy / Operations` + operations role holder. Nothing of this is duplicated.
@@ -1172,7 +1192,7 @@ are never created by the tool; staging `stg.*` users only, with `--create-stg-us
   Faizy CI flake8 command and the module registry check: pass.
 - Staging demonstration on the fresh database with `provision_staff.py --create-stg-users` (users
   `stg.mashood`, `stg.raza`, `stg.umer`; 11 SOP notes; 2 teams; 2 projects; 178 + 204 tasks from
-  23 Nov 2026) plus the SYNTHETIC reactive work of §24, all over XML-RPC as each user and in a headless
+  23 Nov 2026) plus the SYNTHETIC reactive work of §25, all over XML-RPC as each user and in a headless
   browser logged in as each user:
   - visibility: Mashood sees only his project (178 tasks), Raza only his (204), Umer both (382);
   - day 1: Mashood 7 tasks / 8.0 h, Raza 8 tasks / 8.0 h, each with steps, checklist and evidence line;
@@ -1185,7 +1205,7 @@ are never created by the tool; staging `stg.*` users only, with `--create-stg-us
     a walk-in partner enquiry on Raza in "Partners & referrals";
   - My desk as each user showed the expected numbers; the manager's copy showed the team table.
   Screenshots handed to Umer with the PR; not in git. The seeded database is a demonstration, not a
-  test environment (three pre-existing routing tests assume an empty database, see §24).
+  test environment (three pre-existing routing tests assume an empty database, see §25).
 
 **Not done / blocked / needs Umer:** no staging server exists, so staging means a throwaway database here
 with `stg.*` users; nothing has run on `faizy_prod`; real Mashood and Raza accounts, the home action and

@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_onboarding_check_member,c2p.onboarding.check member,model_c2p_onboarding_check,c2p_project_tracker.group_c2p_delivery_member,1,0,0,0
+access_onboarding_check_lead,c2p.onboarding.check lead,model_c2p_onboarding_check,c2p_project_tracker.group_c2p_delivery_lead,1,1,1,0
+access_onboarding_check_manager,c2p.onboarding.check manager,model_c2p_onboarding_check,c2p_project_tracker.group_c2p_portfolio_manager,1,1,1,1
+access_client_instance_member,c2p.client.instance member,model_c2p_client_instance,c2p_project_tracker.group_c2p_delivery_member,1,0,0,0
+access_client_instance_lead,c2p.client.instance lead,model_c2p_client_instance,c2p_project_tracker.group_c2p_delivery_lead,1,1,1,0
+access_client_instance_manager,c2p.client.instance manager,model_c2p_client_instance,c2p_project_tracker.group_c2p_portfolio_manager,1,1,1,1
+access_client_document_member,c2p.client.document member,model_c2p_client_document,c2p_project_tracker.group_c2p_delivery_member,1,0,0,0
+access_client_document_lead,c2p.client.document lead,model_c2p_client_document,c2p_project_tracker.group_c2p_delivery_lead,1,1,1,0
+access_client_document_manager,c2p.client.document manager,model_c2p_client_document,c2p_project_tracker.group_c2p_portfolio_manager,1,1,1,1
+access_client_access_member,c2p.client.access member,model_c2p_client_access,c2p_project_tracker.group_c2p_delivery_member,1,0,0,0
+access_client_access_lead,c2p.client.access lead,model_c2p_client_access,c2p_project_tracker.group_c2p_delivery_lead,1,1,1,0
+access_client_access_manager,c2p.client.access manager,model_c2p_client_access,c2p_project_tracker.group_c2p_portfolio_manager,1,1,1,1

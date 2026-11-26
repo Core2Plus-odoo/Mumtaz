@@ -1,7 +1,7 @@
 """Where work enters and leaves, and the activity it creates or closes.
 
 Routing table: FAIZY HQ05 §4.1 (R1–R8, R10) and, since 19.0.1.4.0, leads
-(R13, §24): a CRM lead is a work item for its salesperson. Every hook is a
+(R13, §25): a CRM lead is a work item for its salesperson. Every hook is a
 side effect: a routing failure is logged and never blocks the business action
 itself.
 """
@@ -232,7 +232,7 @@ class CrmLeadRouting(models.Model):
     def _faizy_lead_owner(self, user):
         """The staff member who should hold this lead's work: the salesperson
         if it is a real staff account; otherwise the leader of the sales team
-        that owns the lead's source (§25, one pipeline per executive); otherwise
+        that owns the lead's source (§26, one pipeline per executive); otherwise
         the customer-care role holder."""
         if self._faizy_eligible(user):
             return user

@@ -1,0 +1,6 @@
+"Purpose: how the work is done today, so we improve it rather than merely digitise it."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Process,Department,Owner,Frequency,Current tooling,Volume,Known pain points,Priority
+MANDATORY,MANDATORY,MANDATORY,Optional,Optional,Optional,MANDATORY,Optional
+Text,Text,Text,"Daily / Weekly / Monthly / Ad hoc",Text,Number,Text,"High / Medium / Low"
+"Monthly invoicing run","Finance","Finance Manager","Monthly","Spreadsheets","~400 invoices","Manual, two days each month, errors found late","High"

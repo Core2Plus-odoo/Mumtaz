@@ -139,7 +139,7 @@
         <field name="domain">[('state', '=', 'in_progress')]</field>
     </record>
 
-    <!-- ── Leads (§24): standard CRM, filtered to the signed-in salesperson ── -->
+    <!-- ── Leads (§25): standard CRM, filtered to the signed-in salesperson ── -->
     <record id="action_faizy_my_leads" model="ir.actions.act_window">
         <field name="name">My leads</field>
         <field name="res_model">crm.lead</field>

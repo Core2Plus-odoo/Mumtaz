@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Provision the two FAIZY executive workspaces over XML-RPC (§25). Idempotent.
+"""Provision the two FAIZY executive workspaces over XML-RPC (§26). Idempotent.
 
     python3 provision_staff.py --url http://127.0.0.1:8069 --db faizy_stg \\
         --login admin --password ... --start 2026-11-24 \\

@@ -1,0 +1,6 @@
+"Purpose: your customer master. One row per customer; contacts go on their own rows."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Customer code,Legal name,Trading name,Tax registration,Country,Email,Phone,Payment terms,Credit limit,Currency,Active
+Optional,MANDATORY,Optional,Optional,MANDATORY,Optional,Optional,Optional,Optional,Optional,Optional
+Text,Text,Text,Text,Text,Email,Text,"e.g. 30 days",Number,"ISO 4217","Yes / No"
+"C-0001","Example Trading LLC","Example","100123456700003","United Arab Emirates","ap@example.com","+971...","30 days","250000","AED","Yes"

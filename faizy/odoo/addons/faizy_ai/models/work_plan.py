@@ -1,4 +1,4 @@
-"""Planned work for the FAIZY desks (§25): standard Project, two guards.
+"""Planned work for the FAIZY desks (§26): standard Project, two guards.
 
 Reactive work (an order to assign, a reply to approve) is a mail.activity on
 the real record (§21). Planned work (the 30-day plan, the daily routine) is a

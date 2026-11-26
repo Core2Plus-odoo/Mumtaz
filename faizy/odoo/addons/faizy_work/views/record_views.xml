@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The checklist lives on the business record. Clicking a row opens it
+         in a dialog, so staff never leave the lead, order or draft. -->
+    <record id="crm_lead_form_work" model="ir.ui.view">
+        <field name="name">crm.lead.form.faizy.work</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="faizy_core.crm_lead_faizy_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='faizy_page']" position="inside">
+                <group string="Prospect quality">
+                    <group>
+                        <field name="faizy_prospect_status"/>
+                        <field name="faizy_prospect_kind"/>
+                        <field name="faizy_contact_basis"/>
+                        <field name="faizy_originator_id"/>
+                    </group>
+                    <group>
+                        <field name="faizy_evidence_url" widget="url"/>
+                        <field name="faizy_verified_on" readonly="1"/>
+                        <field name="faizy_verified_by" readonly="1"/>
+                        <label for="faizy_duplicate_count"/>
+                        <div class="o_row">
+                            <field name="faizy_duplicate_count" readonly="1"/>
+                            <button name="action_view_duplicates" type="object" string="View"
+                                    class="btn-link" invisible="not faizy_duplicate_count"/>
+                        </div>
+                        <field name="faizy_duplicate_reviewed" invisible="not faizy_duplicate_count"/>
+                    </group>
+                </group>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Checklist" name="faizy_checklist">
+                    <button name="action_start_checklist" type="object" string="Start checklist"
+                            class="btn-primary mb-2"/>
+                    <field name="checklist_ids" mode="list" readonly="1">
+                        <list decoration-danger="state == 'blocked'" decoration-success="state == 'approved'">
+                            <field name="name"/>
+                            <field name="owner_id"/>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="missing_summary" string="Still needed"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="faizy_order_form_work" model="ir.ui.view">
+        <field name="name">faizy.order.form.work</field>
+        <field name="model">faizy.order</field>
+        <field name="inherit_id" ref="faizy_core.view_faizy_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Checklist" name="faizy_checklist">
+                    <button name="action_start_checklist" type="object" string="Start checklist"
+                            class="btn-primary mb-2" groups="faizy_core.group_faizy_ops"/>
+                    <field name="checklist_ids" mode="list" readonly="1">
+                        <list decoration-danger="state == 'blocked'" decoration-success="state == 'approved'">
+                            <field name="name"/>
+                            <field name="owner_id"/>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="missing_summary" string="Still needed"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="faizy_vendor_form_work" model="ir.ui.view">
+        <field name="name">faizy.vendor.form.work</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="faizy_core.view_faizy_vendor_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Verification checklist" name="faizy_checklist">
+                    <button name="action_start_checklist" type="object" string="Start checklist"
+                            class="btn-primary mb-2" groups="faizy_core.group_faizy_ops"/>
+                    <field name="checklist_ids" mode="list" readonly="1">
+                        <list decoration-danger="state == 'blocked'" decoration-success="state == 'approved'">
+                            <field name="name"/>
+                            <field name="owner_id"/>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="faizy_draft_form_work" model="ir.ui.view">
+        <field name="name">faizy.ai.draft.form.work</field>
+        <field name="model">faizy.ai.draft</field>
+        <field name="inherit_id" ref="faizy_ai.view_faizy_ai_draft_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Quality checklist">
+                    <button name="action_start_checklist" type="object" string="Start quality checklist"
+                            class="btn-secondary"/>
+                    <field name="checklist_ids" nolabel="1" mode="list" readonly="1">
+                        <list decoration-danger="state == 'blocked'" decoration-success="state == 'approved'">
+                            <field name="name"/>
+                            <field name="owner_id"/>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="missing_summary" string="Still needed"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

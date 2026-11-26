@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_c2p_meeting_root" name="Minutes"
+              parent="project.menu_main_pm" sequence="20"/>
+    <menuitem id="menu_c2p_meeting" name="Minutes of Meeting"
+              parent="menu_c2p_meeting_root" action="action_c2p_meeting"
+              sequence="1"/>
+    <menuitem id="menu_c2p_meeting_action_mine" name="My Meeting Actions"
+              parent="menu_c2p_meeting_root" action="action_c2p_meeting_action_mine"
+              sequence="2"/>
+    <menuitem id="menu_c2p_meeting_action_all" name="All Action Items"
+              parent="menu_c2p_meeting_root" action="action_c2p_meeting_action"
+              groups="project.group_project_manager" sequence="3"/>
+</odoo>

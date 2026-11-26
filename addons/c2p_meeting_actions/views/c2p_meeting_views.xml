@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_c2p_meeting_list" model="ir.ui.view">
+        <field name="name">c2p.meeting.list</field>
+        <field name="model">c2p.meeting</field>
+        <field name="arch" type="xml">
+            <list string="Minutes" decoration-muted="state == 'cancelled'">
+                <field name="reference"/>
+                <field name="title"/>
+                <field name="meeting_date"/>
+                <field name="project_id" optional="show"/>
+                <field name="organiser_id" optional="show"/>
+                <field name="action_count" string="Actions"/>
+                <field name="action_open_count" string="Open"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'confirmed'"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_c2p_meeting_form" model="ir.ui.view">
+        <field name="name">c2p.meeting.form</field>
+        <field name="model">c2p.meeting</field>
+        <field name="arch" type="xml">
+            <form string="Minutes of Meeting">
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm Minutes"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_convert_approved" type="object"
+                            string="Convert Approved Actions" class="btn-primary"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_reopen" type="object" string="Reopen"
+                            groups="c2p_meeting_actions.group_c2p_meeting_approver"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_actions" type="object"
+                                class="oe_stat_button" icon="fa-tasks">
+                            <field name="action_count" widget="statinfo"
+                                   string="Actions"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="reference" readonly="1"/></h1>
+                        <h2><field name="title" placeholder="What was this meeting about?"/></h2>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="meeting_date"/>
+                            <field name="duration_minutes"/>
+                            <field name="location" placeholder="Room, or a call link"/>
+                            <field name="organiser_id"/>
+                        </group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="milestone_id"
+                                   invisible="not project_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="confirmed_by_id" readonly="1"
+                                   invisible="state != 'confirmed'"/>
+                            <field name="confirmed_at" readonly="1"
+                                   invisible="state != 'confirmed'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="attendee_ids" widget="many2many_tags"
+                               placeholder="Who was there"/>
+                        <field name="absentee_ids" widget="many2many_tags"
+                               placeholder="Who sent apologies"/>
+                    </group>
+                    <notebook>
+                        <page string="Decisions" name="decisions">
+                            <field name="decisions"
+                                   placeholder="What was decided. This is the part that gets quoted back."/>
+                        </page>
+                        <page string="Action Items" name="actions">
+                            <field name="action_ids" context="{'default_meeting_id': id}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="reference" readonly="1" optional="show"/>
+                                    <field name="name"/>
+                                    <field name="user_id"/>
+                                    <field name="date_deadline"/>
+                                    <field name="project_id" optional="hide"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'converted'"
+                                           decoration-danger="state == 'rejected'"/>
+                                    <field name="task_id" readonly="1" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Agenda" name="agenda">
+                            <field name="agenda"/>
+                        </page>
+                        <page string="Discussion" name="discussion">
+                            <field name="discussion"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_c2p_meeting_search" model="ir.ui.view">
+        <field name="name">c2p.meeting.search</field>
+        <field name="model">c2p.meeting</field>
+        <field name="arch" type="xml">
+            <search string="Minutes">
+                <field name="reference"/>
+                <field name="title"/>
+                <field name="project_id"/>
+                <field name="attendee_ids"/>
+                <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
+                <separator/>
+                <filter name="open_actions" string="Has open actions"
+                        domain="[('action_ids.state','in',('draft','proposed'))]"/>
+                <filter name="mine" string="I chaired" domain="[('organiser_id','=',uid)]"/>
+                <group>
+                    <filter name="by_project" string="Project" context="{'group_by':'project_id'}"/>
+                    <filter name="by_state" string="Status" context="{'group_by':'state'}"/>
+                    <filter name="by_month" string="Month" context="{'group_by':'meeting_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_c2p_meeting" model="ir.actions.act_window">
+        <field name="name">Minutes of Meeting</field>
+        <field name="res_model">c2p.meeting</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_confirmed': 0}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Record your first set of minutes</p>
+            <p>Minutes capture what was decided. Their action items become
+               project tasks — once each, however many times anyone clicks.</p>
+        </field>
+    </record>
+</odoo>

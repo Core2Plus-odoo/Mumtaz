@@ -285,7 +285,7 @@ class FaizyRouting(models.AbstractModel):
 
     @api.model
     def _escalate_planned_tasks(self, now, owner):
-        """§25: a planned task on a FAIZY desk still open this long after its
+        """§26: a planned task on a FAIZY desk still open this long after its
         deadline escalates once, the same way a work item does."""
         grace = get_float(self.env, 'faizy_ai.task_escalation_hours', 2)
         late = self.env['project.task'].sudo().search([

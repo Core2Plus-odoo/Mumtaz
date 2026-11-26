@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Checklist: the form the person actually works in ───────────── -->
+    <record id="view_checklist_form" model="ir.ui.view">
+        <field name="name">faizy.checklist.form</field>
+        <field name="model">faizy.checklist</field>
+        <field name="arch" type="xml">
+            <form string="Checklist">
+                <header>
+                    <button name="action_ready" type="object" string="Ready for Review" class="btn-primary"
+                            invisible="state not in ('draft', 'in_progress')"/>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary"
+                            invisible="state != 'ready' or not can_review"
+                            groups="faizy_core.group_faizy_manager"/>
+                    <button name="action_open_reason_wizard" type="object" string="Send back"
+                            context="{'reason_action': 'reject'}"
+                            invisible="state != 'ready' or not can_review"
+                            groups="faizy_core.group_faizy_manager"/>
+                    <button name="action_open_reason_wizard" type="object" string="Block"
+                            context="{'reason_action': 'block'}"
+                            invisible="state in ('blocked', 'approved')"/>
+                    <button name="action_open_reason_wizard" type="object" string="Unblock"
+                            context="{'reason_action': 'unblock'}" invisible="state != 'blocked'"/>
+                    <button name="action_open_reason_wizard" type="object" string="Reopen"
+                            context="{'reason_action': 'reopen'}" invisible="state not in ('ready', 'approved')"/>
+                    <button name="action_refresh" type="object" string="Refresh from ERP"
+                            invisible="state == 'approved'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,ready,approved"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-danger" role="alert" invisible="state != 'blocked'">
+                        <b>Blocked:</b> <field name="blocked_reason" readonly="1" class="d-inline"/>
+                        The escalation owner has been asked to decide.
+                    </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_record" type="object" class="oe_stat_button" icon="fa-link"
+                                invisible="not res_id">
+                            <div class="o_stat_info"><span class="o_stat_text">Open record</span></div>
+                        </button>
+                    </div>
+                    <h1><field name="name" readonly="1"/></h1>
+                    <group>
+                        <group>
+                            <field name="owner_id"/>
+                            <field name="due_date"/>
+                            <field name="record_name" invisible="not res_id" string="Record"/>
+                        </group>
+                        <group>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="missing_summary" invisible="not missing_summary" string="Still needed"/>
+                            <field name="template_version" string="Template version"/>
+                            <field name="reject_count" invisible="not reject_count" string="Sent back"/>
+                        </group>
+                    </group>
+                    <field name="line_ids" mode="list" readonly="state == 'approved'">
+                        <list editable="bottom" create="0" delete="0" decoration-muted="not applicable"
+                              decoration-success="state == 'done'">
+                            <field name="sequence" column_invisible="1"/>
+                            <field name="applicable" column_invisible="1"/>
+                            <field name="evidence_required" column_invisible="1"/>
+                            <field name="restricted" column_invisible="1"/>
+                            <button name="action_done" type="object" icon="fa-square-o" title="Mark done"
+                                    invisible="state == 'done' or not applicable"/>
+                            <button name="action_undo" type="object" icon="fa-check-square-o" title="Take the tick back"
+                                    invisible="state != 'done'"/>
+                            <field name="name" readonly="1" width="240px"/>
+                            <field name="mandatory" widget="boolean_toggle" readonly="1" string="Must" width="55px"/>
+                            <field name="sop" readonly="1" optional="show" string="How to do it" width="320px"/>
+                            <field name="auto_note" readonly="1" optional="show" string="From the ERP" width="110px"/>
+                            <field name="note" string="Note / evidence" width="150px"/>
+                            <field name="evidence_ref" optional="show" width="130px"/>
+                            <field name="evidence_url" optional="hide"/>
+                            <field name="done_by" readonly="1" optional="show" width="100px"/>
+                            <field name="done_on" readonly="1" optional="hide"/>
+                            <field name="state" readonly="1" widget="badge"
+                                   decoration-success="state == 'done'" decoration-danger="state == 'blocked'"/>
+                        </list>
+                    </field>
+                    <p class="text-muted small">Steps marked "Must" cannot be skipped. Steps behind a gate
+                        are re-checked on the server when the business record moves forward. Restricted steps
+                        need a Manager who is not the owner.</p>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_checklist_list" model="ir.ui.view">
+        <field name="name">faizy.checklist.list</field>
+        <field name="model">faizy.checklist</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="state == 'blocked'" decoration-success="state == 'approved'">
+                <field name="name"/>
+                <field name="record_name" string="Record"/>
+                <field name="owner_id"/>
+                <field name="due_date"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="missing_summary" string="Still needed" optional="show"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_checklist_search" model="ir.ui.view">
+        <field name="name">faizy.checklist.search</field>
+        <field name="model">faizy.checklist</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="owner_id"/>
+                <filter name="mine" string="Mine" domain="[('owner_id', '=', uid)]"/>
+                <filter name="open" string="Open" domain="[('state', 'in', ('draft', 'in_progress'))]"/>
+                <filter name="ready" string="Ready for review" domain="[('state', '=', 'ready')]"/>
+                <filter name="blocked" string="Blocked" domain="[('state', '=', 'blocked')]"/>
+                <separator/>
+                <filter name="weekly" string="Weekly reviews" domain="[('kind', '=', 'weekly')]"/>
+                <group>
+                    <filter name="g_owner" string="Owner" context="{'group_by': 'owner_id'}"/>
+                    <filter name="g_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="g_tpl" string="Template" context="{'group_by': 'template_code'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_checklists" model="ir.actions.act_window">
+        <field name="name">Checklists</field>
+        <field name="res_model">faizy.checklist</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_mine': 1}</field>
+    </record>
+    <record id="action_checklists_review" model="ir.actions.act_window">
+        <field name="name">Checklists to review</field>
+        <field name="res_model">faizy.checklist</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ('ready', 'blocked'))]</field>
+        <field name="context">{'search_default_g_owner': 1}</field>
+    </record>
+
+    <!-- ── Wizards ───────────────────────────────────────────────────── -->
+    <record id="view_checklist_reason_form" model="ir.ui.view">
+        <field name="name">faizy.checklist.reason.form</field>
+        <field name="model">faizy.checklist.reason</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="checklist_id" invisible="1"/>
+                    <field name="action"/>
+                    <field name="reason" placeholder="Say what is wrong or why. This stays in the history."/>
+                </group>
+                <footer>
+                    <button name="action_confirm" type="object" string="Confirm" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_checklist_start_form" model="ir.ui.view">
+        <field name="name">faizy.checklist.start.form</field>
+        <field name="model">faizy.checklist.start</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="res_model" invisible="1"/>
+                    <field name="res_id" invisible="1"/>
+                    <field name="template_id" options="{'no_create': True}"/>
+                    <field name="sop_preview" nolabel="1" colspan="2"/>
+                </group>
+                <footer>
+                    <button name="action_start" type="object" string="Start checklist" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Templates ─────────────────────────────────────────────────── -->
+    <record id="view_template_list" model="ir.ui.view">
+        <field name="name">faizy.checklist.template.list</field>
+        <field name="model">faizy.checklist.template</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="version"/>
+                <field name="role"/>
+                <field name="res_model"/>
+                <field name="kind"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_template_form" model="ir.ui.view">
+        <field name="name">faizy.checklist.template.form</field>
+        <field name="model">faizy.checklist.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_release" type="object" string="Release" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_new_version" type="object" string="New version"
+                            invisible="state != 'released'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <h1><field name="name" readonly="state != 'draft'"/></h1>
+                    <group>
+                        <group>
+                            <field name="code" readonly="state != 'draft'"/>
+                            <field name="version"/>
+                            <field name="role" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="res_model" readonly="state != 'draft'"/>
+                            <field name="kind" readonly="state != 'draft'"/>
+                            <field name="user_ids" widget="many2many_tags"
+                                   invisible="kind in ('record', 'standalone')"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="What this checklist is for."/>
+                    <field name="item_ids" readonly="state != 'draft'">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="sop"/>
+                            <field name="mandatory"/>
+                            <field name="condition"/>
+                            <field name="evidence_required"/>
+                            <field name="restricted"/>
+                            <field name="gate"/>
+                            <field name="auto_key"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_templates" model="ir.actions.act_window">
+        <field name="name">Checklist templates</field>
+        <field name="res_model">faizy.checklist.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

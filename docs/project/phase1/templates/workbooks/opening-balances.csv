@@ -1,0 +1,6 @@
+"Purpose: the balances we must carry forward. These must net to zero."
+"Owner: <NAME>  |  Return by: <YYYY-MM-DD>"
+Account code,Account name,Debit,Credit,Currency,As at date,Notes
+MANDATORY,MANDATORY,MANDATORY,MANDATORY,MANDATORY,MANDATORY,Optional
+Text,Text,Number,Number,"ISO 4217",YYYY-MM-DD,Text
+"1100","Trade Receivables","125000.00","0.00","AED","2026-01-01","Per audited accounts"
