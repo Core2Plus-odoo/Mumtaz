@@ -4,7 +4,7 @@
 # docs/erp/project/DECISION_REGISTER.md.
 
 layers: ["foundation", "platform", "product", "edition", "internal", "venture"]
-module_count: 66
+module_count: 67
 layering_violations:
   - "mumtaz_portal_routing -> mumtaz_cfo_base"
 modules:
@@ -778,6 +778,20 @@ modules:
     test_files: 1
     access_csv: false
     note: "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
+  c2p_order_projects:
+    layer: internal
+    disposition: keep
+    path: addons/c2p_order_projects
+    title: "C2P Order Projects"
+    version: "19.0.1.0.0"
+    license: "LGPL-3"
+    application: false
+    depends_local: ["c2p_project_tracker"]
+    depends_standard: ["sale_project"]
+    python_lines: 568
+    test_files: 1
+    access_csv: false
+    note: "C2P group internal. One order confirmation gives one oversight and one delivery project, keyed on the order and paired in the Project Tracker. Not installed anywhere; see docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md."
   c2p_project_tracker:
     layer: internal
     disposition: keep

@@ -241,3 +241,36 @@ Asked for by the owner after the live install: "we need upload document".
   `/root/c2p_module_backups/c2p_client_onboarding-before-2026-11-25-0956`.
 - Not done: one file per row, not several; no preview; the upload has not yet
   been tried in a browser on live.
+
+### c2p_order_projects built (26 Nov 2026) — merged work only, not installed anywhere
+Built after the owner's decisions D1 to D4 and D6 in
+`docs/project/phase1/04-ORDER-TO-PROJECT-PATHS.md`.
+- New addon `addons/c2p_order_projects` 19.0.1.0.0. Confirming an order that
+  holds a project-creating product (`project_only` or `task_in_project`) makes
+  sure the order has one oversight and one delivery project. The oversight
+  project is the one the standard Sales Project flow creates; this module tags
+  it. The delivery project is created from a template in the delivery company
+  and tagged. A database index allows one of each per order; an archived
+  project still counts, and templates are never matched.
+- Pairing in the Project Tracker (layers and counterpart) is done only when the
+  delivery template has a Backlog stage, because the tracker refuses a task that
+  leaves Backlog without an owner, a date and a milestone.
+- Where the database-only fields `x_billing_project_id`, `x_delivery_project_id`
+  and `x_billing_milestone_id` exist (they exist on Mumtaz_C2P only), they are
+  filled as action 919 filled them, so the milestone-to-billing rule keeps
+  working. Elsewhere that step does nothing.
+- Confirming never fails because of this module: an error is logged and noted
+  on the order. Nothing happens until four system parameters switch it on
+  (`c2p.order_projects.*`); no emails, scheduled jobs or access rules.
+- Verified on stock Odoo 19: `0 failed, 0 error(s) of 22 tests`, including
+  archived projects, a template carrying the key, losing a race, repeats and
+  re-confirmation, a Consultants-only salesperson, and an error not blocking
+  the confirmation. A separate run with the three `x_` fields present filled
+  them and mirrored the milestone.
+- **Not done:** not run on a copy of live data; not installed; no live
+  automation changed. The proposed changes to the live automations are in
+  `docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md`, as text only. The staging
+  runbook is `docs/project/phase1/06-ORDER-PROJECTS-STAGING-RUNBOOK.md`; its scripts
+  were rehearsed on a local stand-in that holds the pasted live actions (baseline,
+  install, off, on, edited and a two-process race all as expected) and have not run
+  against live data.

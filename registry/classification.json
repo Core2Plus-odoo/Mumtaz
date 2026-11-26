@@ -342,6 +342,11 @@
       "layer": "internal",
       "disposition": "keep",
       "note": "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
+    },
+    "c2p_order_projects": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. One order confirmation gives one oversight and one delivery project, keyed on the order and paired in the Project Tracker. Not installed anywhere; see docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md."
     }
   }
 }
