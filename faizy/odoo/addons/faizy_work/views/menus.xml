@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_work_root" name="My Work" parent="faizy_core.menu_faizy_root" sequence="2"
+              groups="faizy_core.group_faizy_user"/>
+    <menuitem id="menu_work_desk" name="My desk" parent="menu_work_root" action="action_work_desk" sequence="1"/>
+    <menuitem id="menu_work_checklists" name="My checklists" parent="menu_work_root"
+              action="action_checklists" sequence="2"/>
+    <menuitem id="menu_work_scorecard" name="My scorecard" parent="menu_work_root"
+              action="action_work_scorecard" sequence="3"/>
+
+    <menuitem id="menu_founder_root" name="Founder" parent="faizy_core.menu_faizy_root" sequence="3"
+              groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_founder_command" name="Command centre" parent="menu_founder_root"
+              action="action_work_command" sequence="1"/>
+    <menuitem id="menu_founder_checklists" name="Checklists to review" parent="menu_founder_root"
+              action="action_checklists_review" sequence="2"/>
+    <menuitem id="menu_work_templates" name="Checklist templates" parent="faizy_core.menu_faizy_config"
+              action="action_templates" sequence="40" groups="faizy_core.group_faizy_manager"/>
+</odoo>

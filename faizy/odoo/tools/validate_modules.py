@@ -206,7 +206,14 @@ def collect_models(module: Path) -> dict[str, dict]:
             )
             # Defined here (has its own _name) rather than only extended by an
             # `_inherit` of a model another module owns, which needs no ACL here.
-            if name_match:
+            # `_name = "x"` with `_inherit = ["x", "mixin"]` extends x in place
+            # (the form Odoo needs to mix an abstract model into an existing
+            # model); it does not define a new model.
+            first_parent = (
+                re.findall(r'["\']([\w.]+)["\']', inherit_list.group(1))[:1]
+                if inherit_list else []
+            )
+            if name_match and name_match.group(1) not in first_parent:
                 entry["defined"] = True
             entry["fields"].update(fields)
             entry["inherits"].update(inherits)
@@ -447,7 +454,10 @@ def main() -> int:
                 if model_field is None or not model_field.text:
                     continue
                 model_name = model_field.text.strip()
-                declared = (all_models.get(model_name) or {}).get("fields")
+                declared = set((all_models.get(model_name) or {}).get("fields") or ())
+                # Fields that arrive through an abstract mixin count too.
+                for parent in (all_models.get(model_name) or {}).get("inherits", ()):
+                    declared |= (all_models.get(parent) or {}).get("fields", set())
                 # Only check models this codebase defines; core Odoo models
                 # have fields we cannot see from here.
                 if not declared or not model_name.startswith("faizy."):

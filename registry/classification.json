@@ -303,6 +303,16 @@
       "disposition": "relocate-candidate",
       "note": "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
     },
+    "faizy_work": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. Checklist engine, CRM discipline gates, staff desks and KPI scorecards on top of faizy_core, faizy_ai and faizy_pilot; added 23 Nov 2026, not yet installed on production."
+    },
+    "faizy_work_project": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. Auto-install bridge that lets a faizy_work checklist attach to a standard Project task; inert until Project is installed."
+    },
     "faizy_pilot": {
       "layer": "venture",
       "disposition": "relocate-candidate",
