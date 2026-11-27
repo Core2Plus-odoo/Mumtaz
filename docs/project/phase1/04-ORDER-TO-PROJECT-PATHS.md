@@ -197,7 +197,7 @@ Nothing is switched off until the new path passes the staging plan. At no point 
 |---|---|---|
 | 0 | Install the new addon on live with its setting **off** | No behaviour change |
 | 1 | Rule 11 / action 747 **off** | It is inert today (its templates do not exist), so switching it off changes nothing except removing the `x_project_created` flag write |
-| 2 | In action 766 remove the call to 919 (L14) and the no-quotation branch (L24-44). Keep the "won → confirm the single quotation" step (decision D4). | After this, 919 has no caller |
+| 2 | In action 766 remove the call to 919 (L14) and the no-quotation branch (L24-44, decision D7). Keep the "won → confirm the single quotation" step (decision D4). | After this, 919 has no caller and no order-less project is created |
 | 3 | Product 97 and any T0x product: unchanged (Option A chosen) | Not needed |
 | 4 | Switch the new path **on** | Single creator from here |
 | 5 | Rules 2 and 12 (kickoff and portal to-dos): skip delivery projects. Action 751 (weekly status task): skip delivery projects (decision D6). | Four to-dos per deal become two; one weekly task per deal |
@@ -234,7 +234,8 @@ Same safe copy as `T01-staging-runbook`: locked copy, scheduled jobs and mail of
 - D4: **decided**, keep the CRM "won, confirm the single quotation" step.
 - D5: **done**, the Appendix A queries were run on 26 Nov (results above).
 - D6: **decided (26 Nov 2026)**, the Weekly Status Update task (job 38, action 751) covers the **oversight project only**. The delivery project gets none, so a paired deal gets one task a week for the client, not two.
-- Approval to build: **open**. All six decisions are made.
+- D7: **decided (26 Nov 2026)**, the no-quotation branch of action 766 is retired: a Won lead with no quotation creates nothing.
+- Approval to build: **done**. The module is built and on `main`; the staging runbook is `06-ORDER-PROJECTS-STAGING-RUNBOOK.md`.
 
 ## Appendix A. Read-only queries (run by the owner on 26 Nov 2026, 10:36 UTC; kept for repeat use)
 
