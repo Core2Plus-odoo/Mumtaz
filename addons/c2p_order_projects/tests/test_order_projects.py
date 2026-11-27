@@ -34,6 +34,8 @@ class TestOrderProjects(TransactionCase):
         cls.product = cls._product("Test project product", cls.tpl_con)
         cls.other_product = cls._product("Test second project product", cls._template(
             "Test second oversight template", cls.con, ["To Do", "Done"], tasks=0))
+        cls.delivery_linked_product = cls._product(
+            "Test product wrongly linking the delivery template", cls.tpl_sol)
         cls.plain_product = env["product.product"].create(
             {"name": "Test plain service", "type": "service",
              "service_tracking": "no", "list_price": 10})
@@ -262,11 +264,39 @@ class TestOrderProjects(TransactionCase):
                             for m in order.message_ids))
 
     # ── Several products ─────────────────────────────────────────────────
-    def test_two_products_give_one_oversight_and_one_delivery(self):
+    def test_two_project_lines_give_no_delivery_project(self):
         order = self._order(self.product | self.other_product)
         self.assertEqual(len(self._role(order, "oversight")), 1)
-        self.assertEqual(len(self._role(order, "delivery")), 1)
-        self.assertEqual(len(self._keyed(order)), 2)
+        self.assertFalse(self._role(order, "delivery"))
+        self.assertEqual(len(self._keyed(order)), 1)
+        self.assertTrue(any("more than one project line" in (m.body or "")
+                            for m in order.message_ids))
+
+    def test_the_note_names_the_extra_project(self):
+        order = self._order(self.product | self.other_product)
+        extra = order.order_line.sudo().project_id - self._role(order, "oversight")
+        note = next(m.body for m in order.message_ids if "more than one project line" in (m.body or ""))
+        self.assertTrue(extra)
+        self.assertIn(extra.name, note)
+
+    def test_an_archived_extra_project_still_blocks_the_delivery_project(self):
+        order = self._order(self.product | self.other_product)
+        extra = order.order_line.sudo().project_id - self._role(order, "oversight")
+        extra.active = False
+        order._c2p_ensure_project_pair()
+        self.assertFalse(self._role(order, "delivery"))
+
+    def test_a_delivery_template_linked_as_the_standard_template_blocks_the_delivery_project(self):
+        order = self._order(self.delivery_linked_product | self.product)
+        self.assertEqual(len(self._role(order, "oversight")), 1)
+        self.assertFalse(self._role(order, "delivery"))
+        self.assertEqual(len(self._keyed(order)), 1)
+
+    def test_a_delivery_template_as_the_only_standard_link_leaves_the_order_alone(self):
+        order = self._order(self.delivery_linked_product)
+        self.assertFalse(self._keyed(order))
+        self.assertTrue(any("No oversight project exists" in (m.body or "")
+                            for m in order.message_ids))
 
     # ── Access ───────────────────────────────────────────────────────────
     def test_consultants_only_salesperson_can_confirm(self):

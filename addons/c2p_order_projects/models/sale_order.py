@@ -84,7 +84,26 @@ class SaleOrder(models.Model):
             return Project
         if delivery:
             return delivery
+        others = self._c2p_other_projects(lines, oversight)
+        if others:
+            self._c2p_note(_(
+                "No delivery project was created: this order has more than one "
+                "project line (also: %(names)s). Use one project product per "
+                "order, with the delivery template set on the product.",
+                names=", ".join(others.mapped("name"))))
+            return Project
         return self._c2p_create_delivery(oversight, lines, settings)
+
+    def _c2p_other_projects(self, lines, oversight):
+        """Projects the standard flow made for these lines besides the oversight one.
+
+        A second project line puts a second standard project on the order, in
+        the order's company, so adding a delivery project as well would leave the
+        order with two delivery-shaped projects. Archived ones still count.
+        """
+        # sudo: the other projects can belong to another company
+        projects = lines.sudo().mapped("project_id").with_context(active_test=False)
+        return projects.filtered(lambda p: not p.is_template and p != oversight)
 
     # ── Oversight project ────────────────────────────────────────────────
     def _c2p_tag_oversight(self, lines):

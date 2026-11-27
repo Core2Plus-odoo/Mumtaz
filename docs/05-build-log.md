@@ -277,3 +277,11 @@ Built after the owner's decisions D1 to D4 and D6 in
 - Decision D7 (26 Nov 2026): the no-quotation branch of action 766 is to be retired
   in the same edit as the call to action 919; the edit script and the staging
   scenarios cover it, and nothing on live has been changed.
+
+### c2p_order_projects: guard against a second project line (27 Nov 2026) — not installed anywhere
+Option 1 confirmed by the owner: the standard flow creates the oversight project and this module is the only
+creator of the delivery project. Tested on stock Odoo 19 (fictional data): with a second project line the standard
+flow puts both projects in the order's company, so the module would have added a third. It now adds no delivery
+project when a qualifying line produced a project other than the oversight one, and posts a note on the order.
+`0 failed, 0 error(s) of 26 tests` (tag `c2p_order_projects`). The next build list is
+`docs/project/phase1/07-NEXT-BUILD-LIST.md`. Nothing on live is changed.
