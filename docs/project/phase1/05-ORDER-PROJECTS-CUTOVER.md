@@ -40,15 +40,13 @@ Each change is written so that it can be reversed by pasting the old text back.
 | # | Change | Why |
 |---|---|---|
 | 1 | Rule 11 / action 747 **off** (set the rule inactive) | It copies nothing today (templates 581 to 587 do not exist); switching it off only stops the `x_project_created` flag write |
-| 2 | Action 766: delete the one line that runs action 919 (line 14 of the pasted text: `env['ir.actions.server'].sudo().browse(919).with_context(...).run()`). Everything else stays: it still confirms the single quotation (decision D4). | The module now creates the delivery project at confirmation |
+| 2 | Action 766: delete the one line that runs action 919 (line 14 of the pasted text: `env['ir.actions.server'].sudo().browse(919).with_context(...).run()`), and delete the whole no-quotation branch (lines 24 to 44, from `marker = '[OPP:%s]' % lead.id` to the last `lead.message_post(...'Won without a quotation...')`). Everything else stays: it still confirms the single quotation (decision D4). | The module now creates the delivery project at confirmation; the branch made a project no order would ever key (decision D7) |
 | 3 | Action 919: insert at the very top the guard below | 919 was run by hand twice per project on 16 Nov; once the module is on it must not run again |
 | 4 | Actions 738 and 748: skip delivery projects (text below) | One kickoff and one portal to-do per deal, not two of each |
 | 5 | Action 751 (weekly status task): exclude delivery projects (text below), decision D6 | One weekly task per deal |
 | 6 | Job 40 / action 753 (duplicate cleanup) **off** once the key is live | It deletes permanently and the index makes it redundant |
 
-Open and **not** decided here: the no-quotation branch of action 766 (lines 24 to 44) copies
-template 26 into the Consultants company for a won lead with no quotation. It creates a project
-that no order will ever key. It is left untouched; whether to retire it is a separate decision.
+**Decision D7 (26 Nov 2026): the no-quotation branch is retired.** Today a Won lead with no quotation gets the billing template (project 26) copied into Consultants with no order behind it. After the edit above, such a lead creates nothing and nobody is told, so the sales team must raise the quotation first. If a reminder is wanted, it is a separate small change.
 
 **Guard for action 919** (insert as the first lines):
 

@@ -8,11 +8,11 @@ named `c2p_stage_copy`, and the module code is kept in `/opt/stage-t01/addons`, 
 
 | Phase | State of the copy | What it shows |
 |---|---|---|
-| `baseline` | Module not installed, the live automations as they are | What one fictional deal does today on real configuration: expected 2 projects and 4 to-dos for a won lead, 1 project and 2 to-dos for a directly confirmed order |
+| `baseline` | Module not installed, the live automations as they are | What one fictional deal does today on real configuration: expected 2 projects and 4 to-dos for a won lead, 1 project and 2 to-dos for a directly confirmed order, and 1 project and 2 to-dos for a won lead with no quotation |
 | install | Module installed, switched off, with its own 22 tests run against the live-like data and rules | The module loads and passes on live's structure |
 | `off` | Module installed, switched off | Nothing changes (same numbers as `baseline`) |
 | `on` | Module switched on, **old automations still active** | One pair per order, no duplicate from action 919; this is the state during cutover step 4 |
-| `edited` | The proposed text edits from `05-ORDER-PROJECTS-CUTOVER.md` applied | One kickoff and one portal to-do per deal, one weekly task per deal |
+| `edited` | The proposed text edits from `05-ORDER-PROJECTS-CUTOVER.md` applied | One kickoff and one portal to-do per deal, one weekly task per deal, and a won lead with no quotation creates nothing (decision D7) |
 | race | Two processes confirm the same order at the same moment | Exactly one pair; the loser fails cleanly |
 
 **Rehearsed before you got this:** all scripts ran end to end on a local stock Odoo 19 stand-in that holds the pasted code of actions 738, 748, 751, 766, 747, 919, 920, rules 2, 12, 19, 11, 30 and the custom `x_` fields, with fictional ids. Results there: baseline, off, on, edited and race all as expected, and the module's own tests `0 failed, 0 error(s) of 22`. **They have not run against live data.** If any step prints an error, a failed assertion or a line marked `DIFFERENT`, stop and paste it: a difference is a finding, not a mistake.
@@ -137,6 +137,10 @@ edit(a751, "('partner_id','!=',False)])", "('partner_id','!=',False), ('c2p_proj
 line = [l for l in a766.code.split('\n') if ".browse(" in l and ".run()" in l]
 assert len(line) == 1, 'action 766: expected exactly one line that runs another action'
 edit(a766, line[0] + '\n', '')
+# decision D7 (26 Nov 2026): retire the branch that copies the billing template for a Won lead with no quotation
+cut = a766.code.find("    marker = '[OPP:%s]' % lead.id")
+assert cut > 0 and 'Won without a quotation' in a766.code[cut:], 'action 766: the no-quotation branch is not where the pasted text had it, nothing applied'
+a766.code = a766.code[:cut].rstrip() + '\n'
 a919.code = ("if env['ir.config_parameter'].sudo().get_param('c2p.order_projects.enabled') in ('1', 'true', 'True'):\n"
              "    raise UserError('Retired: projects are created when the order is confirmed (module c2p_order_projects).')\n") + a919.code
 for rule in env['base.automation'].search([('action_server_ids', 'in', a747.ids)]):
@@ -207,6 +211,14 @@ for kind in ('crm', 'direct'):
         print('        ', line)
     say('%s deal: projects / keyed / to-dos' % kind, got == exp, 'got %s expected %s' % (got, exp))
     sp.rollback(); env.invalidate_all()
+NOQUOTE = {'baseline': (1, 2), 'off': (1, 2), 'on': (1, 2), 'edited': (0, 0)}
+sp = env.cr.savepoint(); before = set(P.search([]).ids)
+lead = env['crm.lead'].create({'name': 'ZZ Won with no quotation', 'type': 'opportunity', 'partner_id': new_partner().id})
+lead.write({'stage_id': WON.id}); env.flush_all()
+made = P.search([('id', 'not in', list(before))])
+print(' [no quotation] projects:', describe(made))
+say('won lead with no quotation: projects / to-dos', (len(made), todos(made)) == NOQUOTE[PHASE], 'got %s expected %s' % ((len(made), todos(made)), NOQUOTE[PHASE]))
+sp.rollback(); env.invalidate_all()
 if PHASE in ('on', 'edited'):
     sp = env.cr.savepoint(); order, new = run_deal('direct')
     oversight = new.filtered(lambda p: p.c2p_project_role == 'oversight'); delivery = new.filtered(lambda p: p.c2p_project_role == 'delivery')
@@ -331,7 +343,7 @@ The addons path printed must not be empty. The module folder is added only on th
 ```bash
 run /root/stage-ops/scenarios.py PHASE=baseline PROD='Odoo Implementation|Milestone'
 ```
-Expected: `crm deal ... got (2, 0, 4)` and `direct deal ... got (1, 0, 2)`, finishing `ALL AS EXPECTED`. The three numbers are projects created, projects keyed to the order (none yet), and to-dos for the owner. If it differs, that is what live really does; paste it whole.
+Expected: `crm deal ... got (2, 0, 4)`, `direct deal ... got (1, 0, 2)` and `won lead with no quotation ... got (1, 2)`, finishing `ALL AS EXPECTED`. The three numbers are projects created, projects keyed to the order (none yet), and to-dos for the owner. If it differs, that is what live really does; paste it whole.
 
 ## Step 6. Install the module (switched off) and run its own tests
 ```bash
@@ -358,7 +370,7 @@ run /root/stage-ops/scenarios.py PHASE=on PROD='Odoo Implementation|Milestone'
 run /root/stage-ops/apply_edits.py
 run /root/stage-ops/scenarios.py PHASE=edited PROD='Odoo Implementation|Milestone'
 ```
-`apply_edits.py` asserts the exact old text of each action; if the live text differs from what was pasted, it stops and applies nothing. Expected: both deals `got (2, 2, 2)`, and `weekly task: oversight only ... OK`. It also prints how many projects the duplicate-cleanup logic would remove right now (counted, never run), which is worth reading before that job is ever switched back on.
+`apply_edits.py` asserts the exact old text of each action; if the live text differs from what was pasted, it stops and applies nothing. Expected: both deals `got (2, 2, 2)`, `won lead with no quotation ... got (0, 0)`, and `weekly task: oversight only ... OK`. It also prints how many projects the duplicate-cleanup logic would remove right now (counted, never run), which is worth reading before that job is ever switched back on.
 
 ## Step 10. Two processes confirm the same order at once
 ```bash

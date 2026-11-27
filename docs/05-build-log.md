@@ -274,3 +274,6 @@ Built after the owner's decisions D1 to D4 and D6 in
   were rehearsed on a local stand-in that holds the pasted live actions (baseline,
   install, off, on, edited and a two-process race all as expected) and have not run
   against live data.
+- Decision D7 (26 Nov 2026): the no-quotation branch of action 766 is to be retired
+  in the same edit as the call to action 919; the edit script and the staging
+  scenarios cover it, and nothing on live has been changed.
