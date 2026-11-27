@@ -285,3 +285,8 @@ flow puts both projects in the order's company, so the module would have added a
 project when a qualifying line produced a project other than the oversight one, and posts a note on the order.
 `0 failed, 0 error(s) of 26 tests` (tag `c2p_order_projects`). The next build list is
 `docs/project/phase1/07-NEXT-BUILD-LIST.md`. Nothing on live is changed.
+
+### c2p_order_projects: guided setup (27 Nov 2026) — not installed anywhere
+The pair now arrives ready to work: gates linked by number, engagement type from the product, plan dates from
+"Plan: D+n", onboarding checklist when installed, and one note on the delivery project saying where to start.
+`0 failed, 0 error(s) of 32 tests` (tag `c2p_order_projects`). Nothing on live is changed.

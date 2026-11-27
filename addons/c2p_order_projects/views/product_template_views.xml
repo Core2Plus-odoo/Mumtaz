@@ -10,6 +10,8 @@
                 <field name="c2p_delivery_template_id"
                        context="{'active_test': False}"
                        invisible="service_tracking not in ['task_in_project', 'project_only']"/>
+                <field name="c2p_engagement_type"
+                       invisible="service_tracking not in ['task_in_project', 'project_only']"/>
             </field>
         </field>
     </record>

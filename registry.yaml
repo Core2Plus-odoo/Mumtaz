@@ -788,7 +788,7 @@ modules:
     application: false
     depends_local: ["c2p_project_tracker"]
     depends_standard: ["sale_project"]
-    python_lines: 626
+    python_lines: 781
     test_files: 1
     access_csv: false
     note: "C2P group internal. One order confirmation gives one oversight and one delivery project, keyed on the order and paired in the Project Tracker. Not installed anywhere; see docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md."
