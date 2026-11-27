@@ -229,7 +229,7 @@ class SaleOrder(models.Model):
         product = lines[:1].product_id.product_tmpl_id
         # sudo: the engagement can belong to another company than the user's
         if product.c2p_engagement_type and not oversight.engagement_type:
-            oversight.sudo().write({"engagement_type": product.c2p_engagement_type})
+            oversight.sudo().write({"engagement_type": product.c2p_engagement_type})  # sudo: other company
         paired = oversight.c2p_counterpart_id == delivery
         if paired:
             self._c2p_link_gates(oversight, delivery)
@@ -244,10 +244,12 @@ class SaleOrder(models.Model):
     def _c2p_link_gates(self, oversight, delivery):
         """Oversight task M<n> follows delivery milestone G<n>."""
         gates = {}
+        # sudo: the projects are in different companies
         for milestone in delivery.sudo().milestone_ids:
             match = re.match(r"\s*G(\d+)\b", milestone.name or "")
             if match:
                 gates[match.group(1)] = milestone
+        # sudo: the projects are in different companies
         for task in oversight.sudo().task_ids:
             match = re.match(r"\s*M(\d+)\b", task.name or "")
             gate = match and gates.get(match.group(1))
@@ -267,9 +269,10 @@ class SaleOrder(models.Model):
             if match:
                 task.date_deadline = datetime.combine(
                     base + timedelta(days=int(match.group(1))), time(12, 0))
+        # sudo: the projects are in different companies
         for milestone in delivery.sudo().milestone_ids.filtered(lambda m: not m.deadline):
-            dates = [d.date() for d in tasks.filtered(
-                lambda t: t.milestone_id == milestone).mapped("date_deadline") if d]
+            dates = [t.date_deadline.date() for t in tasks
+                     if t.milestone_id == milestone and t.date_deadline]
             if dates:
                 milestone.deadline = max(dates)
 
@@ -286,6 +289,7 @@ class SaleOrder(models.Model):
                 t.display_name,
                 " (due %s)" % t.date_deadline.date() if t.date_deadline else "")
             for t in tasks)
+        # sudo: the delivery project is in another company
         delivery.sudo().message_post(
             body=_(
                 "Start with %(first)s. Each task's description says who does it, "
