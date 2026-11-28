@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_c2p_create_t01_templates" model="ir.actions.server">
+        <field name="name">Create the T01 templates</field>
+        <field name="model_id" ref="project.model_project_project"/>
+        <field name="state">code</field>
+        <field name="code">action = model.c2p_create_t01_templates()</field>
+    </record>
+    <menuitem id="menu_c2p_create_t01_templates"
+              name="Create the T01 templates"
+              parent="project.menu_project_config"
+              action="action_c2p_create_t01_templates"
+              groups="base.group_system"
+              sequence="90"/>
+</odoo>

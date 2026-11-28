@@ -305,3 +305,11 @@ Nothing on live is changed.
 ### Staging runbook for the tracker and forecast fixes (28 Nov 2026)
 `docs/project/phase1/08-TRACKER-FORECAST-STAGING-RUNBOOK.md`: one combined pass on a neutralised copy. The scenario script
 (16 checks, fictional data, rolled back) was rehearsed locally: `ALL AS EXPECTED`. Not run against live data yet. Nothing on live is changed.
+
+### c2p_order_projects: T01 templates as data (28 Nov 2026) — not on live
+The T01 process (oversight template with gates M1 to M3; delivery template with gates G1 to G3 and steps R01 to R07) is data in
+the module, created by one administrator action that is safe to press twice. `0 failed, 0 error(s) of 39 tests`. Nothing on live is changed.
+
+### c2p_order_projects: project manager owns the T01 steps (28 Nov 2026) — not on live
+The delivery project's manager is set as owner of every step with no owner; a step with an owner keeps it.
+`0 failed, 0 error(s) of 41 tests`. Nothing on live is changed.

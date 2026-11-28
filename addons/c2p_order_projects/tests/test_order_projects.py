@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from psycopg2 import IntegrityError
 
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 from odoo.tools import mute_logger
 
@@ -383,3 +383,116 @@ class TestGuidedSetup(TestOrderProjects):
     def test_a_template_without_plan_lines_still_works(self):
         order = self._order()
         self.assertEqual(len(self._role(order, "delivery")), 1)
+
+
+@tagged("post_install", "-at_install", "c2p_order_projects")
+class TestT01Templates(TestOrderProjects):
+    """The T01 process, created once from data, then used by a real order."""
+
+    def _make(self):
+        self.env["project.project"].with_company(self.con).c2p_create_t01_templates()
+        Project = self.env["project.project"]
+        return (Project._c2p_t01_find("t01_oversight", self.con),
+                Project._c2p_t01_find("t01_delivery", self.sol))
+
+    def test_both_templates_are_created_in_their_companies(self):
+        oversight, delivery = self._make()
+        for template, company in ((oversight, self.con), (delivery, self.sol)):
+            self.assertTrue(template.is_template)
+            self.assertEqual(template.company_id, company)
+        self.assertEqual(oversight.type_ids.sorted("sequence").mapped("name"),
+                         ["Not Started", "In Progress", "Blocked", "Client Review", "Done"])
+        self.assertEqual(delivery.type_ids.sorted("sequence").mapped("name"),
+                         ["Backlog", "To Do", "In Progress", "Waiting on Client", "Review", "Done"])
+        self.assertEqual(sorted(oversight.task_ids.mapped("name")),
+                         ["M1 Kickoff", "M2 Client acceptance", "M3 Closure"])
+
+    def test_the_delivery_template_holds_the_seven_steps_and_three_gates(self):
+        _oversight, delivery = self._make()
+        self.assertEqual(delivery.milestone_ids.sorted("name").mapped("name"),
+                         ["G1", "G2", "G3"])
+        tasks = {t.name.split()[0]: t for t in delivery.task_ids}
+        self.assertEqual(sorted(tasks), ["R01", "R02", "R03", "R04", "R05", "R06", "R07"])
+        gate = {code: task.milestone_id.name for code, task in tasks.items()}
+        self.assertEqual(gate, {"R01": "G1", "R02": "G2", "R03": "G2", "R04": "G2",
+                                "R05": "G2", "R06": "G2", "R07": "G3"})
+        after = {code: sorted(d.name.split()[0] for d in task.depend_on_ids)
+                 for code, task in tasks.items()}
+        self.assertEqual(after, {"R01": [], "R02": ["R01"], "R03": ["R02"],
+                                 "R04": ["R03"], "R05": ["R04"],
+                                 "R06": ["R04", "R05"], "R07": ["R06"]})
+        for task in tasks.values():
+            self.assertEqual(task.stage_id.name, "Backlog")
+
+    def test_every_step_says_who_what_and_proof(self):
+        _oversight, delivery = self._make()
+        first = delivery.task_ids.filtered(lambda t: t.name.startswith("R01"))
+        text = first.description
+        self.assertTrue(text.startswith("<p>Plan: D+2</p>"))
+        for needle in ("Owner role: Consultants Lead", "Checklist:", "<li>",
+                       "Proof to keep:", "Sign-off: Consultants", "Gate: G1"):
+            self.assertIn(needle, text)
+
+    def test_pressing_it_twice_creates_nothing_more(self):
+        self._make()
+        count = self.env["project.project"].with_context(active_test=False).search_count(
+            [("name", "like", "T01 Rapid Odoo Implementation")])
+        self._make()
+        again = self.env["project.project"].with_context(active_test=False).search_count(
+            [("name", "like", "T01 Rapid Odoo Implementation")])
+        self.assertEqual((count, again), (2, 2))
+
+    def test_only_an_administrator_can_create_them(self):
+        plain = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "Test plain user", "login": "test-plain-user-t01",
+            "group_ids": [(6, 0, [self.env.ref("base.group_user").id])]})
+        with self.assertRaises(AccessError):
+            self.env["project.project"].with_user(plain).c2p_create_t01_templates()
+
+    def test_it_needs_the_delivery_company(self):
+        self._configure(company="0")
+        with self.assertRaises(UserError):
+            self.env["project.project"].with_company(self.con).c2p_create_t01_templates()
+
+    def test_the_project_manager_owns_every_step(self):
+        oversight_tpl, delivery_tpl = self._make()
+        product = self._product("Test T01 owner product", oversight_tpl)
+        product.product_tmpl_id.write({"c2p_delivery_template_id": delivery_tpl.id})
+        order = self._order(product)
+        delivery = self._role(order, "delivery")
+        self.assertTrue(delivery.user_id)
+        for task in delivery.task_ids:
+            self.assertEqual(task.user_ids, delivery.user_id, task.name)
+
+    def test_a_step_that_already_has_an_owner_keeps_it(self):
+        oversight_tpl, delivery_tpl = self._make()
+        other = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "Test other owner", "login": "test-other-owner-t01",
+            "group_ids": [(6, 0, [self.env.ref("base.group_user").id])]})
+        delivery_tpl.task_ids.filtered(
+            lambda t: t.name.startswith("R03")).user_ids = [(6, 0, [other.id])]
+        product = self._product("Test T01 kept owner product", oversight_tpl)
+        product.product_tmpl_id.write({"c2p_delivery_template_id": delivery_tpl.id})
+        delivery = self._role(self._order(product), "delivery")
+        r03 = delivery.task_ids.filtered(lambda t: t.name.startswith("R03"))
+        self.assertEqual(r03.user_ids, other)
+        r01 = delivery.task_ids.filtered(lambda t: t.name.startswith("R01"))
+        self.assertEqual(r01.user_ids, delivery.user_id)
+
+    def test_an_order_for_a_t01_product_arrives_ready_to_work(self):
+        oversight_tpl, delivery_tpl = self._make()
+        product = self._product("Test T01 product", oversight_tpl)
+        product.product_tmpl_id.write({"c2p_delivery_template_id": delivery_tpl.id})
+        order = self._order(product)
+        oversight, delivery = self._role(order, "oversight"), self._role(order, "delivery")
+        self.assertEqual(len(delivery.task_ids), 7)
+        gates = {t.name.split()[0]: t.delivery_milestone_id.name
+                 for t in oversight.task_ids if t.name[:1] == "M"}
+        self.assertEqual(gates, {"M1": "G1", "M2": "G2", "M3": "G3"})
+        base = order.date_order.date()
+        r07 = delivery.task_ids.filtered(lambda t: t.name.startswith("R07"))
+        self.assertEqual(r07.date_deadline.date(), base + timedelta(days=25))
+        self.assertEqual(delivery.milestone_ids.filtered(lambda m: m.name == "G3").deadline,
+                         base + timedelta(days=25))
+        note = delivery.message_ids.filtered(lambda m: "Start with" in (m.body or ""))
+        self.assertIn("R01 Initiation: Kickoff", note.body)
