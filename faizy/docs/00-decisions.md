@@ -1280,7 +1280,16 @@ lead routing, planned work). Nothing a person needs is lost; what was built twic
 - **Runbook.** `faizy/docs/plans/STAFF_WORK_DEPLOY_RUNBOOK.md`: backup, pull, upgrade, provision, checks,
   rollback, in the order and with the chaining `faizy/CLAUDE.md` requires. `docs/work/README.md` updated.
 
-**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway database, all six modules installed together: VERIFY_27
+- **Look (faizy_ai 19.0.1.5.1).** Umer, 28 Nov: "more attractive and professional, enterprise SAP look and feel".
+  `faizy_ai/static/src/scss/desk.scss`, scoped to `.o_faizy_desk` (My desk only; the shared Odoo chrome and
+  `faizy.dashboard` are untouched): Fiori idiom, shell grey behind white tiles of one size, a white header band
+  with the brand line, sentence-case section titles with an accent bar, title on top of each tile and the
+  figure at the bottom in light numerals. One accent blue for neutral figures; a tile a person must watch today
+  carries a thin orange top bar, and its figure turns orange (waiting, due) or red (overdue, blocked) only when
+  it is not zero (standard `decoration-warning` / `decoration-danger` on the fields). The "Done this week, by
+  type" group hides itself when empty. Checked in a headless browser as Mashood and Umer.
+
+**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway databases: VERIFY_27
 
 **Not done / needs Umer:** everything in the runbook is yours to run on the VPS with written go-ahead; no
 staging server; outgoing mail, WhatsApp sending, plan prices and the payment gateway are unchanged and open.

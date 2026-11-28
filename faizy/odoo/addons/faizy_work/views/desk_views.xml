@@ -15,7 +15,7 @@
                         <span class="fzb-kpi-label">Checklists open</span>
                     </button>
                     <button name="action_open_checklists_blocked" type="object" class="fzb-kpi fzb-attention">
-                        <field name="ck_blocked" nolabel="1"/>
+                        <field name="ck_blocked" nolabel="1" decoration-danger="ck_blocked > 0"/>
                         <span class="fzb-kpi-sub">Waiting on a decision</span>
                         <span class="fzb-kpi-label">Blocked</span>
                     </button>
@@ -25,7 +25,7 @@
                         <span class="fzb-kpi-label">Ready for review</span>
                     </button>
                     <button name="action_open_leads_to_verify" type="object" class="fzb-kpi fzb-attention">
-                        <field name="leads_to_verify" nolabel="1"/>
+                        <field name="leads_to_verify" nolabel="1" decoration-warning="leads_to_verify > 0"/>
                         <span class="fzb-kpi-sub">Leads still at Research</span>
                         <span class="fzb-kpi-label">To verify</span>
                     </button>
@@ -35,7 +35,7 @@
                     </button>
                     <button name="action_open_checklists_review" type="object" class="fzb-kpi fzb-attention"
                             invisible="not is_manager">
-                        <field name="ck_team_ready" nolabel="1"/>
+                        <field name="ck_team_ready" nolabel="1" decoration-warning="ck_team_ready > 0"/>
                         <span class="fzb-kpi-sub">Ready or blocked, whole team</span>
                         <span class="fzb-kpi-label">Checklists to review</span>
                     </button>

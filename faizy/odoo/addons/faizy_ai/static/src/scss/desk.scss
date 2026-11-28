@@ -1,0 +1,189 @@
+// FAIZY · My desk — enterprise look (SAP Fiori idiom), scoped to .o_faizy_desk.
+//
+// Shell grey behind white tiles, one accent blue, semantic colours only on
+// figures that need a person today, quiet typography, uniform tile sizes.
+// Nothing here touches the shared Odoo chrome.
+
+.o_faizy_dashboard.o_faizy_desk {
+  --fd-shell:     #f5f6f7;   // Fiori shell background
+  --fd-tile:      #ffffff;
+  --fd-line:      #d9d9d9;
+  --fd-text:      #32363a;   // Fiori text
+  --fd-muted:     #6a6d70;   // Fiori secondary text
+  --fd-blue:      #0a6ed1;   // Fiori brand / neutral value
+  --fd-blue-dark: #0854a0;
+  --fd-critical:  #e9730c;   // needs attention
+  --fd-negative:  #bb0000;
+  --fd-positive:  #107e3e;
+  --fd-shadow:    0 0 0.125rem 0 rgba(0, 0, 0, 0.15), 0 0.125rem 0.5rem 0 rgba(0, 0, 0, 0.08);
+  --fd-shadow-hover: 0 0 0.125rem 0 rgba(0, 0, 0, 0.25), 0 0.25rem 1rem 0 rgba(0, 0, 0, 0.14);
+
+  background: var(--fd-shell);
+  font-family: "72", "72full", "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+
+  .o_form_sheet {
+    max-width: 1360px;
+    padding: 0 1.5rem 2.5rem;
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+  }
+
+  // ── Page header: white band with the brand line, like a Fiori object header ──
+  .fzb-title,
+  .fzb-sub {
+    background: var(--fd-tile);
+  }
+  .fzb-title {
+    margin: 0 -1.5rem;
+    padding: 1.25rem 1.5rem 0.25rem;
+    font-size: 1.375rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--fd-text);
+    border-top: 0.25rem solid var(--fd-blue);
+  }
+  .fzb-sub {
+    margin: 0 -1.5rem 1.25rem;
+    padding: 0 1.5rem 1rem;
+    font-size: 0.875rem;
+    color: var(--fd-muted);
+    border-bottom: 1px solid var(--fd-line);
+    box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.06);
+  }
+
+  // ── Section titles: sentence case, small, with the accent bar ──────────
+  .fzb-band-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.75rem 0 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fd-text);
+
+    &::before {
+      content: "";
+      display: inline-block;
+      width: 0.25rem;
+      height: 1rem;
+      border-radius: 0.125rem;
+      background: var(--fd-blue);
+    }
+  }
+
+  // ── Tiles: fixed footprint, title on top, figure at the bottom ─────────
+  .fzb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+    gap: 1rem;
+  }
+
+  .fzb-kpi {
+    position: relative;
+    min-height: 9.5rem;
+    padding: 1rem 1rem 0.875rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0;
+    text-align: left;
+    background: var(--fd-tile);
+    border: 1px solid var(--fd-line);
+    border-radius: 0.25rem;
+    box-shadow: var(--fd-shadow);
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+
+    &:hover { box-shadow: var(--fd-shadow-hover); border-color: #c0c0c0; transform: none; }
+    &:focus-visible { outline: 2px solid var(--fd-blue-dark); outline-offset: 1px; }
+
+    .fzb-kpi-label {
+      order: 1;
+      font-size: 0.875rem;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--fd-text);
+    }
+    .fzb-kpi-sub {
+      order: 2;
+      margin-top: 0.125rem;
+      font-size: 0.75rem;
+      line-height: 1.35;
+      color: var(--fd-muted);
+      flex: 1 1 auto;
+    }
+    .o_field_widget {
+      order: 3;
+      margin-top: 0.5rem;
+    }
+    .o_field_widget, .o_field_widget span, .o_field_widget input {
+      font-size: 2.25rem;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--fd-blue);
+      font-variant-numeric: tabular-nums;
+    }
+    // float_time renders as an input-like span; keep it quiet
+    .o_field_float_time span { font-size: 2.25rem; }
+
+    // A tile a person must watch today carries a thin bar at the top. Its
+    // figure takes a semantic colour only when it is not zero (the view sets
+    // decoration-warning / decoration-danger), never a tinted background.
+    &.fzb-attention {
+      background: var(--fd-tile);
+      border-color: var(--fd-line);
+      border-top: 0.1875rem solid var(--fd-critical);
+    }
+    .o_field_widget.text-warning, .o_field_widget.text-warning span { color: var(--fd-critical) !important; }
+    .o_field_widget.text-danger,  .o_field_widget.text-danger span  { color: var(--fd-negative) !important; }
+
+    // Tiles without a number (a plain link such as "My scorecard") sit the
+    // label where the number would be.
+    &:not(:has(.o_field_widget)) {
+      justify-content: flex-end;
+      .fzb-kpi-label { order: 2; font-size: 1.125rem; font-weight: 400; color: var(--fd-blue); }
+      .fzb-kpi-sub   { order: 1; flex: 0 0 auto; margin-bottom: auto; }
+    }
+  }
+  div.fzb-kpi { cursor: default; &:hover { box-shadow: var(--fd-shadow); border-color: var(--fd-line); } }
+
+  // ── Groups below the tiles ("Done this week, by type", "Team") ─────────
+  .o_inner_group, .o_group {
+    background: var(--fd-tile);
+    border: 1px solid var(--fd-line);
+    border-radius: 0.25rem;
+    box-shadow: var(--fd-shadow);
+    padding: 0.75rem 1rem 1rem;
+    margin-top: 1rem;
+  }
+  .o_horizontal_separator, .o_horizontal_separator > * {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    color: var(--fd-text) !important;
+  }
+  .o_horizontal_separator {
+    border-bottom: 1px solid var(--fd-line);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  table.table {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--fd-text);
+    thead th {
+      font-weight: 600;
+      color: var(--fd-muted);
+      background: #f7f7f7;
+      border-bottom: 1px solid var(--fd-line);
+    }
+    td, th { padding: 0.5rem 0.75rem; vertical-align: middle; }
+    tbody tr:hover { background: #f0f6fd; }
+    td:nth-child(n+3), th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+  }
+  ul { margin: 0; padding-left: 1.125rem; font-size: 0.875rem; color: var(--fd-text); }
+}

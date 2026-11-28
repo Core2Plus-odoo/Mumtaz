@@ -1,6 +1,6 @@
 {
     'name': 'Faizy AI Team',
-    'version': '19.0.1.5.0',
+    'version': '19.0.1.5.1',
     'category': 'Services',
     'summary': 'AI team layer for Faizy: draft-and-approve queue, inbound WhatsApp log, agent users, daily digest',
     'description': """
@@ -38,6 +38,13 @@ Adds the AI team to Faizy Core without changing it.
         'views/routing_views.xml',
         'views/work_plan_views.xml',
     ],
+    'assets': {
+        # Scoped to .o_faizy_desk (My desk). The backend is shared with every
+        # other app on the database; nothing here touches the shared chrome.
+        'web.assets_backend': [
+            'faizy_ai/static/src/scss/desk.scss',
+        ],
+    },
     'post_init_hook': 'post_init_hook',
     'installable': True,
     'application': True,
