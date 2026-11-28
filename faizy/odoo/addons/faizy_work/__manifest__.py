@@ -1,6 +1,6 @@
 {
     'name': 'Faizy Work: Checklists, Staff Desks and KPIs',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.1.0',
     'category': 'Services',
     'summary': 'Checklist-driven staff work on the existing CRM lead, FAIZY order, vendor and draft records',
     'description': """
@@ -18,7 +18,8 @@ Additive to Faizy Core, Faizy AI and Faizy Pilot. Nothing in those modules is ed
 * Standard CRM is extended (originator, prospect status, verification evidence, duplicate guard).
   No second CRM, task or approval module.
 * KPI scorecards computed from real records, with "Insufficient data" and a baseline period.
-* My Work desk for each employee and a founder command centre with drill-down.
+* Its figures sit on faizy_ai's My desk (one screen per person) and its review queue on the
+  Command Centre; lead routing is faizy_ai's (faizy_ai.route_leads).
 * Customer WhatsApp sending is untouched and stays off. Nothing here messages a customer.
 """,
     'author': 'C2P Consultants',

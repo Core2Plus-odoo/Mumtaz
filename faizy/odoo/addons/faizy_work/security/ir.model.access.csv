@@ -10,5 +10,3 @@ access_checklist_line_manager,faizy.checklist.line.manager,model_faizy_checklist
 access_checklist_reason_user,faizy.checklist.reason.user,model_faizy_checklist_reason,faizy_core.group_faizy_user,1,1,1,1
 access_checklist_start_user,faizy.checklist.start.user,model_faizy_checklist_start,faizy_core.group_faizy_user,1,1,1,1
 access_work_scorecard_user,faizy.work.scorecard.user,model_faizy_work_scorecard,faizy_core.group_faizy_user,1,1,1,1
-access_work_desk_user,faizy.work.desk.user,model_faizy_work_desk,faizy_core.group_faizy_user,1,1,1,1
-access_work_command_manager,faizy.work.command.manager,model_faizy_work_command,faizy_core.group_faizy_manager,1,1,1,1

@@ -951,12 +951,12 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_work
     title: "Faizy Work: Checklists, Staff Desks and KPIs"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: false
     depends_local: ["faizy_core", "faizy_ai", "faizy_pilot"]
     depends_standard: ["crm", "mail"]
-    python_lines: 1824
+    python_lines: 1739
     test_files: 1
     access_csv: true
     note: "Faizy is a separate venture. Checklist engine, CRM discipline gates, staff desks and KPI scorecards on top of faizy_core, faizy_ai and faizy_pilot; added 23 Nov 2026, not yet installed on production."

@@ -1251,3 +1251,36 @@ switch (off by default) and the test adjustments: **`0 failed, 0 error(s) of 160
 (`faizy_ai` 62, `faizy_work` 33, `faizy_work_project` 3, the rest unchanged). The four original modules alone on
 the merged tree: `0 failed, 0 error(s) of 128 tests`. So the two implementations install and test together;
 what remains is the duplication above, which is a product decision, not a defect.
+
+## 27. One desk, one routing, one plan: faizy_work consolidated onto faizy_ai (faizy_work 19.0.1.1.0)
+
+Umer, 28 Nov 2026: "do all". Option 2 of §26 is applied: `faizy_work` keeps what only it has (the checklist
+engine with gates, the CRM prospect discipline, the scorecards); `faizy_ai` keeps what only it has (the desks,
+lead routing, planned work). Nothing a person needs is lost; what was built twice now exists once.
+
+- **One desk.** `faizy.work.desk` and `faizy.work.command` are removed, with their menus "My Work" and
+  "Founder". `faizy_work` extends `faizy.my.desk` instead: a "Checklists" band (open, blocked, ready for
+  review, research candidates to verify, My scorecard; for the manager "Checklists to review"). "My
+  checklists" and "My scorecard" hang off the Care Desk and the Operations Desk; "Checklists to review" and
+  "Scorecards" off the Command Centre. Checklist templates stay under Configuration.
+- **One routing.** `faizy_work`'s `_faizy_route_new` and `faizy.work_route_leads` are removed. The rule is
+  §26's: `faizy_ai.route_leads` (off by default) and `crm.team.faizy_lead_sources`. `faizy_work`'s test now
+  proves the switch off leaves an unowned lead alone and the switch on sends Facebook to Mashood's team and
+  embassy to Raza's.
+- **One plan.** `scripts/load_30day_plan.py` is retired. `provision_staff.py` loads the ten deliverables per
+  person from `docs/work/30day-register-*.csv` as milestone tasks in the same desk projects as the daily
+  plan (`--milestones none` to skip), and, with `faizy_work` installed, starts its `daily_end` checklist on
+  every end-of-day task and its weekly review checklist on the Saturday review through the
+  `faizy_work_project` bridge, so the steps are ticked with evidence on the task itself. The standalone
+  daily/weekly recurring checklists stay available but nobody is assigned to them, to avoid two lists.
+- **Rights.** `provision_staff.py --align-crm-rights` removes the CRM "all documents" right from care and
+  ops so both have own documents only (the asymmetry §24 found on production). `--enforce-totp` turns on
+  the standard "Enforce two-factor authentication"; it emails the code, so it waits for outgoing mail
+  (FD-06). Until then each person can enable app-based two-factor in their own profile.
+- **Runbook.** `faizy/docs/plans/STAFF_WORK_DEPLOY_RUNBOOK.md`: backup, pull, upgrade, provision, checks,
+  rollback, in the order and with the chaining `faizy/CLAUDE.md` requires. `docs/work/README.md` updated.
+
+**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway database, all six modules installed together: VERIFY_27
+
+**Not done / needs Umer:** everything in the runbook is yours to run on the VPS with written go-ahead; no
+staging server; outgoing mail, WhatsApp sending, plan prices and the payment gateway are unchanged and open.

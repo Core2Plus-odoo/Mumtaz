@@ -1,43 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <record id="view_work_desk_form" model="ir.ui.view">
-        <field name="name">faizy.work.desk.form</field>
-        <field name="model">faizy.work.desk</field>
+    <!-- Checklist figures on faizy_ai's My desk (§27): one screen per person. -->
+    <record id="view_faizy_my_desk_form_work" model="ir.ui.view">
+        <field name="name">faizy.my.desk.form.work</field>
+        <field name="model">faizy.my.desk</field>
+        <field name="inherit_id" ref="faizy_ai.view_faizy_my_desk_form"/>
         <field name="arch" type="xml">
-            <form string="My Work" create="0" edit="0">
-                <sheet>
-                    <h1>My Work</h1>
-                    <field name="user_id" invisible="1"/>
-                    <field name="summary" nolabel="1"/>
-                    <div class="d-flex flex-wrap gap-2 mt-3">
-                        <button name="action_my_activities" type="object" string="My activities" class="btn-primary"/>
-                        <button name="action_my_leads" type="object" string="My leads" class="btn-primary"/>
-                        <button name="action_my_checklists" type="object" string="My checklists" class="btn-primary"/>
-                        <button name="action_my_scorecard" type="object" string="My scorecard" class="btn-secondary"/>
-                    </div>
-                    <p class="text-muted small mt-3">Everything here is a count of, or a link to, the real record.
-                        There is nothing to report separately: do the work in the record and tick its checklist.</p>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <record id="view_work_command_form" model="ir.ui.view">
-        <field name="name">faizy.work.command.form</field>
-        <field name="model">faizy.work.command</field>
-        <field name="arch" type="xml">
-            <form string="Founder command centre" create="0" edit="0">
-                <sheet>
-                    <h1>Founder command centre</h1>
-                    <field name="summary" nolabel="1"/>
-                    <div class="d-flex flex-wrap gap-2 mt-3">
-                        <button name="action_overdue" type="object" string="Overdue by person" class="btn-primary"/>
-                        <button name="action_pipeline" type="object" string="Pipeline by owner" class="btn-primary"/>
-                        <button name="action_checklists" type="object" string="Checklists to review" class="btn-primary"/>
-                        <button name="action_scorecards" type="object" string="Scorecards" class="btn-secondary"/>
-                    </div>
-                </sheet>
-            </form>
+            <xpath expr="//p[@class='fzb-band-title'][last()]" position="after">
+                <p class="fzb-band-title">Checklists</p>
+                <div class="fzb-grid">
+                    <button name="action_open_checklists" type="object" class="fzb-kpi">
+                        <field name="ck_open" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Started, not yet ready</span>
+                        <span class="fzb-kpi-label">Checklists open</span>
+                    </button>
+                    <button name="action_open_checklists_blocked" type="object" class="fzb-kpi fzb-attention">
+                        <field name="ck_blocked" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Waiting on a decision</span>
+                        <span class="fzb-kpi-label">Blocked</span>
+                    </button>
+                    <button name="action_open_checklists" type="object" class="fzb-kpi">
+                        <field name="ck_ready" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Sent for review</span>
+                        <span class="fzb-kpi-label">Ready for review</span>
+                    </button>
+                    <button name="action_open_leads_to_verify" type="object" class="fzb-kpi fzb-attention">
+                        <field name="leads_to_verify" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Leads still at Research</span>
+                        <span class="fzb-kpi-label">To verify</span>
+                    </button>
+                    <button name="action_open_scorecard" type="object" class="fzb-kpi">
+                        <span class="fzb-kpi-label">My scorecard</span>
+                        <span class="fzb-kpi-sub">Weighted KPIs, with baseline</span>
+                    </button>
+                    <button name="action_open_checklists_review" type="object" class="fzb-kpi fzb-attention"
+                            invisible="not is_manager">
+                        <field name="ck_team_ready" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Ready or blocked, whole team</span>
+                        <span class="fzb-kpi-label">Checklists to review</span>
+                    </button>
+                </div>
+            </xpath>
         </field>
     </record>
 
@@ -67,18 +70,6 @@
         </field>
     </record>
 
-    <record id="action_work_desk" model="ir.actions.server">
-        <field name="name">My Work</field>
-        <field name="model_id" ref="model_faizy_work_desk"/>
-        <field name="state">code</field>
-        <field name="code">action = model.action_open()</field>
-    </record>
-    <record id="action_work_command" model="ir.actions.server">
-        <field name="name">Founder command centre</field>
-        <field name="model_id" ref="model_faizy_work_command"/>
-        <field name="state">code</field>
-        <field name="code">action = model.action_open()</field>
-    </record>
     <record id="action_work_scorecard" model="ir.actions.server">
         <field name="name">My scorecard</field>
         <field name="model_id" ref="model_faizy_work_scorecard"/>
