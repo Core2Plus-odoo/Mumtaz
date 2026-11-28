@@ -1284,3 +1284,32 @@ lead routing, planned work). Nothing a person needs is lost; what was built twic
 
 **Not done / needs Umer:** everything in the runbook is yours to run on the VPS with written go-ahead; no
 staging server; outgoing mail, WhatsApp sending, plan prices and the payment gateway are unchanged and open.
+
+## 28. Customer app: ERP sign-up route and the first React Native skeleton (28 Nov 2026)
+
+Umer's direction on 28 Nov 2026: a customer app (workers stay on WhatsApp/PWA), very easy to use,
+voice-first with a speaking assistant on ElevenLabs, English with Urdu and Roman Urdu options, fully
+integrated with this ERP (a sign-up in the app is a customer here, a request in the app is an order
+here), FAIZY work only in this stream. The assistant is male: the existing FAIZY agent image with the
+ElevenLabs voice "Ahmad"; voice and image must be the same gender.
+
+- **`POST /api/care/signup`** (`faizy_website` 19.0.1.25.0, PR #213, merged): creates the partner and a
+  portal user. Off unless system parameter `faizy.app_signup` is `on`. An email or phone already on file
+  is refused, not attached, because this route hands back a login. Rate limiting and a catalogue price
+  guard are in draft PR #217 (19.0.1.26.0), not merged.
+- **`faizy/apps/customer`**: Expo / React Native skeleton. One API client (`src/api.ts`) over the
+  existing `/api/care/*` routes and Odoo's own session login; three languages (`src/i18n.ts`); screens for
+  sign-up, sign-in, home, new request with a review step, my requests, request detail, family. A request
+  is created only from the customer's tap on Send request.
+- **Open before the public can use it:** proof of email or number ownership, proxy setting check for the
+  per-address limit, API versioning, cookie vs token, the voice assistant itself (no ElevenLabs agent
+  exists), stored language/session, store accounts. See `faizy/docs/app/README.md`.
+
+**Verified** locally, Odoo 19.0 + PostgreSQL 16, throwaway database with `faizy.app_signup = on`:
+`npm run typecheck` clean; `scripts/api-smoke.ts` 13 of 13 checks passed (sign-up, duplicate refused,
+wrong password refused, sign-in, home, options, request created as FZO-100001, same request twice gives
+one order, list, detail, unreviewed evidence hidden, sign-out); web export rendered sign-in and the Urdu
+sign-up screen with no page errors.
+
+**NOT RUN:** on a phone or emulator; against staging or production; any store build. The design canvas
+screens were not checked visually after the last edits.

@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "FAIZY",
+    "slug": "faizy-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/faizy-logo.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/faizy-logo.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/faizy-logo.png"
+    }
+  }
+}
