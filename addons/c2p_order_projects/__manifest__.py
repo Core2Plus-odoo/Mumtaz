@@ -28,6 +28,16 @@ template goes in the product's own "Delivery Project Template" field. Never
 link the delivery template as the standard template: the standard flow would
 then create the delivery project itself and there would be no oversight one.
 
+The T01 Rapid Odoo Implementation process is shipped as data. An administrator
+opens Project > Configuration > "Create the T01 templates": it creates the
+oversight template (five stages and the gate tasks M1 to M3) in the current
+company, and the delivery template (six stages, gates G1 to G3 and the seven
+steps R01 to R07, each with its plan day, owner role, checklist and proof to
+keep) in the delivery company. Pressing it twice creates nothing more. When an
+order for a product set up as above is confirmed, the delivery project arrives
+with its dates, its gates linked to the oversight gates, and one note saying
+where to start.
+
 Nothing happens until it is switched on with system parameters:
 
 * ``c2p.order_projects.enabled``: 1 to switch on.
@@ -47,6 +57,7 @@ No emails, no scheduled jobs, no access rules. Community only.
     "data": [
         "views/project_project_views.xml",
         "views/product_template_views.xml",
+        "views/t01_menu.xml",
     ],
     "installable": True,
     "application": False,
