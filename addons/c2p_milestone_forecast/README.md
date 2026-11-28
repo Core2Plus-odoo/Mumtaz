@@ -17,7 +17,10 @@ stock Odoo 19 only. Not installed anywhere.
 No approval step is built: anyone who can edit a milestone can change a
 commitment date, with a reason. No automations, emails or access rules.
 
-Bypasses: system (sudo) writes, module install, and the context key
-`c2p_skip_change_reason=True` for documented bulk operations.
+Bypasses: system (sudo) writes, module install (it runs as the superuser),
+and trusted Python code inside `with skip_change_reason():` (import it from
+`models/project_milestone.py`). No context key bypasses anything: a context is
+chosen by the caller, so `c2p_skip_change_reason`, `install_mode` and the
+others are refused over the API.
 
 Tests: `odoo-bin -i c2p_milestone_forecast --test-tags /c2p_milestone_forecast`.

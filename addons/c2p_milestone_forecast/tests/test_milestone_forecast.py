@@ -3,6 +3,10 @@ from datetime import date, timedelta
 from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 
+from odoo.addons.c2p_milestone_forecast.models.project_milestone import (
+    skip_change_reason,
+)
+
 COMMIT = date(2027, 3, 10)
 
 
@@ -176,11 +180,46 @@ class TestMilestoneForecast(TransactionCase):
         return [row[0] for row in self.env.cr.fetchall()]
 
     def test_documented_bypass(self):
+        """Trusted code in this process can skip the reason; sudo too."""
         ms = self._milestone(late=0)
-        ms.with_context(c2p_skip_change_reason=True).write(
-            {"c2p_forecast_date": COMMIT + timedelta(days=8)})
+        with skip_change_reason():
+            ms.write({"c2p_forecast_date": COMMIT + timedelta(days=8)})
         self.assertEqual(ms.c2p_health, "red")
         ms.sudo().write({"c2p_forecast_date": COMMIT})
+        self.assertEqual(ms.c2p_health, "green")
+
+    def test_the_skip_does_not_outlive_its_block(self):
+        ms = self._milestone(late=0)
+        with skip_change_reason():
+            pass
+        with self.assertRaises(UserError):
+            ms.write({"c2p_forecast_date": COMMIT + timedelta(days=2)})
+
+    # ── keys an API caller can send are not bypasses ─────────────────────
+    def test_context_keys_do_not_skip_the_reason(self):
+        """A context is chosen by the caller, so it must not switch the rule
+        off: every key the old code honoured is refused now."""
+        for key in ("c2p_skip_change_reason", "install_mode", "module",
+                    "c2p_forecast_internal"):
+            with self.subTest(key=key):
+                ms = self._milestone(late=0, name="TEST %s" % key)
+                with self.assertRaises(UserError):
+                    ms.with_context(**{key: True}).write(
+                        {"deadline": COMMIT + timedelta(days=3)})
+                self.assertEqual(ms.deadline, COMMIT)
+
+    def test_context_cannot_set_the_health_by_hand(self):
+        ms = self._milestone(late=0)
+        with self.assertRaises(UserError):
+            ms.with_context(c2p_forecast_internal=True).write(
+                {"c2p_health": "red"})
+        self.assertEqual(ms.c2p_health, "green")
+
+    def test_context_cannot_create_a_milestone_with_a_chosen_health(self):
+        ms = self.Milestone.with_context(c2p_forecast_internal=True).create({
+            "name": "TEST forged", "project_id": self.project.id,
+            "deadline": COMMIT, "c2p_forecast_date": COMMIT,
+            "c2p_health": "red"})
         self.assertEqual(ms.c2p_health, "green")
 
     # ── reached milestones ───────────────────────────────────────────────

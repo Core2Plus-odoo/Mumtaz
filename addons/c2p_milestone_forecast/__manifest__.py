@@ -21,7 +21,7 @@ same history entry as the tracked change.
 
 No automations, no emails, no access rules. Community only.
 """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.0.1",
     "category": "Services/Project",
     "author": "C2P Consultants",
     "license": "LGPL-3",
