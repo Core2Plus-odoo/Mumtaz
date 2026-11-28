@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Faizy / Agent works leads in standard CRM. Making the role carry the
+         standard "own documents" CRM right means an Agent needs no second group
+         to use the CRM, and gains no new access to anyone else's leads. -->
+    <record id="faizy_core.group_faizy_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+
+    <!-- Checklists. Personal (daily/weekly) lists are private to their owner;
+         a checklist on a record is also visible to Operations and Managers. -->
+    <record id="rule_checklist_agent" model="ir.rule">
+        <field name="name">Faizy Work: agents see their own checklists</field>
+        <field name="model_id" ref="model_faizy_checklist"/>
+        <field name="groups" eval="[(4, ref('faizy_core.group_faizy_user'))]"/>
+        <field name="domain_force">['|', ('owner_id', '=', user.id), ('create_uid', '=', user.id)]</field>
+    </record>
+    <record id="rule_checklist_ops" model="ir.rule">
+        <field name="name">Faizy Work: operations also see checklists on records</field>
+        <field name="model_id" ref="model_faizy_checklist"/>
+        <field name="groups" eval="[(4, ref('faizy_core.group_faizy_ops'))]"/>
+        <field name="domain_force">['|', ('res_model', '!=', False), ('owner_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_checklist_manager" model="ir.rule">
+        <field name="name">Faizy Work: managers see all checklists</field>
+        <field name="model_id" ref="model_faizy_checklist"/>
+        <field name="groups" eval="[(4, ref('faizy_core.group_faizy_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="rule_checklist_line_agent" model="ir.rule">
+        <field name="name">Faizy Work: agents see lines of their own checklists</field>
+        <field name="model_id" ref="model_faizy_checklist_line"/>
+        <field name="groups" eval="[(4, ref('faizy_core.group_faizy_user'))]"/>
+        <field name="domain_force">['|', ('checklist_id.owner_id', '=', user.id), ('checklist_id.create_uid', '=', user.id)]</field>
+    </record>
+    <record id="rule_checklist_line_ops" model="ir.rule">
+        <field name="name">Faizy Work: operations also see lines on records</field>
+        <field name="model_id" ref="model_faizy_checklist_line"/>
+        <field name="groups" eval="[(4, ref('faizy_core.group_faizy_ops'))]"/>
+        <field name="domain_force">['|', ('checklist_id.res_model', '!=', False), ('checklist_id.owner_id', '=', user.id)]</field>
+    </record>
+    <record id="rule_checklist_line_manager" model="ir.rule">
+        <field name="name">Faizy Work: managers see all lines</field>
+        <field name="model_id" ref="model_faizy_checklist_line"/>
+        <field name="groups" eval="[(4, ref('faizy_core.group_faizy_manager'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>

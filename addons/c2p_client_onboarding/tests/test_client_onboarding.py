@@ -343,3 +343,62 @@ class TestClientOnboarding(TransactionCase):
             [("model", "=", "project.project"),
              ("res_id", "=", self.portfolio.id),
              ("message_type", "=", "comment")]), messages)
+
+    # ── uploads ──────────────────────────────────────────────────────────
+    FILE = "VEVTVCBmaWxlIGNvbnRlbnQ="  # base64 of fictional text
+
+    def _docs(self):
+        self.client.action_c2p_add_standard_documents()
+        return {d.code: d for d in self.client.c2p_document_ids}
+
+    def test_uploading_a_file_marks_the_document_received(self):
+        doc = self._docs()["trade_licence"]
+        self.assertEqual(doc.state, "required")
+        doc.with_user(self.lead).write(
+            {"file": self.FILE, "file_name": "TEST-licence.pdf"})
+        self.assertEqual(doc.state, "received")
+        self.assertTrue(doc.received_on)
+        self.assertEqual(doc.file_name, "TEST-licence.pdf")
+        self.assertTrue(doc.file)
+
+    def test_upload_does_not_downgrade_a_verified_document(self):
+        doc = self._docs()["contract"]
+        doc.state = "verified"
+        doc.write({"file": self.FILE, "file_name": "TEST-contract-v2.pdf"})
+        self.assertEqual(doc.state, "verified")
+
+    def test_uploaded_file_is_an_attachment_not_a_column(self):
+        doc = self._docs()["nda"]
+        doc.write({"file": self.FILE, "file_name": "TEST-nda.pdf"})
+        attachment = self.env["ir.attachment"].search([
+            ("res_model", "=", "c2p.client.document"),
+            ("res_id", "=", doc.id), ("res_field", "=", "file")])
+        self.assertEqual(len(attachment), 1)
+
+    def test_member_can_download_but_not_upload(self):
+        doc = self._docs()["nda"]
+        doc.write({"file": self.FILE, "file_name": "TEST-nda.pdf"})
+        as_member = doc.with_user(self.member)
+        self.assertTrue(as_member.read(["file"])[0]["file"])
+        with self.assertRaises(AccessError):
+            as_member.write({"file": self.FILE, "file_name": "TEST-x.pdf"})
+
+    def test_outsourced_contributor_cannot_reach_uploaded_files(self):
+        doc = self._docs()["nda"]
+        doc.write({"file": self.FILE, "file_name": "TEST-nda.pdf"})
+        with self.assertRaises(AccessError):
+            doc.with_user(self.outsider).read(["file"])
+
+    def test_scope_file_is_locked_once_scope_is_approved(self):
+        self.portfolio.write({
+            "c2p_scope_file": self.FILE,
+            "c2p_scope_file_name": "TEST-signed-order.pdf"})
+        self._approve_scope()
+        with self.assertRaises(UserError):
+            self.portfolio.write({"c2p_scope_file": self.FILE,
+                                  "c2p_scope_file_name": "TEST-other.pdf"})
+        self.portfolio.with_user(self.manager).action_c2p_reopen_scope()
+        self.portfolio.write({"c2p_scope_file": self.FILE,
+                              "c2p_scope_file_name": "TEST-revised.pdf"})
+        self.assertEqual(self.portfolio.c2p_scope_file_name,
+                         "TEST-revised.pdf")

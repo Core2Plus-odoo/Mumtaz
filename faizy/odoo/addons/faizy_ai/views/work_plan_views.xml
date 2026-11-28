@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Project: which desk, evidence rule ─────────────────────────── -->
+    <record id="project_project_view_form_faizy" model="ir.ui.view">
+        <field name="name">project.project.form.faizy</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="faizy_role" groups="faizy_core.group_faizy_manager"/>
+                <field name="faizy_evidence_required" invisible="not faizy_role" groups="faizy_core.group_faizy_manager"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Planned work on the desks ───────────────────────────────────── -->
+    <record id="action_faizy_my_plan_today" model="ir.actions.act_window">
+        <field name="name">My plan today</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('user_ids', 'in', [uid]), ('project_id.faizy_role', '!=', False), ('state', 'not in', ['1_done', '1_canceled']), ('date_deadline', '&lt;=', context_today().strftime('%Y-%m-%d 23:59:59'))]</field>
+        <field name="context">{'search_default_group_project': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing planned for today.</p>
+            <p>Each task carries its steps, checklist and the evidence to attach. Log a note or attach
+               a file, then mark it Done.</p>
+        </field>
+    </record>
+    <record id="action_faizy_my_plan" model="ir.actions.act_window">
+        <field name="name">My plan</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,calendar,form</field>
+        <field name="domain">[('user_ids', 'in', [uid]), ('project_id.faizy_role', '!=', False)]</field>
+        <field name="context">{'search_default_open_tasks': 1, 'group_by': 'date_deadline:day'}</field>
+    </record>
+    <record id="action_faizy_work_plans" model="ir.actions.act_window">
+        <field name="name">Work plans</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('faizy_role', '!=', False)]</field>
+    </record>
+    <record id="action_faizy_plan_tasks_all" model="ir.actions.act_window">
+        <field name="name">All planned tasks</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('project_id.faizy_role', '!=', False)]</field>
+        <field name="context">{'search_default_open_tasks': 1, 'search_default_group_project': 1}</field>
+    </record>
+
+    <menuitem id="menu_care_plan" name="My plan today" parent="menu_care_desk"
+              action="action_faizy_my_plan_today" sequence="0"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_care_plan_all" name="My plan (30 days)" parent="menu_care_desk"
+              action="action_faizy_my_plan" sequence="6"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_ops_plan" name="My plan today" parent="menu_ops_desk"
+              action="action_faizy_my_plan_today" sequence="0" groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_ops_plan_all" name="My plan (30 days)" parent="menu_ops_desk"
+              action="action_faizy_my_plan" sequence="8" groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_cc_work_plans" name="Work plans" parent="menu_command_centre"
+              action="action_faizy_work_plans" sequence="8" groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_cc_plan_tasks" name="All planned tasks" parent="menu_command_centre"
+              action="action_faizy_plan_tasks_all" sequence="9" groups="faizy_core.group_faizy_manager"/>
+</odoo>

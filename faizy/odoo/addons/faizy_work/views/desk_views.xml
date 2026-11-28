@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Checklist figures on faizy_ai's My desk (§27): one screen per person. -->
+    <record id="view_faizy_my_desk_form_work" model="ir.ui.view">
+        <field name="name">faizy.my.desk.form.work</field>
+        <field name="model">faizy.my.desk</field>
+        <field name="inherit_id" ref="faizy_ai.view_faizy_my_desk_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//p[@class='fzb-band-title'][last()]" position="after">
+                <p class="fzb-band-title">Checklists</p>
+                <div class="fzb-grid">
+                    <button name="action_open_checklists" type="object" class="fzb-kpi">
+                        <field name="ck_open" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Started, not yet ready</span>
+                        <span class="fzb-kpi-label">Checklists open</span>
+                    </button>
+                    <button name="action_open_checklists_blocked" type="object" class="fzb-kpi fzb-attention">
+                        <field name="ck_blocked" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Waiting on a decision</span>
+                        <span class="fzb-kpi-label">Blocked</span>
+                    </button>
+                    <button name="action_open_checklists" type="object" class="fzb-kpi">
+                        <field name="ck_ready" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Sent for review</span>
+                        <span class="fzb-kpi-label">Ready for review</span>
+                    </button>
+                    <button name="action_open_leads_to_verify" type="object" class="fzb-kpi fzb-attention">
+                        <field name="leads_to_verify" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Leads still at Research</span>
+                        <span class="fzb-kpi-label">To verify</span>
+                    </button>
+                    <button name="action_open_scorecard" type="object" class="fzb-kpi">
+                        <span class="fzb-kpi-label">My scorecard</span>
+                        <span class="fzb-kpi-sub">Weighted KPIs, with baseline</span>
+                    </button>
+                    <button name="action_open_checklists_review" type="object" class="fzb-kpi fzb-attention"
+                            invisible="not is_manager">
+                        <field name="ck_team_ready" nolabel="1"/>
+                        <span class="fzb-kpi-sub">Ready or blocked, whole team</span>
+                        <span class="fzb-kpi-label">Checklists to review</span>
+                    </button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_work_scorecard_form" model="ir.ui.view">
+        <field name="name">faizy.work.scorecard.form</field>
+        <field name="model">faizy.work.scorecard</field>
+        <field name="arch" type="xml">
+            <form string="Scorecard" create="0">
+                <sheet>
+                    <h1>Scorecard</h1>
+                    <group>
+                        <group>
+                            <field name="user_id" groups="faizy_core.group_faizy_manager"/>
+                            <field name="user_id" readonly="1" groups="!faizy_core.group_faizy_manager"/>
+                            <field name="profile"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert"><field name="status" readonly="1"/></div>
+                    <h2><field name="total_display"/></h2>
+                    <field name="report" nolabel="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_work_scorecard" model="ir.actions.server">
+        <field name="name">My scorecard</field>
+        <field name="model_id" ref="model_faizy_work_scorecard"/>
+        <field name="state">code</field>
+        <field name="code">
+card = env['faizy.work.scorecard'].create({'user_id': env.uid})
+action = {'type': 'ir.actions.act_window', 'res_model': 'faizy.work.scorecard',
+          'res_id': card.id, 'view_mode': 'form'}
+        </field>
+    </record>
+</odoo>

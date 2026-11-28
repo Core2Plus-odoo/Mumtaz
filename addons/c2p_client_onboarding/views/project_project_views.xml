@@ -12,6 +12,9 @@
                         <group string="Approved scope">
                             <field name="c2p_scope_reference" readonly="c2p_scope_state == 'approved'"/>
                             <field name="c2p_scope_version" readonly="c2p_scope_state == 'approved'"/>
+                            <field name="c2p_scope_file" filename="c2p_scope_file_name"
+                                   readonly="c2p_scope_state == 'approved'"/>
+                            <field name="c2p_scope_file_name" invisible="1"/>
                             <field name="c2p_scope_state" readonly="1" widget="badge"
                                    decoration-success="c2p_scope_state == 'approved'"
                                    decoration-warning="c2p_scope_state == 'draft'"/>

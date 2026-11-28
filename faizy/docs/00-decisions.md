@@ -1042,3 +1042,245 @@ showed them.
 
 Verified on a throwaway Odoo 19 database: all four Faizy modules, 111 tests, 0 failed after merging #200 (5 new in
 `test_plan_prices_hidden`). Not run on production.
+
+## 24. Staff work: checklists, My Work desks, scorecards (faizy_work 19.0.1.0.0, faizy_work_project 19.0.1.0.0)
+
+Brief by Umer, 23 Nov 2026. One reusable checklist mechanism (none exists in Odoo 19 CRM or Project) attached to the existing
+CRM lead, FAIZY order, vendor, AI draft or project task. Standard-first: no second CRM, task or approval app; existing
+modules are extended with `_inherit`, never edited.
+
+- Gates are enforced on the server through `ValidationError`, with a switch `faizy.checklist_enforce` (shipped on).
+- Prospect status maps onto the standard CRM stages; stages are not renamed. Originator and owner are separate.
+- Scorecards count real records, show "Insufficient data" instead of guessing, and wait for a two-week baseline.
+- Shipped off or unset: `faizy.checklist_orders`, `faizy.work_route_leads`, `faizy.kpi_start`. Conversion target 0.20 is provisional.
+- Faizy Agent now implies the CRM salesman group (no net change on production).
+- Open decisions: Mashood's CRM rights (All vs Own Documents), the 30-day start date (assumed Mon 30 Nov 2026), who is assigned to recurring checklists.
+
+Verified on a clean throwaway Odoo 19 database: faizy_core, faizy_ai, faizy_pilot, faizy_website, faizy_work and the bridge,
+143 tests, 0 failed. Not run on production. Details and handoff list: `docs/work/README.md`.
+
+## 25. Leads are work, checklists on every item, My desk KPIs (faizy_ai 19.0.1.4.0)
+
+> Built in parallel with §24 (`faizy_work`, PR #204) from the same brief, in a different session. The two overlap
+> (desks and KPIs, checklists, lead routing, the 30-day plan); the reconciliation is Umer's decision and is
+> listed at the end of §26.
+
+Asked by Umer on 22 Nov 2026: Mashood and Raza log in and see their assigned daily work, qualified
+lead-generation assignments, checklists, follow-ups, deadlines and KPIs, on their existing roles, with
+nothing duplicated. §21 already gives the daily work, follow-ups and deadlines (one `mail.activity`
+per piece of work, on the record, with an escalation window). Three things were missing and are added
+here, all inside `faizy_ai`, all on standard models. No new module, no second task system, no
+`base_automation`.
+
+- **R13, leads are work.** Standard `crm.lead` is already on `faizy_prod` with the Faizy tab (§"CRM
+  lead fields captured from live"). Assignment stays the standard Salesperson field, nothing else. A
+  new lead gets a "FAIZY · Qualify lead" item on its salesperson's desk, due today, escalating after
+  4 h. A lead with no salesperson, or one owned by an AI agent or a portal user, goes to the customer
+  care role holder. Leaving the first stage closes that item and opens "FAIZY · Follow up lead", due
+  tomorrow, escalating after 24 h. Won or lost closes both. Reassigning the lead moves its open items.
+  The standard "Rule-Based Assignment" of `crm.team` was considered and not used: it runs on a daily
+  cron and spreads by capacity, where HQ05 routes immediately to a named role holder.
+- **CRM rights follow the desks.** `Faizy AI / Customer communications approver` (Mashood) and
+  `Faizy / Operations` (Raza) now imply the standard "own documents" CRM group, so a lead assigned to
+  them opens from their desk and nothing else; `Faizy / Manager` implies "all documents". `Faizy /
+  Agent` and the AI agents get no CRM right (tested). The standard CRM app therefore appears in the
+  menu for care and operations; that is the standard app, not a copy.
+- **Checklists.** Each of the eleven FAIZY activity types carries its checklist in the standard
+  Default Note (`CHECKLISTS` in `routing.py`, one place), and every routed item appends it to its
+  note, so the steps are on the item the person opens. The types are `noupdate`, so the
+  19.0.1.4.0 migration and the first-install hook fill the note only where it is empty; a note Umer
+  edits in Settings → Activity Types is never overwritten (tested).
+- **My desk (KPIs).** `faizy.my.desk`, a TransientModel on a form, same pattern as `faizy.dashboard`
+  (BI-01): waiting, due today, overdue, escalated, done today, done this week by type; my open leads,
+  leads waiting on me, leads I qualified this week, my leads won this month; replies I approved,
+  completion messages I sent, orders completed this week (team). "Done" is read from the standard
+  activity-done message (`mail.message.mail_activity_type_id`, by author), so it counts exactly
+  what the person closed. The manager's copy adds a team table per role holder. Every tile opens
+  the real list. Menus: Care Desk and Operations Desk get "My leads" and "My desk (KPIs)"; the
+  Command Centre gets "Lead pipeline" (the standard CRM pipeline action) and "My desk & team KPIs".
+- **Morning summary** adds "Leads waiting on you: N".
+
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases:
+
+- Baseline, `main` before this change, all four addons with tests: `0 failed, 0 error(s) of 111 tests`,
+  no ERROR line.
+- Fresh install, all four addons with tests: `0 failed, 0 error(s) of 120 tests` (52 in `faizy_ai`, 9 of them
+  new), no ERROR line. After the last edit (the breadcrumb name on `faizy.my.desk`) the `faizy_ai` suite was
+  run again on the clean upgrade database: `0 failed, 0 error(s) of 44 tests`.
+- Upgrade path: the baseline database (all four addons from `main`), then `-u faizy_ai` with tests:
+  migration `19.0.1.4.0 post-checklists` ran, `0 failed, 0 error(s) of 44 tests`, no ERROR line.
+- `validate_modules.py`, `check_self_fields.py`, `check_view_schemas.py`, `check_portal_access.py`,
+  flake8 and the module registry check: pass.
+- Staging demonstration, on the fresh database with synthetic users only (`stg.mashood` comms, `stg.raza`
+  operations, `stg.umer` manager, set as the three role holders; SYNTHETIC-prefixed customer, worker, two
+  orders, an inbound message, a reply draft and three leads). Over XML-RPC and in a headless browser logged
+  in as each user: Mashood's "My work today" held Approve reply, Handle inbound, Qualify lead (the lead
+  created with no salesperson) and Follow up lead (the lead moved to Qualified, due tomorrow); Raza's held
+  two Assign Faizy items and the Qualify lead for the lead assigned to him; "My desk" showed 4 waiting /
+  3 due today / 2 leads waiting for Mashood and the team table for Umer; the lead form showed the
+  checklist on the planned activity. Screenshots were handed to Umer with the PR; they are not in git.
+  Three pre-existing routing tests (`test_archived_role_holder_falls_back_to_group_then_umer`,
+  `test_not_escalated_before_window`, `test_overdue_activity_escalates_once`) fail when run on that seeded
+  database because they assume no other comms user and no overdue items exist; they pass on a clean
+  database, so the seeded database is a demonstration, not a test environment.
+
+**Not done / blocked:** there is still no staging instance (HQ05 §8 step 1), so "implemented in
+staging" means a throwaway database here with synthetic `stg.*` users, not a server. Nothing has run
+on `faizy_prod`. Real Mashood and Raza logins wait on Umer's separate written approval (D10 in the
+staging checklist). Open questions for Umer: whether leads default to customer care (this change) or
+to operations; whether the AI agents may create leads at all (today they can only reach the CRM
+through a draft, since they have no CRM right); and the plan-price rule applies to lead follow-ups
+too (no prices until approved, §23), which the follow-up checklist says.
+
+## 26. Staff work execution: planned work on the desks, evidence before Done, one pipeline each (faizy_ai 19.0.1.5.0)
+
+Directive from Umer, 23 Nov 2026: real development in the existing ERP for the two executives, Raza
+(Business Development & Operations Executive) and Mashood (Digital Marketing & Customer Experience
+Executive): individual workspaces, a 30-day plan with daily assignments, checklists, SOPs and completion
+evidence, independent qualified-lead pipelines, recurring activities, overdue escalation, separate KPI
+dashboards, tested on staging with each one's own permissions. Production data, approvals, accounts and
+outbound messaging untouched.
+
+**Audit first (what already existed, reused as is):** §20 security guards; §21 role holders, nine work-item
+activity types, routing R1–R10, escalation and morning-summary crons, Care Desk / Operations Desk /
+Command Centre; §25 leads as work, checklists on work items, My desk KPIs; standard `crm` with the Faizy
+lead fields; `faizy.ai.knowledge` notes (category Procedure) for SOPs; `faizy.dashboard` for the business
+view. Mashood's role is `Faizy AI / Customer communications approver` + care role holder; Raza's is
+`Faizy / Operations` + operations role holder. Nothing of this is duplicated.
+
+**Decision: the standard Project app is installed, for internal staff work plans only.** FIT_GAP row PRJ-01
+said "Out of scope: not a project business"; this directive asks for exactly what Project gives (planned
+tasks with deadlines, assignees, stages, recurrence), so the row changes to "Standard, internal staff work
+only", recorded here. Reactive work stays a `mail.activity` on the real record (§21); planned work is a
+`project.task` in a project that belongs to a desk. Two guards are added on top, nothing else:
+
+- `project.project.faizy_role` (care / ops) and `faizy_evidence_required`. Tasks in a desk project show on
+  "My plan today" and "My plan (30 days)" on that desk, count on My desk (due today, hours today, overdue,
+  done this week, open), appear in the manager's team table and in the morning summary.
+- **Evidence before Done:** with the flag on, a task cannot go to Done until a person's note or an
+  attachment is on it (the automatic "created" and activity messages do not count). Cancel needs none.
+  Tested, including the attachment path.
+- **Overdue planned tasks escalate once** to the escalation owner after `faizy_ai.task_escalation_hours`
+  (default 2) past the deadline, inside working hours, through the same cron and activity type as work
+  items; closing the task closes the escalation item. Tested.
+- **One pipeline per executive:** `crm.team.faizy_lead_sources` lists the lead sources a team owns. A
+  new lead with no real salesperson goes to the leader of the team that owns its source, and into that
+  team; "Digital & customer leads (Mashood)" owns facebook, instagram, website, whatsapp; "Partners &
+  referrals (Raza)" owns embassy, walk_in, other. An explicit salesperson is always kept. Tested.
+  **Switch:** assigning an unowned lead to a desk is `faizy_ai.route_leads`, **off** unless set to `on`
+  (added on 26 Nov when §24 landed with the same rule behind `faizy.work_route_leads`, off). With it off,
+  a lead with no real salesperson is left to the standard CRM and gets no work item; a lead with a real
+  salesperson still gets its Qualify and Follow-up items. `provision_staff.py` turns it on for the staging
+  workspace; production needs Umer's word. Tested both ways.
+- Groups: care and operations imply the standard Project user group; manager implies Project
+  administrator. Plans are followers-only projects, so each executive sees their own and the manager sees
+  both (tested).
+
+**The 30-day plan itself is data, not code:** `faizy/odoo/tools/staff_plan_30d.py` (eleven SOPs, the daily
+routine per role, the project blocks per week, the two teams and projects) and
+`faizy/odoo/tools/provision_staff.py`, an idempotent XML-RPC tool that creates what is missing: role
+holders and home action, recurring tasks switched on, SOP notes, teams, projects with stages Planned / In
+progress / Blocked / Done, and one task per working day per routine plus the week's project block and a
+recurring Saturday review. Six working days a week, 8 h a day (6.5 h routine + 1.5 h project block),
+deadlines at 18:00 Karachi. Rendered for review in `faizy/docs/plans/STAFF_30_DAY_PLAN.md`. Real logins
+are never created by the tool; staging `stg.*` users only, with `--create-stg-users`.
+
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases:
+
+- Fresh install, all four addons with tests: `0 failed, 0 error(s) of 127 tests` (61 in `faizy_ai`, 7 new),
+  no ERROR line.
+- Upgrade path: a database at `faizy_ai` 19.0.1.4.0, then `-u faizy_ai` (installs `project`), tests:
+  `0 failed, 0 error(s) of 51 tests`, no ERROR line. The first run of that path found two defects, both
+  fixed before merge: a lead handed to an AI agent fell back to Odoo's default "Sales" team (led by the
+  administrator), and the Done button did not stamp `date_end`, so "done this week" missed it.
+- `validate_modules.py`, `check_self_fields.py`, `check_view_schemas.py`, `check_portal_access.py`, the
+  Faizy CI flake8 command and the module registry check: pass.
+- Staging demonstration on the fresh database with `provision_staff.py --create-stg-users` (users
+  `stg.mashood`, `stg.raza`, `stg.umer`; 11 SOP notes; 2 teams; 2 projects; 178 + 204 tasks from
+  23 Nov 2026) plus the SYNTHETIC reactive work of §25, all over XML-RPC as each user and in a headless
+  browser logged in as each user:
+  - visibility: Mashood sees only his project (178 tasks), Raza only his (204), Umer both (382);
+  - day 1: Mashood 7 tasks / 8.0 h, Raza 8 tasks / 8.0 h, each with steps, checklist and evidence line;
+  - evidence gate: Done refused as Mashood with "needs evidence before it is Done"; after one note,
+    state Done, evidence count 1, `date_end` stamped;
+  - escalation: a Raza task backdated 6 h past its deadline; the real scheduled action run twice:
+    escalated once, one "Escalated: …" item on Umer's desk;
+  - recurrence: the Saturday review marked Done (with a note) created the next occurrence a week later;
+  - pipelines: an Instagram lead with no salesperson landed on Mashood in "Digital & customer leads",
+    a walk-in partner enquiry on Raza in "Partners & referrals";
+  - My desk as each user showed the expected numbers; the manager's copy showed the team table.
+  Screenshots handed to Umer with the PR; not in git. The seeded database is a demonstration, not a
+  test environment (three pre-existing routing tests assume an empty database, see §25).
+
+**Not done / blocked / needs Umer:** no staging server exists, so staging means a throwaway database here
+with `stg.*` users; nothing has run on `faizy_prod`; real Mashood and Raza accounts, the home action and
+the role holders on production are set by Umer after written approval (D10); outbound messaging stays off
+(§20). The Saturday review recurs only when the previous one is marked Done (standard recurrence). The
+plan's content (targets such as "five contacts a day", the week themes) is a proposal for Umer to edit in
+`staff_plan_30d.py` before it is provisioned on production. Timesheets (actual hours) are not installed;
+"hours today" is the allocated time of the day's tasks.
+
+**Reconciliation with §24 (`faizy_work`, PR #204), for Umer to decide.** Two sessions built from the same
+23 Nov brief without seeing each other. Both are on standard models and both keep the rule "no outbound
+messaging, nothing on production". Where they overlap:
+
+| Need in the brief | §24 `faizy_work` | §25–§26 `faizy_ai` | Overlap |
+|---|---|---|---|
+| Per-person screen | `faizy.work.desk` ("My Work › My desk", badges) + `faizy.work.scorecard` (weighted KPIs, baseline, "Insufficient data") | `faizy.my.desk` ("My desk (KPIs)" on each desk: work items, planned work, leads, outcomes, manager team table) | Two desks. Scorecard weights are only in §24; planned-work tiles only in §25–§26 |
+| Checklists and SOPs | Checklist engine: versioned templates (14, 100 steps), lines with evidence, Ready for review, Blocked, server gates on CRM status, drafts and orders; SOP text inline | Checklist in the activity type's Default Note on every routed work item (11 types); SOP notes in Knowledge (11); steps + checklist + evidence line in every planned task | Two mechanisms. §24 enforces steps; §25 shows them |
+| Lead discipline | Prospect status, originator, verification evidence, duplicate guard, gates on stage moves; routing by source **off** (`faizy.work_route_leads`) | Lead = work item (Qualify, Follow up) on the salesperson's desk, escalation windows; routing by source **on** through `crm.team.faizy_lead_sources`; CRM rights for care, ops, manager | Same source→person mapping, implemented twice; §24's gates may refuse stage moves that §25's tests make directly |
+| 30-day plan | Two CSV registers (10 deliverables each), `load_30day_plan.py` into one project | Daily routine + weekly project blocks per desk (178 + 204 tasks, 8 h/day), `provision_staff.py`, projects per desk with "Evidence before Done", overdue escalation, "My plan today" | Two plans at different grain: deliverables vs daily work |
+| Project app | Bridge `faizy_work_project` (auto-install): checklist page on the task | `faizy_ai` depends on `project`; desk projects, evidence gate, plan menus | Compatible; installing §26 makes the bridge install too |
+
+Options:
+
+1. **Keep both as shipped** (fastest, most duplication): two desks and two checklist mechanisms side by side;
+   staff would need to be told which screen to open. Not recommended.
+2. **`faizy_work` owns checklists, gates and scorecards; `faizy_ai` owns the desks, routing and planned work**
+   (recommended): drop `faizy.work.desk` in favour of `faizy.my.desk` (add a scorecard tile), keep the
+   checklist engine and attach its templates to the planned tasks through the bridge, keep §26's team-by-source
+   routing and retire `faizy.work_route_leads`, keep §26's daily plan and load §24's ten deliverables per
+   person as milestone tasks in the same desk projects. One follow-up PR, mostly deletions and one data file.
+3. **`faizy_work` owns everything**: drop §25–§26's desk tiles, lead routing and planned-work guards; keep only
+   the Project dependency. Loses the daily plan, evidence-before-Done and overdue-task escalation unless rebuilt.
+
+Co-installation result (all six modules, one database, 26 Nov 2026): the first run found exactly the two
+interactions above, `1 failed, 1 error(s) of 159 tests`: §24's CRM gate refused §25's direct move to Qualified,
+and §25's always-on lead assignment broke §24's "routing off by default" test. After the `faizy_ai.route_leads`
+switch (off by default) and the test adjustments: **`0 failed, 0 error(s) of 160 tests`**, no ERROR line
+(`faizy_ai` 62, `faizy_work` 33, `faizy_work_project` 3, the rest unchanged). The four original modules alone on
+the merged tree: `0 failed, 0 error(s) of 128 tests`. So the two implementations install and test together;
+what remains is the duplication above, which is a product decision, not a defect.
+
+## 27. One desk, one routing, one plan: faizy_work consolidated onto faizy_ai (faizy_work 19.0.1.1.0)
+
+Umer, 28 Nov 2026: "do all". Option 2 of §26 is applied: `faizy_work` keeps what only it has (the checklist
+engine with gates, the CRM prospect discipline, the scorecards); `faizy_ai` keeps what only it has (the desks,
+lead routing, planned work). Nothing a person needs is lost; what was built twice now exists once.
+
+- **One desk.** `faizy.work.desk` and `faizy.work.command` are removed, with their menus "My Work" and
+  "Founder". `faizy_work` extends `faizy.my.desk` instead: a "Checklists" band (open, blocked, ready for
+  review, research candidates to verify, My scorecard; for the manager "Checklists to review"). "My
+  checklists" and "My scorecard" hang off the Care Desk and the Operations Desk; "Checklists to review" and
+  "Scorecards" off the Command Centre. Checklist templates stay under Configuration.
+- **One routing.** `faizy_work`'s `_faizy_route_new` and `faizy.work_route_leads` are removed. The rule is
+  §26's: `faizy_ai.route_leads` (off by default) and `crm.team.faizy_lead_sources`. `faizy_work`'s test now
+  proves the switch off leaves an unowned lead alone and the switch on sends Facebook to Mashood's team and
+  embassy to Raza's.
+- **One plan.** `scripts/load_30day_plan.py` is retired. `provision_staff.py` loads the ten deliverables per
+  person from `docs/work/30day-register-*.csv` as milestone tasks in the same desk projects as the daily
+  plan (`--milestones none` to skip), and, with `faizy_work` installed, starts its `daily_end` checklist on
+  every end-of-day task and its weekly review checklist on the Saturday review through the
+  `faizy_work_project` bridge, so the steps are ticked with evidence on the task itself. The standalone
+  daily/weekly recurring checklists stay available but nobody is assigned to them, to avoid two lists.
+- **Rights.** `provision_staff.py --align-crm-rights` removes the CRM "all documents" right from care and
+  ops so both have own documents only (the asymmetry §24 found on production). `--enforce-totp` turns on
+  the standard "Enforce two-factor authentication"; it emails the code, so it waits for outgoing mail
+  (FD-06). Until then each person can enable app-based two-factor in their own profile.
+- **Runbook.** `faizy/docs/plans/STAFF_WORK_DEPLOY_RUNBOOK.md`: backup, pull, upgrade, provision, checks,
+  rollback, in the order and with the chaining `faizy/CLAUDE.md` requires. `docs/work/README.md` updated.
+
+**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway database, all six modules installed together: VERIFY_27
+
+**Not done / needs Umer:** everything in the runbook is yours to run on the VPS with written go-ahead; no
+staging server; outgoing mail, WhatsApp sending, plan prices and the payment gateway are unchanged and open.
