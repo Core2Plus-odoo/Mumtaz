@@ -16,13 +16,14 @@ The customer-facing half of Faizy.
 The site's domain is configured on the Website record (Settings > Website), not
 hardcoded here — see faizy/docs/02-odoo-deployment.md.
 """,
-    "version": "19.0.1.25.0",
+    "version": "19.0.1.26.0",
     "category": "Website",
     "author": "C2P Consultants FZC LLC",
     "website": "https://faizy.pk",
     "license": "LGPL-3",
     "depends": ["website", "portal", "faizy_core", "faizy_pilot"],
     "data": [
+        "security/ir.model.access.csv",
         "views/faizy_website_templates.xml",
         "views/faizy_portal_templates.xml",
         "data/website_menu_data.xml",

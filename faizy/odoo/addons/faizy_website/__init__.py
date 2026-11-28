@@ -1,4 +1,5 @@
 from . import controllers
+from . import models
 from .favicon_setup import apply_favicon
 from .menu_setup import fix_header_menu
 

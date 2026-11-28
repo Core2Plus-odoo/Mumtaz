@@ -21,24 +21,30 @@ app is a `faizy.order`.
 
 Body: `name`, `phone`, `email`, `password` (8+ characters), optional
 `country_code`. Responses: 200 `{ok, partner}`, 400 `{errors}`,
-403 `signup_closed`, 409 `already_registered`.
+403 `signup_closed`, 409 `already_registered`, 429 `too_many_attempts`.
 
 - Shipped off. A Manager sets system parameter `faizy.app_signup` to `on`.
 - An email or phone already on file is refused, never attached: the caller
   gets a login, so matching an existing customer by phone would hand their
   family and orders to anyone who knows the number.
+- Rate limited: 5 attempts per caller address per hour and 60 from all
+  callers per hour, refused attempts included (`faizy.api.throttle`). The
+  per-address limit needs Odoo `proxy_mode` on and nginx forwarding
+  `X-Forwarded-For`; otherwise every caller shares one address.
 - Creates a portal user only. No subscription and no family member; the
   customer adds family afterwards and the plan gate applies as on the web.
 
 ## Open gaps before the app goes public
 
 - A1 Passwordless login by WhatsApp code (OB-03). Needs the WhatsApp provider.
-- A2 Money figures in the API (`amount_total`, fees, activity counts) are not
-  yet checked against `faizy.show_plan_prices`. No app screen may show them
-  until that is audited.
+- A2 Audited 28 Nov 2026: the service catalogue carries no price fields
+  (tested). Order amounts and activity counts go only to the logged-in
+  customer for their own account, as the web portal already shows them.
+  Whether the app shows them is Umer's decision (D3).
 - A3 API versioning. A4 cookie vs token for the app session.
-- A5 Rate limiting / CAPTCHA and proof of email or number ownership on
-  sign-up. Do not switch `faizy.app_signup` on for the public before this.
+- A5 Rate limiting is in. Still missing: proof of email or number ownership,
+  and confirmation of the proxy setting on production. Do not switch
+  `faizy.app_signup` on for the public before both.
 - A6 Push notifications.
 - Voice assistant (ElevenLabs): not built. It may read, answer and fill in a
   request; only the customer's tap sends it.
