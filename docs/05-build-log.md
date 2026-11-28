@@ -301,3 +301,7 @@ tracker, work hub, meeting actions, client onboarding, milestone forecast and or
 The reason rule honoured context keys an API caller can send. They are replaced by in-process switches;
 `with skip_change_reason():` is the documented bypass for trusted code. `0 failed, 0 error(s) of 21 tests`.
 Nothing on live is changed.
+
+### Staging runbook for the tracker and forecast fixes (28 Nov 2026)
+`docs/project/phase1/08-TRACKER-FORECAST-STAGING-RUNBOOK.md`: one combined pass on a neutralised copy. The scenario script
+(16 checks, fictional data, rolled back) was rehearsed locally: `ALL AS EXPECTED`. Not run against live data yet. Nothing on live is changed.

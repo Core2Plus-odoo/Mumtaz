@@ -80,3 +80,7 @@ and the type can later come from the product.
 - **The fix:** no context key bypasses anything now. The switches are in-process variables that only Python code importing the module can set. Trusted bulk code uses `with skip_change_reason():`. The superuser (which also runs the install) stays exempt.
 - **Tests:** 21 pass. New ones prove that each of the four keys is refused for a project manager, that the health cannot be set or forged at create through a key, that the in-process skip works and ends with its block.
 - **Staging check for this one (read-only query on the copy and on live before approval):** search the live database's automations and server actions for the three key names. If any live automation sends one, it would start being refused. In this repository nothing does.
+
+## Staging for items 1 and 2
+
+One combined pass, with the steps in `08-TRACKER-FORECAST-STAGING-RUNBOOK.md`: three read-only queries on live, one `pg_dump`, then everything on a neutralised copy (upgrade with both modules' tests, data checks, and a 16-check scenario on fictional data). The scenario was rehearsed on a local stand-in; it has not run on live data.
