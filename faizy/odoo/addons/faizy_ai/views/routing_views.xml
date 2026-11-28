@@ -168,7 +168,7 @@
         <field name="name">faizy.my.desk.form</field>
         <field name="model">faizy.my.desk</field>
         <field name="arch" type="xml">
-            <form string="My desk" create="false" edit="false" class="o_faizy_dashboard">
+            <form string="My desk" create="false" edit="false" class="o_faizy_dashboard o_faizy_desk">
                 <field name="user_id" invisible="1"/>
                 <field name="is_manager" invisible="1"/>
                 <sheet>
@@ -178,7 +178,7 @@
                     <p class="fzb-band-title">Work items</p>
                     <div class="fzb-grid">
                         <button name="action_open_work" type="object" class="fzb-kpi fzb-attention">
-                            <field name="work_open" nolabel="1"/>
+                            <field name="work_open" nolabel="1" decoration-warning="work_open > 0"/>
                             <span class="fzb-kpi-sub">Open items on your desk</span>
                             <span class="fzb-kpi-label">Waiting for me</span>
                         </button>
@@ -188,12 +188,12 @@
                             <span class="fzb-kpi-label">Due today</span>
                         </button>
                         <button name="action_open_overdue" type="object" class="fzb-kpi fzb-attention">
-                            <field name="work_overdue" nolabel="1"/>
+                            <field name="work_overdue" nolabel="1" decoration-danger="work_overdue > 0"/>
                             <span class="fzb-kpi-sub">Past their deadline</span>
                             <span class="fzb-kpi-label">Overdue</span>
                         </button>
                         <button name="action_open_escalated" type="object" class="fzb-kpi fzb-attention">
-                            <field name="work_escalated" nolabel="1"/>
+                            <field name="work_escalated" nolabel="1" decoration-danger="work_escalated > 0"/>
                             <span class="fzb-kpi-sub">Already with the escalation owner</span>
                             <span class="fzb-kpi-label">Escalated</span>
                         </button>
@@ -208,14 +208,14 @@
                             <span class="fzb-kpi-label">Done this week</span>
                         </div>
                     </div>
-                    <group string="Done this week, by type">
+                    <group string="Done this week, by type" invisible="not done_week_html">
                         <field name="done_week_html" nolabel="1" colspan="2"/>
                     </group>
 
                     <p class="fzb-band-title">Planned work</p>
                     <div class="fzb-grid">
                         <button name="action_open_plan_today" type="object" class="fzb-kpi fzb-attention">
-                            <field name="plan_due_today" nolabel="1"/>
+                            <field name="plan_due_today" nolabel="1" decoration-warning="plan_due_today > 0"/>
                             <span class="fzb-kpi-sub">Tasks with today's deadline</span>
                             <span class="fzb-kpi-label">Plan: due today</span>
                         </button>
@@ -225,7 +225,7 @@
                             <span class="fzb-kpi-label">Plan: hours today</span>
                         </button>
                         <button name="action_open_plan_overdue" type="object" class="fzb-kpi fzb-attention">
-                            <field name="plan_overdue" nolabel="1"/>
+                            <field name="plan_overdue" nolabel="1" decoration-danger="plan_overdue > 0"/>
                             <span class="fzb-kpi-sub">Past their deadline, not done</span>
                             <span class="fzb-kpi-label">Plan: overdue</span>
                         </button>
@@ -249,7 +249,7 @@
                             <span class="fzb-kpi-label">My open leads</span>
                         </button>
                         <button name="action_open_leads_waiting" type="object" class="fzb-kpi fzb-attention">
-                            <field name="leads_waiting" nolabel="1"/>
+                            <field name="leads_waiting" nolabel="1" decoration-warning="leads_waiting > 0"/>
                             <span class="fzb-kpi-sub">Qualify or follow up</span>
                             <span class="fzb-kpi-label">Leads waiting on me</span>
                         </button>

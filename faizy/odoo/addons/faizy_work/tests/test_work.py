@@ -487,7 +487,7 @@ class TestFaizyWork(TransactionCase):
         ck = lead.with_user(self.mashood)._checklist_start('qualified_digital_lead')
         desk = self.env['faizy.my.desk'].with_user(self.mashood).create({})
         self.assertEqual(desk.ck_open, 1)
-        self.assertEqual(ck.state, 'in_progress')
+        self.assertEqual(ck.state, 'draft')   # started, no step ticked yet: counts as open
         self.assertEqual(desk.leads_to_verify, 1)
         self.assertFalse(desk.is_manager)
         self.assertEqual(desk.action_open_checklists()['res_model'], 'faizy.checklist')

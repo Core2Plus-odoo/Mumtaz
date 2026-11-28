@@ -313,7 +313,9 @@ def main():
                         continue
                     wiz = o.call('faizy.checklist.start', 'create',
                                  {'res_model': 'project.task', 'res_id': tid, 'template_id': tpl[0]})
-                    o.call('faizy.checklist.start', 'action_start', [wiz])
+                    res = o.call('faizy.checklist.start', 'action_start', [wiz])
+                    # The wizard makes the caller the owner; the task's assignee is the one who ticks it.
+                    o.call('faizy.checklist', 'write', [res['res_id']], {'owner_id': users[role]})
                     n_ck += 1
         print('checklists started on planned tasks:', n_ck)
 
