@@ -9,6 +9,8 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
     steps:
       - name: Setup SSH
         run: |
@@ -23,7 +25,7 @@ jobs:
             'cd /opt/mumtaz && bash scripts/backup.sh'
 
       - name: Slack Notification
-        if: ${{ secrets.SLACK_WEBHOOK != '' }}
+        if: ${{ env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v1
         with:
           payload: |

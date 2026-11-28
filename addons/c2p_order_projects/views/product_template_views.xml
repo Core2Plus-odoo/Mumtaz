@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_c2p_order_projects" model="ir.ui.view">
+        <field name="name">product.template.form.c2p.order.projects</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id"
+               ref="sale_project.product_template_form_view_invoice_policy_inherit_sale_project"/>
+        <field name="arch" type="xml">
+            <field name="service_tracking" position="after">
+                <field name="c2p_delivery_template_id"
+                       context="{'active_test': False}"
+                       invisible="service_tracking not in ['task_in_project', 'project_only']"/>
+                <field name="c2p_engagement_type"
+                       invisible="service_tracking not in ['task_in_project', 'project_only']"/>
+            </field>
+        </field>
+    </record>
+</odoo>

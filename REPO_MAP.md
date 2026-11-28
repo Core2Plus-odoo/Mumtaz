@@ -29,7 +29,7 @@ that exact path: it moves only with a planned step on the server.
 
 | Folder | What it is | Path |
 | --- | --- | --- |
-| `addons/` | 62 Odoo 19 modules: the platform, the products, the Jawhar edition and C2P's internal modules. Classified in `registry.yaml` | Fixed |
+| `addons/` | 63 Odoo 19 modules: the platform, the products, the Jawhar edition and C2P's internal modules. Classified in `registry.yaml` | Fixed |
 | `registry/`, `registry.yaml` | Module classification (hand-kept) and the generated registry | Free |
 | `scripts/` | Checks, test runs and older server scripts; grouped in `scripts/README.md` | Fixed (CI workflows call them by path) |
 | `config/` | `odoo.conf` for the root `Dockerfile` and `docker-compose*.yml` | Fixed (compose mounts it) |
@@ -54,7 +54,7 @@ install profile `mumtaz_erp` over modules in `addons/`.
 | Folder | What it is | Path |
 | --- | --- | --- |
 | `sites/core2plus.com/`, `sites/ig2.mumtaz.digital/` | Index pages for C2P's internal ERP and the IG2 client instance. Their code is in `addons/` (C2P) and on a separate branch (IG2) | Free |
-| `faizy/` | Faizy, a separate venture: 4 Odoo modules, brand, docs. Production runs it from its own branch | Fixed; destination is its own repository (decision D-12) |
+| `faizy/` | Faizy, a separate venture: 6 Odoo modules, brand, docs. Production runs it from its own branch | Fixed; destination is its own repository (decision D-12) |
 | `sites/myfaizy.com/` | Index page for Faizy | Free |
 
 ### Supporting websites and operations
@@ -80,7 +80,7 @@ step each one needs in `docs/platform/MUMTAZ_REPOSITORY_CONSOLIDATION.md`.
 
 ## Module layers
 
-Generated detail is in `registry.yaml`. Summary on 25 Nov 2026 (66 modules):
+Generated detail is in `registry.yaml`. Summary on 28 Nov 2026 (69 modules):
 
 | Layer | Modules | With a test file |
 | --- | --- | --- |
@@ -88,8 +88,8 @@ Generated detail is in `registry.yaml`. Summary on 25 Nov 2026 (66 modules):
 | platform | 18 | 5 |
 | product | 12 | 2 |
 | edition (Jawhar) | 15 | 14 |
-| internal | 13 | 10 |
-| venture | 4 | 4 |
+| internal | 14 | 11 |
+| venture | 6 | 6 |
 
 Findings:
 
@@ -102,6 +102,34 @@ Findings:
 - **Tests:** the Jawhar edition is tested; 27 of the 34 foundation, platform
   and product modules have no test file.
 
+## What is live (checked on the server, 21 Nov 2026)
+
+From the nginx site files and file checksums on the production server. The
+live front ends are folders inside the server checkout that are **not tracked
+in git**; they were copied there by hand, most in June 2026.
+
+| Site | Served from (server) | Matches in git |
+| --- | --- | --- |
+| mumtaz.digital | `/opt/mumtaz/marketing` | Identical to `platform/marketing/index.html` at the time of the check |
+| zaki.mumtaz.digital | `/opt/mumtaz/zaki/frontend`, API on port 8001 | Identical to `platform/zaki/frontend/index.html` at the time of the check |
+| app.mumtaz.digital | `/opt/mumtaz/platform/frontend`, API on port 8002 | No matching file on `main` (not `sites/app.mumtaz.digital/portal`) |
+| jewel.mumtaz.digital | `/opt/mumtaz/jewel-landing` plus the Jawhar Odoo | Not compared |
+| marketplace.mumtaz.digital | `/var/www/marketplace.mumtaz.digital` | Not compared |
+| erp, pharma, ig2 subdomains | Odoo, by proxy | — |
+
+So `platform/marketing` and `platform/zaki` are the canonical sources.
+`sites/mumtaz.digital/site`, `sites/delivery.mumtaz.digital/landing/` (was `website/index.html`), `sites/zaki.mumtaz.digital/static`
+and `sites/zaki.mumtaz.digital/node-app` are not deployed. Publishing a change means copying the file into the served folder;
+merging to `main` does not do it.
+
+**Update, 22 Nov 2026 (owner-run check on the server).** One day later the
+picture for the apex had changed: nginx proxied `mumtaz.digital` to the ERP's
+Odoo instance on port 8070, and no site file had a root at
+`/opt/mumtaz/marketing` any more. `zaki.` and `app.` were as in the table, and
+both of their back ends were running; the ZAKI one answers finance requests
+without credentials. Full evidence and what follows from it:
+`docs/platform/MUMTAZ_DEPLOYMENT_REGISTRY.md` §0.
+
 ## Duplicates awaiting a decision
 
 Nothing here has been deleted or deprecated. Each row needs an owner decision,
@@ -109,8 +137,8 @@ then one pull request per row.
 
 | Area | Copies | Evidence so far |
 | --- | --- | --- |
-| Marketing site | `sites/mumtaz.digital/site` (14 pages), `sites/delivery.mumtaz.digital/landing/index.html`, `platform/marketing/index.html` | On 21 Nov the live page title at mumtaz.digital matched `platform/marketing` |
-| ZAKI application | `sites/zaki.mumtaz.digital/static` (static), `sites/zaki.mumtaz.digital/node-app` (Node), `platform/zaki` (FastAPI + page) | Which one is served is not determinable from git |
+| Marketing site | `sites/mumtaz.digital/site` (14 pages), `sites/delivery.mumtaz.digital/landing/index.html`, `platform/marketing/index.html` | **Resolved:** `platform/marketing` was the live source on 21 Nov (see above). On 22 Nov the server sent the apex to the ERP's Odoo instead (note under that table) |
+| ZAKI application | `sites/zaki.mumtaz.digital/static` (static), `sites/zaki.mumtaz.digital/node-app` (Node), `platform/zaki` (FastAPI + page) | **Resolved:** `platform/zaki` is live (see above) |
 | AI and CFO modules | `mumtaz_ai`, `mumtaz_voice`, `mumtaz_zaki`, `mumtaz_cfo_*`, plus the Jawhar provider layer | Decision D-03 in the decision register covers part of this |
 | Foundation | `mumtaz_core`, `mumtaz_base` | `mumtaz_base` is 46 lines |
 | Brand source | `mumtaz_branding`, `mumtaz_theme`, `docs/design/brand-tokens-v3/tokens.css` | — |

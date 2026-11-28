@@ -41,6 +41,8 @@
                 <field name="state" widget="badge"
                        decoration-success="state in ('received', 'verified')"
                        decoration-warning="state in ('required', 'requested')"/>
+                <field name="file" widget="binary" filename="file_name" string="File"/>
+                <field name="file_name" column_invisible="True"/>
                 <field name="received_on"/>
                 <field name="location"/>
                 <field name="na_reason" optional="show"/>

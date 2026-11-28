@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_form_checklist" model="ir.ui.view">
+        <field name="name">project.task.form.faizy.checklist</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Checklist" name="faizy_checklist" groups="faizy_core.group_faizy_user">
+                    <button name="action_start_checklist" type="object" string="Start checklist"
+                            class="btn-primary mb-2"/>
+                    <field name="checklist_ids" mode="list" readonly="1">
+                        <list decoration-danger="state == 'blocked'" decoration-success="state == 'approved'">
+                            <field name="name"/>
+                            <field name="owner_id"/>
+                            <field name="progress" widget="progressbar"/>
+                            <field name="missing_summary" string="Still needed"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

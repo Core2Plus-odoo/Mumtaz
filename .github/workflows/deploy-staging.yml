@@ -8,6 +8,8 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     environment: staging
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +32,7 @@ jobs:
             'cd /opt/mumtaz && bash scripts/health-check.sh'
 
       - name: Slack Notification - Staging
-        if: ${{ always() && secrets.SLACK_WEBHOOK != '' }}
+        if: ${{ always() && env.SLACK_WEBHOOK != '' }}
         uses: slackapi/slack-github-action@v1
         with:
           payload: |

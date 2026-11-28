@@ -1,0 +1,20 @@
+from odoo import fields, models
+
+
+class ProductTemplate(models.Model):
+    _inherit = "product.template"
+
+    c2p_delivery_template_id = fields.Many2one(
+        "project.project", string="Delivery Project Template",
+        domain="[('is_template', '=', True)]", copy=True,
+        help="Template for the delivery project created when an order with "
+             "this product is confirmed. Empty: the default template from "
+             "the system parameters is used.")
+
+    c2p_engagement_type = fields.Selection(
+        [("erp", "ERP Implementation"), ("custom", "Custom Development"),
+         ("support", "Support"), ("consulting", "Consulting"),
+         ("other", "Other")],
+        string="Engagement Type", copy=True,
+        help="Set on the engagement (the oversight project) when an order "
+             "with this product is confirmed. Empty: left for the team.")

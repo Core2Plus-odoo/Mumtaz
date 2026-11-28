@@ -13,7 +13,7 @@ each folder is, which copy is which, and what is still undecided.
 
 | Area | Where | State |
 | --- | --- | --- |
-| Odoo modules (62, plus 4 Faizy modules under `faizy/`) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
+| Odoo modules (63, plus 6 Faizy modules under `faizy/`) | `addons/` | Listed with layer, dependencies and test count in [`registry.yaml`](registry.yaml) |
 | Jawhar web app | `apps/jawhar-web` (React + TypeScript + Vite) | Talks to Odoo through `mumtaz_jewellery_api` |
 | Customer portal, marketplace, ZAKI front ends | `sites/<domain>/`, `platform/` | Several variants; see the duplicates table in `REPO_MAP.md` |
 | Marketing sites | `sites/mumtaz.digital/site`, `website/`, `platform/marketing` | Three variants; see `REPO_MAP.md` |

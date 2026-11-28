@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Every switch is explicit. Gates on CRM, drafts and any checklist that is
+         already attached are ON. The switch below that changes how new work
+         arrives stays OFF until the founder decides. Lead routing is faizy_ai.route_leads (§26). -->
+    <record id="param_checklist_enforce" model="ir.config_parameter">
+        <field name="key">faizy.checklist_enforce</field>
+        <field name="value">on</field>
+    </record>
+    <record id="param_checklist_orders" model="ir.config_parameter">
+        <field name="key">faizy.checklist_orders</field>
+        <field name="value">off</field>
+    </record>
+    <record id="param_kpi_conversion_target" model="ir.config_parameter">
+        <field name="key">faizy.kpi_conversion_target</field>
+        <field name="value">0.20</field>
+    </record>
+</odoo>

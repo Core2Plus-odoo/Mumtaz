@@ -186,3 +186,122 @@ Run by the owner as root on the VPS, one block at a time.
   off-server copy of any backup; `odoo2` and `odoo3` still open every database.
 - `PR 205` was merged to `main` at about 08:55 UTC. The server does not pull
   `main`; the live forecast module is the hand-installed copy.
+
+### Tracker, My Work Today, Minutes and Client Overview installed on core2plus.com (25 Nov 2026, about 09:33 UTC)
+Run by the owner as root on the VPS after choosing "Yes, all four".
+- **Installed on `Mumtaz_C2P`:** `c2p_project_tracker`, `c2p_work_hub`,
+  `c2p_meeting_actions`, `c2p_client_onboarding`, from `main`, copied to
+  `/opt/custom_addons/` (the git checkout was not touched). `odoo4.service`
+  restarted; site answered 200; 0 errors logged; record counts unchanged
+  (684 tasks, 54 milestones, 1,172 contacts); 43 active scheduled jobs
+  (42 plus the tracker's hourly sync).
+- **Rehearsal first:** a locked copy of that morning's data, scheduled jobs and
+  mail switched off before any Odoo service could open it; all five modules
+  installed; `0 failed, 0 error(s) of 139 tests`. Copy deleted afterwards.
+- **What the tracker's install hook did on live:** paired 2 of 4 engagements
+  (TUV Austria, 8 milestones linked; Medicslab, 6 linked); Aaban and Ghandhara
+  were skipped because no project with those names exists; classified 8
+  template and 3 internal projects, 18 left unclassified; assigned roles to
+  1 Portfolio Manager, 1 Delivery Lead and 8 Delivery Members; seeded the
+  contract figures recorded on 5 Oct, which the owner should check.
+- **Effect on existing work, measured on the copy:** 2 open delivery tasks
+  lack an assignee, deadline or milestone, and 2 "Waiting on Client" tasks
+  have no reason; each will ask for the missing detail when next edited.
+- **Backups before the install:** database
+  `Mumtaz_C2P_pre-tracker-live-2026-11-25-0932.dump` and uploaded files
+  `Mumtaz_C2P_pre-tracker-live-2026-11-25-0932.tar.gz`.
+- **Also that hour:** `odoo2` pinned to `Mumtaz_ERP` (`db_name` added to
+  `/etc/odoo2.conf`, previous config saved in `/var/backups/`); it now opens
+  only its own database. `odoo3` is still unpinned.
+- **Not verified:** nobody has yet opened the new screens in a browser on
+  live; Shafat's Q1-Q3 were not received; no access review with real users.
+
+### File uploads on required documents and scope (25 Nov 2026) — live on core2plus.com since about 09:57 UTC
+Asked for by the owner after the live install: "we need upload document".
+- `c2p_client_onboarding` 19.0.1.1.0. Each Required Documents row now takes a
+  file; uploading one moves a waiting row to Received and dates it, and leaves
+  a Verified or Not-applicable row as its owner set it. The engagement's Scope
+  & Onboarding tab takes the signed scope or contract file, locked with the
+  rest of the scope once approved.
+- Files are stored as Odoo attachments in the filestore, which the nightly
+  uploaded-files backup added today already covers. Whoever can read the row
+  can download the file; a Delivery Member cannot upload; a user with no
+  tracker role cannot reach it.
+- Verified on stock Odoo 19: `0 failed, 0 error(s) of 88 tests` for
+  `c2p_project_tracker` and `c2p_client_onboarding`; both uploads driven in a
+  browser with fictional files (screens `U3`, `U4` in
+  `docs/project/demo-client-onboarding/screens/`).
+- **Live upgrade (about 09:57 UTC, run by the owner):** rehearsed first on a
+  locked copy of that hour's data (`0 failed, 0 error(s) of 31 tests`, the one
+  marked client preserved), then `c2p_client_onboarding` upgraded to
+  19.0.1.1.0 on `Mumtaz_C2P` and `odoo4.service` restarted. Site answered 200,
+  0 errors logged, 684 tasks and 1,173 contacts unchanged, 43 active scheduled
+  jobs. Backups before it: `Mumtaz_C2P_pre-uploads-live-2026-11-25-0956.dump`
+  and the matching filestore archive. The previous module version is kept at
+  `/root/c2p_module_backups/c2p_client_onboarding-before-2026-11-25-0956`.
+- Not done: one file per row, not several; no preview; the upload has not yet
+  been tried in a browser on live.
+
+### c2p_order_projects built (26 Nov 2026) — merged work only, not installed anywhere
+Built after the owner's decisions D1 to D4 and D6 in
+`docs/project/phase1/04-ORDER-TO-PROJECT-PATHS.md`.
+- New addon `addons/c2p_order_projects` 19.0.1.0.0. Confirming an order that
+  holds a project-creating product (`project_only` or `task_in_project`) makes
+  sure the order has one oversight and one delivery project. The oversight
+  project is the one the standard Sales Project flow creates; this module tags
+  it. The delivery project is created from a template in the delivery company
+  and tagged. A database index allows one of each per order; an archived
+  project still counts, and templates are never matched.
+- Pairing in the Project Tracker (layers and counterpart) is done only when the
+  delivery template has a Backlog stage, because the tracker refuses a task that
+  leaves Backlog without an owner, a date and a milestone.
+- Where the database-only fields `x_billing_project_id`, `x_delivery_project_id`
+  and `x_billing_milestone_id` exist (they exist on Mumtaz_C2P only), they are
+  filled as action 919 filled them, so the milestone-to-billing rule keeps
+  working. Elsewhere that step does nothing.
+- Confirming never fails because of this module: an error is logged and noted
+  on the order. Nothing happens until four system parameters switch it on
+  (`c2p.order_projects.*`); no emails, scheduled jobs or access rules.
+- Verified on stock Odoo 19: `0 failed, 0 error(s) of 22 tests`, including
+  archived projects, a template carrying the key, losing a race, repeats and
+  re-confirmation, a Consultants-only salesperson, and an error not blocking
+  the confirmation. A separate run with the three `x_` fields present filled
+  them and mirrored the milestone.
+- **Not done:** not run on a copy of live data; not installed; no live
+  automation changed. The proposed changes to the live automations are in
+  `docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md`, as text only. The staging
+  runbook is `docs/project/phase1/06-ORDER-PROJECTS-STAGING-RUNBOOK.md`; its scripts
+  were rehearsed on a local stand-in that holds the pasted live actions (baseline,
+  install, off, on, edited and a two-process race all as expected) and have not run
+  against live data.
+- Decision D7 (26 Nov 2026): the no-quotation branch of action 766 is to be retired
+  in the same edit as the call to action 919; the edit script and the staging
+  scenarios cover it, and nothing on live has been changed.
+
+### c2p_order_projects: guard against a second project line (27 Nov 2026) — not installed anywhere
+Option 1 confirmed by the owner: the standard flow creates the oversight project and this module is the only
+creator of the delivery project. Tested on stock Odoo 19 (fictional data): with a second project line the standard
+flow puts both projects in the order's company, so the module would have added a third. It now adds no delivery
+project when a qualifying line produced a project other than the oversight one, and posts a note on the order.
+`0 failed, 0 error(s) of 26 tests` (tag `c2p_order_projects`). The next build list is
+`docs/project/phase1/07-NEXT-BUILD-LIST.md`. Nothing on live is changed.
+
+### c2p_order_projects: guided setup (27 Nov 2026) — not installed anywhere
+The pair now arrives ready to work: gates linked by number, engagement type from the product, plan dates from
+"Plan: D+n", onboarding checklist when installed, and one note on the delivery project saying where to start.
+`0 failed, 0 error(s) of 32 tests` (tag `c2p_order_projects`). Nothing on live is changed.
+
+### c2p_project_tracker 19.0.1.0.2: milestone-history access fix (28 Nov 2026) — not installed on live
+Reproduced first: a Delivery Member moving a task had the save refused (history create denied). Fix: create-only
+access, a paired-company clause on the history rule (new stored field), and an in-process marker so only
+`log()` can write rows (blocks API forgery). `0 failed, 0 error(s) of 63 tests` for the tracker; 200 across the
+tracker, work hub, meeting actions, client onboarding, milestone forecast and order projects. Nothing on live is changed.
+
+### c2p_milestone_forecast 19.0.1.0.1: no context-key bypass (28 Nov 2026) — not installed on live
+The reason rule honoured context keys an API caller can send. They are replaced by in-process switches;
+`with skip_change_reason():` is the documented bypass for trusted code. `0 failed, 0 error(s) of 21 tests`.
+Nothing on live is changed.
+
+### Staging runbook for the tracker and forecast fixes (28 Nov 2026)
+`docs/project/phase1/08-TRACKER-FORECAST-STAGING-RUNBOOK.md`: one combined pass on a neutralised copy. The scenario script
+(16 checks, fictional data, rolled back) was rehearsed locally: `ALL AS EXPECTED`. Not run against live data yet. Nothing on live is changed.

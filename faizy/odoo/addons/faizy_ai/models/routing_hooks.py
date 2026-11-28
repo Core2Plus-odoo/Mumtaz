@@ -1,19 +1,23 @@
 """Where work enters and leaves, and the activity it creates or closes.
 
-Routing table: FAIZY HQ05 §4.1 (R1–R8, R10). Every hook is a side effect:
-a routing failure is logged and never blocks the business action itself.
+Routing table: FAIZY HQ05 §4.1 (R1–R8, R10) and, since 19.0.1.4.0, leads
+(R13, §25): a CRM lead is a work item for its salesperson. Every hook is a
+side effect: a routing failure is logged and never blocks the business action
+itself.
 """
 import logging
+from datetime import timedelta
 
-from odoo import api, models
+from odoo import api, fields, models
 
 from .routing import (
-    T_APPLICATION, T_ASSIGN, T_COMPLETION_MSG, T_ESCALATION, T_FOLLOW_UP,
-    T_INBOUND, T_ORDER_DRAFT, T_PROOF, T_REPLY,
+    LEAD_TYPES, T_APPLICATION, T_ASSIGN, T_COMPLETION_MSG, T_ESCALATION, T_FOLLOW_UP,
+    T_INBOUND, T_LEAD_FOLLOW_UP, T_LEAD_QUALIFY, T_ORDER_DRAFT, T_PROOF, T_REPLY,
 )
 
 _logger = logging.getLogger(__name__)
 
+ROUTE_LEADS_PARAM = 'faizy_ai.route_leads'
 ALL_ORDER_TYPES = (T_ASSIGN, T_FOLLOW_UP, T_PROOF, T_ESCALATION)
 
 
@@ -208,3 +212,118 @@ class FaizyApplicationRouting(models.Model):
             _safe(lambda: self.env['faizy.routing']._close(app, (T_APPLICATION,), self.env._('Rejected.')),
                   'close application', app)
         return res
+
+
+class CrmLeadRouting(models.Model):
+    """R13: a lead is work for its salesperson (standard ``user_id``).
+
+    Assignment is the standard Salesperson field, nothing else. A lead that
+    arrives with no salesperson, or one owned by an AI agent or a portal user,
+    goes to the customer-care role holder. The open FAIZY activities follow
+    the salesperson when the lead is reassigned, so "my leads" and "my work
+    today" always agree.
+    """
+    _inherit = 'crm.lead'
+
+    @api.model
+    def _faizy_eligible(self, user):
+        return bool(user and user.active and not user.share
+                    and not user.has_group('faizy_ai.group_ai_agent'))
+
+    @api.model
+    def _faizy_routing_on(self):
+        """Assigning unowned leads to a desk is a business decision (§26):
+        off until the switch faizy_ai.route_leads is 'on' (the provisioning
+        tool turns it on for staging; production needs Umer's word)."""
+        return self.env['ir.config_parameter'].sudo().get_param(ROUTE_LEADS_PARAM) == 'on'
+
+    def _faizy_lead_owner(self, user):
+        """The staff member who should hold this lead's work: the salesperson
+        if it is a real staff account; otherwise, with routing on, the leader
+        of the sales team that owns the lead's source (§26, one pipeline per
+        executive), else the customer-care role holder; with routing off,
+        nobody (the lead is left as it is)."""
+        if self._faizy_eligible(user):
+            return user
+        if not self._faizy_routing_on():
+            return self.env['res.users'].browse()
+        team = self.env['crm.team'].browse()
+        if self:
+            team = self.env['crm.team']._faizy_team_for_source(self.faizy_lead_source)
+            if not team and self.team_id.faizy_lead_sources:
+                team = self.team_id
+        if team and self._faizy_eligible(team.user_id):
+            return team.user_id
+        return self.env['faizy.routing']._role_user('care')
+
+    @api.model
+    def _faizy_first_stage(self):
+        """The pipeline's first stage (Odoo 19 stages are global, no team)."""
+        return self.env['crm.stage'].sudo().search([], order='sequence, id', limit=1)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        leads = super().create(vals_list)
+        Routing = self.env['faizy.routing']
+        for lead in leads:
+            owner = lead._faizy_lead_owner(lead.user_id)
+            vals = {}
+            if owner and owner != lead.user_id:
+                vals['user_id'] = owner.id
+            team = self.env['crm.team']._faizy_team_for_source(lead.faizy_lead_source)
+            if owner and team and lead.team_id != team and (not lead.team_id or owner == team.user_id):
+                vals['team_id'] = team.id
+            if vals:
+                lead.sudo().write(vals)
+            if not owner:
+                continue   # nobody to work it: left to the standard CRM, no item is made
+            if lead.active and not lead.stage_id.is_won:
+                _safe(lambda: Routing._route(
+                    lead, 'care', T_LEAD_QUALIFY, self.env._('Qualify lead: %s', lead.name),
+                    self.env._('Contact them, confirm what the family needs, then move the lead '
+                               'to Qualified or mark it Lost.'),
+                    user=owner), 'new lead', lead)
+        return leads
+
+    def write(self, vals):
+        res = super().write(vals)
+        Routing = self.env['faizy.routing']
+        for lead in self:
+            if 'user_id' in vals:
+                _safe(lambda: lead._faizy_follow_owner(), 'lead owner', lead)
+            if vals.get('active') is False:
+                _safe(lambda: Routing._close(lead, LEAD_TYPES, self.env._('Lead lost.')),
+                      'lead lost', lead)
+            elif 'stage_id' in vals:
+                if lead.stage_id.is_won:
+                    _safe(lambda: Routing._close(lead, LEAD_TYPES, self.env._('Lead won.')),
+                          'lead won', lead)
+                elif lead.stage_id != lead._faizy_first_stage():
+                    _safe(lambda: lead._faizy_qualified(), 'lead qualified', lead)
+        return res
+
+    def _faizy_follow_owner(self):
+        self.ensure_one()
+        owner = self._faizy_lead_owner(self.user_id)
+        if not owner:
+            return
+        if owner != self.user_id:
+            self.sudo().write({'user_id': owner.id})
+            return
+        types = [self.env.ref(x) for x in LEAD_TYPES]
+        open_items = self.sudo().activity_ids.filtered(lambda a: a.activity_type_id in types)
+        open_items.filtered(lambda a: a.user_id != owner).write({'user_id': owner.id})
+
+    def _faizy_qualified(self):
+        """Past the first stage: qualification is done, the follow-up starts,
+        due tomorrow so today's list is not flooded by every qualified lead."""
+        self.ensure_one()
+        Routing = self.env['faizy.routing']
+        Routing._close(self, (T_LEAD_QUALIFY,), self.env._('Qualified.'))
+        owner = self._faizy_lead_owner(self.user_id)
+        if not owner:
+            return
+        Routing._route(
+            self, 'care', T_LEAD_FOLLOW_UP, self.env._('Follow up lead: %s', self.name),
+            self.env._('Agree the plan and the next step with the customer.'),
+            user=owner, deadline=fields.Date.context_today(self) + timedelta(days=1))

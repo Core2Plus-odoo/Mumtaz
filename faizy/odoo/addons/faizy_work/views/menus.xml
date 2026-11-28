@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- One desk per person (faizy_ai): Faizy Work adds its lists to each desk
+         and its review queue to the Command Centre. No "My Work" app of its own. -->
+    <menuitem id="menu_care_checklists" name="My checklists" parent="faizy_ai.menu_care_desk"
+              action="action_checklists" sequence="7"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_care_scorecard" name="My scorecard" parent="faizy_ai.menu_care_desk"
+              action="action_work_scorecard" sequence="8"
+              groups="faizy_ai.group_comms,faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_ops_checklists" name="My checklists" parent="faizy_ai.menu_ops_desk"
+              action="action_checklists" sequence="8" groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_ops_scorecard" name="My scorecard" parent="faizy_ai.menu_ops_desk"
+              action="action_work_scorecard" sequence="9" groups="faizy_core.group_faizy_ops"/>
+    <menuitem id="menu_cc_checklists_review" name="Checklists to review" parent="faizy_ai.menu_command_centre"
+              action="action_checklists_review" sequence="10" groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_cc_scorecard" name="Scorecards" parent="faizy_ai.menu_command_centre"
+              action="action_work_scorecard" sequence="11" groups="faizy_core.group_faizy_manager"/>
+    <menuitem id="menu_work_templates" name="Checklist templates" parent="faizy_core.menu_faizy_config"
+              action="action_templates" sequence="40" groups="faizy_core.group_faizy_manager"/>
+</odoo>

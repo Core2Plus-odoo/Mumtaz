@@ -5,7 +5,8 @@ from .c2p_onboarding_check import GATE_CHECKS
 
 MANAGER_GROUP = "c2p_project_tracker.group_c2p_portfolio_manager"
 SCOPE_FIELDS = ("c2p_scope_reference", "c2p_scope_version",
-                "c2p_scope_summary", "c2p_scope_exclusions")
+                "c2p_scope_summary", "c2p_scope_exclusions",
+                "c2p_scope_file", "c2p_scope_file_name")
 PROTECTED = ("c2p_scope_state", "c2p_scope_approved_by_id",
              "c2p_scope_approved_on", "c2p_onboarded_by_id", "c2p_onboarded_on")
 
@@ -27,6 +28,11 @@ class ProjectProject(models.Model):
     c2p_scope_version = fields.Char(string="Scope Version", tracking=True)
     c2p_scope_summary = fields.Text(string="Agreed Scope")
     c2p_scope_exclusions = fields.Text(string="Exclusions")
+    c2p_scope_file = fields.Binary(
+        string="Signed Scope / Contract", attachment=True, copy=False,
+        help="The signed document the scope comes from. Locked with the rest "
+             "of the scope once approved.")
+    c2p_scope_file_name = fields.Char(string="Scope File Name", copy=False)
     c2p_scope_state = fields.Selection(
         [("draft", "Not approved"), ("approved", "Approved")],
         string="Scope Status", default="draft", copy=False, tracking=True)

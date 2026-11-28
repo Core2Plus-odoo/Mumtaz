@@ -266,7 +266,7 @@
     "c2p_project_tracker": {
       "layer": "internal",
       "disposition": "keep",
-      "note": "C2P group internal."
+      "note": "C2P group internal. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
     },
     "mumtaz_lead_scraper": {
       "layer": "internal",
@@ -303,6 +303,16 @@
       "disposition": "relocate-candidate",
       "note": "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
     },
+    "faizy_work": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. Checklist engine, CRM discipline gates, staff desks and KPI scorecards on top of faizy_core, faizy_ai and faizy_pilot; added 23 Nov 2026, not yet installed on production."
+    },
+    "faizy_work_project": {
+      "layer": "venture",
+      "disposition": "relocate-candidate",
+      "note": "Faizy is a separate venture. Auto-install bridge that lets a faizy_work checklist attach to a standard Project task; inert until Project is installed."
+    },
     "faizy_pilot": {
       "layer": "venture",
       "disposition": "relocate-candidate",
@@ -326,22 +336,27 @@
     "c2p_work_hub": {
       "layer": "internal",
       "disposition": "keep",
-      "note": "C2P group internal. My Work Today and quick task updates. Not installed anywhere yet."
+      "note": "C2P group internal. My Work Today and quick task updates. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
     },
     "c2p_meeting_actions": {
       "layer": "internal",
       "disposition": "keep",
-      "note": "C2P group internal. Minutes of meeting; action items convert to tasks once. Not installed anywhere yet."
+      "note": "C2P group internal. Minutes of meeting; action items convert to tasks once. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
     },
     "c2p_client_onboarding": {
       "layer": "internal",
       "disposition": "keep",
-      "note": "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Not installed anywhere yet."
+      "note": "C2P group internal. Client master record on res.partner and onboarding checklist on the portfolio project; access register holds vault references only. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
     },
     "c2p_milestone_forecast": {
       "layer": "internal",
       "disposition": "keep",
-      "note": "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Tested on stock Odoo 19 only. Not installed anywhere yet."
+      "note": "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."
+    },
+    "c2p_order_projects": {
+      "layer": "internal",
+      "disposition": "keep",
+      "note": "C2P group internal. One order confirmation gives one oversight and one delivery project, keyed on the order and paired in the Project Tracker. Not installed anywhere; see docs/project/phase1/05-ORDER-PROJECTS-CUTOVER.md."
     }
   }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo noupdate="1">
+    <!-- Creates today's start/end checklists and this week's review for the
+         people assigned on each recurring template (none until the founder
+         assigns them). Idempotent: the scope key stops a second run, a restart
+         or a catch-up from creating a duplicate. -->
+    <record id="cron_checklist_periodic" model="ir.cron">
+        <field name="name">Faizy Work: daily and weekly checklists</field>
+        <field name="model_id" ref="model_faizy_checklist"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_periodic()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>
