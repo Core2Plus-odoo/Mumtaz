@@ -454,6 +454,31 @@ class TestT01Templates(TestOrderProjects):
         with self.assertRaises(UserError):
             self.env["project.project"].with_company(self.con).c2p_create_t01_templates()
 
+    def test_the_project_manager_owns_every_step(self):
+        oversight_tpl, delivery_tpl = self._make()
+        product = self._product("Test T01 owner product", oversight_tpl)
+        product.product_tmpl_id.write({"c2p_delivery_template_id": delivery_tpl.id})
+        order = self._order(product)
+        delivery = self._role(order, "delivery")
+        self.assertTrue(delivery.user_id)
+        for task in delivery.task_ids:
+            self.assertEqual(task.user_ids, delivery.user_id, task.name)
+
+    def test_a_step_that_already_has_an_owner_keeps_it(self):
+        oversight_tpl, delivery_tpl = self._make()
+        other = self.env["res.users"].with_context(no_reset_password=True).create({
+            "name": "Test other owner", "login": "test-other-owner-t01",
+            "group_ids": [(6, 0, [self.env.ref("base.group_user").id])]})
+        delivery_tpl.task_ids.filtered(
+            lambda t: t.name.startswith("R03")).user_ids = [(6, 0, [other.id])]
+        product = self._product("Test T01 kept owner product", oversight_tpl)
+        product.product_tmpl_id.write({"c2p_delivery_template_id": delivery_tpl.id})
+        delivery = self._role(self._order(product), "delivery")
+        r03 = delivery.task_ids.filtered(lambda t: t.name.startswith("R03"))
+        self.assertEqual(r03.user_ids, other)
+        r01 = delivery.task_ids.filtered(lambda t: t.name.startswith("R01"))
+        self.assertEqual(r01.user_ids, delivery.user_id)
+
     def test_an_order_for_a_t01_product_arrives_ready_to_work(self):
         oversight_tpl, delivery_tpl = self._make()
         product = self._product("Test T01 product", oversight_tpl)

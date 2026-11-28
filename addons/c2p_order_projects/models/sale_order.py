@@ -233,6 +233,7 @@ class SaleOrder(models.Model):
         paired = oversight.c2p_counterpart_id == delivery
         if paired:
             self._c2p_link_gates(oversight, delivery)
+        self._c2p_assign_owner(delivery)
         self._c2p_plan_dates(delivery)
         # c2p_client_onboarding is optional: the action exists only when installed
         if paired and oversight.partner_id and hasattr(
@@ -255,6 +256,20 @@ class SaleOrder(models.Model):
             gate = match and gates.get(match.group(1))
             if gate and not task.delivery_milestone_id:
                 task.sudo().write({"delivery_milestone_id": gate.id})  # sudo: same pair
+
+    def _c2p_assign_owner(self, delivery):
+        """The project manager owns every step that has no owner yet.
+
+        A step that already has someone (set in the template) is left alone, and
+        so is everything if the project has no manager.
+        """
+        # sudo: the delivery project is in another company
+        manager = delivery.sudo().user_id
+        if not manager:
+            return
+        # sudo: see above
+        for task in delivery.sudo().task_ids.filtered(lambda t: not t.user_ids):
+            task.user_ids = [(4, manager.id)]
 
     def _c2p_plan_dates(self, delivery):
         """A task whose description starts 'Plan: D+n' is due n days after

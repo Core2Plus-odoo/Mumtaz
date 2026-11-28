@@ -35,8 +35,9 @@ company, and the delivery template (six stages, gates G1 to G3 and the seven
 steps R01 to R07, each with its plan day, owner role, checklist and proof to
 keep) in the delivery company. Pressing it twice creates nothing more. When an
 order for a product set up as above is confirmed, the delivery project arrives
-with its dates, its gates linked to the oversight gates, and one note saying
-where to start.
+with its dates, its gates linked to the oversight gates, the project manager
+as owner of every step that has no owner yet, and one note saying where to
+start.
 
 Nothing happens until it is switched on with system parameters:
 
