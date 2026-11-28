@@ -6,7 +6,7 @@
         <field name="model">faizy.my.desk</field>
         <field name="inherit_id" ref="faizy_ai.view_faizy_my_desk_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//p[@class='fzb-band-title'][last()]" position="after">
+            <xpath expr="//div[@class='fzb-grid'][last()]" position="after">
                 <p class="fzb-band-title">Checklists</p>
                 <div class="fzb-grid">
                     <button name="action_open_checklists" type="object" class="fzb-kpi">
