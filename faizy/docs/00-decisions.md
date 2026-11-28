@@ -1289,7 +1289,23 @@ lead routing, planned work). Nothing a person needs is lost; what was built twic
   it is not zero (standard `decoration-warning` / `decoration-danger` on the fields). The "Done this week, by
   type" group hides itself when empty. Checked in a headless browser as Mashood and Umer.
 
-**Verified** on Odoo 19.0 + PostgreSQL 16, throwaway databases: VERIFY_27
+**Verified** on Odoo 19.0 (shallow clone of `odoo/odoo` 19.0) + PostgreSQL 16, throwaway databases, 28 Nov 2026:
+
+- Fresh install of all six modules with every test, after the consolidation: `0 failed, 0 error(s) of 165
+  tests`, no ERROR line. After the look and the follow-up fixes, `-u faizy_ai,faizy_work` with the `faizy_ai`,
+  `faizy_work` and bridge suites on that database: `0 failed, 0 error(s) of 84 tests`, no ERROR line; `-u faizy_ai`
+  on the four-module database: `0 failed, 0 error(s) of 52 tests`.
+- Upgrade path: the seeded 1.5.0 staging database took `faizy_work` 19.0.1.1.0 and the bridge (`-i faizy_work
+  -u faizy_ai`) with no ERROR line. `provision_staff.py --align-crm-rights` re-run on it: 10 + 10 milestone
+  tasks created, 55 task checklists started and handed to the assignees, care and ops left with own-documents
+  CRM only; `faizy_ai` and `faizy_work` updated again for the look with no ERROR line.
+- `validate_modules.py`, `check_view_schemas.py`, `check_self_fields.py`, `check_portal_access.py`, the Faizy CI
+  flake8 command and the module registry check: pass.
+- Headless browser as `stg.mashood`, `stg.raza`, `stg.umer`: the one desk with its Checklists band and the new
+  look, a planned task carrying its "End of shift" checklist, My checklists, the manager's team table and
+  "Checklists to review". Screenshots with Umer; not in git.
+- One lesson recorded for the next person: cloning a database with `createdb -T` without copying Odoo's
+  filestore leaves the asset bundles missing and every page blank; copy the filestore directory too.
 
 **Not done / needs Umer:** everything in the runbook is yours to run on the VPS with written go-ahead; no
 staging server; outgoing mail, WhatsApp sending, plan prices and the payment gateway are unchanged and open.
