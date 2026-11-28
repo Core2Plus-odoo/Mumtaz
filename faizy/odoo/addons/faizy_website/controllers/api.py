@@ -166,6 +166,110 @@ class FaizyCareAPI(FaizyCustomerPortal):
 
     _ITEMS_PER_PAGE = 30
 
+    # ── Sign-up from the app ─────────────────────────────────────────────
+    #
+    # The one route here that is not behind a session, because the caller
+    # has no account yet. Three rules keep an anonymous write safe:
+    #
+    # 1. Shipped off. Nothing is created unless a Manager sets the system
+    #    parameter `faizy.app_signup` to "on" (same pattern as
+    #    `faizy.show_plan_prices`). Missing or anything else means off.
+    # 2. Never attach to an existing customer. The website's /start matches a
+    #    returning customer by phone, which is right there because it hands
+    #    back no access. Here the caller walks away with a login, so matching
+    #    by phone would give a stranger who knows a customer's number that
+    #    customer's family and orders. An email or phone already on file is
+    #    refused and the person is sent to sign in or to WhatsApp.
+    # 3. Portal user only, never internal.
+    #
+    # Not done here, and needed before this is switched on for the public:
+    # rate limiting / CAPTCHA and proof that the caller owns the email or the
+    # number (docs/app/README.md, gaps A5 and A1).
+
+    _SIGNUP_PARAM = "faizy.app_signup"
+    _SIGNUP_MIN_PASSWORD = 8
+
+    def _app_signup_enabled(self):
+        value = request.env["ir.config_parameter"].sudo().get_param(self._SIGNUP_PARAM)
+        return value == "on"
+
+    @http.route(
+        ["/api/care/signup"],
+        type="http", auth="public", website=True, methods=["POST"], csrf=False,
+    )
+    def api_care_signup(self, **kw):
+        """Create a customer and their portal login from a JSON body.
+
+        Body: name, phone (WhatsApp number), email, password, and optionally
+        country_code (ISO alpha-2). On success the app calls
+        `/web/session/authenticate` with the same email and password, exactly
+        as for any other login; this route does not open a session itself.
+        """
+        if not self._app_signup_enabled():
+            return request.make_json_response(
+                {"ok": False, "error": "signup_closed"}, status=403
+            )
+
+        post = request.get_json_data() or {}
+        name = (post.get("name") or "").strip()
+        phone = (post.get("phone") or "").strip()
+        email = (post.get("email") or "").strip().lower()
+        password = post.get("password") or ""
+        country_code = (post.get("country_code") or "").strip().upper()
+
+        errors = {}
+        if not name:
+            errors["name"] = "required"
+        if not phone:
+            errors["phone"] = "required"
+        if not email or "@" not in email or email.startswith("@") or email.endswith("@"):
+            errors["email"] = "invalid"
+        if len(password) < self._SIGNUP_MIN_PASSWORD:
+            errors["password"] = "too_short"
+        if errors:
+            return request.make_json_response(
+                {"ok": False, "errors": errors}, status=400
+            )
+
+        env = request.env
+        Users = env["res.users"].sudo().with_context(active_test=False)
+        Partner = env["res.partner"].sudo().with_context(active_test=False)
+        if (
+            Users.search_count([("login", "=ilike", email)], limit=1)
+            or Partner.search_count([("email", "=ilike", email)], limit=1)
+            or Partner.search_count([("phone", "=", phone)], limit=1)
+        ):
+            # One answer for all three, so the route does not say which of
+            # the email or the number is already a customer.
+            return request.make_json_response(
+                {"ok": False, "error": "already_registered"}, status=409
+            )
+
+        country = env["res.country"].sudo().search(
+            [("code", "=", country_code)], limit=1
+        ) if country_code else env["res.country"]
+
+        partner = env["res.partner"].sudo().create({
+            "name": name,
+            "phone": phone,
+            "email": email,
+            "country_id": country.id or False,
+            "is_faizy_customer": True,
+        })
+        env["res.users"].sudo().with_context(no_reset_password=True).create({
+            "name": name,
+            "login": email,
+            "email": email,
+            "password": password,
+            "partner_id": partner.id,
+            "group_ids": [(6, 0, [env.ref("base.group_portal").id])],
+        })
+        partner.message_post(body=env._("Signed up from the mobile app."))
+
+        return request.make_json_response(
+            {"ok": True, "partner": {"id": partner.id, "name": partner.name}}
+        )
+
     @http.route(["/api/care/home"], type="http", auth="user", website=True, csrf=False)
     def api_care_home(self, **kw):
         partner = request.env.user.partner_id
