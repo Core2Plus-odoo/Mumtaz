@@ -365,20 +365,31 @@ class TestFaizyWork(TransactionCase):
         draft.with_user(self.umer).action_approve()
         self.assertNotEqual(draft.state, 'draft')
 
-    # ── routing (off until approved) ─────────────────────────────────────
-    def test_lead_routing_is_off_by_default_and_follows_roles_when_on(self):
+    # ── routing is faizy_ai's: one switch, teams by source (§26, §27) ────
+    def test_lead_routing_is_faizy_ai_switch_and_teams(self):
+        Param = self.env['ir.config_parameter'].sudo()
+        Param.set_param('faizy_ai.route_leads', 'off')
         plain = self.env['crm.lead'].with_user(self.umer).create(
             {'name': 'SYNTHETIC a', 'type': 'opportunity', 'user_id': self.umer.id,
              'faizy_lead_source': 'facebook'})
         self.assertEqual(plain.user_id, self.umer)
-        self.env['ir.config_parameter'].sudo().set_param('faizy.work_route_leads', 'on')
+        unowned = self.env['crm.lead'].create(
+            {'name': 'SYNTHETIC u', 'type': 'opportunity', 'user_id': False, 'faizy_lead_source': 'facebook'})
+        self.assertFalse(unowned.user_id)   # off: left to the standard CRM
+        Param.set_param('faizy_ai.route_leads', 'on')
+        Team = self.env['crm.team'].sudo()
+        Team.create({'name': 'SYNTHETIC digital', 'user_id': self.mashood.id,
+                     'faizy_lead_sources': 'facebook, instagram, website, whatsapp'})
+        Team.create({'name': 'SYNTHETIC partners', 'user_id': self.raza.id,
+                     'faizy_lead_sources': 'embassy, walk_in, other'})
         marketing = self.env['crm.lead'].create(
-            {'name': 'SYNTHETIC b', 'type': 'opportunity', 'faizy_lead_source': 'facebook'})
+            {'name': 'SYNTHETIC b', 'type': 'opportunity', 'user_id': False, 'faizy_lead_source': 'facebook'})
         partner = self.env['crm.lead'].create(
-            {'name': 'SYNTHETIC c', 'type': 'opportunity', 'faizy_lead_source': 'embassy'})
+            {'name': 'SYNTHETIC c', 'type': 'opportunity', 'user_id': False, 'faizy_lead_source': 'embassy'})
         self.assertEqual(marketing.user_id, self.mashood)
         self.assertEqual(partner.user_id, self.raza)
         self.assertEqual(marketing.faizy_originator_id.id, self.env.uid)
+        self.assertFalse(Param.get_param('faizy.work_route_leads'))
 
     # ── permissions and privacy ──────────────────────────────────────────
     def test_both_employees_have_the_same_crm_standing_and_no_admin(self):
@@ -470,14 +481,27 @@ class TestFaizyWork(TransactionCase):
         card2 = self.env['faizy.work.scorecard'].with_user(self.raza).create({})
         self.assertEqual(card2.total_display, 'Insufficient data')
 
-    # ── desks ────────────────────────────────────────────────────────────
-    def test_desks_open_and_command_centre_is_manager_only(self):
-        desk = self.env['faizy.work.desk'].with_user(self.mashood).create({})
-        self.assertIn('Overdue', desk.summary)
-        self.assertTrue(desk.with_user(self.mashood).action_my_leads()['res_model'])
-        with self.assertRaises(AccessError):
-            self.env['faizy.work.command'].with_user(self.mashood).create({})
-        cc = self.env['faizy.work.command'].with_user(self.umer).create({})
-        self.assertIn('w_mashood', cc.summary)
-        self.assertIn('w_raza', cc.summary)
-        self.assertIn('OFF', cc.summary)
+    # ── one desk per person: faizy_work's figures sit on faizy_ai's My desk ──
+    def test_checklist_figures_sit_on_the_one_desk(self):
+        lead = self._lead(self.mashood)
+        ck = lead.with_user(self.mashood)._checklist_start('qualified_digital_lead')
+        desk = self.env['faizy.my.desk'].with_user(self.mashood).create({})
+        self.assertEqual(desk.ck_open, 1)
+        self.assertEqual(ck.state, 'in_progress')
+        self.assertEqual(desk.leads_to_verify, 1)
+        self.assertFalse(desk.is_manager)
+        self.assertEqual(desk.action_open_checklists()['res_model'], 'faizy.checklist')
+        self.assertEqual(desk.action_open_scorecard()['res_model'], 'faizy.work.scorecard')
+        team = self.env['faizy.my.desk'].with_user(self.umer).create({})
+        self.assertTrue(team.is_manager)
+        self.assertEqual(team.action_open_checklists_review()['res_model'], 'faizy.checklist')
+        # No second desk or command centre exists any more; the Command Centre is faizy_ai's.
+        self.assertNotIn('faizy.work.desk', self.env)
+        self.assertNotIn('faizy.work.command', self.env)
+        Menu = self.env['ir.ui.menu']
+        self.assertIn(self.env.ref('faizy_work.menu_cc_checklists_review').id,
+                      Menu.with_user(self.umer)._visible_menu_ids())
+        self.assertNotIn(self.env.ref('faizy_work.menu_cc_checklists_review').id,
+                         Menu.with_user(self.mashood)._visible_menu_ids())
+        self.assertIn(self.env.ref('faizy_work.menu_care_checklists').id,
+                      Menu.with_user(self.mashood)._visible_menu_ids())

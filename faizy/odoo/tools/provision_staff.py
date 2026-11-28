@@ -18,6 +18,12 @@ What it does, in order, creating only what is missing:
   6. the 30-day plan: one task per working day per routine, plus the week's
      project block, plus a recurring Saturday review. Tasks are keyed by name;
      existing ones are left alone.
+  7. the ten deliverables per person from docs/work/30day-register-*.csv as
+     milestone tasks in the same projects (--milestones none to skip).
+  8. with faizy_work installed: its "daily end" checklist on every end-of-day
+     task and its weekly review checklist on the Saturday review, so the
+     steps are ticked with evidence on the task itself.
+  --align-crm-rights, --enforce-totp: see the flags.
   --write-doc PATH renders the plan as Markdown for review. --dry-run prints only.
 
 Never run against production without Umer's written approval (D10).
@@ -154,6 +160,13 @@ def main():
     ap.add_argument('--create-stg-users', metavar='PASSWORD',
                     help='create missing stg.* users with this password (staging only)')
     ap.add_argument('--write-doc')
+    ap.add_argument('--milestones', default='auto',
+                    help="directory with 30day-register-{mashood,raza}.csv (default: faizy/docs/work in this"
+                         " repo); 'none' skips the ten milestone tasks per person")
+    ap.add_argument('--align-crm-rights', action='store_true',
+                    help='remove the CRM "all documents" right from care and ops so both have own documents only')
+    ap.add_argument('--enforce-totp', action='store_true',
+                    help='turn on "Enforce two-factor authentication" (needs outgoing mail: the code is emailed)')
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
     if a.start:
@@ -181,6 +194,15 @@ def main():
                                                 'action_id': o.ref('faizy_ai.action_faizy_my_desk')})
         o.call('ir.config_parameter', 'set_param', ROLE_PARAM[role], str(ids[0]))
     print('users:', users)
+    if a.align_crm_rights and not a.dry_run:
+        all_docs = o.ref('sales_team.group_sale_salesman_all_leads')
+        for role in ('care', 'ops'):
+            o.call('res.users', 'write', [users[role]], {'group_ids': [[3, all_docs]]})
+        print('  CRM rights aligned: care and ops have own documents only')
+    if a.enforce_totp and not a.dry_run:
+        sid = o.call('res.config.settings', 'create', {'auth_totp_enforce': True})
+        o.call('res.config.settings', 'execute', [sid])
+        print('  two-factor authentication enforced for internal users (codes go by email)')
     # Unowned leads go to the desk that owns their source (§26). Off by default; on for this workspace.
     o.call('ir.config_parameter', 'set_param', 'faizy_ai.route_leads', 'on')
 
@@ -243,6 +265,57 @@ def main():
             _, created = o.ensure('project.task', [['name', '=', name], ['project_id', '=', pid]], vals, name)
             n_new += created
         print('%s: %s tasks created' % (role, n_new))
+
+    # 7. the ten deliverables per person (§24's registers) as milestone tasks in the same projects
+    if a.milestones != 'none':
+        import csv
+        import os
+        base = a.milestones if a.milestones != 'auto' else os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), '..', '..', 'docs', 'work')
+        for role, fname in (('care', '30day-register-mashood.csv'), ('ops', '30day-register-raza.csv')):
+            path = os.path.join(base, fname)
+            if role not in projects or not os.path.exists(path):
+                continue
+            pid, planned = projects[role]
+            n_new = 0
+            for row in csv.DictReader(open(path, encoding='utf-8')):
+                name = '[%s] %s' % (row['id'], row['title'])
+                due = start + dt.timedelta(days=int(row['due_day']) - 1)
+                deadline = dt.datetime.combine(due, dt.time(P.DEADLINE_HOUR_KARACHI - 5, 0))
+                keys = ('category', 'source', 'deliverable', 'evidence', 'dependency', 'next_action')
+                desc = ''.join(
+                    '<p><b>%s:</b> %s</p>' % (html.escape(k.replace('_', ' ').capitalize()), html.escape(row[k]))
+                    for k in keys)
+                desc += '<p><b>Evidence before Done:</b> %s</p>' % html.escape(row['evidence'])
+                vals = {'name': name, 'project_id': pid, 'stage_id': planned, 'user_ids': [[6, 0, [users[role]]]],
+                        'priority': '1' if row['priority'] == 'High' else '0',
+                        'date_deadline': deadline.strftime('%Y-%m-%d %H:%M:%S'), 'description': desc}
+                _, created = o.ensure('project.task', [['name', '=', name], ['project_id', '=', pid]], vals, name)
+                n_new += created
+            print('%s: %s milestone tasks created' % (role, n_new))
+
+    # 8. Faizy Work checklists on the daily end-of-day and weekly review tasks (when faizy_work is installed)
+    if o.call('ir.model', 'search_count', [['model', '=', 'faizy.checklist.start']]) and not a.dry_run:
+        tpl_role = {'care': 'weekly_review_cx', 'ops': 'weekly_review_ops'}
+        n_ck = 0
+        for role in ('care', 'ops'):
+            if role not in projects:
+                continue
+            pid = projects[role][0]
+            for code, pattern in (('daily_end', '%End-of-day%'), (tpl_role[role], '%Weekly review%')):
+                tpl = o.call('faizy.checklist.template', 'search', [['code', '=', code], ['state', '=', 'released']],
+                             order='version desc', limit=1)
+                if not tpl:
+                    continue
+                for tid in o.call('project.task', 'search', [['project_id', '=', pid], ['name', 'like', pattern]]):
+                    if o.call('faizy.checklist', 'search_count',
+                              [['res_model', '=', 'project.task'], ['res_id', '=', tid]]):
+                        continue
+                    wiz = o.call('faizy.checklist.start', 'create',
+                                 {'res_model': 'project.task', 'res_id': tid, 'template_id': tpl[0]})
+                    o.call('faizy.checklist.start', 'action_start', [wiz])
+                    n_ck += 1
+        print('checklists started on planned tasks:', n_ck)
 
 
 if __name__ == '__main__':

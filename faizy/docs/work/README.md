@@ -13,7 +13,7 @@ Brief: "MYFAIZY complete staff work execution, lead generation and KPI implement
 | Staff accounts on production | Already exist, no TOTP. Mashood has CRM "All Documents", Raza has "Own Documents Only" (asymmetric). |
 | CRM on production | 50 leads in stage New, all owned by Umer. Project app not installed. |
 
-Module ownership: `faizy_work` owns the checklist engine, CRM discipline, desks and scorecards. `faizy_core`, `faizy_ai`,
+Module ownership (after §27): `faizy_work` owns the checklist engine, CRM discipline and scorecards; `faizy_ai` owns the desks (My desk), lead routing and planned work. `faizy_core`, `faizy_ai`,
 `faizy_pilot` are unchanged (extended by `_inherit` only). `faizy_work_project` is an auto-install bridge that adds the
 same checklist to `project.task` once Project is installed; inert until then.
 
@@ -55,15 +55,15 @@ Weekly pilot targets: Mashood 15 verified, 10 drafts. Raza 12 / 8 / 3 discovery 
 shows "Insufficient data". A total appears only if at least 60 weight is measurable. Conversion waits for a two-week baseline
 (`faizy.kpi_start`, unset) and 5 verified prospects. Conversion target 20% is provisional.
 
-## 6. Routing (off until approved)
+## 6. Routing
 
-`faizy.work_route_leads=off`. When on: website, Facebook, Instagram and WhatsApp leads go to the care user, all others to the ops user.
+One switch, `faizy_ai.route_leads` (off by default). When on, an unowned lead goes to the leader of the sales team that owns its source (`crm.team.faizy_lead_sources`): Digital & customer leads (Mashood) for website, Facebook, Instagram, WhatsApp; Partners & referrals (Raza) for embassy, walk-in, other. `faizy.work_route_leads` no longer exists (§27).
 
 ## 7. 30-day plans
 
 `30day-register-mashood.csv` (M-01..M-10) and `30day-register-raza.csv` (R-01..R-10), each with the full field set.
-Start date assumed **Monday 30 Nov 2026**, to be confirmed by Umer. `scripts/load_30day_plan.py` creates them as standard
-Project tasks once Project is installed (idempotent; staging only until approved).
+Start date assumed **Monday 30 Nov 2026**, to be confirmed by Umer. `faizy/odoo/tools/provision_staff.py` creates them as milestone tasks in each person's desk project, next to the daily
+plan (idempotent; `--milestones none` to skip). `scripts/load_30day_plan.py` was retired in §27.
 
 ## 8. Tests
 
@@ -77,14 +77,14 @@ Demo: `scripts/work_demo.py` runs one synthetic scenario per employee and shows 
 
 1. Merge the PR (Umer says "merge"), then a fresh explicit "deploy".
 2. Install `faizy_work` on production (`-u`/`-i`, per the deploy sequence in `faizy/CLAUDE.md`).
-3. Install the Project app, then run `load_30day_plan.py`.
+3. Run `provision_staff.py` (installs nothing; Project comes with `faizy_ai` 19.0.1.5.0). Runbook: `faizy/docs/plans/STAFF_WORK_DEPLOY_RUNBOOK.md`.
 4. Align Mashood's CRM rights; add TOTP to existing staff accounts.
 5. Assign staff on the recurring templates; set `faizy.kpi_start` and the conversion target.
-6. Switch on `faizy.work_route_leads` and `faizy.checklist_orders` when approved.
+6. Switch on `faizy_ai.route_leads` (the tool does) and `faizy.checklist_orders` when approved.
 7. Pricing stays hidden until Umer approves figures (`faizy.show_plan_prices`). SMTP setup (FD-06) is still open.
 8. Raza's manual evidence-review check (R-05).
 
 ## 10. Training checklist
 
-Open My Work, read today's start checklist, work from the record (not from this screen), tick steps with evidence, use
+Open My desk (home), read today's plan, work from the record (not from this screen), tick steps with evidence, use
 "Ready for Review" when finished, use Block with a reason when stuck. Messages to customers only 10:00-21:00 Karachi.

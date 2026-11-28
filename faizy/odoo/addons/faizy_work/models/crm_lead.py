@@ -27,8 +27,6 @@ STATUS_DATE_FIELD = {
     'verified': 'faizy_verified_on', 'contacted': 'faizy_contacted_on',
     'engaged': 'faizy_engaged_on', 'qualified': 'faizy_qualified_on',
 }
-MARKETING_SOURCES = ('facebook', 'instagram', 'website', 'whatsapp')
-ROUTE_PARAM = 'faizy.work_route_leads'
 
 
 class CrmLead(models.Model):
@@ -151,9 +149,7 @@ class CrmLead(models.Model):
             if status and RANK.get(status, 0) > RANK['research'] and self._checklist_enforced():
                 # A lead may be created as research candidate only: the rest is earned.
                 vals['faizy_prospect_status'] = 'research'
-        leads = super().create(vals_list)
-        leads._faizy_route_new()
-        return leads
+        return super().create(vals_list)
 
     def write(self, vals):
         enforced = self._checklist_enforced()
@@ -191,16 +187,3 @@ class CrmLead(models.Model):
                     super(CrmLead, lead).write(extra)
             return res
         return super().write(vals)
-
-    # ── routing of new leads (off until the founder approves) ────────────
-    def _faizy_route_new(self):
-        if self.env['ir.config_parameter'].sudo().get_param(ROUTE_PARAM) != 'on':
-            return
-        routing = self.env['faizy.routing']
-        for lead in self:
-            if lead.user_id and lead.user_id != self.env.ref('base.user_root') and \
-                    lead.user_id.id != self.env.uid:
-                continue
-            role = 'care' if lead.faizy_lead_source in MARKETING_SOURCES else 'ops'
-            owner = routing._role_user(role)
-            lead.sudo().with_context(mail_notrack=True).write({'user_id': owner.id})
