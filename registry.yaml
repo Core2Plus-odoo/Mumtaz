@@ -35,7 +35,7 @@ modules:
     python_lines: 95
     test_files: 0
     access_csv: true
-    note: "One of three brand sources (with mumtaz_theme and brand/tokens.css)."
+    note: "One of three brand sources (with mumtaz_theme and docs/design/brand-tokens-v3/tokens.css)."
   mumtaz_core:
     layer: foundation
     disposition: keep
@@ -125,13 +125,13 @@ modules:
     disposition: keep
     path: addons/mumtaz_control_plane
     title: "Mumtaz Control Plane"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: true
     depends_local: ["mumtaz_tenant_manager"]
     depends_standard: ["base", "mail"]
-    python_lines: 1955
-    test_files: 0
+    python_lines: 2754
+    test_files: 1
     access_csv: true
     note: "Plans, features, subscriptions, usage."
   mumtaz_customer_portal:
@@ -265,13 +265,13 @@ modules:
     disposition: keep
     path: addons/mumtaz_tenant_manager
     title: "Mumtaz Tenant Manager"
-    version: "19.0.1.0.0"
+    version: "19.0.1.1.0"
     license: "LGPL-3"
     application: true
     depends_local: ["mumtaz_branding"]
     depends_standard: ["base", "mail"]
-    python_lines: 900
-    test_files: 0
+    python_lines: 1331
+    test_files: 1
     access_csv: true
     note: "mumtaz.tenant registry and provisioning service."
   mumtaz_vendor_portal:

@@ -24,6 +24,17 @@ Production: Hostinger VPS `187.77.128.199`, repo checked out at `/opt/mumtaz`,
 console at `https://delivery.mumtaz.digital`. **Deploys go to `main`** — the VPS
 pulls main; feature branches never reach production.
 
+> **Checked on the server, 22 Nov 2026 — the paragraph above is not what the
+> server does.** `/opt/mumtaz` is on branch `claude/resume-help-95ne9v`, not
+> `main`, so `update.sh` (`git pull --ff-only origin main`) cannot
+> fast-forward it. Only the ERP instance (and the public website it serves)
+> runs `main`, from a separate checkout, `/opt/mumtaz-main`. C2P, IG2 and the
+> base instance share `/opt/custom_addons/Mumtaz/addons`, which is on the same
+> feature branch. So a merge to `main` reaches the ERP and the website when
+> someone pulls `/opt/mumtaz-main`, and nothing else; and one pull in the
+> shared checkout changes three instances at once. Evidence and open checks:
+> `docs/platform/MUMTAZ_DEPLOYMENT_REGISTRY.md` §0.
+
 ## Deploying
 
 One command on the VPS (pull → relink console → restart API → health):
@@ -145,11 +156,13 @@ bus → hub v2 → new role prompts. Extend, never replace; new code goes in
   capability should respect and reinforce the ladder.
 - Every new stage/feature gets: LLM path + local fallback + `llm.log_local`,
   compile check (`python3 -m py_compile`, `pyflakes`), console JS check +
-  headless render, an entry in `docs/05-build-log.md`, then commit to `main`
+  headless render, an entry in `c2p-delivery-system/docs/05-build-log.md`, then commit to `main`
   with a descriptive message and push (retry w/ backoff).
 - Secrets never in git: `.env`, `*.db`, `web/` are gitignored; tokens/keys are
   encrypted at rest via `C2P_SECRET_KEY` (Fernet) and never echoed back.
-- `docs/05-build-log.md` is the chronological build record; keep appending.
+- Two build logs, keep appending to the right one: `c2p-delivery-system/docs/05-build-log.md`
+  for the Agency OS (this section), and `docs/05-build-log.md` at the repository root for
+  ERP and C2P addon work, including installs on the server.
 
 ## ERP programme standard (added 20 Nov 2026)
 

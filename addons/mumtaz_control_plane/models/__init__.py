@@ -14,3 +14,5 @@ from . import tenant_commercial
 from . import commercial_operation
 from . import billing_record
 from . import commercial_event_log
+from . import product
+from . import signup_request

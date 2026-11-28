@@ -78,5 +78,26 @@
             <field name="max_users">0</field>
         </record>
 
+
+        <!-- General ERP: the install profile behind the "Mumtaz ERP" product.
+             Standard Odoo 19 Community apps plus the ledger-based financial
+             reports. It deliberately carries:
+               - no control-plane module (a customer database must not hold
+                 the tenant registry or the price list),
+               - no mumtaz_core / mumtaz_branding / mumtaz_theme until those
+                 are reworked (docs/platform/MUMTAZ_MODULE_REGISTRY_REVIEW.md),
+               - no mumtaz_sso until its shared-secret flaw is fixed.
+             Price left at 0 until the price list is decided (decision D-11). -->
+        <record id="bundle_mumtaz_erp" model="mumtaz.module.bundle">
+            <field name="name">Mumtaz ERP (General)</field>
+            <field name="code">mumtaz_erp</field>
+            <field name="sequence">5</field>
+            <field name="description">General business ERP on standard Odoo 19 Community: contacts, CRM, sales, purchasing, inventory, accounting and financial reports.</field>
+            <field name="base_modules">base,mail,contacts,crm,sale_management,purchase,stock,account,mumtaz_financial_reports</field>
+            <field name="optional_modules">hr,project,mrp,mumtaz_crm_starter,mumtaz_customer_portal</field>
+            <field name="monthly_price">0</field>
+            <field name="max_users">0</field>
+        </record>
+
     </data>
 </odoo>

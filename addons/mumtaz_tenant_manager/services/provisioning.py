@@ -15,21 +15,22 @@ for:
   4. Applying baseline settings (company name, branding, etc.).
   5. Marking the tenant record as ``active``.
 
-Current implementation
------------------------
-The service provides a clean interface and a ``DryRunProvisioner`` that
-simulates the flow without making actual database calls.  This keeps the
-control-plane module installable on any Odoo instance while the operator
-decides on the deployment topology.
+Two provisioners
+----------------
+``DryRunProvisioner`` checks the configuration and logs what would happen. It
+creates nothing, and its result is marked ``simulated`` so that no caller can
+mistake it for a provisioned tenant.
 
-To wire up real provisioning, subclass ``BaseProvisioner`` and override the
-``_create_database``, ``_install_modules``, ``_create_admin_user`` and
-``_apply_settings`` hooks.  Then register your subclass via the
-``PROVISIONER_CLASS`` module-level variable or use the ``get_provisioner``
-factory.
+``RealProvisioner`` creates the database, installs the bundle, verifies the
+outcome and issues a one-time set-password link for the tenant administrator.
+It only runs when the server environment sets ``MUMTAZ_REAL_PROVISIONING=1``.
+
+A tenant becomes ``active`` only after a real run that passed verification.
 """
 
 import logging
+import os
+import secrets
 
 _logger = logging.getLogger(__name__)
 
@@ -41,14 +42,30 @@ _logger = logging.getLogger(__name__)
 class ProvisionResult:
     """Immutable result returned by ``BaseProvisioner.run``."""
 
-    def __init__(self, success: bool, message: str = "", log: str = ""):
+    def __init__(self, success: bool, message: str = "", log: str = "",
+                 simulated: bool = False, access_link: str = "",
+                 database_created: bool = False):
         self.success = success
         self.message = message
         self.log = log
+        # True when nothing was created (dry run). A simulated success must
+        # never activate a tenant.
+        self.simulated = simulated
+        # One-time set-password link for the tenant administrator. It is a
+        # credential: never write it to a log.
+        self.access_link = access_link
+        # True once the PostgreSQL database exists, including on a failed run.
+        self.database_created = database_created
 
     def __repr__(self):
         status = "OK" if self.success else "FAIL"
+        if self.simulated:
+            status += " simulated"
         return f"<ProvisionResult [{status}] {self.message!r}>"
+
+
+class ProvisioningDisabled(Exception):
+    """Real provisioning was asked for on a server that has not enabled it."""
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +86,9 @@ class BaseProvisioner:
     catches and logs all exceptions.
     """
 
+    #: True for provisioners that create nothing.
+    simulated = False
+
     def __init__(self, odoo_env=None):
         """
         :param odoo_env: An Odoo ``api.Environment`` instance (the master DB
@@ -76,6 +96,7 @@ class BaseProvisioner:
                          for dry-run.
         """
         self.env = odoo_env
+        self._database_created = False
 
     # -- Public API --------------------------------------------------------
 
@@ -100,26 +121,50 @@ class BaseProvisioner:
             modules = self._resolve_modules(tenant)
             log(f"Modules to install: {', '.join(modules) or '(none)'}")
 
-            log("Step 1/4: Creating database …")
+            log("Step 1/6: Creating database …")
             self._create_database(tenant)
 
-            log("Step 2/4: Installing modules …")
+            log("Step 2/6: Installing modules …")
             self._install_modules(tenant, modules)
 
-            log("Step 3/4: Creating admin user …")
+            log("Step 3/6: Creating admin user …")
             self._create_admin_user(tenant)
 
-            log("Step 4/4: Applying settings and branding …")
+            log("Step 4/6: Applying settings and branding …")
             self._apply_settings(tenant)
 
+            log("Step 5/6: Verifying the result …")
+            self._verify(tenant, modules)
+
+            log("Step 6/6: Issuing the administrator's set-password link …")
+            access_link = self._issue_access_link(tenant) or ""
+
+            if self.simulated:
+                log("Dry run passed. Nothing was created.")
+                return ProvisionResult(
+                    True, "Dry run passed. Nothing was created.",
+                    "\n".join(log_lines), simulated=True)
+
             log("Provisioning complete.")
-            return ProvisionResult(True, "Provisioning succeeded.", "\n".join(log_lines))
+            return ProvisionResult(
+                True, "Provisioning succeeded.", "\n".join(log_lines),
+                access_link=access_link, database_created=True)
 
         except Exception as exc:  # pylint: disable=broad-except
             msg = f"Provisioning failed: {exc}"
             _logger.exception("[Provisioning] %s — %s", tenant.name, msg)
             log_lines.append(msg)
-            return ProvisionResult(False, msg, "\n".join(log_lines))
+            if self._database_created:
+                # Never dropped automatically: a person decides what happens
+                # to a database, even a half-built one.
+                log_lines.append(
+                    "Database '%s' exists but is incomplete. An administrator "
+                    "must inspect it and remove it before this tenant can be "
+                    "provisioned again." % tenant.database_name)
+            return ProvisionResult(
+                False, msg, "\n".join(log_lines),
+                simulated=self.simulated,
+                database_created=self._database_created)
 
     # -- Hooks (override in subclasses) ------------------------------------
 
@@ -142,6 +187,13 @@ class BaseProvisioner:
         raise NotImplementedError(
             "_apply_settings must be implemented by a concrete provisioner."
         )
+
+    def _verify(self, tenant, modules):
+        """Raise unless the tenant database is in the state that was asked for."""
+
+    def _issue_access_link(self, tenant):
+        """Return a one-time set-password link for the tenant administrator."""
+        return ""
 
     # -- Shared helpers ----------------------------------------------------
 
@@ -169,10 +221,11 @@ class DryRunProvisioner(BaseProvisioner):
     """
     Simulates the provisioning workflow without making any real system calls.
 
-    Safe to use during development and when the Odoo DB-manager endpoint has
-    not yet been configured.  Every step logs what *would* happen and
-    returns success.
+    Every step logs what *would* happen. The result is marked ``simulated``;
+    callers leave the tenant in draft.
     """
+
+    simulated = True
 
     def _create_database(self, tenant):
         _logger.info(
@@ -218,23 +271,40 @@ class RealProvisioner(BaseProvisioner):
 
     def _create_database(self, tenant):
         import odoo.service.db as db_service
+        import odoo.sql_db
 
         db_name = tenant.database_name
         if not db_name:
             raise ValueError("Tenant has no database_name.")
         if db_service.exp_db_exist(db_name):
             raise ValueError("Database '%s' already exists." % db_name)
-        if not tenant.admin_password:
-            raise ValueError(
-                "An admin password is required to provision a real database."
-            )
         login = tenant.admin_email or "admin"
-        password = tenant.admin_password
-        # Creates the DB, installs base and creates the admin user in one step.
-        db_service.exp_create_database(
-            db_name, False, "en_US",
-            user_password=password, login=login,
-        )
+        # With no password on the record the administrator gets a random one
+        # that nobody ever sees; they set their own through the one-time link.
+        password = tenant.admin_password or secrets.token_urlsafe(32)
+        # The two calls below are what odoo.service.db.exp_create_database
+        # does. That public wrapper refuses to run when the server hides its
+        # database manager (list_db = False), which is how a multi-tenant
+        # server should be configured. Creating databases is this service's
+        # job, authorised by the provisioning permission and the server-side
+        # switch, not by the database-manager screen.
+        db_service._create_empty_database(db_name)
+        self._database_created = True
+        db_service._initialize_db(
+            db_name, False, "en_US", password, login=login)
+        # _initialize_db logs and swallows its own failures, so look.
+        with odoo.sql_db.db_connect(db_name).cursor() as cr:
+            cr.execute("SELECT to_regclass('ir_module_module'), to_regclass('res_users')")
+            if not all(cr.fetchone()):
+                raise RuntimeError(
+                    "Database '%s' was created but Odoo did not initialise it. "
+                    "See the server log." % db_name)
+            cr.execute("SELECT state FROM ir_module_module WHERE name = 'base'")
+            row = cr.fetchone()
+            if not row or row[0] != "installed":
+                raise RuntimeError(
+                    "Database '%s' was created but the base module is not "
+                    "installed. See the server log." % db_name)
         # Clear the password immediately after use so it is never left on the
         # control-plane record if the provisioner crashes in a later step.
         tenant.write({"admin_password": False})
@@ -280,7 +350,6 @@ class RealProvisioner(BaseProvisioner):
                 admin.write(vals)
 
     def _apply_settings(self, tenant):
-        import os
         import odoo
         from odoo import api, SUPERUSER_ID
 
@@ -303,6 +372,48 @@ class RealProvisioner(BaseProvisioner):
                 icp.set_param("web.base.url",
                               "https://%s.%s" % (tenant.subdomain, base))
 
+    def _verify(self, tenant, modules):
+        import odoo
+        from odoo import api, SUPERUSER_ID
+
+        registry = odoo.modules.registry.Registry(tenant.database_name)
+        with registry.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            installed = set(env["ir.module.module"].search(
+                [("name", "in", modules), ("state", "=", "installed")]
+            ).mapped("name"))
+            missing = [m for m in modules if m not in installed]
+            if missing:
+                raise RuntimeError(
+                    "Modules not installed: %s." % ", ".join(missing))
+            admin = env.ref("base.user_admin", raise_if_not_found=False)
+            if not admin or not admin.active:
+                raise RuntimeError("The administrator user is missing.")
+            if tenant.admin_email and admin.login != tenant.admin_email:
+                raise RuntimeError(
+                    "The administrator login was not set to the tenant's "
+                    "admin email.")
+
+    def _issue_access_link(self, tenant):
+        import odoo
+        from odoo import api, SUPERUSER_ID
+
+        registry = odoo.modules.registry.Registry(tenant.database_name)
+        with registry.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            admin = env.ref("base.user_admin", raise_if_not_found=False)
+            if not admin or "signup_type" not in admin.partner_id._fields:
+                # auth_signup is absent: no link can be issued, and the
+                # random password is unknown. Say so instead of pretending.
+                raise RuntimeError(
+                    "Cannot issue a set-password link: the tenant database "
+                    "has no auth_signup module.")
+            partner = admin.partner_id
+            # Odoo's own invitation token: signed with the tenant
+            # database's secret, time-limited, and void after first login.
+            partner.signup_prepare(signup_type="signup")
+            return partner._get_signup_url_for_action()[partner.id]
+
 
 # ---------------------------------------------------------------------------
 # Factory
@@ -312,15 +423,29 @@ class RealProvisioner(BaseProvisioner):
 PROVISIONER_CLASS = DryRunProvisioner
 
 
-def get_provisioner(odoo_env=None) -> BaseProvisioner:
-    """Return the active provisioner instance.
+def real_provisioning_enabled() -> bool:
+    """True when this server is allowed to create tenant databases."""
+    return os.environ.get("MUMTAZ_REAL_PROVISIONING") == "1"
 
-    Real database creation is opt-in: set ``MUMTAZ_REAL_PROVISIONING=1`` in the
-    environment to switch from the dry-run simulation to actual provisioning.
+
+def get_provisioner(odoo_env=None, dry_run=None) -> BaseProvisioner:
+    """Return the provisioner to use.
+
+    :param dry_run: ``True`` always simulates. ``False`` asks for a real run
+        and raises ``ProvisioningDisabled`` when the server has not enabled
+        one. ``None`` (background queue) runs for real when the server allows
+        it and simulates otherwise.
+
+    Real database creation is opt-in per server: set
+    ``MUMTAZ_REAL_PROVISIONING=1`` in the service environment.
     """
-    import os
-
-    if os.environ.get("MUMTAZ_REAL_PROVISIONING") == "1":
+    if dry_run:
+        return DryRunProvisioner(odoo_env=odoo_env)
+    if real_provisioning_enabled():
         _logger.info("[Provisioning] Real provisioner active.")
         return RealProvisioner(odoo_env=odoo_env)
+    if dry_run is False:
+        raise ProvisioningDisabled(
+            "Real provisioning is switched off on this server "
+            "(MUMTAZ_REAL_PROVISIONING is not set).")
     return DryRunProvisioner(odoo_env=odoo_env)

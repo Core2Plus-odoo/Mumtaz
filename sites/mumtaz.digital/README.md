@@ -6,7 +6,7 @@ Marketing website for the Mumtaz platform. Static HTML, no database.
 |---|---|
 | **Status** | Three copies of this site exist in the repo. On 21 Nov 2026 the live page title matched the `platform/marketing` copy (recorded in `REPO_MAP.md`) |
 | **Code in this folder** | [`site/`](site/) — 14-page static site (moved from `apps/website/`). This is the copy the scripts in `ops/deployment/` publish, which suggests those scripts are no longer what deploys the live site |
-| **Other copies** | [`website/index.html`](../../website/index.html) — single page, checked by CI, links to the delivery console · [`platform/marketing/`](../../platform/marketing/) — from the stalled platform rebuild |
+| **Other copies** | [`sites/delivery.mumtaz.digital/landing/index.html`](../delivery.mumtaz.digital/landing/index.html) — single page, checked by CI, links to the delivery console · [`platform/marketing/`](../../platform/marketing/) — from the stalled platform rebuild |
 | **Database** | None |
 | **Served by** | nginx, web root `/var/www/mumtaz.digital` |
 | **Deploy** | `ops/deployment/deploy-website.sh` copies `site/` to the web root |
