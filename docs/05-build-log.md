@@ -290,3 +290,9 @@ project when a qualifying line produced a project other than the oversight one, 
 The pair now arrives ready to work: gates linked by number, engagement type from the product, plan dates from
 "Plan: D+n", onboarding checklist when installed, and one note on the delivery project saying where to start.
 `0 failed, 0 error(s) of 32 tests` (tag `c2p_order_projects`). Nothing on live is changed.
+
+### c2p_project_tracker 19.0.1.0.2: milestone-history access fix (28 Nov 2026) — not installed on live
+Reproduced first: a Delivery Member moving a task had the save refused (history create denied). Fix: create-only
+access, a paired-company clause on the history rule (new stored field), and an in-process marker so only
+`log()` can write rows (blocks API forgery). `0 failed, 0 error(s) of 63 tests` for the tracker; 200 across the
+tracker, work hub, meeting actions, client onboarding, milestone forecast and order projects. Nothing on live is changed.

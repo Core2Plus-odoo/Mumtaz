@@ -1,4 +1,12 @@
-from odoo import api, fields, models
+import contextvars
+
+from odoo import _, api, fields, models
+from odoo.exceptions import AccessError
+
+# True only while `log()` is creating a row. It lives in this process, so it
+# cannot be sent over the API the way a context key can: a caller who is not
+# this module's own code cannot switch it on.
+_INTERNAL_WRITE = contextvars.ContextVar("c2p_history_internal_write", default=False)
 
 
 class C2pMilestoneHistory(models.Model):
@@ -43,8 +51,24 @@ class C2pMilestoneHistory(models.Model):
     waiting_task_count = fields.Integer()
 
     note = fields.Char()
+    paired_company_id = fields.Many2one(
+        "res.company", string="Paired Delivery Company",
+        related="project_id.c2p_counterpart_id.company_id", store=True,
+        index=True,
+        help="Company of the paired delivery project. Lets that company read "
+             "and log the history without access to the engagement itself.")
 
     _milestone_date_idx = models.Index("(milestone_id, change_date)")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Rows are evidence. Only `log()` may write them: a direct create, an
+        # import or an API call is refused, whatever group the caller is in.
+        # The install and system-level code (superuser) are not API callers.
+        if not (_INTERNAL_WRITE.get() or self.env.su):
+            raise AccessError(_(
+                "Milestone history is written by the tracker only."))
+        return super().create(vals_list)
 
     @api.model
     def log(self, milestone, old_stage, old_deadline, counts, source="sync",
@@ -56,7 +80,17 @@ class C2pMilestoneHistory(models.Model):
         date_changed = (old_deadline or False) != (new_deadline or False)
         if not stage_changed and not date_changed:
             return self.browse()
-        return self.create({
+        token = _INTERNAL_WRITE.set(True)
+        try:
+            return self.create(self._log_values(
+                milestone, old_stage, old_deadline, new_deadline, counts,
+                source, note))
+        finally:
+            _INTERNAL_WRITE.reset(token)
+
+    def _log_values(self, milestone, old_stage, old_deadline, new_deadline,
+                    counts, source, note):
+        return {
             "milestone_id": milestone.id,
             "source": source,
             "old_stage_id": old_stage.id or False,
@@ -67,4 +101,4 @@ class C2pMilestoneHistory(models.Model):
             "open_task_count": counts.get("open", 0),
             "waiting_task_count": counts.get("waiting", 0),
             "note": note,
-        })
+        }

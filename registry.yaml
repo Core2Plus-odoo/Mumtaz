@@ -797,12 +797,12 @@ modules:
     disposition: keep
     path: addons/c2p_project_tracker
     title: "C2P Project Tracker"
-    version: "19.0.1.0.1"
+    version: "19.0.1.0.2"
     license: "LGPL-3"
     application: false
     depends_local: []
     depends_standard: ["project", "mail", "sale"]
-    python_lines: 2492
+    python_lines: 2598
     test_files: 6
     access_csv: true
     note: "C2P group internal. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."

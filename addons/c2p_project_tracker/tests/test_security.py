@@ -75,14 +75,86 @@ class TestSecurity(C2pTrackerCommon):
         self.assertNotIn("AED", reasons["rag_reasons"])
 
     def test_multi_company_isolation_on_history(self):
-        """History rows belong to the milestone's company and must not leak to
-        a user without that company allowed."""
+        """History belongs to the milestone's company. A Solutions-only user
+        sees it only while that company is the engagement's paired delivery
+        company; once the pairing is removed the rows are hidden again."""
         self._delivery_task(stage="In Progress")
         rows = self.env["c2p.milestone.history"].search([])
         self.assertTrue(rows)
         self.assertEqual(rows[0].company_id, self.company_consult)
-        visible = self.env["c2p.milestone.history"].with_user(
-            self.worker).search([])
+        History = self.env["c2p.milestone.history"].with_user(self.worker)
+        self.assertIn(rows[0], History.search([]))
+        self.portfolio.c2p_counterpart_id = False
+        rows.invalidate_recordset()
         self.assertNotIn(
-            rows[0], visible,
-            "a Solutions-only user should not see Consultants history rows")
+            rows[0], History.search([]),
+            "an unpaired Consultants engagement must stay hidden from Solutions")
+
+
+@tagged("post_install", "-at_install")
+class TestMilestoneHistoryAccess(C2pTrackerCommon):
+    """History is append-only and written only by the tracker's own code."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.manager = cls.env["res.users"].create({
+            "name": "T-History-Manager", "login": "t-history-manager",
+            "company_id": cls.company_consult.id,
+            "company_ids": [(6, 0, [cls.company_consult.id,
+                                    cls.company_solutions.id])],
+            "group_ids": [(4, cls.env.ref(
+                "c2p_project_tracker.group_c2p_portfolio_manager").id)],
+        })
+        cls.company_other = cls.env["res.company"].create({"name": "T-Other"})
+        cls.outsider = cls.env["res.users"].create({
+            "name": "T-Outsider", "login": "t-outsider",
+            "company_id": cls.company_other.id,
+            "company_ids": [(6, 0, [cls.company_other.id])],
+            "group_ids": [(4, cls.env.ref(
+                "c2p_project_tracker.group_c2p_delivery_member").id)],
+        })
+
+    def _row_values(self):
+        return {"milestone_id": self.pm1.id, "source": "manual",
+                "new_stage_id": self.p_stage["In Progress"].id}
+
+    def _logged_by(self, user):
+        """Move a delivery task as `user`; return the history rows it made."""
+        task = self._delivery_task("To move", "To Do")
+        before = self.env["c2p.milestone.history"].search([])
+        task.with_user(user).write({"stage_id": self.d_stage["In Progress"].id})
+        return self.env["c2p.milestone.history"].search([]) - before
+
+    def test_a_delivery_member_moving_a_task_logs_the_history(self):
+        rows = self._logged_by(self.worker)
+        self.assertTrue(rows, "the change must be logged, not refused")
+        self.assertEqual(rows.milestone_id, self.pm1)
+
+    def test_a_forged_create_is_refused_for_a_member(self):
+        with self.assertRaises(AccessError):
+            self.env["c2p.milestone.history"].with_user(self.worker).create(
+                self._row_values())
+
+    def test_a_forged_create_is_refused_for_a_manager(self):
+        with self.assertRaises(AccessError):
+            self.env["c2p.milestone.history"].with_user(self.manager).create(
+                self._row_values())
+
+    def test_a_row_cannot_be_edited_or_deleted_by_a_member(self):
+        row = self._logged_by(self.worker)[:1]
+        self.assertTrue(row)
+        with self.assertRaises(AccessError):
+            row.with_user(self.worker).write({"note": "tampered"})
+        with self.assertRaises(AccessError):
+            row.with_user(self.worker).unlink()
+
+    def test_the_paired_delivery_company_can_read_the_history(self):
+        rows = self._logged_by(self.worker)
+        visible = self.env["c2p.milestone.history"].with_user(self.worker).search([])
+        self.assertTrue(rows <= visible)
+
+    def test_an_unrelated_company_sees_nothing(self):
+        self._logged_by(self.worker)
+        visible = self.env["c2p.milestone.history"].with_user(self.outsider).search([])
+        self.assertFalse(visible)
