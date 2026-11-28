@@ -769,12 +769,12 @@ modules:
     disposition: keep
     path: addons/c2p_milestone_forecast
     title: "C2P Milestone Forecast"
-    version: "19.0.1.0.0"
+    version: "19.0.1.0.1"
     license: "LGPL-3"
     application: false
     depends_local: []
     depends_standard: ["project"]
-    python_lines: 431
+    python_lines: 497
     test_files: 1
     access_csv: false
     note: "C2P group internal. Commitment and forecast dates per milestone with calculated health; reason required on date changes. Installed on core2plus.com (Mumtaz_C2P) on 25 Nov 2026."

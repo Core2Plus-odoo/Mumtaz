@@ -296,3 +296,8 @@ Reproduced first: a Delivery Member moving a task had the save refused (history 
 access, a paired-company clause on the history rule (new stored field), and an in-process marker so only
 `log()` can write rows (blocks API forgery). `0 failed, 0 error(s) of 63 tests` for the tracker; 200 across the
 tracker, work hub, meeting actions, client onboarding, milestone forecast and order projects. Nothing on live is changed.
+
+### c2p_milestone_forecast 19.0.1.0.1: no context-key bypass (28 Nov 2026) — not installed on live
+The reason rule honoured context keys an API caller can send. They are replaced by in-process switches;
+`with skip_change_reason():` is the documented bypass for trusted code. `0 failed, 0 error(s) of 21 tests`.
+Nothing on live is changed.

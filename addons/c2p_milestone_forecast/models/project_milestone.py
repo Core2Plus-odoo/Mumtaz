@@ -1,3 +1,6 @@
+import contextvars
+from contextlib import contextmanager
+
 from markupsafe import Markup
 
 from odoo import _, api, fields, models
@@ -13,8 +16,30 @@ HEALTH = [
     ("red", "Red"),
     ("grey", "No forecast"),
 ]
-SKIP = "c2p_skip_change_reason"
-INTERNAL = "c2p_forecast_internal"
+
+# Switches for trusted code in this process. They are not context keys: a
+# context is chosen by whoever calls the API, so a key in it can be sent by
+# anyone with a login. These variables can only be set by Python code that
+# imports this module.
+_INTERNAL = contextvars.ContextVar("c2p_forecast_internal", default=False)
+_SKIP_REASON = contextvars.ContextVar("c2p_forecast_skip_reason", default=False)
+
+
+@contextmanager
+def _switched_on(var):
+    token = var.set(True)
+    try:
+        yield
+    finally:
+        var.reset(token)
+
+
+def skip_change_reason():
+    """For trusted bulk code: `with skip_change_reason(): milestone.write(...)`.
+
+    The reason rule is off inside the block only.
+    """
+    return _switched_on(_SKIP_REASON)
 
 
 def health_for(commitment, forecast):
@@ -84,31 +109,34 @@ class ProjectMilestone(models.Model):
                 continue
             colour = health_for(ms.deadline, ms.c2p_forecast_date)
             if ms.c2p_health != colour:
-                super(ProjectMilestone, ms.with_context(**{INTERNAL: True})
-                      ).write({"c2p_health": colour})
+                ms._c2p_store_health(colour)
+
+    def _c2p_store_health(self, colour):
+        """The one place the stored colour is written."""
+        with _switched_on(_INTERNAL):
+            super(ProjectMilestone, self).write({"c2p_health": colour})
 
     def _c2p_reason_exempt(self):
-        return bool(self.env.su or self.env.context.get(SKIP)
-                    or self.env.context.get("install_mode")
-                    or self.env.context.get("module"))
+        # System writes (the superuser, which also runs the install) and code
+        # inside `skip_change_reason()`. No context key counts.
+        return bool(self.env.su or _SKIP_REASON.get())
 
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
             vals.pop("c2p_change_reason", None)
-            if not self.env.context.get(INTERNAL):
+            if not _INTERNAL.get():
                 vals.pop("c2p_health", None)
         milestones = super().create(vals_list)
         for ms in milestones:
             # Created already reached: take the colour of its dates once.
             colour = health_for(ms.deadline, ms.c2p_forecast_date)
             if ms.c2p_health != colour:
-                super(ProjectMilestone, ms.with_context(**{INTERNAL: True})
-                      ).write({"c2p_health": colour})
+                ms._c2p_store_health(colour)
         return milestones
 
     def write(self, vals):
-        if self.env.context.get(INTERNAL):
+        if _INTERNAL.get():
             return super().write(vals)
         vals = dict(vals)
         if "c2p_health" in vals:
@@ -148,8 +176,7 @@ class ProjectMilestone(models.Model):
         for ms in becoming_reached:
             colour = health_for(ms.deadline, ms.c2p_forecast_date)
             if ms.c2p_health != colour:
-                super(ProjectMilestone, ms.with_context(**{INTERNAL: True})
-                      ).write({"c2p_health": colour})
+                ms._c2p_store_health(colour)
         if {"deadline", "c2p_forecast_date", "is_reached"} & set(vals):
             (self - becoming_reached)._c2p_refresh_health()
         return res
