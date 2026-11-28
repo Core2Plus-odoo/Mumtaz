@@ -78,3 +78,54 @@ class TestAppSignup(HttpCase):
         self.assertEqual(status, 400)
         self.assertEqual(set(data["errors"]), {"name", "phone", "email", "password"})
         self.assertFalse(self._users())
+
+    def test_sixth_attempt_from_one_address_in_an_hour_is_refused(self):
+        self._on()
+        for n in range(5):
+            status, data = self._post(email="not-an-email")
+            self.assertEqual(status, 400, n)
+        status, data = self._post()
+        self.assertEqual(status, 429)
+        self.assertEqual(data["error"], "too_many_attempts")
+        self.assertFalse(self._users())
+
+    def test_attempts_are_not_counted_while_sign_up_is_closed(self):
+        for n in range(7):
+            self._post()
+        self.assertFalse(self.env["faizy.api.throttle"].sudo().search_count([]))
+
+    def test_old_attempts_are_cleaned_up(self):
+        Throttle = self.env["faizy.api.throttle"].sudo()
+        row = Throttle.create({"scope": "signup", "key": "203.0.113.9"})
+        self.env.cr.execute(
+            "UPDATE faizy_api_throttle SET create_date = now() - interval '2 days' WHERE id = %s", [row.id]
+        )
+        Throttle.invalidate_model()
+        Throttle._gc_attempts()
+        self.assertFalse(row.exists())
+
+
+@tagged("post_install", "-at_install", "faizy")
+class TestAppApiCarriesNoPlanPrices(HttpCase):
+    """The service catalogue the app shows before a request carries no price."""
+
+    def test_request_options_have_no_price_fields(self):
+        from odoo.addons.mail.tests.common import mail_new_test_user
+
+        mail_new_test_user(self.env, login="noprice_cust", name="SYNTHETIC No Price", groups="base.group_portal")
+        self.authenticate("noprice_cust", "noprice_cust")
+        response = self.url_open("/api/care/request/options")
+        self.assertEqual(response.status_code, 200, response.text)
+
+        def keys(node):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    yield key
+                    yield from keys(value)
+            elif isinstance(node, list):
+                for item in node:
+                    yield from keys(item)
+
+        for key in set(keys(json.loads(response.text))):
+            for forbidden in ("price", "amount", "fee", "cost"):
+                self.assertNotIn(forbidden, key.lower())

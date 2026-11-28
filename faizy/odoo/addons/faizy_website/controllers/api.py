@@ -182,12 +182,19 @@ class FaizyCareAPI(FaizyCustomerPortal):
     #    refused and the person is sent to sign in or to WhatsApp.
     # 3. Portal user only, never internal.
     #
+    # 4. Rate limited. Every attempt, accepted or refused, is counted per
+    #    caller address and across all callers, so the route cannot be used
+    #    to flood the customer list or to test which numbers are customers.
+    #
     # Not done here, and needed before this is switched on for the public:
-    # rate limiting / CAPTCHA and proof that the caller owns the email or the
-    # number (docs/app/README.md, gaps A5 and A1).
+    # proof that the caller owns the email or the number (docs/app/README.md,
+    # gap A1). The limits slow abuse down; they do not prove who is asking.
 
     _SIGNUP_PARAM = "faizy.app_signup"
     _SIGNUP_MIN_PASSWORD = 8
+    _SIGNUP_PER_ADDRESS = 5      # attempts per address per hour
+    _SIGNUP_ALL_CALLERS = 60     # attempts from everyone per hour
+    _SIGNUP_WINDOW_MINUTES = 60
 
     def _app_signup_enabled(self):
         value = request.env["ir.config_parameter"].sudo().get_param(self._SIGNUP_PARAM)
@@ -208,6 +215,19 @@ class FaizyCareAPI(FaizyCustomerPortal):
         if not self._app_signup_enabled():
             return request.make_json_response(
                 {"ok": False, "error": "signup_closed"}, status=403
+            )
+
+        throttle = request.env["faizy.api.throttle"].sudo()
+        address = request.httprequest.remote_addr or "unknown"
+        within_own = throttle.allow(
+            "signup", address, self._SIGNUP_PER_ADDRESS, self._SIGNUP_WINDOW_MINUTES
+        )
+        within_all = throttle.allow(
+            "signup_all", "all", self._SIGNUP_ALL_CALLERS, self._SIGNUP_WINDOW_MINUTES
+        )
+        if not (within_own and within_all):
+            return request.make_json_response(
+                {"ok": False, "error": "too_many_attempts"}, status=429
             )
 
         post = request.get_json_data() or {}
