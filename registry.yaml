@@ -895,13 +895,13 @@ modules:
     disposition: relocate-candidate
     path: faizy/odoo/addons/faizy_ai
     title: "Faizy AI Team"
-    version: "19.0.1.3.0"
+    version: "19.0.1.5.0"
     license: "LGPL-3"
     application: true
     depends_local: ["faizy_core"]
-    depends_standard: ["mail"]
-    python_lines: 1704
-    test_files: 3
+    depends_standard: ["mail", "crm", "project"]
+    python_lines: 2612
+    test_files: 5
     access_csv: true
     note: "Faizy is a separate venture. AI team addon on top of faizy_core; brought to main from the production branch 22 Nov 2026."
   faizy_core:

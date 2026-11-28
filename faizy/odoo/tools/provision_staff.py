@@ -1,0 +1,249 @@
+#!/usr/bin/env python3
+"""Provision the two FAIZY executive workspaces over XML-RPC (§26). Idempotent.
+
+    python3 provision_staff.py --url http://127.0.0.1:8069 --db faizy_stg \\
+        --login admin --password ... --start 2026-11-24 \\
+        --care stg.mashood --ops stg.raza --manager stg.umer [--create-stg-users PASSWORD]
+
+What it does, in order, creating only what is missing:
+  1. users: finds the three logins (creates stg.* ones only with --create-stg-users);
+     puts care in "Customer communications approver", ops in "Faizy / Operations",
+     manager in "Faizy / Manager"; sets the three role holders; sets each user's
+     home action to "My desk".
+  2. recurring tasks are switched on through the projects.
+  3. SOPs as knowledge notes (category Procedure).
+  4. two sales teams with their lead sources and leaders.
+  5. two projects ("Evidence before Done", followers-only, the executive and the
+     manager as followers) with the stages Planned / In progress / Blocked / Done.
+  6. the 30-day plan: one task per working day per routine, plus the week's
+     project block, plus a recurring Saturday review. Tasks are keyed by name;
+     existing ones are left alone.
+  --write-doc PATH renders the plan as Markdown for review. --dry-run prints only.
+
+Never run against production without Umer's written approval (D10).
+"""
+import argparse
+import datetime as dt
+import html
+import sys
+import xmlrpc.client
+
+sys.path.insert(0, __import__('os').path.dirname(__file__))
+import staff_plan_30d as P  # noqa: E402
+
+ROLE_GROUP = {'care': 'faizy_ai.group_comms', 'ops': 'faizy_core.group_faizy_ops',
+              'manager': 'faizy_core.group_faizy_manager'}
+ROLE_PARAM = {'care': 'faizy_ai.care_user_id', 'ops': 'faizy_ai.ops_user_id',
+              'manager': 'faizy_ai.escalation_user_id'}
+
+
+class Odoo:
+    def __init__(self, url, db, login, password, dry):
+        self.db, self.pw, self.dry = db, password, dry
+        self.uid = xmlrpc.client.ServerProxy(url + '/xmlrpc/2/common').authenticate(db, login, password, {})
+        if not self.uid:
+            sys.exit('login failed')
+        self.m = xmlrpc.client.ServerProxy(url + '/xmlrpc/2/object', allow_none=True)
+
+    def call(self, model, method, *args, **kw):
+        return self.m.execute_kw(self.db, self.uid, self.pw, model, method, list(args), kw)
+
+    def ref(self, xmlid):
+        mod, name = xmlid.split('.')
+        rows = self.call('ir.model.data', 'search_read', [['module', '=', mod], ['name', '=', name]],
+                         fields=['res_id'])
+        if not rows:
+            sys.exit('missing xmlid %s (is faizy_ai 19.0.1.5.0 installed?)' % xmlid)
+        return rows[0]['res_id']
+
+    def ensure(self, model, domain, vals, log):
+        ids = self.call(model, 'search', domain)
+        if ids:
+            return ids[0], False
+        if self.dry:
+            print('  would create %s: %s' % (model, log))
+            return 0, True
+        rid = self.call(model, 'create', vals)
+        print('  created %s %s: %s' % (model, rid, log))
+        return rid, True
+
+
+def task_html(sop, steps, checklist, evidence, hours):
+    e = html.escape
+    out = ['<p><b>Time box:</b> %s h. <b>SOP:</b> %s</p>' % (hours, e(sop))]
+    if steps:
+        out.append('<p><b>Steps</b></p><ol>%s</ol>' % ''.join('<li>%s</li>' % e(s) for s in steps))
+    out.append('<p><b>Checklist</b></p><ul>%s</ul>' % ''.join('<li>%s</li>' % e(c) for c in checklist))
+    out.append('<p><b>Evidence before Done:</b> %s</p>' % e(evidence))
+    return ''.join(out)
+
+
+def working_days(start, days=30):
+    out, d = [], start
+    while d < start + dt.timedelta(days=days):
+        if d.weekday() != 6:   # Sunday off
+            out.append(d)
+        d += dt.timedelta(days=1)
+    return out
+
+
+def plan_for(role, start):
+    """Yield (date, name, sop, hours, checklist, evidence, recurring)."""
+    blocks = P.BLOCKS[role]
+    week_cursor = {w: 0 for w in blocks}
+    day_no = 0
+    for d in working_days(start):
+        day_no += 1
+        week = (d - start).days // 7 + 1
+        tag = 'D%02d · %s' % (day_no, d.strftime('%a %d %b'))
+        for name, sop, hours, checklist, evidence in P.ROUTINE[role]:
+            yield d, '%s · %s' % (tag, name), sop, hours, checklist, evidence, False
+        if d.weekday() == 5:   # Saturday: the recurring review
+            if day_no <= 6:
+                name, checklist, evidence = P.WEEKLY_REVIEW
+                yield (d, '%s · %s' % (tag, name), 'SOP-X1 End-of-day log and evidence rule', 1.5,
+                       checklist, evidence, True)
+            continue
+        items = blocks.get(week) or blocks.get(max(blocks))
+        idx = week_cursor.setdefault(week, 0)
+        if idx < len(items):
+            name, checklist, evidence = items[idx]
+            week_cursor[week] = idx + 1
+            yield d, '%s · %s' % (tag, name), 'see the task', 1.5, checklist, evidence, False
+
+
+def write_doc(path, start):
+    lines = ['# FAIZY staff 30-day work plan', '',
+             'Generated by `faizy/odoo/tools/provision_staff.py` from `staff_plan_30d.py`. Start: %s. '
+             'Six working days a week, 8 productive hours a day (6.5 h routine + 1.5 h project block). '
+             'Every task needs evidence before Done. No prices or claims anywhere.' % start, '']
+    lines += ['## SOPs', '']
+    for name, steps in P.SOPS.items():
+        lines += ['### %s' % name, ''] + ['%d. %s' % (i + 1, s) for i, s in enumerate(steps)] + ['']
+    for role, who in (('care', 'Mashood, Digital Marketing & Customer Experience Executive'),
+                      ('ops', 'Raza, Business Development & Operations Executive')):
+        lines += ['## %s' % who, '', '### Daily routine (%s h)' % sum(r[2] for r in P.ROUTINE[role]), '',
+                  '| Task | SOP | Hours | Evidence |', '|---|---|---|---|']
+        lines += ['| %s | %s | %s | %s |' % (r[0], r[1], r[2], r[4]) for r in P.ROUTINE[role]]
+        lines += ['', '### Project blocks (1.5 h a day, by week)', '']
+        for week, items in sorted(P.BLOCKS[role].items()):
+            lines += ['**Week %s**' % week, ''] + ['- %s — evidence: %s' % (n, ev) for n, _c, ev in items] + ['']
+        lines += ['**Every Saturday**: %s (recurring, 1.5 h)' % P.WEEKLY_REVIEW[0], '']
+        lines += ['### Day by day', '', '| Day | Tasks | Hours |', '|---|---|---|']
+        by_day = {}
+        for d, name, _sop, hours, *_rest in plan_for(role, start):
+            by_day.setdefault(d, []).append((name.split(' · ', 2)[-1], hours))
+        for d, items in sorted(by_day.items()):
+            names = '; '.join(n for n, _h in items)
+            lines.append('| %s | %s | %s |' % (d.strftime('%a %d %b'), names, sum(h for _n, h in items)))
+        lines.append('')
+    open(path, 'w').write('\n'.join(lines))
+    print('wrote', path)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--url', required=True)
+    ap.add_argument('--db', required=True)
+    ap.add_argument('--login', default='admin')
+    ap.add_argument('--password', required=True)
+    ap.add_argument('--start', help='first day of the plan (YYYY-MM-DD), default next Monday')
+    ap.add_argument('--care', required=True)
+    ap.add_argument('--ops', required=True)
+    ap.add_argument('--manager', required=True)
+    ap.add_argument('--create-stg-users', metavar='PASSWORD',
+                    help='create missing stg.* users with this password (staging only)')
+    ap.add_argument('--write-doc')
+    ap.add_argument('--dry-run', action='store_true')
+    a = ap.parse_args()
+    if a.start:
+        start = dt.date.fromisoformat(a.start)
+    else:
+        today = dt.date.today()
+        start = today + dt.timedelta(days=(7 - today.weekday()) % 7 or 7)
+    if a.write_doc:
+        write_doc(a.write_doc, start)
+    o = Odoo(a.url, a.db, a.login, a.password, a.dry_run)
+
+    # 1. users and roles
+    users = {}
+    for role, login in (('care', a.care), ('ops', a.ops), ('manager', a.manager)):
+        ids = o.call('res.users', 'search', [['login', '=', login]])
+        if not ids:
+            if not (a.create_stg_users and login.startswith('stg.')):
+                sys.exit('user %s does not exist; real logins are created by Umer, not by this tool' % login)
+            vals = {'name': '%s (%s)' % (login, role), 'login': login,
+                    'password': a.create_stg_users, 'notification_type': 'inbox'}
+            ids = [o.call('res.users', 'create', vals)]
+            print('  created staging user', login)
+        users[role] = ids[0]
+        o.call('res.users', 'write', [ids[0]], {'group_ids': [[4, o.ref(ROLE_GROUP[role])]],
+                                                'action_id': o.ref('faizy_ai.action_faizy_my_desk')})
+        o.call('ir.config_parameter', 'set_param', ROLE_PARAM[role], str(ids[0]))
+    print('users:', users)
+    # Unowned leads go to the desk that owns their source (§26). Off by default; on for this workspace.
+    o.call('ir.config_parameter', 'set_param', 'faizy_ai.route_leads', 'on')
+
+    # 2. recurring tasks: switched on per project below (allow_recurring_tasks turns the
+    #    standard "Use Recurring Tasks" feature group on for everyone).
+
+    # 3. SOPs
+    for name, steps in P.SOPS.items():
+        o.ensure('faizy.ai.knowledge', [['name', '=', name]],
+                 {'name': name, 'category': 'procedure',
+                  'body': '\n'.join('%d. %s' % (i + 1, s) for i, s in enumerate(steps))}, name)
+
+    # 4. teams
+    teams = {}
+    for role, t in P.TEAMS.items():
+        tid, _ = o.ensure('crm.team', [['name', '=', t['name']]],
+                          {'name': t['name'], 'user_id': users[role], 'faizy_lead_sources': t['sources'],
+                           'member_ids': [[4, users[role]]]}, t['name'])
+        if tid:
+            o.call('crm.team', 'write', [tid], {'user_id': users[role], 'faizy_lead_sources': t['sources']})
+        teams[role] = tid
+
+    # 5. projects and stages
+    projects = {}
+    for role, pname in P.PROJECTS.items():
+        pid, created = o.ensure('project.project', [['name', '=', pname]], {
+            'name': pname, 'faizy_role': role, 'faizy_evidence_required': True,
+            'privacy_visibility': 'followers', 'user_id': users[role], 'allow_recurring_tasks': True,
+        }, pname)
+        if pid:
+            o.call('project.project', 'message_subscribe', [pid], partner_ids=[
+                o.call('res.users', 'read', [users[role]], fields=['partner_id'])[0]['partner_id'][0],
+                o.call('res.users', 'read', [users['manager']], fields=['partner_id'])[0]['partner_id'][0]])
+            stage_ids = []
+            for seq, sname in enumerate(P.STAGES):
+                sid = o.call('project.task.type', 'search', [['name', '=', sname], ['project_ids', 'in', [pid]]])
+                if not sid:
+                    sid = [o.call('project.task.type', 'create', {
+                        'name': sname, 'sequence': seq, 'fold': sname == 'Done', 'project_ids': [[4, pid]]})]
+                stage_ids.append(sid[0])
+            o.call('project.project', 'write', [pid], {'type_ids': [[6, 0, stage_ids]]})
+            projects[role] = (pid, stage_ids[0])
+
+    # 6. the plan
+    for role in ('care', 'ops'):
+        if role not in projects:
+            continue
+        pid, planned = projects[role]
+        n_new = 0
+        for d, name, sop, hours, checklist, evidence, recurring in plan_for(role, start):
+            steps = P.SOPS.get(sop, [])
+            deadline = dt.datetime.combine(d, dt.time(P.DEADLINE_HOUR_KARACHI - 5, 0))   # Karachi is UTC+5
+            vals = {'name': name, 'project_id': pid, 'stage_id': planned,
+                    'user_ids': [[6, 0, [users[role]]]], 'allocated_hours': hours,
+                    'date_deadline': deadline.strftime('%Y-%m-%d %H:%M:%S'),
+                    'description': task_html(sop, steps, checklist, evidence, hours)}
+            if recurring:
+                vals.update({'recurring_task': True, 'repeat_interval': 1, 'repeat_unit': 'week',
+                             'repeat_type': 'forever'})
+            _, created = o.ensure('project.task', [['name', '=', name], ['project_id', '=', pid]], vals, name)
+            n_new += created
+        print('%s: %s tasks created' % (role, n_new))
+
+
+if __name__ == '__main__':
+    main()
