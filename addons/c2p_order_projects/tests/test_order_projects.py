@@ -1,3 +1,4 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from psycopg2 import IntegrityError
@@ -34,6 +35,8 @@ class TestOrderProjects(TransactionCase):
         cls.product = cls._product("Test project product", cls.tpl_con)
         cls.other_product = cls._product("Test second project product", cls._template(
             "Test second oversight template", cls.con, ["To Do", "Done"], tasks=0))
+        cls.delivery_linked_product = cls._product(
+            "Test product wrongly linking the delivery template", cls.tpl_sol)
         cls.plain_product = env["product.product"].create(
             {"name": "Test plain service", "type": "service",
              "service_tracking": "no", "list_price": 10})
@@ -262,11 +265,39 @@ class TestOrderProjects(TransactionCase):
                             for m in order.message_ids))
 
     # ── Several products ─────────────────────────────────────────────────
-    def test_two_products_give_one_oversight_and_one_delivery(self):
+    def test_two_project_lines_give_no_delivery_project(self):
         order = self._order(self.product | self.other_product)
         self.assertEqual(len(self._role(order, "oversight")), 1)
-        self.assertEqual(len(self._role(order, "delivery")), 1)
-        self.assertEqual(len(self._keyed(order)), 2)
+        self.assertFalse(self._role(order, "delivery"))
+        self.assertEqual(len(self._keyed(order)), 1)
+        self.assertTrue(any("more than one project line" in (m.body or "")
+                            for m in order.message_ids))
+
+    def test_the_note_names_the_extra_project(self):
+        order = self._order(self.product | self.other_product)
+        extra = order.order_line.sudo().project_id - self._role(order, "oversight")
+        note = next(m.body for m in order.message_ids if "more than one project line" in (m.body or ""))
+        self.assertTrue(extra)
+        self.assertIn(extra.name, note)
+
+    def test_an_archived_extra_project_still_blocks_the_delivery_project(self):
+        order = self._order(self.product | self.other_product)
+        extra = order.order_line.sudo().project_id - self._role(order, "oversight")
+        extra.active = False
+        order._c2p_ensure_project_pair()
+        self.assertFalse(self._role(order, "delivery"))
+
+    def test_a_delivery_template_linked_as_the_standard_template_blocks_the_delivery_project(self):
+        order = self._order(self.delivery_linked_product | self.product)
+        self.assertEqual(len(self._role(order, "oversight")), 1)
+        self.assertFalse(self._role(order, "delivery"))
+        self.assertEqual(len(self._keyed(order)), 1)
+
+    def test_a_delivery_template_as_the_only_standard_link_leaves_the_order_alone(self):
+        order = self._order(self.delivery_linked_product)
+        self.assertFalse(self._keyed(order))
+        self.assertTrue(any("No oversight project exists" in (m.body or "")
+                            for m in order.message_ids))
 
     # ── Access ───────────────────────────────────────────────────────────
     def test_consultants_only_salesperson_can_confirm(self):
@@ -285,3 +316,70 @@ class TestOrderProjects(TransactionCase):
             allowed_company_ids=[self.con.id]).search_count(
             [("c2p_source_order_id", "=", order.id), ("company_id", "=", self.sol.id)])
         self.assertEqual(visible, 0)
+
+
+@tagged("post_install", "-at_install", "c2p_order_projects")
+class TestGuidedSetup(TestOrderProjects):
+    """The pair arrives ready to work. Same fixtures, plus a planned template."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        env = cls.env
+        cls.g_over = cls._template("Test guided oversight", cls.con, ["To Do", "Done"], tasks=0)
+        for name in ("M1 Kickoff", "M2 Acceptance", "Other task"):
+            env["project.task"].create({"name": name, "project_id": cls.g_over.id})
+        cls.g_del = cls._template(
+            "Test guided delivery", cls.sol,
+            ["Backlog", "To Do", "In Progress", "Done"], tasks=0, gates=2)
+        g1, g2 = cls.g_del.milestone_ids.sorted("name")
+        stage = cls.g_del.type_ids[:1]
+        for name, plan, gate in (("R01 Kickoff", "D+2", g1), ("R02 Confirm", "D+5", g2),
+                                 ("R03 Hand over", "D+9", g2), ("R04 No plan", None, g2)):
+            env["project.task"].create({
+                "name": name, "project_id": cls.g_del.id, "stage_id": stage.id,
+                "milestone_id": gate.id,
+                "description": ("<p>Plan: %s</p><p>Checklist</p>" % plan) if plan else "<p>Free</p>"})
+        cls.g_product = cls._product("Test guided product", cls.g_over)
+        cls.g_product.product_tmpl_id.write({
+            "c2p_delivery_template_id": cls.g_del.id, "c2p_engagement_type": "support"})
+
+    def _guided(self):
+        order = self._order(self.g_product)
+        return (self._role(order, "oversight"), self._role(order, "delivery"), order)
+
+    def test_engagement_type_comes_from_the_product(self):
+        oversight, _delivery, _order = self._guided()
+        self.assertEqual(oversight.engagement_type, "support")
+
+    def test_gates_are_linked_by_number(self):
+        oversight, delivery, _order = self._guided()
+        tasks = {t.name: t for t in oversight.task_ids}
+        self.assertEqual(tasks["M1 Kickoff"].delivery_milestone_id.name, "G1")
+        self.assertEqual(tasks["M2 Acceptance"].delivery_milestone_id.name, "G2")
+        self.assertFalse(tasks["Other task"].delivery_milestone_id)
+        self.assertEqual(tasks["M1 Kickoff"].delivery_milestone_id.project_id, delivery)
+
+    def test_plan_dates_fill_empty_deadlines_only(self):
+        _oversight, delivery, order = self._guided()
+        base = order.date_order.date()
+        by_name = {t.name: t for t in delivery.task_ids}
+        self.assertEqual(by_name["R01 Kickoff"].date_deadline.date(), base + timedelta(days=2))
+        self.assertEqual(by_name["R03 Hand over"].date_deadline.date(), base + timedelta(days=9))
+        self.assertFalse(by_name["R04 No plan"].date_deadline)
+
+    def test_gates_take_the_latest_task_date(self):
+        _oversight, delivery, order = self._guided()
+        base = order.date_order.date()
+        g2 = delivery.milestone_ids.filtered(lambda m: m.name == "G2")
+        self.assertEqual(g2.deadline, base + timedelta(days=9))
+
+    def test_one_note_tells_the_team_where_to_start(self):
+        _oversight, delivery, _order = self._guided()
+        notes = delivery.message_ids.filtered(lambda m: "Start with" in (m.body or ""))
+        self.assertEqual(len(notes), 1)
+        self.assertIn("R01 Kickoff", notes.body)
+
+    def test_a_template_without_plan_lines_still_works(self):
+        order = self._order()
+        self.assertEqual(len(self._role(order, "delivery")), 1)

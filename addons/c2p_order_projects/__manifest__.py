@@ -16,8 +16,17 @@ project, and pairs them in the Project Tracker.
   one delivery project per order. An archived project still counts as
   existing, so confirming again never creates a replacement. Templates are
   never matched.
+* An order with more than one project line gets no delivery project: the
+  standard flow already made a second project, and a delivery project on top
+  would be a second delivery-shaped project. A note on the order says so.
 * Confirming never fails because of this module: a problem is logged and
   written as a note on the order.
+
+Setting up a product (for example T01): the standard template link
+("Project Template") is the Consultants oversight template. The delivery
+template goes in the product's own "Delivery Project Template" field. Never
+link the delivery template as the standard template: the standard flow would
+then create the delivery project itself and there would be no oversight one.
 
 Nothing happens until it is switched on with system parameters:
 

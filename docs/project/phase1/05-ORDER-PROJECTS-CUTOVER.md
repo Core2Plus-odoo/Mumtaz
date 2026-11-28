@@ -15,6 +15,7 @@ below is **proposed text** that needs the owner's approval and a staging run fir
 - Pairs them in the Project Tracker only when the delivery template has a Backlog stage.
 - Fills `x_billing_project_id`, `x_delivery_project_id` and `x_billing_milestone_id`
   where they exist (Mumtaz_C2P only), as action 919 did.
+- Adds no delivery project when the order has another project line, and posts a note instead (a second project line makes the standard flow create a second project, in the order's company).
 - Never blocks a confirmation: an error is logged and noted on the order.
 - Off until switched on. System parameters (Settings > Technical > Parameters):
 
@@ -27,6 +28,8 @@ below is **proposed text** that needs the owner's approval and a staging run fir
 
 A product can set its own delivery template (field "Delivery Project Template" on the
 product form), which is how a T01 product will pick the T01 template.
+
+**T01 product setup rule (decided 27 Nov 2026).** The standard template link ("Project Template") is the Consultants oversight template; the delivery template goes in the product's Delivery Project Template field. Never link the delivery template as the standard template: the standard flow would create the delivery project itself and there would be no oversight one.
 
 **Known limit of the default template.** Template 28 has phase stages ("1. Discovery & BRD"
 and so on) and no Backlog stage, so with it the pair is created but **not** paired in
